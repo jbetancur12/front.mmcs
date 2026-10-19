@@ -12,11 +12,16 @@ import {
   Tooltip
 } from '@mui/material'
 import {
-  useAllUsers,
+  USER_SORTABLE_FIELDS,
   useDeleteUserById,
   useRegisterUser,
-  useUpdateUserById
+  useUpdateUserById,
+  useUsersPaginated
 } from 'src/hooks/useUsers'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 
 import {
   MaterialReactTable,
@@ -45,11 +50,23 @@ export interface UserData {
 // Main component
 const Table: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const { data: filteredTableData = [] } = useAllUsers<UserData>({
+  // Paginación, búsqueda (nombre, email, teléfono) y orden en el servidor.
+  const server = useServerTableState({ sortableFields: USER_SORTABLE_FIELDS })
+  const {
+    data: usersPage,
+    isLoading,
+    isFetching
+  } = useUsersPaginated<UserData>(server.params, {
     onError: (error) => {
       console.error('Error fetching user data:', error)
     }
   })
+  useKeepPageInRange(
+    usersPage?.totalPages,
+    server.pagination.pageIndex,
+    server.setPagination
+  )
+  const filteredTableData = useMemo(() => usersPage?.items ?? [], [usersPage])
   const registerUser = useRegisterUser<UserData>()
   const updateUserById = useUpdateUserById()
   const deleteUserById = useDeleteUserById()
@@ -230,6 +247,7 @@ const Table: React.FC = () => {
         accessorKey: 'identificacion',
         header: 'Identificacion',
         size: 150,
+        enableSorting: false,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'show'
@@ -248,6 +266,7 @@ const Table: React.FC = () => {
         accessorKey: 'isActive',
         header: 'Activo',
         size: 10,
+        enableSorting: false,
         Cell: ({ cell }) => (
           <div
             className={`circle ${
@@ -279,6 +298,15 @@ const Table: React.FC = () => {
         }}
         columns={columns}
         data={filteredTableData}
+        {...server.tableProps}
+        // El endpoint no tiene filtros exactos por estas columnas.
+        enableColumnFilters={false}
+        rowCount={usersPage?.totalItems ?? 0}
+        state={{
+          ...server.tableState,
+          isLoading,
+          showProgressBars: isFetching && !isLoading
+        }}
         editingMode='modal' //default
         enableColumnOrdering
         enableEditing

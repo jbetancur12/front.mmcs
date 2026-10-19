@@ -216,10 +216,17 @@ import type { AxiosResponse } from 'axios'
 import useAxiosPrivateHook from '@utils/use-axios-private'
 import { ROLES } from 'src/constants/roles'
 import { customersKeys } from './customers/useCustomers'
+import {
+  fetchPaginated,
+  type PaginatedResponse,
+  type ServerListParams
+} from './useServerTable'
 
 export const usersKeys = {
   all: ['users-admin'] as const,
   list: () => [...usersKeys.all, 'list'] as const,
+  paginated: (params: ServerListParams) =>
+    [...usersKeys.all, 'paginated', params] as const,
   byCustomer: (customerId: number | string | undefined) =>
     customersKeys.users(String(customerId))
 }
@@ -243,6 +250,29 @@ export const useAllUsers = <T extends UserWithRol = UserWithRol>(
       return excludeAdmins(response.data as T[])
     },
     options
+  )
+}
+
+/** Columnas que `GET /users` acepta en `sortBy`. */
+export const USER_SORTABLE_FIELDS = ['id', 'nombre', 'email'] as const
+
+/**
+ * GET /users?page=&limit=... (búsqueda en nombre, email y teléfono).
+ * El backend no filtra por rol: los admin se quitan de la página recibida,
+ * igual que en `useAllUsers`, así que una página puede traer menos filas.
+ */
+export const useUsersPaginated = <T extends UserWithRol = UserWithRol>(
+  params: ServerListParams,
+  options: { onError?: (error: unknown) => void } = {}
+) => {
+  const axiosPrivate = useAxiosPrivateHook()
+  return useQuery<PaginatedResponse<T>>(
+    usersKeys.paginated(params),
+    async () => {
+      const page = await fetchPaginated<T>(axiosPrivate, '/users', params)
+      return { ...page, items: excludeAdmins(page.items) }
+    },
+    { keepPreviousData: true, ...options }
   )
 }
 
