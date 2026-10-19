@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useQuery, useQueryClient } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '../utils/api'
 import { Notification } from '../types/notifications'
 
@@ -152,22 +152,46 @@ export const useDashboardNotifications = (options: DashboardNotificationsOptions
         }
     }, [connectWebSocket])
 
-    // Mark as read handler
+    // Mark as read handlers
+    const markAsReadMutation = useMutation(
+        (id: string) => axiosPrivate.patch(`/lms/notifications/${id}/read`),
+        {
+            retry: false,
+            onSuccess: () => {
+                queryClient.invalidateQueries(['dashboard-notifications'])
+            },
+            onError: (err) => {
+                console.error('Error marking as read:', err)
+            }
+        }
+    )
+
+    const markAllAsReadMutation = useMutation(
+        () => axiosPrivate.patch('/lms/notifications/read-all'),
+        {
+            retry: false,
+            onSuccess: () => {
+                queryClient.invalidateQueries(['dashboard-notifications'])
+            },
+            onError: (err) => {
+                console.error('Error marking all as read:', err)
+            }
+        }
+    )
+
     const markAsRead = async (id: string) => {
         try {
-            await axiosPrivate.patch(`/lms/notifications/${id}/read`)
-            queryClient.invalidateQueries(['dashboard-notifications'])
-        } catch (err) {
-            console.error('Error marking as read:', err)
+            await markAsReadMutation.mutateAsync(id)
+        } catch {
+            // El error ya se registra en onError
         }
     }
 
     const markAllAsRead = async () => {
         try {
-            await axiosPrivate.patch('/lms/notifications/read-all')
-            queryClient.invalidateQueries(['dashboard-notifications'])
-        } catch (err) {
-            console.error('Error marking all as read:', err)
+            await markAllAsReadMutation.mutateAsync()
+        } catch {
+            // El error ya se registra en onError
         }
     }
 
