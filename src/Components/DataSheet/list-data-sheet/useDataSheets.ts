@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
   fetchPaginated,
+  fetchTotal,
   PaginatedResponse,
   ServerListParams
 } from 'src/hooks/useServerTable'
@@ -72,14 +73,8 @@ export const useDataSheetCounts = () => {
   return useQuery(
     dataSheetKeys.counts(),
     async () => {
-      const count = async (filters: Record<string, string> = {}) => {
-        const page = await fetchPaginated<DataSheetData>(
-          axiosPrivate,
-          '/dataSheet',
-          { page: 1, limit: 1, ...filters }
-        )
-        return page.totalItems
-      }
+      const count = (filters: Record<string, string> = {}) =>
+        fetchTotal(axiosPrivate, '/dataSheet', filters)
       const [total, available, busy, alerts] = await Promise.all([
         count(),
         count({ status: 'available' }),

@@ -54,6 +54,23 @@ export const fetchPaginated = async <T>(
   return response.data
 }
 
+/**
+ * Total de filas que cumplen `filters` sin bajar la lista (`limit=1` y se lee
+ * `totalItems`). Sirve para indicadores/KPIs.
+ */
+export const fetchTotal = async (
+  axiosPrivate: AxiosInstance,
+  url: string,
+  filters: Record<string, string | number | boolean | undefined> = {}
+): Promise<number> => {
+  const page = await fetchPaginated<unknown>(axiosPrivate, url, {
+    ...filters,
+    page: 1,
+    limit: 1
+  })
+  return page.totalItems
+}
+
 type Updater<T> = T | ((old: T) => T)
 
 const resolve = <T>(updater: Updater<T>, old: T): T =>
@@ -81,6 +98,7 @@ export interface UseServerTableStateOptions {
   columnFilters?: MRT_ColumnFiltersState
   onColumnFiltersChange?: (updater: Updater<MRT_ColumnFiltersState>) => void
   initialGlobalFilter?: string
+  initialSorting?: MRT_SortingState
 }
 
 const toMap = (value?: readonly string[] | Record<string, string>) => {
@@ -107,7 +125,8 @@ export const useServerTableState = (options: UseServerTableStateOptions = {}) =>
     exactFilters,
     pageSize = 10,
     debounceMs = 400,
-    initialGlobalFilter = ''
+    initialGlobalFilter = '',
+    initialSorting = []
   } = options
 
   const sortMap = useMemo(() => toMap(sortableFields), [sortableFields])
@@ -116,7 +135,7 @@ export const useServerTableState = (options: UseServerTableStateOptions = {}) =>
   const [innerPagination, setInnerPagination] = useState<MRT_PaginationState>(
     { pageIndex: 0, pageSize }
   )
-  const [innerSorting, setInnerSorting] = useState<MRT_SortingState>([])
+  const [innerSorting, setInnerSorting] = useState<MRT_SortingState>(initialSorting)
   const [innerColumnFilters, setInnerColumnFilters] =
     useState<MRT_ColumnFiltersState>([])
   const [globalFilter, setGlobalFilterState] = useState(initialGlobalFilter)
