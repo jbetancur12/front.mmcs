@@ -1,37 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { Button, IconButton, Stack } from '@mui/material'
-import { useQuery } from 'react-query'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useIotDevicesTable } from '@hooks/iot/useIotDevices'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddDeviceModal from 'src/Components/Iot/AddDeviceIotModal'
 import { DeviceIot } from 'src/Components/Iot/types'
 import { loadDevices } from 'src/store/deviceIotStore'
 
-const transformDevice = (device: any) => {
-  const [lng, lat] = device.lastLocation.coordinates
-  return {
-    id: device.id.toString(), // o device.id si lo manejas como string
-    imei: device.imei,
-    name: device.name,
-    lastLocation: { lat, lng },
-    lastSeen: device.lastSeen,
-    status: device.isOnline ? 'online' : 'offline',
-    customer: device.customer
-  }
-}
-
 const DeviceList: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   // Datos de ejemplo; en un caso real vendrían desde una API o estado global
 
   const [open, setOpen] = useState<boolean>(false)
 
-  const { data: devices } = useQuery<DeviceIot[]>('devices', async () => {
-    const response = await axiosPrivate.get('/devicesIot')
-    return response.data.map(transformDevice)
-  })
+  const { data: devices } = useIotDevicesTable()
 
   useEffect(() => {
     if (devices) {
