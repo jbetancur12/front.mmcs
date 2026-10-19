@@ -34,20 +34,17 @@ import {
 } from '@mui/icons-material'
 import toast, { Toaster } from 'react-hot-toast'
 import PDFViewer from '../Components/PDFViewer.js'
-import useAxiosPrivate from '@utils/use-axios-private.js'
+import {
+  TraceabilityDocument,
+  useTraceabilities,
+  useTraceabilityMutations
+} from '@hooks/traceability/useTraceabilities'
 import Swal from 'sweetalert2'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-interface TraceabilityDocument {
-  id: number
-  name: string
-  filePath: string
-  createdAt: string
-}
-
 interface CreateDocumentForm {
   name: string
   file: File | null
@@ -59,10 +56,10 @@ const initialState: CreateDocumentForm = {
 }
 
 const Traceability = () => {
-  const axiosPrivate = useAxiosPrivate()
   const canManageTraceability = useCan(PERMISSIONS.CALIBRATION_TRACEABILITY_MANAGE)
-  const [traceabilities, setTraceabilities] = useState<TraceabilityDocument[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: traceabilities = [], isLoading: loading } = useTraceabilities()
+  const { createTraceability, updateTraceability, deleteTraceability } =
+    useTraceabilityMutations()
   const [openModal, setOpenModal] = useState(false)
   const [formData, setFormData] = useState<CreateDocumentForm>(initialState)
   const [searchTerm, setSearchTerm] = useState('')
@@ -84,23 +81,6 @@ const Traceability = () => {
       [e.target.name]: e.target.value
     })
   }
-
-  useEffect(() => {
-    const fetchTraceabilities = async () => {
-      try {
-        setLoading(true)
-        const response = await axiosPrivate.get(`/traceabilities`, {})
-        setTraceabilities(response.data)
-      } catch (error) {
-        console.error('Error al cargar las trazabilidades:', error)
-        toast.error('Error al cargar las trazabilidades')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchTraceabilities()
-  }, [])
 
   // Debounced search effect
   useEffect(() => {
@@ -184,22 +164,12 @@ const Traceability = () => {
       setIsUploading(true)
       setUploadProgress(0)
 
-      const response = await axiosPrivate.post(
-        `/traceabilities`,
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
-            setUploadProgress(progress)
-          }
-        }
-      )
+      await createTraceability.mutateAsync({
+        formData: formDataToSend,
+        onProgress: setUploadProgress
+      })
 
       toast.success('Documento de trazabilidad creado con éxito')
-      setTraceabilities([...traceabilities, response.data])
       setFormData(initialState)
       setUploadProgress(0)
       handleCloseModal()
@@ -234,26 +204,13 @@ const Traceability = () => {
       setIsUploading(true)
       setUploadProgress(0)
 
-      const response = await axiosPrivate.put(
-        `/traceabilities/${updateId}`,
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
-            setUploadProgress(progress)
-          }
-        }
-      )
+      await updateTraceability.mutateAsync({
+        id: updateId,
+        formData: formDataToSend,
+        onProgress: setUploadProgress
+      })
 
       toast.success('Documento actualizado con éxito')
-      setTraceabilities(
-        traceabilities.map((traceability) =>
-          traceability.id === updateId ? response.data : traceability
-        )
-      )
       setUpdateId(null)
       setUpdateFile(null)
       setUploadProgress(0)
@@ -305,13 +262,9 @@ const Traceability = () => {
         }
       })
 
-      const response = await axiosPrivate.delete(`/traceabilities/${id}`, {})
+      const response = await deleteTraceability.mutateAsync(id)
 
       if (response.status >= 200 && response.status < 300) {
-        setTraceabilities(
-          traceabilities.filter((traceability) => traceability.id !== id)
-        )
-
         Swal.fire({
           title: '¡Eliminado!',
           text: 'El documento ha sido eliminado correctamente',
