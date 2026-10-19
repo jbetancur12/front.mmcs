@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Typography,
   Box,
@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material'
 
 import { useNavigate } from 'react-router-dom'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCustomerCalibrationSchedule } from '@hooks/calibration/useCustomerCalibrationSchedule'
 // import jsPDF from 'jspdf'
 // import html2canvas from 'html2canvas'
 
@@ -125,15 +125,22 @@ interface Props {
 }
 
 const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
-  const [timeline, setTimeline] = useState<
-    { month: number; year: number; label: string }[] | null
-  >(null)
-  const [devices, setDevices] = useState<Device[] | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [headquarters, setHeadquarters] = useState<string[]>([])
+  const {
+    data: scheduleData,
+    isLoading,
+    isIdle,
+    isError
+  } = useCustomerCalibrationSchedule<DataResponse>(customerId)
+  // Sin cliente la petición no se lanza y se mantiene el esqueleto de carga
+  const loading = isLoading || isIdle
+  const error = isError ? 'Failed to load data' : null
+  const timeline = useMemo(
+    () => (scheduleData ? createTimeline(scheduleData) : null),
+    [scheduleData]
+  )
+  const devices: Device[] | null = scheduleData?.devices ?? null
+  const headquarters: string[] = scheduleData?.headquarters ?? []
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
@@ -154,31 +161,6 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await axiosPrivate.get<DataResponse>(
-          `/files/customer/${customerId}/schedule`,
-          {}
-        )
-        const data = response.data
-        setTimeline(createTimeline(data))
-        setHeadquarters(data.headquarters)
-        setDevices(data.devices)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-        setError('Failed to load data')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (customerId) {
-      fetchData()
-    }
-  }, [customerId])
 
   if (loading) {
     return (
