@@ -40,6 +40,7 @@ import {
   School as SchoolIcon,
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useLmsUserOptions } from 'src/hooks/lms/useLmsUserOptions'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import SignaturePad from '../../../Components/Maintenance/SignaturePad'
@@ -267,13 +268,7 @@ const LmsCourseManagement: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   const { data: certificateTemplates = [] } = useCertificateTemplates()
-  const { data: optionsData } = useQuery<LmsUserOptions>(
-    ['lms-course-customer-options'],
-    async () => {
-      const response = await axiosPrivate.get('/lms/users/options')
-      return response.data.data
-    }
-  )
+  const { data: optionsData } = useLmsUserOptions<LmsUserOptions>()
   const customerOptions = optionsData?.customers || []
 
   // Query para obtener cursos
