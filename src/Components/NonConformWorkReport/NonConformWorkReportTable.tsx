@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import {
@@ -18,7 +18,11 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import { Add, CheckCircle, FolderOpen, ListAlt, NotificationsActive, ReportProblemOutlined } from '@mui/icons-material'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useDeleteNonConformWorkReport,
+  useNonConformWorkReportAlerts,
+  useNonConformWorkReports
+} from '@hooks/nonConform/useNonConformWorkReports'
 import { NonConformWorkReport } from './NonConformWorkReport.types'
 import { format } from 'date-fns'
 import Swal from 'sweetalert2'
@@ -93,6 +97,9 @@ const impactProbColor = (valor: string) => {
   }
 }
 
+const EMPTY_REPORTS: NonConformWorkReport[] = []
+const EMPTY_ALERTS: NonConformWorkReportAlert[] = []
+
 interface NonConformWorkReportTableProps {
   onEdit?: (row: NonConformWorkReport) => void
   onView?: (row: NonConformWorkReport) => void
@@ -105,41 +112,11 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   onCreate
 }) => {
   const canManage = useCan(PERMISSIONS.NONCONFORM_REPORT_MANAGE)
-  const axiosPrivate = useAxiosPrivate()
-  const [rows, setRows] = useState<NonConformWorkReport[]>([])
-  const [loading, setLoading] = useState(true)
-  const [alerts, setAlerts] = useState<NonConformWorkReportAlert[]>([])
-  const [, setAlertsLoading] = useState(true)
+  const { data: rows = EMPTY_REPORTS, isLoading: loading } =
+    useNonConformWorkReports()
+  const { data: alerts = EMPTY_ALERTS } = useNonConformWorkReportAlerts()
+  const deleteReport = useDeleteNonConformWorkReport()
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false)
-
-  const fetchReports = async () => {
-    setLoading(true)
-    try {
-      const res = await axiosPrivate.get('/non-conform-work-report')
-      setRows(res.data || [])
-    } catch (err) {
-      alert('Error al obtener los reportes')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchAlerts = async () => {
-    setAlertsLoading(true)
-    try {
-      const res = await axiosPrivate.get('/non-conform-work-report/alerts')
-      setAlerts(res.data || [])
-    } catch (err) {
-      setAlerts([])
-    } finally {
-      setAlertsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchReports()
-    fetchAlerts()
-  }, [])
 
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
@@ -152,8 +129,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     })
     if (!result.isConfirmed) return
     try {
-      await axiosPrivate.delete(`/non-conform-work-report/${id}`)
-      setRows((prev) => prev.filter((r) => r.id !== id))
+      await deleteReport.mutateAsync(id)
       await Swal.fire({
         icon: 'success',
         title: '¡Eliminado!',
