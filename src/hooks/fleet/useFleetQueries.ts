@@ -28,6 +28,9 @@ export const useVehicleInspections = (vehicleId?: number | string) => {
     },
     {
       enabled: !!vehicleId,
+      // Las inspecciones se registran desde otros flujos: refrescar al montar
+      staleTime: 0,
+      keepPreviousData: false,
       onError: (error) => {
         console.error('Error fetching inspections:', error)
       }
@@ -49,6 +52,9 @@ export const useVehicleMaintenanceRecords = (vehicleId?: number | string) => {
     },
     {
       enabled: vehicleId !== undefined && vehicleId !== null,
+      // Otros componentes de flota agregan registros sin pasar por esta caché
+      staleTime: 0,
+      keepPreviousData: false,
       onError: (error) => {
         console.error('Error fetching maintenance records:', error)
       }

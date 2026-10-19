@@ -21,6 +21,8 @@ export const useCustomerCalibrationSchedule = <T>(
     },
     {
       enabled: !!customerId,
+      // Depende de certificados que cambian fuera de esta pantalla
+      staleTime: 0,
       keepPreviousData: false,
       onError: (error) => {
         console.error('Error fetching data:', error)

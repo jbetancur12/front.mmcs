@@ -29,7 +29,7 @@ export const useIotNotificationEmails = (
       )
       return response.data || []
     },
-    { onSuccess, onError }
+    { keepPreviousData: false, onSuccess, onError }
   )
 }
 
