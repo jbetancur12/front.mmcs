@@ -71,6 +71,32 @@ export const fetchTotal = async (
   return page.totalItems
 }
 
+/**
+ * Todas las filas que cumplen `filters`, recorriendo las páginas de 100 en
+ * 100. Solo para subconjuntos acotados (p. ej. un estado concreto) que una
+ * pantalla necesita completos y que el endpoint no puede contar por sí mismo.
+ */
+export const fetchAllPages = async <T>(
+  axiosPrivate: AxiosInstance,
+  url: string,
+  filters: Record<string, string | number | boolean | undefined> = {}
+): Promise<T[]> => {
+  const rows: T[] = []
+  let page = 1
+  let totalPages = 1
+  do {
+    const result = await fetchPaginated<T>(axiosPrivate, url, {
+      ...filters,
+      page,
+      limit: MAX_PAGE_SIZE
+    })
+    rows.push(...result.items)
+    totalPages = result.totalPages
+    page += 1
+  } while (page <= totalPages)
+  return rows
+}
+
 type Updater<T> = T | ((old: T) => T)
 
 const resolve = <T>(updater: Updater<T>, old: T): T =>

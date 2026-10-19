@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
   Avatar,
@@ -27,9 +27,17 @@ import { differenceInDays, format } from 'date-fns'
 import RenderRowActions from 'src/Components/Purchases/RenderRowActions'
 import { useQueryClient } from 'react-query'
 import {
-  usePurchaseRequests,
+  PURCHASE_REQUEST_EXACT_FILTERS,
+  PURCHASE_REQUEST_SORTABLE_FIELDS,
+  useApprovedPurchaseRequests,
+  usePurchaseRequestCounts,
+  usePurchaseRequestsPaginated,
   useSetInitialPurchaseRequestId
 } from 'src/hooks/purchases/usePurchaseRequests'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 import { useSuppliers } from 'src/hooks/purchases/useSuppliers'
 import Swal from 'sweetalert2'
 import { useCan } from '@utils/functions'
@@ -77,15 +85,59 @@ const PurchaseRequest: React.FC = () => {
 
   // Create standardized event handlers
   const tableHandlers = createTableStateHandlers(persistentTableState)
-  // Uso de react-query para obtener los datos
-  const { data, isLoading } = usePurchaseRequests()
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all')
+
+  // Filtros guardados de versiones anteriores sobre columnas que ya no se
+  // filtran (la tabla filtra en el servidor): se descartan.
+  const { columnFilters: savedFilters, onColumnFiltersChange } =
+    persistentTableState
+  useEffect(() => {
+    const allowed = savedFilters.filter((filter) =>
+      (PURCHASE_REQUEST_EXACT_FILTERS as readonly string[]).includes(filter.id)
+    )
+    if (allowed.length !== savedFilters.length) onColumnFiltersChange(allowed)
+  }, [savedFilters, onColumnFiltersChange])
+
+  // "Todas" y "Pendientes" se paginan en el servidor; "Por generar orden" y
+  // "Sin orden" se filtran en el cliente sobre las solicitudes aprobadas
+  // (el endpoint no sabe filtrar por "sin orden de compra").
+  const serverMode = quickFilter === 'all' || quickFilter === 'pending'
+  const server = useServerTableState({
+    sortableFields: PURCHASE_REQUEST_SORTABLE_FIELDS,
+    exactFilters: PURCHASE_REQUEST_EXACT_FILTERS,
+    pagination: persistentTableState.pagination,
+    onPaginationChange: persistentTableState.onPaginationChange,
+    sorting: persistentTableState.sorting,
+    onSortingChange: persistentTableState.onSortingChange,
+    columnFilters: persistentTableState.columnFilters,
+    onColumnFiltersChange: persistentTableState.onColumnFiltersChange
+  })
+  const pageParams = useMemo(
+    () =>
+      quickFilter === 'pending'
+        ? { ...server.params, status: PurchaseRequestStatus.Pending }
+        : server.params,
+    [server.params, quickFilter]
+  )
+  const {
+    data: requestsPage,
+    isLoading: pageLoading,
+    isFetching: pageFetching
+  } = usePurchaseRequestsPaginated(pageParams, { enabled: serverMode })
+  useKeepPageInRange(
+    serverMode ? requestsPage?.totalPages : undefined,
+    server.pagination.pageIndex,
+    server.setPagination
+  )
+  const { data: requestCounts } = usePurchaseRequestCounts()
+  const { data: approvedRequests = [], isLoading: approvedLoading } =
+    useApprovedPurchaseRequests()
   // Precarga el listado de proveedores (caché compartida con /suppliers)
   useSuppliers()
   const setInitialId = useSetInitialPurchaseRequestId()
 
-  const allRequests = data?.purchaseRequests ?? []
-  const totalRecords = data?.count ?? 0
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all')
+  const totalRecords = requestCounts?.total ?? 0
+  const isLoading = serverMode ? pageLoading : approvedLoading
 
   // Aprobadas (o pre-aprobadas) que todavía no tienen orden de compra
   const needsOrder = (r: IPurchaseRequest) =>
@@ -97,32 +149,30 @@ const PurchaseRequest: React.FC = () => {
 
   const counts = useMemo(
     () => ({
-      pending: allRequests.filter(
-        (r) => r.status === PurchaseRequestStatus.Pending
-      ).length,
-      toOrder: allRequests.filter(needsOrder).length,
-      late: allRequests.filter(isLate).length
+      pending: requestCounts?.pending ?? 0,
+      toOrder: approvedRequests.filter(needsOrder).length,
+      late: approvedRequests.filter(isLate).length
     }),
-    [allRequests]
+    [approvedRequests, requestCounts]
   )
 
   const purchaseRequests = useMemo(() => {
     switch (quickFilter) {
-      case 'pending':
-        return allRequests.filter(
-          (r) => r.status === PurchaseRequestStatus.Pending
-        )
       case 'toOrder':
-        return allRequests.filter(needsOrder)
+        return approvedRequests.filter(needsOrder)
       case 'late':
-        return allRequests.filter(isLate)
+        return approvedRequests.filter(isLate)
       default:
-        return allRequests
+        return requestsPage?.items ?? []
     }
-  }, [allRequests, quickFilter])
+  }, [approvedRequests, requestsPage, quickFilter])
 
+  const changeQuickFilter = (value: QuickFilter) => {
+    setQuickFilter(value)
+    server.goToFirstPage()
+  }
   const toggleQuick = (value: QuickFilter) =>
-    setQuickFilter((current) => (current === value ? 'all' : value))
+    changeQuickFilter(quickFilter === value ? 'all' : value)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -197,6 +247,7 @@ const PurchaseRequest: React.FC = () => {
       accessorKey: 'purchaseCode',
       header: 'Código',
       size: 150,
+      enableColumnFilter: false,
       Cell: ({ cell }) => (
         <Typography variant='body2' fontWeight={600} noWrap>
           {cell.getValue<string>()}
@@ -207,6 +258,7 @@ const PurchaseRequest: React.FC = () => {
       accessorKey: 'elaborationDate',
       header: 'Elaborada el',
       size: 120,
+      enableColumnFilter: false,
       Cell: ({ cell }) => {
         const date = cell.getValue<string>()
         return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
@@ -216,6 +268,9 @@ const PurchaseRequest: React.FC = () => {
       accessorKey: 'applicantName',
       header: 'Solicitante',
       size: 230,
+      // La búsqueda global ya busca por solicitante en el servidor.
+      enableSorting: false,
+      enableColumnFilter: false,
       Cell: ({ cell }) => {
         const name = cell.getValue<string>() ?? ''
         const initials = name
@@ -248,6 +303,7 @@ const PurchaseRequest: React.FC = () => {
       accessorKey: 'purchaseType',
       header: 'Tipo',
       size: 80,
+      enableSorting: false,
       filterVariant: 'select',
       filterSelectOptions: ['I', 'II'],
       Cell: ({ cell }) => (
@@ -264,6 +320,13 @@ const PurchaseRequest: React.FC = () => {
       accessorKey: 'status',
       header: 'Estado',
       size: 230,
+      filterVariant: 'select',
+      filterSelectOptions: [
+        { text: 'Pendiente', value: PurchaseRequestStatus.Pending },
+        { text: 'Pre-aprobado', value: PurchaseRequestStatus.PreApproved },
+        { text: 'Aprobado', value: PurchaseRequestStatus.Accepted },
+        { text: 'Rechazado', value: PurchaseRequestStatus.Rejected }
+      ],
       Cell: ({ cell }) => {
         const status = cell.getValue() as PurchaseRequestStatus
         let color: 'warning' | 'success' | 'error'
@@ -370,6 +433,8 @@ const PurchaseRequest: React.FC = () => {
       accessorKey: 'approvalDate',
       header: 'Aprobada el',
       size: 120,
+      enableSorting: false,
+      enableColumnFilter: false,
       Cell: ({ cell }) => {
         const date = cell.getValue() as string
         return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
@@ -427,7 +492,7 @@ const PurchaseRequest: React.FC = () => {
                 icon={<ListAlt />}
                 tone='teal'
                 active={quickFilter === 'all'}
-                onClick={() => setQuickFilter('all')}
+                onClick={() => changeQuickFilter('all')}
               />
             </Grid>
             <Grid item xs={6} md={3}>
@@ -473,13 +538,20 @@ const PurchaseRequest: React.FC = () => {
           {...purchaseTableStyle}
           columns={columns}
           data={purchaseRequests}
+          {...(serverMode
+            ? { ...server.tableProps, rowCount: requestsPage?.totalItems ?? 0 }
+            : {
+                onColumnFiltersChange: server.setColumnFilters,
+                onSortingChange: server.setSorting,
+                onPaginationChange: server.setPagination,
+                onGlobalFilterChange: server.setGlobalFilter
+              })}
           state={{
+            ...tableHandlers.state,
+            ...server.tableState,
             isLoading,
-            ...tableHandlers.state
+            showProgressBars: serverMode && pageFetching && !pageLoading
           }}
-          onColumnFiltersChange={tableHandlers.onColumnFiltersChange}
-          onSortingChange={tableHandlers.onSortingChange}
-          onPaginationChange={tableHandlers.onPaginationChange}
           enableRowActions={true}
           enablePinning
           initialState={{
