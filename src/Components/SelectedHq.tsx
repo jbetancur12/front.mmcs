@@ -15,7 +15,7 @@ import {
   IconButton,
   Chip
 } from '@mui/material'
-import { useQuery } from 'react-query'
+import { useCustomerCertificatesByHeadquarter } from 'src/hooks/customers/useCustomerCertificates'
 import { useParams } from 'react-router-dom'
 
 interface ApiResponse {
@@ -153,23 +153,12 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
     sessionStorage.setItem('currentPage', currentPage.toString())
   }, [currentPage])
 
-  const { data: apiResponse, isLoading } = useQuery<ApiResponse>(
-    ['certificates-data', id, searchTerm, selectedSede, currentPage],
-    async () => {
-      if (!id) throw new Error('No customer ID provided')
-      const response = await axiosPrivate.get(`/files/customer/${id}`, {
-        params: {
-          search: searchTerm,
-          headquarter: selectedSede,
-          page: currentPage
-        }
-      })
-      return response.data
-    },
-    {
-      enabled: !!id
-    }
-  )
+  const { data: apiResponse, isLoading } =
+    useCustomerCertificatesByHeadquarter<ApiResponse>(id, {
+      search: searchTerm,
+      headquarter: selectedSede,
+      page: currentPage
+    })
 
   const fetchAllDataForDownload = useCallback(
     async (filterType: 'all' | 'nextOrExpired'): Promise<Certificate[]> => {
