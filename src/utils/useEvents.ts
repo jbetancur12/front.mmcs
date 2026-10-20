@@ -1,6 +1,6 @@
 // useEvents.ts
-import { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
+import { useEffect } from 'react'
+import { useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from './use-axios-private'
 import { api } from 'src/config'
 
@@ -20,50 +20,49 @@ export interface Event {
   deviceIotId: number
 }
 
+export const iotEventsKeys = {
+  all: ['devicesIot', 'events'] as const,
+  byDevice: (deviceId: string | number) =>
+    [...iotEventsKeys.all, String(deviceId)] as const
+}
+
 const useEvents = (deviceId: string | number, realTime = true) => {
   const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
   const basePath = api()
+  const queryKey = iotEventsKeys.byDevice(deviceId)
 
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-  const hasFetchedData = useRef(false)
+  const {
+    data: events = [],
+    isLoading: loading,
+    error
+  } = useQuery<Event[], Error>(
+    queryKey,
+    async ({ signal }) => {
+      const response = await axiosPrivate.get(
+        `/devicesIot/events/${deviceId}`,
+        {
+          signal
+        }
+      )
+      return (response.data as Array<Record<string, unknown>>).map((event) => ({
+        ...event,
+        timestamp: new Date(event.timestamp as string)
+      })) as unknown as Event[]
+    },
+    { keepPreviousData: false }
+  )
 
+  // Tiempo real (SSE): las alarmas nuevas se anteponen a la caché de la query
   useEffect(() => {
-    if (hasFetchedData.current || events.length > 0) {
-      setLoading(false)
-      return
-    }
-    const abortController = new AbortController()
+    if (!realTime) return
     let eventSource: EventSource | null = null
-    const fetchEvents = async () => {
-      try {
-        const response = await axiosPrivate.get(
-          `/devicesIot/events/${deviceId}`,
-          {
-            signal: abortController.signal
-          }
-        )
-        setEvents(
-          response.data.map((event: any) => ({
-            ...event,
-            timestamp: new Date(event.timestamp)
-          }))
-        )
-        hasFetchedData.current = true
-      } catch (err) {
-        if (!axios.isCancel(err)) {
-          setError(err as Error)
-        }
-      } finally {
-        if (!abortController.signal.aborted) {
-          setLoading(false)
-        }
-      }
-    }
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null
+    let closed = false
+    const key = iotEventsKeys.byDevice(deviceId)
 
     const setupRealtime = () => {
-      if (!realTime) return
+      if (closed) return
 
       eventSource = new EventSource(
         `${basePath}/devicesIot/events/sse/${deviceId}`,
@@ -73,37 +72,40 @@ const useEvents = (deviceId: string | number, realTime = true) => {
       )
 
       eventSource.addEventListener('new-alarm', (e) => {
-        const eventData = JSON.parse(e.data)
+        const eventData = JSON.parse((e as MessageEvent).data)
         console.log('🚀 ~ eventSource.addEventListener ~ eventData:', eventData)
         const parsedEvent: Event = {
           ...eventData,
           createdAt: new Date(eventData.createdAt),
           rawData:
-            eventData.rawData?.map((d: any) => ({
+            eventData.rawData?.map((d: { timestamp: string }) => ({
               ...d,
               timestamp: new Date(d.timestamp)
             })) || []
         }
 
-        setEvents((prev) => [parsedEvent, ...prev])
+        queryClient.setQueryData<Event[]>(key, (prev) => [
+          parsedEvent,
+          ...(prev || [])
+        ])
       })
 
       eventSource.onerror = (e) => {
         console.error('SSE Error:', e)
         eventSource?.close()
-        setTimeout(setupRealtime, 5000)
+        retryTimeout = setTimeout(setupRealtime, 5000)
       }
     }
 
-    fetchEvents()
     setupRealtime()
     return () => {
-      abortController.abort()
+      closed = true
+      if (retryTimeout) clearTimeout(retryTimeout)
       eventSource?.close()
     }
-  }, [deviceId, realTime])
+  }, [deviceId, realTime, basePath, queryClient])
 
-  return { events, loading, error }
+  return { events, loading, error: error ?? null }
 }
 
 export default useEvents

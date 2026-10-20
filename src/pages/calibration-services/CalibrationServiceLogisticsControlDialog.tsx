@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useRef, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import {
   Alert,
   Autocomplete,
@@ -37,7 +37,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import CalibrationServiceLoanEquipmentSection from './CalibrationServiceLoanEquipmentSection'
-import { axiosPrivate } from '@utils/api'
+import { useCalibrationDeviceSearch } from '../../hooks/calibration/useCalibrationDeviceSearch'
 import {
   CalibrationServiceLogisticsControlItem,
   CalibrationServiceLogisticsControlSheet
@@ -192,26 +192,7 @@ const CalibrationServiceLogisticsControlDialog = ({
   }
 
   const [deviceQuery, setDeviceQuery] = useState('')
-  const [deviceOptions, setDeviceOptions] = useState<Array<{ id: number; name: string }>>([])
-  const [deviceLoading, setDeviceLoading] = useState(false)
-  const deviceTimerRef = useRef<ReturnType<typeof setTimeout>>()
-
-  useEffect(() => {
-    clearTimeout(deviceTimerRef.current)
-    if (!deviceQuery.trim() || deviceQuery.trim().length < 2) {
-      setDeviceOptions([])
-      return
-    }
-    deviceTimerRef.current = setTimeout(async () => {
-      setDeviceLoading(true)
-      try {
-        const res = await axiosPrivate.get('/devices', { params: { q: deviceQuery.trim() } })
-        setDeviceOptions((res.data || []).map((d: any) => ({ id: d.id, name: d.name })))
-      } catch { setDeviceOptions([]) }
-      setDeviceLoading(false)
-    }, 300)
-    return () => clearTimeout(deviceTimerRef.current)
-  }, [deviceQuery])
+  const { options: deviceOptions, loading: deviceLoading } = useCalibrationDeviceSearch(deviceQuery)
 
   const handleAddRowWithDevice = (device: { id: number; name: string }) => {
     setValues((current) => ({

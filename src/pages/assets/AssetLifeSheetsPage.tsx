@@ -60,6 +60,21 @@ import type {
   AssetLifeSheetFormValues
 } from 'src/types/assetLifeSheet'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useQueryClient } from 'react-query'
+import {
+  ASSET_LIFE_SHEET_EXACT_FILTERS,
+  ASSET_LIFE_SHEET_SORTABLE_FIELDS,
+  ASSET_LIFE_SHEETS_QUERY_KEYS,
+  fetchAllAssetLifeSheets,
+  useAssetLifeSheetCounts,
+  useAssetLifeSheetMutations,
+  useAssetLifeSheets,
+  useAssetLifeSheetsPaginated
+} from '@hooks/assets/useAssetLifeSheets'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -113,17 +128,46 @@ const formatDate = (value?: string | null) => {
   return date.toLocaleDateString('es-CO')
 }
 
+const EMPTY_ASSETS: AssetLifeSheet[] = []
+
 const AssetLifeSheetsPage = () => {
   const canManage = useCan(PERMISSIONS.ASSETS_LIFE_SHEET_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
 
-  const [assets, setAssets] = useState<AssetLifeSheet[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+  // La tabla se pagina, busca, ordena y filtra en el servidor.
+  const server = useServerTableState({
+    sortableFields: ASSET_LIFE_SHEET_SORTABLE_FIELDS,
+    exactFilters: ASSET_LIFE_SHEET_EXACT_FILTERS,
+    initialSorting: [{ id: 'assetCode', desc: false }]
+  })
+  const {
+    data: assetsPage,
+    isLoading,
+    isFetching: loading
+  } = useAssetLifeSheetsPaginated(server.params)
+  useKeepPageInRange(
+    assetsPage?.totalPages,
+    server.pagination.pageIndex,
+    server.setPagination
+  )
+  const assets = assetsPage?.items ?? EMPTY_ASSETS
+  const { data: counts } = useAssetLifeSheetCounts()
+  const {
+    saveAsset: saveAssetMutation,
+    deleteAsset: deleteAssetMutation,
+    createIntervention
+  } = useAssetLifeSheetMutations()
   const [selectedAsset, setSelectedAsset] = useState<AssetLifeSheet | null>(
     null
   )
   const [assetDialogOpen, setAssetDialogOpen] = useState(false)
+  // Las sugerencias del formulario necesitan todos los activos: solo se piden
+  // (sin paginar) mientras el formulario está abierto.
+  const { data: allAssets = EMPTY_ASSETS } = useAssetLifeSheets({
+    enabled: assetDialogOpen
+  })
   const [editingAssetId, setEditingAssetId] = useState<number | null>(null)
   const [assetForm, setAssetForm] =
     useState<AssetLifeSheetFormValues>(emptyAssetForm())
@@ -141,24 +185,6 @@ const AssetLifeSheetsPage = () => {
       performedByName: $userStore.nombre || 'Administrador',
       nextActionDate: ''
     })
-
-  const fetchAssets = async () => {
-    try {
-      setLoading(true)
-      const response =
-        await axiosPrivate.get<AssetLifeSheet[]>('/asset-life-sheets')
-      setAssets(response.data)
-    } catch (error) {
-      console.error(error)
-      bigToast('No se pudieron cargar los activos', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchAssets()
-  }, [])
 
   useEffect(() => {
     if (!selectedAsset) return
@@ -254,14 +280,9 @@ const AssetLifeSheetsPage = () => {
       })
       if (selectedImageFile) formData.append('image', selectedImageFile)
 
-      if (editingAssetId) {
-        await axiosPrivate.put(`/asset-life-sheets/${editingAssetId}`, formData)
-      } else {
-        await axiosPrivate.post('/asset-life-sheets', formData)
-      }
+      await saveAssetMutation.mutateAsync({ id: editingAssetId, formData })
 
       closeAssetDialog()
-      fetchAssets()
       bigToast('Activo guardado correctamente', 'success')
     } catch (error) {
       console.error(error)
@@ -271,10 +292,9 @@ const AssetLifeSheetsPage = () => {
 
   const deleteAsset = async (assetId: number) => {
     try {
-      await axiosPrivate.delete(`/asset-life-sheets/${assetId}`)
+      await deleteAssetMutation.mutateAsync(assetId)
       setSelectedAsset((current) => (current?.id === assetId ? null : current))
       setAssetPendingDelete(null)
-      fetchAssets()
       bigToast('Activo eliminado', 'success')
     } catch (error) {
       console.error(error)
@@ -324,6 +344,12 @@ const AssetLifeSheetsPage = () => {
   const exportAssetsExcel = async () => {
     try {
       const XLSX = await import('xlsx')
+      // La exportación lleva todos los activos, no solo la página visible.
+      const assets = await queryClient.fetchQuery(
+        ASSET_LIFE_SHEETS_QUERY_KEYS.list,
+        () => fetchAllAssetLifeSheets(axiosPrivate),
+        { staleTime: 0 }
+      )
       const workbook = XLSX.utils.book_new()
       const assetRows = assets.map((asset) => ({
         Código: asset.assetCode,
@@ -390,12 +416,14 @@ const AssetLifeSheetsPage = () => {
       {
         accessorKey: 'assetCode',
         header: 'Código',
-        size: 110
+        size: 110,
+        enableColumnFilter: false
       },
       {
         accessorKey: 'name',
         header: 'Activo',
         size: 220,
+        enableColumnFilter: false,
         Cell: ({ row }) => (
           <Box>
             <Typography fontWeight={700}>{row.original.name}</Typography>
@@ -441,32 +469,46 @@ const AssetLifeSheetsPage = () => {
       {
         accessorKey: 'location',
         header: 'Ubicación',
-        size: 160
+        size: 160,
+        // Sin filtro exacto en el servidor (la búsqueda global sí la incluye).
+        enableColumnFilter: false
       },
       {
         accessorKey: 'area',
         header: 'Área',
-        size: 140
+        size: 140,
+        // Filtro exacto en el servidor (`area`).
+        enableSorting: false,
+        muiTableHeadCellFilterTextFieldProps: { placeholder: 'Valor exacto' }
       },
       {
         accessorKey: 'custodian',
         header: 'Responsable',
-        size: 170
+        size: 170,
+        enableSorting: false,
+        enableColumnFilter: false
       },
       {
         accessorKey: 'serialNumber',
         header: 'Serial',
-        size: 160
+        size: 160,
+        // La búsqueda global incluye el serial.
+        enableSorting: false,
+        enableColumnFilter: false
       },
       {
         accessorKey: 'maintenanceFrequency',
         header: 'Frecuencia',
-        size: 150
+        size: 150,
+        enableSorting: false,
+        enableColumnFilter: false
       },
       {
         accessorKey: 'warrantyExpiresAt',
         header: 'Garantía',
         size: 130,
+        enableSorting: false,
+        enableColumnFilter: false,
         Cell: ({ cell }) => formatDate(cell.getValue<string | null>())
       }
     ],
@@ -476,10 +518,10 @@ const AssetLifeSheetsPage = () => {
   const saveIntervention = async () => {
     if (!selectedAsset?.id) return
     try {
-      await axiosPrivate.post(
-        `/asset-life-sheets/${selectedAsset.id}/interventions`,
-        interventionForm
-      )
+      await createIntervention.mutateAsync({
+        assetId: selectedAsset.id,
+        values: interventionForm
+      })
       setInterventionDialogOpen(false)
       setInterventionForm((current) => ({
         ...current,
@@ -488,7 +530,6 @@ const AssetLifeSheetsPage = () => {
         observations: '',
         nextActionDate: ''
       }))
-      fetchAssets()
       bigToast('Intervención registrada', 'success')
     } catch (error) {
       bigToast('No fue posible registrar la intervención', 'error')
@@ -505,14 +546,15 @@ const AssetLifeSheetsPage = () => {
   ) => {
     return [
       ...new Set(
-        assets
+        allAssets
           .map((asset) => asset[field]?.trim())
           .filter((value): value is string => Boolean(value))
       )
     ].sort((left, right) => left.localeCompare(right, 'es'))
   }
 
-  const activeCount = assets.filter((a) => a.status === 'active').length
+  const totalCount = counts?.total ?? assetsPage?.totalItems ?? 0
+  const activeCount = counts?.active ?? 0
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -539,13 +581,13 @@ const AssetLifeSheetsPage = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Activos' value={assets.length} icon={<Computer />} tone='teal' />
+          <LmsStatCard label='Activos' value={totalCount} icon={<Computer />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={4}>
           <LmsStatCard label='En uso' value={activeCount} icon={<CheckCircle />} tone='green' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Retirados o inactivos' value={assets.length - activeCount} icon={<Archive />} tone='orange' />
+          <LmsStatCard label='Retirados o inactivos' value={Math.max(totalCount - activeCount, 0)} icon={<Archive />} tone='orange' />
         </Grid>
       </Grid>
 
@@ -564,11 +606,16 @@ const AssetLifeSheetsPage = () => {
         enableRowActions
         enableSorting
         enablePinning
-        state={{ isLoading: loading }}
+        {...server.tableProps}
+        rowCount={assetsPage?.totalItems ?? 0}
+        state={{
+          ...server.tableState,
+          isLoading,
+          showProgressBars: loading && !isLoading
+        }}
         initialState={{
           columnPinning: { right: ['mrt-row-actions'] },
-          density: 'compact',
-          sorting: [{ id: 'assetCode', desc: false }]
+          density: 'compact'
         }}
         renderRowActions={({ row }) => (
           <Stack direction='row' spacing={0.5}>

@@ -26,9 +26,12 @@ import { Link } from 'react-router-dom'
 
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast, MySwal } from './ExcelManipulation/Utils'
-import useAxiosPrivate from '@utils/use-axios-private'
-
-import { ROLES } from 'src/constants/roles'
+import {
+  useCreateCustomer,
+  useCustomers,
+  useDeleteCustomer,
+  useUpdateCustomer
+} from 'src/hooks/customers/useCustomers'
 // Define interfaces
 export interface CustomerData {
   id?: number
@@ -48,10 +51,18 @@ export interface CustomerData {
 
 // Main component
 const Table: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [tableData, setTableData] = useState<CustomerData[]>([])
-  const [filteredTableData, setFilteredTableData] = useState<CustomerData[]>([])
+  const { data: filteredTableData = [] } = useCustomers<CustomerData>(
+    undefined,
+    {
+      onError: (error) => {
+        console.error('Error fetching customer data:', error)
+      }
+    }
+  )
+  const createCustomer = useCreateCustomer<CustomerData>()
+  const updateCustomer = useUpdateCustomer<CustomerData>()
+  const deleteCustomerMutation = useDeleteCustomer()
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -71,34 +82,15 @@ const Table: React.FC = () => {
       const updatedValues = { ...customerData }
       delete updatedValues.id
 
-      const response = await axiosPrivate.post(`/customers`, updatedValues, {})
+      const response = await createCustomer.mutateAsync(updatedValues)
 
       if (response.status >= 200 && response.status < 300) {
         bigToast('Cliente Creado Exitosamente!', 'success')
-        fetchCustomers() // Refresh data after creation
       } else {
         console.error('Error al crear cliente')
       }
     } catch (error) {
       console.error('Error de red:', error)
-    }
-  }
-
-  // Fetch customers data
-  const fetchCustomers = async () => {
-    try {
-      const response = await axiosPrivate.get(`/customers`, {})
-
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
-        const filteredData = response.data.filter(
-          (customer: CustomerData) => customer.rol !== ROLES.ADMIN
-        )
-        setTableData(filteredData)
-        setFilteredTableData(filteredData)
-      }
-    } catch (error) {
-      console.error('Error fetching customer data:', error)
     }
   }
 
@@ -126,7 +118,6 @@ const Table: React.FC = () => {
   // }
 
   useEffect(() => {
-    fetchCustomers()
     const savedFilters = sessionStorage.getItem('columnFiltersCustomers')
     if (savedFilters) {
       setColumnFilters(JSON.parse(savedFilters))
@@ -147,21 +138,18 @@ const Table: React.FC = () => {
   }
 
   const handleSaveRowEdits: MaterialReactTableProps<CustomerData>['onEditingRowSave'] =
-    async ({ exitEditingMode, row, values }) => {
+    async ({ exitEditingMode, values }) => {
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axiosPrivate.put(
-            `/customers/${values.id}`,
-            updatedValues,
-            {}
-          )
+          const response = await updateCustomer.mutateAsync({
+            id: values.id,
+            values: updatedValues
+          })
 
           if (response.status === 201) {
             bigToast('Cliente Modificado Exitosamente!', 'success')
-            tableData[row.index] = values
-            setTableData([...tableData])
           } else {
             console.error('Error al crear cliente')
           }
@@ -177,14 +165,12 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteCustomer = async (rowIndex: number, id: number) => {
+  const deleteCustomer = async (id: number) => {
     try {
-      const response = await axiosPrivate.delete(`/customers/${id}`, {})
+      const response = await deleteCustomerMutation.mutateAsync(id)
 
       if (response.status === 204) {
         bigToast('Cliente Eliminado Exitosamente!', 'success')
-        filteredTableData.splice(rowIndex, 1)
-        setFilteredTableData([...filteredTableData])
       } else {
         console.error('Error al eliminar cliente')
       }
@@ -205,7 +191,7 @@ const Table: React.FC = () => {
       }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         if (result.isConfirmed) {
-          deleteCustomer(row.index, row.getValue('id'))
+          deleteCustomer(row.getValue('id'))
         }
       })
     },

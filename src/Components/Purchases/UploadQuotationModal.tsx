@@ -38,7 +38,8 @@ const tealButton = {
 }
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useMutation, useQueryClient } from 'react-query'
+import { useSupplierSearch } from 'src/hooks/purchases/useSuppliers'
 import { isAxiosError } from 'axios' // Importar AxiosResponse
 import {
   PurchaseRequest as IPurchaseRequest, // Renombrado para evitar conflicto con el componente
@@ -47,7 +48,6 @@ import {
   // PurchaseOrder, // No se usa directamente en este modal más que para tipos internos
 } from 'src/pages/Purchases/Types' // Asegúrate que estas rutas sean correctas
 import debounce from 'lodash/debounce'
-import { SuppliersAPIResponse } from './PurchaseRequestModal'
 
 // Definir localmente si no está en Types.ts, pero idealmente debería estar allí
 interface Quotation {
@@ -157,26 +157,9 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
   const {
     data: searchedSuppliersList = [],
     isLoading: isLoadingSearchedSuppliers
-  } = useQuery<ISupplier[], Error>(
-    ['searchSuppliersForQuotation', debouncedSearchTerm],
-    async () => {
-      if (!debouncedSearchTerm.trim() || debouncedSearchTerm.length < 2)
-        return []
-      const response = await axiosPrivate.get<
-        SuppliersAPIResponse | ISupplier[]
-      >('/suppliers', {
-        params: {
-          search: debouncedSearchTerm,
-          limit: 15,
-          //active: true,
-          purchaseType: purchaseRequest.purchaseType
-        } // Ejemplo de parámetros
-      })
-      return Array.isArray(response.data)
-        ? response.data
-        : response.data.suppliers || []
-    },
-    { enabled: debouncedSearchTerm.length >= 2, keepPreviousData: true }
+  } = useSupplierSearch<ISupplier>(
+    debouncedSearchTerm,
+    purchaseRequest.purchaseType
   )
 
   const handleFileChange = (

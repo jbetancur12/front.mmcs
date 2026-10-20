@@ -46,6 +46,11 @@ const updateUser = async (userData: UpdateUserData): Promise<UserData> => {
   return data
 }
 
+const fetchRoles = async () => {
+  const { data } = await axiosPrivate.get('/roles')
+  return data
+}
+
 const deleteUser = async (userId: number): Promise<void> => {
   await axiosPrivate.delete(`/users/${userId}`)
 }
@@ -89,6 +94,9 @@ export const useUsers = () => {
     refetchOnReconnect: true,
   })
 }
+
+// Roles disponibles (`GET /roles`)
+export const useRoles = () => useQuery(QUERY_KEYS.ROLES, fetchRoles)
 
 // Custom hook for user mutations
 export const useUserMutations = () => {
@@ -198,4 +206,143 @@ export const useUserMutations = () => {
     updateUser: updateUserMutation,
     deleteUser: deleteUserMutation,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios (listado general, usuarios de un cliente y mutaciones por id)
+// (imports locales a este bloque para no chocar con otros cambios del archivo)
+// ---------------------------------------------------------------------------
+import type { AxiosResponse } from 'axios'
+import useAxiosPrivateHook from '@utils/use-axios-private'
+import { ROLES } from 'src/constants/roles'
+import { customersKeys } from './customers/useCustomers'
+import {
+  fetchPaginated,
+  type PaginatedResponse,
+  type ServerListParams
+} from './useServerTable'
+
+export const usersKeys = {
+  all: ['users-admin'] as const,
+  list: () => [...usersKeys.all, 'list'] as const,
+  paginated: (params: ServerListParams) =>
+    [...usersKeys.all, 'paginated', params] as const,
+  byCustomer: (customerId: number | string | undefined) =>
+    customersKeys.users(String(customerId))
+}
+
+interface UserWithRol {
+  rol?: string
+}
+
+const excludeAdmins = <T extends UserWithRol>(users: T[]): T[] =>
+  users.filter((user) => user.rol !== ROLES.ADMIN)
+
+/** GET /users (sin usuarios admin) */
+export const useAllUsers = <T extends UserWithRol = UserWithRol>(
+  options: { onError?: (error: unknown) => void } = {}
+) => {
+  const axiosPrivate = useAxiosPrivateHook()
+  return useQuery<T[]>(
+    usersKeys.list(),
+    async () => {
+      const response = await axiosPrivate.get(`/users`, {})
+      return excludeAdmins(response.data as T[])
+    },
+    options
+  )
+}
+
+/** Columnas que `GET /users` acepta en `sortBy`. */
+export const USER_SORTABLE_FIELDS = ['id', 'nombre', 'email'] as const
+
+/**
+ * GET /users?page=&limit=... (búsqueda en nombre, email y teléfono).
+ * El backend no filtra por rol: los admin se quitan de la página recibida,
+ * igual que en `useAllUsers`, así que una página puede traer menos filas.
+ */
+export const useUsersPaginated = <T extends UserWithRol = UserWithRol>(
+  params: ServerListParams,
+  options: { onError?: (error: unknown) => void } = {}
+) => {
+  const axiosPrivate = useAxiosPrivateHook()
+  return useQuery<PaginatedResponse<T>>(
+    usersKeys.paginated(params),
+    async () => {
+      const page = await fetchPaginated<T>(axiosPrivate, '/users', params)
+      return { ...page, items: excludeAdmins(page.items) }
+    },
+    { keepPreviousData: true, ...options }
+  )
+}
+
+/** GET /customers/:id/users (sin usuarios admin) */
+export const useCustomerUsers = <T extends UserWithRol = UserWithRol>(
+  customerId: number | string | undefined,
+  options: { onError?: (error: unknown) => void } = {}
+) => {
+  const axiosPrivate = useAxiosPrivateHook()
+  return useQuery<T[]>(
+    usersKeys.byCustomer(customerId),
+    async () => {
+      const response = await axiosPrivate.get(
+        `/customers/${customerId}/users`,
+        {}
+      )
+      return excludeAdmins(response.data as T[])
+    },
+    { enabled: !!customerId, keepPreviousData: false, ...options }
+  )
+}
+
+const invalidateUserLists = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries(usersKeys.all)
+  queryClient.invalidateQueries({
+    predicate: (query) =>
+      query.queryKey[0] === customersKeys.all[0] && query.queryKey[3] === 'users'
+  })
+}
+
+/** POST /auth/register */
+export const useRegisterUser = <T extends object = Record<string, unknown>>() => {
+  const axiosPrivate = useAxiosPrivateHook()
+  const queryClient = useQueryClient()
+  return useMutation<AxiosResponse, unknown, T>(
+    (userData) => axiosPrivate.post(`/auth/register`, userData, {}),
+    { retry: false, onSuccess: () => invalidateUserLists(queryClient) }
+  )
+}
+
+/** PUT /users/:id */
+export const useUpdateUserById = <T extends object = Record<string, unknown>>() => {
+  const axiosPrivate = useAxiosPrivateHook()
+  const queryClient = useQueryClient()
+  return useMutation<AxiosResponse, unknown, { id: number | string; values: T }>(
+    ({ id, values }) => axiosPrivate.put(`/users/${id}`, values, {}),
+    { retry: false, onSuccess: () => invalidateUserLists(queryClient) }
+  )
+}
+
+/** DELETE /users/:id */
+export const useDeleteUserById = () => {
+  const axiosPrivate = useAxiosPrivateHook()
+  const queryClient = useQueryClient()
+  return useMutation<AxiosResponse, unknown, number | string>(
+    (id) => axiosPrivate.delete(`/users/${id}`, {}),
+    { retry: false, onSuccess: () => invalidateUserLists(queryClient) }
+  )
+}
+
+/** PUT /auth/:id/password */
+export const useResetUserPassword = () => {
+  const axiosPrivate = useAxiosPrivateHook()
+  return useMutation<
+    AxiosResponse,
+    unknown,
+    { userId: number | string; newPassword: string }
+  >(
+    ({ userId, newPassword }) =>
+      axiosPrivate.put(`/auth/${userId}/password`, { newPassword }),
+    { retry: false }
+  )
 }

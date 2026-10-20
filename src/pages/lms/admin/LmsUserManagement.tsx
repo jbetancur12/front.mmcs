@@ -38,6 +38,7 @@ import {
   People as PeopleIcon
 } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useLmsUserOptions } from 'src/hooks/lms/useLmsUserOptions'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { getRoleLabelEs, ROLES } from 'src/constants/roles'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -145,13 +146,7 @@ const LmsUserManagement: React.FC = () => {
     severity: 'success' as 'success' | 'error'
   })
 
-  const { data: optionsData } = useQuery<LmsUserOptions>(
-    ['lms-user-options'],
-    async () => {
-      const response = await axiosPrivate.get('/lms/users/options')
-      return response.data.data
-    }
-  )
+  const { data: optionsData } = useLmsUserOptions<LmsUserOptions>()
 
   const { data: usersData, isLoading } = useQuery<LmsUsersResponse>(
     ['lms-users', userTypeFilter, lmsOnlyFilter, activeFilter, search, page, rowsPerPage],

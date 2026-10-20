@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { Box, Button, Grid, IconButton, Tooltip } from '@mui/material'
-import useAxiosPrivate from '@utils/use-axios-private'
-import { Criterion, SelectionSupplier } from './Types'
+import { SelectionSupplier } from './Types'
+import {
+  useSupplierSelectionCriteria,
+  useSupplierSelections
+} from 'src/hooks/purchases/useSuppliers'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Link } from 'react-router-dom'
@@ -15,59 +18,14 @@ import SupplierSelectionModal from 'src/Components/Purchases/SupplierSelectionMo
 // Definir el tipo para los proveedores
 
 const SuppliersSelection: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
-  const [suppliers, setSuppliers] = useState<SelectionSupplier[]>([])
-  const [criteria, setCriteria] = useState<Criterion[]>([])
-  const [categories, setCategories] = useState<string[]>([])
+  const { data: suppliers = [], isLoading: loading } = useSupplierSelections()
+  const { criteria, categories } = useSupplierSelectionCriteria({
+    onError: (error) => console.error('Error cargando criterios', error)
+  })
   const [modalOpen, setModalOpen] = useState(false)
-  const [loading, setLoading] = useState<boolean>(true)
 
   const [editingSelection, setEditingSelection] =
     useState<SelectionSupplier | null>(null)
-
-  useEffect(() => {
-    loadSuppliers() // Cargar proveedores al montar el componente
-  }, [])
-
-  // Cargar criterios
-  useEffect(() => {
-    const loadCriteria = async () => {
-      try {
-        const response = await axiosPrivate.get<Criterion[]>(
-          '/suppliers/selection-supplier-sub-items'
-        )
-
-        const processedCriteria = response.data.map((item) => ({
-          ...item,
-          requiresWhich: item.category === 'CALIDAD'
-        })) as Criterion[] // Type assertion aquí
-
-        setCriteria(processedCriteria)
-        const uniqueCategories = [
-          ...new Set(processedCriteria.map((item) => item.category))
-        ] as string[] // Cast a string[]
-        setCategories(uniqueCategories)
-      } catch (error) {
-        console.error('Error cargando criterios', error)
-      }
-    }
-    loadCriteria()
-  }, [])
-
-  // Cargar proveedores
-  const loadSuppliers = async () => {
-    setLoading(true)
-    try {
-      const response = await axiosPrivate.get<SelectionSupplier[]>(
-        '/suppliers/selection-suppliers'
-      )
-      setSuppliers(response.data)
-    } catch (error) {
-      console.error('Error cargando proveedores', error)
-    } finally {
-      setLoading(false) // Asegurarse de que el loading se desactive al finalizar
-    }
-  }
 
   const handleOpenEditModal = (selection: SelectionSupplier) => {
     setEditingSelection(selection)
@@ -80,7 +38,7 @@ const SuppliersSelection: React.FC = () => {
   }
 
   const handleSuccess = () => {
-    loadSuppliers() // Recargar la lista después de crear/editar
+    // La mutación del modal invalida la lista de selecciones
   }
 
   // Definir las columnas de la tabla

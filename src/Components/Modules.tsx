@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Card,
   CardContent,
@@ -26,7 +26,10 @@ import {
   Storage,
   CloudSync
 } from '@mui/icons-material'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCustomerModules,
+  useToggleCustomerModule
+} from 'src/hooks/modules/useModules'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useStore } from '@nanostores/react'
@@ -40,60 +43,37 @@ interface CustomerModulesProps {
 }
 
 const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
-  const axiosPrivate = useAxiosPrivate()
   const canAssignModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_ASSIGN)
   const currentUser = useStore(userStore)
-  const [modules, setModules] = useState<Module[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
   const [updating, setUpdating] = useState<number | null>(null)
   const [pendingOff, setPendingOff] = useState<Module | null>(null)
 
-  useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        setLoading(true)
-        const response = await axiosPrivate.get(`/customers/${customerId}/modules`)
-        // 'Basic' es el marcador de módulos core: siempre visible, su switch no tendría efecto
-        setModules(response.data.filter((m: Module) => m.name !== BASIC_MODULE))
-      } catch (error) {
-        setError('Error al obtener los módulos')
-        bigToast('Error al cargar los módulos', 'error')
-      } finally {
-        setLoading(false)
-      }
+  const {
+    data: customerModules = [],
+    isLoading,
+    isIdle,
+    isError
+  } = useCustomerModules<Module>(customerId, {
+    onError: () => {
+      bigToast('Error al cargar los módulos', 'error')
     }
-
-    if (customerId) {
-      fetchModules()
-    }
-  }, [customerId, axiosPrivate])
+  })
+  // Sin customerId la vista se queda en estado de carga, como antes
+  const loading = isLoading || isIdle
+  // 'Basic' es el marcador de módulos core: siempre visible, su switch no tendría efecto
+  const modules = customerModules.filter((m) => m.name !== BASIC_MODULE)
+  const error = isError ? 'Error al obtener los módulos' : null
+  const toggleModule = useToggleCustomerModule(customerId)
 
   const handleModuleChange = async (moduleId: number, isActive: boolean) => {
     try {
       setUpdating(moduleId)
-      await axiosPrivate.put(`/customers/${customerId}/modules`, {
+      await toggleModule.mutateAsync({
         moduleId,
-        isActive
+        isActive,
+        updaterName: currentUser?.nombre
       })
-      
-      // Actualiza el estado local
-      setModules((prevModules) =>
-        prevModules.map((module) =>
-          module.id === moduleId
-            ? {
-                ...module,
-                customerModules: {
-                  ...module.customerModules,
-                  isActive,
-                  updatedAt: new Date().toISOString(),
-                  updater: currentUser?.nombre ? { id: 0, nombre: currentUser.nombre } : null
-                }
-              }
-            : module
-        )
-      )
-      
+
       bigToast(
         `Módulo ${isActive ? 'activado' : 'desactivado'} exitosamente`, 
         'success'

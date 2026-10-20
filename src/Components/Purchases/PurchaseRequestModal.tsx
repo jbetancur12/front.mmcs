@@ -21,7 +21,6 @@ import {
   PurchaseRequestItem,
   Supplier
 } from 'src/pages/Purchases/Types'
-import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 import {
   calibrationServiceRequirements,
@@ -31,7 +30,10 @@ import {
 } from 'src/utils/requirements'
 import Swal from 'sweetalert2'
 import { isAxiosError } from 'axios'
-import { useQuery } from 'react-query'
+import {
+  usePurchaseRequesters,
+  useSavePurchaseRequest
+} from 'src/hooks/purchases/usePurchaseRequests'
 
 interface CreatePurchaseRequestModalProps {
   // Renombrar a PurchaseRequestModalProps
@@ -63,7 +65,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   onSuccess,
   existingRequest
 }) => {
-  const axiosPrivate = useAxiosPrivate()
   const [formData, setFormData] = React.useState<Partial<IPurchaseRequest>>({})
 
   const [currentItem, setCurrentItem] =
@@ -88,47 +89,8 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     React.useState<RequesterUser | null>(null)
 
   const { data: requesterOptions = [], isLoading: loadingRequesters } =
-    useQuery<RequesterUser[], Error>(
-      'requesterUsersList', // Clave única para esta query
-      async () => {
-        try {
-          // Ajusta este endpoint al tuyo para obtener la lista de solicitantes
-          const response = await axiosPrivate.get<RequesterUser[]>('/personnel')
-          const data = response.data || []
-
-          return data
-        } catch (err) {
-          console.error('Error cargando solicitantes:', err)
-          throw err // Para que React Query maneje el estado de error
-        }
-      },
-      {
-        enabled: open, // Solo cargar cuando el modal esté abierto
-        staleTime: 1000 * 60 * 15, // Cachear por 15 minutos para no llamar en cada apertura
-        onSuccess: (data) => {
-          // Pre-seleccionar el solicitante si estamos en modo edición
-          if (open && existingRequest && data) {
-            const preSelected = data.find((r) => {
-              return (
-                (existingRequest.applicantName &&
-                  r.name === existingRequest.applicantName) || // El mejor método es por ID
-                r.name === existingRequest.applicantName
-              )
-            })
-            if (preSelected) {
-              setSelectedRequester(preSelected)
-              // Asegurar que formData también se sincronice por si el Autocomplete no lo hace al inicio
-              setFormData((prev) => ({
-                ...prev,
-                applicantName: preSelected.name,
-                applicantPosition: preSelected.position,
-                applicantId: preSelected.id
-              }))
-            }
-          }
-        }
-      }
-    )
+    usePurchaseRequesters(open) // Solo cargar cuando el modal esté abierto
+  const savePurchaseRequest = useSavePurchaseRequest()
 
   useEffect(() => {
     if (open) {
@@ -296,13 +258,12 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     }
 
     try {
-      let response
+      const savedRequest = await savePurchaseRequest.mutateAsync({
+        id: existingRequest?.id,
+        payload
+      })
       if (existingRequest?.id) {
         // Modo Edición
-        response = await axiosPrivate.put<IPurchaseRequest>( // O PATCH
-          `/purchaseRequests/${existingRequest.id}`,
-          payload
-        )
         Swal.fire({
           icon: 'success',
           title: '¡Actualizado!',
@@ -312,10 +273,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
         })
       } else {
         // Modo Creación
-        response = await axiosPrivate.post<IPurchaseRequest>(
-          '/purchaseRequests',
-          payload
-        )
         Swal.fire({
           icon: 'success',
           title: '¡Creado!',
@@ -324,7 +281,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
           showConfirmButton: false
         })
       }
-      onSuccess(response.data)
+      onSuccess(savedRequest)
       handleClose()
     } catch (err) {
       setError('Error al crear/actualizar la solicitud') // Tu manejo de errores existente

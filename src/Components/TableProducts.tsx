@@ -37,6 +37,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { NumericFormatCustom } from './NumericFormatCustom'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useProductMutations, useProducts } from 'src/hooks/purchases/useProducts'
 import Swal from 'sweetalert2'
 
 export interface ProductVariant {
@@ -117,9 +118,20 @@ const ServiceTypeBadge: React.FC<{ type: string }> = ({ type }) => (
   </Typography>
 )
 
+const EMPTY_PRODUCTS: ProductData[] = []
+
 const TableProducts: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
-  const [tableData, setTableData] = useState<ProductData[]>([])
+  const { data: tableData = EMPTY_PRODUCTS } = useProducts<ProductData>({
+    onError: () => bigToast('No se pudo cargar el catálogo.', 'error')
+  })
+  const {
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    updatePrices,
+    importProducts
+  } = useProductMutations()
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const [percentage, setPercentage] = useState('')
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false)
@@ -130,17 +142,6 @@ const TableProducts: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<ProductData | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axiosPrivate.get<ProductData[]>('/products', {})
-      setTableData(response.data)
-    } catch {
-      bigToast('No se pudo cargar el catálogo.', 'error')
-    }
-  }
-
-  useEffect(() => { fetchProducts() }, [])
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return tableData
@@ -173,11 +174,9 @@ const TableProducts: React.FC = () => {
       return
     }
     try {
-      const response = await axiosPrivate.put('/products/update-prices', {
-        percentage: parsedPercentage
-      })
+      // La mutación recarga el catálogo antes de resolver
+      const response = await updatePrices.mutateAsync(parsedPercentage)
       if (response.status === 200) {
-        await fetchProducts()
         bigToast('Precios actualizados exitosamente.', 'success')
       } else bigToast('Error al actualizar los precios.', 'error')
     } catch {
@@ -210,8 +209,7 @@ const TableProducts: React.FC = () => {
     })
     if (!result.isConfirmed) return
     try {
-      await axiosPrivate.delete(`/products/${product.id}`)
-      await fetchProducts()
+      await deleteProduct.mutateAsync(product.id)
       bigToast('Producto eliminado.', 'success')
     } catch {
       bigToast('Error al eliminar el producto.', 'error')
@@ -246,11 +244,7 @@ const TableProducts: React.FC = () => {
     }
     setIsImporting(true)
     try {
-      const formData = new FormData()
-      formData.append('file', importFile)
-      const response = await axiosPrivate.post('/products/import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const response = await importProducts.mutateAsync(importFile)
       const result = response.data
       bigToast(
         `Importación completada: ${result.created} creados, ${result.updated} actualizados${result.errors?.length ? `, ${result.errors.length} errores.` : '.'}`,
@@ -258,7 +252,6 @@ const TableProducts: React.FC = () => {
       )
       setImportDialogOpen(false)
       setImportFile(null)
-      await fetchProducts()
     } catch {
       bigToast('Error al importar productos.', 'error')
     } finally {
@@ -272,14 +265,13 @@ const TableProducts: React.FC = () => {
     variants: VariantFormEntry[]
   ) => {
     try {
-      const response = await axiosPrivate.post('/products', {
+      const response = await createProduct.mutateAsync({
         name,
         intervalText: intervalText || null,
         variants
       })
       if (response.status === 201) {
         bigToast('Producto creado.', 'success')
-        await fetchProducts()
       } else bigToast('No se pudo crear el registro.', 'error')
     } catch {
       bigToast('No se pudo crear el registro.', 'error')
@@ -293,14 +285,14 @@ const TableProducts: React.FC = () => {
     variants: VariantFormEntry[]
   ) => {
     try {
-      const response = await axiosPrivate.put(`/products/${id}`, {
+      const response = await updateProduct.mutateAsync({
+        id,
         name,
         intervalText: intervalText || null,
         variants
       })
       if (response.status === 200) {
         bigToast('Producto actualizado.', 'success')
-        await fetchProducts()
       } else bigToast('No se pudo actualizar.', 'error')
     } catch {
       bigToast('No se pudo actualizar.', 'error')

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Container,
   Typography,
@@ -26,7 +26,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCertificatesNextToExpireGrouped } from 'src/hooks/dashboard/useCertificatesDue'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 
@@ -65,38 +65,21 @@ interface Customer {
 }
 
 const DashboardCards: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
 
-  const [tableData, setTableData] = useState<Customer[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: tableData = [], isLoading: loading } =
+    useCertificatesNextToExpireGrouped<Customer>({
+      onError: (error) => {
+        console.error('Error fetching file data:', error)
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los datos de certificados',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        })
+      }
+    })
   const [searchTerm, setSearchTerm] = useState('')
-
-  // Fetch files data
-  const fetchFiles = async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(
-        `/files/next-to-expire-grouped`,
-        {}
-      )
-      setTableData(response.data || [])
-    } catch (error) {
-      console.error('Error fetching file data:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los datos de certificados',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchFiles()
-  }, [])
 
   // Filter data based on search term
   const filteredData = useMemo(() => {

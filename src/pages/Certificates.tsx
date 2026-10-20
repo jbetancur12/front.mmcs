@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
+import { useQueryClient } from 'react-query'
 import {
   Box,
   Button,
@@ -36,6 +37,14 @@ import {
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useFetchDevicesNow } from '@hooks/devices/useDevices'
+import {
+  FILE_QUERY_KEYS,
+  useBulkReassignFileDevice,
+  useFile,
+  useUpdateFile
+} from '@hooks/files/useFiles'
+import { CERTIFICATE_HISTORY_QUERY_KEYS } from '@hooks/certificates/useCertificateHistory'
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { createRoot } from 'react-dom/client'
@@ -85,29 +94,23 @@ function Certificates() {
   const canEditFile = useCan(PERMISSIONS.CALIBRATION_FILE_UPDATE)
   const MySwal = withReactContent(Swal)
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [certificateData, setCertificateData] =
-    useState<DeviceDetailsProps | null>(null)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+  const fetchDevicesNow = useFetchDevicesNow()
+  const updateFileMutation = useUpdateFile()
+  const bulkReassignMutation = useBulkReassignFileDevice()
 
-  const getCertificateInfo = async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(`/files/${id}`, {})
-      if (response.status === 200) {
-        setCertificateData(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching certificate data:', error)
-    } finally {
-      setLoading(false)
-    }
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { data: certificateDataResponse, isLoading: loading } =
+    useFile<DeviceDetailsProps>(id)
+  const certificateData = certificateDataResponse ?? null
+
+  const refreshCertificate = () => {
+    queryClient.invalidateQueries(FILE_QUERY_KEYS.detail(id))
   }
 
-  useEffect(() => {
-    getCertificateInfo()
-  }, [id])
+  const refreshCertificateHistory = () => {
+    queryClient.invalidateQueries(CERTIFICATE_HISTORY_QUERY_KEYS.byFile(id))
+  }
 
   // Calculate status based on calibration dates
   const getCalibrationStatus = () => {
@@ -138,10 +141,10 @@ function Certificates() {
 
   const handleUpdateSuccess = () => {
     // Refrescar datos automáticamente
-    getCertificateInfo()
+    refreshCertificate()
 
     // Refrescar la lista de certificados
-    setRefreshTrigger(prev => prev + 1)
+    refreshCertificateHistory()
 
     // Mostrar feedback persistente con SweetAlert2
     MySwal.fire({
@@ -158,8 +161,7 @@ function Certificates() {
 
     if (field === 'equipo') {
       try {
-        const response = await axiosPrivate.get('/devices')
-        const devices = Array.isArray(response.data) ? response.data : []
+        const devices = await fetchDevicesNow()
 
         if (!devices.length) {
           MySwal.fire(
@@ -229,8 +231,11 @@ function Certificates() {
 
         if (!confirmResult.isConfirmed) return
 
-        const updateResponse = await axiosPrivate.put(`/files/${id}`, {
-          deviceId: selectedDeviceId
+        const updateResponse = await updateFileMutation.mutateAsync({
+          id: id as string,
+          payload: {
+            deviceId: selectedDeviceId
+          }
         })
 
         if (updateResponse.status === 200) {
@@ -239,7 +244,7 @@ function Certificates() {
             'El equipo asociado al certificado fue actualizado exitosamente.',
             'success'
           )
-          getCertificateInfo()
+          refreshCertificate()
         }
       } catch (error) {
         MySwal.fire(
@@ -320,7 +325,10 @@ function Certificates() {
             payload.nextCalibrationDate = nextCalibrationDate
           }
           try {
-            const response = await axiosPrivate.put(`/files/${id}`, payload)
+            const response = await updateFileMutation.mutateAsync({
+              id: id as string,
+              payload
+            })
 
             if (response.status === 200) {
               MySwal.fire(
@@ -328,7 +336,7 @@ function Certificates() {
                 `El campo ${fieldLabel} ha sido actualizado exitosamente`,
                 'success'
               )
-              getCertificateInfo()
+              refreshCertificate()
             }
           } catch (error) {
             MySwal.fire(
@@ -355,8 +363,11 @@ function Certificates() {
         const newValue = result.value
 
         try {
-          const response = await axiosPrivate.put(`/files/${id}`, {
-            [field]: newValue
+          const response = await updateFileMutation.mutateAsync({
+            id: id as string,
+            payload: {
+              [field]: newValue
+            }
           })
 
           if (response.status === 200) {
@@ -365,7 +376,7 @@ function Certificates() {
               `El campo ${fieldLabel} ha sido actualizado exitosamente`,
               'success'
             )
-            getCertificateInfo()
+            refreshCertificate()
           }
         } catch (error) {
           MySwal.fire(
@@ -380,8 +391,7 @@ function Certificates() {
 
   const handleBulkDeviceReassignment = async () => {
     try {
-      const response = await axiosPrivate.get('/devices')
-      const devices = Array.isArray(response.data) ? response.data : []
+      const devices = await fetchDevicesNow()
 
       if (!devices.length) {
         MySwal.fire(
@@ -502,14 +512,11 @@ function Certificates() {
 
       if (!confirmResult.isConfirmed) return
 
-      const updateResponse = await axiosPrivate.post(
-        '/files/bulk/device-reassignment',
-        {
-          sourceDeviceId,
-          targetDeviceId,
-          customerId: certificateData?.customerId
-        }
-      )
+      const updateResponse = await bulkReassignMutation.mutateAsync({
+        sourceDeviceId,
+        targetDeviceId,
+        customerId: certificateData?.customerId
+      })
 
       if (updateResponse.status === 200) {
         MySwal.fire(
@@ -517,8 +524,8 @@ function Certificates() {
           `Se reasignaron ${updateResponse.data.updatedCount} certificado(s) correctamente.`,
           'success'
         )
-        getCertificateInfo()
-        setRefreshTrigger((prev) => prev + 1)
+        refreshCertificate()
+        refreshCertificateHistory()
       }
     } catch (error) {
       MySwal.fire(
@@ -871,7 +878,7 @@ function Certificates() {
               <Typography variant="h6" fontWeight="600" gutterBottom sx={{ color: '#1f2937', fontSize: '1rem' }}>
                 Certificados y Documentos
               </Typography>
-              <CertificatesList refreshTrigger={refreshTrigger} />
+              <CertificatesList />
             </CardContent>
           </Card>
         </Grid>

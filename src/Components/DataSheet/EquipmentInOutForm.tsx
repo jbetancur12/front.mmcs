@@ -25,7 +25,10 @@ import AsyncSelect from 'react-select/async'
 import { loadOptions, mapOptions } from '../../utils/loadOptions'
 
 import { Profile } from '../../pages/Profiles'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useDataSheetStatus,
+  useSaveEquipmentInOut
+} from '@hooks/dataSheets/useDataSheets'
 import { useStore } from '@nanostores/react'
 import { userStore } from '@stores/userStore'
 
@@ -67,7 +70,6 @@ const validationSchema = Yup.object({
 })
 
 const EquipmentForm: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const isAdmin = $userStore.rol.some((role) => role === ROLES.ADMIN)
   const { id } = useParams<{ id: string }>()
@@ -75,39 +77,30 @@ const EquipmentForm: React.FC = () => {
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)
   const [lastRecord, setLastRecord] = useState<Record<any, any>>({})
 
-  const fetchEquipmentStatus = async () => {
-    try {
-      const response = await axiosPrivate.get(`/dataSheet/${id}/status`, {})
-
-      if (response.statusText === 'OK') {
-        if (response.data.status === 'busy') {
-          setIsEquipmentOut(true)
-          setLastRecord(response.data.lastRecord[0])
-        }
-
-        if (response.data.status === 'available') {
-          setIsEquipmentOut(false)
-          setLastRecord(response.data.lastRecord[0])
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching equipment status:', error)
-    }
-  }
+  const { data: equipmentStatus } = useDataSheetStatus(id)
+  const saveEquipmentInOutMutation = useSaveEquipmentInOut()
 
   useEffect(() => {
-    fetchEquipmentStatus()
-  }, [id])
+    if (!equipmentStatus) return
+
+    if (equipmentStatus.status === 'busy') {
+      setIsEquipmentOut(true)
+      setLastRecord(equipmentStatus.lastRecord?.[0] as typeof lastRecord)
+    }
+
+    if (equipmentStatus.status === 'available') {
+      setIsEquipmentOut(false)
+      setLastRecord(equipmentStatus.lastRecord?.[0] as typeof lastRecord)
+    }
+  }, [equipmentStatus])
 
   const handleSubmit = async (values: EquipmentFormValues) => {
     try {
-      const endpoint = `/equipmentInOut`
       const method = !isEquipmentOut ? 'post' : 'put'
       setIsEquipmentOut(!isEquipmentOut)
 
-      const response = await axiosPrivate({
+      const response = await saveEquipmentInOutMutation.mutateAsync({
         method,
-        url: endpoint,
         data: {
           ...values,
           equipmentId: id

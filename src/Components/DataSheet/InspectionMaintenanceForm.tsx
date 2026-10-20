@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   TextField,
   Typography,
@@ -22,7 +22,12 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import AsyncSelect from 'react-select/async'
 import Profile from '../../pages/Profile'
 import { loadOptions, mapOptions } from '../../utils/loadOptions'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useDataSheet,
+  useDeleteDataSheetRecord,
+  useInspectionMaintenanceRecord,
+  useSaveInspectionMaintenance
+} from '@hooks/dataSheets/useDataSheets'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
@@ -61,6 +66,12 @@ export interface EquipmentInfo {
   serviceType: string
   serialNumber: string
   calibrationCycle: string
+}
+
+interface InspectionMaintenanceRecord extends InspectionMaintenanceData {
+  id: number
+  comments?: string
+  verifiedBy?: string
 }
 
 // Definir el esquema de validación con yup
@@ -120,75 +131,70 @@ const validationSchema = yup.object().shape({
 })
 
 const InspectionMaintenanceDataForm: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const location = useLocation()
 
   const navigate = useNavigate()
-
-  const [equipmentInfo, setEquipmentInfo] = useState<EquipmentInfo | null>(null)
 
   const MySwal = withReactContent(Swal)
   const isEdit = Boolean(location.state && location.state.edit)
   const [editId, setEditId] = useState<number | null>(null)
   const equipoId = isEdit ? location.state.data.equipmentId : location.state?.id
 
-  useEffect(() => {
-    let equipoId: any = null
-    if (
-      isEdit &&
-      location.state &&
-      location.state.data &&
-      location.state.data.equipmentId
-    ) {
-      equipoId = location.state.data.equipmentId
-    } else if (!isEdit && location.state && location.state.id) {
-      equipoId = location.state.id
-    }
-    if (equipoId) {
-      const fetchEquipmentInfo = async () => {
-        try {
-          const response = await axiosPrivate.get(`/dataSheet/${equipoId}`)
-          setEquipmentInfo({
-            equipmentName: response.data.equipmentName,
-            internalCode: response.data.internalCode,
-            brand: response.data.brand,
-            model: response.data.model,
-            serviceType: response.data.serviceType,
-            serialNumber: response.data.serialNumber,
-            calibrationCycle: response.data.calibrationCycle
-          })
-        } catch (error) {
-          console.error('Error al obtener la información del equipo:', error)
-        }
-      }
-      fetchEquipmentInfo()
-    }
-  }, [isEdit, location.state])
+  const equipmentQueryId =
+    isEdit &&
+    location.state &&
+    location.state.data &&
+    location.state.data.equipmentId
+      ? location.state.data.equipmentId
+      : !isEdit && location.state && location.state.id
+        ? location.state.id
+        : null
+  const { data: equipmentData } = useDataSheet<EquipmentInfo>(
+    equipmentQueryId,
+    { refetchOnWindowFocus: false }
+  )
+  const equipmentInfo = useMemo<EquipmentInfo | null>(
+    () =>
+      equipmentData
+        ? {
+            equipmentName: equipmentData.equipmentName,
+            internalCode: equipmentData.internalCode,
+            brand: equipmentData.brand,
+            model: equipmentData.model,
+            serviceType: equipmentData.serviceType,
+            serialNumber: equipmentData.serialNumber,
+            calibrationCycle: equipmentData.calibrationCycle
+          }
+        : null,
+    [equipmentData]
+  )
+
+  // Si solo tenemos el id, pedimos los datos al backend
+  const editRecordId: number | string | undefined =
+    location.state && location.state.edit && location.state.id
+      ? location.state.id
+      : undefined
+  const { data: editData } =
+    useInspectionMaintenanceRecord<InspectionMaintenanceRecord>(editRecordId)
+  const prefilledRecordId = useRef<number | null>(null)
+  const saveInspectionMutation = useSaveInspectionMaintenance()
+  const deleteInspectionMutation = useDeleteDataSheetRecord()
 
   useEffect(() => {
-    if (location.state && location.state.edit && location.state.id) {
-      // Si solo tenemos el id, pedimos los datos al backend
-      const fetchEditData = async () => {
-        try {
-          const response = await axiosPrivate.get(
-            `/inspectionMaintenance/${location.state.id}`
-          )
-          const data = response.data
-          setEditId(data.id)
-          formik.setValues({
-            ...data,
-            equipmentId: data.equipmentId,
-            date: data.date.split('T')[0],
-            comentarios: data.comments || '',
-            elaboradoPor: data.verifiedBy || ''
-          })
-        } catch (error) {
-          console.error('Error al obtener datos de edición:', error)
-        }
-      }
-      fetchEditData()
-    }
-  }, [location.state])
+    if (!editData) return
+    // Solo precarga una vez por registro para no pisar lo que se esté editando
+    if (prefilledRecordId.current === editData.id) return
+    prefilledRecordId.current = editData.id
+    const data = editData
+    setEditId(data.id)
+    formik.setValues({
+      ...data,
+      equipmentId: data.equipmentId,
+      date: data.date.split('T')[0],
+      comentarios: data.comments || '',
+      elaboradoPor: data.verifiedBy || ''
+    })
+  }, [editData])
 
   const options = ['Bueno', 'Malo', 'No Aplica']
 
@@ -223,20 +229,10 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        let response
-        if (isEdit && editId) {
-          response = await axiosPrivate.put(
-            `/inspectionMaintenance/${editId}`,
-            { ...values, name: 'Mantenimiento' },
-            {}
-          )
-        } else {
-          response = await axiosPrivate.post(
-            `/inspectionMaintenance`,
-            { ...values, name: 'Mantenimiento' },
-            {}
-          )
-        }
+        const response = await saveInspectionMutation.mutateAsync({
+          id: isEdit && editId ? editId : null,
+          payload: { ...values, name: 'Mantenimiento' }
+        })
         if (response.status >= 200 && response.status < 300) {
           bigToast(
             isEdit
@@ -268,7 +264,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     })
     if (result.isConfirmed) {
       try {
-        const response = await axiosPrivate.delete(
+        const response = await deleteInspectionMutation.mutateAsync(
           `/inspectionMaintenance/${editId}`
         )
         if (response.status === 204 || response.status === 200) {

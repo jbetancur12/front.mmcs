@@ -8,13 +8,12 @@ import {
   View
 } from '@react-pdf/renderer'
 import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
 import { createTw } from 'react-pdf-tailwind'
 
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useVehicleMaintenanceRecords } from '@hooks/fleet/useFleetQueries'
 import { buildMinioObjectUrl } from '@utils/minio'
 
-import { Document as DocumentType, MaintenanceRecord } from './types'
+import { Document as DocumentType } from './types'
 
 type VehicleDocument = DocumentType & {
   documentType: string
@@ -58,13 +57,12 @@ const VehicleDataSheetPreview = ({
   vehicleData,
   documents
 }: VehicleDataSheetPreviewProps) => {
-  const axiosPrivate = useAxiosPrivate()
   const imageUrl = vehicleData?.pictureUrl
     ? buildMinioObjectUrl('images', vehicleData.pictureUrl)
     : ''
-  const [maintenanceRecords, setMaintenanceRecords] = useState<
-    MaintenanceRecord[]
-  >([])
+  const { data: maintenanceRecords = [] } = useVehicleMaintenanceRecords(
+    vehicleData.id
+  )
 
   const soat = documents.find((doc) => doc.documentType === 'SOAT')
   const rtm = documents.find((doc) => doc.documentType === 'RTM')
@@ -157,24 +155,6 @@ const VehicleDataSheetPreview = ({
     }
   })
 
-  useEffect(() => {
-    const getMaintenanceRecords = async () => {
-      try {
-        const response = await axiosPrivate.get(
-          `/maintenanceRecord?vehicleId=${vehicleData.id}`,
-          {}
-        )
-
-        if (response.status === 200) {
-          setMaintenanceRecords(response.data)
-        }
-      } catch (error) {
-        console.error('Error fetching maintenance records:', error)
-      }
-    }
-
-    getMaintenanceRecords()
-  }, [axiosPrivate, vehicleData.id])
 
   const Footer = () => (
     <View
