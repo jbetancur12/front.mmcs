@@ -257,7 +257,7 @@ export interface ComplianceGroup {
 export interface Compliance {
   period: { from: string; to: string }
   total: Omit<ComplianceGroup, 'label'>
-  byType: Record<'calibration' | 'preventive', Omit<ComplianceGroup, 'label'>>
+  byType: Partial<Record<'calibration' | 'preventive', Omit<ComplianceGroup, 'label'>>>
   bySede: ComplianceGroup[]
   byService: ComplianceGroup[]
   byRiskClass: ComplianceGroup[]

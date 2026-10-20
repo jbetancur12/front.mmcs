@@ -44,7 +44,17 @@ const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', '
 
 const cardSx = { borderRadius: '16px', border: '1px solid #e5e7eb', height: '100%' }
 
-const ComplianceBar = ({ label, group }: { label: string; group: Omit<ComplianceGroup, 'label'> }) => (
+const EMPTY_GROUP: Omit<ComplianceGroup, 'label'> = {
+  programmed: 0,
+  executed: 0,
+  onTime: 0,
+  overdue: 0,
+  pending: 0,
+  compliance: null,
+  timeliness: null
+}
+
+const ComplianceBar = ({ label, group = EMPTY_GROUP }: { label: string; group?: Omit<ComplianceGroup, 'label'> }) => (
   <Box mb={2}>
     <Box display='flex' justifyContent='space-between' mb={0.5}>
       <Typography variant='body2' fontWeight={600}>
@@ -188,12 +198,12 @@ const TechDashboardTab = ({ customerId, onNavigate }: { customerId: string; onNa
               <Typography variant='h6' fontWeight={600} mb={2}>
                 Cumplimiento por tipo
               </Typography>
-              <ComplianceBar label={ACTIVITY_TYPE_LABELS.calibration} group={compliance.byType.calibration} />
-              <ComplianceBar label={ACTIVITY_TYPE_LABELS.preventive} group={compliance.byType.preventive} />
+              <ComplianceBar label={ACTIVITY_TYPE_LABELS.calibration} group={compliance.byType?.calibration} />
+              <ComplianceBar label={ACTIVITY_TYPE_LABELS.preventive} group={compliance.byType?.preventive} />
               <Typography variant='body2' color='text.secondary'>
                 Correctivos atendidos en el periodo: {compliance.corrective}
               </Typography>
-              {compliance.bySede.length > 1 && (
+              {(compliance.bySede?.length ?? 0) > 1 && (
                 <>
                   <Typography variant='subtitle2' fontWeight={600} mt={3} mb={1}>
                     Por sede
