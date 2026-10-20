@@ -7,7 +7,7 @@ import { bigToast, styles } from './ExcelManipulation/Utils'
 import { loadOptions, mapOptions } from '../utils/loadOptions'
 
 import { CertificateTemplateData } from '../pages/AnalyzeExcelComponent'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCreateDevice } from '@hooks/devices/useDevices'
 
 interface ModalDeviceProps {
   open: boolean
@@ -26,7 +26,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
   dataReturned,
   resetForm
 }) => {
-  const axiosPrivate = useAxiosPrivate()
+  const createDeviceMutation = useCreateDevice()
   const [formValues, setFormValues] = useState<
     Record<string, string | boolean>
   >(formFields.reduce((obj, field) => ({ ...obj, [field]: '' }), {}))
@@ -48,10 +48,10 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
   }
 
   useEffect(() => {
-    setFormValues({
-      ...formValues,
+    setFormValues((prev) => ({
+      ...prev,
       name: name
-    })
+    }))
   }, [name])
 
   const handleSubmit = async () => {
@@ -70,7 +70,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
     }
 
     try {
-      const response = await axiosPrivate.post(`/devices`, formValues, {})
+      const response = await createDeviceMutation.mutateAsync(formValues)
 
       if (response.status === 201) {
         bigToast('Cliente Creado Exitosamente!', 'success')

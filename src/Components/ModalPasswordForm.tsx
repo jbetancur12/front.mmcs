@@ -10,6 +10,7 @@ import {
   Typography
 } from '@mui/material'
 import axios from 'axios'
+import { useMutation, useQuery } from 'react-query'
 import { api } from '../config'
 import { bigToast } from './ExcelManipulation/Utils'
 import { Delete, Visibility, VisibilityOff } from '@mui/icons-material'
@@ -40,20 +41,56 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
   // const [wbPasswords, setWbPasswords] = useState<string[]>([])
   const [showUpdateButton, setShowUpdateButton] = useState(false)
 
+  const authHeaders = () => ({
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+    }
+  })
+
+  const { data: settingsPasswords } = useQuery<string[]>(
+    ['settings', 'passwords'],
+    async () => {
+      const response = await axios.get(`${apiUrl}/settings`, authHeaders())
+      return response.data
+        .filter((data: { name: string }) => data.name === 'passwords')
+        .flatMap((data: { values: string[] }) => data.values)
+    },
+    {
+      // Siempre fresco al montar, sin recargas al enfocar (no pisa ediciones locales)
+      staleTime: 0,
+      refetchOnWindowFocus: false,
+      onError: (error) => {
+        console.error('Error fetching settings:', error)
+      }
+    }
+  )
+
+  const createPasswords = useMutation(
+    (passwordValues: string[]) =>
+      axios.post(
+        `${apiUrl}/settings`,
+        { passwords: passwordValues },
+        authHeaders()
+      ),
+    { retry: false }
+  )
+
+  const updatePasswords = useMutation(
+    (passwordsToSave: string[]) =>
+      axios.put(
+        `${apiUrl}/settings`,
+        { passwords: passwordsToSave },
+        authHeaders()
+      ),
+    { retry: false }
+  )
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const passwordValues = passwords.map((password) => password.password)
 
     try {
-      await axios.post(
-        `${apiUrl}/settings`,
-        { passwords: passwordValues },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
-      )
+      await createPasswords.mutateAsync(passwordValues)
 
       bigToast('Contraseñas creadas con éxito', 'success')
       onCloseModal()
@@ -89,36 +126,9 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
     setShowUpdateButton(true)
   }
 
-  const fetchSettings = async () => {
-    try {
-      const response = await axios.get(`${apiUrl}/settings`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
-
-      if (response.status === 200) {
-        const passwords = response.data
-          .filter((data: any) => data.name === 'passwords')
-          .flatMap((data: any) => data.values)
-        setWbPasswords(passwords)
-      }
-    } catch (error) {
-      console.error('Error fetching settings:', error)
-    }
-  }
-
   const handleUpdate = async () => {
     try {
-      await axios.put(
-        `${apiUrl}/settings`,
-        { passwords: wbPasswords },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
-      )
+      await updatePasswords.mutateAsync(wbPasswords)
 
       bigToast('Contraseñas actualizadas con éxito', 'success')
       setShowUpdateButton(false)
@@ -127,9 +137,12 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
     }
   }
 
+  // Las contraseñas cargadas viven en el estado del padre (se editan localmente)
   useEffect(() => {
-    fetchSettings()
-  }, [])
+    if (settingsPasswords) {
+      setWbPasswords(settingsPasswords)
+    }
+  }, [settingsPasswords])
 
   return (
     <Dialog open={open} onClose={onCloseModal}>

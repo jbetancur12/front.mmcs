@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
@@ -26,18 +26,7 @@ import {
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import InspectionSummary from './InspectionSummary'
-import useAxiosPrivate from '@utils/use-axios-private'
-
-const fetchInspections = async (
-  vehicleId: number
-): Promise<InspectionHistory[]> => {
-  const axiosPrivate = useAxiosPrivate()
-  const { data } = await axiosPrivate.get(
-    `/vehicles/${vehicleId}/inspections`,
-    {}
-  )
-  return data
-}
+import { useVehicleInspections } from '@hooks/fleet/useFleetQueries'
 
 const getConditionIcon = (condition: string) => {
   switch (condition) {
@@ -56,27 +45,12 @@ const getConditionIcon = (condition: string) => {
 const InspectionsTable = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [inspections, setInspections] = useState<InspectionHistory[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const { data: inspections = [], isLoading: loading } =
+    useVehicleInspections(id)
   const [selectedInspection, setSelectedInspection] =
     useState<InspectionHistory | null>(null)
   const [openModal, setOpenModal] = useState<boolean>(false)
 
-  useEffect(() => {
-    const loadInspections = async () => {
-      try {
-        if (id) {
-          const data = await fetchInspections(Number(id))
-          setInspections(data)
-        }
-      } catch (error) {
-        console.error('Error fetching inspections:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadInspections()
-  }, [id])
 
   const columns = useMemo<MRT_ColumnDef<InspectionHistory>[]>(
     () => [

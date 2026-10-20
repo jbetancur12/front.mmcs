@@ -28,7 +28,11 @@ import {
 import PDFViewer from '../Components/PDFViewer'
 import IMGViewer from '../Components/IMGViewer'
 import Swal from 'sweetalert2'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useProfile,
+  useUpdateProfile,
+  useUploadProfileFile
+} from 'src/hooks/profiles/useProfiles'
 
 interface Profile {
   id: number
@@ -43,44 +47,42 @@ interface Profile {
 
 const Profile: React.FC = () => {
   const canManageProfiles = useCan(PERMISSIONS.USERS_PROFILE_MANAGE)
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
   const { id: idProfile } = useParams()
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [editedProfile, setEditedProfile] = useState<Profile | null>(null)
   const [image, setImage] = useState<string>('')
   const [selectedCV, setSelectedCV] = useState<string>('')
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true)
-        const response = await axiosPrivate.get(`/profiles/${idProfile}`, {})
-
-        const { cvUrl, avatarUrl, createdAt, updatedAt, id, ...profileData } =
-          response.data
-
-        setProfile(response.data)
-        setEditedProfile(profileData)
-        setImage(response.data.avatarUrl)
-        setSelectedCV(response.data.cvUrl)
-      } catch (error) {
-        console.error('Error al cargar el perfil:', error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudo cargar el perfil',
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        })
-      } finally {
-        setLoading(false)
-      }
+  const { data: profileData, isLoading: loading } = useProfile<
+    Profile & { createdAt?: string; updatedAt?: string }
+  >(idProfile, {
+    onError: (error) => {
+      console.error('Error al cargar el perfil:', error)
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo cargar el perfil',
+        icon: 'error',
+        confirmButtonText: 'Entendido'
+      })
     }
+  })
+  const profile = profileData ?? null
+  const updateProfile = useUpdateProfile<Profile>(idProfile)
+  const uploadAvatar = useUploadProfileFile(idProfile, 'avatar')
+  const uploadCV = useUploadProfileFile(idProfile, 'cv')
 
-    fetchProfile()
-  }, [idProfile])
+  // Estado editable inicializado desde los datos del servidor (no mientras se edita)
+  useEffect(() => {
+    if (!profileData || isEditing) return
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { cvUrl, avatarUrl, createdAt, updatedAt, id, ...editable } =
+      profileData
+
+    setEditedProfile(editable as Profile)
+    setImage(profileData.avatarUrl)
+    setSelectedCV(profileData.cvUrl)
+  }, [profileData, isEditing])
 
   const handleEditClick = () => {
     setIsEditing(true)
@@ -88,10 +90,7 @@ const Profile: React.FC = () => {
 
   const handleSaveClick = async () => {
     try {
-      await axiosPrivate.put(`/profiles/${idProfile}`, editedProfile, {})
-      setProfile((prevState) =>
-        prevState ? { ...prevState, ...editedProfile! } : prevState
-      )
+      await updateProfile.mutateAsync(editedProfile!)
       setIsEditing(false)
       Swal.fire({
         title: '¡Actualizado!',
@@ -130,15 +129,7 @@ const Profile: React.FC = () => {
     formData.append('cv', file as Blob)
     try {
       // Enviar la imagen al backend Express
-      const response = await axiosPrivate.post(
-        `/profiles/${idProfile}/cv`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      )
+      const response = await uploadCV.mutateAsync(formData)
 
       setSelectedCV(response.data.profile.cvUrl)
       Swal.fire({
@@ -178,15 +169,7 @@ const Profile: React.FC = () => {
 
       try {
         // Enviar la imagen al backend Express
-        const response = await axiosPrivate.post(
-          `/profiles/${idProfile}/avatar`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        )
+        const response = await uploadAvatar.mutateAsync(formData)
 
         setImage(response.data.profile.avatarUrl)
         Swal.fire({

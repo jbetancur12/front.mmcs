@@ -34,7 +34,12 @@ import {
 } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
-import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useMutation, useQueryClient } from 'react-query'
+import {
+  useSupplierDetails,
+  useSupplierEvaluationStatusSummary
+} from 'src/hooks/purchases/useSuppliers'
+import { supplierKeys } from 'src/hooks/purchases/queryKeys'
 import { isAxiosError } from 'axios'
 import SupplierEvaluationForm from 'src/Components/Purchases/SupplierEvaluationForm'
 import SupplierPurchaseHistoryTable from 'src/Components/Purchases/SupplierPurchaseHistoryTable'
@@ -202,44 +207,20 @@ const SupplierDetailsPage: React.FC = () => {
     data: supplier,
     isLoading: isLoadingSupplier,
     error: supplierError
-  } = useQuery<Supplier, Error>(
-    ['supplierDetails', supplierId],
-    async () => {
-      const response = await axiosPrivate.get<Supplier>(
-        `/suppliers/${supplierId}`
-      )
-      return response.data
+  } = useSupplierDetails<Supplier>(supplierId, {
+    onSuccess: (data) => {
+      setApplyRetention(data.applyRetention || false)
+      const currentDocTypes =
+        data.typePerson === 1 ? naturalDocumentTypes : juridicalDocumentTypes
+      setFilesToUpload(currentDocTypes.map((doc) => ({ ...doc, file: null })))
     },
-    {
-      enabled: !!supplierId, // Only run query if supplierId exists
-      onSuccess: (data) => {
-        setApplyRetention(data.applyRetention || false)
-        const currentDocTypes =
-          data.typePerson === 1 ? naturalDocumentTypes : juridicalDocumentTypes
-        setFilesToUpload(currentDocTypes.map((doc) => ({ ...doc, file: null })))
-      },
-      onError: (err) => {
-        console.error('Error fetching supplier details:', err)
-      }
+    onError: (err) => {
+      console.error('Error fetching supplier details:', err)
     }
-  )
+  })
 
-  const { data: evalStatusSummary, isLoading: isLoadingEvalStatus } = useQuery<
-    EvaluationStatusSummary,
-    Error
-  >(
-    ['supplierEvaluationStatusSummary', supplierId],
-    async () => {
-      const response = await axiosPrivate.get<EvaluationStatusSummary>(
-        `/suppliers/${supplierId}/evaluation-status-summary`
-      )
-      return response.data
-    },
-    {
-      enabled: !!supplierId // Solo ejecutar si supplierId existe
-      // staleTime: 1000 * 60 * 5 // Cachear por 5 minutos, por ejemplo
-    }
-  )
+  const { data: evalStatusSummary, isLoading: isLoadingEvalStatus } =
+    useSupplierEvaluationStatusSummary<EvaluationStatusSummary>(supplierId)
 
   const evaluationNotificationInfo =
     getEvaluationStatusAlertInfo(evalStatusSummary)
@@ -339,7 +320,7 @@ const SupplierDetailsPage: React.FC = () => {
           `Documento '${variables.documentTypeLabel}' subido correctamente.`,
           'success'
         )
-        queryClient.invalidateQueries(['supplierDetails', supplierId]) // Invalidate para refrescar
+        queryClient.invalidateQueries(supplierKeys.details(supplierId)) // Invalidate para refrescar
         setFilesToUpload((prevFiles) =>
           prevFiles.map((doc) =>
             doc.id === variables.docId ? { ...doc, file: null } : doc
@@ -383,7 +364,7 @@ const SupplierDetailsPage: React.FC = () => {
           ? 'Se ha activado la retención en fuente para el proveedor.'
           : 'Se ha desactivado la retención en fuente para el proveedor.'
         Swal.fire('Actualizado', message, 'success')
-        queryClient.invalidateQueries(['supplierDetails', supplierId]) // Invalidate para refrescar
+        queryClient.invalidateQueries(supplierKeys.details(supplierId)) // Invalidate para refrescar
         // El estado local 'applyRetention' se actualiza optimistamente o en el onSuccess de useQuery
       },
       onError: (error, newRetentionValue) => {
@@ -464,7 +445,9 @@ const SupplierDetailsPage: React.FC = () => {
         setTimeout(() => {
           try {
             newWindow.document.title = originalFileName
-          } catch (e) {}
+          } catch (e) {
+            // El navegador puede bloquear el cambio de título; no es crítico
+          }
         }, 500)
       } else {
         Swal.fire(

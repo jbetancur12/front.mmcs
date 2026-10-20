@@ -22,13 +22,20 @@ import {
   type MRT_Row,
   type MaterialReactTableProps
 } from 'material-react-table'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
+import { useQueryClient } from 'react-query'
 import toast, { Toaster } from 'react-hot-toast'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  CERTIFICATE_TYPE_QUERY_KEYS,
+  useCertificateTypes,
+  useCreateCertificateType,
+  useDeleteCertificateType,
+  useUpdateCertificateType
+} from '@hooks/certificates/useCertificateTypes'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -43,9 +50,16 @@ export interface CertificateTypeData {
 // Main component
 const Table: React.FC = () => {
   const canManageCertificateTypes = useCan(PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE)
-  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [tableData, setTableData] = useState<CertificateTypeData[]>([])
+  const { data: certificateTypesData } = useCertificateTypes()
+  const tableData = useMemo<CertificateTypeData[]>(
+    () => certificateTypesData ?? [],
+    [certificateTypesData]
+  )
+  const createCertificateTypeMutation = useCreateCertificateType()
+  const updateCertificateTypeMutation = useUpdateCertificateType()
+  const deleteCertificateTypeMutation = useDeleteCertificateType()
   // const [filteredTableData, setFilteredTableData] = useState<CertificateTypeData[]>([]);
 
   const [validationErrors, setValidationErrors] = useState<{
@@ -57,37 +71,20 @@ const Table: React.FC = () => {
     certificateTypeData: CertificateTypeData
   ) => {
     try {
-      const response = await axiosPrivate.post(
-        `/certificateTypes`,
-        { name: certificateTypeData.name },
-        {}
-      )
+      const response = await createCertificateTypeMutation.mutateAsync({
+        name: certificateTypeData.name
+      })
 
       if (response.status === 201) {
         toast.success('Equipo Creado Exitosamente!', {
           duration: 4000,
           position: 'top-center'
         })
-        fetchUsers() // Refresh data after creation
       } else {
         console.error('Error al crear tipo de certificado')
       }
     } catch (error) {
       console.error('Error de red:', error)
-    }
-  }
-
-  // Fetch certificateTypes data
-  const fetchUsers = async () => {
-    try {
-      const response = await axiosPrivate.get(`/certificateTypes`, {})
-
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching certificateType data:', error)
     }
   }
 
@@ -114,10 +111,6 @@ const Table: React.FC = () => {
   //   }
   // }
 
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
   const handleCreateNewRow = (values: CertificateTypeData) => {
     onCreateCertificateType(values)
     setCreateModalOpen(false)
@@ -129,19 +122,21 @@ const Table: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axiosPrivate.put(
-            `/certificateTypes/${values.id}`,
-            updatedValues,
-            {}
-          )
+          const response = await updateCertificateTypeMutation.mutateAsync({
+            id: values.id,
+            payload: updatedValues
+          })
 
           if (response.status === 201) {
             toast.success('Equipo Modificado Exitosamente!', {
               duration: 4000,
               position: 'top-center'
             })
-            tableData[row.index] = values
-            setTableData([...tableData])
+            queryClient.setQueryData<CertificateTypeData[]>(
+              CERTIFICATE_TYPE_QUERY_KEYS.list(),
+              (prev = []) =>
+                prev.map((item, index) => (index === row.index ? values : item))
+            )
           } else {
             console.error('Error al crear tipo de certificado')
           }
@@ -157,17 +152,23 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteUser = async (rowIndex: number, id: number) => {
+  const removeRowFromCache = (id: number) => {
+    queryClient.setQueryData<CertificateTypeData[]>(
+      CERTIFICATE_TYPE_QUERY_KEYS.list(),
+      (prev = []) => prev.filter((item) => item.id !== id)
+    )
+  }
+
+  const deleteUser = async (id: number) => {
     try {
-      const response = await axiosPrivate.delete(`/certificateTypes/${id}`, {})
+      const response = await deleteCertificateTypeMutation.mutateAsync(id)
 
       if (response.status === 201) {
         toast.success('Equipo Eliminado Exitosamente!', {
           duration: 4000,
           position: 'top-center'
         })
-        tableData.splice(rowIndex, 1)
-        setTableData([...tableData])
+        removeRowFromCache(id)
       } else {
         console.error('Error al crear tipo de certificado')
       }
@@ -181,11 +182,10 @@ const Table: React.FC = () => {
       if (!confirm(`Are you sure you want to delete ${row.getValue('name')}`)) {
         return
       }
-      deleteUser(row.index, row.getValue('id'))
-      tableData.splice(row.index, 1)
-      setTableData([...tableData])
+      deleteUser(row.getValue('id'))
+      removeRowFromCache(row.getValue('id'))
     },
-    [tableData]
+    [deleteUser]
   )
 
   const getCommonEditTextFieldProps = useCallback(

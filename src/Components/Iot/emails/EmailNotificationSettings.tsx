@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Typography,
@@ -19,7 +19,10 @@ import {
 } from '@mui/icons-material'
 import withReactContent from 'sweetalert2-react-content'
 import Swal from 'sweetalert2'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useIotNotificationEmailMutations,
+  useIotNotificationEmails
+} from '@hooks/iot/useIotNotificationEmails'
 // Utilidad para manejar peticiones API
 const apiRequest = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(url, options)
@@ -36,10 +39,7 @@ export const EmailNotificationSettings = ({
 }: {
   customerId?: number | string
 }) => {
-  const axiosPrivate = useAxiosPrivate()
   const [email, setEmail] = useState('')
-  const [emails, setEmails] = useState<any>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [testLoading, setTestLoading] = useState(false)
@@ -52,27 +52,18 @@ export const EmailNotificationSettings = ({
   const MySwal = withReactContent(Swal)
 
   // Cargar la lista de emails de notificación
-  useEffect(() => {
-    const fetchEmails = async () => {
-      try {
-        setLoading(true)
-        const response = await axiosPrivate.get(
-          '/customers/emails-notifications/' + customerId
-        )
-        setEmails(response.data || [])
-        setError(null)
-      } catch (err) {
+  const { data: emails = [], isLoading: emailsLoading } =
+    useIotNotificationEmails(customerId, {
+      onSuccess: () => setError(null),
+      onError: (err) => {
         console.error('Error fetching emails:', err)
         setError(
           'No se pudieron cargar los correos electrónicos de notificación'
         )
-      } finally {
-        setLoading(false)
       }
-    }
-
-    fetchEmails()
-  }, [])
+    })
+  const { addEmail, removeEmail } = useIotNotificationEmailMutations(customerId)
+  const loading = emailsLoading || addEmail.isLoading || removeEmail.isLoading
 
   // Manejar la adición de un nuevo email
   const handleAddEmail = async (e: React.FormEvent) => {
@@ -85,15 +76,7 @@ export const EmailNotificationSettings = ({
     }
 
     try {
-      setLoading(true)
-      const response = await axiosPrivate.post(
-        '/customers/emails-notifications/' + customerId,
-        {
-          email
-        }
-      )
-
-      setEmails((prevEmails: any) => [...prevEmails, response.data])
+      await addEmail.mutateAsync(email)
       setEmail('')
       setError(null)
       setSuccess('Correo electrónico añadido correctamente')
@@ -110,22 +93,13 @@ export const EmailNotificationSettings = ({
     } catch (err) {
       console.error('Error adding email:', err)
       setError('No se pudo añadir el correo electrónico')
-    } finally {
-      setLoading(false)
     }
   }
 
   // Manejar la eliminación de un email
   const handleRemoveEmail = async (emailToRemove: number) => {
     try {
-      setLoading(true)
-      await axiosPrivate.delete(
-        '/customers/emails-notifications/' + emailToRemove
-      )
-
-      setEmails((prevEmails: any) =>
-        prevEmails.filter((emailItem: any) => emailItem.id !== emailToRemove)
-      )
+      await removeEmail.mutateAsync(emailToRemove)
       setError(null)
       setSuccess('Correo electrónico eliminado correctamente')
 
@@ -141,8 +115,6 @@ export const EmailNotificationSettings = ({
     } catch (err) {
       console.error('Error removing email:', err)
       setError('No se pudo eliminar el correo electrónico')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -266,7 +238,7 @@ export const EmailNotificationSettings = ({
           </Box>
         ) : emails.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {emails.map((emailItem: any) => (
+            {emails.map((emailItem) => (
               <Chip
                 key={emailItem.id}
                 label={emailItem.email}

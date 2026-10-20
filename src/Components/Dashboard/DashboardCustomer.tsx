@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Container,
   Typography,
@@ -32,7 +32,7 @@ import {
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { differenceInDays, format } from 'date-fns'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCertificatesNextToExpire } from 'src/hooks/dashboard/useCertificatesDue'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import { FileData } from '../TableFiles'
@@ -45,13 +45,25 @@ import Swal from 'sweetalert2'
 type FilterType = 'all' | 'warning' | 'expired'
 
 const Dashboard: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const $userStore = useStore(userStore)
-  const [tableData, setTableData] = useState<FileData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [customerInfo, setCustomerInfo] = useState<any>(null)
+  const customerId: number | null =
+    $userStore.customer?.id || id ? $userStore.customer?.id || Number(id) : null
+  const { data: tableData = [], isLoading: loading } =
+    useCertificatesNextToExpire<FileData>(customerId, {
+      onError: (error) => {
+        console.error('Error fetching file data:', error)
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los certificados del cliente',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        })
+      }
+    })
+  // Información del cliente tomada del primer registro
+  const customerInfo: any = tableData.length > 0 ? tableData[0].customer : null
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
   
   // Filter state management
@@ -92,42 +104,6 @@ const Dashboard: React.FC = () => {
     // Reset pagination when clearing filter
     setPagination(prev => ({ ...prev, pageIndex: 0 }))
   }
-
-  // Fetch files data
-  const fetchFiles = async () => {
-    let customerId: null | number = null
-    if ($userStore.customer?.id || id) {
-      customerId = $userStore.customer?.id || Number(id)
-    }
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(`/files/next-to-expire`, {
-        params: {
-          customerId: customerId
-        }
-      })
-      setTableData(response.data || [])
-      
-      // Get customer info from first record
-      if (response.data && response.data.length > 0) {
-        setCustomerInfo(response.data[0].customer)
-      }
-    } catch (error) {
-      console.error('Error fetching file data:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los certificados del cliente',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchFiles()
-  }, [id])
 
   // Memoized filtered data calculation
   const filteredData = useMemo(() => {

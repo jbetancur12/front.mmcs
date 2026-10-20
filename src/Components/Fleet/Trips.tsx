@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useMutation, useQueryClient } from 'react-query'
 
 import MaterialReactTable, {
   MRT_Cell,
@@ -22,23 +22,24 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { Trip, TripsResponse } from './types'
+import { Trip } from './types'
 import { format } from 'date-fns'
 import { vehicleStore } from '../../store/vehicleStore'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import {
+  TRIP_SORTABLE_FIELDS,
+  useLastTrip,
+  useTripsPaginated
+} from 'src/hooks/fleet/useTrips'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 
 // Tipos e interfaces para los datos de Trip
-
-const fetchTrips = async (
-  vehicleId: number,
-  axiosPrivate: any
-): Promise<TripsResponse> => {
-  const { data } = await axiosPrivate.get(`/trip?vehicleId=${vehicleId}`)
-  return data
-}
 
 const TripsTable = () => {
   const canManage = useCan(PERMISSIONS.FLEET_TRIP_MANAGE)
@@ -47,15 +48,20 @@ const TripsTable = () => {
   const $vehicleStore = useStore(vehicleStore)
 
   const { id } = useParams<{ id: string }>()
-  const { data } = useQuery<TripsResponse>(
-    ['trips', id],
-    () => fetchTrips(Number(id), axiosPrivate),
-    {
-      enabled: !!id // Solo ejecuta la query si el id está disponible
-    }
+  // Paginación, búsqueda (conductor, propósito) y orden en el servidor.
+  const server = useServerTableState({ sortableFields: TRIP_SORTABLE_FIELDS })
+  const {
+    data: tripsPage,
+    isLoading,
+    isFetching
+  } = useTripsPaginated(id, server.params)
+  useKeepPageInRange(
+    tripsPage?.totalPages,
+    server.pagination.pageIndex,
+    server.setPagination
   )
-
-  const { trips = [], lastTrip = null } = data || {}
+  const { data: lastTrip = null } = useLastTrip(id)
+  const trips = tripsPage?.items ?? []
 
   const navigate = useNavigate()
 
@@ -159,6 +165,7 @@ const TripsTable = () => {
         accessorKey: 'vehicleId',
         header: 'ID Vehículo',
         size: 150,
+        enableSorting: false,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       },
       {
@@ -173,6 +180,7 @@ const TripsTable = () => {
         accessorKey: 'endMileage',
         header: 'Kilometraje Final',
         size: 150,
+        enableSorting: false,
         Cell: ({
           row
         }: {
@@ -323,6 +331,15 @@ const TripsTable = () => {
         columns={columns}
         data={trips}
         localization={MRT_Localization_ES}
+        {...server.tableProps}
+        // El endpoint no tiene filtros exactos por estas columnas.
+        enableColumnFilters={false}
+        rowCount={tripsPage?.totalItems ?? 0}
+        state={{
+          ...server.tableState,
+          isLoading,
+          showProgressBars: isFetching && !isLoading
+        }}
         enableColumnOrdering
         editingMode='modal'
         enableEditing={canManage}

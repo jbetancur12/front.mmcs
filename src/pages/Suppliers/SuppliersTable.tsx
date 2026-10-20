@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react' // useEffect y useState ya no son necesarios para el fetch principal
+import React, { useMemo } from 'react'
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
 import {
   Box,
@@ -9,7 +9,6 @@ import {
   CircularProgress,
   Grid
 } from '@mui/material'
-import useAxiosPrivate from '@utils/use-axios-private'
 import { useNavigate } from 'react-router-dom'
 import {
   Article,
@@ -19,7 +18,7 @@ import {
   Refresh as RefreshIcon,
   WarningAmber
 } from '@mui/icons-material' // Añadido RefreshIcon
-import { useQuery } from 'react-query'
+import { useSuppliers } from 'src/hooks/purchases/useSuppliers'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import {
@@ -168,10 +167,9 @@ const getEvaluationStatusInfo = (
 }
 
 const SuppliersTable: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
 
-  // Refactorizado para usar useQuery y la nueva interfaz de respuesta
+  // GET /suppliers con caché compartida (src/hooks/purchases/useSuppliers)
   const {
     data: apiResponse, // Contiene el objeto completo: { totalItems, suppliers, ... }
     isLoading,
@@ -179,21 +177,7 @@ const SuppliersTable: React.FC = () => {
     error,
     isFetching, // Para la barra de progreso durante refetches o paginación
     refetch // Para el botón de refrescar
-  } = useQuery<SuppliersAPIResponse, Error>(
-    'suppliersList', // Clave de la query
-    async () => {
-      // Aquí podrías pasar parámetros de paginación si implementas paginación del lado del servidor
-      // const params = { page: pageIndex + 1, limit: pageSize, search: globalFilterValue };
-      const response = await axiosPrivate.get<SuppliersAPIResponse>(
-        '/suppliers' /*, { params }*/
-      )
-      return response.data
-    },
-    {
-      // Opciones de React Query
-      // keepPreviousData: true, // Útil para paginación server-side para evitar parpadeos
-    }
-  )
+  } = useSuppliers<SuppliersAPIResponse>()
 
   // Extraer la lista de proveedores del objeto de respuesta
   const suppliersForTable = apiResponse?.suppliers || []

@@ -24,6 +24,7 @@ import Loader from '../Components/Loader2'
 import { addMonths, set } from 'date-fns'
 import Select from 'react-select'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useUploadRawCertificate } from '@hooks/calibration/useUploadRawCertificate'
 
 // Importa los componentes de MUI
 
@@ -37,6 +38,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   wbPasswords
 }) => {
   const axiosPrivate = useAxiosPrivate()
+  const uploadRawCertificate = useUploadRawCertificate()
   const [file, setFile] = useState<File | null>(null)
   const [filePdf, setFilePdf] = useState<File | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
@@ -409,14 +411,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     set
   }
 
-  const postData = async (data: FormData) => {
-    //logFormData(data)
-    return await axiosPrivate.post(`/files/raw`, data, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-  }
+  const postData = (data: FormData) => uploadRawCertificate.mutateAsync(data)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]

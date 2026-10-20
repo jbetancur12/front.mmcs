@@ -1,11 +1,16 @@
 // Enhanced Templates Page - Main Container Component
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState } from 'react'
 import { Button, Container, Grid, Typography, Box } from '@mui/material'
 import { Add as AddIcon, Description } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { bigToast } from '../ExcelManipulation/Utils'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCreateTemplate,
+  useDeleteTemplate,
+  useTemplates,
+  useUpdateTemplate
+} from '@hooks/templates/useTemplates'
 import { TemplatesData, TemplateData, ErrorState } from './types'
 import LoadingState from './LoadingState'
 import EmptyState from './EmptyState'
@@ -21,13 +26,27 @@ import { useCan } from '@utils/functions'
 
 const TemplatesPage: React.FC = () => {
   const canManageTemplates = useCan(PERMISSIONS.CALIBRATION_TEMPLATE_MANAGE)
-  const axiosPrivate = useAxiosPrivate()
   const { announce } = useAccessibility({ announceChanges: true })
 
   // State management
-  const [templates, setTemplates] = useState<TemplatesData[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<ErrorState | null>(null)
+  const {
+    data: templatesData,
+    isFetching: loading,
+    error: templatesError
+  } = useTemplates<TemplatesData>()
+  const templates = templatesData ?? []
+  const error: ErrorState | null = templatesError
+    ? {
+        type: 'network',
+        message: 'Error al cargar las plantillas. Por favor, intenta de nuevo.',
+        code: (
+          templatesError as { response?: { status?: number } }
+        ).response?.status?.toString()
+      }
+    : null
+  const createTemplateMutation = useCreateTemplate()
+  const updateTemplateMutation = useUpdateTemplate()
+  const deleteTemplateMutation = useDeleteTemplate()
 
   // Modal states
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -35,41 +54,13 @@ const TemplatesPage: React.FC = () => {
   const [templateToDuplicate, setTemplateToDuplicate] =
     useState<TemplatesData | null>(null)
 
-  // Fetch templates from API
-  const fetchTemplates = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const response = await axiosPrivate.get('/templates')
-      if (response.status === 200) {
-        setTemplates(response.data)
-      }
-    } catch (error: any) {
-      console.error('Error fetching templates:', error)
-      setError({
-        type: 'network',
-        message: 'Error al cargar las plantillas. Por favor, intenta de nuevo.',
-        code: error.response?.status?.toString()
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [axiosPrivate])
-
-  // Load templates on component mount
-  useEffect(() => {
-    fetchTemplates()
-  }, [fetchTemplates])
-
   // Handle template creation
   const handleCreateTemplate = async (templateData: TemplateData) => {
     try {
-      const response = await axiosPrivate.post('/templates', templateData)
+      const response = await createTemplateMutation.mutateAsync(templateData)
 
       if (response.status >= 200 && response.status < 300) {
         bigToast('Plantilla creada exitosamente!', 'success')
-        await fetchTemplates() // Refresh the list
         setCreateModalOpen(false)
       }
     } catch (error: any) {
@@ -94,11 +85,10 @@ const TemplatesPage: React.FC = () => {
   // Handle template duplication
   const handleDuplicateTemplate = async (templateData: TemplateData) => {
     try {
-      const response = await axiosPrivate.post('/templates', templateData)
+      const response = await createTemplateMutation.mutateAsync(templateData)
 
       if (response.status >= 200 && response.status < 300) {
         bigToast('Plantilla duplicada exitosamente!', 'success')
-        await fetchTemplates() // Refresh the list
         setDuplicateModalOpen(false)
         setTemplateToDuplicate(null)
       }
@@ -127,11 +117,13 @@ const TemplatesPage: React.FC = () => {
     templateData: TemplateData
   ) => {
     try {
-      const response = await axiosPrivate.put(`/templates/${id}`, templateData)
+      const response = await updateTemplateMutation.mutateAsync({
+        id,
+        payload: templateData
+      })
 
       if (response.status === 200 || response.status === 201) {
         bigToast('Plantilla actualizada exitosamente!', 'success')
-        await fetchTemplates() // Refresh the list
         return true
       }
       return false
@@ -155,11 +147,10 @@ const TemplatesPage: React.FC = () => {
     if (!shouldDelete) return
 
     try {
-      const response = await axiosPrivate.delete(`/templates/${id}`)
+      const response = await deleteTemplateMutation.mutateAsync(id)
 
       if (response.status >= 200 && response.status < 300) {
         bigToast('Plantilla eliminada exitosamente!', 'success')
-        await fetchTemplates() // Refresh the list
       }
     } catch (error: any) {
       console.error('Error deleting template:', error)

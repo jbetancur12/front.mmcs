@@ -25,9 +25,11 @@ import {
 } from '@mui/material'
 import { Close, DeleteOutline } from '@mui/icons-material'
 import { PURCHASE_TEAL, PURCHASE_TEAL_HOVER } from './purchaseTableStyle'
-import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
-import { useQuery } from 'react-query'
+import {
+  useCreatePurchaseOrder,
+  useFiscalSettings
+} from 'src/hooks/purchases/usePurchaseOrders'
 import {
   PurchaseRequestItem,
   Supplier,
@@ -35,15 +37,6 @@ import {
   PurchaseOrder
 } from 'src/pages/Purchases/Types' // Asegúrate que estas rutas sean correctas
 import { NumericFormat } from 'react-number-format'
-
-// Interfaz para los parámetros fiscales que se obtendrán del backend
-interface FiscalSettings {
-  PURCHASE_RETENTION_RATE?: number
-  SERVICE_RETENTION_RATE?: number
-  PURCHASE_MINIMUM_BASE?: number
-  SERVICE_MINIMUM_BASE?: number
-  IVA_GENERAL_RATE_PERCENTAGE?: number // Ej: 19 para 19%
-}
 
 interface AssignedItem {
   purchaseRequestItemId: string
@@ -70,7 +63,6 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   purchaseRequest,
   onSuccess
 }) => {
-  const axiosPrivate = useAxiosPrivate()
   const [orderData, setOrderData] = useState<
     Omit<PurchaseOrder, 'purchaseRequestId' | 'purchaseRequest'>
   >({
@@ -102,15 +94,8 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     data: fiscalSettings,
     isLoading: isLoadingFiscalSettings,
     error: fiscalSettingsError
-  } = useQuery<FiscalSettings, Error>(
-    'fiscalSettings',
-    async () => {
-      const response =
-        await axiosPrivate.get<FiscalSettings>('/fiscal-parameters')
-      return response.data
-    },
-    { staleTime: 1000 * 60 * 30 }
-  )
+  } = useFiscalSettings()
+  const createOrder = useCreatePurchaseOrder()
 
   const handleSubmitOrder = async () => {
     if (!selectedSupplier) {
@@ -171,7 +156,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     }
 
     try {
-      await axiosPrivate.post('/purchaseOrders', payload)
+      await createOrder.mutateAsync(payload)
       Swal.fire('Éxito', 'La orden de compra ha sido generada.', 'success')
       const processedIds = assignedItems.map(
         (item) => item.purchaseRequestItemId

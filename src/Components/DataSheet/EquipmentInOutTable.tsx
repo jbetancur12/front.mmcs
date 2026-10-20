@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -7,7 +7,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Box, Grid, IconButton, Typography } from '@mui/material'
 import { format } from 'date-fns'
 import { ArrowBack } from '@mui/icons-material'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useEquipmentInOutReport } from '@hooks/dataSheets/useDataSheets'
 
 interface EquipmentInOutRecord {
   id: number
@@ -27,38 +27,27 @@ interface EquipmentInOutRecord {
 }
 
 const EquipmentInOutTable = () => {
-  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [equipmentInfo, setEquipmentInfo] = useState<{
+  const { data: inOutReport } = useEquipmentInOutReport<{
     equipmentName: string
     internalCode: string
-  } | null>(null)
-  const [inOutData, setInOutData] = useState<EquipmentInOutRecord[]>([])
-
-  const fetchInOutReport = async () => {
-    try {
-      const response = await axiosPrivate.get(
-        `/dataSheet/${id}/in-out-report`,
-        {}
-      )
-
-      if (response.status === 200) {
-        setEquipmentInfo({
-          equipmentName: response.data.equipmentName,
-          internalCode: response.data.internalCode
-        })
-
-        setInOutData(response.data.equipmentInOutRecords)
-      }
-    } catch (error) {
-      console.error('Error fetching dataSheet data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchInOutReport()
-  }, [id])
+    equipmentInOutRecords: EquipmentInOutRecord[]
+  }>(id)
+  const equipmentInfo = useMemo(
+    () =>
+      inOutReport
+        ? {
+            equipmentName: inOutReport.equipmentName,
+            internalCode: inOutReport.internalCode
+          }
+        : null,
+    [inOutReport]
+  )
+  const inOutData = useMemo(
+    () => inOutReport?.equipmentInOutRecords ?? [],
+    [inOutReport]
+  )
 
   const columns = useMemo<MRT_ColumnDef<EquipmentInOutRecord>[]>(
     () => [

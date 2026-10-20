@@ -22,9 +22,10 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 
-// Importar useQuery, useQueryClient
-import { useQuery } from 'react-query'
-import useAxiosPrivate from '@utils/use-axios-private' // Tu hook de Axios privado
+import {
+  useLaboratoryDevices,
+  useLaboratoryHistoricalData
+} from '@hooks/iot/useLaboratoryData'
 
 // Importar componentes hijos y hook de WebSocket
 import SensorCard from './SensorCard' // Asegúrate que la ruta sea correcta
@@ -133,7 +134,6 @@ const avgOf = (values: (number | null | undefined)[], unit: string) => {
 
 const LaboratoryMonitor: React.FC = () => {
   const canManage = useCan(PERMISSIONS.LABORATORY_DEVICE_MANAGE)
-  const axiosPrivate = useAxiosPrivate()
   const { lastMessage } = useWebSocket()
   const boxRef = useRef<HTMLDivElement>(null)
 
@@ -157,11 +157,7 @@ const LaboratoryMonitor: React.FC = () => {
     data: initialDevices,
     error: errorDevices, // Renombrar
     refetch: refetchDevices // Renombrar
-  } = useQuery<ApiDeviceData[], Error>({
-    queryKey: ['laboratoryDevices'],
-    queryFn: async () =>
-      axiosPrivate.get('/laboratory/devices').then((res) => res.data)
-  })
+  } = useLaboratoryDevices<ApiDeviceData>()
 
   // Estado local para dispositivos mostrados (sin cambios)
   const [displayedDevices, setDisplayedDevices] = useState<ApiDeviceData[]>([])
@@ -235,30 +231,11 @@ const LaboratoryMonitor: React.FC = () => {
     error: errorHistory
 
     // El tipo genérico ahora es HistoricalApiResponse
-  } = useQuery<HistoricalApiResponse, Error>({
-    queryKey: [
-      'laboratoryHistoricalData',
-      selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null,
-      selectedSensorIds.sort().join(',')
-    ], // Ordenar IDs para consistencia de la key
-    queryFn: async () => {
-      if (!selectedDate || selectedSensorIds.length === 0) {
-        // Devolver una estructura válida vacía si no se debe fetchear
-        return { historicalData: [], statistics: {} }
-      }
-      const dateString = format(selectedDate, 'yyyy-MM-dd')
-      const sensorIdsString = selectedSensorIds.join(',')
-
-      const response = await axiosPrivate.get(
-        `/laboratory/historical-data?date=${dateString}&sensorIds=${sensorIdsString}`
-      )
-      // response.data debería ser { historicalData: [...], statistics: {...} }
-      return response.data
-    },
-    enabled: !!selectedDate && selectedSensorIds.length > 0,
-    staleTime: 5 * 60 * 1000
-    // keepPreviousData: true, // Opcional: Muestra datos viejos mientras carga los nuevos
-  })
+  } = useLaboratoryHistoricalData<HistoricalApiResponse>(
+    selectedDate,
+    selectedSensorIds,
+    { historicalData: [], statistics: {} }
+  )
 
   // --- Extraer datos del resultado de la query ---
   const rawHistoricalData = historicalApiResponse?.historicalData

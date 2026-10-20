@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useQueryClient } from 'react-query'
 import {
   Alert,
   Accordion,
@@ -36,7 +36,6 @@ import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { Toaster, toast } from 'react-hot-toast'
-import { axiosPrivate } from '@utils/api'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   EQUIPMENT_QUOTATION_STATUS_COLORS,
@@ -44,7 +43,10 @@ import {
 } from '../../constants/equipmentSales'
 import {
   EQUIPMENT_SALES_QUERY_KEYS,
+  useCreateEquipmentSalesCustomer,
+  useCreateEquipmentSalesCustomerSite,
   useEquipmentProducts,
+  useEquipmentSalesCustomers,
   useEquipmentQuotation,
   useEquipmentQuotationDocuments,
   useEquipmentQuoteTermsTemplate,
@@ -65,9 +67,7 @@ import EquipmentQuotationItemsEditor, {
 } from './EquipmentQuotationItemsEditor'
 import EquipmentSalesCatalogProductPickerDialog from './EquipmentSalesCatalogProductPickerDialog'
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
-import EquipmentSalesCustomerDialog, {
-  EquipmentSalesCustomerDialogValues
-} from './EquipmentSalesCustomerDialog'
+import EquipmentSalesCustomerDialog from './EquipmentSalesCustomerDialog'
 import CalibrationServiceRichTextEditor from '../calibration-services/CalibrationServiceRichTextEditor'
 import {
   EQUIPMENT_QUOTE_TERM_KEYS,
@@ -229,15 +229,7 @@ const EquipmentSalesWorkspacePage = () => {
     downloadDocument,
     upsertSequenceConfig
   } = useEquipmentSalesMutations()
-  const { data: customers = [] } = useQuery({
-    queryKey: ['equipment-sales-customers'],
-    queryFn: async () => {
-      const response = await axiosPrivate.get<EquipmentCustomerOption[]>('/customers')
-      return response.data
-    },
-    enabled: canAccessWorkspace,
-    staleTime: 5 * 60 * 1000
-  })
+  const { data: customers = [] } = useEquipmentSalesCustomers(canAccessWorkspace)
   const { data: productsData } = useEquipmentProducts({ limit: 500 })
   const products = productsData?.data || []
 
@@ -263,67 +255,23 @@ const EquipmentSalesWorkspacePage = () => {
   const [catalogPickerOpen, setCatalogPickerOpen] = useState(false)
   const [activeSection, setActiveSection] = useState(0)
 
-  const createCustomerMutation = useMutation({
-    mutationFn: async (values: EquipmentSalesCustomerDialogValues) => {
-      const response = await axiosPrivate.post<{ customer: EquipmentCustomerOption }>(
-        '/customers',
-        {
-          ...values.customer,
-          direccion: values.customer.direccion || values.site.address || '',
-          ciudad: values.customer.ciudad || values.site.city || '',
-          departamento: values.customer.departamento || values.site.department || '',
-          email: values.customer.email || values.site.contactEmail || '',
-          telefono: values.customer.telefono || values.site.contactPhone || '',
-          pais: values.customer.pais || values.site.country || 'Colombia',
-          sites: [values.site]
-        }
-      )
-      return response.data.customer
-    },
-    onSuccess: (customer) => {
-      queryClient.setQueryData<EquipmentCustomerOption[]>(
-        ['equipment-sales-customers'],
-        (previous = []) => {
-          const withoutDuplicate = previous.filter((item) => item.id !== customer.id)
-          return [...withoutDuplicate, customer].sort((left, right) =>
-            left.nombre.localeCompare(right.nombre)
-          )
-        }
-      )
-      handleCustomerChange(customer)
-      if (customer.sites?.[0]) {
-        handleCustomerSiteChange(customer.sites[0])
-      }
-      setCustomerDialogMode(null)
-      toast.success('Cliente creado y seleccionado.')
+  const createCustomerMutation = useCreateEquipmentSalesCustomer((customer) => {
+    handleCustomerChange(customer)
+    if (customer.sites?.[0]) {
+      handleCustomerSiteChange(customer.sites[0])
     }
+    setCustomerDialogMode(null)
+    toast.success('Cliente creado y seleccionado.')
   })
 
-  const createCustomerSiteMutation = useMutation({
-    mutationFn: async (values: EquipmentSalesCustomerDialogValues) => {
-      if (!selectedCustomer?.id) {
-        throw new Error('Selecciona un cliente antes de crear la sede.')
-      }
-      const response = await axiosPrivate.post<EquipmentCustomerOption>(
-        `/customers/${selectedCustomer.id}/sedes`,
-        values.site
-      )
-      return response.data
-    },
-    onSuccess: (customer) => {
-      queryClient.setQueryData<EquipmentCustomerOption[]>(
-        ['equipment-sales-customers'],
-        (previous = []) =>
-          previous.map((item) => (item.id === customer.id ? customer : item))
-      )
-      const createdSite = customer.sites?.[customer.sites.length - 1]
-      handleCustomerChange(customer)
-      if (createdSite) {
-        handleCustomerSiteChange(createdSite)
-      }
-      setCustomerDialogMode(null)
-      toast.success('Sede creada y seleccionada.')
+  const createCustomerSiteMutation = useCreateEquipmentSalesCustomerSite((customer) => {
+    const createdSite = customer.sites?.[customer.sites.length - 1]
+    handleCustomerChange(customer)
+    if (createdSite) {
+      handleCustomerSiteChange(createdSite)
     }
+    setCustomerDialogMode(null)
+    toast.success('Sede creada y seleccionada.')
   })
 
   useEffect(() => {
@@ -1324,7 +1272,7 @@ const EquipmentSalesWorkspacePage = () => {
             if (customerDialogMode === 'customer') {
               createCustomerMutation.mutate(values)
             } else {
-              createCustomerSiteMutation.mutate(values)
+              createCustomerSiteMutation.mutate({ customerId: selectedCustomer?.id, values })
             }
           }}
         />

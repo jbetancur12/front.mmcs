@@ -1,1031 +1,115 @@
-import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useState } from 'react'
 import {
   Alert,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Autocomplete,
   Box,
   Button,
   Card,
   CardContent,
-  Checkbox,
   Chip,
   CircularProgress,
   Container,
-  Divider,
-  FormControlLabel,
-  FormControl,
   Grid,
-  InputLabel,
-  List,
-  ListItem,
-  ListItemText,
-  MenuItem,
-  Paper,
-  Popper,
-  PopperProps,
-  Select,
   Stack,
-  Tab,
-  Tabs,
-  TextField,
-  Tooltip,
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
-import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined'
-import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined'
-import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
-import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
-import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
-import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
-import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined'
-import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined'
-import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
-import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
-import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
-import { Toaster, toast } from 'react-hot-toast'
-import { axiosPrivate } from '@utils/api'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
-import {
-  CALIBRATION_SERVICE_QUERY_KEYS,
-  useCalibrationServiceSequenceConfig,
-  useCalibrationService,
-  useCalibrationServiceQuoteTermsTemplate,
-  useCalibrationServiceMutations
-} from '../../hooks/useCalibrationServices'
-import {
-  CalibrationServiceCustomer,
-  CalibrationServiceCustomerSite,
-  CalibrationServiceItemPayload,
-  CalibrationServicePayload,
-  CalibrationServiceQuoteTerms,
-  CalibrationServiceProductSummary
-} from '../../types/calibrationService'
-import { useHasRole } from '../../utils/functions'
 import CalibrationServiceItemsEditor from './CalibrationServiceItemsEditor'
 import CatalogProductPickerDialog from './CatalogProductPickerDialog'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
-import CalibrationServiceCustomerDialog, {
-  CalibrationServiceCustomerDialogValues
-} from './CalibrationServiceCustomerDialog'
-import CalibrationServiceRichTextEditor from './CalibrationServiceRichTextEditor'
+import CalibrationServiceCustomerDialog from './CalibrationServiceCustomerDialog'
 import {
-  CALIBRATION_QUOTE_TERM_KEYS,
-  CALIBRATION_QUOTE_TERM_LABELS,
-  CalibrationQuoteTermKey,
-  mergeCalibrationQuoteTerms
-} from './calibrationQuoteTerms'
-import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
+  CATALOG_PRICE_SOURCE_OPTIONS,
+  sectionCardSx,
+  SUGGESTED_CATALOG_PRICE_SOURCE,
+  tealOutlineSx
+} from './workspace/calibrationServiceWorkspaceConstants'
+import { WORKSPACE_SECTIONS } from './workspace/calibrationServiceWorkspaceSections'
+import { getWorkspaceSummary } from './workspace/calibrationServiceWorkspaceSummary'
+import CalibrationServiceWorkspaceSectionTabs from './workspace/CalibrationServiceWorkspaceSectionTabs'
+import CalibrationServiceWorkspaceCustomerSection from './workspace/CalibrationServiceWorkspaceCustomerSection'
+import CalibrationServiceWorkspaceContactSection from './workspace/CalibrationServiceWorkspaceContactSection'
+import CalibrationServiceWorkspaceTermsSection from './workspace/CalibrationServiceWorkspaceTermsSection'
+import CalibrationServiceWorkspaceCommercialSection from './workspace/CalibrationServiceWorkspaceCommercialSection'
+import CalibrationServiceWorkspaceSummaryCard from './workspace/CalibrationServiceWorkspaceSummaryCard'
+import CalibrationServiceWorkspaceActionBar from './workspace/CalibrationServiceWorkspaceActionBar'
+import useCalibrationServiceWorkspaceData from './workspace/useCalibrationServiceWorkspaceData'
+import useCalibrationServiceWorkspaceForm from './workspace/useCalibrationServiceWorkspaceForm'
+import useCalibrationServiceWorkspaceNavigation from './workspace/useCalibrationServiceWorkspaceNavigation'
+import useCalibrationServiceWorkspaceActions from './workspace/useCalibrationServiceWorkspaceActions'
+import useCalibrationServiceWorkspaceCustomerActions from './workspace/useCalibrationServiceWorkspaceCustomerActions'
+import useWorkspaceActionBarBox from './workspace/useWorkspaceActionBarBox'
 
-import { ROLE_GROUPS } from 'src/constants/roles'
-import { PERMISSIONS } from 'src/constants/permissions'
-import { useCan } from '@utils/functions'
-type FormItem = CalibrationServiceItemPayload & { localId: string }
-type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] }
-
-const REQUEST_CHANNEL_OPTIONS = ['En persona', 'Por Email', 'Por Telefono', 'Por WhatsApp']
-const PAYMENT_METHOD_OPTIONS = ['De Contado', 'A 30 Dias', 'A 60 Dias', 'A 90 Dias', '50% / 50%']
-const DELIVERY_TIME_OPTIONS = ['8 Dias Habiles', '15 Dias Habiles', '20 Dias Habiles', '30 Dias Habiles']
-const VALIDITY_DAY_OPTIONS = [8, 15, 30, 60, 90]
-const CATALOG_PRICE_SOURCE_OPTIONS = [
-  { value: 'medicalPrice', label: 'Valor médica' },
-  { value: 'industrialPrice', label: 'Valor industrial' },
-  { value: 'thirdPartyPrice', label: 'Valor subcontratados' }
-] as const
-
-type CatalogPriceSource = (typeof CATALOG_PRICE_SOURCE_OPTIONS)[number]['value']
-const DISCOUNT_TYPE_OPTIONS = [
-  { value: 'fixed', label: 'Valor fijo' },
-  { value: 'percentage', label: 'Porcentaje' }
-]
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// Lo que falta para poder guardar (borrador) o enviar la cotización, y en qué paso se corrige
-interface Requirement {
-  key: string
-  label: string
-  section: number
-  forDraft: boolean
-  pending: boolean
-}
-
-// La lista del selector de clientes es más ancha que el campo: los nombres largos se leen en una o dos líneas
-const WideListPopper = (props: PopperProps) => (
-  <Popper {...props} placement='bottom-start' style={{ ...props.style, width: 'fit-content', minWidth: 380, maxWidth: 'min(640px, 92vw)' }} />
-)
-
-const sectionCardSx = {
-  borderRadius: '16px',
-  mb: 3,
-  border: '1px solid #e5e7eb',
-  bgcolor: '#fff',
-  boxShadow: 'none'
-} as const
-
-const tealButtonSx = {
-  borderRadius: '12px',
-  textTransform: 'none',
-  fontWeight: 600,
-  py: 1.1,
-  bgcolor: '#00BFA5',
-  '&:hover': { bgcolor: '#00ACC1' },
-  '&.Mui-disabled': { bgcolor: '#e5e7eb', color: '#9ca3af' }
-} as const
-
-const tealOutlineSx = {
-  borderRadius: '12px',
-  textTransform: 'none',
-  fontWeight: 600,
-  py: 1.1,
-  color: '#00897B',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
-} as const
-
-const currencyFormatter = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0
-})
-
-const createLocalId = () =>
-  `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-const toNumber = (value: number | string | null | undefined) => {
-  if (value === null || value === undefined || value === '') return 0
-  const parsed = typeof value === 'string' ? parseFloat(value) : value
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-const stripHtml = (value?: string | null) =>
-  String(value || '')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-const getQueryErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (error instanceof Error && error.message) {
-    return `${fallbackMessage} ${error.message}`
-  }
-
-  return fallbackMessage
-}
-
-const createEmptyItem = (): FormItem => ({
-  localId: createLocalId(),
-  productId: null,
-  itemName: '',
-  instrumentName: '',
-  intervalText: '',
-  quantity: 1,
-  serviceType: 'Trazable',
-  unitPrice: 0,
-  taxRate: 19,
-  subtotal: 0,
-  taxTotal: 0,
-  total: 0,
-  notes: '',
-  sortOrder: 0,
-  otherFields: {
-    catalogPriceSource: 'medicalPrice',
-    hasCalibrationPoints: false
-  }
-})
-
-const createInitialFormState = (): FormState => ({
-  customerId: null,
-  scopeType: 'general',
-  customerSite: '',
-  executionCustomerName: '',
-  executionSiteName: '',
-  requestChannel: '',
-  approvalChannel: '',
-  approvalReference: '',
-  validityDays: 30,
-  hasDiscount: false,
-  discountType: 'fixed',
-  discountValue: 0,
-  paymentMethod: '',
-  instrumentDeliveryTime: '',
-  certificateDeliveryTime: '',
-  contactName: '',
-  contactEmail: '',
-  contactPhone: '',
-  city: '',
-  department: '',
-  address: '',
-  commercialComments: '',
-  quoteTerms: mergeCalibrationQuoteTerms(),
-  internalNotes: '',
-  otherFields: {},
-  items: []
-})
-
-const getItemTotals = (item: CalibrationServiceItemPayload) => {
-  const subtotal = Math.max(Number(item.quantity) || 0, 0) * toNumber(item.unitPrice)
-  const taxTotal = subtotal * (toNumber(item.taxRate) / 100)
-  return { subtotal, taxTotal, total: subtotal + taxTotal }
-}
-
-const getCatalogPriceValue = (
-  product: CalibrationServiceProductSummary | null,
-  priceSource: CatalogPriceSource
-) => {
-  if (!product) return null
-
-  const firstVariant = product.variants?.[0]
-  if (!firstVariant) return null
-
-  const val = firstVariant[priceSource]
-  return val !== null && val !== undefined ? Number(val) : null
-}
-
-const getCustomerSiteOptions = (
-  customer: CalibrationServiceCustomer | null
-): CalibrationServiceCustomerSite[] => {
-  if (!customer) return []
-
-  if (customer.sites?.length) {
-    return customer.sites.filter((site) => site.isActive !== false)
-  }
-
-  return (customer.sede || []).map((siteName) => ({
-    name: siteName,
-    address: customer.direccion || '',
-    city: customer.ciudad || '',
-    department: customer.departamento || '',
-    country: 'Colombia',
-    contactEmail: customer.email || '',
-    contactPhone: customer.telefono || '',
-    isActive: true
-  }))
-}
-
-const getSiteDisplayLabel = (site: CalibrationServiceCustomerSite) =>
-  [site.name, site.city, site.department].filter(Boolean).join(' · ')
-
-const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'): CalibrationServicePayload => ({
-  customerId: formState.customerId ?? null,
-  scopeType: formState.scopeType ?? 'general',
-  customerSite: formState.customerSite?.trim() || null,
-  executionCustomerName: formState.executionCustomerName?.trim() || null,
-  executionSiteName: formState.executionSiteName?.trim() || null,
-  requestChannel: formState.requestChannel?.trim() || null,
-  approvalChannel: formState.approvalChannel?.trim() || null,
-  approvalReference: formState.approvalReference?.trim() || null,
-  validityDays: formState.validityDays ? Number(formState.validityDays) : null,
-  hasDiscount: Boolean(formState.hasDiscount),
-  discountType: formState.hasDiscount ? formState.discountType || 'fixed' : null,
-  discountValue: formState.hasDiscount ? toNumber(formState.discountValue) : 0,
-  paymentMethod: formState.paymentMethod?.trim() || null,
-  instrumentDeliveryTime: formState.instrumentDeliveryTime?.trim() || null,
-  certificateDeliveryTime: formState.certificateDeliveryTime?.trim() || null,
-  contactName: formState.contactName?.trim() || null,
-  contactEmail: formState.contactEmail?.trim() || null,
-  contactPhone: formState.contactPhone?.trim() || null,
-  city: formState.city?.trim() || null,
-  department: formState.department?.trim() || null,
-  address: formState.address?.trim() || null,
-  commercialComments:
-    stripHtml(formState.quoteTerms?.commercialComments) ||
-    formState.commercialComments?.trim() ||
-    null,
-  quoteTerms: formState.quoteTerms || null,
-  internalNotes: formState.internalNotes?.trim() || null,
-  status,
-  otherFields: formState.otherFields || {},
-  items: formState.items
-    .filter((item) => item.itemName.trim() || item.instrumentName?.trim())
-    .map((item, index) => {
-      const totals = getItemTotals(item)
-      return {
-        productId: item.productId ?? null,
-        itemName: item.itemName.trim() || item.instrumentName?.trim() || '',
-        instrumentName: item.instrumentName?.trim() || null,
-        intervalText: item.intervalText?.trim() || null,
-        quantity: Number(item.quantity) || 1,
-        serviceType: item.serviceType?.trim() || null,
-        unitPrice: toNumber(item.unitPrice),
-        taxRate: toNumber(item.taxRate),
-        subtotal: totals.subtotal,
-        taxTotal: totals.taxTotal,
-        total: totals.total,
-        notes: item.notes?.trim() || null,
-        sortOrder: index,
-        otherFields: item.otherFields || {}
-      }
-    })
-})
-
+/** Formulario por pasos para crear o editar la cotización base de un servicio de calibración. */
 const CalibrationServiceWorkspacePage = () => {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const { serviceId } = useParams<{ serviceId?: string }>()
-  const isEditing = Boolean(serviceId)
-  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
-  // Crear exige "crear" y editar exige "editar"; la ruta ya filtra, esto cubre el cambio en vivo
-  const canCreateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
-  const canUpdateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_UPDATE)
-  const canAccessWorkspace = isEditing ? canUpdateService : canCreateService
+  const data = useCalibrationServiceWorkspaceData()
   const {
-    data: sequenceConfig,
-    isLoading: isLoadingSequenceConfig
-  } = useCalibrationServiceSequenceConfig(canAccessWorkspace)
-  const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
-  const { data: quoteTermsTemplate, isFetchedAfterMount: isTemplateFresh } =
-    useCalibrationServiceQuoteTermsTemplate(canAccessWorkspace && !isEditing)
+    serviceId,
+    isEditing,
+    isAdmin,
+    canAccessWorkspace,
+    sequenceConfig,
+    service,
+    customerOptions,
+    hasCustomersError,
+    productOptions,
+    catalogErrors,
+    requestEvidenceDocuments,
+    hasCustomerChangeRequest,
+    latestChangeRequest,
+    canEdit,
+    isPageLoading
+  } = data
+  const form = useCalibrationServiceWorkspaceForm(data)
   const {
-    createService,
-    updateService,
-    uploadDocument,
-    generateQuotePdf,
-    downloadDocument,
-    upsertSequenceConfig
-  } = useCalibrationServiceMutations()
-  const {
-    data: customers = [],
-    error: customersError,
-    isError: hasCustomersError,
-    isLoading: isLoadingCustomers
-  } = useQuery({
-    queryKey: ['calibration-service-customers'],
-    queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers', {
-        params: { scope: 'calibration' }
-      })
-      return response.data
-    },
-    enabled: canAccessWorkspace,
-    staleTime: 5 * 60 * 1000
-  })
-  const {
-    data: products = [],
-    error: productsError,
-    isError: hasProductsError,
-    isLoading: isLoadingProducts
-  } = useQuery({
-    queryKey: ['calibration-service-products'],
-    queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationServiceProductSummary[]>('/products')
-      return response.data
-    },
-    enabled: canAccessWorkspace,
-    staleTime: 5 * 60 * 1000
-  })
-
-  const [formState, setFormState] = useState<FormState>(() => {
-    const cached = queryClient.getQueryData<{ terms: CalibrationServiceQuoteTerms }>(
-      [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']
-    )
-    if (cached?.terms) {
-      return {
-        ...createInitialFormState(),
-        quoteTerms: mergeCalibrationQuoteTerms(cached.terms),
-        commercialComments: stripHtml(cached.terms.commercialComments) || ''
-      }
-    }
-    return createInitialFormState()
-  })
-  const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
-  const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
-  const [hydrated, setHydrated] = useState(false)
-  const templateHydratedRef = useRef(false)
-  const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
-  const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
+    formState,
+    requestEvidenceFile,
+    selectedCustomer,
+    setItemField,
+    setItemOtherField,
+    handleAddItemsFromCatalog,
+    handleRemoveItem,
+    handleSelectProduct,
+    handleSelectCatalogPrice
+  } = form
+  const navigation = useCalibrationServiceWorkspaceNavigation()
+  const { activeSection, goToSection } = navigation
   const [catalogPickerOpen, setCatalogPickerOpen] = useState(false)
-  const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
-    useState(false)
-  const [activeSection, setActiveSection] = useState(0)
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [actionBarBox, setActionBarBox] = useState<{ left: number; width: number } | null>(null)
-  const [validationErrorItemIds, setValidationErrorItemIds] = useState<Set<string>>(new Set())
-
-  const createCustomerMutation = useMutation({
-    mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
-      const response = await axiosPrivate.post<{ customer: CalibrationServiceCustomer }>(
-        '/customers',
-        {
-          ...values.customer,
-          direccion: values.customer.direccion || values.site.address || '',
-          ciudad: values.customer.ciudad || values.site.city || '',
-          departamento: values.customer.departamento || values.site.department || '',
-          email: values.customer.email || values.site.contactEmail || '',
-          telefono: values.customer.telefono || values.site.contactPhone || '',
-          pais: values.customer.pais || values.site.country || 'Colombia',
-          sites: [values.site]
-        }
-      )
-      return response.data.customer
-    },
-    onSuccess: (customer) => {
-      queryClient.setQueryData<CalibrationServiceCustomer[]>(
-        ['calibration-service-customers'],
-        (previous = []) => {
-          const withoutDuplicate = previous.filter((item) => item.id !== customer.id)
-          return [...withoutDuplicate, customer].sort((left, right) =>
-            left.nombre.localeCompare(right.nombre)
-          )
-        }
-      )
-      handleCustomerChange(customer)
-      if (customer.sites?.[0]) {
-        handleCustomerSiteChange(customer.sites[0])
-      }
-      setCustomerDialogMode(null)
-      toast.success('Cliente creado y seleccionado.')
-    }
+  const summary = getWorkspaceSummary({
+    formState,
+    hasRequestEvidence: Boolean(requestEvidenceFile || requestEvidenceDocuments.length)
   })
-
-  const createCustomerSiteMutation = useMutation({
-    mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
-      if (!selectedCustomer?.id) {
-        throw new Error('Selecciona un cliente antes de crear la sede.')
-      }
-
-      const response = await axiosPrivate.post<CalibrationServiceCustomer>(
-        `/customers/${selectedCustomer.id}/sedes`,
-        values.site
-      )
-      return response.data
-    },
-    onSuccess: (customer) => {
-      queryClient.setQueryData<CalibrationServiceCustomer[]>(
-        ['calibration-service-customers'],
-        (previous = []) =>
-          previous.map((item) => (item.id === customer.id ? customer : item))
-      )
-      const createdSite = customer.sites?.[customer.sites.length - 1]
-      handleCustomerChange(customer)
-      if (createdSite) {
-        handleCustomerSiteChange(createdSite)
-      }
-      setCustomerDialogMode(null)
-      toast.success('Sede creada y seleccionada.')
-    }
-  })
-
-  useEffect(() => {
-    if (!canAccessWorkspace || isLoadingSequenceConfig) {
-      return
-    }
-
-    if (!sequenceConfig?.initialized) {
-      setIsSequenceDialogOpen(true)
-    }
-  }, [canAccessWorkspace, isLoadingSequenceConfig, sequenceConfig?.initialized])
-
-  useEffect(() => {
-    if (!service || hydrated) return
-    const hasDifferentExecutionCustomer = Boolean(service.executionCustomerName)
-    setFormState({
-      customerId: service.customerId ?? null,
-      scopeType: service.scopeType ?? 'general',
-      customerSite: service.customerSite || '',
-      executionCustomerName: service.executionCustomerName || '',
-      executionSiteName: service.executionSiteName || '',
-      requestChannel: service.requestChannel || '',
-      approvalChannel: service.approvalChannel || '',
-      approvalReference: service.approvalReference || '',
-      validityDays: service.validityDays || 30,
-      hasDiscount: service.hasDiscount,
-      discountType: service.discountType || 'fixed',
-      discountValue: toNumber(service.discountValue),
-      paymentMethod: service.paymentMethod || '',
-      instrumentDeliveryTime: service.instrumentDeliveryTime || '',
-      certificateDeliveryTime: service.certificateDeliveryTime || '',
-      contactName: service.contactName || '',
-      contactEmail: service.contactEmail || '',
-      contactPhone: service.contactPhone || '',
-      city: service.city || '',
-      department: service.department || '',
-      address: service.address || '',
-      commercialComments: service.commercialComments || '',
-      quoteTerms: mergeCalibrationQuoteTerms({
-        commercialComments:
-          service.quoteTerms?.commercialComments ||
-          (service.commercialComments
-            ? `<p>${service.commercialComments}</p>`
-            : undefined),
-        ...(service.quoteTerms || {})
-      }),
-      internalNotes: service.internalNotes || '',
-      otherFields: service.otherFields || {},
-      items: service.items?.map((item, index) => ({
-        localId: String(item.id ?? createLocalId()),
-        productId: item.productId ?? null,
-        itemName: item.itemName,
-        instrumentName: item.instrumentName || '',
-        intervalText: item.intervalText || '',
-        quantity: item.quantity,
-        serviceType: item.serviceType || 'Trazable',
-        unitPrice: toNumber(item.unitPrice),
-        taxRate: toNumber(item.taxRate),
-        subtotal: toNumber(item.subtotal),
-        taxTotal: toNumber(item.taxTotal),
-        total: toNumber(item.total),
-        notes: item.notes || '',
-        sortOrder: item.sortOrder ?? index,
-        otherFields: {
-          catalogPriceSource:
-            typeof item.otherFields?.catalogPriceSource === 'string' &&
-            ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(item.otherFields.catalogPriceSource)
-              ? item.otherFields.catalogPriceSource
-              : 'medicalPrice',
-          ...(item.otherFields || {})
-        }
-      })) || [createEmptyItem()]
-    })
-    setRequestEvidenceTitle(`Evidencia de solicitud ${service.serviceCode}`)
-    setUseDifferentExecutionCustomer(hasDifferentExecutionCustomer)
-    setHydrated(true)
-  }, [hydrated, service])
-
-  useEffect(() => {
-    // Solo la respuesta pedida en este montaje: el caché puede traer una plantilla vieja
-    if (isEditing || templateHydratedRef.current || !isTemplateFresh || !quoteTermsTemplate?.terms) return
-
-    templateHydratedRef.current = true
-    setFormState((previous) => ({
-      ...previous,
-      quoteTerms: mergeCalibrationQuoteTerms(quoteTermsTemplate.terms),
-      commercialComments:
-        stripHtml(quoteTermsTemplate.terms.commercialComments) ||
-        previous.commercialComments
-    }))
-  }, [isEditing, isTemplateFresh, quoteTermsTemplate?.terms])
-
-  const customerOptions =
-    customers.length > 0
-      ? customers
-      : service?.customer
-        ? [service.customer]
-        : []
-  const productFallbackOptions = (service?.items || [])
-    .map((item) => item.product)
-    .filter(
-      (product): product is CalibrationServiceProductSummary =>
-        Boolean(product?.id)
-    )
-    .filter(
-      (product, index, array) =>
-        array.findIndex((candidate) => candidate.id === product.id) === index
-    )
-  const productOptions = products.length > 0 ? products : productFallbackOptions
-  const catalogErrors = [
-    hasCustomersError
-      ? getQueryErrorMessage(
-          customersError,
-          'No pudimos cargar el catalogo de clientes para este formulario.'
-        )
-      : null,
-    hasProductsError
-      ? getQueryErrorMessage(
-          productsError,
-          'No pudimos cargar el catalogo de productos para este formulario.'
-        )
-      : null
-  ].filter(Boolean) as string[]
-  const selectedCustomer =
-    customerOptions.find((customer) => customer.id === formState.customerId) || null
-  const customerSites = getCustomerSiteOptions(selectedCustomer)
-  const requestEvidenceDocuments =
-    service?.documents?.filter((document) => document.documentType === 'request_evidence') || []
-  const hasCustomerChangeRequest =
-    service?.otherFields?.customerResponseType === 'changes_requested'
-  const latestChangeRequest =
-    service?.otherFields?.latestChangeRequest &&
-    typeof service.otherFields.latestChangeRequest === 'object' &&
-    !Array.isArray(service.otherFields.latestChangeRequest)
-      ? (service.otherFields.latestChangeRequest as Record<string, unknown>)
-      : null
-  const canEdit =
-    canAccessWorkspace &&
-    (!service || service.status === 'draft')
-  const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading ||
-    generateQuotePdf.isLoading || downloadDocument.isLoading
-  const SUGGESTED_CATALOG_PRICE_SOURCE: CatalogPriceSource = 'medicalPrice'
-
-  const sections = [
-    { key: 'customer', label: 'Cliente y alcance', icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['customerId', 'requestChannel'] as const },
-    { key: 'contact', label: 'Contacto y destino', icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />, fields: ['contactName', 'contactEmail', 'city'] as const },
-    { key: 'terms', label: 'Términos', icon: <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />, fields: [] as const },
-    { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
-    { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays', 'instrumentDeliveryTime', 'certificateDeliveryTime'] as const },
-  ] as const
-
-  const subtotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).subtotal, 0)
-  const taxTotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).taxTotal, 0)
-  const discountTotal = formState.hasDiscount
-    ? formState.discountType === 'percentage'
-      ? subtotal * (toNumber(formState.discountValue) / 100)
-      : toNumber(formState.discountValue)
-    : 0
-  const grandTotal = subtotal + taxTotal - discountTotal
-  const validItemsCount = formState.items.filter((i) => i.itemName.trim()).length
-
-  const filledItems = formState.items.filter((item) => item.itemName.trim() || item.instrumentName?.trim())
-  const itemsNeedingPoints = filledItems.filter(
-    (item) =>
-      item.otherFields?.hasCalibrationPoints !== false &&
-      (!item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange)
-  )
-  const hasRequestEvidence = Boolean(requestEvidenceFile || requestEvidenceDocuments.length)
-  const contactEmail = formState.contactEmail?.trim() || ''
-  const requirements: Requirement[] = [
-    { key: 'customer', label: 'Elegir el cliente', section: 0, forDraft: true, pending: !formState.customerId },
-    { key: 'site', label: 'Elegir la sede', section: 0, forDraft: true, pending: formState.scopeType === 'site' && !formState.customerSite?.trim() },
-    { key: 'channel', label: 'Indicar la vía de solicitud', section: 0, forDraft: true, pending: !formState.requestChannel?.trim() },
-    { key: 'evidence', label: 'Adjuntar la evidencia de solicitud', section: 0, forDraft: true, pending: !hasRequestEvidence },
-    { key: 'email', label: 'Corregir el email de contacto', section: 1, forDraft: true, pending: Boolean(contactEmail) && !EMAIL_REGEX.test(contactEmail) },
-    {
-      key: 'items',
-      label: filledItems.length ? 'Completar nombre y cantidad de los ítems' : 'Agregar al menos un ítem',
-      section: 3,
-      forDraft: true,
-      pending: !filledItems.length || filledItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))
-    },
-    { key: 'points', label: 'Completar puntos y rango de medición de los ítems', section: 3, forDraft: false, pending: itemsNeedingPoints.length > 0 },
-    { key: 'payment', label: 'Elegir la forma de pago', section: 4, forDraft: false, pending: !formState.paymentMethod },
-    { key: 'instrument', label: 'Definir el tiempo de entrega de equipos', section: 4, forDraft: false, pending: !formState.instrumentDeliveryTime },
-    { key: 'certificate', label: 'Definir el tiempo de entrega de certificados', section: 4, forDraft: false, pending: !formState.certificateDeliveryTime },
-    { key: 'discount', label: 'Completar el tipo y valor del descuento', section: 4, forDraft: false, pending: Boolean(formState.hasDiscount) && (!formState.discountType || !(Number(formState.discountValue) > 0)) }
-  ]
-  const pendingRequirements = requirements.filter((requirement) => requirement.pending)
-  const pendingForDraft = pendingRequirements.filter((requirement) => requirement.forDraft)
-  const pendingBySection = sections.map((_, index) => pendingRequirements.filter((requirement) => requirement.section === index).length)
-  // Pasos con obligatorios: allí se muestra el avance; los demás (contacto, términos) son opcionales
-  const trackedSections = [0, 3, 4]
-
-  const goToSection = (index: number) => {
-    setActiveSection(Math.min(Math.max(index, 0), sections.length - 1))
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
-    setFormState((previous) => ({ ...previous, [field]: value }))
-  }
-
-  const setQuoteTerm = (field: CalibrationQuoteTermKey, value: string) => {
-    setFormState((previous) => ({
-      ...previous,
-      commercialComments:
-        field === 'commercialComments'
-          ? stripHtml(value)
-          : previous.commercialComments,
-      quoteTerms: {
-        ...(previous.quoteTerms || mergeCalibrationQuoteTerms()),
-        [field]: value
-      } as CalibrationServiceQuoteTerms
-    }))
-  }
-
-  const setItemField = (localId: string, field: keyof FormItem, value: string | number | null) => {
-    setFormState((previous) => ({
-      ...previous,
-      items: previous.items.map((item) =>
-        item.localId === localId ? { ...item, [field]: value } : item
-      )
-    }))
-  }
-
-  const setItemOtherField = (localId: string, field: string, value: unknown) => {
-    setFormState((previous) => ({
-      ...previous,
-      items: previous.items.map((item) =>
-        item.localId === localId
-          ? {
-              ...item,
-              otherFields: {
-                ...(item.otherFields || {}),
-                [field]: value
-              }
-            }
-          : item
-      )
-    }))
-  }
+  const {
+    upsertSequenceConfig,
+    isSequenceDialogOpen,
+    setIsSequenceDialogOpen,
+    validationErrorItemIds,
+    isBusy,
+    handleSave,
+    handleSaveSequenceConfig
+  } = useCalibrationServiceWorkspaceActions({ data, form, summary, navigation })
+  const {
+    customerDialogMode,
+    setCustomerDialogMode,
+    isSubmitting: isSubmittingCustomer,
+    handleCustomerDialogSubmit
+  } = useCalibrationServiceWorkspaceCustomerActions(form)
+  const { containerRef, actionBarBox } = useWorkspaceActionBarBox(isPageLoading, canAccessWorkspace)
 
   const handleAddItem = () => {
     setCatalogPickerOpen(true)
   }
-
-  const handleAddItemsFromCatalog = (
-    pickedItems: { productId: number; productVariantId: number; itemName: string; intervalText: string | null | undefined; serviceType: string; unitPrice: number; catalogPriceSource: string }[],
-    quantity: number
-  ) => {
-    setFormState((previous) => ({
-      ...previous,
-      items: [
-        ...previous.items,
-        ...pickedItems.map((picked, index) => ({
-          localId: createLocalId(),
-          productId: picked.productId,
-          itemName: picked.itemName,
-          instrumentName: picked.itemName,
-          intervalText: picked.intervalText || '',
-          quantity,
-          serviceType: picked.serviceType,
-          unitPrice: picked.unitPrice,
-          taxRate: 19,
-          subtotal: quantity * picked.unitPrice,
-          taxTotal: quantity * picked.unitPrice * 0.19,
-          total: quantity * picked.unitPrice * 1.19,
-          notes: '',
-          sortOrder: previous.items.length + index,
-          otherFields: {
-            catalogPriceSource: picked.catalogPriceSource || SUGGESTED_CATALOG_PRICE_SOURCE,
-            hasCalibrationPoints: false
-          }
-        }))
-      ]
-    }))
-  }
-
-  const handleRemoveItem = (localId: string) => {
-    setFormState((previous) => ({
-      ...previous,
-      items:
-        previous.items.length === 1
-          ? [createEmptyItem()]
-          : previous.items.filter((candidate) => candidate.localId !== localId)
-    }))
-  }
-
-  const handleSelectProduct = (
-    localId: string,
-    product: CalibrationServiceProductSummary | null
-  ) => {
-    const catalogPriceSource = SUGGESTED_CATALOG_PRICE_SOURCE
-    const selectedUnitPrice = getCatalogPriceValue(product, catalogPriceSource)
-    const firstVariantServiceType = product?.variants?.[0]?.serviceType || null
-
-    setFormState((previous) => ({
-      ...previous,
-      items: previous.items.map((candidate) =>
-        candidate.localId === localId
-          ? {
-              ...candidate,
-              productId: product?.id ?? null,
-              itemName: product?.name || candidate.itemName,
-              instrumentName: product?.name || candidate.instrumentName,
-              intervalText: product?.intervalText || candidate.intervalText,
-              serviceType: firstVariantServiceType || candidate.serviceType,
-              unitPrice:
-                selectedUnitPrice ?? candidate.unitPrice,
-              otherFields: {
-                ...(candidate.otherFields || {}),
-                catalogPriceSource
-              }
-            }
-          : candidate
-      )
-    }))
-  }
-
-  const handleSelectCatalogPrice = (
-    localId: string,
-    product: CalibrationServiceProductSummary | null,
-    priceSource: CatalogPriceSource
-  ) => {
-    const nextUnitPrice = getCatalogPriceValue(product, priceSource)
-
-    setFormState((previous) => ({
-      ...previous,
-      items: previous.items.map((candidate) =>
-        candidate.localId === localId
-          ? {
-              ...candidate,
-              unitPrice:
-                nextUnitPrice !== null && nextUnitPrice !== undefined
-                  ? nextUnitPrice
-                  : candidate.unitPrice,
-              otherFields: {
-                ...(candidate.otherFields || {}),
-                catalogPriceSource: priceSource
-              }
-            }
-          : candidate
-      )
-    }))
-  }
-
-  const handleCustomerChange = (customer: CalibrationServiceCustomer | null) => {
-    const firstSite = getCustomerSiteOptions(customer)[0]
-
-    setFormState((previous) => ({
-      ...previous,
-      customerId: customer?.id ?? null,
-      customerSite:
-        previous.scopeType === 'site'
-          ? firstSite?.name || previous.customerSite
-          : previous.customerSite,
-      contactEmail: firstSite?.contactEmail || customer?.email || previous.contactEmail || '',
-      contactPhone: firstSite?.contactPhone || customer?.telefono || previous.contactPhone || '',
-      city: firstSite?.city || customer?.ciudad || previous.city || '',
-      department: firstSite?.department || customer?.departamento || previous.department || '',
-      address: firstSite?.address || customer?.direccion || previous.address || ''
-    }))
-  }
-
-  const handleCustomerSiteChange = (site: CalibrationServiceCustomerSite | null) => {
-    setFormState((previous) => ({
-      ...previous,
-      customerSite: site?.name || '',
-      contactName: site?.contactName || previous.contactName || '',
-      contactEmail: site?.contactEmail || previous.contactEmail || selectedCustomer?.email || '',
-      contactPhone: site?.contactPhone || previous.contactPhone || selectedCustomer?.telefono || '',
-      city: site?.city || previous.city || selectedCustomer?.ciudad || '',
-      department: site?.department || previous.department || selectedCustomer?.departamento || '',
-      address: site?.address || previous.address || selectedCustomer?.direccion || ''
-    }))
-  }
-
-  const handleDifferentExecutionCustomerToggle = (checked: boolean) => {
-    setUseDifferentExecutionCustomer(checked)
-
-    if (!checked) {
-      setFormState((previous) => ({
-        ...previous,
-        executionCustomerName: '',
-        executionSiteName: ''
-      }))
-    }
-  }
-
-  const validateForm = (targetStatus: 'draft' | 'pending_approval') => {
-    if (!formState.customerId) return 'Selecciona un cliente.'
-    if (formState.scopeType === 'site' && !formState.customerSite?.trim()) {
-      return 'Selecciona la sede del servicio.'
-    }
-    if (!formState.requestChannel?.trim()) return 'Define la vía de solicitud.'
-    if (formState.contactEmail?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.contactEmail.trim())) {
-      return 'El email de contacto no es válido. Ingresa un email con formato correcto (ej: usuario@dominio.com).'
-    }
-    const validItems = formState.items.filter(
-      (item) => item.itemName.trim() || item.instrumentName?.trim()
-    )
-    if (!validItems.length) return 'Agrega al menos un ítem.'
-    if (validItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))) {
-      return 'Revisa nombre y cantidad de los ítems.'
-    }
-    if (targetStatus === 'pending_approval') {
-      if (!formState.paymentMethod) {
-        setActiveSection(4)
-        return 'Selecciona la forma de pago.'
-      }
-      if (!formState.instrumentDeliveryTime) {
-        setActiveSection(4)
-        return 'Selecciona el tiempo de entrega de equipos.'
-      }
-      if (!formState.certificateDeliveryTime) {
-        setActiveSection(4)
-        return 'Selecciona el tiempo de entrega de certificados.'
-      }
-      if (formState.hasDiscount) {
-        if (!formState.discountType || Number(formState.discountValue) <= 0) {
-          setActiveSection(4)
-          return 'Completa el tipo y valor del descuento.'
-        }
-      }
-      const invalidItems = validItems.filter(
-        (item) =>
-          item.otherFields?.hasCalibrationPoints !== false &&
-          (!item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange)
-      )
-      if (invalidItems.length) {
-        setValidationErrorItemIds(new Set(invalidItems.map((i) => i.localId)))
-        setActiveSection(3)
-        return `Completa cantidad de puntos y rango de medición en ${invalidItems.length} item${invalidItems.length > 1 ? 's' : ''}.`
-      }
-    }
-    setValidationErrorItemIds(new Set())
-    if (!requestEvidenceFile && !requestEvidenceDocuments.length) {
-      return 'Debes adjuntar la evidencia de solicitud.'
-    }
-    return null
-  }
-
-  const handleSave = async (targetStatus: 'draft' | 'pending_approval') => {
-    const blocking = targetStatus === 'draft' ? pendingForDraft : pendingRequirements
-    if (blocking.length) {
-      if (blocking.some((requirement) => requirement.key === 'points')) {
-        setValidationErrorItemIds(new Set(itemsNeedingPoints.map((item) => item.localId)))
-      }
-      goToSection(blocking[0].section)
-      toast.error(
-        `Antes de ${targetStatus === 'draft' ? 'guardar' : 'enviar'}, completa: ${blocking
-          .map((requirement) => requirement.label.charAt(0).toLowerCase() + requirement.label.slice(1))
-          .join('; ')}.`
-      )
-      return
-    }
-    const validationError = validateForm(targetStatus)
-    if (validationError) {
-      toast.error(validationError)
-      return
-    }
-    try {
-      const payload = buildPayload(formState, targetStatus)
-      const savedService = isEditing
-        ? await updateService.mutateAsync({ serviceId: serviceId as string, payload })
-        : await createService.mutateAsync(payload)
-      if (requestEvidenceFile) {
-        try {
-          await uploadDocument.mutateAsync({
-            serviceId: String(savedService.id),
-            file: requestEvidenceFile,
-            documentType: 'request_evidence',
-            title: requestEvidenceTitle || `Evidencia de solicitud ${savedService.serviceCode}`
-          })
-        } catch (uploadError) {
-          console.error(uploadError)
-          toast.error('El servicio se guardo, pero no fue posible subir la evidencia.')
-          navigate(`/calibration-services/${savedService.id}`)
-          return
-        }
-      }
-      if (targetStatus === 'pending_approval') {
-        try {
-          const pdfDocument = await generateQuotePdf.mutateAsync({
-            serviceId: String(savedService.id)
-          })
-          const fileBlob = await downloadDocument.mutateAsync({
-            serviceId: String(savedService.id),
-            documentId: String(pdfDocument.id)
-          })
-          const objectUrl = window.URL.createObjectURL(fileBlob as Blob)
-          const anchor = window.document.createElement('a')
-          anchor.href = objectUrl
-          anchor.download = pdfDocument.originalFileName || `cotizacion-${savedService.serviceCode}.pdf`
-          anchor.target = '_blank'
-          anchor.rel = 'noopener'
-          anchor.click()
-          window.URL.revokeObjectURL(objectUrl)
-        } catch (pdfError) {
-          console.error(pdfError)
-          toast.error('No se pudo generar la cotización PDF.')
-        }
-      }
-      const codeLabel = savedService.quoteCode || savedService.serviceCode
-      toast.success(
-        targetStatus === 'pending_approval'
-          ? `Cotización ${codeLabel} generada y guardada.`
-          : `Servicio ${codeLabel} guardado como borrador.`
-      )
-      navigate(`/calibration-services/${savedService.id}`)
-    } catch (error) {
-      console.error(error)
-      toast.error(isEditing ? 'No pudimos actualizar el servicio.' : 'No pudimos crear el servicio.')
-    }
-  }
-
-  const handleSaveSequenceConfig = async (values: {
-    nextQuoteNumber: number
-    nextOdsNumber: number
-  }) => {
-    try {
-      await upsertSequenceConfig.mutateAsync(values)
-      toast.success('Los consecutivos iniciales del módulo quedaron configurados.')
-      setIsSequenceDialogOpen(false)
-    } catch (configError) {
-      console.error(configError)
-      toast.error('No pudimos guardar la configuración inicial.')
-    }
-  }
-
-  // La barra de acciones es fija: el layout de la app no permite 'sticky', así que se alinea con el contenido
-  const isPageLoading = isLoadingService || isLoadingCustomers || isLoadingProducts || isLoadingSequenceConfig
-  useEffect(() => {
-    const update = () => {
-      const element = containerRef.current
-      if (!element) return
-      const rect = element.getBoundingClientRect()
-      const styles = window.getComputedStyle(element)
-      const paddingLeft = parseFloat(styles.paddingLeft) || 0
-      const paddingRight = parseFloat(styles.paddingRight) || 0
-      setActionBarBox({ left: rect.left + paddingLeft, width: rect.width - paddingLeft - paddingRight })
-    }
-    update()
-    window.addEventListener('resize', update)
-    const observer = new ResizeObserver(update)
-    if (containerRef.current) observer.observe(containerRef.current)
-    return () => {
-      window.removeEventListener('resize', update)
-      observer.disconnect()
-    }
-  }, [isPageLoading, canAccessWorkspace])
 
   if (isPageLoading) {
     return (
@@ -1116,397 +200,33 @@ const CalibrationServiceWorkspacePage = () => {
         </Alert>
       ) : null}
 
-      {/* ── Section navigation ── */}
-      <Paper
-        elevation={0}
-        sx={{
-          mb: 3,
-          borderRadius: '14px',
-          border: '1px solid rgba(0,0,0,0.06)',
-          overflow: 'hidden',
-        }}
-      >
-        <Tabs
-          value={activeSection}
-          onChange={(_, v) => goToSection(v)}
-          variant='scrollable'
-          scrollButtons={false}
-          sx={{
-            minHeight: 48,
-            px: 1.5,
-            '& .MuiTab-root': {
-              minHeight: 48,
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.8rem',
-              px: 2,
-              gap: 1,
-              color: 'text.secondary',
-              '&.Mui-selected': { color: '#00897B' }
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#00BFA5',
-              height: 3,
-              borderRadius: '3px 3px 0 0'
-            }
-          }}
-        >
-          {sections.map((section, index) => (
-            <Tab
-              key={section.key}
-              icon={section.icon}
-              iconPosition='start'
-              label={
-                <Stack direction='row' alignItems='center' spacing={1}>
-                  <span>{section.label}</span>
-                  {pendingBySection[index] > 0 ? (
-                    <Chip
-                      size='small'
-                      color='warning'
-                      variant='outlined'
-                      label={pendingBySection[index]}
-                      aria-label={`${pendingBySection[index]} pendientes`}
-                      sx={{ height: 20, minWidth: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8, fontWeight: 700 } }}
-                    />
-                  ) : trackedSections.includes(index) ? (
-                    <CheckCircleOutlineOutlinedIcon aria-label='Completo' sx={{ fontSize: 16, color: '#00897B' }} />
-                  ) : null}
-                </Stack>
-              }
-            />
-          ))}
-        </Tabs>
-      </Paper>
+      <CalibrationServiceWorkspaceSectionTabs
+        activeSection={activeSection}
+        goToSection={goToSection}
+        pendingBySection={summary.pendingBySection}
+      />
 
       <Grid container spacing={2.5}>
         <Grid item xs={12} lg={8}>
           <div style={{ display: activeSection !== 0 ? 'none' : undefined }}>
-          <Card elevation={0} sx={sectionCardSx}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <GroupOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
-                  Cliente y alcance
-                </Typography>
-              </Stack>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'flex-start' }}>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                    <Autocomplete
-                      fullWidth
-                      PopperComponent={WideListPopper}
-                      options={customerOptions}
-                      value={selectedCustomer}
-                      getOptionLabel={(option) =>
-                        [option.nombre, option.identificacion].filter(Boolean).join(' · ')
-                      }
-                      onChange={(_, value) => handleCustomerChange(value)}
-                      disabled={
-                        !canEdit ||
-                        isBusy ||
-                        (hasCustomersError && customerOptions.length === 0)
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label='Cliente'
-                          required
-                          inputProps={{ ...params.inputProps, title: params.inputProps.value ? String(params.inputProps.value) : undefined }}
-                        />
-                      )}
-                    />
-                    <Tooltip title='Nuevo cliente'>
-                      <span>
-                        <Button
-                          variant='outlined'
-                          aria-label='Nuevo cliente'
-                          startIcon={<PersonAddAltOutlinedIcon />}
-                          sx={{ height: 56, minWidth: { xs: '100%', sm: 56 }, width: { xs: '100%', sm: 56 }, px: { xs: 2, sm: 0 }, '& .MuiButton-startIcon': { mr: { xs: 1, sm: 0 }, ml: { sm: 0 } } }}
-                          disabled={!canEdit || isBusy}
-                          onClick={() => setCustomerDialogMode('customer')}
-                        >
-                          <Box component='span' sx={{ display: { xs: 'inline', sm: 'none' } }}>Nuevo cliente</Box>
-                        </Button>
-                      </span>
-                    </Tooltip>
-                  </Stack>
-                    </Box>
-                    <Box sx={{ width: { xs: '100%', md: 190 }, flexShrink: 0 }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Alcance</InputLabel>
-                    <Select
-                      value={formState.scopeType || 'general'}
-                      label='Alcance'
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('scopeType', event.target.value as FormState['scopeType'])}
-                    >
-                      <MenuItem value='general'>Cliente general</MenuItem>
-                      <MenuItem value='site'>Sede específica</MenuItem>
-                    </Select>
-                  </FormControl>
-                    </Box>
-                  </Stack>
-                </Grid>
-                {formState.scopeType === 'site' ? (
-                  <Grid item xs={12} md={6}>
-                    {customerSites.length ? (
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        <FormControl fullWidth>
-                          <InputLabel>Sede</InputLabel>
-                          <Select
-                            value={formState.customerSite || ''}
-                            label='Sede'
-                            disabled={!canEdit || isBusy}
-                            onChange={(event) => {
-                              const site = customerSites.find(
-                                (candidate) => candidate.name === event.target.value
-                              )
-                              handleCustomerSiteChange(site || null)
-                            }}
-                          >
-                            {customerSites.map((site) => (
-                              <MenuItem key={site.id || site.name} value={site.name}>
-                                {getSiteDisplayLabel(site)}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <Button
-                          variant='outlined'
-                          sx={{ minWidth: 130 }}
-                          disabled={!canEdit || isBusy || !selectedCustomer}
-                          onClick={() => setCustomerDialogMode('site')}
-                        >
-                          Nueva sede
-                        </Button>
-                      </Stack>
-                    ) : (
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        <TextField
-                          fullWidth
-                          label='Sede'
-                          value={formState.customerSite || ''}
-                          disabled={!canEdit || isBusy}
-                          onChange={(event) => setField('customerSite', event.target.value)}
-                        />
-                        <Button
-                          variant='outlined'
-                          sx={{ minWidth: 130 }}
-                          disabled={!canEdit || isBusy || !selectedCustomer}
-                          onClick={() => setCustomerDialogMode('site')}
-                        >
-                          Crear sede
-                        </Button>
-                      </Stack>
-                    )}
-                  </Grid>
-                ) : null}
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Vía de solicitud</InputLabel>
-                    <Select
-                      value={formState.requestChannel || ''}
-                      label='Vía de solicitud'
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('requestChannel', event.target.value)}
-                    >
-                      {REQUEST_CHANNEL_OPTIONS.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-
-              <Divider sx={{ my: 2 }} />
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
-                <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 20 }} />
-                <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#374151' }}>
-                  Evidencia de solicitud *
-                </Typography>
-                {requestEvidenceFile || requestEvidenceDocuments.length ? (
-                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Adjunta' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
-                ) : (
-                  <Chip size='small' label='Obligatorio' color='error' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 } }} />
-                )}
-              </Stack>
-              <Stack spacing={2}>
-                <TextField fullWidth label='Título de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} required />
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
-                  <Button component='label' variant='outlined' startIcon={<UploadFileOutlinedIcon />} disabled={!canEdit || isBusy}>
-                    Seleccionar archivo
-                    <input
-                      hidden
-                      type='file'
-                      accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
-                      onChange={(event) => setRequestEvidenceFile(event.target.files?.[0] || null)}
-                    />
-                  </Button>
-                  <Typography variant='body2' color='text.secondary'>
-                    {requestEvidenceFile ? requestEvidenceFile.name : 'Adjunta PDF, imagen o soporte documental de la solicitud.'}
-                  </Typography>
-                </Stack>
-                {requestEvidenceDocuments.length ? (
-                  <List dense disablePadding>
-                    {requestEvidenceDocuments.map((document) => (
-                      <ListItem key={document.id} disableGutters>
-                        <ListItemText primary={document.title || document.originalFileName} secondary={`Version ${document.version}`} />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : null}
-              </Stack>
-            </CardContent>
-          </Card>
+            <CalibrationServiceWorkspaceCustomerSection
+              form={form}
+              canEdit={canEdit}
+              isBusy={isBusy}
+              customerOptions={customerOptions}
+              hasCustomersError={hasCustomersError}
+              requestEvidenceDocuments={requestEvidenceDocuments}
+              setCustomerDialogMode={setCustomerDialogMode}
+            />
           </div>
 
           <div style={{ display: activeSection !== 1 ? 'none' : undefined }}>
-          <Card elevation={0} sx={sectionCardSx}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <Inventory2OutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
-                  Contacto y destino del servicio
-                </Typography>
-              </Stack>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label='Contacto' value={formState.contactName || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactName', event.target.value)} />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label='Email' type='email' value={formState.contactEmail || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactEmail', event.target.value)} />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label='Teléfono / celular' value={formState.contactPhone || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactPhone', event.target.value)} />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField fullWidth label='Ciudad' value={formState.city || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('city', event.target.value)} />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField fullWidth label='Departamento' value={formState.department || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('department', event.target.value)} />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField fullWidth label='Dirección' value={formState.address || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('address', event.target.value)} />
-                </Grid>
-                <Grid item xs={12}>
-                  <Divider sx={{ my: 1 }} />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={useDifferentExecutionCustomer}
-                        disabled={!canEdit || isBusy}
-                        onChange={(event) =>
-                          handleDifferentExecutionCustomerToggle(event.target.checked)
-                        }
-                      />
-                    }
-                    label='El servicio es para un cliente diferente a la oferta'
-                  />
-                </Grid>
-                {useDifferentExecutionCustomer ? (
-                  <>
-                    <Grid item xs={12}>
-                      <Alert severity='info'>
-                        Usa este bloque cuando la cotización se emite a un cliente, pero la
-                        ejecución real será para un tercero. Estos datos quedarán precargados en
-                        la ODS y en el bloque `Cliente Diferente Oferta`.
-                      </Alert>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label='Cliente de ejecución'
-                        value={formState.executionCustomerName || ''}
-                        disabled={!canEdit || isBusy}
-                        onChange={(event) =>
-                          setField('executionCustomerName', event.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label='Sede o referencia de ejecución'
-                        value={formState.executionSiteName || ''}
-                        disabled={!canEdit || isBusy}
-                        onChange={(event) =>
-                          setField('executionSiteName', event.target.value)
-                        }
-                      />
-                    </Grid>
-                  </>
-                ) : (
-                  <Grid item xs={12}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Si no marcas esta opción, el sistema asumirá que el servicio se presta para el
-                      mismo cliente de la oferta y tomará como base el cliente y la sede ya elegidos.
-                    </Typography>
-                  </Grid>
-                )}
-              </Grid>
-            </CardContent>
-          </Card>
+            <CalibrationServiceWorkspaceContactSection form={form} canEdit={canEdit} isBusy={isBusy} />
           </div>
 
 
           <div style={{ display: activeSection !== 2 ? 'none' : undefined }}>
-          <Card elevation={0} sx={sectionCardSx}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
-                  Términos
-                </Typography>
-              </Stack>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant='body2' color='text.secondary'>
-                    Este bloque se deja al final para ajustar la última hoja de la
-                    cotización. Al guardar, los términos quedan como snapshot de este
-                    servicio sin afectar la plantilla global. Para modificar la plantilla
-                    que se precarga en servicios nuevos, usa el botón "Plantilla
-                    términos" en la bandeja de entrada.
-                  </Typography>
-                </Box>
-                <Alert severity='info'>
-                  Puedes usar variables dentro del texto. Al generar el PDF se reemplazan
-                  automáticamente por los valores de esta cotización:
-                  <Box component='ul' sx={{ mt: 1, mb: 0, pl: 3 }}>
-                    <li><strong>{'{{validityDays}}'}</strong>: validez de la oferta.</li>
-                    <li><strong>{'{{paymentMethod}}'}</strong>: forma de pago acordada.</li>
-                    <li><strong>{'{{instrumentDeliveryTime}}'}</strong>: tiempo de entrega de los equipos.</li>
-                    <li><strong>{'{{certificateDeliveryTime}}'}</strong>: tiempo de entrega de los certificados.</li>
-                  </Box>
-                </Alert>
-                {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => (
-                  <Accordion
-                    key={termKey}
-                    disableGutters
-                    elevation={0}
-                    sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}
-                  >
-                    <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
-                      <Typography fontWeight={800}>
-                        {CALIBRATION_QUOTE_TERM_LABELS[termKey]}
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <CalibrationServiceRichTextEditor
-                        value={formState.quoteTerms?.[termKey] || ''}
-                        disabled={!canEdit || isBusy}
-                        placeholder={`Escribe ${CALIBRATION_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
-                        onChange={(value) => setQuoteTerm(termKey, value)}
-                      />
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
+            <CalibrationServiceWorkspaceTermsSection form={form} canEdit={canEdit} isBusy={isBusy} />
           </div>
 
           <div style={{ display: activeSection !== 3 ? 'none' : undefined }}>
@@ -1532,147 +252,7 @@ const CalibrationServiceWorkspacePage = () => {
           </div>
 
           <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
-          <Card elevation={0} sx={sectionCardSx}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <ReceiptLongOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
-                  Condiciones comerciales
-                </Typography>
-              </Stack>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth>
-                    <InputLabel>Validez</InputLabel>
-                    <Select
-                      value={String(formState.validityDays || 30)}
-                      label='Validez'
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('validityDays', Number(event.target.value))}
-                    >
-                      {VALIDITY_DAY_OPTIONS.map((days) => (
-                        <MenuItem key={days} value={String(days)}>
-                          {days} dias
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth>
-                    <InputLabel required>Forma de pago</InputLabel>
-                    <Select
-                      value={formState.paymentMethod || ''}
-                      label='Forma de pago'
-                      required
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('paymentMethod', event.target.value)}
-                    >
-                      {PAYMENT_METHOD_OPTIONS.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth>
-                    <InputLabel>Aplica descuento</InputLabel>
-                    <Select
-                      value={formState.hasDiscount ? 'yes' : 'no'}
-                      label='Aplica descuento'
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('hasDiscount', event.target.value === 'yes')}
-                    >
-                      <MenuItem value='no'>No</MenuItem>
-                      <MenuItem value='yes'>Si</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                {formState.hasDiscount ? (
-                  <>
-                    <Grid item xs={12} md={4}>
-                      <FormControl fullWidth>
-                        <InputLabel>Tipo descuento</InputLabel>
-                        <Select
-                          value={formState.discountType || 'fixed'}
-                          label='Tipo descuento'
-                          disabled={!canEdit || isBusy}
-                          onChange={(event) => setField('discountType', event.target.value)}
-                        >
-                          {DISCOUNT_TYPE_OPTIONS.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                              {option.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <TextField
-                        fullWidth
-                        label='Valor descuento'
-                        value={formState.discountValue ?? 0}
-                        disabled={!canEdit || isBusy}
-                        onChange={(event) =>
-                          setField('discountValue', Number(event.target.value))
-                        }
-                        InputProps={
-                          formState.discountType === 'fixed'
-                            ? { inputComponent: NumericFormatCustom as never }
-                            : undefined
-                        }
-                      />
-                    </Grid>
-                  </>
-                ) : null}
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel required>Entrega instrumento</InputLabel>
-                    <Select
-                      value={formState.instrumentDeliveryTime || ''}
-                      label='Entrega instrumento'
-                      required
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('instrumentDeliveryTime', event.target.value)}
-                    >
-                      {DELIVERY_TIME_OPTIONS.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel required>Entrega certificado</InputLabel>
-                    <Select
-                      value={formState.certificateDeliveryTime || ''}
-                      label='Entrega certificado'
-                      required
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('certificateDeliveryTime', event.target.value)}
-                    >
-                      {DELIVERY_TIME_OPTIONS.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <Alert severity='info'>
-                    El perfil sugerido de precio se usa para precargar el valor al
-                    seleccionar un producto del catálogo. Luego cada ítem puede cambiar
-                    su precio de catálogo o editar manualmente el valor unitario.
-                  </Alert>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
+            <CalibrationServiceWorkspaceCommercialSection form={form} canEdit={canEdit} isBusy={isBusy} />
           </div>
 
           <Stack direction='row' justifyContent='space-between' alignItems='center' spacing={2} sx={{ mb: 3 }}>
@@ -1684,14 +264,14 @@ const CalibrationServiceWorkspacePage = () => {
             >
               Anterior
             </Button>
-            {activeSection < sections.length - 1 ? (
+            {activeSection < WORKSPACE_SECTIONS.length - 1 ? (
               <Button
                 variant='outlined'
                 endIcon={<ArrowForwardOutlinedIcon />}
                 onClick={() => goToSection(activeSection + 1)}
                 sx={tealOutlineSx}
               >
-                Siguiente: {sections[activeSection + 1].label}
+                Siguiente: {WORKSPACE_SECTIONS[activeSection + 1].label}
               </Button>
             ) : (
               <Typography variant='body2' color='text.secondary'>
@@ -1702,170 +282,18 @@ const CalibrationServiceWorkspacePage = () => {
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb', bgcolor: '#fff', boxShadow: 'none', position: { lg: 'sticky' }, top: { lg: 24 } }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 }, '&:last-child': { pb: { xs: 2, md: 3 } } }}>
-              <Box>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
-                <ReceiptLongOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
-                  Resumen económico
-                </Typography>
-              </Stack>
-              <Stack spacing={1.5}>
-                <Stack direction='row' justifyContent='space-between'>
-                  <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>Subtotal</Typography>
-                  <Typography fontWeight={600} sx={{ color: '#111827' }}>{currencyFormatter.format(subtotal)}</Typography>
-                </Stack>
-                <Stack direction='row' justifyContent='space-between'>
-                  <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>IVA</Typography>
-                  <Typography fontWeight={600} sx={{ color: '#111827' }}>{currencyFormatter.format(taxTotal)}</Typography>
-                </Stack>
-                <Stack direction='row' justifyContent='space-between'>
-                  <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>Descuento</Typography>
-                  <Typography fontWeight={600} sx={{ color: '#111827' }}>{currencyFormatter.format(discountTotal)}</Typography>
-                </Stack>
-                <Divider />
-                <Stack direction='row' justifyContent='space-between' alignItems='center'>
-                  <Typography variant='h6' sx={{ color: '#111827', fontWeight: 700 }}>Total</Typography>
-                  <Typography variant='h6' fontWeight={800} sx={{ color: '#059669' }}>
-                    {currencyFormatter.format(grandTotal)}
-                  </Typography>
-                </Stack>
-              </Stack>
-
-              <Divider sx={{ my: 2.5 }} />
-
-              <Stack spacing={1}>
-                <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#111827' }}>
-                  {pendingRequirements.length ? `Faltan ${pendingRequirements.length} para enviar` : 'Todo listo para enviar'}
-                </Typography>
-                {pendingRequirements.length ? (
-                  <>
-                    {!pendingForDraft.length ? (
-                      <Typography variant='caption' color='text.secondary'>
-                        Ya puedes guardar el borrador. Lo que falta solo se exige al enviar.
-                      </Typography>
-                    ) : null}
-                    <Stack spacing={0.25}>
-                      {pendingRequirements.map((requirement) => (
-                        <Box
-                          key={requirement.key}
-                          component='button'
-                          type='button'
-                          onClick={() => goToSection(requirement.section)}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            width: '100%',
-                            py: 0.75,
-                            px: 0.75,
-                            border: 0,
-                            bgcolor: 'transparent',
-                            textAlign: 'left',
-                            font: 'inherit',
-                            cursor: 'pointer',
-                            borderRadius: '8px',
-                            '&:hover': { bgcolor: '#f3f4f6' },
-                            '&:focus-visible': { outline: '2px solid #00BFA5' }
-                          }}
-                        >
-                          <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: requirement.forDraft ? '#d97706' : '#9ca3af' }} />
-                          <Typography variant='body2' sx={{ color: '#374151', flex: 1 }}>
-                            {requirement.label}
-                          </Typography>
-                          {!requirement.forDraft ? (
-                            <Typography variant='caption' sx={{ color: '#9ca3af', whiteSpace: 'nowrap' }}>
-                              al enviar
-                            </Typography>
-                          ) : null}
-                        </Box>
-                      ))}
-                    </Stack>
-                  </>
-                ) : (
-                  <Stack direction='row' spacing={1} alignItems='flex-start'>
-                    <CheckCircleOutlineOutlinedIcon sx={{ color: '#00897B', fontSize: 20, mt: 0.1 }} />
-                    <Typography variant='body2' color='text.secondary'>
-                      Cliente, evidencia, ítems y condiciones están completos.
-                    </Typography>
-                  </Stack>
-                )}
-                <Typography variant='caption' color='text.secondary'>
-                  {validItemsCount} ítem{validItemsCount === 1 ? '' : 's'} en la cotización
-                </Typography>
-              </Stack>
-              </Box>
-            </CardContent>
-          </Card>
+          <CalibrationServiceWorkspaceSummaryCard summary={summary} goToSection={goToSection} />
         </Grid>
       </Grid>
 
       {/* Acciones siempre visibles: estado de lo que falta y guardar / enviar */}
-      <Box sx={{ height: { xs: 150, sm: 88 } }} aria-hidden />
-      <Paper
-        elevation={0}
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          left: actionBarBox?.left ?? 16,
-          width: actionBarBox?.width ?? 'calc(100vw - 32px)',
-          zIndex: 1100,
-          px: { xs: 1.5, sm: 2.5 },
-          py: 1.5,
-          borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'stretch', sm: 'center' },
-          justifyContent: 'space-between',
-          gap: { xs: 1, sm: 2 }
-        }}
-      >
-        {pendingRequirements.length ? (
-          <Stack direction='row' alignItems='center' spacing={1.25}>
-            <ErrorOutlineOutlinedIcon sx={{ color: pendingForDraft.length ? '#d97706' : '#9ca3af' }} />
-            <Typography variant='body2' sx={{ color: '#374151', flex: 1, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-              {pendingForDraft.length
-                ? `Faltan ${pendingForDraft.length} dato${pendingForDraft.length === 1 ? '' : 's'} para guardar y ${pendingRequirements.length} para enviar`
-                : `Puedes guardar el borrador. Faltan ${pendingRequirements.length} dato${pendingRequirements.length === 1 ? '' : 's'} para enviar`}
-            </Typography>
-            <Button size='small' onClick={() => goToSection(pendingRequirements[0].section)} sx={{ textTransform: 'none', fontWeight: 600, color: '#00897B' }}>
-              Ver qué falta
-            </Button>
-          </Stack>
-        ) : (
-          <Stack direction='row' alignItems='center' spacing={1.25}>
-            <CheckCircleOutlineOutlinedIcon sx={{ color: '#00897B' }} />
-            <Typography variant='body2' sx={{ color: '#374151' }}>
-              Todo listo para enviar la cotización
-            </Typography>
-          </Stack>
-        )}
-        <Stack direction='row' spacing={1} sx={{ '& .MuiButton-root': { flex: { xs: 1, sm: 'initial' }, whiteSpace: 'nowrap', px: { xs: 1, sm: 2 }, fontSize: { xs: '0.82rem', sm: '0.875rem' } }, '& .MuiButton-startIcon': { display: { xs: 'none', sm: 'inherit' } } }}>
-          <Button
-            variant='outlined'
-            startIcon={<SaveOutlinedIcon />}
-            onClick={() => void handleSave('draft')}
-            disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
-            sx={tealOutlineSx}
-          >
-            Guardar borrador
-          </Button>
-          <Button
-            variant='contained'
-            disableElevation
-            startIcon={<SendOutlinedIcon />}
-            onClick={() => void handleSave('pending_approval')}
-            disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
-            sx={tealButtonSx}
-          >
-            Guardar y enviar
-            <Box component='span' sx={{ display: { xs: 'none', sm: 'inline' } }}>&nbsp;cotización</Box>
-          </Button>
-        </Stack>
-      </Paper>
+      <CalibrationServiceWorkspaceActionBar
+        summary={summary}
+        actionBarBox={actionBarBox}
+        isSaveDisabled={!canEdit || isBusy || !sequenceConfig?.initialized}
+        goToSection={goToSection}
+        handleSave={handleSave}
+      />
       <CatalogProductPickerDialog
         open={catalogPickerOpen}
         products={productOptions}
@@ -1886,30 +314,9 @@ const CalibrationServiceWorkspacePage = () => {
         open={Boolean(customerDialogMode)}
         mode={customerDialogMode || 'customer'}
         customer={selectedCustomer}
-        isSubmitting={createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading}
+        isSubmitting={isSubmittingCustomer}
         onClose={() => setCustomerDialogMode(null)}
-        onSubmit={(values) => {
-          if (customerDialogMode === 'site') {
-            if (!values.site.name.trim()) {
-              toast.error('Indica el nombre de la sede.')
-              return
-            }
-            createCustomerSiteMutation.mutate(values)
-            return
-          }
-
-          if (!values.customer.nombre.trim()) {
-            toast.error('Indica el nombre del cliente.')
-            return
-          }
-
-          if (!values.site.name.trim()) {
-            toast.error('Indica al menos una sede inicial.')
-            return
-          }
-
-          createCustomerMutation.mutate(values)
-        }}
+        onSubmit={handleCustomerDialogSubmit}
       />
     </Container>
   )

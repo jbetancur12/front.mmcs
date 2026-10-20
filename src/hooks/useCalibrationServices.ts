@@ -42,6 +42,8 @@ import {
   CalibrationServiceLoanOutPayload,
   CalibrationServiceLoanReturnPayload,
   CalibrationServiceCertificateSendResult,
+  CalibrationServiceCustomer,
+  CalibrationServiceProductSummary,
   CalibrationServiceResumePayload,
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
@@ -58,6 +60,10 @@ export const CALIBRATION_SERVICE_QUERY_KEYS = {
   loans: 'calibration-service-loan-equipment',
   availableLoans: 'calibration-available-loan-equipment'
 } as const
+
+/** Claves de los catálogos de clientes y productos usados por el formulario de cotización. */
+export const CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY = ['calibration-service-customers'] as const
+export const CALIBRATION_SERVICE_PRODUCTS_QUERY_KEY = ['calibration-service-products'] as const
 
 const calibrationServiceApi = {
   getLoanEquipment: async (
@@ -836,6 +842,34 @@ export const useCalibrationService = (serviceId?: string) => {
     enabled: Boolean(serviceId),
     staleTime: 60 * 1000,
     retry: 1
+  })
+}
+
+/** Clientes con alcance de calibración para el selector del formulario de cotización. */
+export const useCalibrationServiceCustomerOptions = (enabled = true) => {
+  return useQuery({
+    queryKey: CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY,
+    queryFn: async () => {
+      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers', {
+        params: { scope: 'calibration' }
+      })
+      return response.data
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000
+  })
+}
+
+/** Catálogo de productos para los ítems del formulario de cotización. */
+export const useCalibrationServiceProductOptions = (enabled = true) => {
+  return useQuery({
+    queryKey: CALIBRATION_SERVICE_PRODUCTS_QUERY_KEY,
+    queryFn: async () => {
+      const response = await axiosPrivate.get<CalibrationServiceProductSummary[]>('/products')
+      return response.data
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000
   })
 }
 
