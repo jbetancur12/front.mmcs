@@ -18,6 +18,7 @@ export const MODULE_AUDIENCE = {
   purchases: 'internal',
   quality: 'internal',
   lms: 'both',
+  tech_management: 'both',
 } as const
 
 export type ModuleName = keyof typeof MODULE_AUDIENCE

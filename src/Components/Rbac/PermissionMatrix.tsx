@@ -48,6 +48,7 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
   calibration: 'Calibración',
   lms: 'Academia (LMS)',
   fleet: 'Flota',
+  tech: 'Gestión tecnológica',
   assets: 'Activos de TI',
   repositories: 'Repositorios',
   tools: 'Utilidades',
