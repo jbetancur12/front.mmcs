@@ -31,7 +31,7 @@ import {
   Visibility
 } from '@mui/icons-material'
 import ModalProfile from '../Components/ModalProfile'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useDeleteProfile, useProfiles } from 'src/hooks/profiles/useProfiles'
 import toast, { Toaster } from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { buildMinioObjectUrl } from '@utils/minio'
@@ -50,11 +50,8 @@ export interface Profile {
 
 const Profiles: React.FC = () => {
   const canManageProfiles = useCan(PERMISSIONS.USERS_PROFILE_MANAGE)
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
-  const [profiles, setProfiles] = useState<Profile[]>([])
   const [openModal, setOpenModal] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [isSearching, setIsSearching] = useState(false)
@@ -70,27 +67,17 @@ const Profiles: React.FC = () => {
         : getDefaultAvatar(item.name)
     }))
 
-  const fetchProfiles = async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(`/profiles`, {})
-      
-      if (response.data && response.data.length > 0) {
-        setProfiles(mapProfilesWithImageUrl(response.data) as Profile[])
-      } else {
-        setProfiles([])
-      }
-    } catch (error) {
+  const { data: rawProfiles, isLoading: loading } = useProfiles({
+    onError: (error) => {
       console.error('Error al cargar los perfiles:', error)
       toast.error('Error al cargar los perfiles')
-    } finally {
-      setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    fetchProfiles()
-  }, [])
+  })
+  const profiles = useMemo(
+    () => mapProfilesWithImageUrl(rawProfiles || []) as Profile[],
+    [rawProfiles]
+  )
+  const deleteProfile = useDeleteProfile()
 
   // Debounced search effect
   useEffect(() => {
@@ -166,11 +153,9 @@ const Profiles: React.FC = () => {
         }
       })
 
-      const response = await axiosPrivate.delete(`/profiles/${id}`, {})
+      const response = await deleteProfile.mutateAsync(id)
 
       if (response.status === 204) {
-        fetchProfiles()
-        
         Swal.fire({
           title: '¡Eliminado!',
           text: 'El perfil ha sido eliminado correctamente',

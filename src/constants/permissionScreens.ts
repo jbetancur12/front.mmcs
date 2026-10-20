@@ -15,13 +15,17 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/asset-life-sheets", label: "Inventario › Hoja de Vida TI", kind: 'screen' }
   ],
   'calibration:adjustment:commercial': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:adjustment:review_technical': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:analytics:view': [
@@ -35,7 +39,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/lms/admin/quiz-management", label: "Academia › Administración › Banco de preguntas", kind: 'related' }
   ],
   'calibration:certificate_history:delete': [
-    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' }
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' },
+    { path: "/", label: "Dashboard", kind: 'related' },
+    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
+    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
+    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
   ],
   'calibration:certificate_type:manage': [
     { path: "/calibraciones/tipos-de-certificado", label: "Calibraciones › Tipos de Certificado", kind: 'screen' }
@@ -44,13 +52,17 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibraciones/tipos-de-certificado", label: "Calibraciones › Tipos de Certificado", kind: 'related' }
   ],
   'calibration:config:sequence': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:config:sla_manage': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:config:whatsapp_manage': [
@@ -69,10 +81,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets", label: "Inventario › Hoja de Vida", kind: 'action' },
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'related' },
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
     { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
     { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
     { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
-    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' }
+    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' },
+    { path: "/datasheets/devices-on-loan", label: "Hojas de datos › Equipos en préstamo", kind: 'related' }
   ],
   'calibration:datasheet:update': [
     { path: "/datasheets", label: "Inventario › Hoja de Vida", kind: 'action' },
@@ -85,12 +99,15 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'related' },
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'related' },
     { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
     { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
     { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
-    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' }
+    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' },
+    { path: "/datasheets/devices-on-loan", label: "Hojas de datos › Equipos en préstamo", kind: 'related' }
   ],
   'calibration:device:manage': [
     { path: "/calibraciones/equipos", label: "Calibraciones › Equipos", kind: 'action' },
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' },
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }
   ],
   'calibration:device:view': [
@@ -110,7 +127,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'screen' }
   ],
   'calibration:file:bulk_reassign': [
-    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' }
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' },
+    { path: "/", label: "Dashboard", kind: 'related' },
+    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
+    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
+    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
   ],
   'calibration:file:create': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'screen' },
@@ -118,7 +139,8 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibraciones/certificados", label: "Calibraciones › Certificados", kind: 'action' },
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
     { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'action' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' }
+    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' },
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' }
   ],
   'calibration:file:delete': [
     { path: "/", label: "Dashboard", kind: 'action' },
@@ -126,11 +148,15 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'action' },
     { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'action' },
     { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' },
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' },
     { path: "/customers/:id", label: "Empresas", kind: 'related' }
   ],
   'calibration:file:expiring_grouped': [
     { path: "/", label: "Dashboard", kind: 'related' },
-    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' }
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' },
+    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
+    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
+    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
   ],
   'calibration:file:list': [
     { path: "/", label: "Dashboard", kind: 'related' },
@@ -151,8 +177,13 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'calibration:inspection_maintenance:manage': [
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'screen' },
     { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'screen' },
+    { path: "/datasheets/:id", label: "Inventario › Hoja de Vida", kind: 'related' },
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'related' },
-    { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' }
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
+    { path: "/datasheets/devices-on-loan", label: "Hojas de datos › Equipos en préstamo", kind: 'related' }
   ],
   'calibration:inspection_maintenance:view': [
     { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'screen' },
@@ -160,8 +191,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/:id", label: "Inventario › Hoja de Vida", kind: 'action' },
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'related' },
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
     { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
-    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' }
+    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' },
+    { path: "/datasheets/devices-on-loan", label: "Hojas de datos › Equipos en préstamo", kind: 'related' }
   ],
   'calibration:product:manage': [
     { path: "/calibration-services/productos-y-servicios", label: "Servicios de calibración › Productos y servicios", kind: 'related' },
@@ -169,17 +203,34 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'calibration:product:view': [
     { path: "/productos-y-servicios", label: "Productos y servicios", kind: 'screen' },
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
+    { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' },
     { path: "/calibration-services/productos-y-servicios", label: "Servicios de calibración › Productos y servicios", kind: 'related' }
   ],
   'calibration:record:manage': [
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'screen' },
-    { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'screen' }
+    { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'screen' },
+    { path: "/datasheets/:id", label: "Inventario › Hoja de Vida", kind: 'related' },
+    { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' },
+    { path: "/datasheets/devices-on-loan", label: "Hojas de datos › Equipos en préstamo", kind: 'related' }
   ],
   'calibration:record:view': [
+    { path: "/datasheets/:id", label: "Inventario › Hoja de Vida", kind: 'related' },
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'related' },
-    { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' }
+    { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
+    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' },
+    { path: "/datasheets/devices-on-loan", label: "Hojas de datos › Equipos en préstamo", kind: 'related' }
   ],
   'calibration:report:view': [
     { path: "/datasheets/:id/in-out-report", label: "Hojas de datos › Informe de entradas y salidas", kind: 'screen' },
@@ -189,57 +240,85 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/inventory-leasing", label: "Hojas de datos › Inventario y alquiler", kind: 'screen' },
     { path: "/datasheets/inventory/:id?", label: "Hojas de datos › Inventario", kind: 'screen' },
     { path: "/datasheets/maintenance-schedule/:id?", label: "Hojas de datos › Cronograma de mantenimiento", kind: 'screen' },
-    { path: "/customers/:id/schedule/pdf", label: "Clientes › Programación › PDF", kind: 'related' }
+    { path: "/customers/:id/schedule/pdf", label: "Clientes › Programación › PDF", kind: 'related' },
+    { path: "/datasheets/:id", label: "Inventario › Hoja de Vida", kind: 'related' },
+    { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'related' },
+    { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
+    { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
+    { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
+    { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' }
   ],
   'calibration:service:cancel': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:certificate_send': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:close': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:create': [
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'screen' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'screen' },
     { path: "/calibration-services/customers", label: "Servicios de calibración › Clientes", kind: 'action' },
-    { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' }
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
+    { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' }
   ],
   'calibration:service:decide': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:document_control': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:document_upload': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:execute': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:execution_customer': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:invoicing': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:ods': [
@@ -250,33 +329,45 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:pause': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:quote_pdf': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:quote_terms': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:reassign': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:request_approval': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:reschedule': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:schedule': [
@@ -287,14 +378,18 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:traceability': [
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:update': [
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'action' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'action' },
-    { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' }
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
+    { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' }
   ],
   'calibration:service:view': [
     { path: "/calibration-services", label: "Servicios Cal.", kind: 'screen' },
@@ -324,15 +419,24 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'customers:customer:catalog': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
+    { path: "/calibration-services/:serviceId", label: "Servicios Cal.", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
     { path: "/calibration-services/customers", label: "Servicios de calibración › Clientes", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' },
     { path: "/customers", label: "Empresas", kind: 'related' },
+    { path: "/customers/:id", label: "Empresas", kind: 'related' },
+    { path: "/equipment-sales", label: "Venta Equipos", kind: 'related' },
+    { path: "/equipment-sales/:quotationId", label: "Venta Equipos", kind: 'related' },
     { path: "/equipment-sales/:quotationId/edit", label: "Venta de equipos › Editar", kind: 'related' },
     { path: "/equipment-sales/new", label: "Venta de equipos › Nuevo", kind: 'related' },
+    { path: "/equipment-sales/products", label: "Venta de equipos › Productos", kind: 'related' },
     { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'related' },
-    { path: "/iot/map", label: "IoT › Mapa", kind: 'related' }
+    { path: "/iot/map", label: "IoT › Mapa", kind: 'related' },
+    { path: "/modules", label: "Módulos", kind: 'related' },
+    { path: "/settings", label: "Ajustes", kind: 'related' },
+    { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'customers:customer:create': [
     { path: "/customers", label: "Empresas", kind: 'action' },
@@ -340,13 +444,25 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/customers", label: "Servicios de calibración › Clientes", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' },
+    { path: "/customers/:id", label: "Empresas", kind: 'related' },
+    { path: "/equipment-sales", label: "Venta Equipos", kind: 'related' },
+    { path: "/equipment-sales/:quotationId", label: "Venta Equipos", kind: 'related' },
     { path: "/equipment-sales/:quotationId/edit", label: "Venta de equipos › Editar", kind: 'related' },
     { path: "/equipment-sales/new", label: "Venta de equipos › Nuevo", kind: 'related' },
-    { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'related' }
+    { path: "/equipment-sales/products", label: "Venta de equipos › Productos", kind: 'related' },
+    { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'related' },
+    { path: "/modules", label: "Módulos", kind: 'related' },
+    { path: "/settings", label: "Ajustes", kind: 'related' },
+    { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'customers:customer:delete': [
     { path: "/customers", label: "Empresas", kind: 'action' },
-    { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'related' }
+    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
+    { path: "/customers/:id", label: "Empresas", kind: 'related' },
+    { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'related' },
+    { path: "/modules", label: "Módulos", kind: 'related' },
+    { path: "/settings", label: "Ajustes", kind: 'related' },
+    { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'customers:customer:manage': [
     { path: "/customers", label: "Empresas", kind: 'screen' },
@@ -357,8 +473,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'customers:customer:update': [
     { path: "/customers", label: "Empresas", kind: 'action' },
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
     { path: "/calibration-services/customers", label: "Servicios de calibración › Clientes", kind: 'related' },
-    { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'related' }
+    { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'related' },
+    { path: "/modules", label: "Módulos", kind: 'related' },
+    { path: "/settings", label: "Ajustes", kind: 'related' },
+    { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'customers:customer:view': [
     { path: "/customers/:id", label: "Empresas", kind: 'screen' },
@@ -369,24 +489,32 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/customers/:id", label: "Empresas", kind: 'action' }
   ],
   'customers:module:assign': [
-    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/modules", label: "Módulos", kind: 'related' }
   ],
   'customers:module:view': [
-    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/modules", label: "Módulos", kind: 'related' }
   ],
   'customers:module_catalog:view': [
-    { path: "/modules", label: "Módulos", kind: 'screen' }
+    { path: "/modules", label: "Módulos", kind: 'screen' },
+    { path: "/customers/:id", label: "Empresas", kind: 'related' }
   ],
   'customers:site:manage': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/customers", label: "Servicios de calibración › Clientes", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' },
+    { path: "/equipment-sales", label: "Venta Equipos", kind: 'related' },
+    { path: "/equipment-sales/:quotationId", label: "Venta Equipos", kind: 'related' },
     { path: "/equipment-sales/:quotationId/edit", label: "Venta de equipos › Editar", kind: 'related' },
-    { path: "/equipment-sales/new", label: "Venta de equipos › Nuevo", kind: 'related' }
+    { path: "/equipment-sales/new", label: "Venta de equipos › Nuevo", kind: 'related' },
+    { path: "/equipment-sales/products", label: "Venta de equipos › Productos", kind: 'related' }
   ],
   'customers:user:list': [
-    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/settings", label: "Ajustes", kind: 'related' },
+    { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'fleet:intervention_type:manage': [
     { path: "/fleet/interventions", label: "Flota › Tipos de intervención", kind: 'action' }
@@ -396,11 +524,14 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/fleet/:id/interventions", label: "Flota › Tipos de intervención", kind: 'related' }
   ],
   'fleet:maintenance:manage': [
-    { path: "/fleet/:id/interventions", label: "Flota › Tipos de intervención", kind: 'action' }
+    { path: "/fleet/:id/interventions", label: "Flota › Tipos de intervención", kind: 'action' },
+    { path: "/fleet/:id/data-sheet", label: "Flota › Hoja de vida", kind: 'related' },
+    { path: "/fleet/:id/inspections", label: "Flota › Inspecciones", kind: 'related' }
   ],
   'fleet:maintenance:view': [
     { path: "/fleet/:id/interventions", label: "Flota › Tipos de intervención", kind: 'screen' },
-    { path: "/fleet/:id/data-sheet", label: "Flota › Hoja de vida", kind: 'related' }
+    { path: "/fleet/:id/data-sheet", label: "Flota › Hoja de vida", kind: 'related' },
+    { path: "/fleet/:id/inspections", label: "Flota › Inspecciones", kind: 'related' }
   ],
   'fleet:trip:manage': [
     { path: "/fleet/:id/trip/new", label: "Flota › Viajes › Nuevo", kind: 'screen' },
@@ -420,7 +551,8 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/fleet/:id/data-sheet", label: "Flota › Hoja de vida", kind: 'screen' },
     { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'screen' },
     { path: "/fleet/:id/documents/:docId", label: "Flota › Documentos", kind: 'screen' },
-    { path: "/fleet/:id/inspections", label: "Flota › Inspecciones", kind: 'screen' }
+    { path: "/fleet/:id/inspections", label: "Flota › Inspecciones", kind: 'screen' },
+    { path: "/fleet/:id/interventions", label: "Flota › Tipos de intervención", kind: 'related' }
   ],
   'iot:alarm:manage': [
     { path: "/iot/map", label: "IoT › Mapa", kind: 'related' }
@@ -703,7 +835,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/purchases/statistics", label: "Compras › Estadísticas", kind: 'screen' }
   ],
   'purchases:supplier:create': [
-    { path: "/purchases/supplier-selection", label: "Compras › Selección de Proveedores", kind: 'related' }
+    { path: "/purchases/requests", label: "Compras › Solicitudes de Compra", kind: 'related' },
+    { path: "/purchases/supplier-selection", label: "Compras › Selección de Proveedores", kind: 'related' },
+    { path: "/purchases/suppliers", label: "Compras › Lista de Proveedores", kind: 'related' },
+    { path: "/purchases/suppliers/details/:supplierId", label: "Compras › Proveedores › Detalle", kind: 'related' },
+    { path: "/purchases/suppliers/evaluations", label: "Compras › Evaluaciones de Proveedores", kind: 'related' }
   ],
   'purchases:supplier:document_upload': [
     { path: "/purchases/suppliers/details/:supplierId", label: "Compras › Proveedores › Detalle", kind: 'related' },
@@ -722,14 +858,21 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/purchases/suppliers", label: "Compras › Lista de Proveedores", kind: 'screen' },
     { path: "/purchases/suppliers/details/:supplierId", label: "Compras › Proveedores › Detalle", kind: 'screen' },
     { path: "/purchases/requests", label: "Compras › Solicitudes de Compra", kind: 'related' },
+    { path: "/purchases/supplier-selection", label: "Compras › Selección de Proveedores", kind: 'related' },
     { path: "/purchases/suppliers/edit/:supplierId", label: "Compras › Proveedores › Editar", kind: 'related' },
     { path: "/purchases/suppliers/evaluations", label: "Compras › Evaluaciones de Proveedores", kind: 'related' }
   ],
   'purchases:supplier_selection:manage': [
-    { path: "/purchases/supplier-selection", label: "Compras › Selección de Proveedores", kind: 'related' }
+    { path: "/purchases/requests", label: "Compras › Solicitudes de Compra", kind: 'related' },
+    { path: "/purchases/supplier-selection", label: "Compras › Selección de Proveedores", kind: 'related' },
+    { path: "/purchases/suppliers", label: "Compras › Lista de Proveedores", kind: 'related' },
+    { path: "/purchases/suppliers/details/:supplierId", label: "Compras › Proveedores › Detalle", kind: 'related' },
+    { path: "/purchases/suppliers/evaluations", label: "Compras › Evaluaciones de Proveedores", kind: 'related' }
   ],
   'purchases:supplier_selection:view': [
     { path: "/purchases/supplier-selection", label: "Compras › Selección de Proveedores", kind: 'screen' },
+    { path: "/purchases/requests", label: "Compras › Solicitudes de Compra", kind: 'related' },
+    { path: "/purchases/suppliers", label: "Compras › Lista de Proveedores", kind: 'related' },
     { path: "/purchases/suppliers/details/:supplierId", label: "Compras › Proveedores › Detalle", kind: 'related' },
     { path: "/purchases/suppliers/edit/:supplierId", label: "Compras › Proveedores › Editar", kind: 'related' },
     { path: "/purchases/suppliers/evaluations", label: "Compras › Evaluaciones de Proveedores", kind: 'related' }
@@ -854,25 +997,29 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/profiles/:id", label: "Biomedicos", kind: 'action' }
   ],
   'users:role:list': [
+    { path: "/customers/:id", label: "Empresas", kind: 'related' },
     { path: "/lms/admin/courses/:courseId/assignments", label: "Academia › Administración › Cursos › Asignaciones", kind: 'related' },
-    { path: "/settings", label: "Ajustes", kind: 'related' }
+    { path: "/settings", label: "Ajustes", kind: 'related' },
+    { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'users:user:activation': [
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
     { path: "/settings", label: "Ajustes", kind: 'action' },
-    { path: "/customers/:id", label: "Empresas", kind: 'related' }
+    { path: "/users", label: "Usuarios", kind: 'action' }
   ],
   'users:user:create': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
     { path: "/settings", label: "Ajustes", kind: 'action' },
-    { path: "/users", label: "Usuarios", kind: 'related' }
+    { path: "/users", label: "Usuarios", kind: 'action' }
   ],
   'users:user:delete': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
     { path: "/settings", label: "Ajustes", kind: 'action' },
-    { path: "/users", label: "Usuarios", kind: 'related' }
+    { path: "/users", label: "Usuarios", kind: 'action' }
   ],
   'users:user:list': [
     { path: "/settings", label: "Ajustes", kind: 'screen' },
+    { path: "/customers/:id", label: "Empresas", kind: 'related' },
     { path: "/lms", label: "Academia › Dashboard", kind: 'related' },
     { path: "/lms/admin", label: "Academia › Administración", kind: 'related' },
     { path: "/lms/admin/analytics", label: "Academia › Analíticas", kind: 'related' },
@@ -896,13 +1043,18 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'users:user:password_reset': [
-    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/settings", label: "Ajustes", kind: 'related' },
+    { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'users:user:update': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/settings", label: "Ajustes", kind: 'related' },
     { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'users:user:update_internal': [
-    { path: "/settings", label: "Ajustes", kind: 'action' }
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/settings", label: "Ajustes", kind: 'action' },
+    { path: "/users", label: "Usuarios", kind: 'action' }
   ],
 }

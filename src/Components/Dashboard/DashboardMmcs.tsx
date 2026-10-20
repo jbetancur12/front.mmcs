@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Container,
   Typography,
@@ -24,7 +24,7 @@ import {
   ViewModule as ViewModuleIcon,
   TableRows as TableRowsIcon
 } from '@mui/icons-material'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCertificatesNextToExpireGrouped } from 'src/hooks/dashboard/useCertificatesDue'
 import DashboardTable from './DashboardMmcsTable'
 import DashboardCards from './DashboardMmcsCards'
 import Swal from 'sweetalert2'
@@ -73,19 +73,15 @@ interface Customer {
  * Ambas vistas comparten las mismas estadísticas y funcionalidades base.
  */
 const Dashboard: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
-  const [tableData, setTableData] = useState<Customer[]>([])
-  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  // Fetch files data
-  const fetchFiles = async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(`/files/next-to-expire-grouped`, {})
-      setTableData(response.data || [])
-    } catch (error) {
+  const {
+    data: tableData = [],
+    isLoading,
+    refetch
+  } = useCertificatesNextToExpireGrouped<Customer>({
+    onError: (error) => {
       console.error('Error fetching file data:', error)
       Swal.fire({
         title: 'Error',
@@ -93,18 +89,14 @@ const Dashboard: React.FC = () => {
         icon: 'error',
         confirmButtonText: 'Entendido'
       })
-    } finally {
-      setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    fetchFiles()
-  }, [])
+  })
+  // Al refrescar manualmente se muestra el esqueleto, como antes
+  const loading = isLoading || refreshing
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await fetchFiles()
+    await refetch()
     setRefreshing(false)
     Swal.fire({
       title: '¡Actualizado!',

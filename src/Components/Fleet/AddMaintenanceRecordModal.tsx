@@ -15,7 +15,7 @@ import { InterventionType, MaintenanceRecord, Reminder } from './types'
 import { addMonths } from 'date-fns'
 import { bigToast } from '../ExcelManipulation/Utils'
 import { AxiosError, isAxiosError } from 'axios'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCreateMaintenanceRecord } from '@hooks/fleet/useFleetQueries'
 
 interface AddMaintenanceRecordModalProps {
   isOpen: boolean
@@ -32,7 +32,7 @@ const AddMaintenanceRecordModal: React.FC<AddMaintenanceRecordModalProps> = ({
   interventionTypes,
   vehicleId
 }) => {
-  const axiosPrivate = useAxiosPrivate()
+  const createMaintenanceRecord = useCreateMaintenanceRecord(vehicleId)
   const [formData, setFormData] = useState<Partial<MaintenanceRecord>>({})
   const [reminder, setReminder] = useState<Partial<Reminder>>({})
   const [selectedInterventionType, setSelectedInterventionType] = useState<
@@ -89,11 +89,7 @@ const AddMaintenanceRecordModal: React.FC<AddMaintenanceRecordModalProps> = ({
     }
 
     try {
-      const { data } = await axiosPrivate.post(
-        `/maintenanceRecord`,
-        newRecord,
-        {}
-      )
+      const data = await createMaintenanceRecord.mutateAsync(newRecord)
       onSave(data) // Actualizar el estado con el nuevo registro
       onClose() // Cerrar el modal
     } catch (error) {

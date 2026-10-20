@@ -33,7 +33,6 @@ import MaterialReactTable, {
 } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from 'react-query'
 import {
   CartesianGrid,
   Legend,
@@ -54,11 +53,11 @@ import {
   useCalibrationAssignableMetrologists,
   useCalibrationServiceAnalytics
 } from '../../hooks/useCalibrationServices'
+import { useCalibrationCustomerOptions } from '../../hooks/calibration/useCalibrationCustomerOptions'
 import {
   CalibrationServiceAnalyticsFilters,
   CalibrationServiceAnalyticsResponse,
   CalibrationServiceAnalyticsTableRow,
-  CalibrationServiceCustomer,
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus,
   CalibrationServiceUserSummary
@@ -234,10 +233,6 @@ const parseBooleanFilter = (value: string) => {
 
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 
-interface CalibrationCustomersResponse {
-  customers: CalibrationServiceCustomer[]
-}
-
 const YesNoSelect = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
   <TextField fullWidth select label={label} value={value} onChange={(e) => onChange(e.target.value)}>
     {yesNoOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
@@ -269,23 +264,7 @@ const CalibrationServiceAnalyticsPage = () => {
     pageSize: 10
   })
 
-  const { data: customerData } = useQuery({
-    queryKey: ['calibration-service-analytics-customers'],
-    queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationCustomersResponse>(
-        '/customers',
-        {
-          params: {
-            scope: 'calibration',
-            page: 1,
-            limit: 100
-          }
-        }
-      )
-      return response.data
-    },
-    staleTime: 5 * 60 * 1000
-  })
+  const { data: customerData } = useCalibrationCustomerOptions()
   const { data: metrologists = [] } = useCalibrationAssignableMetrologists()
 
   const filters: CalibrationServiceAnalyticsFilters = {}

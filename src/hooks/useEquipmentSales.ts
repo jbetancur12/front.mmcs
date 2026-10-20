@@ -10,6 +10,8 @@ import {
   EquipmentProductListResponse,
   EquipmentProductPayload
 } from '../types/equipmentSales'
+import type { EquipmentCustomerOption } from '../types/equipmentSales'
+import type { EquipmentSalesCustomerDialogValues } from '../pages/equipment-sales/EquipmentSalesCustomerDialog'
 
 export const EQUIPMENT_SALES_QUERY_KEYS = {
   all: 'equipment-sales',
@@ -327,4 +329,90 @@ export const useEquipmentSalesMutations = () => {
     saveQuoteTermsTemplate,
     upsertSequenceConfig
   }
+}
+
+// --- Clientes del workspace de cotizaciones de equipos ---
+
+export const EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY = ['equipment-sales-customers'] as const
+
+export const useEquipmentSalesCustomers = (enabled: boolean) => {
+  return useQuery({
+    queryKey: EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY,
+    queryFn: async () => {
+      const response = await axiosPrivate.get<EquipmentCustomerOption[]>('/customers')
+      return response.data
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000
+  })
+}
+
+/** Crea un cliente (con su primera sede) y lo agrega a la caché de clientes */
+export const useCreateEquipmentSalesCustomer = (
+  onCreated?: (customer: EquipmentCustomerOption) => void
+) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (values: EquipmentSalesCustomerDialogValues) => {
+      const response = await axiosPrivate.post<{ customer: EquipmentCustomerOption }>(
+        '/customers',
+        {
+          ...values.customer,
+          direccion: values.customer.direccion || values.site.address || '',
+          ciudad: values.customer.ciudad || values.site.city || '',
+          departamento: values.customer.departamento || values.site.department || '',
+          email: values.customer.email || values.site.contactEmail || '',
+          telefono: values.customer.telefono || values.site.contactPhone || '',
+          pais: values.customer.pais || values.site.country || 'Colombia',
+          sites: [values.site]
+        }
+      )
+      return response.data.customer
+    },
+    onSuccess: (customer) => {
+      queryClient.setQueryData<EquipmentCustomerOption[]>(
+        EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY,
+        (previous = []) => {
+          const withoutDuplicate = previous.filter((item) => item.id !== customer.id)
+          return [...withoutDuplicate, customer].sort((left, right) =>
+            left.nombre.localeCompare(right.nombre)
+          )
+        }
+      )
+      onCreated?.(customer)
+    }
+  })
+}
+
+/** Crea una sede para un cliente existente y actualiza la caché de clientes */
+export const useCreateEquipmentSalesCustomerSite = (
+  onCreated?: (customer: EquipmentCustomerOption) => void
+) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      customerId,
+      values
+    }: {
+      customerId?: number
+      values: EquipmentSalesCustomerDialogValues
+    }) => {
+      if (!customerId) {
+        throw new Error('Selecciona un cliente antes de crear la sede.')
+      }
+      const response = await axiosPrivate.post<EquipmentCustomerOption>(
+        `/customers/${customerId}/sedes`,
+        values.site
+      )
+      return response.data
+    },
+    onSuccess: (customer) => {
+      queryClient.setQueryData<EquipmentCustomerOption[]>(
+        EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY,
+        (previous = []) =>
+          previous.map((item) => (item.id === customer.id ? customer : item))
+      )
+      onCreated?.(customer)
+    }
+  })
 }

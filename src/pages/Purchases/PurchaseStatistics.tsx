@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { isAxiosError } from 'axios'
 import {
   Bar,
   Line,
@@ -18,6 +19,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { usePurchaseStatistics } from 'src/hooks/purchases/usePurchaseStatistics'
 import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -56,38 +58,43 @@ interface PurchaseStatistics {
 // const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
 const PurchaseStatistics = () => {
-  const [statistics, setStatistics] = useState<PurchaseStatistics | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<'daily' | 'monthly' | 'yearly'>('monthly')
   const [dateFilter, setDateFilter] = useState({
     startDate: subDays(new Date(), 30),
     endDate: new Date()
   })
   const [customDateRange, setCustomDateRange] = useState(false)
-  
+  // Estado de la consulta por rango (se dispara a mano y por ahora solo se registra)
+  const [rangeLoading, setRangeLoading] = useState(false)
+  const [rangeError, setRangeError] = useState<string | null>(null)
+
   const axiosPrivate = useAxiosPrivate()
 
-  const fetchStatistics = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await axiosPrivate.get('/purchase-statistics')
-      setStatistics(response.data)
-      
-    } catch (err: any) {
-      console.error('Error fetching purchase statistics:', err)
-      setError(err.response?.data?.details || 'Error al cargar las estadísticas')
-    } finally {
-      setLoading(false)
-    }
+  const {
+    data: statistics,
+    isLoading: statisticsLoading,
+    error: statisticsError,
+    refetch: refetchStatistics
+  } = usePurchaseStatistics<PurchaseStatistics>({
+    onError: (err) => console.error('Error fetching purchase statistics:', err)
+  })
+
+  const loading = statisticsLoading || rangeLoading
+  const error: string | null = statisticsError
+    ? (isAxiosError(statisticsError) &&
+        statisticsError.response?.data?.details) ||
+      'Error al cargar las estadísticas'
+    : rangeError
+
+  const fetchStatistics = () => {
+    setRangeError(null)
+    refetchStatistics()
   }
 
   const fetchStatisticsByDateRange = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setRangeLoading(true)
+      setRangeError(null)
       
       const params = {
         startDate: format(dateFilter.startDate, 'yyyy-MM-dd'),
@@ -100,15 +107,11 @@ const PurchaseStatistics = () => {
       
     } catch (err: any) {
       console.error('Error fetching date range statistics:', err)
-      setError(err.response?.data?.error || 'Error al cargar las estadísticas por fecha')
+      setRangeError(err.response?.data?.error || 'Error al cargar las estadísticas por fecha')
     } finally {
-      setLoading(false)
+      setRangeLoading(false)
     }
   }
-
-  useEffect(() => {
-    fetchStatistics()
-  }, [])
 
   const handleDateRangeFilter = () => {
     fetchStatisticsByDateRange()

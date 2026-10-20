@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   Container,
   Typography,
@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material'
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCertificatesNextToExpireGrouped } from 'src/hooks/dashboard/useCertificatesDue'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 
@@ -57,37 +57,20 @@ interface Customer {
 }
 
 const DashboardTable: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
 
-  const [tableData, setTableData] = useState<Customer[]>([])
-  const [loading, setLoading] = useState(true)
-
-  // Fetch files data
-  const fetchFiles = async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(
-        `/files/next-to-expire-grouped`,
-        {}
-      )
-      setTableData(response.data || [])
-    } catch (error) {
-      console.error('Error fetching file data:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los datos de certificados',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchFiles()
-  }, [])
+  const { data: tableData = [], isLoading: loading } =
+    useCertificatesNextToExpireGrouped<Customer>({
+      onError: (error) => {
+        console.error('Error fetching file data:', error)
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los datos de certificados',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        })
+      }
+    })
 
 
 

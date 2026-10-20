@@ -11,7 +11,17 @@ import {
   TextField,
   Tooltip
 } from '@mui/material'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  USER_SORTABLE_FIELDS,
+  useDeleteUserById,
+  useRegisterUser,
+  useUpdateUserById,
+  useUsersPaginated
+} from 'src/hooks/useUsers'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 
 import {
   MaterialReactTable,
@@ -20,11 +30,10 @@ import {
   type MRT_Row,
   type MaterialReactTableProps
 } from 'material-react-table'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { showActivationLinkDialog } from '../utils/sweetAlert'
 
-import { ROLES } from 'src/constants/roles'
 // Define interfaces
 export interface UserData {
   id: number
@@ -40,10 +49,27 @@ export interface UserData {
 
 // Main component
 const Table: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [tableData, setTableData] = useState<UserData[]>([])
-  const [filteredTableData, setFilteredTableData] = useState<UserData[]>([])
+  // Paginación, búsqueda (nombre, email, teléfono) y orden en el servidor.
+  const server = useServerTableState({ sortableFields: USER_SORTABLE_FIELDS })
+  const {
+    data: usersPage,
+    isLoading,
+    isFetching
+  } = useUsersPaginated<UserData>(server.params, {
+    onError: (error) => {
+      console.error('Error fetching user data:', error)
+    }
+  })
+  useKeepPageInRange(
+    usersPage?.totalPages,
+    server.pagination.pageIndex,
+    server.setPagination
+  )
+  const filteredTableData = useMemo(() => usersPage?.items ?? [], [usersPage])
+  const registerUser = useRegisterUser<UserData>()
+  const updateUserById = useUpdateUserById()
+  const deleteUserById = useDeleteUserById()
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -52,7 +78,7 @@ const Table: React.FC = () => {
   // Create a new user
   const onCreateUser = async (userData: UserData) => {
     try {
-      const response = await axiosPrivate.post(`/auth/register`, userData, {})
+      const response = await registerUser.mutateAsync(userData)
 
       if (response.status === 201) {
         if (response.data?.activationUrl) {
@@ -70,30 +96,11 @@ const Table: React.FC = () => {
             position: 'top-center'
           })
         }
-        fetchUsers() // Refresh data after creation
       } else {
         console.error('Error al crear usuario')
       }
     } catch (error) {
       console.error('Error de red:', error)
-    }
-  }
-
-  // Fetch users data
-  const fetchUsers = async () => {
-    try {
-      const response = await axiosPrivate.get(`/users`, {})
-
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
-        const filteredData = response.data.filter(
-          (user: UserData) => user.rol !== ROLES.ADMIN
-        )
-        setTableData(filteredData)
-        setFilteredTableData(filteredData)
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error)
     }
   }
 
@@ -120,34 +127,27 @@ const Table: React.FC = () => {
   //   }
   // }
 
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
   const handleCreateNewRow = (values: UserData) => {
     onCreateUser(values)
     setCreateModalOpen(false)
   }
 
   const handleSaveRowEdits: MaterialReactTableProps<UserData>['onEditingRowSave'] =
-    async ({ exitEditingMode, row, values }) => {
+    async ({ exitEditingMode, values }) => {
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axiosPrivate.put(
-            `/users/${values.id}`,
-            updatedValues,
-            {}
-          )
+          const response = await updateUserById.mutateAsync({
+            id: values.id,
+            values: updatedValues
+          })
 
           if (response.status === 201) {
             toast.success('Usuario Modificado Exitosamente!', {
               duration: 4000,
               position: 'top-center'
             })
-            tableData[row.index] = values
-            setTableData([...tableData])
           } else {
             console.error('Error al crear usuario')
           }
@@ -163,17 +163,15 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteUser = async (rowIndex: number, id: number) => {
+  const deleteUser = async (id: number) => {
     try {
-      const response = await axiosPrivate.delete(`/users/${id}`, {})
+      const response = await deleteUserById.mutateAsync(id)
 
       if (response.status === 201) {
         toast.success('Usuario Eliminado Exitosamente!', {
           duration: 4000,
           position: 'top-center'
         })
-        tableData.splice(rowIndex, 1)
-        setTableData([...tableData])
       } else {
         console.error('Error al crear usuario')
       }
@@ -189,11 +187,9 @@ const Table: React.FC = () => {
       ) {
         return
       }
-      deleteUser(row.index, row.getValue('id'))
-      tableData.splice(row.index, 1)
-      setTableData([...tableData])
+      deleteUser(row.getValue('id'))
     },
-    [tableData]
+    [filteredTableData]
   )
 
   const getCommonEditTextFieldProps = useCallback(
@@ -251,6 +247,7 @@ const Table: React.FC = () => {
         accessorKey: 'identificacion',
         header: 'Identificacion',
         size: 150,
+        enableSorting: false,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'show'
@@ -269,6 +266,7 @@ const Table: React.FC = () => {
         accessorKey: 'isActive',
         header: 'Activo',
         size: 10,
+        enableSorting: false,
         Cell: ({ cell }) => (
           <div
             className={`circle ${
@@ -300,6 +298,15 @@ const Table: React.FC = () => {
         }}
         columns={columns}
         data={filteredTableData}
+        {...server.tableProps}
+        // El endpoint no tiene filtros exactos por estas columnas.
+        enableColumnFilters={false}
+        rowCount={usersPage?.totalItems ?? 0}
+        state={{
+          ...server.tableState,
+          isLoading,
+          showProgressBars: isFetching && !isLoading
+        }}
         editingMode='modal' //default
         enableColumnOrdering
         enableEditing

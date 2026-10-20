@@ -11,7 +11,7 @@ import {
 } from 'react-leaflet'
 import { DeviceSidebar } from './sidebar'
 
-import { $devicesIot, hasAlarms, loadDevices } from 'src/store/deviceIotStore'
+import { $devicesIot } from 'src/store/deviceIotStore'
 import { DEFAULT_MAP_CENTER, MAP_LAYERS, MAP_STYLE } from './constants'
 
 import { useMapSetup } from './hooks/useMapSetup'
@@ -21,9 +21,7 @@ import { MapControls } from './parts/MapControls'
 
 import { DeviceMarkers } from './parts/DeviceMarkers'
 import { DeviceIot } from '../types'
-import useAxiosPrivate from '@utils/use-axios-private'
-import { useQuery } from 'react-query'
-import { transformDevice } from './utils/transformDevice'
+import { useIotMapDevices } from '@hooks/iot/useIotDevices'
 import GraphDrawer from '../GraphDrawer/index.tsx'
 import { userStore } from '@stores/userStore'
 import L from 'leaflet'
@@ -55,7 +53,6 @@ const DeviceIotMap = () => {
   const devices = useStore($devicesIot)
 
   const $user = useStore(userStore)
-  const axiosPrivate = useAxiosPrivate()
   const { handleMapRef, isSidebarOpen, toggleSidebar } = useMapSetup()
   const { filteredDevices, filterState, handleFilterChange } =
     useDeviceData(devices)
@@ -68,23 +65,7 @@ const DeviceIotMap = () => {
   const [selectedDeviceForGraph, setSelectedDeviceForGraph] =
     useState<DeviceIot | null>(null)
 
-  const { data: apiDevices } = useQuery(
-    ['devices', $user?.customer?.id],
-    async () => {
-      const response = await axiosPrivate.get('/devicesIot')
-      const transformed = response.data.map(transformDevice)
-
-      const hasAlarm = response.data.some(
-        (device: DeviceIot) => device.isInAlarm
-      )
-      hasAlarms(hasAlarm)
-      loadDevices(transformed) // Guardar en el store
-      return transformed // Asegurar que transformDevice existe
-    },
-    {
-      staleTime: 5 * 60 * 1000 // 5 minutos
-    }
-  )
+  const { data: apiDevices } = useIotMapDevices($user?.customer?.id)
 
   const handleShowDeviceGraph = (device: DeviceIot) => {
     setGraphDeviceId(device.id)

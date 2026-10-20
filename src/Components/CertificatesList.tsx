@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AxiosError, AxiosResponse, isAxiosError } from 'axios'
 import {
   Button,
@@ -23,6 +23,11 @@ import Loader from './Loader2'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
+  CertificateHistoryItem,
+  useCertificateHistory,
+  useDeleteCertificateHistory
+} from '@hooks/certificates/useCertificateHistory'
+import {
   Download,
   Delete,
   CalendarToday,
@@ -34,25 +39,18 @@ import PDFViewer from './PDFViewer'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
-interface Certificate {
-  id: number
-  calibrationDate: string
-  filePath: string
-}
+type Certificate = CertificateHistoryItem
 
-interface CertificatesListProps {
-  refreshTrigger?: number
-}
-
-function CertificatesList({ refreshTrigger }: CertificatesListProps) {
+function CertificatesList() {
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
-  const [certificates, setCertificates] = useState<Certificate[]>([])
+  const { data: certificatesData, isLoading: loading } =
+    useCertificateHistory(id)
+  const certificates: Certificate[] = certificatesData ?? []
+  const deleteCertificateMutation = useDeleteCertificateHistory()
   const [certificateId, setCertificateId] = useState<number>(0)
   const [previewId, setPreviewId] = useState<number | null>(null)
   const [certificatePath, setCertificatePath] = useState<string>('')
-
-  const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
 
   const canDeleteCertificate = useCan(PERMISSIONS.CALIBRATION_CERTIFICATE_HISTORY_DELETE)
@@ -65,28 +63,6 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
   // const uniqueYears = years.filter((value, index, self) => {
   //   return self.indexOf(value) === index
   // })
-
-  useEffect(() => {
-    const getCertificates = async () => {
-      try {
-        setLoading(true)
-        const response = await axiosPrivate.get<Certificate[]>(
-          `/certificateHistory/certificate/${id}`,
-          {}
-        )
-
-        if (response.status === 200) {
-          setCertificates(response.data)
-          setLoading(false)
-        }
-      } catch (error) {
-        setLoading(false)
-        console.error('Error fetching certificates:', error)
-      }
-    }
-
-    getCertificates()
-  }, [id, refreshTrigger])
 
   const handleDownload = async (path: string) => {
     const filePath = path
@@ -155,16 +131,10 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await axiosPrivate.delete(
-        `/certificateHistory/${id}`,
-        {}
-      )
+      const response = await deleteCertificateMutation.mutateAsync(id)
 
       if (response.status === 200) {
         bigToast('Certificado eliminado con éxito', 'success')
-        setCertificates(
-          certificates.filter((certificate) => certificate.id !== id)
-        )
       }
     } catch (error) {
       console.error('Error al eliminar el certificado:', error)
