@@ -300,7 +300,7 @@ const CustomersTable: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Business sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
             <Typography variant='h4' component='h1' fontWeight='bold'>
-              Clientes - Vista Tabla
+              Clientes
             </Typography>
           </Box>
 
@@ -317,7 +317,7 @@ const CustomersTable: React.FC = () => {
               }}
               aria-label='Crear nuevo cliente'
             >
-              Crear Cliente
+              Crear cliente
             </Button>
           )}
         </Box>
