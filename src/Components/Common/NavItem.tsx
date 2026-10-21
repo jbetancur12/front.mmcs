@@ -124,7 +124,7 @@ const NavItem: React.FC<NavItemProps> = ({
           {label}
         </Box>
       )}
-      {isGroup && !minimized && (
+      {expanded !== undefined && !minimized && (
         <KeyboardArrowDownIcon
           aria-hidden='true'
           sx={{

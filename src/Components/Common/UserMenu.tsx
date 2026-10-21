@@ -22,6 +22,8 @@ interface UserMenuProps {
   impersonating?: boolean
   onStopImpersonation?: () => void
   onLogout: () => void
+  /** Pie del menú para soporte: "Versión 1.10.1 (API 1.8.2)". */
+  versionLabel?: string
 }
 
 const TEAL_INK = '#00695c'
@@ -46,7 +48,8 @@ const UserMenu: React.FC<UserMenuProps> = ({
   roleLabel,
   impersonating = false,
   onStopImpersonation,
-  onLogout
+  onLogout,
+  versionLabel
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
@@ -196,6 +199,15 @@ const UserMenu: React.FC<UserMenuProps> = ({
           </ListItemIcon>
           Cerrar sesión
         </MenuItem>
+        {versionLabel && [
+          <Divider key='version-divider' />,
+          <Typography
+            key='version'
+            sx={{ px: 2, pt: 1, pb: 0.5, fontSize: 12, color: '#4b5563' }}
+          >
+            {versionLabel}
+          </Typography>
+        ]}
       </Menu>
     </>
   )

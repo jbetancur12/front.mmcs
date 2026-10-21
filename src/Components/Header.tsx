@@ -40,6 +40,15 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
   const $userStore = useStore(userStore)
 
   const logout = useLogout()
+  const [apiVersion, setApiVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    axiosPrivate
+      .get('/version')
+      .then((response) => setApiVersion(response.data?.version ?? null))
+      .catch(() => setApiVersion(null))
+    // Solo al montar: la versión de la API no cambia durante la sesión.
+  }, [])
   const [hasAlert, setHasAlert] = useState<EquipmentData[]>([])
   const [impersonationDialogOpen, setImpersonationDialogOpen] = useState(false)
   const {
@@ -266,6 +275,9 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
               impersonating={isImpersonating}
               onStopImpersonation={stopImpersonation}
               onLogout={logout}
+              versionLabel={`Versión ${import.meta.env.VITE_APP_VERSION}${
+                apiVersion ? ` (API ${apiVersion})` : ''
+              }`}
             />
           </Box>
         </Toolbar>

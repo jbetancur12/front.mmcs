@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { axiosPrivate } from '@utils/api'
 import { useLocation } from 'react-router-dom'
 import {
   AccountTreeOutlined,
   AssignmentTurnedInOutlined,
   BuildOutlined,
   BusinessOutlined,
-  ChevronLeft,
-  ChevronRight,
   Close,
   DashboardOutlined,
   DirectionsCarOutlined,
   Inventory2Outlined,
+  KeyboardDoubleArrowLeft,
+  KeyboardDoubleArrowRight,
   MonitorHeartOutlined,
   PeopleAltOutlined,
   ScienceOutlined,
@@ -49,11 +48,6 @@ import {
 const warnedUnknownModules = new Set<string>()
 
 const LMS_SIDEBAR_HINT_DISMISSED_KEY = 'lms-sidebar-hint-dismissed'
-
-const apiVersionPromise = axiosPrivate
-  .get('/version')
-  .then((r) => r.data.version)
-  .catch(() => null)
 
 // Helper para verificar si un módulo debe ser visible
 const canViewModule = (roles: string[], userRole: string[]) => {
@@ -507,12 +501,7 @@ const SideBar = ({
   mobileMenuOpen,
   setMobileMenuOpen
 }: SideBarProps) => {
-  const [apiVersion, setApiVersion] = useState<string | null>(null)
   const $userStore = useStore(userStore)
-
-  useEffect(() => {
-    apiVersionPromise.then(setApiVersion)
-  }, [])
   const { pathname } = useLocation()
   const effectiveLmsMenuRoles = getEffectiveLmsMenuRoles($userStore)
   const [isLmsHintDismissed, setIsLmsHintDismissed] = useState(true)
@@ -682,7 +671,8 @@ const SideBar = ({
         </ul>
       </nav>
 
-      <div className='flex-shrink-0 border-t border-gray-200 px-3 py-3'>
+      {/* En móvil no hay nada que minimizar: el pie solo existe en escritorio. */}
+      <div className='hidden lg:block flex-shrink-0 border-t border-gray-200 px-3 py-2'>
         {isLmsRoute && !minimized && !isLmsHintDismissed && (
           <div className='mb-3 flex items-start gap-2 rounded-lg bg-[#e0f7f4] p-3'>
             <p className='flex-1 text-xs leading-5 text-[#00695c]'>
@@ -702,38 +692,28 @@ const SideBar = ({
             </button>
           </div>
         )}
-        <div
-          className={`flex items-center gap-3 ${minimized ? 'justify-center' : 'justify-between'}`}
-        >
-          {!minimized && (
-            <p className='text-xs leading-5 text-gray-600'>
-              Versión {import.meta.env.VITE_APP_VERSION}
-              {apiVersion && (
-                <>
-                  <br />
-                  API {apiVersion}
-                </>
-              )}
-            </p>
-          )}
-          <button
-            type='button'
-            onClick={() => {
-              clearTimeout(hoverTimer.current)
-              setHovered(false)
-              setUserMinimized(!userMinimized)
-            }}
-            aria-label={userMinimized ? 'Expandir menú' : 'Minimizar menú'}
-            title={userMinimized ? 'Expandir menú' : 'Minimizar menú'}
-            className='hidden lg:flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[#00695c]'
-          >
-            {userMinimized ? (
-              <ChevronRight sx={{ fontSize: 20 }} />
+        <NavItem
+          label={
+            minimized
+              ? 'Expandir menú'
+              : userMinimized
+                ? 'Mantener abierto'
+                : 'Minimizar menú'
+          }
+          icon={
+            userMinimized ? (
+              <KeyboardDoubleArrowRight />
             ) : (
-              <ChevronLeft sx={{ fontSize: 20 }} />
-            )}
-          </button>
-        </div>
+              <KeyboardDoubleArrowLeft />
+            )
+          }
+          minimized={minimized}
+          onClick={() => {
+            clearTimeout(hoverTimer.current)
+            setHovered(false)
+            setUserMinimized(!userMinimized)
+          }}
+        />
       </div>
     </aside>
   )
