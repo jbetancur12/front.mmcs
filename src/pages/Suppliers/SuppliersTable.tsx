@@ -234,10 +234,10 @@ const SuppliersTable: React.FC = () => {
       stats={
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard label='Proveedores' value={apiResponse?.totalItems ?? suppliersForTable.length} icon={<LocalShipping />} tone='teal' />
+            <LmsStatCard variant='quiet' label='Proveedores' value={apiResponse?.totalItems ?? suppliersForTable.length} icon={<LocalShipping />} tone='teal' />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard
+            <LmsStatCard variant='quiet'
               label='Evaluación requerida'
               value={needsActionCount}
               icon={<WarningAmber />}
@@ -245,7 +245,7 @@ const SuppliersTable: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard label='Evaluación al día' value={upToDateCount} icon={<CheckCircle />} tone='green' />
+            <LmsStatCard variant='quiet' label='Evaluación al día' value={upToDateCount} icon={<CheckCircle />} tone='green' />
           </Grid>
         </Grid>
       }

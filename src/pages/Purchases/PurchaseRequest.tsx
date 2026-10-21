@@ -486,7 +486,7 @@ const PurchaseRequest: React.FC = () => {
         stats={
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={6} md={3}>
-              <LmsStatCard
+              <LmsStatCard variant='quiet'
                 label='Todas'
                 value={totalRecords}
                 icon={<ListAlt />}
@@ -496,7 +496,7 @@ const PurchaseRequest: React.FC = () => {
               />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard
+              <LmsStatCard variant='quiet'
                 label='Pendientes de aprobar'
                 value={counts.pending}
                 icon={<AccessTime />}
@@ -506,7 +506,7 @@ const PurchaseRequest: React.FC = () => {
               />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard
+              <LmsStatCard variant='quiet'
                 label='Por generar orden'
                 value={counts.toOrder}
                 icon={<ShoppingCartCheckout />}
@@ -516,7 +516,7 @@ const PurchaseRequest: React.FC = () => {
               />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard
+              <LmsStatCard variant='quiet'
                 label='Sin orden hace más de 7 días'
                 value={counts.late}
                 icon={<ErrorOutline />}

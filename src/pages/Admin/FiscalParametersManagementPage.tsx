@@ -417,13 +417,13 @@ const FiscalParametersManagementPage: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Parámetros' value={fiscalParams.length} icon={<AccountBalance />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Parámetros' value={fiscalParams.length} icon={<AccountBalance />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Activos' value={fiscalParams.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
+          <LmsStatCard variant='quiet' label='Activos' value={fiscalParams.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Inactivos' value={fiscalParams.filter((p) => !p.isActive).length} icon={<Block />} tone='orange' />
+          <LmsStatCard variant='quiet' label='Inactivos' value={fiscalParams.filter((p) => !p.isActive).length} icon={<Block />} tone='orange' />
         </Grid>
       </Grid>
 

@@ -118,13 +118,13 @@ const SuppliersSelection: React.FC = () => {
         stats={
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={6} sm={4}>
-              <LmsStatCard label='Seleccionados' value={suppliers.length} icon={<HowToReg />} tone='teal' />
+              <LmsStatCard variant='quiet' label='Seleccionados' value={suppliers.length} icon={<HowToReg />} tone='teal' />
             </Grid>
             <Grid item xs={6} sm={4}>
-              <LmsStatCard label='Aprobados' value={suppliers.filter((x) => x.finalDecision === 'APPROVED').length} icon={<CheckCircle />} tone='green' />
+              <LmsStatCard variant='quiet' label='Aprobados' value={suppliers.filter((x) => x.finalDecision === 'APPROVED').length} icon={<CheckCircle />} tone='green' />
             </Grid>
             <Grid item xs={6} sm={4}>
-              <LmsStatCard label='Con reserva' value={suppliers.filter((x) => x.finalDecision === 'APPROVED WITH RESERVE').length} icon={<WarningAmber />} tone='orange' />
+              <LmsStatCard variant='quiet' label='Con reserva' value={suppliers.filter((x) => x.finalDecision === 'APPROVED WITH RESERVE').length} icon={<WarningAmber />} tone='orange' />
             </Grid>
           </Grid>
         }

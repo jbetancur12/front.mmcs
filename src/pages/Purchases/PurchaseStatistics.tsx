@@ -277,22 +277,22 @@ const PurchaseStatistics = () => {
       {/* Overview Cards */}
       <Grid container spacing={3}>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard label='Total solicitudes' value={statistics.overview.totalRequests} icon={<ListAlt />} tone='blue' />
+          <LmsStatCard variant='quiet' label='Total solicitudes' value={statistics.overview.totalRequests} icon={<ListAlt />} tone='blue' />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard label='Total órdenes' value={statistics.overview.totalOrders} icon={<ReceiptLong />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Total órdenes' value={statistics.overview.totalOrders} icon={<ReceiptLong />} tone='teal' />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard label='Verificaciones' value={statistics.overview.totalVerifications} icon={<FactCheck />} tone='green' />
+          <LmsStatCard variant='quiet' label='Verificaciones' value={statistics.overview.totalVerifications} icon={<FactCheck />} tone='green' />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard label='Sin orden' value={statistics.overview.requestsWithoutOrders} icon={<RemoveShoppingCart />} tone='orange' />
+          <LmsStatCard variant='quiet' label='Sin orden' value={statistics.overview.requestsWithoutOrders} icon={<RemoveShoppingCart />} tone='orange' />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard label='Sin verificar' value={statistics.overview.ordersWithoutVerification} icon={<ErrorOutline />} tone='red' />
+          <LmsStatCard variant='quiet' label='Sin verificar' value={statistics.overview.ordersWithoutVerification} icon={<ErrorOutline />} tone='red' />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard label='Pendientes' value={statistics.overview.pendingVerifications} icon={<HourglassEmpty />} tone='orange' />
+          <LmsStatCard variant='quiet' label='Pendientes' value={statistics.overview.pendingVerifications} icon={<HourglassEmpty />} tone='orange' />
         </Grid>
       </Grid>
 

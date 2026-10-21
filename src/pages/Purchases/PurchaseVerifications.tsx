@@ -253,7 +253,7 @@ const PurchaseVerificationsTable: React.FC = () => {
       stats={
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard
+            <LmsStatCard variant='quiet'
               label='Verificaciones'
               value={verifications.length}
               icon={<ListAlt />}
@@ -261,7 +261,7 @@ const PurchaseVerificationsTable: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard
+            <LmsStatCard variant='quiet'
               label='Recibidas este mes'
               value={thisMonth}
               icon={<CalendarMonth />}
@@ -269,7 +269,7 @@ const PurchaseVerificationsTable: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard
+            <LmsStatCard variant='quiet'
               label='Con observaciones'
               value={withNotes}
               icon={<SpeakerNotes />}

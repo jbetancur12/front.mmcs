@@ -163,13 +163,13 @@ const PersonnelManagementPage: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Personal' value={personnelList.length} icon={<Badge />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Personal' value={personnelList.length} icon={<Badge />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Activos' value={personnelList.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
+          <LmsStatCard variant='quiet' label='Activos' value={personnelList.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Inactivos' value={personnelList.filter((p) => !p.isActive).length} icon={<PersonOff />} tone='orange' />
+          <LmsStatCard variant='quiet' label='Inactivos' value={personnelList.filter((p) => !p.isActive).length} icon={<PersonOff />} tone='orange' />
         </Grid>
       </Grid>
 

@@ -305,10 +305,10 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Evaluaciones' value={evaluations.length} icon={<FactCheck />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Evaluaciones' value={evaluations.length} icon={<FactCheck />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Condición excelente'
             value={evaluations.filter((e) => String(e.finalCondition ?? '').toUpperCase().includes('EXCELENTE')).length}
             icon={<EmojiEvents />}
@@ -316,7 +316,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Puntaje promedio'
             value={
               evaluations.length
