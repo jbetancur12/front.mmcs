@@ -10,6 +10,11 @@ import MaterialReactTable, {
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 const TEAL_INK = '#00695C'
+const TEAL_DARK = '#00897B'
+// Grises del sistema (levemente fríos), los mismos del menú lateral y las tarjetas
+const HEAD_BG = '#f3f4f6'
+const TOOLBAR_BG = '#f9fafb'
+const LINE = '#e5e7eb'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- misma restricción que MRT; las interfaces no encajan en Record<string, unknown>
 type DataTableProps<TData extends Record<string, any>> =
@@ -91,11 +96,11 @@ function DataTable<TData extends Record<string, any>>({
           // Fija a la derecha: fondo sólido para que no se vea lo que pasa debajo
           muiTableHeadCellProps: {
             align: 'left',
-            sx: { backgroundColor: '#f5f5f5', opacity: 1 }
+            sx: { backgroundColor: HEAD_BG, opacity: 1 }
           },
           muiTableBodyCellProps: {
             align: 'left',
-            sx: { backgroundColor: '#fff', boxShadow: '-1px 0 0 #e5e7eb' }
+            sx: { backgroundColor: '#fff', boxShadow: `-1px 0 0 ${LINE}` }
           }
         },
         ...props.displayColumnDefOptions
@@ -104,7 +109,12 @@ function DataTable<TData extends Record<string, any>>({
         placeholder: searchPlaceholder,
         variant: 'outlined',
         size: 'small',
-        sx: { minWidth: { xs: 0, sm: 300 } },
+        sx: {
+          minWidth: { xs: 0, sm: 300 },
+          // Foco turquesa, igual que AuthField y los formularios nuevos
+          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+            { borderColor: TEAL_DARK, borderWidth: 2 }
+        },
         inputProps: { 'aria-label': searchPlaceholder }
       }}
       renderToolbarInternalActions={({ table }) => (
@@ -127,10 +137,21 @@ function DataTable<TData extends Record<string, any>>({
           {renderTopToolbarCustomActions?.({ table })}
         </Box>
       )}
-      muiTableHeadCellProps={{ sx: { px: 1.5 } }}
-      muiTableBodyCellProps={{ sx: { px: 1.5 } }}
-      muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
-      muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+      muiTableHeadCellProps={{
+        sx: { px: 1.5, borderBottom: `1px solid ${LINE}` }
+      }}
+      muiTableBodyCellProps={{
+        // Cifras tabulares: teléfonos, NIT, fechas y totales en columna recta
+        sx: {
+          px: 1.5,
+          borderBottom: `1px solid ${LINE}`,
+          fontVariantNumeric: 'tabular-nums'
+        }
+      }}
+      muiTopToolbarProps={{ sx: { backgroundColor: TOOLBAR_BG } }}
+      muiBottomToolbarProps={{
+        sx: { backgroundColor: TOOLBAR_BG, borderTop: `1px solid ${LINE}` }
+      }}
       muiTableContainerProps={{ sx: { maxHeight: '600px' } }}
       muiTablePaperProps={
         muiTablePaperProps ?? {
@@ -142,7 +163,7 @@ function DataTable<TData extends Record<string, any>>({
         muiTableProps ?? {
           sx: {
             '& .MuiTableHead-root .MuiTableCell-root': {
-              backgroundColor: '#f5f5f5',
+              backgroundColor: HEAD_BG,
               color: '#374151',
               fontWeight: 600,
               fontSize: 14
