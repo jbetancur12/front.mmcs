@@ -8,8 +8,8 @@ interface AppConfig {
 }
 
 export const APP_CONFIG: AppConfig = {
-  VERSION: '1.9.7',
-  BUILD_DATE: '2026-10-18',
+  VERSION: '1.10.0',
+  BUILD_DATE: '2026-10-21',
   ENVIRONMENT:
     typeof import.meta !== 'undefined' && import.meta.env
       ? import.meta.env.VITE_ENV || 'development'
@@ -28,7 +28,7 @@ export const APP_CONFIG: AppConfig = {
     '1.6.9': 'Filtro por estado en equipos del cliente',
     '1.6.10': 'Compras: control de envío de la orden de compra',
     '1.8.0': 'Compras: control de envío de órdenes y rediseño de tablas, acciones y modales',
-    '1.9.7': 'Voz mas natural en avisos'
+    '1.10.0': 'Rediseño de inicio de sesión, recuperar y crear contraseña'
   } as Record<string, string>,
 
   // Configuración de limpieza
