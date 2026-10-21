@@ -58,7 +58,7 @@ const ModulesView = () => {
     <Box>
       <Grid container spacing={3} sx={{ mb: 3 }} alignItems='center'>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Módulos' value={modules.length} icon={<Apps />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Módulos' value={modules.length} icon={<Apps />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={8} sx={{ display: 'flex', justifyContent: { sm: 'flex-end' } }}>
           <Button variant='contained' startIcon={<Add />} onClick={() => setOpenModal(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', textTransform: 'none', '&:hover': { bgcolor: '#00ACC1' } }}>

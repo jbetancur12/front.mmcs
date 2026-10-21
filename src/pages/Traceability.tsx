@@ -491,10 +491,10 @@ const Traceability = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={6} sm={4}>
-          <LmsStatCard label='Documentos' value={traceabilities.length} icon={<PictureAsPdf />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Documentos' value={traceabilities.length} icon={<PictureAsPdf />} tone='teal' />
         </Grid>
         <Grid item xs={6} sm={4}>
-          <LmsStatCard label='Mostrando' value={filteredTraceabilities.length} icon={<Search />} tone='blue' />
+          <LmsStatCard variant='quiet' label='Mostrando' value={filteredTraceabilities.length} icon={<Search />} tone='blue' />
         </Grid>
       </Grid>
 

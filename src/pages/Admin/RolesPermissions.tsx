@@ -267,7 +267,7 @@ const RolesPermissions: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Roles activos'
             value={stats.roles}
             icon={<GroupsIcon />}
@@ -275,7 +275,7 @@ const RolesPermissions: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Capacidades'
             value={stats.permissions}
             icon={<VpnKeyIcon />}
@@ -283,7 +283,7 @@ const RolesPermissions: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Módulos gestionados'
             value={stats.modules}
             icon={<ViewModuleIcon />}

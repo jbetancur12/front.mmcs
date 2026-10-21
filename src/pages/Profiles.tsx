@@ -267,10 +267,10 @@ const Profiles: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={6} sm={4}>
-          <LmsStatCard label='Metrólogos' value={profiles.length} icon={<Person />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Metrólogos' value={profiles.length} icon={<Person />} tone='teal' />
         </Grid>
         <Grid item xs={6} sm={4}>
-          <LmsStatCard label='Mostrando' value={filteredProfiles.length} icon={<Search />} tone='blue' />
+          <LmsStatCard variant='quiet' label='Mostrando' value={filteredProfiles.length} icon={<Search />} tone='blue' />
         </Grid>
       </Grid>
 

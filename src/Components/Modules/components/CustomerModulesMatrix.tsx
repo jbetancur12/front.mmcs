@@ -24,7 +24,7 @@ import {
   Typography
 } from '@mui/material'
 import { Business, CheckCircle, DomainDisabled, School, ToggleOff, ToggleOn, VerifiedUser } from '@mui/icons-material'
-import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
@@ -38,7 +38,6 @@ import { bigToast } from '../../ExcelManipulation/Utils'
 
 type RowProps = { row: MRT_Row<CustomerModulesRow> }
 
-const TONES: LmsStatTone[] = ['blue', 'green']
 const MODULE_ICONS: Record<string, React.ReactElement> = {
   lms: <School />,
   tecnovigilancia: <VerifiedUser />
@@ -282,7 +281,7 @@ const CustomerModulesMatrix: React.FC = () => {
     <>
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Clientes activos'
             value={activeCustomers.length}
             icon={<Business />}
@@ -293,7 +292,7 @@ const CustomerModulesMatrix: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Clientes inactivos'
             value={inactiveCustomers.length}
             icon={<DomainDisabled />}
@@ -303,13 +302,13 @@ const CustomerModulesMatrix: React.FC = () => {
             onClick={() => changeScope(true)}
           />
         </Grid>
-        {modules.map((module, index) => (
+        {modules.map((module) => (
           <Grid item xs={12} sm={6} md={3} key={module.id}>
-            <LmsStatCard
+            <LmsStatCard variant='quiet'
               label={`Con ${module.label}`}
               value={activeCount(module.id)}
               icon={MODULE_ICONS[module.name] ?? <CheckCircle />}
-              tone={TONES[index % TONES.length]}
+              tone='teal'
               caption={`de ${activeCustomers.length} activos`}
             />
           </Grid>
