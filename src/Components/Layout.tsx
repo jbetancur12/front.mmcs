@@ -46,7 +46,7 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           />
         )}
         <div
-          className={`relative w-full h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 ${!isCourseView ? (sidebarMinimized ? 'lg:ml-20' : 'lg:ml-64') : ''}`}
+          className={`relative w-full h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 ${!isCourseView ? (userMinimized ? 'lg:ml-20' : 'lg:ml-64') : ''}`}
         >
           <SessionExpiryBanner />
           <main>

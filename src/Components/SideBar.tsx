@@ -1,21 +1,32 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { axiosPrivate } from '@utils/api'
-import { Link, useLocation } from 'react-router-dom'
-import { FaHospitalUser, FaUser } from 'react-icons/fa'
+import { useLocation } from 'react-router-dom'
 import {
-  MdMicrowave,
-  MdDashboard
-} from 'react-icons/md'
-import { BiSolidReport } from 'react-icons/bi'
+  AccountTreeOutlined,
+  AssignmentTurnedInOutlined,
+  BuildOutlined,
+  BusinessOutlined,
+  ChevronLeft,
+  ChevronRight,
+  Close,
+  DashboardOutlined,
+  DirectionsCarOutlined,
+  Inventory2Outlined,
+  MonitorHeartOutlined,
+  PeopleAltOutlined,
+  ScienceOutlined,
+  SchoolOutlined,
+  SettingsOutlined,
+  ShoppingCartOutlined,
+  SpeedOutlined,
+  StorefrontOutlined,
+  VerifiedOutlined
+} from '@mui/icons-material'
 
-import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
+import DropdownButton from './DropdownButton'
+import NavItem from './Common/NavItem'
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
-import {
-  CarRepair,
-  PrecisionManufacturing,
-  ScienceOutlined
-} from '@mui/icons-material'
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
@@ -36,9 +47,6 @@ import {
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
-
-const iconClass =
-  'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
 
 const LMS_SIDEBAR_HINT_DISMISSED_KEY = 'lms-sidebar-hint-dismissed'
 
@@ -74,9 +82,9 @@ const getLinkToCustomer = (to: string, $userStore: UserData) => {
 const sidebarItems = ($userStore: UserData) => [
   {
     type: 'link', // Tipo de ítem (enlace simple)
-    label: 'Dashboard',
+    label: 'Inicio',
     to: '/',
-    icon: <MdDashboard className={iconClass} />,
+    icon: <DashboardOutlined />,
     roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
     moduleName: 'Basic'
   },
@@ -84,7 +92,7 @@ const sidebarItems = ($userStore: UserData) => [
     type: 'link',
     label: 'Equipos',
     to: getLinkToCustomer(`customers/`, $userStore),
-    icon: <MdMicrowave className={iconClass} />,
+    icon: <MonitorHeartOutlined />,
     roles: [ROLES.USER],
     moduleName: 'Basic'
   },
@@ -93,7 +101,7 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Empresas',
     to: '/customers',
     permission: PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE,
-    icon: <FaHospitalUser className={iconClass} />,
+    icon: <BusinessOutlined />,
     roles: ROLE_GROUPS.METROLOGY_STAFF,
     moduleName: 'Basic'
   },
@@ -114,26 +122,25 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.PURCHASES_STATISTICS_VIEW
     ] as readonly PermissionKey[],
     moduleName: 'Basic',
-    pathData:
-      'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14l.84-2h7.45c.75 0 1.41-.41 1.75-1.03l3.24-5.88A1 1 0 0 0 20 4H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7.42c-.14 0-.25-.11-.26-.25z',
+    icon: <ShoppingCartOutlined />,
     menuItems: [
       {
-        label: 'Selección de Proveedores',
+        label: 'Selección de proveedores',
         url: 'purchases/supplier-selection',
         permission: PERMISSIONS.PURCHASES_SUPPLIER_SELECTION_VIEW
       },
       {
-        label: 'Lista de Proveedores',
+        label: 'Lista de proveedores',
         url: 'purchases/suppliers',
         permission: PERMISSIONS.PURCHASES_SUPPLIER_VIEW
       },
       {
-        label: 'Solicitudes de Compra',
+        label: 'Solicitudes de compra',
         url: 'purchases/requests',
         permission: PERMISSIONS.PURCHASES_REQUEST_VIEW
       },
       {
-        label: 'Ordenes de Compra',
+        label: 'Órdenes de compra',
         url: 'purchases/orders',
         permission: PERMISSIONS.PURCHASES_ORDER_VIEW
       },
@@ -143,12 +150,12 @@ const sidebarItems = ($userStore: UserData) => [
         permission: PERMISSIONS.PURCHASES_VERIFICATION_VIEW
       },
       {
-        label: 'Parametros Fiscales',
+        label: 'Parámetros fiscales',
         url: 'purchases/fiscal-parameters',
         permission: PERMISSIONS.PURCHASES_FISCAL_PARAMETER_MANAGE
       },
       {
-        label: 'Evaluaciones de Proveedores',
+        label: 'Evaluaciones de proveedores',
         url: 'purchases/suppliers/evaluations',
         permission: PERMISSIONS.PURCHASES_EVALUATION_VIEW
       },
@@ -164,21 +171,20 @@ const sidebarItems = ($userStore: UserData) => [
     buttonText: 'Academia',
     roles: [...LMS_ACCESS_MENU_ROLES],
     moduleName: 'Basic',
-    pathData:
-      'M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z',
+    icon: <SchoolOutlined />,
     menuItems: [
       {
-        label: 'Dashboard',
+        label: 'Panel de Academia',
         url: 'lms',
         permission: PERMISSIONS.LMS_TRAINING_MANAGE
       },
       {
-        label: 'Gestión de Cursos',
+        label: 'Gestión de cursos',
         url: 'lms/admin/courses',
         permission: PERMISSIONS.LMS_COURSE_MANAGE
       },
       {
-        label: 'Gestión de Usuarios',
+        label: 'Gestión de usuarios',
         url: 'lms/admin/users',
         permission: PERMISSIONS.LMS_USER_MANAGE
       },
@@ -213,27 +219,27 @@ const sidebarItems = ($userStore: UserData) => [
         permission: PERMISSIONS.LMS_NOTIFICATION_MANAGE
       },
       {
-        label: 'Plantillas de Certificados',
+        label: 'Plantillas de certificados',
         url: 'lms/admin/certificate-templates',
         permission: PERMISSIONS.LMS_CERTIFICATE_MANAGE
       },
       {
-        label: 'Certificados Emitidos',
+        label: 'Certificados emitidos',
         url: 'lms/admin/certificates',
         permission: PERMISSIONS.LMS_CERTIFICATE_MANAGE
       },
       {
-        label: 'Mi Aprendizaje',
+        label: 'Mi aprendizaje',
         url: 'lms/employee',
         roles: [ROLES.EMPLOYEE]
       },
       {
-        label: 'Mis Certificados',
+        label: 'Mis certificados',
         url: 'lms/certificates',
         roles: [ROLES.EMPLOYEE, ROLES.USER]
       },
       {
-        label: 'Mi Aprendizaje',
+        label: 'Mi aprendizaje',
         url: 'lms/client',
         roles: [ROLES.USER]
       }
@@ -241,9 +247,9 @@ const sidebarItems = ($userStore: UserData) => [
   },
   {
     type: 'link',
-    label: 'Biomedicos',
+    label: 'Biomédicos',
     to: '/profiles',
-    icon: <FaUser className={iconClass} />,
+    icon: <PeopleAltOutlined />,
     roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
     moduleName: 'Basic'
   },
@@ -251,7 +257,7 @@ const sidebarItems = ($userStore: UserData) => [
     type: 'link',
     label: 'Trazabilidades',
     to: '/trazabilidad',
-    icon: <BiSolidReport className={iconClass} />,
+    icon: <AccountTreeOutlined />,
     roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
     moduleName: 'Basic'
   },
@@ -261,11 +267,10 @@ const sidebarItems = ($userStore: UserData) => [
     roles: [] as string[],
     permission: PERMISSIONS.NONCONFORM_REPORT_VIEW,
     moduleName: 'Basic',
-    pathData:
-      'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
+    icon: <VerifiedOutlined />,
     menuItems: [
       {
-        label: 'Trabajo no Conforme',
+        label: 'Trabajo no conforme',
         url: '/non-conform-work-reports',
         permission: PERMISSIONS.NONCONFORM_REPORT_VIEW
       }
@@ -278,16 +283,15 @@ const sidebarItems = ($userStore: UserData) => [
     roles: [] as string[],
     permission: PERMISSIONS.CALIBRATION_DATASHEET_VIEW,
     moduleName: 'Basic',
-    pathData:
-      'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H8v-2h6v2zm3-4H8v-2h8v2zm0-4H8V7h8v2z',
+    icon: <Inventory2Outlined />,
     menuItems: [
       {
-        label: 'Hoja de Vida',
+        label: 'Hoja de vida',
         url: 'datasheets',
         permission: PERMISSIONS.CALIBRATION_DATASHEET_VIEW
       },
       {
-        label: 'Hoja de Vida TI',
+        label: 'Hoja de vida TI',
         url: 'asset-life-sheets',
         permission: PERMISSIONS.ASSETS_LIFE_SHEET_MANAGE
       },
@@ -300,18 +304,15 @@ const sidebarItems = ($userStore: UserData) => [
   },
   {
     type: 'dropdown',
-    buttonText: 'Laboratorio', // Texto del botón principal
+    buttonText: 'Laboratorio',
     // Migrado a capacidades: se ve si el usuario puede ver al menos uno de sus ítems
     roles: [] as string[],
     permission: [
       PERMISSIONS.LABORATORY_DEVICE_VIEW,
       PERMISSIONS.LABORATORY_CALIBRATION_VIEW
     ] as readonly PermissionKey[],
-    moduleName: 'Basic', // Nombre interno del módulo (opcional, ajusta según tu sistema)
-    // Path SVG para un icono de matraz/laboratorio (puedes reemplazarlo)
-
-    pathData:
-      'M19 19V8.83l-6-6-6 6V19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zm-7-7h2v5h-2z',
+    moduleName: 'Basic',
+    icon: <ScienceOutlined />,
     menuItems: [
       {
         label: 'Condiciones',
@@ -353,8 +354,7 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
     ] as readonly PermissionKey[],
     moduleName: 'Basic',
-    pathData:
-      'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 13.17l6.59-6.59L20 8l-8 8z',
+    icon: <SpeedOutlined />,
     menuItems: [
       {
         label: 'Equipos',
@@ -362,7 +362,7 @@ const sidebarItems = ($userStore: UserData) => [
         permission: PERMISSIONS.CALIBRATION_DEVICE_VIEW
       },
       {
-        label: 'Tipos de Certificado',
+        label: 'Tipos de certificado',
         url: 'calibraciones/tipos-de-certificado',
         permission: PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE
       },
@@ -385,18 +385,18 @@ const sidebarItems = ($userStore: UserData) => [
   },
   {
     type: 'link',
-    label: 'Servicios Cal.',
+    label: 'Servicios de calibración',
     to: '/calibration-services',
-    icon: <ScienceOutlined className={iconClass} />,
+    icon: <AssignmentTurnedInOutlined />,
     roles: [] as string[],
     permission: PERMISSIONS.CALIBRATION_SERVICE_VIEW,
     moduleName: 'Basic'
   },
   {
     type: 'link',
-    label: 'Venta Equipos',
+    label: 'Venta de equipos',
     to: '/equipment-sales',
-    icon: <PrecisionManufacturing className={iconClass} />,
+    icon: <StorefrontOutlined />,
     roles: [] as string[],
     permission: PERMISSIONS.SALES_QUOTATION_VIEW,
     moduleName: 'Basic'
@@ -405,7 +405,7 @@ const sidebarItems = ($userStore: UserData) => [
     type: 'link',
     label: 'Flota',
     to: '/fleet',
-    icon: <CarRepair className={iconClass} />,
+    icon: <DirectionsCarOutlined />,
     roles: [] as string[],
     permission: PERMISSIONS.FLEET_VEHICLE_VIEW,
     moduleName: 'Fleet'
@@ -422,11 +422,10 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.MAINTENANCE_INVOICING_VIEW
     ] as readonly PermissionKey[],
     moduleName: 'Basic',
-    pathData:
-      'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
+    icon: <BuildOutlined />,
     menuItems: [
       {
-        label: 'Dashboard',
+        label: 'Panel de mantenimiento',
         url: 'maintenance',
         permission: PERMISSIONS.MAINTENANCE_TICKET_VIEW
       },
@@ -458,8 +457,7 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW
     ] as PermissionKey[],
     moduleName: 'Basic',
-    pathData:
-      'M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z',
+    icon: <SettingsOutlined />,
     menuItems: [
       {
         label: 'Usuarios',
@@ -504,6 +502,8 @@ const SideBar = ({
   sidebarMinimized,
   userMinimized,
   setUserMinimized,
+  setHovered,
+  hoverEnabled,
   mobileMenuOpen,
   setMobileMenuOpen
 }: SideBarProps) => {
@@ -577,15 +577,39 @@ const SideBar = ({
     setMobileMenuOpen(false)
   }
 
+  // Minimizado, se abre al dejar el mouse encima un momento (no al cruzarlo).
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>()
+  const handleMouseEnter = () => {
+    if (!hoverEnabled || !userMinimized) return
+    hoverTimer.current = setTimeout(() => setHovered(true), 250)
+  }
+  const handleMouseLeave = () => {
+    clearTimeout(hoverTimer.current)
+    setHovered(false)
+  }
+  useEffect(() => () => clearTimeout(hoverTimer.current), [])
+
+  // En el panel móvil siempre se ven los nombres.
+  const minimized = sidebarMinimized && !mobileMenuOpen
+
+  const isLinkActive = (to: string) =>
+    pathname === to || (to !== '/' && pathname.startsWith(`${to}/`))
+
   return (
     <aside
-      className={`fixed top-0 left-0 z-30 flex flex-col flex-shrink-0 h-full pt-16 font-normal bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-2xl shadow-gray-300/30 dark:shadow-black/30 transition-all duration-300 ease-out ${
-        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:z-20 lg:translate-x-0 lg:flex lg:bg-white/98 lg:backdrop-blur-lg lg:border-gray-200/50 lg:dark:bg-gray-900/98 lg:dark:border-gray-700/50 lg:shadow-xl lg:shadow-gray-200/30 lg:dark:shadow-gray-900/30 ${userMinimized ? 'lg:w-20' : 'lg:w-64'} w-64`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={`fixed top-0 left-0 z-30 flex flex-col flex-shrink-0 h-full pt-16 bg-white border-r border-gray-200 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none ${
+        mobileMenuOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'
+      } lg:z-20 lg:translate-x-0 ${sidebarMinimized ? 'lg:w-20' : 'lg:w-64'} ${
+        userMinimized && !sidebarMinimized ? 'lg:shadow-xl' : 'lg:shadow-none'
+      } w-64`}
     >
-      {/* Contenedor con scroll para los items del sidebar */}
-      <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 dark:scrollbar-thumb-gray-600/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70'>
-        <ul className='space-y-1.5'>
+      <nav
+        aria-label='Menú principal'
+        className='flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 scrollbar-track-transparent'
+      >
+        <ul className='space-y-0.5'>
           {sidebarItems($userStore).map((item, index) => {
             if (
               isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
@@ -608,52 +632,15 @@ const SideBar = ({
               hasModuleAccess(item.moduleName)
             ) {
               return (
-                <li key={index} className='relative group'>
-                  <Link
+                <li key={index}>
+                  <NavItem
+                    label={item.label ?? ''}
+                    icon={item.icon}
                     to={item.to}
-                    className={`flex items-center p-2.5 text-sm font-medium rounded-lg transition-all duration-250 group relative ${
-                      pathname === item.to ||
-                      (item.to &&
-                        item.to !== '/' &&
-                        pathname.startsWith(item.to + '/'))
-                        ? 'bg-[#6dc662]/12 text-[#6dc662] shadow-sm shadow-[#6dc662]/15 border-l-3 border-[#6dc662] dark:bg-[#6dc662]/20 dark:text-[#6dc662]'
-                        : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900 hover:shadow-sm hover:shadow-gray-200/30 dark:text-gray-300 dark:hover:bg-gray-800/40 dark:hover:text-white'
-                    } ${sidebarMinimized ? 'justify-center px-2' : ''}`}
+                    active={isLinkActive(item.to)}
+                    minimized={minimized}
                     onClick={handleLinkClick}
-                  >
-                    <div
-                      className={`flex-shrink-0 ${sidebarMinimized ? '' : 'mr-3'} ${pathname === item.to || (item.to && item.to !== '/' && pathname.startsWith(item.to + '/')) ? 'bg-[#6dc662] p-1.5 rounded-md shadow-sm' : 'group-hover:bg-[#6dc662]/10 group-hover:p-1.5 group-hover:rounded-md transition-all duration-250'}`}
-                    >
-                      {item.icon}
-                    </div>
-                    {!sidebarMinimized && (
-                      <span className='truncate transition-all duration-250 font-medium'>
-                        {item.label}
-                      </span>
-                    )}
-                    {pathname === item.to && !sidebarMinimized && (
-                      <div className='ml-auto flex items-center'>
-                        <div className='w-2 h-2 bg-[#6dc662] rounded-full'></div>
-                      </div>
-                    )}
-                    {!pathname.includes(item.to) && !sidebarMinimized && (
-                      <div className='ml-auto opacity-0 group-hover:opacity-60 transition-opacity duration-250'>
-                        <svg
-                          className='w-3.5 h-3.5 text-gray-400'
-                          fill='none'
-                          viewBox='0 0 24 24'
-                          stroke='currentColor'
-                        >
-                          <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth={2}
-                            d='M9 5l7 7-7 7'
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </Link>
+                  />
                 </li>
               )
             } else if (
@@ -677,7 +664,7 @@ const SideBar = ({
                   key={index}
                   buttonText={item.buttonText ?? ''}
                   menuItems={item.menuItems ?? []}
-                  pathData={item.pathData ?? ''}
+                  icon={item.icon}
                   rol={
                     item.buttonText === 'Academia' || item.buttonText === 'LMS'
                       ? effectiveLmsMenuRoles
@@ -685,7 +672,7 @@ const SideBar = ({
                   }
                   permissions={$userStore.permissions}
                   currentPath={pathname}
-                  onlyIcons={sidebarMinimized}
+                  onlyIcons={minimized}
                   onItemClick={handleLinkClick}
                 />
               )
@@ -693,131 +680,59 @@ const SideBar = ({
             return null
           })}
         </ul>
-      </div>
+      </nav>
 
-      {/* Botón de minimizar/expandir fijo en la parte inferior */}
-      <div className='flex-shrink-0 border-t border-gray-200/40 dark:border-gray-700/40 p-3 bg-gray-50/30 dark:bg-gray-800/30'>
-        {isLmsRoute && !userMinimized && !isLmsHintDismissed && (
-          <div className='mb-3 rounded-2xl border border-[#6dc662]/20 bg-gradient-to-br from-[#f5fff2] via-white to-[#eef9ff] p-3 shadow-sm shadow-[#6dc662]/10 dark:border-[#6dc662]/25 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900'>
-            <div className='flex items-start gap-3'>
-              <div className='mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#6dc662]/15 text-[#4f9f45] dark:bg-[#6dc662]/20 dark:text-[#8be27f]'>
-                <svg
-                  className='h-4 w-4'
-                  fill='none'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={1.8}
-                    d='M15 19l-7-7 7-7'
-                  />
-                </svg>
-              </div>
-              <div className='min-w-0 flex-1'>
-                <div className='flex items-start justify-between gap-2'>
-                  <div>
-                    <p className='text-sm font-semibold text-gray-900 dark:text-white'>
-                      Tip rápido del LMS
-                    </p>
-                    <p className='mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300'>
-                      Puedes presionar este botón para ocultar el menú y ganar
-                      más espacio mientras trabajas en Academia.
-                    </p>
-                  </div>
-                  <button
-                    type='button'
-                    onClick={dismissLmsHint}
-                    className='rounded-full p-1 text-gray-400 transition hover:bg-white/80 hover:text-gray-600 dark:hover:bg-gray-700/80 dark:hover:text-gray-200'
-                    aria-label='Cerrar ayuda del LMS'
-                  >
-                    <svg
-                      className='h-4 w-4'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M6 18L18 6M6 6l12 12'
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
+      <div className='flex-shrink-0 border-t border-gray-200 px-3 py-3'>
+        {isLmsRoute && !minimized && !isLmsHintDismissed && (
+          <div className='mb-3 flex items-start gap-2 rounded-lg bg-[#e0f7f4] p-3'>
+            <p className='flex-1 text-xs leading-5 text-[#00695c]'>
+              <span className='block font-semibold'>
+                Gana espacio en Academia
+              </span>
+              Minimiza el menú con el botón de abajo mientras trabajas en los
+              cursos.
+            </p>
+            <button
+              type='button'
+              onClick={dismissLmsHint}
+              className='rounded p-0.5 text-[#00695c] hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00695c]'
+              aria-label='Cerrar sugerencia'
+            >
+              <Close sx={{ fontSize: 16 }} />
+            </button>
           </div>
         )}
         <div
-          className={`flex items-center ${userMinimized ? 'justify-center' : 'justify-between'}`}
+          className={`flex items-center gap-3 ${minimized ? 'justify-center' : 'justify-between'}`}
         >
-          {!userMinimized && (
-            <div className='flex items-center space-x-2.5'>
-              <div className='w-8 h-8 bg-[#6dc662] rounded-lg flex items-center justify-center shadow-sm'>
-                <span className='text-white text-xs font-bold'>MM</span>
-              </div>
-              <div className='flex flex-col'>
-                <span className='text-xs font-semibold text-gray-900 dark:text-white'>
-                  MetroMedics
-                </span>
-                <span className='text-xs text-gray-500 dark:text-gray-400'>
-                  Sistema
-                </span>
-              </div>
-            </div>
-          )}
-          <button
-            className={`p-2 rounded-lg bg-white/80 dark:bg-gray-700/80 border border-gray-200/60 dark:border-gray-600/60 text-gray-600 hover:text-[#6dc662] dark:text-gray-300 dark:hover:text-[#6dc662] hover:bg-[#6dc662]/8 dark:hover:bg-gray-600/60 transition-all duration-200 hover:shadow-sm hover:scale-102 ${
-              userMinimized ? 'mx-auto' : ''
-            }`}
-            onClick={() => setUserMinimized(!userMinimized)}
-            aria-label={userMinimized ? 'Expandir menú' : 'Minimizar menú'}
-            type='button'
-          >
-            {userMinimized ? (
-              <svg
-                className='w-4 h-4 transition-transform duration-200'
-                fill='none'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  d='M10 6l6 6-6 6'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                />
-              </svg>
-            ) : (
-              <svg
-                className='w-4 h-4 transition-transform duration-200'
-                fill='none'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  d='M14 6l-6 6 6 6'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                />
-              </svg>
-            )}
-          </button>
-          {!userMinimized && (
-            <span className='text-[0.6rem] text-gray-400 dark:text-gray-500 text-center block mt-1 leading-tight'>
-              <span>v{import.meta.env.VITE_APP_VERSION}</span>
+          {!minimized && (
+            <p className='text-xs leading-5 text-gray-600'>
+              Versión {import.meta.env.VITE_APP_VERSION}
               {apiVersion && (
                 <>
                   <br />
-                  API v{apiVersion}
+                  API {apiVersion}
                 </>
               )}
-            </span>
+            </p>
           )}
+          <button
+            type='button'
+            onClick={() => {
+              clearTimeout(hoverTimer.current)
+              setHovered(false)
+              setUserMinimized(!userMinimized)
+            }}
+            aria-label={userMinimized ? 'Expandir menú' : 'Minimizar menú'}
+            title={userMinimized ? 'Expandir menú' : 'Minimizar menú'}
+            className='hidden lg:flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[#00695c]'
+          >
+            {userMinimized ? (
+              <ChevronRight sx={{ fontSize: 20 }} />
+            ) : (
+              <ChevronLeft sx={{ fontSize: 20 }} />
+            )}
+          </button>
         </div>
       </div>
     </aside>
