@@ -36,8 +36,7 @@ import {
   useUpdateCustomer
 } from 'src/hooks/customers/useCustomers'
 import Swal from 'sweetalert2'
-import CreateCustomerModal from '../Components/CreateCustomerModal.tsx'
-import EditCustomerModal from '../Components/EditCustomerModal.tsx'
+import CustomerFormDialog from '../Components/CustomerFormDialog'
 
 export interface CustomerData {
   id?: number
@@ -579,21 +578,16 @@ Content Area */}
           </Grid>
         )}
       </Box>
-      {/* Create Customer Modal */}
-      <CreateCustomerModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onSubmit={handleCreateCustomer}
-      />
-      {/* Edit Customer Modal */}
-      <EditCustomerModal
-        open={editModalOpen}
-        customer={selectedCustomer}
+      {/* Crear o editar cliente */}
+      <CustomerFormDialog
+        open={createModalOpen || editModalOpen}
+        customer={editModalOpen ? selectedCustomer : null}
         onClose={() => {
+          setCreateModalOpen(false)
           setEditModalOpen(false)
           setSelectedCustomer(null)
         }}
-        onSubmit={handleUpdateCustomer}
+        onSubmit={editModalOpen ? handleUpdateCustomer : handleCreateCustomer}
       />
     </Container>
   )

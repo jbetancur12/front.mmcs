@@ -26,7 +26,8 @@ interface FormDialogProps {
   loading?: boolean
   /** Bloquea el botón principal cuando el formulario no es válido. */
   submitDisabled?: boolean
-  maxWidth?: 'xs' | 'sm'
+  /** `xs` para uno o dos campos; `md` para formularios con secciones. */
+  maxWidth?: 'xs' | 'sm' | 'md'
   children: React.ReactNode
 }
 
@@ -76,7 +77,16 @@ const FormDialog: React.FC<FormDialogProps> = ({
         <CloseIcon />
       </IconButton>
     </DialogTitle>
-    <DialogContent dividers sx={{ pt: 2.5 }}>
+    <DialogContent
+      dividers
+      sx={{
+        pt: 2.5,
+        // Foco turquesa en los campos, igual que AuthField y DataTable
+        '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+          { borderColor: '#00897B' },
+        '& .MuiInputLabel-root.Mui-focused': { color: '#00695C' }
+      }}
+    >
       {children}
     </DialogContent>
     <DialogActions sx={{ p: '16px 24px' }}>
@@ -99,3 +109,52 @@ const FormDialog: React.FC<FormDialogProps> = ({
 )
 
 export default FormDialog
+
+interface FormDialogSectionProps {
+  /** Qué agrupa: "Datos de la empresa", "Contacto". */
+  title: string
+  /** Una línea opcional sobre para qué sirven estos datos. */
+  description?: string
+  children: React.ReactNode
+}
+
+/**
+ * Grupo de campos dentro de un FormDialog: título corto en negrita y los
+ * campos en una cuadrícula de 2 columnas (1 en móvil). Entre secciones,
+ * 24px de aire; sin íconos ni colores propios.
+ */
+export const FormDialogSection: React.FC<FormDialogSectionProps> = ({
+  title,
+  description,
+  children
+}) => (
+  <Box
+    component='fieldset'
+    sx={{ border: 0, m: 0, p: 0, minWidth: 0, '& + &': { mt: 3 } }}
+  >
+    <Typography
+      component='legend'
+      sx={{ p: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}
+    >
+      {title}
+    </Typography>
+    {description && (
+      <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25 }}>
+        {description}
+      </Typography>
+    )}
+    <Box
+      sx={{
+        mt: 1.5,
+        display: 'grid',
+        gap: 2,
+        gridTemplateColumns: {
+          xs: 'minmax(0, 1fr)',
+          sm: 'repeat(2, minmax(0, 1fr))'
+        }
+      }}
+    >
+      {children}
+    </Box>
+  </Box>
+)
