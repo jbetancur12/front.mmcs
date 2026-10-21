@@ -12,7 +12,6 @@ import {
 } from '@mui/material'
 import {
   FactCheck,
-  ListAlt,
   ReceiptLong,
   ScheduleSend,
   SendOutlined,
@@ -64,7 +63,11 @@ const PurchaseOrders: React.FC = () => {
     {
       onSuccess: () => queryClient.invalidateQueries('purchaseOrders'),
       onError: () => {
-        Swal.fire('Error', 'No se pudo actualizar el envío de la orden', 'error')
+        Swal.fire(
+          'Error',
+          'No se pudo actualizar el envío de la orden',
+          'error'
+        )
       }
     }
   )
@@ -190,9 +193,9 @@ const PurchaseOrders: React.FC = () => {
         const total = cell.getValue() as number
         return total
           ? new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP'
-          }).format(total)
+              style: 'currency',
+              currency: 'COP'
+            }).format(total)
           : 'N/A'
       }
     }
@@ -219,29 +222,22 @@ const PurchaseOrders: React.FC = () => {
         subtitle='Controla que cada orden salga al proveedor y se verifique al recibirla'
         icon={<ReceiptLong />}
         stats={
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={6} md={3}>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            {/* Cada tarjeta filtra la tabla; un segundo clic quita el filtro */}
+            <Grid item xs={12} sm={4}>
               <LmsStatCard
-                label='Todas'
-                value={purchaseOrders.length}
-                icon={<ListAlt />}
-                tone='teal'
-                active={quickFilter === 'all'}
-                onClick={() => setQuickFilter('all')}
-              />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard
+                variant='quiet'
                 label='Sin enviar'
                 value={unsentCount}
                 icon={<SendOutlined />}
-                tone='blue'
+                tone='orange'
                 active={quickFilter === 'unsent'}
                 onClick={() => toggleQuick('unsent')}
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs={12} sm={4}>
               <LmsStatCard
+                variant='quiet'
                 label='Envío vencido (3 días hábiles)'
                 value={overdueCount}
                 icon={<ScheduleSend />}
@@ -250,12 +246,13 @@ const PurchaseOrders: React.FC = () => {
                 onClick={() => toggleQuick('overdue')}
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs={12} sm={4}>
               <LmsStatCard
+                variant='quiet'
                 label='Sin verificar'
                 value={unverifiedCount}
                 icon={<FactCheck />}
-                tone='orange'
+                tone='blue'
                 active={quickFilter === 'unverified'}
                 onClick={() => toggleQuick('unverified')}
               />
