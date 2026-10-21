@@ -2,6 +2,10 @@ import React, { useState } from 'react'
 
 import { Toast } from './ExcelManipulation/Utils'
 import { axiosPublic } from '@utils/api'
+import { Link } from 'react-router-dom'
+import { Box, Button, Link as MuiLink, Stack } from '@mui/material'
+import AuthLayout from 'src/Components/Common/AuthLayout'
+import AuthField from 'src/Components/Common/AuthField'
 // import * as Yup from 'yup'; // Importa Yup para la validación
 
 const PasswordGeneratorForm: React.FC = () => {
@@ -47,55 +51,67 @@ const PasswordGeneratorForm: React.FC = () => {
   }
 
   return (
-    <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>
-      <div className='w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800'>
-        <h2 className='text-2xl font-semibold mb-4'>Generar Contraseña</h2>
-
-        <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-          <div>
-            <label
-              htmlFor='password'
-              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-            >
-              Contraseña
-            </label>
-            <input
-              type='password'
-              id='password'
-              name='password'
-              className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor='confirmPassword'
-              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-            >
-              Confirmar Contraseña
-            </label>
-            <input
-              type='password'
-              id='confirmPassword'
-              name='confirmPassword'
-              className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <button
+    <AuthLayout
+      title='Crea tu nueva contraseña'
+      subtitle='Escríbela dos veces para confirmar que quedó bien.'
+      footer={
+        <MuiLink
+          component={Link}
+          to='/login'
+          underline='hover'
+          sx={{ fontWeight: 600, color: '#00695c' }}
+        >
+          Volver a iniciar sesión
+        </MuiLink>
+      }
+    >
+      <Box component='form' onSubmit={handleSubmit}>
+        <Stack spacing={2.5}>
+          <AuthField
+            label='Nueva contraseña'
+            type='password'
+            id='password'
+            name='password'
+            required
+            autoFocus
+            autoComplete='new-password'
+            value={formData.password}
+            onChange={handleInputChange}
+          />
+          <AuthField
+            label='Confirmar contraseña'
+            type='password'
+            id='confirmPassword'
+            name='confirmPassword'
+            required
+            autoComplete='new-password'
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+          />
+          <Button
             type='submit'
-            className='w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
+            fullWidth
+            sx={{
+              height: 48,
+              borderRadius: '12px',
+              bgcolor: '#00bfa5',
+              color: '#ffffff',
+              fontSize: 15,
+              fontWeight: 700,
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#00acc1' },
+              '&.Mui-disabled': {
+                bgcolor: '#00bfa5',
+                color: '#ffffff',
+                opacity: 0.6
+              }
+            }}
           >
-            Enviar
-          </button>
-        </form>
-      </div>
-    </div>
+            Guardar contraseña
+          </Button>
+        </Stack>
+      </Box>
+    </AuthLayout>
   )
 }
 

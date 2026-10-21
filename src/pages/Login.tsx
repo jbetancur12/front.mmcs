@@ -10,6 +10,16 @@ import { userStore } from 'src/store/userStore'
 import { getPreferredPostLoginRoute } from 'src/utils/lmsIdentity'
 import { axiosPublic } from '@utils/api'
 import Cookies from 'js-cookie'
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Link as MuiLink,
+  Stack
+} from '@mui/material'
+import AuthLayout from 'src/Components/Common/AuthLayout'
+import AuthField from 'src/Components/Common/AuthField'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
@@ -30,6 +40,7 @@ const Login: React.FC = () => {
   const posthog = usePostHog()
   const navigate = useNavigate()
   const [_loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
     email: '',
@@ -62,10 +73,12 @@ const Login: React.FC = () => {
       setError(errorMessage)
     } else {
       // Verificar si error es de tipo AxiosError antes de acceder a response
-      if (isAxiosError(error) && error.response) {
+      if (isAxiosError(error)) {
         handleNetworkError(error)
       } else {
-        // Manejar otros tipos de errores aquí
+        setError(
+          'Ocurrió un error durante el inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
+        )
       }
     }
   }
@@ -75,7 +88,7 @@ const Login: React.FC = () => {
       switch (error.response.status) {
         case 401:
           setError(
-            'Credenciales incorrectas. Por favor, verifica tus credenciales.'
+            'El correo o la contraseña no coinciden. Revísalos e inténtalo de nuevo.'
           )
           break
         case 400:
@@ -88,7 +101,9 @@ const Login: React.FC = () => {
           ) {
             const message = responseData.message
             if (message === 'You are not verified') {
-              setError('La cuenta aún no ha sido activada')
+              setError(
+                'Tu cuenta aún no está activada. Revisa el correo de activación.'
+              )
             } else {
               setError(
                 'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
@@ -113,7 +128,7 @@ const Login: React.FC = () => {
               '"El cliente asociado está inactivo. Contacta al administrador.'
             ) {
               setError(
-                '"El cliente asociado está inactivo. Contacta al administrador.'
+                'El cliente asociado está inactivo. Contacta al administrador.'
               )
             } else {
               setError(
@@ -129,7 +144,7 @@ const Login: React.FC = () => {
 
         case 429:
           setError(
-            'Demasiados intentos de inicio de sesión. Por favor, espera un momento e inténtalo de nuevo.'
+            'Hiciste demasiados intentos. Espera un minuto e inténtalo de nuevo.'
           )
           break
         default:
@@ -140,7 +155,7 @@ const Login: React.FC = () => {
       }
     } else {
       setError(
-        'Ocurrió un error de red. Por favor, verifica tu conexión e inténtalo de nuevo.'
+        'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.'
       )
     }
   }
@@ -152,6 +167,9 @@ const Login: React.FC = () => {
       email: formData.email,
       contraseña: formData.password
     }
+
+    setError(null)
+    setSubmitting(true)
 
     try {
       await validationSchema.validate(formData, { abortEarly: false })
@@ -218,7 +236,7 @@ const Login: React.FC = () => {
         // Handle login error
         if (response.status === 401) {
           setError(
-            'Credenciales incorrectas. Por favor, verifica tus credenciales.'
+            'El correo o la contraseña no coinciden. Revísalos e inténtalo de nuevo.'
           )
         } else {
           setError(
@@ -230,6 +248,8 @@ const Login: React.FC = () => {
       // Handle network error or other exceptions
       handleValidationOrNetworkError(error)
       // Toast.fire('Error', error.message, 'error')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -287,85 +307,86 @@ const Login: React.FC = () => {
   }, [navigate])
 
   return (
-    <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>
-      <a
-        href='/'
-        className='flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white'
-      >
-        <img
-          src='/images/logo2.png'
-          className='mr-4 h-28'
-          alt='Metromedics Logo Logo'
-        />
-        {/* <span>Metromedics S.A.S</span> */}
-      </a>
-
-      <div className='w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800'>
-        <h2 className='text-2xl font-bold text-gray-900 dark:text-white'>
-          Ingresa a la plataforma{' '}
-        </h2>
-        <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-          <div>
-            <label
-              htmlFor='email'
-              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-            >
-              Email
-            </label>
-            <input
-              type='email'
-              name='email'
-              id='email'
-              className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-              placeholder='name@company.com'
-              required
-              value={formData.email}
-              onChange={handleInputChange}
-              autoComplete='email'
-            />
-          </div>
-          <div>
-            <label
-              htmlFor='password'
-              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-            >
-              Contraseña
-            </label>
-            {/* <span>------------------</span> */}
-            <input
+    <AuthLayout
+      title='Ingresa a la plataforma'
+      subtitle='Usa el correo y la contraseña de tu cuenta Metromedics.'
+    >
+      <Box component='form' noValidate onSubmit={handleSubmit}>
+        <Stack spacing={2.5}>
+          <AuthField
+            label='Correo electrónico'
+            type='email'
+            name='email'
+            id='email'
+            placeholder='nombre@empresa.com'
+            required
+            autoFocus
+            autoComplete='email'
+            value={formData.email}
+            onChange={handleInputChange}
+          />
+          <Box>
+            <AuthField
+              label='Contraseña'
               type='password'
               name='password'
               id='password'
-              placeholder='••••••••'
-              className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
               required
+              autoComplete='current-password'
               value={formData.password}
               onChange={handleInputChange}
-              autoComplete='password'
             />
-          </div>
+            <Box sx={{ mt: 1, textAlign: 'right' }}>
+              <MuiLink
+                component={Link}
+                to='/password-recovery'
+                underline='hover'
+                sx={{ fontSize: 14, fontWeight: 600, color: '#00695c' }}
+              >
+                ¿Olvidaste tu contraseña?
+              </MuiLink>
+            </Box>
+          </Box>
 
-          <div className='flex justify-between items-center'>
-            <button
-              type='submit'
-              className='w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
-            >
-              Ingresar a tu cuenta
-            </button>
-
-            <Link
-              to='/password-recovery'
-              className='text-blue-500 hover:text-blue-800'
-            >
-              Recordar Contraseña
-            </Link>
-          </div>
           {error && (
-            <p className='text-red-500 text-sm mt-2'>{error}</p> // Mostrar el mensaje de error si existe
+            <Alert severity='error' sx={{ borderRadius: '8px' }}>
+              {error}
+            </Alert>
           )}
-        </form>
-      </div>
-    </div>
+
+          <Button
+            type='submit'
+            fullWidth
+            disabled={submitting}
+            sx={{
+              height: 48,
+              borderRadius: '12px',
+              bgcolor: '#00bfa5',
+              color: '#ffffff',
+              fontSize: 15,
+              fontWeight: 700,
+              textTransform: 'none',
+              boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
+              '&:hover': { bgcolor: '#00acc1' },
+              '&.Mui-disabled': {
+                bgcolor: '#00bfa5',
+                color: '#ffffff',
+                opacity: 0.6
+              }
+            }}
+          >
+            {submitting ? (
+              <>
+                <CircularProgress size={18} sx={{ color: '#ffffff', mr: 1 }} />
+                Ingresando…
+              </>
+            ) : (
+              'Ingresar'
+            )}
+          </Button>
+        </Stack>
+      </Box>
+    </AuthLayout>
   )
 }
 

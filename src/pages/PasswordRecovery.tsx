@@ -4,6 +4,10 @@ import React, { useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { api } from 'src/config'
 import * as Yup from 'yup' // Importa Yup para la validación
+import { Link } from 'react-router-dom'
+import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
+import AuthLayout from 'src/Components/Common/AuthLayout'
+import AuthField from 'src/Components/Common/AuthField'
 
 const apiUrl = api()
 
@@ -107,7 +111,7 @@ const PasswordRecovery: React.FC = () => {
 
       if (response.status === 201) {
         // Handle successful login
-        toast.success('Email para recuperación enviado', {
+        toast.success('Enlace enviado. Revisa tu correo.', {
           duration: 4000,
           position: 'top-center'
         })
@@ -133,57 +137,70 @@ const PasswordRecovery: React.FC = () => {
     } catch (error: any) {
       // Handle network error or other exceptions
       handleValidationOrNetworkError(error)
+      setLoading(false)
     }
   }
 
   return (
-    <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>
+    <AuthLayout
+      title='Recupera tu contraseña'
+      subtitle='Escribe el correo de tu cuenta y te enviaremos un enlace para crear una nueva.'
+      footer={
+        <MuiLink
+          component={Link}
+          to='/login'
+          underline='hover'
+          sx={{ fontWeight: 600, color: '#00695c' }}
+        >
+          Volver a iniciar sesión
+        </MuiLink>
+      }
+    >
       <Toaster />
-      <a
-        href='/'
-        className='flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white'
-      >
-        <img
-          src='/images/logo2.png'
-          className='mr-4 h-11'
-          alt='Metromedics Logo Logo'
-        />
-        {/* <span>Metromedics S.A.S</span> */}
-      </a>
-      <div className='w-full max-w-xl p-6 space-y-4 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800'>
-        <h2 className='text-2xl font-bold text-gray-900 dark:text-white'>
-          Restablecer Contraseña
-        </h2>
-        <p>
-          Introduce tu dirección de correo electrónico y te enviaremos un código
-          de verificación para restablecer tu contraseña
-        </p>
-        <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-          <div>
-            <input
-              type='email'
-              name='email'
-              id='email'
-              className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-              placeholder='name@company.com'
-              required
-              value={formData.email}
-              onChange={handleInputChange}
-            />
-          </div>
-          <button
-            type='submit'
-            className='w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
-            disabled={loading}
-          >
-            {!loading ? 'Enviar' : 'Enviando...'}
-          </button>
+      <Box component='form' noValidate onSubmit={handleSubmit}>
+        <Stack spacing={2.5}>
+          <AuthField
+            label='Correo electrónico'
+            type='email'
+            name='email'
+            id='email'
+            placeholder='nombre@empresa.com'
+            required
+            autoFocus
+            autoComplete='email'
+            value={formData.email}
+            onChange={handleInputChange}
+          />
           {error && (
-            <p className='text-red-500 text-sm mt-2'>{error}</p> // Mostrar el mensaje de error si existe
+            <Alert severity='error' sx={{ borderRadius: '8px' }}>
+              {error}
+            </Alert>
           )}
-        </form>
-      </div>
-    </div>
+          <Button
+            type='submit'
+            fullWidth
+            disabled={loading}
+            sx={{
+              height: 48,
+              borderRadius: '12px',
+              bgcolor: '#00bfa5',
+              color: '#ffffff',
+              fontSize: 15,
+              fontWeight: 700,
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#00acc1' },
+              '&.Mui-disabled': {
+                bgcolor: '#00bfa5',
+                color: '#ffffff',
+                opacity: 0.6
+              }
+            }}
+          >
+            {loading ? 'Enviando enlace…' : 'Enviar enlace'}
+          </Button>
+        </Stack>
+      </Box>
+    </AuthLayout>
   )
 }
 
