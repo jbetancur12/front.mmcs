@@ -76,8 +76,8 @@ const CalibrationServicesSummary = ({
             value={urgentCount}
             caption={
               isTechnicalOnlyView
-                ? `${scheduledCount} prog · ${inExecutionCount} ejec · ${technicallyCompletedCount} fin · ${closedCount} cerrados`
-                : `${requestedChangesCount} con cambios · ${pendingDocumentControlCount} documentales`
+                ? `${scheduledCount} programados, ${inExecutionCount} en ejecución, ${technicallyCompletedCount} finalizados, ${closedCount} cerrados`
+                : `${requestedChangesCount} con cambios pedidos, ${pendingDocumentControlCount} con pendiente documental`
             }
             icon={<ReportProblemOutlinedIcon />}
             tone={urgentCount > 0 ? 'red' : 'teal'}
@@ -108,10 +108,10 @@ const CalibrationServicesSummary = ({
             severity='success'
             sx={{
               borderRadius: '16px',
-              border: `1px solid ${alpha(ui.green, 0.18)}`,
-              bgcolor: ui.greenLight,
-              color: ui.textSecondary,
-              '& .MuiAlert-icon': { color: ui.green }
+              border: '1px solid #b2dfdb',
+              bgcolor: '#E0F7F4',
+              color: '#00695C',
+              '& .MuiAlert-icon': { color: '#00695C' }
             }}
           >
             {readyToCloseCount > 0

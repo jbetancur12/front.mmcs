@@ -37,7 +37,7 @@ const StatusPill: React.FC<StatusPillProps> = ({
       gap: 0.75,
       px: size === 'small' ? 1 : 1.25,
       py: size === 'small' ? 0.25 : 0.5,
-      borderRadius: 999,
+      borderRadius: '999px',
       bgcolor: TONES[tone].bg,
       color: TONES[tone].color,
       fontSize: size === 'small' ? '0.75rem' : '0.8125rem',

@@ -7,7 +7,6 @@ import {
   Stack,
   Typography
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import { ui } from './calibrationServicesListConstants'
 import { CalibrationServicesColumn } from './calibrationServicesListTypes'
@@ -39,7 +38,7 @@ const CalibrationServicesGroupedList = ({
           disableGutters
           elevation={0}
           sx={{
-            border: `1px solid ${alpha(group.accent, 0.16)}`,
+            border: `1px solid ${ui.border}`,
             borderRadius: '16px !important',
             '&::before': { display: 'none' },
             overflow: 'hidden'
@@ -48,22 +47,22 @@ const CalibrationServicesGroupedList = ({
           <AccordionSummary
             expandIcon={<ExpandMoreOutlinedIcon />}
             sx={{
-              background: `linear-gradient(90deg, ${alpha(group.accent, 0.06)} 0%, transparent 100%)`,
-              borderBottom: `1px solid ${alpha(group.accent, 0.1)}`,
+              backgroundColor: '#f9fafb',
+              borderBottom: `1px solid ${ui.border}`,
               minHeight: 48,
               '&.Mui-expanded': { minHeight: 48 },
               '& .MuiAccordionSummary-content': { my: 1 }
             }}
           >
             <Stack direction='row' spacing={1.5} alignItems='center'>
-              <Box sx={{ width: 4, height: 24, borderRadius: 2, backgroundColor: group.accent }} />
-              <Typography variant='subtitle1' fontWeight={800} sx={{ color: ui.text }}>
+              <Box aria-hidden sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: group.accent, flexShrink: 0 }} />
+              <Typography variant='subtitle1' fontWeight={700} sx={{ color: ui.text }}>
                 {group.title}
               </Typography>
               <Chip
                 size='small'
                 label={group.services.length}
-                sx={{ bgcolor: alpha(group.accent, 0.12), color: group.accent, fontWeight: 800 }}
+                sx={{ bgcolor: '#f3f4f6', color: '#374151', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
               />
             </Stack>
           </AccordionSummary>

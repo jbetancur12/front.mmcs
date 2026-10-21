@@ -85,14 +85,9 @@ const CalibrationServicesKanban = ({
             sx={{
               width: isEmptyColumn ? 172 : 312,
               minWidth: isEmptyColumn ? 172 : 312,
-              borderRadius: '20px',
-              border: `1px solid ${alpha(column.accent, 0.16)}`,
-              background: `linear-gradient(180deg, ${alpha(
-                column.accent,
-                0.08
-              )} 0%, rgba(255,255,255,0.88) 22%)`,
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
+              borderRadius: '16px',
+              border: '1px solid #e5e7eb',
+              backgroundColor: '#f9fafb',
               display: 'flex',
               flexDirection: 'column',
               maxHeight: 'calc(100vh - 220px)',

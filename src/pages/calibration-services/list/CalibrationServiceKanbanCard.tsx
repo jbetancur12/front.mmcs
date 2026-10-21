@@ -1,9 +1,11 @@
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
-  CALIBRATION_SERVICE_APPROVAL_LABELS
+  CALIBRATION_SERVICE_APPROVAL_LABELS,
+  CALIBRATION_SERVICE_SLA_COLORS,
+  chipColorToStatusTone
 } from '../../../constants/calibrationServices'
+import StatusPill from 'src/Components/Common/StatusPill'
 import { CalibrationService } from '../../../types/calibrationService'
 import CalibrationServiceStatusChip from '../CalibrationServiceStatusChip'
 import { currencyFormatter, ui } from './calibrationServicesListConstants'
@@ -12,8 +14,7 @@ import {
   getItemsTotal,
   getMetrologistNames,
   getServiceOperationalFocus,
-  getServiceSiteLabel,
-  getSlaVisualTone
+  getServiceSiteLabel
 } from './calibrationServicesListUtils'
 
 interface CalibrationServiceKanbanCardProps {
@@ -28,9 +29,6 @@ const CalibrationServiceKanbanCard = ({
   isTechnicalOnlyView,
   openServiceDetail
 }: CalibrationServiceKanbanCardProps) => {
-  const slaTone = getSlaVisualTone(
-    service.slaIndicator?.color || 'gray'
-  )
   const assignedMetrologistNames = getMetrologistNames(service)
   const assignedMetrologistName = assignedMetrologistNames[0] || ''
   const customerLabel =
@@ -53,28 +51,20 @@ const CalibrationServiceKanbanCard = ({
       role='button'
       tabIndex={0}
       sx={{
-        borderRadius: '14px',
-        border: `1px solid ${slaTone.border}`,
-        background: slaTone.background,
-        boxShadow: slaTone.glow,
-        position: 'relative',
-        overflow: 'hidden',
+        // Tarjeta blanca del sistema; el semáforo va en la pastilla
+        borderRadius: '12px',
+        border: '1px solid #e5e7eb',
+        backgroundColor: '#fff',
+        boxShadow: 'none',
         cursor: 'pointer',
         flexShrink: 0,
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        transition: 'border-color .15s, box-shadow .15s',
         '&:hover': {
-          transform: 'translateY(-1px)',
-          boxShadow: `0 10px 22px ${alpha(slaTone.accent, 0.16)}`
+          borderColor: '#9ca3af',
+          boxShadow: '0 4px 12px rgba(17, 24, 39, 0.08)'
         },
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: 4,
-          backgroundColor: slaTone.accent
-        }
+        '&:focus-visible': { outline: '3px solid #00695C', outlineOffset: 2 },
+        '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
       }}
     >
       <CardContent sx={{ p: 1.5 }}>
@@ -95,8 +85,8 @@ const CalibrationServiceKanbanCard = ({
                   {service.serviceCode}
                 </Box>
                 {service.quoteCode ? (
-                  <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: '#059669', fontWeight: 700, fontSize: '0.75rem', cursor: 'help' }}>
-                    · {service.quoteCode}
+                  <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: ui.textSecondary, fontWeight: 600, fontSize: '0.75rem', cursor: 'help' }}>
+                    {service.quoteCode}
                   </Box>
                 ) : null}
               </Typography>
@@ -118,15 +108,12 @@ const CalibrationServiceKanbanCard = ({
                 {customerLabel}
               </Typography>
             </Box>
-            <Chip
+            <StatusPill
               size='small'
               label={getCompactSlaLabel(service.slaIndicator?.color)}
-              sx={{
-                bgcolor: alpha(slaTone.accent, 0.12),
-                color: slaTone.accent,
-                fontWeight: 800,
-                height: 24
-              }}
+              tone={chipColorToStatusTone(
+                CALIBRATION_SERVICE_SLA_COLORS[service.slaIndicator?.color || 'gray']
+              )}
             />
           </Stack>
 
@@ -139,27 +126,24 @@ const CalibrationServiceKanbanCard = ({
             <CalibrationServiceStatusChip
               status={service.status}
             />
-            {!isTechnicalOnlyView ? (
-              <Chip
+            {!isTechnicalOnlyView &&
+            service.approvalStatus !== 'approved' &&
+            !(
+              service.approvalStatus === 'pending' &&
+              ['draft', 'pending_approval'].includes(service.status)
+            ) ? (
+              <StatusPill
                 size='small'
-                variant='outlined'
-color={
-                  CALIBRATION_SERVICE_APPROVAL_COLORS[
-                    service.approvalStatus
-                  ]
-                }
-                label={
-                  CALIBRATION_SERVICE_APPROVAL_LABELS[
-                    service.approvalStatus
-                  ]
-                }
+                tone={chipColorToStatusTone(
+                  CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
+                )}
+                label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]}
               />
             ) : null}
             {serviceFocus ? (
-              <Chip
+              <StatusPill
                 size='small'
-                color={serviceFocus.color}
-                variant='outlined'
+                tone={chipColorToStatusTone(serviceFocus.color)}
                 label={serviceFocus.label}
               />
             ) : null}
@@ -206,12 +190,12 @@ color={
               {(service.items?.length ?? 0) === 1 ? '' : 's'}
             </Typography>
             {service.otherFields?.hasEquipmentSale === true ? (
-              <Chip size='small' color='warning' variant='outlined' label='Venta' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
+              <Chip size='small' color='warning' variant='outlined' label='Venta de equipos' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
             ) : null}
             <Typography
               variant='caption'
-              fontWeight={800}
-              sx={{ color: ui.greenDark }}
+              fontWeight={700}
+              sx={{ color: '#00695C' }}
             >
               {isTechnicalOnlyView
                 ? service.odsCode || 'ODS pendiente'

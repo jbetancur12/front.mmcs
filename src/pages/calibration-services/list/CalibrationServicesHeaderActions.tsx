@@ -57,7 +57,11 @@ const CalibrationServicesHeaderActions = ({
         </Button>
       ) : null}
       <CalibrationNotificationBell />
-      <IconButton onClick={(e) => setMoreAnchorEl(e.currentTarget)}>
+      <IconButton
+        aria-label='Más acciones'
+        aria-haspopup='menu'
+        onClick={(e) => setMoreAnchorEl(e.currentTarget)}
+      >
         <MoreVertIcon />
       </IconButton>
   <Menu

@@ -95,68 +95,46 @@ export const ui = {
   glass: 'rgba(255, 255, 255, 0.75)'
 }
 
+// Tarjeta del sistema de diseño: blanca, borde gris, sin vidrio ni brillo
 export const softCardSx = {
-  background: ui.glass,
-  backdropFilter: 'blur(12px)',
-  border: `1px solid rgba(255, 255, 255, 0.5)`,
+  background: ui.white,
+  border: `1px solid ${ui.border}`,
   borderRadius: '16px',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: 'none',
+  transition: 'border-color .15s, box-shadow .15s',
   '&:hover': {
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-    boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.1), 0 4px 6px -2px rgba(16, 185, 129, 0.05)',
-    transform: 'translateY(-2px)'
-  }
+    borderColor: '#d1d5db',
+    boxShadow: '0 4px 12px rgba(17, 24, 39, 0.06)'
+  },
+  '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
 }
 
+// Botón principal del sistema: turquesa sólido (el esmeralda queda para el
+// banner de las fichas de detalle)
 export const primaryButtonSx = {
-  background: `linear-gradient(135deg, ${ui.green} 0%, ${ui.greenDark} 100%)`,
-  borderRadius: '12px',
+  bgcolor: '#00BFA5',
+  borderRadius: '10px',
   textTransform: 'none',
   fontWeight: 700,
   color: ui.white,
-  boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1)',
-  minHeight: 44,
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  position: 'relative',
-  overflow: 'hidden',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(rgba(255,255,255,0.2), transparent)',
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
-  },
-  '&:hover': {
-    background: `linear-gradient(135deg, ${ui.green} 0%, #047857 100%)`,
-    boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.1)',
-    transform: 'translateY(-1px)'
-  },
-  '&:hover::after': {
-    opacity: 1
-  }
+  boxShadow: 'none',
+  minHeight: 40,
+  '&:hover': { bgcolor: '#00897B', boxShadow: 'none' },
+  '&.Mui-disabled': { bgcolor: '#e5e7eb', color: '#6b7280' }
 }
 
+// Botón secundario: contorno gris, hover turquesa suave
 export const secondaryButtonSx = {
-  borderRadius: '12px',
+  borderRadius: '10px',
   textTransform: 'none',
-  fontWeight: 700,
-  minHeight: 44,
+  fontWeight: 600,
+  minHeight: 40,
   borderColor: ui.border,
-  color: ui.textSecondary,
-  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-  backdropFilter: 'blur(8px)',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+  color: '#374151',
+  backgroundColor: ui.white,
   '&:hover': {
-    borderColor: ui.green,
-    color: ui.greenDark,
-    backgroundColor: ui.greenLight,
-    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.1)',
-    transform: 'translateY(-1px)'
+    borderColor: '#00897B',
+    color: '#00695C',
+    backgroundColor: '#E0F7F4'
   }
 }

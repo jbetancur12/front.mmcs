@@ -9,23 +9,22 @@ import {
   Stack,
   Typography
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
-import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
 import { useNavigate } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_SLA_COLORS,
-  getCalibrationServiceStatusAccent,
+  chipColorToStatusTone,
   isSlaLabelRedundantWithStatus
 } from '../../../constants/calibrationServices'
 import { CalibrationService } from '../../../types/calibrationService'
 import CalibrationServiceStatusChip from '../CalibrationServiceStatusChip'
+import StatusPill from 'src/Components/Common/StatusPill'
 import {
   currencyFormatter,
   primaryButtonSx,
@@ -108,15 +107,23 @@ const CalibrationServiceListCard = ({
     canRunExecution &&
     ['scheduled', 'in_execution'].includes(service.status)
 
+  // La aprobación del cliente se omite cuando la etapa ya la implica
+  // (aprobada y siguientes) o cuando todavía se espera su respuesta.
+  const showApprovalPill =
+    !isTechnicalOnlyView &&
+    service.approvalStatus !== 'approved' &&
+    !(
+      service.approvalStatus === 'pending' &&
+      ['draft', 'pending_approval'].includes(service.status)
+    )
+  // Plazo y alerta van en una sola pastilla, con el color de su gravedad
+  const slaColor = service.slaIndicator?.color || 'gray'
+  const showSlaPill =
+    ['yellow', 'red'].includes(slaColor) ||
+    !isSlaLabelRedundantWithStatus(service.status, service.slaIndicator?.label)
+
   return (
-    <Card key={service.id} elevation={0} sx={{
-      ...softCardSx, position: 'relative', overflow: 'visible',
-      '&::before': {
-        content: '""', position: 'absolute', left: 0, top: 12, bottom: 12,
-        width: 3, borderRadius: '2px',
-        background: `linear-gradient(180deg, ${getCalibrationServiceStatusAccent(service.status)}, ${alpha(getCalibrationServiceStatusAccent(service.status), 0.3)})`
-      }
-    }}>
+    <Card key={service.id} elevation={0} sx={softCardSx}>
       <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
         <Stack
           direction={{ xs: 'column', xl: 'row' }}
@@ -140,103 +147,58 @@ const CalibrationServiceListCard = ({
                   {service.serviceCode}
                 </Box>
                 {service.quoteCode ? (
-                  <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: '#059669', fontWeight: 800, fontSize: '0.85rem', cursor: 'help' }}>
-                    · {service.quoteCode}
+                  <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1.25, color: ui.textSecondary, fontWeight: 600, fontSize: '0.85rem', cursor: 'help' }}>
+                    Cotización {service.quoteCode}
                   </Box>
                 ) : null}
               </Typography>
               <CalibrationServiceStatusChip status={service.status} />
-              {!isTechnicalOnlyView ? (
-                <Chip
+              {showApprovalPill ? (
+                <StatusPill
                   size='small'
-                  variant='outlined'
-                  color={
-                    CALIBRATION_SERVICE_APPROVAL_COLORS[
-                      service.approvalStatus
-                    ]
-                  }
+                  tone={chipColorToStatusTone(
+                    CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
+                  )}
                   label={
-                    CALIBRATION_SERVICE_APPROVAL_LABELS[
-                      service.approvalStatus
-                    ]
+                    CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
                   }
                 />
               ) : null}
-              {isSlaLabelRedundantWithStatus(
-                service.status,
-                service.slaIndicator?.label
-              ) ? null : (
-                <Chip
+              {showSlaPill ? (
+                <StatusPill
                   size='small'
-                  color={
-                    CALIBRATION_SERVICE_SLA_COLORS[
-                      service.slaIndicator?.color || 'gray'
-                    ]
-                  }
-                  label={service.slaIndicator?.label || 'SLA no iniciado'}
-                />
-              )}
-              {['yellow', 'red'].includes(
-                service.slaIndicator?.color || 'gray'
-              ) ? (
-                <Chip
-                  size='small'
-                  icon={
-                    service.slaIndicator?.color === 'red' ? (
-                      <ReportProblemOutlinedIcon />
-                    ) : (
-                      <WarningAmberOutlinedIcon />
-                    )
-                  }
-                  color={
-                    service.slaIndicator?.color === 'red'
-                      ? 'error'
-                      : 'warning'
-                  }
+                  tone={chipColorToStatusTone(
+                    CALIBRATION_SERVICE_SLA_COLORS[slaColor]
+                  )}
                   label={
-                    service.slaIndicator?.color === 'red'
-                      ? 'Alerta vencida'
-                      : 'Alerta activa'
+                    slaColor === 'red'
+                      ? `Vencido: ${service.slaIndicator?.label || 'plazo'}`
+                      : service.slaIndicator?.label || 'SLA no iniciado'
                   }
                 />
               ) : null}
               {serviceOperationalFocus ? (
-                <Chip
+                <StatusPill
                   size='small'
-                  color={serviceOperationalFocus.color}
-                  variant='filled'
+                  tone={chipColorToStatusTone(serviceOperationalFocus.color)}
                   label={serviceOperationalFocus.label}
                 />
+              ) : null}
+              {!isTechnicalOnlyView && hasCustomerChangeRequest(service) ? (
+                <StatusPill
+                  size='small'
+                  tone='warning'
+                  label='Cliente pidió modificación'
+                />
+              ) : null}
+              {isAssignedToCurrentMetrologist ? (
+                <StatusPill size='small' tone='live' label='Asignado a ti' />
               ) : null}
               {service.odsCode ? (
                 <Chip size='small' variant='outlined' label={service.odsCode} />
               ) : null}
               {service.otherFields?.hasEquipmentSale === true ? (
-                <Chip size='small' color='warning' variant='outlined' label='Venta Eq.' />
-              ) : null}
-              {!isTechnicalOnlyView && hasCustomerChangeRequest(service) ? (
-                <Chip
-                  size='small'
-                  color='warning'
-                  variant='outlined'
-                  label='Cliente pidió modificación'
-                />
-              ) : null}
-              {assignedMetrologistName ? (
-                <Chip
-                  size='small'
-                  color={isAssignedToCurrentMetrologist ? 'success' : 'default'}
-                  variant={
-                    isAssignedToCurrentMetrologist ? 'filled' : 'outlined'
-                  }
-                  label={
-                    isAssignedToCurrentMetrologist
-                      ? 'Asignado a ti'
-                      : assignedMetrologistNames.length > 1
-                        ? `Metrólogos: ${assignedMetrologistNames.join(', ')}`
-                        : `Metrólogo: ${assignedMetrologistName}`
-                  }
-                />
+                <Chip size='small' variant='outlined' label='Con venta de equipos' />
               ) : null}
             </Stack>
 
@@ -280,7 +242,7 @@ const CalibrationServiceListCard = ({
                     </>
                   )}
                 {assignedMetrologistEmails.length > 0 && !isTechnicalOnlyView
-                  ? ` · ${assignedMetrologistEmails.join(', ')}`
+                  ? ` (${assignedMetrologistEmails.join(', ')})`
                   : ''}
               </Typography>
             ) : null}
@@ -315,7 +277,7 @@ const CalibrationServiceListCard = ({
                 <Typography
                   variant='body1'
                   fontWeight={700}
-                  sx={{ color: ui.success }}
+                  sx={{ color: '#00695C' }}
                 >
                   {isTechnicalOnlyView || isAnalystOnlyView
                     ? service.odsCode || 'Pendiente'
@@ -409,15 +371,9 @@ const CalibrationServiceListCard = ({
             {canResolveApproval ? (
               <Button
                 variant='contained'
-                color='warning'
                 startIcon={<WarningAmberOutlinedIcon />}
                 onClick={() => openServiceDetail(service.id)}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  minHeight: 44
-                }}
+                sx={primaryButtonSx}
               >
                 Registrar respuesta cliente
               </Button>
@@ -425,15 +381,9 @@ const CalibrationServiceListCard = ({
             {canOpenOds ? (
               <Button
                 variant='contained'
-                color='info'
                 startIcon={<DescriptionOutlinedIcon />}
                 onClick={() => openOdsWorkflow(service.id)}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  minHeight: 44
-                }}
+                sx={primaryButtonSx}
               >
                 Emitir ODS
               </Button>
@@ -441,15 +391,9 @@ const CalibrationServiceListCard = ({
             {canOpenScheduling ? (
               <Button
                 variant='contained'
-                color='primary'
                 startIcon={<DescriptionOutlinedIcon />}
                 onClick={() => openScheduleWorkflow(service.id)}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  minHeight: 44
-                }}
+                sx={primaryButtonSx}
               >
                 Programar
               </Button>
@@ -457,14 +401,9 @@ const CalibrationServiceListCard = ({
             {canManageExecution ? (
               <Button
                 variant='outlined'
-                color='success'
                 startIcon={<VisibilityOutlinedIcon />}
                 onClick={() => openServiceDetail(service.id)}
-                sx={{
-                  ...secondaryButtonSx,
-                  color: ui.success,
-                  borderColor: alpha(ui.success, 0.35)
-                }}
+                sx={secondaryButtonSx}
               >
                 Operación
               </Button>

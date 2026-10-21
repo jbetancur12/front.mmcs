@@ -13,7 +13,6 @@ import {
   ToggleButtonGroup,
   Typography
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
@@ -123,7 +122,7 @@ const CalibrationServicesFiltersCard = ({
               ) : null}
             </Stack>
             <Typography variant='body2' sx={{ mt: 0.5, color: ui.muted, lineHeight: 1.5 }}>
-              Reduce ruido y enfócate en los servicios que sí requieren acción.
+              Busca por código, cliente u ODS, o filtra por estado, semáforo, metrólogo y sede.
             </Typography>
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -186,8 +185,8 @@ const CalibrationServicesFiltersCard = ({
                   gap: 0.75
                 },
                 '& .Mui-selected': {
-                  backgroundColor: alpha(ui.green, 0.12),
-                  color: ui.greenDark
+                  backgroundColor: '#E0F7F4',
+                  color: '#00695C'
                 }
               }}
             >
