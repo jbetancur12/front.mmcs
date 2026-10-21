@@ -61,7 +61,8 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0
   }).format(value || 0)
 
-const KPI_TONES: LmsStatTone[] = ['teal', 'blue', 'green', 'orange', 'red', 'blue']
+// Totales, abiertos (pendiente), cerrados (correcto), tiempo, costo y satisfacción
+const KPI_TONES: LmsStatTone[] = ['teal', 'orange', 'green', 'blue', 'blue', 'teal']
 const KPI_ICONS = [<Assignment />, <FolderOpen />, <CheckCircle />, <Schedule />, <AttachMoney />, <SentimentSatisfied />]
 
 const formatHours = (value: number) => {

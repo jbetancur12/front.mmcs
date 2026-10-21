@@ -53,9 +53,11 @@ interface LmsStatCardProps {
   caption?: string
   onClick?: () => void
   /**
-   * `gradient` (por defecto): degradado de color con texto blanco.
-   * `quiet`: tarjeta blanca con el color en el número y el ícono; en 0 queda
-   * en gris, para que el color solo aparezca cuando hay algo que mirar.
+   * `quiet` (por defecto): tarjeta blanca con el color en el número y el
+   * ícono; en 0 queda en gris, para que el color solo aparezca cuando hay
+   * algo que mirar.
+   * `gradient`: el degradado antiguo con texto blanco. No usar en pantallas
+   * nuevas; se conserva solo por compatibilidad.
    */
   variant?: LmsStatVariant
 }
@@ -74,7 +76,9 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
   caption,
   onClick
 }) => {
-  const isZero = value === 0 || value === '0'
+  // También reconoce ceros con formato: "$ 0", "0.00", "0 %"
+  const text = String(value)
+  const isZero = /\d/.test(text) && Number(text.replace(/[^\d.-]/g, '')) === 0
   const colors = isZero ? QUIET_IDLE : QUIET[tone]
   return (
     <Card
@@ -177,7 +181,7 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
 }
 
 const LmsStatCard: React.FC<LmsStatCardProps> = ({
-  variant = 'gradient',
+  variant = 'quiet',
   ...props
 }) =>
   variant === 'quiet' ? (
