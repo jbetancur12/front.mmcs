@@ -7,8 +7,7 @@ import {
   Chip,
   IconButton,
   Avatar,
-  Tooltip,
-  Paper
+  Tooltip
 } from '@mui/material'
 import {
   Add,
@@ -20,8 +19,8 @@ import {
   Phone,
   LocationOn
 } from '@mui/icons-material'
-import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import { type MRT_ColumnDef } from 'material-react-table'
+import DataTable from 'src/Components/Common/DataTable'
 import { useNavigate } from 'react-router-dom'
 import {
   useCreateCustomer,
@@ -61,17 +60,20 @@ const CustomersTable: React.FC = () => {
   )
 
   const { data: customers = [], isLoading: loading } =
-    useCustomers<CustomerData>({ scope: 'all' }, {
-      onError: (error) => {
-        console.error('Error fetching customer data:', error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron cargar los clientes',
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        })
+    useCustomers<CustomerData>(
+      { scope: 'all' },
+      {
+        onError: (error) => {
+          console.error('Error fetching customer data:', error)
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudieron cargar los clientes',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+          })
+        }
       }
-    })
+    )
   const createCustomer = useCreateCustomer<CustomerData>()
   const updateCustomer = useUpdateCustomer<CustomerData>()
   const deleteCustomer = useDeleteCustomer()
@@ -206,7 +208,7 @@ const CustomersTable: React.FC = () => {
       {
         accessorKey: 'nombre',
         header: 'Cliente',
-        size: 200,
+        size: 210,
         Cell: ({ row }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
@@ -231,19 +233,21 @@ const CustomersTable: React.FC = () => {
       },
       {
         accessorKey: 'email',
-        header: 'Email',
-        size: 200,
+        header: 'Correo',
+        size: 190,
         Cell: ({ cell }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Email sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant='body2'>{cell.getValue<string>()}</Typography>
+            <Typography variant='body2' sx={{ overflowWrap: 'anywhere' }}>
+              {cell.getValue<string>()}
+            </Typography>
           </Box>
         )
       },
       {
         accessorKey: 'telefono',
         header: 'Teléfono',
-        size: 150,
+        size: 120,
         Cell: ({ cell }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Phone sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -254,7 +258,7 @@ const CustomersTable: React.FC = () => {
       {
         accessorKey: 'ciudad',
         header: 'Ubicación',
-        size: 180,
+        size: 150,
         Cell: ({ row }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -267,7 +271,7 @@ const CustomersTable: React.FC = () => {
       {
         accessorKey: 'isActive',
         header: 'Estado',
-        size: 100,
+        size: 90,
         Cell: ({ cell }) => (
           <Chip
             label={cell.getValue<boolean>() ? 'Activo' : 'Inactivo'}
@@ -300,129 +304,85 @@ const CustomersTable: React.FC = () => {
             </Typography>
           </Box>
 
-{canCreate && (
-          <Button
-            variant='contained'
-            startIcon={<Add />}
-            onClick={() => setCreateModalOpen(true)}
-            sx={{
-              bgcolor: '#00BFA5',
-              '&:hover': {
-                bgcolor: '#00ACC1'
-              }
-            }}
-            aria-label='Crear nuevo cliente'
-          >
-            Crear Cliente
-          </Button>
-)}
+          {canCreate && (
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={() => setCreateModalOpen(true)}
+              sx={{
+                bgcolor: '#00BFA5',
+                '&:hover': {
+                  bgcolor: '#00ACC1'
+                }
+              }}
+              aria-label='Crear nuevo cliente'
+            >
+              Crear Cliente
+            </Button>
+          )}
         </Box>
       </Box>
 
       {/* Table Section */}
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable
-          columns={columns}
-          data={customers}
-          localization={MRT_Localization_ES}
-          state={{
-            isLoading: loading
-          }}
-          enableRowActions
-          positionActionsColumn='last'
-          renderRowActions={({ row }) => (
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Tooltip title='Ver detalles'>
-                <IconButton
-                  size='small'
-                  onClick={() => handleViewCustomer(row.original.id!)}
-                  sx={{
-                    color: '#00BFA5',
-                    '&:hover': {
-                      bgcolor: 'rgba(0, 191, 165, 0.1)'
-                    }
-                  }}
-                >
-                  <Visibility />
-                </IconButton>
-              </Tooltip>
-{canUpdate && (
+      <DataTable
+        columns={columns}
+        data={customers}
+        itemLabel={['cliente', 'clientes']}
+        searchPlaceholder='Buscar clientes'
+        state={{
+          isLoading: loading
+        }}
+        initialState={{
+          pagination: {
+            pageSize: 10,
+            pageIndex: 0
+          }
+        }}
+        enableRowActions
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title='Ver detalles'>
+              <IconButton
+                size='small'
+                aria-label={`Ver ${row.original.nombre}`}
+                onClick={() => handleViewCustomer(row.original.id!)}
+                sx={{
+                  color: '#00695C',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 191, 165, 0.1)'
+                  }
+                }}
+              >
+                <Visibility />
+              </IconButton>
+            </Tooltip>
+            {canUpdate && (
               <Tooltip title='Editar'>
                 <IconButton
                   size='small'
-                  color='primary'
+                  aria-label={`Editar ${row.original.nombre}`}
                   onClick={() => handleEditCustomer(row.original)}
+                  sx={{ color: '#2563eb' }}
                 >
                   <Edit />
                 </IconButton>
               </Tooltip>
-)}
-{canDelete && (
+            )}
+            {canDelete && (
               <Tooltip title='Eliminar'>
                 <IconButton
                   size='small'
                   color='error'
+                  aria-label={`Eliminar ${row.original.nombre}`}
                   onClick={() => handleDeleteCustomer(row.original)}
                 >
                   <Delete />
                 </IconButton>
               </Tooltip>
-)}
-            </Box>
-          )}
-          muiTableProps={{
-            sx: {
-              '& .MuiTableHead-root': {
-                '& .MuiTableCell-root': {
-                  backgroundColor: '#f5f5f5',
-                  fontWeight: 600
-                }
-              },
-              '& .MuiTableBody-root': {
-                '& .MuiTableRow-root:hover': {
-                  backgroundColor: 'rgba(0, 191, 165, 0.04)'
-                }
-              }
-            }
-          }}
-          muiSearchTextFieldProps={{
-            placeholder: 'Buscar clientes...',
-            sx: { minWidth: '300px' },
-            variant: 'outlined'
-          }}
-          muiTopToolbarProps={{
-            sx: {
-              backgroundColor: '#fafafa',
-              '& .MuiBox-root': {
-                gap: 2
-              }
-            }
-          }}
-          muiBottomToolbarProps={{
-            sx: {
-              backgroundColor: '#fafafa'
-            }
-          }}
-          initialState={{
-            density: 'comfortable',
-            pagination: {
-              pageSize: 10,
-              pageIndex: 0
-            }
-          }}
-          enableColumnFilterModes
-          enableColumnOrdering
-          enableGrouping
-          enableFacetedValues
-          enableRowSelection={false}
-          enableStickyHeader
-          muiTableContainerProps={{
-            sx: {
-              maxHeight: '600px'
-            }
-          }}
-        />
-      </Paper>
+            )}
+          </Box>
+        )}
+      />
 
       {/* Create Customer Modal */}
       <CreateCustomerModal

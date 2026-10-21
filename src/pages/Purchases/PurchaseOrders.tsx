@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
+import { MRT_ColumnDef } from 'material-react-table'
 import {
   Button,
   Checkbox,
@@ -27,7 +27,7 @@ import { Link } from 'react-router-dom'
 import CreatePurchaseVerificationModal from 'src/Components/Purchases/PurchaseVerificationModal'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
 
 type QuickFilter = 'all' | 'unsent' | 'overdue' | 'unverified'
 
@@ -109,9 +109,7 @@ const PurchaseOrders: React.FC = () => {
       size: 220,
       Cell: ({ cell, row }) => (
         <Stack>
-          <Typography variant='body2' noWrap>
-            {cell.getValue<string>()}
-          </Typography>
+          <Typography variant='body2'>{cell.getValue<string>()}</Typography>
           <Typography variant='caption' color='text.secondary'>
             {row.original.supplier?.phone}
           </Typography>
@@ -265,21 +263,16 @@ const PurchaseOrders: React.FC = () => {
           </Grid>
         }
       >
-        <MaterialReactTable
-          {...purchaseTableStyle}
+        <DataTable
           columns={columns}
           data={filteredOrders}
+          itemLabel={['orden', 'órdenes']}
+          searchPlaceholder='Buscar órdenes'
           state={{ isLoading }}
-          enableRowActions={true}
-          enablePinning
-          initialState={{
-            density: 'compact',
-            columnPinning: { right: ['mrt-row-actions'] }
-          }}
-          muiSearchTextFieldProps={{
-            ...purchaseTableStyle.muiSearchTextFieldProps,
-            placeholder: 'Buscar órdenes...'
-          }}
+          enableRowActions
+          initialState={{ density: 'compact' }}
+          // PurchasesPage ya pone el marco de la tabla
+          muiTablePaperProps={{ elevation: 0 }}
           renderRowActions={({ row }) => (
             <RenderRowActions
               row={row}
@@ -344,11 +337,15 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
   return (
     <Stack direction='row' spacing={0.5} alignItems='center'>
       <Tooltip title='Ver'>
-        <Link to={`${row.original.id}`}>
-          <IconButton size='small' sx={{ color: '#00BFA5' }}>
-            <Visibility />
-          </IconButton>
-        </Link>
+        <IconButton
+          component={Link}
+          to={`${row.original.id}`}
+          size='small'
+          aria-label={`Ver ${row.original.code}`}
+          sx={{ color: '#00695C' }}
+        >
+          <Visibility />
+        </IconButton>
       </Tooltip>
       {!isVerified && (
         <Button
