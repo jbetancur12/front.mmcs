@@ -581,13 +581,13 @@ const AssetLifeSheetsPage = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Activos' value={totalCount} icon={<Computer />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Activos' value={totalCount} icon={<Computer />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='En uso' value={activeCount} icon={<CheckCircle />} tone='green' />
+          <LmsStatCard variant='quiet' label='En uso' value={activeCount} icon={<CheckCircle />} tone='green' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Retirados o inactivos' value={Math.max(totalCount - activeCount, 0)} icon={<Archive />} tone='orange' />
+          <LmsStatCard variant='quiet' label='Retirados o inactivos' value={Math.max(totalCount - activeCount, 0)} icon={<Archive />} tone='orange' />
         </Grid>
       </Grid>
 

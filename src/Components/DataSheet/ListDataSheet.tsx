@@ -147,10 +147,10 @@ const ListDataSheet: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={6} md={3}>
-          <LmsStatCard label='Equipos' value={counts?.total ?? totalItems} icon={<InventoryKpi />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Equipos' value={counts?.total ?? totalItems} icon={<InventoryKpi />} tone='teal' />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Disponibles'
             value={counts?.available ?? 0}
             icon={<CheckKpi />}
@@ -158,7 +158,7 @@ const ListDataSheet: React.FC = () => {
           />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Ocupados'
             value={counts?.busy ?? 0}
             icon={<BuildKpi />}
@@ -166,11 +166,11 @@ const ListDataSheet: React.FC = () => {
           />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Por calibrar o inspeccionar'
             value={dueSoonCount}
             icon={<WarnKpi />}
-            tone={dueSoonCount > 0 ? 'red' : 'green'}
+            tone='red'
           />
         </Grid>
       </Grid>

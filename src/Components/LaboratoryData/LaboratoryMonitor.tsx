@@ -423,13 +423,13 @@ const LaboratoryMonitor: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Sensores' value={displayedDevices.length} icon={<Sensors />} tone='teal' />
+          <LmsStatCard variant='quiet' label='Sensores' value={displayedDevices.length} icon={<Sensors />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Temperatura promedio' value={avgOf(displayedDevices.map((d) => d.lastTemperature), '°C')} icon={<Thermostat />} tone='orange' />
+          <LmsStatCard variant='quiet' label='Temperatura promedio' value={avgOf(displayedDevices.map((d) => d.lastTemperature), '°C')} icon={<Thermostat />} tone='teal' />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Humedad promedio' value={avgOf(displayedDevices.map((d) => d.lastHumidity), '%')} icon={<WaterDrop />} tone='blue' />
+          <LmsStatCard variant='quiet' label='Humedad promedio' value={avgOf(displayedDevices.map((d) => d.lastHumidity), '%')} icon={<WaterDrop />} tone='blue' />
         </Grid>
       </Grid>
 

@@ -646,7 +646,7 @@ const CalibrationChamberView: React.FC = () => {
         <Grid item xs={12}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard
+              <LmsStatCard variant='quiet'
                 label='Cámaras'
                 value={chambers.length}
                 icon={<AcUnit />}
@@ -654,7 +654,7 @@ const CalibrationChamberView: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard
+              <LmsStatCard variant='quiet'
                 label='En calibración'
                 value={
                   chambers.filter(
@@ -666,7 +666,7 @@ const CalibrationChamberView: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard
+              <LmsStatCard variant='quiet'
                 label='En reposo'
                 value={
                   chambers.filter(

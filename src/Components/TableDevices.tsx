@@ -315,7 +315,7 @@ const Table: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Total equipos'
             value={devicesCount ?? devicesPage?.totalItems ?? 0}
             icon={<Build />}
