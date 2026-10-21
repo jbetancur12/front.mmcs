@@ -346,7 +346,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={6} md={3}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Reportes'
             value={counts?.total ?? reportsPage?.totalItems ?? 0}
             icon={<ListAlt />}
@@ -356,17 +356,17 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard label='Abiertos' value={openCount} icon={<FolderOpen />} tone='orange' />
+          <LmsStatCard variant='quiet' label='Abiertos' value={openCount} icon={<FolderOpen />} tone='orange' />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard label='Cerrados' value={closedCount} icon={<CheckCircle />} tone='green' />
+          <LmsStatCard variant='quiet' label='Cerrados' value={closedCount} icon={<CheckCircle />} tone='green' />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard
+          <LmsStatCard variant='quiet'
             label='Con revisión pendiente'
             value={alerts.length}
             icon={<NotificationsActive />}
-            tone={alerts.length > 0 ? 'red' : 'blue'}
+            tone='red'
             active={showOnlyAlerts}
             onClick={alerts.length > 0 ? () => toggleAlerts(!showOnlyAlerts) : undefined}
           />
