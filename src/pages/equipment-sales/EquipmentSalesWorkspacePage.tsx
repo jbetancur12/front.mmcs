@@ -26,6 +26,8 @@ import {
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import StatusPill from 'src/Components/Common/StatusPill'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
@@ -38,7 +40,7 @@ import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  EQUIPMENT_QUOTATION_STATUS_COLORS,
+  EQUIPMENT_QUOTATION_STATUS_TONES,
   EQUIPMENT_QUOTATION_STATUS_LABELS
 } from '../../constants/equipmentSales'
 import {
@@ -825,127 +827,54 @@ const EquipmentSalesWorkspacePage = () => {
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         minHeight: '100vh',
-        backgroundColor: '#f8fafb',
-        '@keyframes fadeUp': {
-          from: { opacity: 0, transform: 'translateY(15px)' },
-          to: { opacity: 1, transform: 'translateY(0)' }
-        }
+        backgroundColor: '#f8fafb'
       }}
     >
       <Toaster position='top-center' />
 
-      {/* ── Header banner ── */}
-      <Box
-        sx={{
-          background:
-            'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
-          borderRadius: '20px',
-          p: { xs: 3, md: 4 },
-          mb: 3,
-          position: 'relative',
-          overflow: 'hidden',
-          animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '45%',
-            height: '100%',
-            background:
-              'radial-gradient(ellipse at 70% 10%, rgba(255,255,255,0.10) 0%, transparent 65%)',
-            pointerEvents: 'none'
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            width: '100%',
-            height: '1px',
-            background:
-              'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)'
-          }
-        }}
+      <Button
+        startIcon={<ArrowBackOutlinedIcon />}
+        onClick={() =>
+          navigate(
+            isEditing && quotationId
+              ? `/equipment-sales/${quotationId}`
+              : '/equipment-sales'
+          )
+        }
+        sx={{ mb: 1, color: '#4b5563', textTransform: 'none', fontWeight: 600 }}
       >
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          justifyContent='space-between'
-          alignItems={{ xs: 'flex-start', md: 'center' }}
-          spacing={2}
-        >
-          <Box>
-            <Button
-              startIcon={<ArrowBackOutlinedIcon />}
-              onClick={() =>
-                navigate(
-                  isEditing && quotationId
-                    ? `/equipment-sales/${quotationId}`
-                    : '/equipment-sales'
-                )
-              }
-              sx={{
-                mb: 1,
-                color: 'rgba(255,255,255,0.8)',
-                textTransform: 'none',
-                fontWeight: 600,
-                borderRadius: '10px',
-                fontSize: '0.85rem',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.10)',
-                  color: '#fff'
-                }
-              }}
-            >
-              Volver
-            </Button>
-            <Typography
-              variant='h4'
-              fontWeight={800}
-              sx={{
-                color: '#fff',
-                lineHeight: 1.15,
-                letterSpacing: '-0.025em',
-                fontSize: { xs: '1.6rem', md: '2rem' }
-              }}
-            >
-              {isEditing
-                ? `Editar ${quotation?.quoteCode || 'cotización'}`
-                : 'Nueva cotización de venta de equipos'}
-            </Typography>
-            <Typography
-              variant='body2'
-              sx={{
-                mt: 1,
-                color: 'rgba(255,255,255,0.75)',
-                lineHeight: 1.5,
-                maxWidth: 700,
-                fontSize: '0.9rem'
-              }}
-            >
-              Cotización de venta de equipos con cliente, sede, condiciones
-              comerciales, productos y evidencia de solicitud.
-            </Typography>
-          </Box>
-          {quotation ? (
-            <Stack
-              spacing={1}
-              alignItems={{ xs: 'flex-start', md: 'flex-end' }}
-            >
-              <Chip
-                label={EQUIPMENT_QUOTATION_STATUS_LABELS[quotation.status]}
-                sx={{
-                  fontWeight: 700,
-                  borderRadius: '8px',
-                  backgroundColor:
-                    EQUIPMENT_QUOTATION_STATUS_COLORS[quotation.status],
-                  color: '#fff'
-                }}
-              />
-            </Stack>
-          ) : null}
-        </Stack>
-      </Box>
+        {isEditing ? 'Volver a la cotización' : 'Volver a cotizaciones'}
+      </Button>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent='space-between'
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        spacing={1.5}
+        sx={{ mb: 3 }}
+      >
+        <Box>
+          <Typography
+            variant='h4'
+            component='h1'
+            fontWeight={700}
+            sx={{ fontSize: { xs: '1.5rem', md: '1.75rem' } }}
+          >
+            {isEditing
+              ? `Editar ${quotation?.quoteCode || 'cotización'}`
+              : 'Nueva cotización'}
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+            Completa cada sección; el resumen de la derecha muestra qué falta
+            antes de enviar.
+          </Typography>
+        </Box>
+        {quotation ? (
+          <StatusPill
+            label={EQUIPMENT_QUOTATION_STATUS_LABELS[quotation.status]}
+            tone={EQUIPMENT_QUOTATION_STATUS_TONES[quotation.status] || 'idle'}
+          />
+        ) : null}
+      </Stack>
 
       {!canEdit ? (
         <Alert severity='warning' sx={{ mb: 3 }}>
@@ -963,9 +892,9 @@ const EquipmentSalesWorkspacePage = () => {
         </Alert>
       ) : null}
 
-      {canAccessWorkspace && sequenceConfig ? (
+      {canAccessWorkspace && sequenceConfig && !sequenceConfig.initialized ? (
         <Alert
-          severity={sequenceConfig.initialized ? 'info' : 'warning'}
+          severity='warning'
           sx={{ mb: 3 }}
           action={
             <Button
@@ -977,9 +906,8 @@ const EquipmentSalesWorkspacePage = () => {
             </Button>
           }
         >
-          {sequenceConfig.initialized
-            ? 'Puedes ajustar el consecutivo de cotizaciones desde la configuración.'
-            : 'Sin consecutivo configurado: el código se deriva automáticamente. Puedes definir uno manualmente desde la configuración.'}
+          Sin consecutivo configurado: el código se genera automáticamente.
+          Defínelo para que las cotizaciones sigan tu numeración.
         </Alert>
       ) : null}
 
@@ -989,9 +917,8 @@ const EquipmentSalesWorkspacePage = () => {
         sx={{
           mb: 3,
           borderRadius: '14px',
-          border: '1px solid rgba(0,0,0,0.06)',
-          overflow: 'hidden',
-          animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both'
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden'
         }}
       >
         <Tabs
@@ -1011,10 +938,10 @@ const EquipmentSalesWorkspacePage = () => {
               px: 2,
               gap: 1,
               color: 'text.secondary',
-              '&.Mui-selected': { color: '#059669' }
+              '&.Mui-selected': { color: '#00695C' }
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: '#059669',
+              backgroundColor: '#00695C',
               height: 3,
               borderRadius: '3px 3px 0 0'
             }
@@ -1026,20 +953,14 @@ const EquipmentSalesWorkspacePage = () => {
               icon={section.icon}
               iconPosition='start'
               label={
-                <Stack direction='row' alignItems='center' spacing={1}>
+                <Stack direction='row' alignItems='center' spacing={0.75}>
                   <span>{section.label}</span>
-                  <Chip
-                    size='small'
-                    label={`${Math.round(sectionCompletion[index] * 100)}%`}
-                    color={
-                      sectionCompletion[index] >= 1 ? 'success' : 'default'
-                    }
-                    variant='outlined'
-                    sx={{
-                      height: 20,
-                      '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 }
-                    }}
-                  />
+                  {sectionCompletion[index] >= 1 ? (
+                    <CheckCircleRoundedIcon
+                      aria-label='completa'
+                      sx={{ fontSize: 16, color: '#047857' }}
+                    />
+                  ) : null}
                 </Stack>
               }
             />
@@ -1056,23 +977,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid rgba(0,0,0,0.06)',
-                background: 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both',
-                position: 'relative',
-                overflow: 'visible',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: 16,
-                  bottom: 16,
-                  width: 3,
-                  borderRadius: '2px',
-                  background: 'linear-gradient(180deg, #10b981, #34d399)'
-                }
+                border: '1px solid #e5e7eb',
+                bgcolor: '#fff'
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1185,24 +1091,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid rgba(0,0,0,0.06)',
-                background: 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                animation:
-                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
-                position: 'relative',
-                overflow: 'visible',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: 16,
-                  bottom: 16,
-                  width: 3,
-                  borderRadius: '2px',
-                  background: 'linear-gradient(180deg, #7c3aed, #a78bfa)'
-                }
+                border: '1px solid #e5e7eb',
+                bgcolor: '#fff'
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1304,24 +1194,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid rgba(0,0,0,0.06)',
-                background: 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                animation:
-                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
-                position: 'relative',
-                overflow: 'visible',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: 16,
-                  bottom: 16,
-                  width: 3,
-                  borderRadius: '2px',
-                  background: 'linear-gradient(180deg, #f59e0b, #fbbf24)'
-                }
+                border: '1px solid #e5e7eb',
+                bgcolor: '#fff'
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1436,24 +1310,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid rgba(0,0,0,0.06)',
-                background: 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                animation:
-                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
-                position: 'relative',
-                overflow: 'visible',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: 16,
-                  bottom: 16,
-                  width: 3,
-                  borderRadius: '2px',
-                  background: 'linear-gradient(180deg, #6366f1, #818cf8)'
-                }
+                border: '1px solid #e5e7eb',
+                bgcolor: '#fff'
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1586,24 +1444,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid rgba(0,0,0,0.06)',
-                background: 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                animation:
-                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
-                position: 'relative',
-                overflow: 'visible',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: 16,
-                  bottom: 16,
-                  width: 3,
-                  borderRadius: '2px',
-                  background: 'linear-gradient(180deg, #ec4899, #f472b6)'
-                }
+                border: '1px solid #e5e7eb',
+                bgcolor: '#fff'
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1625,24 +1467,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid rgba(0,0,0,0.06)',
-                background: 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                animation:
-                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
-                position: 'relative',
-                overflow: 'visible',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: 16,
-                  bottom: 16,
-                  width: 3,
-                  borderRadius: '2px',
-                  background: 'linear-gradient(180deg, #0ea5e9, #38bdf8)'
-                }
+                border: '1px solid #e5e7eb',
+                bgcolor: '#fff'
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1880,7 +1706,7 @@ const EquipmentSalesWorkspacePage = () => {
                   }}
                 >
                   <Typography variant='subtitle1' fontWeight={800}>
-                    TOTAL
+                    Total
                   </Typography>
                   <Typography
                     variant='h6'
@@ -1922,30 +1748,34 @@ const EquipmentSalesWorkspacePage = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Button
                   variant='contained'
-                  startIcon={<SaveOutlinedIcon />}
-                  onClick={() => handleSave('draft')}
-                  disabled={isBusy}
-                  sx={{
-                    borderRadius: '10px',
-                    textTransform: 'none',
-                    fontWeight: 700
-                  }}
-                >
-                  Guardar borrador
-                </Button>
-                <Button
-                  variant='contained'
-                  color='success'
                   startIcon={<SendOutlinedIcon />}
                   onClick={() => handleSave('pending_approval')}
                   disabled={isBusy}
                   sx={{
                     borderRadius: '10px',
                     textTransform: 'none',
-                    fontWeight: 700
+                    fontWeight: 700,
+                    bgcolor: '#047857',
+                    '&:hover': { bgcolor: '#065f46' }
                   }}
                 >
                   Guardar y enviar cotización
+                </Button>
+                <Button
+                  variant='outlined'
+                  startIcon={<SaveOutlinedIcon />}
+                  onClick={() => handleSave('draft')}
+                  disabled={isBusy}
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    color: '#047857',
+                    borderColor: '#047857',
+                    '&:hover': { borderColor: '#065f46', bgcolor: '#ecfdf5' }
+                  }}
+                >
+                  Guardar borrador
                 </Button>
               </Box>
             </CardContent>

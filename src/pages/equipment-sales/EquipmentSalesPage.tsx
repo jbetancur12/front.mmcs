@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PERMISSIONS } from 'src/constants/permissions'
-import { useCan } from '@utils/functions'
+import { useCan, useHasRole } from '@utils/functions'
 import {
   Accordion,
   AccordionDetails,
@@ -20,6 +20,8 @@ import {
   DialogTitle,
   Grid,
   IconButton,
+  Menu,
+  MenuItem,
   Paper,
   Stack,
   TablePagination,
@@ -27,12 +29,8 @@ import {
   Typography
 } from '@mui/material'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
-import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined'
-import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
-import ReceiptLongOutlined from '@mui/icons-material/ReceiptLongOutlined'
 import RequestQuoteOutlined from '@mui/icons-material/RequestQuoteOutlined'
-import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined'
-import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
@@ -45,17 +43,20 @@ import MaterialReactTable from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Toaster, toast } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
-import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 import ListItemCard from 'src/Components/Common/ListItemCard'
+import StagePipeline from 'src/Components/Common/StagePipeline'
+import StatusPill from 'src/Components/Common/StatusPill'
 import Swal from 'sweetalert2'
 import {
   useEquipmentQuotations,
   useEquipmentSalesMutations,
-  useEquipmentQuoteTermsTemplate
+  useEquipmentQuoteTermsTemplate,
+  useEquipmentSequenceConfig
 } from '../../hooks/useEquipmentSales'
 import {
   EQUIPMENT_QUOTATION_STATUS_COLORS,
-  EQUIPMENT_QUOTATION_STATUS_LABELS
+  EQUIPMENT_QUOTATION_STATUS_LABELS,
+  EQUIPMENT_QUOTATION_STATUS_TONES
 } from '../../constants/equipmentSales'
 import {
   EquipmentQuotation,
@@ -67,6 +68,8 @@ import {
   EQUIPMENT_QUOTE_TERM_LABELS,
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
+import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
+import { ROLE_GROUPS } from 'src/constants/roles'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -86,17 +89,15 @@ const STATUS_ORDER: EquipmentQuotationStatus[] = [
 
 type ViewMode = 'list' | 'table' | 'kanban'
 
-const KPI_STATUSES: {
-  status: string
-  tone: LmsStatTone
-  icon: React.ReactElement
-}[] = [
-  { status: 'all', tone: 'blue', icon: <ListAltOutlined /> },
-  { status: 'draft', tone: 'teal', icon: <EditNoteOutlined /> },
-  { status: 'pending_approval', tone: 'orange', icon: <SendOutlinedIcon /> },
-  { status: 'approved', tone: 'green', icon: <TaskAltOutlined /> },
-  { status: 'ready_for_invoicing', tone: 'blue', icon: <ReceiptLongOutlined /> }
+// Ciclo comercial en el orden en que ocurre; rechazada y cancelada salen de él.
+const PIPELINE_STATUSES: EquipmentQuotationStatus[] = [
+  'draft',
+  'pending_approval',
+  'approved',
+  'ready_for_invoicing',
+  'invoiced'
 ]
+const OUTSIDE_STATUSES: EquipmentQuotationStatus[] = ['rejected', 'cancelled']
 
 const QUOTATION_STATUS_LABELS: Record<string, string> =
   EQUIPMENT_QUOTATION_STATUS_LABELS
@@ -119,6 +120,10 @@ const EquipmentSalesPage = () => {
   const { data: templateData } = useEquipmentQuoteTermsTemplate()
   const { data, isLoading } = useEquipmentQuotations({ limit: 500 })
   const mutations = useEquipmentSalesMutations()
+  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
+  const { data: sequenceConfig } = useEquipmentSequenceConfig(canConfig)
+  const [configAnchor, setConfigAnchor] = useState<null | HTMLElement>(null)
+  const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
 
   const quotations = data?.data || []
 
@@ -199,17 +204,17 @@ const EquipmentSalesPage = () => {
   }
 
   const renderStatusChip = (status: string) => (
-    <Chip
+    <StatusPill
       size='small'
       label={QUOTATION_STATUS_LABELS[status] || status}
-      sx={{
-        fontWeight: 700,
-        borderRadius: '8px',
-        backgroundColor: QUOTATION_STATUS_COLORS[status],
-        color: '#fff'
-      }}
+      tone={EQUIPMENT_QUOTATION_STATUS_TONES[status] || 'idle'}
     />
   )
+
+  const selectStatus = (status: string) => {
+    setStatusFilter(status)
+    setPage(0)
+  }
 
   const renderQuickActions = (quotation: EquipmentQuotation) => (
     <Stack direction='row' spacing={0.5}>
@@ -219,6 +224,7 @@ const EquipmentSalesPage = () => {
             <Tooltip title='Editar'>
               <IconButton
                 size='small'
+                aria-label={`Editar ${quotation.quoteCode}`}
                 onClick={(e) => {
                   e.stopPropagation()
                   navigate(`/equipment-sales/${quotation.id}/edit`)
@@ -232,7 +238,8 @@ const EquipmentSalesPage = () => {
             <Tooltip title='Enviar al cliente'>
               <IconButton
                 size='small'
-                color='primary'
+                aria-label={`Enviar ${quotation.quoteCode} al cliente`}
+                sx={{ color: '#00695C' }}
                 onClick={(e) => {
                   e.stopPropagation()
                   void handleSend(quotation)
@@ -244,17 +251,6 @@ const EquipmentSalesPage = () => {
           ) : null}
         </>
       ) : null}
-      <Tooltip title='Ver detalle'>
-        <IconButton
-          size='small'
-          onClick={(e) => {
-            e.stopPropagation()
-            navigate(`/equipment-sales/${quotation.id}`)
-          }}
-        >
-          <ChevronRightOutlinedIcon fontSize='small' />
-        </IconButton>
-      </Tooltip>
     </Stack>
   )
 
@@ -263,8 +259,8 @@ const EquipmentSalesPage = () => {
       <Toaster position='top-center' />
 
       <LmsPageHeader
-        title='Cotizaciones — Venta de Equipos'
-        subtitle='Ciclo comercial: borrador, cotización enviada, aprobación del cliente y facturación.'
+        title='Cotizaciones de venta de equipos'
+        subtitle='Sigue cada cotización desde el borrador hasta la factura.'
         icon={<RequestQuoteOutlined />}
         actions={
           <>
@@ -294,6 +290,48 @@ const EquipmentSalesPage = () => {
                 Productos
               </Button>
             ) : null}
+            {canConfig ? (
+              <>
+                <Button
+                  variant='outlined'
+                  startIcon={<SettingsOutlinedIcon />}
+                  onClick={(event) => setConfigAnchor(event.currentTarget)}
+                  aria-haspopup='menu'
+                  aria-expanded={Boolean(configAnchor)}
+                  sx={{
+                    color: '#00897B',
+                    borderColor: '#00BFA5',
+                    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                  }}
+                >
+                  Configuración
+                </Button>
+                <Menu
+                  anchorEl={configAnchor}
+                  open={Boolean(configAnchor)}
+                  onClose={() => setConfigAnchor(null)}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                >
+                  <MenuItem
+                    onClick={() => {
+                      setConfigAnchor(null)
+                      handleOpenTemplate()
+                    }}
+                  >
+                    Plantilla de términos
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      setConfigAnchor(null)
+                      setIsSequenceDialogOpen(true)
+                    }}
+                  >
+                    Consecutivo de cotizaciones
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : null}
             {canCreate ? (
               <Button
                 variant='contained'
@@ -312,127 +350,77 @@ const EquipmentSalesPage = () => {
         }
       />
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {KPI_STATUSES.map(({ status, tone, icon }) => (
-          <Grid item xs={12} sm={6} md={4} lg={2.4} key={status}>
-            <LmsStatCard
-              label={
-                status === 'all' ? 'Todas' : QUOTATION_STATUS_LABELS[status]
-              }
-              value={
-                status === 'all' ? quotations.length : statusCounts[status] ?? 0
-              }
-              icon={icon}
-              tone={tone}
-              active={
-                statusFilter === status || (status === 'all' && !statusFilter)
-              }
-              onClick={() => {
-                setStatusFilter(status === 'all' ? '' : status)
-                setPage(0)
-              }}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      <StagePipeline
+        ariaLabel='Filtrar cotizaciones por etapa'
+        total={quotations.length}
+        selected={statusFilter}
+        onSelect={selectStatus}
+        stages={PIPELINE_STATUSES.map((status) => ({
+          key: status,
+          label: QUOTATION_STATUS_LABELS[status],
+          count: statusCounts[status] ?? 0
+        }))}
+        outside={OUTSIDE_STATUSES.map((status) => ({
+          key: status,
+          label: QUOTATION_STATUS_LABELS[status],
+          count: statusCounts[status] ?? 0
+        }))}
+      />
 
-      {/* ── Toolbar: view mode + template ── */}
       <Stack
-        direction={{ xs: 'column', md: 'row' }}
+        direction='row'
         justifyContent='space-between'
-        alignItems={{ xs: 'stretch', md: 'center' }}
+        alignItems='center'
         spacing={2}
         sx={{ mb: 2 }}
       >
-        <Typography variant='body2' color='text.secondary'>
-          {filteredQuotations.length} cotización
-          {filteredQuotations.length !== 1 ? 'es' : ''}
+        <Typography variant='body2' color='text.secondary' aria-live='polite'>
+          {filteredQuotations.length === 1
+            ? '1 cotización'
+            : `${filteredQuotations.length} cotizaciones`}
+          {statusFilter
+            ? ` en estado ${QUOTATION_STATUS_LABELS[statusFilter].toLowerCase()}`
+            : ''}
         </Typography>
-        <Stack direction='row' spacing={1} alignItems='center'>
-          {canConfig ? (
-            <Button
-              variant='outlined'
-              size='small'
-              startIcon={<ExpandMoreOutlinedIcon />}
-              onClick={handleOpenTemplate}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                borderRadius: '8px'
-              }}
-            >
-              Plantilla términos
-            </Button>
-          ) : null}
-          <Stack direction='row' spacing={0.5}>
-            <IconButton
-              size='small'
-              onClick={() => setViewMode('list')}
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: '8px',
-                color: viewMode === 'list' ? '#059669' : 'text.secondary'
-              }}
-            >
-              <ViewStreamOutlinedIcon fontSize='small' />
-            </IconButton>
-            <IconButton
-              size='small'
-              onClick={() => setViewMode('table')}
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: '8px',
-                color: viewMode === 'table' ? '#059669' : 'text.secondary'
-              }}
-            >
-              <TableChartOutlinedIcon fontSize='small' />
-            </IconButton>
-            <IconButton
-              size='small'
-              onClick={() => setViewMode('kanban')}
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: '8px',
-                color: viewMode === 'kanban' ? '#059669' : 'text.secondary'
-              }}
-            >
-              <ViewKanbanOutlinedIcon fontSize='small' />
-            </IconButton>
-          </Stack>
+        <Stack direction='row' spacing={0.5} role='group' aria-label='Vista'>
+          {(
+            [
+              [
+                'list',
+                'Ver como tarjetas',
+                <ViewStreamOutlinedIcon key='list' fontSize='small' />
+              ],
+              [
+                'table',
+                'Ver como tabla',
+                <TableChartOutlinedIcon key='table' fontSize='small' />
+              ],
+              [
+                'kanban',
+                'Ver por etapa',
+                <ViewKanbanOutlinedIcon key='kanban' fontSize='small' />
+              ]
+            ] as [ViewMode, string, React.ReactNode][]
+          ).map(([mode, label, icon]) => (
+            <Tooltip key={mode} title={label}>
+              <IconButton
+                size='small'
+                aria-label={label}
+                aria-pressed={viewMode === mode}
+                onClick={() => setViewMode(mode)}
+                sx={{
+                  border: '1px solid',
+                  borderColor: viewMode === mode ? '#00695C' : 'divider',
+                  borderRadius: '8px',
+                  color: viewMode === mode ? '#00695C' : 'text.secondary',
+                  bgcolor: viewMode === mode ? '#E0F7F4' : 'transparent'
+                }}
+              >
+                {icon}
+              </IconButton>
+            </Tooltip>
+          ))}
         </Stack>
-      </Stack>
-
-      {/* ── Status filter chips ── */}
-      <Stack
-        direction='row'
-        spacing={1}
-        sx={{ mb: 3, flexWrap: 'wrap' }}
-        useFlexGap
-      >
-        <Chip
-          label='Todas'
-          color={!statusFilter ? 'primary' : 'default'}
-          variant={!statusFilter ? 'filled' : 'outlined'}
-          onClick={() => {
-            setStatusFilter('')
-            setPage(0)
-          }}
-        />
-        {STATUS_ORDER.map((status) => (
-          <Chip
-            key={status}
-            label={QUOTATION_STATUS_LABELS[status]}
-            color={statusFilter === status ? 'primary' : 'default'}
-            variant={statusFilter === status ? 'filled' : 'outlined'}
-            onClick={() => {
-              setStatusFilter(status === statusFilter ? '' : status)
-              setPage(0)
-            }}
-          />
-        ))}
       </Stack>
 
       {isLoading ? (
@@ -460,8 +448,8 @@ const EquipmentSalesPage = () => {
           />
           <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
             {statusFilter
-              ? 'Ninguna cotización coincide con el filtro de estado.'
-              : 'Aún no hay cotizaciones de venta de equipos.'}
+              ? 'No hay cotizaciones en esta etapa.'
+              : 'Aún no hay cotizaciones de venta de equipos. Crea la primera para empezar.'}
           </Typography>
           {canCreate ? (
             <Button
@@ -474,7 +462,7 @@ const EquipmentSalesPage = () => {
                 fontWeight: 700
               }}
             >
-              Nueva Cotización
+              Nueva cotización
             </Button>
           ) : null}
         </Paper>
@@ -515,7 +503,19 @@ const EquipmentSalesPage = () => {
               setRowsPerPage(parseInt(e.target.value, 10))
               setPage(0)
             }}
-            labelRowsPerPage='Filas por página'
+            labelRowsPerPage='Por página'
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}–${to} de ${count}`
+            }
+            getItemAriaLabel={(type) =>
+              type === 'previous'
+                ? 'Página anterior'
+                : type === 'next'
+                  ? 'Página siguiente'
+                  : type === 'first'
+                    ? 'Primera página'
+                    : 'Última página'
+            }
           />
         </>
       ) : viewMode === 'table' ? (
@@ -753,6 +753,24 @@ const EquipmentSalesPage = () => {
           ))}
         </Box>
       )}
+
+      <EquipmentSalesSequenceConfigDialog
+        open={isSequenceDialogOpen}
+        config={sequenceConfig}
+        isAdmin={isAdmin}
+        isLoading={mutations.upsertSequenceConfig.isLoading}
+        onClose={() => setIsSequenceDialogOpen(false)}
+        onSubmit={async (values) => {
+          try {
+            await mutations.upsertSequenceConfig.mutateAsync(values)
+            toast.success('El consecutivo de cotizaciones quedó configurado.')
+            setIsSequenceDialogOpen(false)
+          } catch (error) {
+            console.error(error)
+            toast.error('No se pudo guardar el consecutivo.')
+          }
+        }}
+      />
 
       {/* ── Template dialog ── */}
       <Dialog

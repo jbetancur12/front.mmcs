@@ -32,7 +32,7 @@ import {
   useEquipmentSequenceConfig
 } from '../../hooks/useEquipmentSales'
 import {
-  EQUIPMENT_QUOTATION_STATUS_COLORS,
+  EQUIPMENT_QUOTATION_STATUS_TONES,
   EQUIPMENT_QUOTATION_STATUS_LABELS
 } from '../../constants/equipmentSales'
 import { EquipmentQuotationDocumentType } from '../../types/equipmentSales'
@@ -44,6 +44,13 @@ import EquipmentSalesDocumentsPanel from './EquipmentSalesDocumentsPanel'
 import { EQUIPMENT_QUOTE_TERM_LABELS } from './equipmentQuoteTerms'
 
 import { ROLE_GROUPS } from 'src/constants/roles'
+import StageTracker from 'src/Components/Common/StageTracker'
+import StatusPill from 'src/Components/Common/StatusPill'
+import {
+  DetailCell,
+  DetailField,
+  DetailSection
+} from 'src/Components/Common/DetailBlocks'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -90,6 +97,15 @@ const DetailTabPanel = ({
   if (value !== tab) return null
   return <Box sx={{ pt: 3 }}>{children}</Box>
 }
+
+// Ciclo comercial de la cotización, en el orden en que ocurre.
+const PIPELINE_STAGES = [
+  'draft',
+  'pending_approval',
+  'approved',
+  'ready_for_invoicing',
+  'invoiced'
+].map((key) => ({ key, label: EQUIPMENT_QUOTATION_STATUS_LABELS[key] }))
 
 const EquipmentSalesDetailPage = () => {
   const navigate = useNavigate()
@@ -474,24 +490,21 @@ const EquipmentSalesDetailPage = () => {
                 fontSize: '0.9rem'
               }}
             >
-              {quotation.customer?.nombre || 'Cliente no especificado'} ·
-              Emitida {formatDate(quotation.createdAt)}
+              {quotation.customer?.nombre || 'Cliente no especificado'}
+              <br />
+              Emitida el {formatDate(quotation.createdAt)}
               {quotation.createdBy ? ` por ${quotation.createdBy.nombre}` : ''}
               {quotation.approvalChannel
-                ? ` · Aprobada vía ${quotation.approvalChannel}`
+                ? `, aprobada vía ${quotation.approvalChannel}`
                 : ''}
             </Typography>
           </Box>
           <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-            <Chip
+            <StatusPill
               label={EQUIPMENT_QUOTATION_STATUS_LABELS[quotation.status]}
-              sx={{
-                fontWeight: 700,
-                borderRadius: '8px',
-                backgroundColor:
-                  EQUIPMENT_QUOTATION_STATUS_COLORS[quotation.status],
-                color: '#fff'
-              }}
+              tone={
+                EQUIPMENT_QUOTATION_STATUS_TONES[quotation.status] || 'idle'
+              }
             />
             {quotation.otherFields?.quoteRevision ? (
               <Typography
@@ -505,9 +518,9 @@ const EquipmentSalesDetailPage = () => {
         </Stack>
       </Box>
 
-      {canEdit && sequenceConfig ? (
+      {canEdit && sequenceConfig && !sequenceConfig.initialized ? (
         <Alert
-          severity={sequenceConfig.initialized ? 'info' : 'warning'}
+          severity='warning'
           sx={{ mb: 3 }}
           action={
             <Button
@@ -519,11 +532,29 @@ const EquipmentSalesDetailPage = () => {
             </Button>
           }
         >
-          {sequenceConfig.initialized
-            ? 'Puedes ajustar el consecutivo de cotizaciones desde la configuración.'
-            : 'Sin consecutivo configurado: el código se deriva automáticamente. Puedes definir uno manualmente desde la configuración.'}
+          Sin consecutivo configurado: el código se genera automáticamente.
+          Defínelo para que las cotizaciones sigan tu numeración.
         </Alert>
       ) : null}
+
+      <StageTracker
+        ariaLabel='Etapas de la cotización'
+        current={quotation.status}
+        stages={PIPELINE_STAGES}
+        stopped={
+          quotation.status === 'rejected'
+            ? {
+                title: 'Cotización rechazada por el cliente',
+                message: 'La cotización no avanza a más etapas.'
+              }
+            : quotation.status === 'cancelled'
+              ? {
+                  title: 'Cotización cancelada',
+                  message: 'La cotización no avanza a más etapas.'
+                }
+              : undefined
+        }
+      />
 
       {quotation.status === 'rejected' && quotation.rejectedReason ? (
         <Alert severity='error' sx={{ mb: 3 }}>
@@ -572,113 +603,96 @@ const EquipmentSalesDetailPage = () => {
               </Tabs>
 
               <DetailTabPanel value={activeTab} tab='summary'>
-                <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
-                  Información del cliente
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Cliente:</strong>{' '}
-                      {quotation.customer?.nombre || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Creada por:</strong>{' '}
-                      {quotation.createdBy
-                        ? `${quotation.createdBy.nombre} (${quotation.createdBy.email})`
-                        : 'Sin registro'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>NIT:</strong>{' '}
-                      {quotation.customer?.identificacion || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Sede:</strong> {quotation.customerSite || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Vía solicitud:</strong>{' '}
-                      {quotation.requestChannel || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Contacto:</strong>{' '}
-                      {quotation.contactName || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Email:</strong> {quotation.contactEmail || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Teléfono:</strong>{' '}
-                      {quotation.contactPhone || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='body2'>
-                      <strong>Dirección:</strong>{' '}
+                <DetailSection title='Cliente y contacto'>
+                  <DetailCell>
+                    <DetailField label='Cliente'>
+                      {quotation.customer?.nombre || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='NIT'>
+                      {quotation.customer?.identificacion || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Sede'>
+                      {quotation.customerSite || 'Sin sede definida'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Vía de solicitud'>
+                      {quotation.requestChannel || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Contacto'>
+                      {quotation.contactName || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Teléfono'>
+                      {quotation.contactPhone || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Correo'>
+                      {quotation.contactEmail || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Dirección'>
                       {[quotation.address, quotation.city, quotation.department]
                         .filter(Boolean)
-                        .join(', ') || 'N/A'}
-                    </Typography>
-                  </Grid>
-                </Grid>
+                        .join(', ') || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell full>
+                    <DetailField label='Creada por'>
+                      {quotation.createdBy
+                        ? `${quotation.createdBy.nombre} (${quotation.createdBy.email})`
+                        : 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                </DetailSection>
 
-                <Typography variant='h6' fontWeight={800} sx={{ mt: 3, mb: 2 }}>
-                  Condiciones comerciales
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={4}>
-                    <Typography variant='body2'>
-                      <strong>Validez:</strong>{' '}
+                <DetailSection title='Condiciones comerciales'>
+                  <DetailCell>
+                    <DetailField label='Validez'>
                       {quotation.validityDays
                         ? `${quotation.validityDays} días`
-                        : 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Typography variant='body2'>
-                      <strong>Forma de pago:</strong>{' '}
-                      {quotation.paymentMethod || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Typography variant='body2'>
-                      <strong>Entrega:</strong>{' '}
-                      {quotation.deliveryTime || 'N/A'}
-                    </Typography>
-                  </Grid>
+                        : 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Forma de pago'>
+                      {quotation.paymentMethod || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Entrega'>
+                      {quotation.deliveryTime || 'Sin registrar'}
+                    </DetailField>
+                  </DetailCell>
                   {quotation.warrantyTerms ? (
-                    <Grid item xs={12}>
-                      <Typography variant='body2'>
-                        <strong>Garantía:</strong> {quotation.warrantyTerms}
-                      </Typography>
-                    </Grid>
+                    <DetailCell>
+                      <DetailField label='Garantía'>
+                        {quotation.warrantyTerms}
+                      </DetailField>
+                    </DetailCell>
                   ) : null}
                   {quotation.status === 'approved' &&
                   quotation.approvalReference ? (
-                    <Grid item xs={12}>
-                      <Typography variant='body2'>
-                        <strong>Aprobación:</strong>{' '}
-                        {formatDate(quotation.acceptedAt)} ·{' '}
+                    <DetailCell full>
+                      <DetailField label='Aprobación del cliente'>
+                        {formatDate(quotation.acceptedAt)}, vía{' '}
                         {quotation.approvalChannel}
                         {quotation.approvalReference
-                          ? ` · ${quotation.approvalReference}`
+                          ? ` (referencia ${quotation.approvalReference})`
                           : ''}
-                      </Typography>
-                    </Grid>
+                      </DetailField>
+                    </DetailCell>
                   ) : null}
-                </Grid>
+                </DetailSection>
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='items'>
@@ -907,7 +921,7 @@ const EquipmentSalesDetailPage = () => {
                   }}
                 >
                   <Typography variant='subtitle1' fontWeight={800}>
-                    TOTAL
+                    Total
                   </Typography>
                   <Typography
                     variant='h6'
@@ -967,10 +981,12 @@ const EquipmentSalesDetailPage = () => {
                     sx={{
                       borderRadius: '10px',
                       textTransform: 'none',
-                      fontWeight: 700
+                      fontWeight: 700,
+                      bgcolor: '#047857',
+                      '&:hover': { bgcolor: '#065f46' }
                     }}
                   >
-                    Registrar aprobación cliente
+                    Registrar aprobación
                   </Button>
                   <Button
                     variant='outlined'
@@ -984,7 +1000,7 @@ const EquipmentSalesDetailPage = () => {
                       fontWeight: 600
                     }}
                   >
-                    Registrar rechazo cliente
+                    Registrar rechazo
                   </Button>
                   <Button
                     variant='outlined'
@@ -1012,10 +1028,12 @@ const EquipmentSalesDetailPage = () => {
                   sx={{
                     borderRadius: '10px',
                     textTransform: 'none',
-                    fontWeight: 700
+                    fontWeight: 700,
+                    bgcolor: '#047857',
+                    '&:hover': { bgcolor: '#065f46' }
                   }}
                 >
-                  Lista para facturar
+                  Marcar lista para facturar
                 </Button>
               ) : null}
 

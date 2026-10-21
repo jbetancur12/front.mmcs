@@ -1,4 +1,5 @@
 import { ChipProps } from '@mui/material'
+import type { StatusPillTone } from 'src/Components/Common/StatusPill'
 
 export const EQUIPMENT_QUOTATION_STATUS_LABELS: Record<string, string> = {
   draft: 'Borrador',
@@ -20,13 +21,28 @@ export const EQUIPMENT_QUOTATION_STATUS_COLORS: Record<string, string> = {
   cancelled: '#757575'
 }
 
+// Tono de StatusPill por estado: fondo suave y texto oscuro, legibles sobre blanco.
+export const EQUIPMENT_QUOTATION_STATUS_TONES: Record<string, StatusPillTone> =
+  {
+    draft: 'idle',
+    pending_approval: 'warning',
+    approved: 'success',
+    ready_for_invoicing: 'live',
+    rejected: 'error',
+    invoiced: 'success',
+    cancelled: 'idle'
+  }
+
 export const EQUIPMENT_QUOTATION_APPROVAL_LABELS: Record<string, string> = {
   pending: 'Pendiente respuesta cliente',
   approved: 'Aprobada por cliente',
   rejected: 'Rechazada por cliente'
 }
 
-export const EQUIPMENT_QUOTATION_APPROVAL_COLORS: Record<string, ChipProps['color']> = {
+export const EQUIPMENT_QUOTATION_APPROVAL_COLORS: Record<
+  string,
+  ChipProps['color']
+> = {
   pending: 'warning',
   approved: 'success',
   rejected: 'error'
@@ -40,7 +56,10 @@ export const EQUIPMENT_QUOTATION_DOCUMENT_LABELS: Record<string, string> = {
   supporting_attachment: 'Soporte adjunto'
 }
 
-export const EQUIPMENT_QUOTATION_DOCUMENT_COLORS: Record<string, ChipProps['color']> = {
+export const EQUIPMENT_QUOTATION_DOCUMENT_COLORS: Record<
+  string,
+  ChipProps['color']
+> = {
   request_evidence: 'info',
   approval_evidence: 'success',
   rejection_evidence: 'warning',
