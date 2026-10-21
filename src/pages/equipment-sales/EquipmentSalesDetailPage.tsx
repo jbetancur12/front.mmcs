@@ -61,12 +61,21 @@ const formatDate = (value?: string | null) =>
 
 type DetailTab = 'summary' | 'items' | 'terms' | 'documents'
 
-const detailTabs: readonly DetailTab[] = ['summary', 'items', 'terms', 'documents']
+const detailTabs: readonly DetailTab[] = [
+  'summary',
+  'items',
+  'terms',
+  'documents'
+]
 
 const getStoredDetailTab = (quotationId?: string): DetailTab => {
   if (!quotationId || typeof window === 'undefined') return 'summary'
-  const storedTab = window.sessionStorage.getItem(`equipment-quotation-detail-tab:${quotationId}`)
-  return detailTabs.includes(storedTab as DetailTab) ? (storedTab as DetailTab) : 'summary'
+  const storedTab = window.sessionStorage.getItem(
+    `equipment-quotation-detail-tab:${quotationId}`
+  )
+  return detailTabs.includes(storedTab as DetailTab)
+    ? (storedTab as DetailTab)
+    : 'summary'
 }
 
 const DetailTabPanel = ({
@@ -88,9 +97,12 @@ const EquipmentSalesDetailPage = () => {
   const { data: quotation, isLoading } = useEquipmentQuotation(quotationId)
   const { data: documentsData } = useEquipmentQuotationDocuments(quotationId)
   const mutations = useEquipmentSalesMutations()
-  const [decisionMode, setDecisionMode] = useState<EquipmentQuotationDecisionMode | null>(null)
+  const [decisionMode, setDecisionMode] =
+    useState<EquipmentQuotationDecisionMode | null>(null)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<DetailTab>(() => getStoredDetailTab(quotationId))
+  const [activeTab, setActiveTab] = useState<DetailTab>(() =>
+    getStoredDetailTab(quotationId)
+  )
   const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
 
   useEffect(() => {
@@ -99,7 +111,10 @@ const EquipmentSalesDetailPage = () => {
 
   useEffect(() => {
     if (!quotationId) return
-    window.sessionStorage.setItem(`equipment-quotation-detail-tab:${quotationId}`, activeTab)
+    window.sessionStorage.setItem(
+      `equipment-quotation-detail-tab:${quotationId}`,
+      activeTab
+    )
   }, [activeTab, quotationId])
 
   // Cada acción se muestra según la capacidad que el backend le pide a su endpoint
@@ -115,7 +130,9 @@ const EquipmentSalesDetailPage = () => {
   const documents = documentsData?.documents || []
   // Solo la version vigente del PDF oficial: al enviar se regenera y las
   // versiones previas (con marca BORRADOR) quedan como historico.
-  const officialPdfVersions = documents.filter((d) => d.documentType === 'quote_pdf')
+  const officialPdfVersions = documents.filter(
+    (d) => d.documentType === 'quote_pdf'
+  )
   const latestOfficialPdfVersion = officialPdfVersions.reduce(
     (max, document) => Math.max(max, document.version || 0),
     0
@@ -158,7 +175,9 @@ const EquipmentSalesDetailPage = () => {
     }
   }
 
-  const handleDecisionSubmit = async (values: EquipmentQuotationDecisionValues) => {
+  const handleDecisionSubmit = async (
+    values: EquipmentQuotationDecisionValues
+  ) => {
     if (!quotation) return
     try {
       let evidenceDocumentId: number | null = null
@@ -220,7 +239,9 @@ const EquipmentSalesDetailPage = () => {
           requestedAt: decisionIsoDate,
           evidenceDocumentId
         })
-        toast.success('La solicitud de modificación del cliente quedó registrada.')
+        toast.success(
+          'La solicitud de modificación del cliente quedó registrada.'
+        )
       }
 
       setDecisionMode(null)
@@ -239,7 +260,9 @@ const EquipmentSalesDetailPage = () => {
   const handleGenerateQuotePdf = async () => {
     if (!quotation) return
     try {
-      const document = await mutations.generateQuotePdf.mutateAsync(quotation.id)
+      const document = await mutations.generateQuotePdf.mutateAsync(
+        quotation.id
+      )
       toast.success('La cotización PDF quedó generada.')
       await handleDownloadDocument(
         document.id,
@@ -251,7 +274,10 @@ const EquipmentSalesDetailPage = () => {
     }
   }
 
-  const handleDownloadDocument = async (documentId: number, fileName: string) => {
+  const handleDownloadDocument = async (
+    documentId: number,
+    fileName: string
+  ) => {
     try {
       const blob = await mutations.downloadDocument.mutateAsync({
         quotationId: String(quotationId),
@@ -327,7 +353,10 @@ const EquipmentSalesDetailPage = () => {
     const reason = window.prompt('Motivo de cancelación (opcional):')
     if (reason === null || !quotation) return
     try {
-      await mutations.cancelQuotation.mutateAsync({ id: quotation.id, reason: reason || undefined })
+      await mutations.cancelQuotation.mutateAsync({
+        id: quotation.id,
+        reason: reason || undefined
+      })
       toast.success('La cotización quedó cancelada.')
     } catch (error) {
       console.error(error)
@@ -346,7 +375,12 @@ const EquipmentSalesDetailPage = () => {
 
   if (isLoading) {
     return (
-      <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='55vh'
+      >
         <CircularProgress />
       </Box>
     )
@@ -361,7 +395,9 @@ const EquipmentSalesDetailPage = () => {
   }
 
   const quoteTerms = quotation.quoteTerms || {}
-  const termEntries = Object.entries(quoteTerms).filter(([, value]) => value && String(value).trim())
+  const termEntries = Object.entries(quoteTerms).filter(
+    ([, value]) => value && String(value).trim()
+  )
   const latestChangeRequest =
     quotation.otherFields?.latestChangeRequest &&
     typeof quotation.otherFields.latestChangeRequest === 'object' &&
@@ -370,13 +406,21 @@ const EquipmentSalesDetailPage = () => {
       : null
 
   return (
-    <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 }, minHeight: '100vh', backgroundColor: '#f8fafb' }}>
+    <Box
+      sx={{
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+        minHeight: '100vh',
+        backgroundColor: '#f8fafb'
+      }}
+    >
       <Toaster position='top-center' />
 
       {/* ── Header banner ── */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
+          background:
+            'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
           borderRadius: '20px',
           p: { xs: 3, md: 4 },
           mb: 3,
@@ -384,31 +428,76 @@ const EquipmentSalesDetailPage = () => {
           overflow: 'hidden'
         }}
       >
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent='space-between'
+          alignItems={{ xs: 'flex-start', md: 'center' }}
+          spacing={2}
+        >
           <Box>
             <Button
               startIcon={<ArrowBackOutlinedIcon />}
               onClick={() => navigate('/equipment-sales')}
-              sx={{ mb: 1, color: 'rgba(255,255,255,0.8)', textTransform: 'none', fontWeight: 600, borderRadius: '10px', fontSize: '0.85rem', '&:hover': { backgroundColor: 'rgba(255,255,255,0.10)', color: '#fff' } }}
+              sx={{
+                mb: 1,
+                color: 'rgba(255,255,255,0.8)',
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: '10px',
+                fontSize: '0.85rem',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.10)',
+                  color: '#fff'
+                }
+              }}
             >
               Volver
             </Button>
-            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', fontSize: { xs: '1.6rem', md: '2rem' } }}>
+            <Typography
+              variant='h4'
+              fontWeight={800}
+              sx={{
+                color: '#fff',
+                lineHeight: 1.15,
+                letterSpacing: '-0.025em',
+                fontSize: { xs: '1.6rem', md: '2rem' }
+              }}
+            >
               {quotation.quoteCode}
             </Typography>
-            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: '0.9rem' }}>
-              {quotation.customer?.nombre || 'Cliente no especificado'} · Emitida {formatDate(quotation.createdAt)}
+            <Typography
+              variant='body2'
+              sx={{
+                mt: 1,
+                color: 'rgba(255,255,255,0.75)',
+                lineHeight: 1.5,
+                fontSize: '0.9rem'
+              }}
+            >
+              {quotation.customer?.nombre || 'Cliente no especificado'} ·
+              Emitida {formatDate(quotation.createdAt)}
               {quotation.createdBy ? ` por ${quotation.createdBy.nombre}` : ''}
-              {quotation.approvalChannel ? ` · Aprobada vía ${quotation.approvalChannel}` : ''}
+              {quotation.approvalChannel
+                ? ` · Aprobada vía ${quotation.approvalChannel}`
+                : ''}
             </Typography>
           </Box>
           <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
             <Chip
               label={EQUIPMENT_QUOTATION_STATUS_LABELS[quotation.status]}
-              sx={{ fontWeight: 700, borderRadius: '8px', backgroundColor: EQUIPMENT_QUOTATION_STATUS_COLORS[quotation.status], color: '#fff' }}
+              sx={{
+                fontWeight: 700,
+                borderRadius: '8px',
+                backgroundColor:
+                  EQUIPMENT_QUOTATION_STATUS_COLORS[quotation.status],
+                color: '#fff'
+              }}
             />
             {quotation.otherFields?.quoteRevision ? (
-              <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.7)' }}>
+              <Typography
+                variant='caption'
+                sx={{ color: 'rgba(255,255,255,0.7)' }}
+              >
                 Revisión {String(quotation.otherFields.quoteRevision)}
               </Typography>
             ) : null}
@@ -459,7 +548,10 @@ const EquipmentSalesDetailPage = () => {
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={8}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}>
+          <Card
+            elevation={0}
+            sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}
+          >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Tabs
                 value={activeTab}
@@ -468,250 +560,509 @@ const EquipmentSalesDetailPage = () => {
                 allowScrollButtonsMobile
               >
                 <Tab label='Resumen' value='summary' />
-                <Tab label={`Productos (${quotation.items?.length || 0})`} value='items' />
+                <Tab
+                  label={`Productos (${quotation.items?.length || 0})`}
+                  value='items'
+                />
                 <Tab label='Términos' value='terms' />
-                <Tab label={`Documentos (${documents.length})`} value='documents' />
+                <Tab
+                  label={`Documentos (${documents.length})`}
+                  value='documents'
+                />
               </Tabs>
 
               <DetailTabPanel value={activeTab} tab='summary'>
-              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Información del cliente</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>Cliente:</strong> {quotation.customer?.nombre || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>Creada por:</strong> {quotation.createdBy ? `${quotation.createdBy.nombre} (${quotation.createdBy.email})` : 'Sin registro'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>NIT:</strong> {quotation.customer?.identificacion || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>Sede:</strong> {quotation.customerSite || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>Vía solicitud:</strong> {quotation.requestChannel || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>Contacto:</strong> {quotation.contactName || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>Email:</strong> {quotation.contactEmail || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'><strong>Teléfono:</strong> {quotation.contactPhone || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='body2'>
-                    <strong>Dirección:</strong> {[quotation.address, quotation.city, quotation.department].filter(Boolean).join(', ') || 'N/A'}
-                  </Typography>
-                </Grid>
-              </Grid>
-
-              <Typography variant='h6' fontWeight={800} sx={{ mt: 3, mb: 2 }}>Condiciones comerciales</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
-                  <Typography variant='body2'><strong>Validez:</strong> {quotation.validityDays ? `${quotation.validityDays} días` : 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Typography variant='body2'><strong>Forma de pago:</strong> {quotation.paymentMethod || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Typography variant='body2'><strong>Entrega:</strong> {quotation.deliveryTime || 'N/A'}</Typography>
-                </Grid>
-                {quotation.warrantyTerms ? (
-                  <Grid item xs={12}>
-                    <Typography variant='body2'><strong>Garantía:</strong> {quotation.warrantyTerms}</Typography>
-                  </Grid>
-                ) : null}
-                {quotation.status === 'approved' && quotation.approvalReference ? (
-                  <Grid item xs={12}>
+                <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
+                  Información del cliente
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
                     <Typography variant='body2'>
-                      <strong>Aprobación:</strong> {formatDate(quotation.acceptedAt)} · {quotation.approvalChannel}
-                      {quotation.approvalReference ? ` · ${quotation.approvalReference}` : ''}
+                      <strong>Cliente:</strong>{' '}
+                      {quotation.customer?.nombre || 'N/A'}
                     </Typography>
                   </Grid>
-                ) : null}
-              </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>Creada por:</strong>{' '}
+                      {quotation.createdBy
+                        ? `${quotation.createdBy.nombre} (${quotation.createdBy.email})`
+                        : 'Sin registro'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>NIT:</strong>{' '}
+                      {quotation.customer?.identificacion || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>Sede:</strong> {quotation.customerSite || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>Vía solicitud:</strong>{' '}
+                      {quotation.requestChannel || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>Contacto:</strong>{' '}
+                      {quotation.contactName || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>Email:</strong> {quotation.contactEmail || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>Teléfono:</strong>{' '}
+                      {quotation.contactPhone || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2'>
+                      <strong>Dirección:</strong>{' '}
+                      {[quotation.address, quotation.city, quotation.department]
+                        .filter(Boolean)
+                        .join(', ') || 'N/A'}
+                    </Typography>
+                  </Grid>
+                </Grid>
+
+                <Typography variant='h6' fontWeight={800} sx={{ mt: 3, mb: 2 }}>
+                  Condiciones comerciales
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={4}>
+                    <Typography variant='body2'>
+                      <strong>Validez:</strong>{' '}
+                      {quotation.validityDays
+                        ? `${quotation.validityDays} días`
+                        : 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Typography variant='body2'>
+                      <strong>Forma de pago:</strong>{' '}
+                      {quotation.paymentMethod || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Typography variant='body2'>
+                      <strong>Entrega:</strong>{' '}
+                      {quotation.deliveryTime || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  {quotation.warrantyTerms ? (
+                    <Grid item xs={12}>
+                      <Typography variant='body2'>
+                        <strong>Garantía:</strong> {quotation.warrantyTerms}
+                      </Typography>
+                    </Grid>
+                  ) : null}
+                  {quotation.status === 'approved' &&
+                  quotation.approvalReference ? (
+                    <Grid item xs={12}>
+                      <Typography variant='body2'>
+                        <strong>Aprobación:</strong>{' '}
+                        {formatDate(quotation.acceptedAt)} ·{' '}
+                        {quotation.approvalChannel}
+                        {quotation.approvalReference
+                          ? ` · ${quotation.approvalReference}`
+                          : ''}
+                      </Typography>
+                    </Grid>
+                  ) : null}
+                </Grid>
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='items'>
-              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
-                Productos cotizados ({quotation.items?.length || 0})
-              </Typography>
-              {quotation.items?.length ? (
-                <Stack spacing={1.5}>
-                  {quotation.items.map((item, index) => (
-                    <Box key={item.id ?? index} sx={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', p: 2 }}>
-                      <Stack direction='row' justifyContent='space-between' alignItems='flex-start' spacing={2}>
-                        <Box>
-                          <Typography variant='body2' fontWeight={700}>
-                            {index + 1}. {item.itemName}
-                          </Typography>
-                          {[item.brand, item.model].filter(Boolean).length ? (
-                            <Typography variant='caption' color='text.secondary'>
-                              {[item.brand, item.model].filter(Boolean).join(' · ')}
+                <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
+                  Productos cotizados ({quotation.items?.length || 0})
+                </Typography>
+                {quotation.items?.length ? (
+                  <Stack spacing={1.5}>
+                    {quotation.items.map((item, index) => (
+                      <Box
+                        key={item.id ?? index}
+                        sx={{
+                          border: '1px solid rgba(0,0,0,0.06)',
+                          borderRadius: '12px',
+                          p: 2
+                        }}
+                      >
+                        <Stack
+                          direction='row'
+                          justifyContent='space-between'
+                          alignItems='flex-start'
+                          spacing={2}
+                        >
+                          <Box>
+                            <Typography variant='body2' fontWeight={700}>
+                              {index + 1}. {item.itemName}
                             </Typography>
-                          ) : null}
-                          {item.characteristics ? (
-                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                              {item.characteristics}
-                            </Typography>
-                          ) : null}
-                          {item.notes ? (
-                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                              {item.notes}
-                            </Typography>
-                          ) : null}
-                          <Stack direction='row' spacing={1} sx={{ mt: 0.5 }}>
-                            {item.warrantyMonths ? (
-                              <Chip size='small' variant='outlined' label={`Garantía: ${item.warrantyMonths} meses`} sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem' } }} />
+                            {[item.brand, item.model].filter(Boolean).length ? (
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
+                                {[item.brand, item.model]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </Typography>
                             ) : null}
-                            {item.deliveryTime ? (
-                              <Chip size='small' variant='outlined' label={`Entrega: ${item.deliveryTime}`} sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem' } }} />
+                            {item.characteristics ? (
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                                sx={{ display: 'block', mt: 0.5 }}
+                              >
+                                {item.characteristics}
+                              </Typography>
                             ) : null}
-                          </Stack>
-                        </Box>
-                        <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
-                          <Typography variant='body2' color='text.secondary'>
-                            {item.quantity} × {currencyFormatter.format(item.unitPrice)}
-                            {Number(item.taxRate) > 0 ? ` · IVA ${item.taxRate}%` : ''}
-                          </Typography>
-                          <Typography variant='body2' fontWeight={800} sx={{ color: '#059669' }}>
-                            {currencyFormatter.format(item.total)}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </Box>
-                  ))}
-                </Stack>
-              ) : (
-                <Alert severity='info'>Aún no hay productos registrados.</Alert>
-              )}
+                            {item.notes ? (
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                                sx={{ display: 'block', mt: 0.5 }}
+                              >
+                                {item.notes}
+                              </Typography>
+                            ) : null}
+                            <Stack direction='row' spacing={1} sx={{ mt: 0.5 }}>
+                              {item.warrantyMonths ? (
+                                <Chip
+                                  size='small'
+                                  variant='outlined'
+                                  label={`Garantía: ${item.warrantyMonths} meses`}
+                                  sx={{
+                                    height: 20,
+                                    '& .MuiChip-label': { fontSize: '0.65rem' }
+                                  }}
+                                />
+                              ) : null}
+                              {item.deliveryTime ? (
+                                <Chip
+                                  size='small'
+                                  variant='outlined'
+                                  label={`Entrega: ${item.deliveryTime}`}
+                                  sx={{
+                                    height: 20,
+                                    '& .MuiChip-label': { fontSize: '0.65rem' }
+                                  }}
+                                />
+                              ) : null}
+                            </Stack>
+                          </Box>
+                          <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                            <Typography variant='body2' color='text.secondary'>
+                              {item.quantity} ×{' '}
+                              {currencyFormatter.format(item.unitPrice)}
+                              {Number(item.taxRate) > 0
+                                ? ` · IVA ${item.taxRate}%`
+                                : ''}
+                            </Typography>
+                            <Typography
+                              variant='body2'
+                              fontWeight={800}
+                              sx={{ color: '#059669' }}
+                            >
+                              {currencyFormatter.format(item.total)}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Alert severity='info'>
+                    Aún no hay productos registrados.
+                  </Alert>
+                )}
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='terms'>
-              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Términos de la cotización</Typography>
-              {termEntries.length ? (
-                <Stack spacing={2}>
-                  {termEntries.map(([key, value]) => (
-                    <Box key={key}>
-                      <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 0.5 }}>
-                        {EQUIPMENT_QUOTE_TERM_LABELS[key as keyof typeof EQUIPMENT_QUOTE_TERM_LABELS] || key}
-                      </Typography>
-                      <Box
-                        sx={{ border: '1px solid rgba(0,0,0,0.08)', borderRadius: '8px', p: 1.5, backgroundColor: '#fafafa' }}
-                        dangerouslySetInnerHTML={{ __html: String(value) }}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              ) : (
-                <Alert severity='info'>Esta cotización no tiene términos registrados.</Alert>
-              )}
+                <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
+                  Términos de la cotización
+                </Typography>
+                {termEntries.length ? (
+                  <Stack spacing={2}>
+                    {termEntries.map(([key, value]) => (
+                      <Box key={key}>
+                        <Typography
+                          variant='subtitle2'
+                          fontWeight={700}
+                          sx={{ mb: 0.5 }}
+                        >
+                          {EQUIPMENT_QUOTE_TERM_LABELS[
+                            key as keyof typeof EQUIPMENT_QUOTE_TERM_LABELS
+                          ] || key}
+                        </Typography>
+                        <Box
+                          sx={{
+                            border: '1px solid rgba(0,0,0,0.08)',
+                            borderRadius: '8px',
+                            p: 1.5,
+                            backgroundColor: '#fafafa'
+                          }}
+                          dangerouslySetInnerHTML={{ __html: String(value) }}
+                        />
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Alert severity='info'>
+                    Esta cotización no tiene términos registrados.
+                  </Alert>
+                )}
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='documents'>
-              <EquipmentSalesDocumentsPanel
-                quoteCode={quotation.quoteCode}
-                hasCustomer={Boolean(quotation.customerId)}
-                hasItems={Boolean(quotation.items?.length)}
-                canUploadDocuments={canUploadDocuments}
-                canGenerateQuotePdf={canGeneratePdf && quotation.status === 'draft'}
-                officialPdfDocuments={officialPdfDocuments}
-                decisionDocuments={decisionDocuments}
-                supportDocuments={supportDocuments}
-                isBusy={isBusy}
-                onGenerateQuotePdf={handleGenerateQuotePdf}
-                onDownloadDocument={handleDownloadDocument}
-                onViewDocument={handleViewDocument}
-                onUploadDocument={async (payload) => {
-                  await mutations.uploadDocument.mutateAsync({
-                    quotationId: String(quotation.id),
-                    ...payload
-                  })
-                }}
-              />
+                <EquipmentSalesDocumentsPanel
+                  quoteCode={quotation.quoteCode}
+                  hasCustomer={Boolean(quotation.customerId)}
+                  hasItems={Boolean(quotation.items?.length)}
+                  canUploadDocuments={canUploadDocuments}
+                  canGenerateQuotePdf={
+                    canGeneratePdf && quotation.status === 'draft'
+                  }
+                  officialPdfDocuments={officialPdfDocuments}
+                  decisionDocuments={decisionDocuments}
+                  supportDocuments={supportDocuments}
+                  isBusy={isBusy}
+                  onGenerateQuotePdf={handleGenerateQuotePdf}
+                  onDownloadDocument={handleDownloadDocument}
+                  onViewDocument={handleViewDocument}
+                  onUploadDocument={async (payload) => {
+                    await mutations.uploadDocument.mutateAsync({
+                      quotationId: String(quotation.id),
+                      ...payload
+                    })
+                  }}
+                />
               </DetailTabPanel>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card elevation={0} sx={{ position: 'sticky', top: 24, borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+          <Card
+            elevation={0}
+            sx={{
+              position: 'sticky',
+              top: 24,
+              borderRadius: '16px',
+              border: '1px solid rgba(0,0,0,0.06)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+            }}
+          >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Totales</Typography>
+              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
+                Totales
+              </Typography>
               <Stack spacing={1} sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant='body2' color='text.secondary'>Subtotal</Typography>
-                  <Typography variant='body2' fontWeight={700}>{currencyFormatter.format(quotation.subtotal)}</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Subtotal
+                  </Typography>
+                  <Typography variant='body2' fontWeight={700}>
+                    {currencyFormatter.format(quotation.subtotal)}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant='body2' color='text.secondary'>IVA</Typography>
-                  <Typography variant='body2' fontWeight={700}>{currencyFormatter.format(quotation.taxTotal)}</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    IVA
+                  </Typography>
+                  <Typography variant='body2' fontWeight={700}>
+                    {currencyFormatter.format(quotation.taxTotal)}
+                  </Typography>
                 </Box>
                 {Number(quotation.discountTotal) > 0 ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant='body2' color='text.secondary'>Descuento</Typography>
-                    <Typography variant='body2' fontWeight={700} sx={{ color: '#dc2626' }}>-{currencyFormatter.format(quotation.discountTotal)}</Typography>
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between' }}
+                  >
+                    <Typography variant='body2' color='text.secondary'>
+                      Descuento
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      fontWeight={700}
+                      sx={{ color: '#dc2626' }}
+                    >
+                      -{currencyFormatter.format(quotation.discountTotal)}
+                    </Typography>
                   </Box>
                 ) : null}
-                <Box sx={{ borderTop: '1px dashed rgba(0,0,0,0.12)', pt: 1.5, display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant='subtitle1' fontWeight={800}>TOTAL</Typography>
-                  <Typography variant='h6' fontWeight={800} sx={{ color: '#059669' }}>{currencyFormatter.format(quotation.grandTotal)}</Typography>
+                <Box
+                  sx={{
+                    borderTop: '1px dashed rgba(0,0,0,0.12)',
+                    pt: 1.5,
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Typography variant='subtitle1' fontWeight={800}>
+                    TOTAL
+                  </Typography>
+                  <Typography
+                    variant='h6'
+                    fontWeight={800}
+                    sx={{ color: '#059669' }}
+                  >
+                    {currencyFormatter.format(quotation.grandTotal)}
+                  </Typography>
                 </Box>
               </Stack>
 
               {quotation.status === 'draft' && (canWorkflow || canUpdate) ? (
                 <Stack spacing={1}>
                   {canWorkflow ? (
-                    <Button variant='contained' startIcon={<SendOutlinedIcon />} onClick={handleRequestApproval} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
-                    Enviar cotización
-                  </Button>
+                    <Button
+                      variant='contained'
+                      startIcon={<SendOutlinedIcon />}
+                      onClick={handleRequestApproval}
+                      disabled={isBusy}
+                      sx={{
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        fontWeight: 700
+                      }}
+                    >
+                      Enviar cotización
+                    </Button>
                   ) : null}
                   {canUpdate ? (
-                    <Button variant='outlined' startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/equipment-sales/${quotation.id}/edit`)} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
-                    Editar
-                  </Button>
+                    <Button
+                      variant='outlined'
+                      startIcon={<EditOutlinedIcon />}
+                      onClick={() =>
+                        navigate(`/equipment-sales/${quotation.id}/edit`)
+                      }
+                      disabled={isBusy}
+                      sx={{
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        fontWeight: 600
+                      }}
+                    >
+                      Editar
+                    </Button>
                   ) : null}
                 </Stack>
               ) : null}
 
               {quotation.status === 'pending_approval' && canWorkflow ? (
                 <Stack spacing={1}>
-                  <Button variant='contained' color='success' startIcon={<CheckCircleOutlineOutlinedIcon />} onClick={() => setDecisionMode('approve')} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
+                  <Button
+                    variant='contained'
+                    color='success'
+                    startIcon={<CheckCircleOutlineOutlinedIcon />}
+                    onClick={() => setDecisionMode('approve')}
+                    disabled={isBusy}
+                    sx={{
+                      borderRadius: '10px',
+                      textTransform: 'none',
+                      fontWeight: 700
+                    }}
+                  >
                     Registrar aprobación cliente
                   </Button>
-                  <Button variant='outlined' color='error' startIcon={<BlockOutlinedIcon />} onClick={() => setDecisionMode('reject')} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
+                  <Button
+                    variant='outlined'
+                    color='error'
+                    startIcon={<BlockOutlinedIcon />}
+                    onClick={() => setDecisionMode('reject')}
+                    disabled={isBusy}
+                    sx={{
+                      borderRadius: '10px',
+                      textTransform: 'none',
+                      fontWeight: 600
+                    }}
+                  >
                     Registrar rechazo cliente
                   </Button>
-                  <Button variant='outlined' onClick={() => setDecisionMode('request_changes')} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
+                  <Button
+                    variant='outlined'
+                    onClick={() => setDecisionMode('request_changes')}
+                    disabled={isBusy}
+                    sx={{
+                      borderRadius: '10px',
+                      textTransform: 'none',
+                      fontWeight: 600
+                    }}
+                  >
                     Solicitar modificación
                   </Button>
                 </Stack>
               ) : null}
 
               {quotation.status === 'approved' && canWorkflow ? (
-                <Button variant='contained' color='success' startIcon={<CheckCircleOutlineOutlinedIcon />} onClick={handleReadyForInvoice} disabled={isBusy} fullWidth sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
+                <Button
+                  variant='contained'
+                  color='success'
+                  startIcon={<CheckCircleOutlineOutlinedIcon />}
+                  onClick={handleReadyForInvoice}
+                  disabled={isBusy}
+                  fullWidth
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700
+                  }}
+                >
                   Lista para facturar
                 </Button>
               ) : null}
 
               {quotation.status === 'ready_for_invoicing' && canInvoice ? (
-                <Button variant='contained' startIcon={<ReceiptLongOutlinedIcon />} onClick={handleInvoice} disabled={isBusy} fullWidth sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
+                <Button
+                  variant='contained'
+                  startIcon={<ReceiptLongOutlinedIcon />}
+                  onClick={handleInvoice}
+                  disabled={isBusy}
+                  fullWidth
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700
+                  }}
+                >
                   Facturar
                 </Button>
               ) : null}
 
               {quotation.status === 'draft' && canWorkflow ? (
-                <Button variant='text' color='error' startIcon={<BlockOutlinedIcon />} onClick={handleCancel} disabled={isBusy} fullWidth sx={{ mt: 1, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
+                <Button
+                  variant='text'
+                  color='error'
+                  startIcon={<BlockOutlinedIcon />}
+                  onClick={handleCancel}
+                  disabled={isBusy}
+                  fullWidth
+                  sx={{
+                    mt: 1,
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 600
+                  }}
+                >
                   Cancelar cotización
                 </Button>
               ) : null}
 
               {quotation.internalNotes ? (
                 <Box sx={{ mt: 3 }}>
-                  <Typography variant='subtitle2' fontWeight={700}>Notas internas</Typography>
-                  <Typography variant='body2' color='text.secondary'>{quotation.internalNotes}</Typography>
+                  <Typography variant='subtitle2' fontWeight={700}>
+                    Notas internas
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    {quotation.internalNotes}
+                  </Typography>
                 </Box>
               ) : null}
             </CardContent>
@@ -723,7 +1074,11 @@ const EquipmentSalesDetailPage = () => {
         open={Boolean(decisionMode)}
         mode={decisionMode || 'approve'}
         quoteCode={quotation.quoteCode}
-        isLoading={mutations.approveQuotation.isLoading || mutations.rejectQuotation.isLoading || mutations.requestChanges.isLoading}
+        isLoading={
+          mutations.approveQuotation.isLoading ||
+          mutations.rejectQuotation.isLoading ||
+          mutations.requestChanges.isLoading
+        }
         onClose={() => setDecisionMode(null)}
         onSubmit={handleDecisionSubmit}
       />

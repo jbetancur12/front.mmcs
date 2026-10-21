@@ -48,11 +48,25 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 import ListItemCard from 'src/Components/Common/ListItemCard'
 import Swal from 'sweetalert2'
-import { useEquipmentQuotations, useEquipmentSalesMutations, useEquipmentQuoteTermsTemplate } from '../../hooks/useEquipmentSales'
-import { EQUIPMENT_QUOTATION_STATUS_COLORS, EQUIPMENT_QUOTATION_STATUS_LABELS } from '../../constants/equipmentSales'
-import { EquipmentQuotation, EquipmentQuotationStatus } from '../../types/equipmentSales'
+import {
+  useEquipmentQuotations,
+  useEquipmentSalesMutations,
+  useEquipmentQuoteTermsTemplate
+} from '../../hooks/useEquipmentSales'
+import {
+  EQUIPMENT_QUOTATION_STATUS_COLORS,
+  EQUIPMENT_QUOTATION_STATUS_LABELS
+} from '../../constants/equipmentSales'
+import {
+  EquipmentQuotation,
+  EquipmentQuotationStatus
+} from '../../types/equipmentSales'
 import CalibrationServiceRichTextEditor from '../calibration-services/CalibrationServiceRichTextEditor'
-import { EQUIPMENT_QUOTE_TERM_KEYS, EQUIPMENT_QUOTE_TERM_LABELS, mergeEquipmentQuoteTerms } from './equipmentQuoteTerms'
+import {
+  EQUIPMENT_QUOTE_TERM_KEYS,
+  EQUIPMENT_QUOTE_TERM_LABELS,
+  mergeEquipmentQuoteTerms
+} from './equipmentQuoteTerms'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -72,7 +86,11 @@ const STATUS_ORDER: EquipmentQuotationStatus[] = [
 
 type ViewMode = 'list' | 'table' | 'kanban'
 
-const KPI_STATUSES: { status: string; tone: LmsStatTone; icon: React.ReactElement }[] = [
+const KPI_STATUSES: {
+  status: string
+  tone: LmsStatTone
+  icon: React.ReactElement
+}[] = [
   { status: 'all', tone: 'blue', icon: <ListAltOutlined /> },
   { status: 'draft', tone: 'teal', icon: <EditNoteOutlined /> },
   { status: 'pending_approval', tone: 'orange', icon: <SendOutlinedIcon /> },
@@ -80,8 +98,10 @@ const KPI_STATUSES: { status: string; tone: LmsStatTone; icon: React.ReactElemen
   { status: 'ready_for_invoicing', tone: 'blue', icon: <ReceiptLongOutlined /> }
 ]
 
-const QUOTATION_STATUS_LABELS: Record<string, string> = EQUIPMENT_QUOTATION_STATUS_LABELS
-const QUOTATION_STATUS_COLORS: Record<string, string> = EQUIPMENT_QUOTATION_STATUS_COLORS
+const QUOTATION_STATUS_LABELS: Record<string, string> =
+  EQUIPMENT_QUOTATION_STATUS_LABELS
+const QUOTATION_STATUS_COLORS: Record<string, string> =
+  EQUIPMENT_QUOTATION_STATUS_COLORS
 
 const EquipmentSalesPage = () => {
   const navigate = useNavigate()
@@ -116,24 +136,30 @@ const EquipmentSalesPage = () => {
   }, [quotations])
 
   const paginatedQuotations = useMemo(
-    () => filteredQuotations.slice(page * rowsPerPage, (page + 1) * rowsPerPage),
+    () =>
+      filteredQuotations.slice(page * rowsPerPage, (page + 1) * rowsPerPage),
     [filteredQuotations, page, rowsPerPage]
   )
 
   const kanbanColumns = useMemo(
     () =>
-      STATUS_ORDER.filter((status) => status !== 'rejected' && status !== 'cancelled')
-        .map((status) => ({
-          status,
-          label: QUOTATION_STATUS_LABELS[status],
-          color: QUOTATION_STATUS_COLORS[status],
-          quotations: filteredQuotations.filter((q) => q.status === status)
-        })),
+      STATUS_ORDER.filter(
+        (status) => status !== 'rejected' && status !== 'cancelled'
+      ).map((status) => ({
+        status,
+        label: QUOTATION_STATUS_LABELS[status],
+        color: QUOTATION_STATUS_COLORS[status],
+        quotations: filteredQuotations.filter((q) => q.status === status)
+      })),
     [filteredQuotations]
   )
 
   const handleOpenTemplate = () => {
-    setTemplateTerms(mergeEquipmentQuoteTerms(templateData?.terms as Record<string, string> | null))
+    setTemplateTerms(
+      mergeEquipmentQuoteTerms(
+        templateData?.terms as Record<string, string> | null
+      )
+    )
     setTemplateOpen(true)
   }
 
@@ -176,7 +202,12 @@ const EquipmentSalesPage = () => {
     <Chip
       size='small'
       label={QUOTATION_STATUS_LABELS[status] || status}
-      sx={{ fontWeight: 700, borderRadius: '8px', backgroundColor: QUOTATION_STATUS_COLORS[status], color: '#fff' }}
+      sx={{
+        fontWeight: 700,
+        borderRadius: '8px',
+        backgroundColor: QUOTATION_STATUS_COLORS[status],
+        color: '#fff'
+      }}
     />
   )
 
@@ -184,20 +215,43 @@ const EquipmentSalesPage = () => {
     <Stack direction='row' spacing={0.5}>
       {quotation.status === 'draft' && (canUpdate || canWorkflow) ? (
         <>
-          {canUpdate ? (<Tooltip title='Editar'>
-            <IconButton size='small' onClick={(e) => { e.stopPropagation(); navigate(`/equipment-sales/${quotation.id}/edit`) }}>
-              <EditOutlinedIcon fontSize='small' />
-            </IconButton>
-          </Tooltip>) : null}
-          {canWorkflow ? (<Tooltip title='Enviar al cliente'>
-            <IconButton size='small' color='primary' onClick={(e) => { e.stopPropagation(); void handleSend(quotation) }}>
-              <SendOutlinedIcon fontSize='small' />
-            </IconButton>
-          </Tooltip>) : null}
+          {canUpdate ? (
+            <Tooltip title='Editar'>
+              <IconButton
+                size='small'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate(`/equipment-sales/${quotation.id}/edit`)
+                }}
+              >
+                <EditOutlinedIcon fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {canWorkflow ? (
+            <Tooltip title='Enviar al cliente'>
+              <IconButton
+                size='small'
+                color='primary'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  void handleSend(quotation)
+                }}
+              >
+                <SendOutlinedIcon fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          ) : null}
         </>
       ) : null}
       <Tooltip title='Ver detalle'>
-        <IconButton size='small' onClick={(e) => { e.stopPropagation(); navigate(`/equipment-sales/${quotation.id}`) }}>
+        <IconButton
+          size='small'
+          onClick={(e) => {
+            e.stopPropagation()
+            navigate(`/equipment-sales/${quotation.id}`)
+          }}
+        >
           <ChevronRightOutlinedIcon fontSize='small' />
         </IconButton>
       </Tooltip>
@@ -214,16 +268,43 @@ const EquipmentSalesPage = () => {
         icon={<RequestQuoteOutlined />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<GroupOutlinedIcon />} onClick={() => navigate('/calibration-services/customers')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<GroupOutlinedIcon />}
+              onClick={() => navigate('/calibration-services/customers')}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Clientes
             </Button>
             {canSeeProducts ? (
-              <Button variant='outlined' startIcon={<Inventory2OutlinedIcon />} onClick={() => navigate('/equipment-sales/products')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              <Button
+                variant='outlined'
+                startIcon={<Inventory2OutlinedIcon />}
+                onClick={() => navigate('/equipment-sales/products')}
+                sx={{
+                  color: '#00897B',
+                  borderColor: '#00BFA5',
+                  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                }}
+              >
                 Productos
               </Button>
             ) : null}
             {canCreate ? (
-              <Button variant='contained' startIcon={<AddOutlinedIcon />} onClick={() => navigate('/equipment-sales/new')} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              <Button
+                variant='contained'
+                startIcon={<AddOutlinedIcon />}
+                onClick={() => navigate('/equipment-sales/new')}
+                sx={{
+                  bgcolor: '#00BFA5',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#00ACC1' }
+                }}
+              >
                 Nueva cotización
               </Button>
             ) : null}
@@ -235,36 +316,89 @@ const EquipmentSalesPage = () => {
         {KPI_STATUSES.map(({ status, tone, icon }) => (
           <Grid item xs={12} sm={6} md={4} lg={2.4} key={status}>
             <LmsStatCard
-              label={status === 'all' ? 'Todas' : QUOTATION_STATUS_LABELS[status]}
-              value={status === 'all' ? quotations.length : statusCounts[status] ?? 0}
+              label={
+                status === 'all' ? 'Todas' : QUOTATION_STATUS_LABELS[status]
+              }
+              value={
+                status === 'all' ? quotations.length : statusCounts[status] ?? 0
+              }
               icon={icon}
               tone={tone}
-              active={statusFilter === status || (status === 'all' && !statusFilter)}
-              onClick={() => { setStatusFilter(status === 'all' ? '' : status); setPage(0) }}
+              active={
+                statusFilter === status || (status === 'all' && !statusFilter)
+              }
+              onClick={() => {
+                setStatusFilter(status === 'all' ? '' : status)
+                setPage(0)
+              }}
             />
           </Grid>
         ))}
       </Grid>
 
       {/* ── Toolbar: view mode + template ── */}
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' alignItems={{ xs: 'stretch', md: 'center' }} spacing={2} sx={{ mb: 2 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        justifyContent='space-between'
+        alignItems={{ xs: 'stretch', md: 'center' }}
+        spacing={2}
+        sx={{ mb: 2 }}
+      >
         <Typography variant='body2' color='text.secondary'>
-          {filteredQuotations.length} cotización{filteredQuotations.length !== 1 ? 'es' : ''}
+          {filteredQuotations.length} cotización
+          {filteredQuotations.length !== 1 ? 'es' : ''}
         </Typography>
         <Stack direction='row' spacing={1} alignItems='center'>
           {canConfig ? (
-                    <Button variant='outlined' size='small' startIcon={<ExpandMoreOutlinedIcon />} onClick={handleOpenTemplate} sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}>
-            Plantilla términos
-          </Button>
-                  ) : null}
+            <Button
+              variant='outlined'
+              size='small'
+              startIcon={<ExpandMoreOutlinedIcon />}
+              onClick={handleOpenTemplate}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: '8px'
+              }}
+            >
+              Plantilla términos
+            </Button>
+          ) : null}
           <Stack direction='row' spacing={0.5}>
-            <IconButton size='small' onClick={() => setViewMode('list')} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', color: viewMode === 'list' ? '#059669' : 'text.secondary' }}>
+            <IconButton
+              size='small'
+              onClick={() => setViewMode('list')}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: '8px',
+                color: viewMode === 'list' ? '#059669' : 'text.secondary'
+              }}
+            >
               <ViewStreamOutlinedIcon fontSize='small' />
             </IconButton>
-            <IconButton size='small' onClick={() => setViewMode('table')} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', color: viewMode === 'table' ? '#059669' : 'text.secondary' }}>
+            <IconButton
+              size='small'
+              onClick={() => setViewMode('table')}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: '8px',
+                color: viewMode === 'table' ? '#059669' : 'text.secondary'
+              }}
+            >
               <TableChartOutlinedIcon fontSize='small' />
             </IconButton>
-            <IconButton size='small' onClick={() => setViewMode('kanban')} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', color: viewMode === 'kanban' ? '#059669' : 'text.secondary' }}>
+            <IconButton
+              size='small'
+              onClick={() => setViewMode('kanban')}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: '8px',
+                color: viewMode === 'kanban' ? '#059669' : 'text.secondary'
+              }}
+            >
               <ViewKanbanOutlinedIcon fontSize='small' />
             </IconButton>
           </Stack>
@@ -272,12 +406,20 @@ const EquipmentSalesPage = () => {
       </Stack>
 
       {/* ── Status filter chips ── */}
-      <Stack direction='row' spacing={1} sx={{ mb: 3, flexWrap: 'wrap' }} useFlexGap>
+      <Stack
+        direction='row'
+        spacing={1}
+        sx={{ mb: 3, flexWrap: 'wrap' }}
+        useFlexGap
+      >
         <Chip
           label='Todas'
           color={!statusFilter ? 'primary' : 'default'}
           variant={!statusFilter ? 'filled' : 'outlined'}
-          onClick={() => { setStatusFilter(''); setPage(0) }}
+          onClick={() => {
+            setStatusFilter('')
+            setPage(0)
+          }}
         />
         {STATUS_ORDER.map((status) => (
           <Chip
@@ -285,28 +427,56 @@ const EquipmentSalesPage = () => {
             label={QUOTATION_STATUS_LABELS[status]}
             color={statusFilter === status ? 'primary' : 'default'}
             variant={statusFilter === status ? 'filled' : 'outlined'}
-            onClick={() => { setStatusFilter(status === statusFilter ? '' : status); setPage(0) }}
+            onClick={() => {
+              setStatusFilter(status === statusFilter ? '' : status)
+              setPage(0)
+            }}
           />
         ))}
       </Stack>
 
       {isLoading ? (
-        <Box display='flex' justifyContent='center' alignItems='center' minHeight='40vh'>
+        <Box
+          display='flex'
+          justifyContent='center'
+          alignItems='center'
+          minHeight='40vh'
+        >
           <CircularProgress />
         </Box>
       ) : filteredQuotations.length === 0 ? (
-        <Paper elevation={0} sx={{ p: 6, textAlign: 'center', border: '1px dashed', borderColor: 'divider', borderRadius: '16px' }}>
-          <Inventory2OutlinedIcon sx={{ fontSize: 48, color: '#d1d5db', mb: 1 }} />
+        <Paper
+          elevation={0}
+          sx={{
+            p: 6,
+            textAlign: 'center',
+            border: '1px dashed',
+            borderColor: 'divider',
+            borderRadius: '16px'
+          }}
+        >
+          <Inventory2OutlinedIcon
+            sx={{ fontSize: 48, color: '#d1d5db', mb: 1 }}
+          />
           <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
             {statusFilter
               ? 'Ninguna cotización coincide con el filtro de estado.'
               : 'Aún no hay cotizaciones de venta de equipos.'}
           </Typography>
           {canCreate ? (
-                    <Button variant='contained' startIcon={<AddOutlinedIcon />} onClick={() => navigate('/equipment-sales/new')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
-            Nueva Cotización
-          </Button>
-                  ) : null}
+            <Button
+              variant='contained'
+              startIcon={<AddOutlinedIcon />}
+              onClick={() => navigate('/equipment-sales/new')}
+              sx={{
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 700
+              }}
+            >
+              Nueva Cotización
+            </Button>
+          ) : null}
         </Paper>
       ) : viewMode === 'list' ? (
         <>
@@ -315,9 +485,16 @@ const EquipmentSalesPage = () => {
               <Grid item xs={12} sm={6} md={4} key={quotation.id}>
                 <ListItemCard
                   title={quotation.quoteCode}
-                  subtitle={quotation.customer?.nombre || 'Cliente no especificado'}
+                  subtitle={
+                    quotation.customer?.nombre || 'Cliente no especificado'
+                  }
                   status={renderStatusChip(quotation.status)}
-                  highlight={<><strong>Total:</strong> {currencyFormatter.format(quotation.grandTotal)}</>}
+                  highlight={
+                    <>
+                      <strong>Total:</strong>{' '}
+                      {currencyFormatter.format(quotation.grandTotal)}
+                    </>
+                  }
                   meta={[
                     `Creada por ${quotation.createdBy?.nombre || 'Sin registro'}`,
                     new Date(quotation.createdAt).toLocaleDateString('es-CO')
@@ -334,7 +511,10 @@ const EquipmentSalesPage = () => {
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0) }}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10))
+              setPage(0)
+            }}
             labelRowsPerPage='Filas por página'
           />
         </>
@@ -346,7 +526,11 @@ const EquipmentSalesPage = () => {
               header: 'Código',
               size: 140,
               Cell: ({ row }) => (
-                <Typography variant='body2' fontWeight={700} sx={{ color: '#111827', lineHeight: 1.2 }}>
+                <Typography
+                  variant='body2'
+                  fontWeight={700}
+                  sx={{ color: '#111827', lineHeight: 1.2 }}
+                >
                   {row.original.quoteCode}
                 </Typography>
               )
@@ -356,7 +540,10 @@ const EquipmentSalesPage = () => {
               header: 'Cliente',
               size: 220,
               Cell: ({ cell }) => (
-                <Typography variant='body2' sx={{ color: '#6b7280', fontWeight: 600 }}>
+                <Typography
+                  variant='body2'
+                  sx={{ color: '#6b7280', fontWeight: 600 }}
+                >
                   {cell.getValue<string>()}
                 </Typography>
               )
@@ -377,21 +564,32 @@ const EquipmentSalesPage = () => {
               header: 'Estado',
               size: 150,
               filterVariant: 'select',
-              filterSelectOptions: STATUS_ORDER.map((status) => ({ text: QUOTATION_STATUS_LABELS[status], value: status })),
+              filterSelectOptions: STATUS_ORDER.map((status) => ({
+                text: QUOTATION_STATUS_LABELS[status],
+                value: status
+              })),
               Cell: ({ cell }) => renderStatusChip(cell.getValue<string>())
             },
             {
               accessorFn: (q) => q.items?.length ?? 0,
               header: 'Productos',
               size: 90,
-              Cell: ({ cell }) => <Typography variant='body2'>{cell.getValue<number>()}</Typography>
+              Cell: ({ cell }) => (
+                <Typography variant='body2'>
+                  {cell.getValue<number>()}
+                </Typography>
+              )
             },
             {
               accessorFn: (q) => Number(q.grandTotal),
               header: 'Valor',
               size: 110,
               Cell: ({ cell }) => (
-                <Typography variant='body2' fontWeight={700} sx={{ color: '#059669' }}>
+                <Typography
+                  variant='body2'
+                  fontWeight={700}
+                  sx={{ color: '#059669' }}
+                >
                   {currencyFormatter.format(cell.getValue<number>())}
                 </Typography>
               )
@@ -414,8 +612,15 @@ const EquipmentSalesPage = () => {
                 <Button
                   size='small'
                   variant='outlined'
-                  onClick={(e) => { e.stopPropagation(); navigate(`/equipment-sales/${row.original.id}`) }}
-                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate(`/equipment-sales/${row.original.id}`)
+                  }}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderRadius: '8px'
+                  }}
                 >
                   Ver
                 </Button>
@@ -436,7 +641,11 @@ const EquipmentSalesPage = () => {
           }}
           muiTablePaperProps={{
             elevation: 0,
-            sx: { border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', overflow: 'hidden' }
+            sx: {
+              border: '1px solid rgba(0,0,0,0.06)',
+              borderRadius: '14px',
+              overflow: 'hidden'
+            }
           }}
           muiTableHeadCellProps={{ sx: { fontWeight: 700, color: '#6b7280' } }}
         />
@@ -444,10 +653,32 @@ const EquipmentSalesPage = () => {
         <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
           {kanbanColumns.map((column) => (
             <Box key={column.status} sx={{ minWidth: 280, flex: 1 }}>
-              <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1.5 }}>
-                <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: column.color }} />
-                <Typography variant='subtitle2' fontWeight={700}>{column.label}</Typography>
-                <Chip size='small' label={column.quotations.length} variant='outlined' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.7rem' } }} />
+              <Stack
+                direction='row'
+                alignItems='center'
+                spacing={1}
+                sx={{ mb: 1.5 }}
+              >
+                <Box
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    backgroundColor: column.color
+                  }}
+                />
+                <Typography variant='subtitle2' fontWeight={700}>
+                  {column.label}
+                </Typography>
+                <Chip
+                  size='small'
+                  label={column.quotations.length}
+                  variant='outlined'
+                  sx={{
+                    height: 20,
+                    '& .MuiChip-label': { fontSize: '0.7rem' }
+                  }}
+                />
               </Stack>
               <Stack spacing={1.5}>
                 {column.quotations.map((quotation) => (
@@ -455,28 +686,66 @@ const EquipmentSalesPage = () => {
                     key={quotation.id}
                     elevation={0}
                     onClick={() => navigate(`/equipment-sales/${quotation.id}`)}
-                    sx={{ cursor: 'pointer', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)', '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' } }}
+                    sx={{
+                      cursor: 'pointer',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(0,0,0,0.06)',
+                      '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }
+                    }}
                   >
                     <CardContent sx={{ p: 2 }}>
-                      <Typography variant='subtitle2' fontWeight={700}>{quotation.quoteCode}</Typography>
-                      <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                        {quotation.customer?.nombre || 'Cliente no especificado'}
+                      <Typography variant='subtitle2' fontWeight={700}>
+                        {quotation.quoteCode}
                       </Typography>
-                      <Typography variant='body2' fontWeight={700} sx={{ mt: 1, color: '#059669' }}>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: 'block', mt: 0.5 }}
+                      >
+                        {quotation.customer?.nombre ||
+                          'Cliente no especificado'}
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        fontWeight={700}
+                        sx={{ mt: 1, color: '#059669' }}
+                      >
                         {currencyFormatter.format(quotation.grandTotal)}
                       </Typography>
-                      <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                        Creada por {quotation.createdBy?.nombre || 'Sin registro'}
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: 'block', mt: 0.5 }}
+                      >
+                        Creada por{' '}
+                        {quotation.createdBy?.nombre || 'Sin registro'}
                       </Typography>
-                      <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
-                        {new Date(quotation.createdAt).toLocaleDateString('es-CO')}
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: 'block' }}
+                      >
+                        {new Date(quotation.createdAt).toLocaleDateString(
+                          'es-CO'
+                        )}
                       </Typography>
                     </CardContent>
                   </Card>
                 ))}
                 {column.quotations.length === 0 ? (
-                  <Paper elevation={0} sx={{ p: 2, textAlign: 'center', border: '1px dashed', borderColor: 'divider', borderRadius: '12px' }}>
-                    <Typography variant='caption' color='text.secondary'>Sin cotizaciones</Typography>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      border: '1px dashed',
+                      borderColor: 'divider',
+                      borderRadius: '12px'
+                    }}
+                  >
+                    <Typography variant='caption' color='text.secondary'>
+                      Sin cotizaciones
+                    </Typography>
                   </Paper>
                 ) : null}
               </Stack>
@@ -486,18 +755,35 @@ const EquipmentSalesPage = () => {
       )}
 
       {/* ── Template dialog ── */}
-      <Dialog open={templateOpen} onClose={() => setTemplateOpen(false)} maxWidth='md' fullWidth>
+      <Dialog
+        open={templateOpen}
+        onClose={() => setTemplateOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Plantilla global de términos y condiciones</DialogTitle>
         <DialogContent dividers>
           <Alert severity='info' sx={{ mb: 2 }}>
-            Edita los términos que se cargarán por defecto al crear una nueva cotización. Usa {'{{validityDays}}'}, {'{{paymentMethod}}'}, {'{{deliveryTime}}'}, {'{{warrantyTerms}}'} como variables dinámicas.
+            Edita los términos que se cargarán por defecto al crear una nueva
+            cotización. Usa {'{{validityDays}}'}, {'{{paymentMethod}}'},{' '}
+            {'{{deliveryTime}}'}, {'{{warrantyTerms}}'} como variables
+            dinámicas.
           </Alert>
           <Stack spacing={1.5}>
             {EQUIPMENT_QUOTE_TERM_KEYS.map((termKey) => (
-              <Accordion key={termKey} elevation={0}
-                sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}>
+              <Accordion
+                key={termKey}
+                elevation={0}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: '12px !important'
+                }}
+              >
                 <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
-                  <Typography fontWeight={800}>{EQUIPMENT_QUOTE_TERM_LABELS[termKey]}</Typography>
+                  <Typography fontWeight={800}>
+                    {EQUIPMENT_QUOTE_TERM_LABELS[termKey]}
+                  </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <CalibrationServiceRichTextEditor
@@ -512,7 +798,11 @@ const EquipmentSalesPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setTemplateOpen(false)}>Cancelar</Button>
-          <Button variant='contained' onClick={() => void handleSaveTemplate()} disabled={mutations.saveQuoteTermsTemplate.isLoading}>
+          <Button
+            variant='contained'
+            onClick={() => void handleSaveTemplate()}
+            disabled={mutations.saveQuoteTermsTemplate.isLoading}
+          >
             Guardar plantilla
           </Button>
         </DialogActions>

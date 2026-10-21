@@ -77,14 +77,35 @@ import {
 } from './equipmentQuoteTerms'
 
 import { ROLE_GROUPS } from 'src/constants/roles'
-type FormState = Omit<EquipmentQuotationPayload, 'items' | 'status' | 'quoteTerms'> & {
+type FormState = Omit<
+  EquipmentQuotationPayload,
+  'items' | 'status' | 'quoteTerms'
+> & {
   items: FormItem[]
   quoteTerms: Record<string, string>
 }
 
-const REQUEST_CHANNEL_OPTIONS = ['En persona', 'Por Email', 'Por Telefono', 'Por WhatsApp']
-const PAYMENT_METHOD_OPTIONS = ['De Contado', 'A 30 Dias', 'A 60 Dias', 'A 90 Dias', '50% / 50%', 'Credito 30 Dias', 'Credito 60 Dias']
-const DELIVERY_TIME_OPTIONS = ['8 Dias Habiles', '15 Dias Habiles', '20 Dias Habiles', '30 Dias Habiles']
+const REQUEST_CHANNEL_OPTIONS = [
+  'En persona',
+  'Por Email',
+  'Por Telefono',
+  'Por WhatsApp'
+]
+const PAYMENT_METHOD_OPTIONS = [
+  'De Contado',
+  'A 30 Dias',
+  'A 60 Dias',
+  'A 90 Dias',
+  '50% / 50%',
+  'Credito 30 Dias',
+  'Credito 60 Dias'
+]
+const DELIVERY_TIME_OPTIONS = [
+  '8 Dias Habiles',
+  '15 Dias Habiles',
+  '20 Dias Habiles',
+  '30 Dias Habiles'
+]
 const VALIDITY_DAY_OPTIONS = [8, 15, 30, 60, 90]
 const DISCOUNT_TYPE_OPTIONS = [
   { value: 'fixed', label: 'Valor fijo' },
@@ -125,8 +146,11 @@ const getCustomerSiteOptions = (customer: EquipmentCustomerOption | null) => {
   }))
 }
 
-const getSiteDisplayLabel = (site: { name: string; city?: string; department?: string }) =>
-  [site.name, site.city, site.department].filter(Boolean).join(' · ')
+const getSiteDisplayLabel = (site: {
+  name: string
+  city?: string
+  department?: string
+}) => [site.name, site.city, site.department].filter(Boolean).join(' · ')
 
 const createInitialFormState = (): FormState => ({
   customerId: null,
@@ -152,7 +176,10 @@ const createInitialFormState = (): FormState => ({
   items: [createEmptyItem()]
 })
 
-const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'): EquipmentQuotationPayload => ({
+const buildPayload = (
+  formState: FormState,
+  status: 'draft' | 'pending_approval'
+): EquipmentQuotationPayload => ({
   customerId: formState.customerId ?? null,
   customerSite: formState.customerSite?.trim() || null,
   requestChannel: formState.requestChannel?.trim() || null,
@@ -167,7 +194,9 @@ const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'
   deliveryTime: formState.deliveryTime?.trim() || null,
   warrantyTerms: formState.warrantyTerms?.trim() || null,
   hasDiscount: Boolean(formState.hasDiscount),
-  discountType: formState.hasDiscount ? formState.discountType || 'fixed' : null,
+  discountType: formState.hasDiscount
+    ? formState.discountType || 'fixed'
+    : null,
   discountValue: formState.hasDiscount ? toNumber(formState.discountValue) : 0,
   commercialComments:
     stripHtml(formState.quoteTerms?.commercialComments) ||
@@ -211,9 +240,13 @@ const EquipmentSalesWorkspacePage = () => {
   // Crear exige "crear" y editar exige "editar"; la ruta ya filtra, esto cubre el cambio en vivo
   const canCreateQuotation = useCan(PERMISSIONS.SALES_QUOTATION_CREATE)
   const canUpdateQuotation = useCan(PERMISSIONS.SALES_QUOTATION_UPDATE)
-  const canAccessWorkspace = quotationId ? canUpdateQuotation : canCreateQuotation
-  const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } = useEquipmentSequenceConfig(canAccessWorkspace)
-  const { data: quotation, isLoading: isLoadingQuotation } = useEquipmentQuotation(quotationId)
+  const canAccessWorkspace = quotationId
+    ? canUpdateQuotation
+    : canCreateQuotation
+  const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
+    useEquipmentSequenceConfig(canAccessWorkspace)
+  const { data: quotation, isLoading: isLoadingQuotation } =
+    useEquipmentQuotation(quotationId)
   const { data: documentsData } = useEquipmentQuotationDocuments(quotationId)
   const existingRequestEvidence = documentsData?.documents?.find(
     (document) => document.documentType === 'request_evidence'
@@ -229,14 +262,16 @@ const EquipmentSalesWorkspacePage = () => {
     downloadDocument,
     upsertSequenceConfig
   } = useEquipmentSalesMutations()
-  const { data: customers = [] } = useEquipmentSalesCustomers(canAccessWorkspace)
+  const { data: customers = [] } =
+    useEquipmentSalesCustomers(canAccessWorkspace)
   const { data: productsData } = useEquipmentProducts({ limit: 500 })
   const products = productsData?.data || []
 
   const [formState, setFormState] = useState<FormState>(() => {
-    const cached = queryClient.getQueryData(
-      [EQUIPMENT_SALES_QUERY_KEYS.all, 'quote-terms-template']
-    ) as { terms?: Record<string, string> } | undefined
+    const cached = queryClient.getQueryData([
+      EQUIPMENT_SALES_QUERY_KEYS.all,
+      'quote-terms-template'
+    ]) as { terms?: Record<string, string> } | undefined
     if (cached?.terms) {
       return {
         ...createInitialFormState(),
@@ -246,12 +281,16 @@ const EquipmentSalesWorkspacePage = () => {
     }
     return createInitialFormState()
   })
-  const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
+  const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(
+    null
+  )
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const templateHydratedRef = useRef(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
-  const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
+  const [customerDialogMode, setCustomerDialogMode] = useState<
+    'customer' | 'site' | null
+  >(null)
   const [catalogPickerOpen, setCatalogPickerOpen] = useState(false)
   const [activeSection, setActiveSection] = useState(0)
 
@@ -264,15 +303,17 @@ const EquipmentSalesWorkspacePage = () => {
     toast.success('Cliente creado y seleccionado.')
   })
 
-  const createCustomerSiteMutation = useCreateEquipmentSalesCustomerSite((customer) => {
-    const createdSite = customer.sites?.[customer.sites.length - 1]
-    handleCustomerChange(customer)
-    if (createdSite) {
-      handleCustomerSiteChange(createdSite)
+  const createCustomerSiteMutation = useCreateEquipmentSalesCustomerSite(
+    (customer) => {
+      const createdSite = customer.sites?.[customer.sites.length - 1]
+      handleCustomerChange(customer)
+      if (createdSite) {
+        handleCustomerSiteChange(createdSite)
+      }
+      setCustomerDialogMode(null)
+      toast.success('Sede creada y seleccionada.')
     }
-    setCustomerDialogMode(null)
-    toast.success('Sede creada y seleccionada.')
-  })
+  )
 
   useEffect(() => {
     if (!canAccessWorkspace || isLoadingSequenceConfig) return
@@ -336,7 +377,13 @@ const EquipmentSalesWorkspacePage = () => {
   }, [hydrated, quotation])
 
   useEffect(() => {
-    if (isEditing || templateHydratedRef.current || isLoadingTemplate || !quoteTermsTemplate?.terms) return
+    if (
+      isEditing ||
+      templateHydratedRef.current ||
+      isLoadingTemplate ||
+      !quoteTermsTemplate?.terms
+    )
+      return
     templateHydratedRef.current = true
     setFormState((previous) => ({
       ...previous,
@@ -351,28 +398,35 @@ const EquipmentSalesWorkspacePage = () => {
     customers.length > 0
       ? customers
       : quotation?.customer
-        ? [{
-            id: quotation.customer.id,
-            nombre: quotation.customer.nombre,
-            identificacion: quotation.customer.identificacion,
-            email: quotation.customer.email || undefined,
-            telefono: quotation.customer.telefono || undefined,
-            ciudad: quotation.customer.ciudad || undefined,
-            departamento: quotation.customer.departamento || undefined,
-            direccion: quotation.customer.direccion || undefined
-          }]
+        ? [
+            {
+              id: quotation.customer.id,
+              nombre: quotation.customer.nombre,
+              identificacion: quotation.customer.identificacion,
+              email: quotation.customer.email || undefined,
+              telefono: quotation.customer.telefono || undefined,
+              ciudad: quotation.customer.ciudad || undefined,
+              departamento: quotation.customer.departamento || undefined,
+              direccion: quotation.customer.direccion || undefined
+            }
+          ]
         : []
   const productOptions =
     products.length > 0
       ? products
       : (quotation?.items || [])
           .map((item) => item.product)
-          .filter((product): product is NonNullable<typeof product> => Boolean(product?.id))
-          .filter((product, index, array) =>
-            array.findIndex((candidate) => candidate.id === product.id) === index
+          .filter((product): product is NonNullable<typeof product> =>
+            Boolean(product?.id)
+          )
+          .filter(
+            (product, index, array) =>
+              array.findIndex((candidate) => candidate.id === product.id) ===
+              index
           )
   const selectedCustomer =
-    customerOptions.find((customer) => customer.id === formState.customerId) || null
+    customerOptions.find((customer) => customer.id === formState.customerId) ||
+    null
   const customerSites = getCustomerSiteOptions(selectedCustomer)
   const hasChangeRequest =
     quotation?.otherFields?.customerResponseType === 'changes_requested'
@@ -382,16 +436,46 @@ const EquipmentSalesWorkspacePage = () => {
     !Array.isArray(quotation.otherFields.latestChangeRequest)
       ? (quotation.otherFields.latestChangeRequest as Record<string, unknown>)
       : null
-  const canEdit = canAccessWorkspace && (!quotation || quotation.status === 'draft')
-  const isBusy = createQuotation.isLoading || updateQuotation.isLoading || uploadDocument.isLoading ||
-    generateQuotePdf.isLoading || downloadDocument.isLoading
+  const canEdit =
+    canAccessWorkspace && (!quotation || quotation.status === 'draft')
+  const isBusy =
+    createQuotation.isLoading ||
+    updateQuotation.isLoading ||
+    uploadDocument.isLoading ||
+    generateQuotePdf.isLoading ||
+    downloadDocument.isLoading
 
   const sections = [
-    { key: 'customer', label: 'Cliente y alcance', icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['customerId', 'requestChannel'] as const },
-    { key: 'contact', label: 'Contacto y destino', icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />, fields: ['contactName', 'contactEmail', 'city'] as const },
-    { key: 'terms', label: 'Términos', icon: <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />, fields: [] as const },
-    { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
-    { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays', 'deliveryTime'] as const },
+    {
+      key: 'customer',
+      label: 'Cliente y alcance',
+      icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />,
+      fields: ['customerId', 'requestChannel'] as const
+    },
+    {
+      key: 'contact',
+      label: 'Contacto y destino',
+      icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />,
+      fields: ['contactName', 'contactEmail', 'city'] as const
+    },
+    {
+      key: 'terms',
+      label: 'Términos',
+      icon: <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />,
+      fields: [] as const
+    },
+    {
+      key: 'items',
+      label: 'Ítems cotizados',
+      icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />,
+      fields: ['items'] as const
+    },
+    {
+      key: 'commercial',
+      label: 'Condiciones',
+      icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />,
+      fields: ['paymentMethod', 'validityDays', 'deliveryTime'] as const
+    }
   ] as const
   const sectionCompletion = sections.map((section) => {
     if (section.key === 'items') {
@@ -408,8 +492,8 @@ const EquipmentSalesWorkspacePage = () => {
       return Math.min((base + (hasEvidence ? 1 : 0)) / total, 1)
     }
     if (section.key === 'terms') {
-      const hasContent = EQUIPMENT_QUOTE_TERM_KEYS.some(
-        (key) => formState.quoteTerms?.[key]?.trim()
+      const hasContent = EQUIPMENT_QUOTE_TERM_KEYS.some((key) =>
+        formState.quoteTerms?.[key]?.trim()
       )
       return hasContent ? 1 : 0
     }
@@ -418,11 +502,14 @@ const EquipmentSalesWorkspacePage = () => {
         const val = formState[f]
         return val !== null && val !== undefined && val !== '' && val !== 0
       }).length
-      const discountOk = !formState.hasDiscount || (
-        formState.discountType?.trim() && Number(formState.discountValue) > 0
-      )
+      const discountOk =
+        !formState.hasDiscount ||
+        (formState.discountType?.trim() && Number(formState.discountValue) > 0)
       const extraTotal = 1
-      return Math.min((base + (discountOk ? 1 : 0)) / (section.fields.length + extraTotal), 1)
+      return Math.min(
+        (base + (discountOk ? 1 : 0)) / (section.fields.length + extraTotal),
+        1
+      )
     }
     const filled = section.fields.filter((f) => {
       const val = formState[f]
@@ -431,8 +518,14 @@ const EquipmentSalesWorkspacePage = () => {
     return Math.min(filled / Math.max(section.fields.length, 1), 1)
   })
 
-  const subtotal = formState.items.reduce((acc, item) => acc + calculateItemTotals(item as FormItem).subtotal, 0)
-  const taxTotal = formState.items.reduce((acc, item) => acc + calculateItemTotals(item as FormItem).taxTotal, 0)
+  const subtotal = formState.items.reduce(
+    (acc, item) => acc + calculateItemTotals(item as FormItem).subtotal,
+    0
+  )
+  const taxTotal = formState.items.reduce(
+    (acc, item) => acc + calculateItemTotals(item as FormItem).taxTotal,
+    0
+  )
   const discountTotal = formState.hasDiscount
     ? formState.discountType === 'percentage'
       ? subtotal * (toNumber(formState.discountValue) / 100)
@@ -440,7 +533,10 @@ const EquipmentSalesWorkspacePage = () => {
     : 0
   const grandTotal = subtotal + taxTotal - discountTotal
 
-  const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
+  const setField = <K extends keyof FormState>(
+    field: K,
+    value: FormState[K]
+  ) => {
     setFormState((previous) => ({ ...previous, [field]: value }))
   }
 
@@ -464,24 +560,60 @@ const EquipmentSalesWorkspacePage = () => {
       ...previous,
       customerId: customer?.id ?? null,
       customerSite: firstSite?.name || previous.customerSite,
-      contactEmail: firstSite?.contactEmail || customer?.email || previous.contactEmail || '',
-      contactPhone: firstSite?.contactPhone || customer?.telefono || previous.contactPhone || '',
+      contactEmail:
+        firstSite?.contactEmail ||
+        customer?.email ||
+        previous.contactEmail ||
+        '',
+      contactPhone:
+        firstSite?.contactPhone ||
+        customer?.telefono ||
+        previous.contactPhone ||
+        '',
       city: firstSite?.city || customer?.ciudad || previous.city || '',
-      department: firstSite?.department || customer?.departamento || previous.department || '',
-      address: firstSite?.address || customer?.direccion || previous.address || ''
+      department:
+        firstSite?.department ||
+        customer?.departamento ||
+        previous.department ||
+        '',
+      address:
+        firstSite?.address || customer?.direccion || previous.address || ''
     }))
   }
 
-  const handleCustomerSiteChange = (site: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; city?: string; department?: string; address?: string } | null) => {
+  const handleCustomerSiteChange = (
+    site: {
+      name: string
+      contactName?: string
+      contactEmail?: string
+      contactPhone?: string
+      city?: string
+      department?: string
+      address?: string
+    } | null
+  ) => {
     setFormState((previous) => ({
       ...previous,
       customerSite: site?.name || '',
       contactName: site?.contactName || previous.contactName || '',
-      contactEmail: site?.contactEmail || previous.contactEmail || selectedCustomer?.email || '',
-      contactPhone: site?.contactPhone || previous.contactPhone || selectedCustomer?.telefono || '',
+      contactEmail:
+        site?.contactEmail ||
+        previous.contactEmail ||
+        selectedCustomer?.email ||
+        '',
+      contactPhone:
+        site?.contactPhone ||
+        previous.contactPhone ||
+        selectedCustomer?.telefono ||
+        '',
       city: site?.city || previous.city || selectedCustomer?.ciudad || '',
-      department: site?.department || previous.department || selectedCustomer?.departamento || '',
-      address: site?.address || previous.address || selectedCustomer?.direccion || ''
+      department:
+        site?.department ||
+        previous.department ||
+        selectedCustomer?.departamento ||
+        '',
+      address:
+        site?.address || previous.address || selectedCustomer?.direccion || ''
     }))
   }
 
@@ -506,8 +638,14 @@ const EquipmentSalesWorkspacePage = () => {
             unitPrice: pickedItem.unitPrice,
             taxRate: Number(product.taxRate || 19),
             subtotal: quantity * pickedItem.unitPrice,
-            taxTotal: quantity * pickedItem.unitPrice * (Number(product.taxRate || 19) / 100),
-            total: quantity * pickedItem.unitPrice * (1 + Number(product.taxRate || 19) / 100),
+            taxTotal:
+              quantity *
+              pickedItem.unitPrice *
+              (Number(product.taxRate || 19) / 100),
+            total:
+              quantity *
+              pickedItem.unitPrice *
+              (1 + Number(product.taxRate || 19) / 100),
             warrantyMonths: null,
             deliveryTime: '',
             notes: '',
@@ -523,12 +661,19 @@ const EquipmentSalesWorkspacePage = () => {
   const validateForm = (targetStatus: 'draft' | 'pending_approval') => {
     if (!formState.customerId) return 'Selecciona un cliente.'
     if (!formState.requestChannel?.trim()) return 'Define la via de solicitud.'
-    if (formState.contactEmail?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.contactEmail.trim())) {
+    if (
+      formState.contactEmail?.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.contactEmail.trim())
+    ) {
       return 'El email de contacto no es válido. Ingresa un email con formato correcto (ej: usuario@dominio.com).'
     }
     const validItems = formState.items.filter((item) => item.itemName.trim())
     if (!validItems.length) return 'Agrega al menos un producto.'
-    if (validItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))) {
+    if (
+      validItems.some(
+        (item) => !item.itemName.trim() || !(Number(item.quantity) > 0)
+      )
+    ) {
       return 'Revisa nombre y cantidad de los productos.'
     }
     if (targetStatus === 'pending_approval') {
@@ -562,7 +707,10 @@ const EquipmentSalesWorkspacePage = () => {
     try {
       const payload = buildPayload(formState, targetStatus)
       const savedQuotation = isEditing
-        ? await updateQuotation.mutateAsync({ id: quotationId as string, payload })
+        ? await updateQuotation.mutateAsync({
+            id: quotationId as string,
+            payload
+          })
         : await createQuotation.mutateAsync(payload)
       if (requestEvidenceFile) {
         try {
@@ -570,11 +718,15 @@ const EquipmentSalesWorkspacePage = () => {
             quotationId: String(savedQuotation.id),
             file: requestEvidenceFile,
             documentType: 'request_evidence',
-            title: requestEvidenceTitle || `Evidencia de solicitud ${savedQuotation.quoteCode}`
+            title:
+              requestEvidenceTitle ||
+              `Evidencia de solicitud ${savedQuotation.quoteCode}`
           })
         } catch (uploadError) {
           console.error(uploadError)
-          toast.error('La cotización se guardo, pero no fue posible subir la evidencia.')
+          toast.error(
+            'La cotización se guardo, pero no fue posible subir la evidencia.'
+          )
           navigate(`/equipment-sales/${savedQuotation.id}`)
           return
         }
@@ -586,7 +738,9 @@ const EquipmentSalesWorkspacePage = () => {
           await requestApproval.mutateAsync(savedQuotation.id)
         }
         try {
-          const pdfDocument = await generateQuotePdf.mutateAsync(String(savedQuotation.id))
+          const pdfDocument = await generateQuotePdf.mutateAsync(
+            String(savedQuotation.id)
+          )
           const fileBlob = await downloadDocument.mutateAsync({
             quotationId: String(savedQuotation.id),
             documentId: String(pdfDocument.id)
@@ -594,7 +748,9 @@ const EquipmentSalesWorkspacePage = () => {
           const objectUrl = window.URL.createObjectURL(fileBlob as Blob)
           const anchor = window.document.createElement('a')
           anchor.href = objectUrl
-          anchor.download = pdfDocument.originalFileName || `cotizacion-${savedQuotation.quoteCode}.pdf`
+          anchor.download =
+            pdfDocument.originalFileName ||
+            `cotizacion-${savedQuotation.quoteCode}.pdf`
           anchor.target = '_blank'
           anchor.rel = 'noopener'
           anchor.click()
@@ -612,11 +768,17 @@ const EquipmentSalesWorkspacePage = () => {
       navigate(`/equipment-sales/${savedQuotation.id}`)
     } catch (error) {
       console.error(error)
-      toast.error(isEditing ? 'No pudimos actualizar la cotización.' : 'No pudimos crear la cotización.')
+      toast.error(
+        isEditing
+          ? 'No pudimos actualizar la cotización.'
+          : 'No pudimos crear la cotización.'
+      )
     }
   }
 
-  const handleSaveSequenceConfig = async (values: { nextQuoteNumber: number }) => {
+  const handleSaveSequenceConfig = async (values: {
+    nextQuoteNumber: number
+  }) => {
     try {
       await upsertSequenceConfig.mutateAsync(values)
       toast.success('El consecutivo inicial quedó configurado.')
@@ -629,7 +791,12 @@ const EquipmentSalesWorkspacePage = () => {
 
   if (isLoadingQuotation) {
     return (
-      <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='55vh'
+      >
         <CircularProgress />
       </Box>
     )
@@ -670,7 +837,8 @@ const EquipmentSalesWorkspacePage = () => {
       {/* ── Header banner ── */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
+          background:
+            'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
           borderRadius: '20px',
           p: { xs: 3, md: 4 },
           mb: 3,
@@ -684,7 +852,8 @@ const EquipmentSalesWorkspacePage = () => {
             right: 0,
             width: '45%',
             height: '100%',
-            background: 'radial-gradient(ellipse at 70% 10%, rgba(255,255,255,0.10) 0%, transparent 65%)',
+            background:
+              'radial-gradient(ellipse at 70% 10%, rgba(255,255,255,0.10) 0%, transparent 65%)',
             pointerEvents: 'none'
           },
           '&::after': {
@@ -694,7 +863,8 @@ const EquipmentSalesWorkspacePage = () => {
             left: 0,
             width: '100%',
             height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)'
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)'
           }
         }}
       >
@@ -708,7 +878,11 @@ const EquipmentSalesWorkspacePage = () => {
             <Button
               startIcon={<ArrowBackOutlinedIcon />}
               onClick={() =>
-                navigate(isEditing && quotationId ? `/equipment-sales/${quotationId}` : '/equipment-sales')
+                navigate(
+                  isEditing && quotationId
+                    ? `/equipment-sales/${quotationId}`
+                    : '/equipment-sales'
+                )
               }
               sx={{
                 mb: 1,
@@ -725,19 +899,48 @@ const EquipmentSalesWorkspacePage = () => {
             >
               Volver
             </Button>
-            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', fontSize: { xs: '1.6rem', md: '2rem' } }}>
-              {isEditing ? `Editar ${quotation?.quoteCode || 'cotización'}` : 'Nueva cotización de venta de equipos'}
+            <Typography
+              variant='h4'
+              fontWeight={800}
+              sx={{
+                color: '#fff',
+                lineHeight: 1.15,
+                letterSpacing: '-0.025em',
+                fontSize: { xs: '1.6rem', md: '2rem' }
+              }}
+            >
+              {isEditing
+                ? `Editar ${quotation?.quoteCode || 'cotización'}`
+                : 'Nueva cotización de venta de equipos'}
             </Typography>
-            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, maxWidth: 700, fontSize: '0.9rem' }}>
-              Cotización de venta de equipos con cliente, sede, condiciones comerciales,
-              productos y evidencia de solicitud.
+            <Typography
+              variant='body2'
+              sx={{
+                mt: 1,
+                color: 'rgba(255,255,255,0.75)',
+                lineHeight: 1.5,
+                maxWidth: 700,
+                fontSize: '0.9rem'
+              }}
+            >
+              Cotización de venta de equipos con cliente, sede, condiciones
+              comerciales, productos y evidencia de solicitud.
             </Typography>
           </Box>
           {quotation ? (
-            <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+            <Stack
+              spacing={1}
+              alignItems={{ xs: 'flex-start', md: 'flex-end' }}
+            >
               <Chip
                 label={EQUIPMENT_QUOTATION_STATUS_LABELS[quotation.status]}
-                sx={{ fontWeight: 700, borderRadius: '8px', backgroundColor: EQUIPMENT_QUOTATION_STATUS_COLORS[quotation.status], color: '#fff' }}
+                sx={{
+                  fontWeight: 700,
+                  borderRadius: '8px',
+                  backgroundColor:
+                    EQUIPMENT_QUOTATION_STATUS_COLORS[quotation.status],
+                  color: '#fff'
+                }}
               />
             </Stack>
           ) : null}
@@ -746,7 +949,8 @@ const EquipmentSalesWorkspacePage = () => {
 
       {!canEdit ? (
         <Alert severity='warning' sx={{ mb: 3 }}>
-          Esta cotización ya no puede editarse desde el formulario base porque superó la etapa comercial inicial.
+          Esta cotización ya no puede editarse desde el formulario base porque
+          superó la etapa comercial inicial.
         </Alert>
       ) : null}
 
@@ -764,7 +968,11 @@ const EquipmentSalesWorkspacePage = () => {
           severity={sequenceConfig.initialized ? 'info' : 'warning'}
           sx={{ mb: 3 }}
           action={
-            <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
+            <Button
+              color='inherit'
+              size='small'
+              onClick={() => setIsSequenceDialogOpen(true)}
+            >
               Configurar
             </Button>
           }
@@ -823,9 +1031,14 @@ const EquipmentSalesWorkspacePage = () => {
                   <Chip
                     size='small'
                     label={`${Math.round(sectionCompletion[index] * 100)}%`}
-                    color={sectionCompletion[index] >= 1 ? 'success' : 'default'}
+                    color={
+                      sectionCompletion[index] >= 1 ? 'success' : 'default'
+                    }
                     variant='outlined'
-                    sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }}
+                    sx={{
+                      height: 20,
+                      '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 }
+                    }}
                   />
                 </Stack>
               }
@@ -838,15 +1051,60 @@ const EquipmentSalesWorkspacePage = () => {
         <Grid item xs={12} lg={8}>
           {/* ── Section 0: Cliente y alcance ── */}
           <div style={{ display: activeSection !== 0 ? 'none' : undefined }}>
-            <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #10b981, #34d399)' } }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '16px',
+                mb: 3,
+                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both',
+                position: 'relative',
+                overflow: 'visible',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 16,
+                  bottom: 16,
+                  width: 3,
+                  borderRadius: '2px',
+                  background: 'linear-gradient(180deg, #10b981, #34d399)'
+                }
+              }}
+            >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <Stack
+                  direction='row'
+                  alignItems='center'
+                  spacing={1.5}
+                  sx={{ mb: 2.5 }}
+                >
                   <GroupOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />
-                  <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  <Typography
+                    variant='h6'
+                    fontWeight={800}
+                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                  >
                     Cliente y alcance
                   </Typography>
                   {sectionCompletion[0] >= 1 ? (
-                    <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                    <Chip
+                      icon={
+                        <CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />
+                      }
+                      size='small'
+                      label='Completo'
+                      color='success'
+                      variant='outlined'
+                      sx={{
+                        height: 22,
+                        '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 },
+                        '& .MuiChip-icon': { fontSize: 14, ml: 0.5 }
+                      }}
+                    />
                   ) : null}
                 </Stack>
                 <Grid container spacing={2}>
@@ -855,9 +1113,13 @@ const EquipmentSalesWorkspacePage = () => {
                       options={customerOptions}
                       value={selectedCustomer}
                       onChange={(_, value) => handleCustomerChange(value)}
-                      getOptionLabel={(option) => `${option.nombre} · ${option.identificacion}`}
+                      getOptionLabel={(option) =>
+                        `${option.nombre} · ${option.identificacion}`
+                      }
                       disabled={!canEdit || isBusy}
-                      renderInput={(params) => <TextField {...params} label='Cliente' required />}
+                      renderInput={(params) => (
+                        <TextField {...params} label='Cliente' required />
+                      )}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -879,8 +1141,12 @@ const EquipmentSalesWorkspacePage = () => {
                         label='Sede'
                         disabled={!canEdit || isBusy || !selectedCustomer}
                         onChange={(event) => {
-                          const site = customerSites.find((candidate) => candidate.name === event.target.value)
-                          handleCustomerSiteChange(site || { name: event.target.value })
+                          const site = customerSites.find(
+                            (candidate) => candidate.name === event.target.value
+                          )
+                          handleCustomerSiteChange(
+                            site || { name: event.target.value }
+                          )
                         }}
                       >
                         {customerSites.map((site) => (
@@ -898,10 +1164,14 @@ const EquipmentSalesWorkspacePage = () => {
                         value={formState.requestChannel || ''}
                         label='Vía de solicitud'
                         disabled={!canEdit || isBusy}
-                        onChange={(event) => setField('requestChannel', event.target.value)}
+                        onChange={(event) =>
+                          setField('requestChannel', event.target.value)
+                        }
                       >
                         {REQUEST_CHANNEL_OPTIONS.map((option) => (
-                          <MenuItem key={option} value={option}>{option}</MenuItem>
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -910,36 +1180,108 @@ const EquipmentSalesWorkspacePage = () => {
               </CardContent>
             </Card>
 
-            <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #7c3aed, #a78bfa)' } }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '16px',
+                mb: 3,
+                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                animation:
+                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
+                position: 'relative',
+                overflow: 'visible',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 16,
+                  bottom: 16,
+                  width: 3,
+                  borderRadius: '2px',
+                  background: 'linear-gradient(180deg, #7c3aed, #a78bfa)'
+                }
+              }}
+            >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
-                  <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 20 }} />
-                  <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#374151' }}>
+                <Stack
+                  direction='row'
+                  alignItems='center'
+                  spacing={1.5}
+                  sx={{ mb: 2 }}
+                >
+                  <UploadFileOutlinedIcon
+                    sx={{ color: '#7c3aed', fontSize: 20 }}
+                  />
+                  <Typography
+                    variant='subtitle2'
+                    fontWeight={700}
+                    sx={{ color: '#374151' }}
+                  >
                     Evidencia de solicitud *
                   </Typography>
                   {requestEvidenceFile || existingRequestEvidence ? (
                     <Chip
-                      icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />}
+                      icon={
+                        <CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />
+                      }
                       size='small'
                       label={requestEvidenceFile ? 'Adjunta' : 'Ya adjunta'}
                       color='success'
                       variant='outlined'
-                      sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }}
+                      sx={{
+                        height: 22,
+                        '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 },
+                        '& .MuiChip-icon': { fontSize: 14, ml: 0.5 }
+                      }}
                     />
                   ) : (
-                    <Chip size='small' label='Obligatorio' color='error' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 } }} />
+                    <Chip
+                      size='small'
+                      label='Obligatorio'
+                      color='error'
+                      variant='outlined'
+                      sx={{
+                        height: 22,
+                        '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }
+                      }}
+                    />
                   )}
                 </Stack>
                 <Stack spacing={2}>
-                  <TextField fullWidth label='Titulo de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} required />
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
-                    <Button component='label' variant='outlined' startIcon={<UploadFileOutlinedIcon />} disabled={!canEdit || isBusy}>
+                  <TextField
+                    fullWidth
+                    label='Titulo de la evidencia'
+                    value={requestEvidenceTitle}
+                    disabled={!canEdit || isBusy}
+                    onChange={(event) =>
+                      setRequestEvidenceTitle(event.target.value)
+                    }
+                    required
+                  />
+                  <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    spacing={2}
+                    alignItems={{ xs: 'flex-start', md: 'center' }}
+                  >
+                    <Button
+                      component='label'
+                      variant='outlined'
+                      startIcon={<UploadFileOutlinedIcon />}
+                      disabled={!canEdit || isBusy}
+                    >
                       Seleccionar archivo
                       <input
                         hidden
                         type='file'
                         accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
-                        onChange={(event) => setRequestEvidenceFile(event.target.files?.[0] || null)}
+                        onChange={(event) =>
+                          setRequestEvidenceFile(
+                            event.target.files?.[0] || null
+                          )
+                        }
                       />
                     </Button>
                     <Typography variant='body2' color='text.secondary'>
@@ -957,35 +1299,130 @@ const EquipmentSalesWorkspacePage = () => {
 
           {/* ── Section 1: Contacto y destino ── */}
           <div style={{ display: activeSection !== 1 ? 'none' : undefined }}>
-            <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #f59e0b, #fbbf24)' } }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '16px',
+                mb: 3,
+                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                animation:
+                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
+                position: 'relative',
+                overflow: 'visible',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 16,
+                  bottom: 16,
+                  width: 3,
+                  borderRadius: '2px',
+                  background: 'linear-gradient(180deg, #f59e0b, #fbbf24)'
+                }
+              }}
+            >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                  <Inventory2OutlinedIcon sx={{ color: '#d97706', fontSize: 22 }} />
-                  <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <Stack
+                  direction='row'
+                  alignItems='center'
+                  spacing={1.5}
+                  sx={{ mb: 2.5 }}
+                >
+                  <Inventory2OutlinedIcon
+                    sx={{ color: '#d97706', fontSize: 22 }}
+                  />
+                  <Typography
+                    variant='h6'
+                    fontWeight={800}
+                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                  >
                     Contacto y destino
                   </Typography>
                   {sectionCompletion[1] >= 1 ? (
-                    <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                    <Chip
+                      icon={
+                        <CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />
+                      }
+                      size='small'
+                      label='Completo'
+                      color='success'
+                      variant='outlined'
+                      sx={{
+                        height: 22,
+                        '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 },
+                        '& .MuiChip-icon': { fontSize: 14, ml: 0.5 }
+                      }}
+                    />
                   ) : null}
                 </Stack>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
-                    <TextField fullWidth label='Contacto' value={formState.contactName || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactName', event.target.value)} />
+                    <TextField
+                      fullWidth
+                      label='Contacto'
+                      value={formState.contactName || ''}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) =>
+                        setField('contactName', event.target.value)
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <TextField fullWidth label='Email' type='email' value={formState.contactEmail || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactEmail', event.target.value)} />
+                    <TextField
+                      fullWidth
+                      label='Email'
+                      type='email'
+                      value={formState.contactEmail || ''}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) =>
+                        setField('contactEmail', event.target.value)
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <TextField fullWidth label='Telefono / celular' value={formState.contactPhone || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactPhone', event.target.value)} />
+                    <TextField
+                      fullWidth
+                      label='Telefono / celular'
+                      value={formState.contactPhone || ''}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) =>
+                        setField('contactPhone', event.target.value)
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField fullWidth label='Ciudad' value={formState.city || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('city', event.target.value)} />
+                    <TextField
+                      fullWidth
+                      label='Ciudad'
+                      value={formState.city || ''}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) => setField('city', event.target.value)}
+                    />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField fullWidth label='Departamento' value={formState.department || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('department', event.target.value)} />
+                    <TextField
+                      fullWidth
+                      label='Departamento'
+                      value={formState.department || ''}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) =>
+                        setField('department', event.target.value)
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField fullWidth label='Dirección' value={formState.address || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('address', event.target.value)} />
+                    <TextField
+                      fullWidth
+                      label='Dirección'
+                      value={formState.address || ''}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) =>
+                        setField('address', event.target.value)
+                      }
+                    />
                   </Grid>
                 </Grid>
               </CardContent>
@@ -994,44 +1431,137 @@ const EquipmentSalesWorkspacePage = () => {
 
           {/* ── Section 2: Términos ── */}
           <div style={{ display: activeSection !== 2 ? 'none' : undefined }}>
-            <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #6366f1, #818cf8)' } }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '16px',
+                mb: 3,
+                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                animation:
+                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
+                position: 'relative',
+                overflow: 'visible',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 16,
+                  bottom: 16,
+                  width: 3,
+                  borderRadius: '2px',
+                  background: 'linear-gradient(180deg, #6366f1, #818cf8)'
+                }
+              }}
+            >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                  <UploadFileOutlinedIcon sx={{ color: '#4f46e5', fontSize: 22 }} />
-                  <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <Stack
+                  direction='row'
+                  alignItems='center'
+                  spacing={1.5}
+                  sx={{ mb: 2.5 }}
+                >
+                  <UploadFileOutlinedIcon
+                    sx={{ color: '#4f46e5', fontSize: 22 }}
+                  />
+                  <Typography
+                    variant='h6'
+                    fontWeight={800}
+                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                  >
                     Términos de la cotización
                   </Typography>
                 </Stack>
-                <Box sx={{ mb: 3, p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 2 }}>
-                  <Typography variant='subtitle2' sx={{ mb: 1, color: '#166534' }}>
+                <Box
+                  sx={{
+                    mb: 3,
+                    p: 2,
+                    bgcolor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: 2
+                  }}
+                >
+                  <Typography
+                    variant='subtitle2'
+                    sx={{ mb: 1, color: '#166534' }}
+                  >
                     Variables disponibles:
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    <Chip label='{{validityDays}} → Días de validez' size='small' color='success' variant='outlined' />
-                    <Chip label='{{paymentMethod}} → Forma de pago' size='small' color='success' variant='outlined' />
-                    <Chip label='{{deliveryTime}} → Tiempo de entrega' size='small' color='success' variant='outlined' />
-                    <Chip label='{{warrantyTerms}} → Términos de garantía' size='small' color='success' variant='outlined' />
+                    <Chip
+                      label='{{validityDays}} → Días de validez'
+                      size='small'
+                      color='success'
+                      variant='outlined'
+                    />
+                    <Chip
+                      label='{{paymentMethod}} → Forma de pago'
+                      size='small'
+                      color='success'
+                      variant='outlined'
+                    />
+                    <Chip
+                      label='{{deliveryTime}} → Tiempo de entrega'
+                      size='small'
+                      color='success'
+                      variant='outlined'
+                    />
+                    <Chip
+                      label='{{warrantyTerms}} → Términos de garantía'
+                      size='small'
+                      color='success'
+                      variant='outlined'
+                    />
                   </Box>
-                  <Typography variant='caption' sx={{ mt: 1, display: 'block', color: '#15803d' }}>
-                    Escribe estas variables en el texto y serán reemplazadas automáticamente al generar el PDF.
+                  <Typography
+                    variant='caption'
+                    sx={{ mt: 1, display: 'block', color: '#15803d' }}
+                  >
+                    Escribe estas variables en el texto y serán reemplazadas
+                    automáticamente al generar el PDF.
                   </Typography>
                 </Box>
                 <Stack spacing={1.5}>
                   {EQUIPMENT_QUOTE_TERM_KEYS.map((termKey) => {
                     const vars = TERM_VARIABLES[termKey] || []
                     return (
-                      <Accordion key={termKey} elevation={0}
-                        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}>
-                        <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
+                      <Accordion
+                        key={termKey}
+                        elevation={0}
+                        sx={{
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: '12px !important'
+                        }}
+                      >
+                        <AccordionSummary
+                          expandIcon={<ExpandMoreOutlinedIcon />}
+                        >
                           <Typography fontWeight={800}>
                             {EQUIPMENT_QUOTE_TERM_LABELS[termKey]}
                           </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                           {vars.length > 0 && (
-                            <Box sx={{ mb: 1.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            <Box
+                              sx={{
+                                mb: 1.5,
+                                display: 'flex',
+                                gap: 0.5,
+                                flexWrap: 'wrap'
+                              }}
+                            >
                               {vars.map((v) => (
-                                <Chip key={v} label={v} size='small' color='success' variant='outlined' sx={{ height: 22, fontSize: 11 }} />
+                                <Chip
+                                  key={v}
+                                  label={v}
+                                  size='small'
+                                  color='success'
+                                  variant='outlined'
+                                  sx={{ height: 22, fontSize: 11 }}
+                                />
                               ))}
                             </Box>
                           )}
@@ -1051,7 +1581,31 @@ const EquipmentSalesWorkspacePage = () => {
 
           {/* ── Section 3: Ítems cotizados ── */}
           <div style={{ display: activeSection !== 3 ? 'none' : undefined }}>
-            <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #ec4899, #f472b6)' } }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '16px',
+                mb: 3,
+                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                animation:
+                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
+                position: 'relative',
+                overflow: 'visible',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 16,
+                  bottom: 16,
+                  width: 3,
+                  borderRadius: '2px',
+                  background: 'linear-gradient(180deg, #ec4899, #f472b6)'
+                }
+              }}
+            >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                 <EquipmentQuotationItemsEditor
                   items={formState.items}
@@ -1066,15 +1620,63 @@ const EquipmentSalesWorkspacePage = () => {
 
           {/* ── Section 4: Condiciones ── */}
           <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
-            <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #0ea5e9, #38bdf8)' } }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '16px',
+                mb: 3,
+                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                animation:
+                  'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both',
+                position: 'relative',
+                overflow: 'visible',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 16,
+                  bottom: 16,
+                  width: 3,
+                  borderRadius: '2px',
+                  background: 'linear-gradient(180deg, #0ea5e9, #38bdf8)'
+                }
+              }}
+            >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                  <ReceiptLongOutlinedIcon sx={{ color: '#0284c7', fontSize: 22 }} />
-                  <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <Stack
+                  direction='row'
+                  alignItems='center'
+                  spacing={1.5}
+                  sx={{ mb: 2.5 }}
+                >
+                  <ReceiptLongOutlinedIcon
+                    sx={{ color: '#0284c7', fontSize: 22 }}
+                  />
+                  <Typography
+                    variant='h6'
+                    fontWeight={800}
+                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                  >
                     Condiciones comerciales
                   </Typography>
                   {sectionCompletion[4] >= 1 ? (
-                    <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                    <Chip
+                      icon={
+                        <CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />
+                      }
+                      size='small'
+                      label='Completo'
+                      color='success'
+                      variant='outlined'
+                      sx={{
+                        height: 22,
+                        '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 },
+                        '& .MuiChip-icon': { fontSize: 14, ml: 0.5 }
+                      }}
+                    />
                   ) : null}
                 </Stack>
                 <Grid container spacing={2}>
@@ -1085,10 +1687,14 @@ const EquipmentSalesWorkspacePage = () => {
                       select
                       value={formState.validityDays ?? 30}
                       disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('validityDays', Number(event.target.value))}
+                      onChange={(event) =>
+                        setField('validityDays', Number(event.target.value))
+                      }
                     >
                       {VALIDITY_DAY_OPTIONS.map((option) => (
-                        <MenuItem key={option} value={option}>{option} días</MenuItem>
+                        <MenuItem key={option} value={option}>
+                          {option} días
+                        </MenuItem>
                       ))}
                     </TextField>
                   </Grid>
@@ -1099,10 +1705,14 @@ const EquipmentSalesWorkspacePage = () => {
                         value={formState.paymentMethod || ''}
                         label='Forma de pago'
                         disabled={!canEdit || isBusy}
-                        onChange={(event) => setField('paymentMethod', event.target.value)}
+                        onChange={(event) =>
+                          setField('paymentMethod', event.target.value)
+                        }
                       >
                         {PAYMENT_METHOD_OPTIONS.map((option) => (
-                          <MenuItem key={option} value={option}>{option}</MenuItem>
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -1114,10 +1724,14 @@ const EquipmentSalesWorkspacePage = () => {
                         value={formState.deliveryTime || ''}
                         label='Tiempo de entrega equipos'
                         disabled={!canEdit || isBusy}
-                        onChange={(event) => setField('deliveryTime', event.target.value)}
+                        onChange={(event) =>
+                          setField('deliveryTime', event.target.value)
+                        }
                       >
                         {DELIVERY_TIME_OPTIONS.map((option) => (
-                          <MenuItem key={option} value={option}>{option}</MenuItem>
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -1130,18 +1744,28 @@ const EquipmentSalesWorkspacePage = () => {
                       label='Términos de garantía'
                       value={formState.warrantyTerms || ''}
                       disabled={!canEdit || isBusy}
-                      onChange={(event) => setField('warrantyTerms', event.target.value)}
+                      onChange={(event) =>
+                        setField('warrantyTerms', event.target.value)
+                      }
                       placeholder='Ej: 1 año contra defectos de fábrica...'
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                    <Stack
+                      direction={{ xs: 'column', md: 'row' }}
+                      spacing={2}
+                      alignItems={{ xs: 'flex-start', md: 'center' }}
+                    >
                       <Stack direction='row' alignItems='center' spacing={1}>
-                        <Typography variant='body2' fontWeight={600}>¿Aplicar descuento?</Typography>
+                        <Typography variant='body2' fontWeight={600}>
+                          ¿Aplicar descuento?
+                        </Typography>
                         <Switch
                           checked={formState.hasDiscount}
                           disabled={!canEdit || isBusy}
-                          onChange={(event) => setField('hasDiscount', event.target.checked)}
+                          onChange={(event) =>
+                            setField('hasDiscount', event.target.checked)
+                          }
                         />
                       </Stack>
                       {formState.hasDiscount ? (
@@ -1152,20 +1776,36 @@ const EquipmentSalesWorkspacePage = () => {
                               value={formState.discountType || 'fixed'}
                               label='Tipo descuento'
                               disabled={!canEdit || isBusy}
-                              onChange={(event) => setField('discountType', event.target.value)}
+                              onChange={(event) =>
+                                setField('discountType', event.target.value)
+                              }
                             >
                               {DISCOUNT_TYPE_OPTIONS.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                                <MenuItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </MenuItem>
                               ))}
                             </Select>
                           </FormControl>
                           <TextField
-                            label={formState.discountType === 'percentage' ? 'Valor descuento (%)' : 'Valor descuento'}
+                            label={
+                              formState.discountType === 'percentage'
+                                ? 'Valor descuento (%)'
+                                : 'Valor descuento'
+                            }
                             type='number'
                             size='small'
                             value={formState.discountValue}
                             disabled={!canEdit || isBusy}
-                            onChange={(event) => setField('discountValue', parseFloat(event.target.value) || 0)}
+                            onChange={(event) =>
+                              setField(
+                                'discountValue',
+                                parseFloat(event.target.value) || 0
+                              )
+                            }
                             sx={{ width: 180 }}
                           />
                         </>
@@ -1180,41 +1820,101 @@ const EquipmentSalesWorkspacePage = () => {
 
         {/* ── Right sidebar: resumen económico ── */}
         <Grid item xs={12} lg={4}>
-          <Card elevation={0} sx={{ position: 'sticky', top: 24, borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+          <Card
+            elevation={0}
+            sx={{
+              position: 'sticky',
+              top: 24,
+              borderRadius: '16px',
+              border: '1px solid rgba(0,0,0,0.06)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+            }}
+          >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Resumen económico</Typography>
+              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
+                Resumen económico
+              </Typography>
               <Stack spacing={1} sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant='body2' color='text.secondary'>Subtotal</Typography>
-                  <Typography variant='body2' fontWeight={700}>{currencyFormatter.format(subtotal)}</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Subtotal
+                  </Typography>
+                  <Typography variant='body2' fontWeight={700}>
+                    {currencyFormatter.format(subtotal)}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant='body2' color='text.secondary'>IVA</Typography>
-                  <Typography variant='body2' fontWeight={700}>{currencyFormatter.format(taxTotal)}</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    IVA
+                  </Typography>
+                  <Typography variant='body2' fontWeight={700}>
+                    {currencyFormatter.format(taxTotal)}
+                  </Typography>
                 </Box>
                 {discountTotal > 0 ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between' }}
+                  >
                     <Typography variant='body2' color='text.secondary'>
-                      Descuento ({formState.discountType === 'percentage' ? `${formState.discountValue}%` : currencyFormatter.format(discountTotal)})
+                      Descuento (
+                      {formState.discountType === 'percentage'
+                        ? `${formState.discountValue}%`
+                        : currencyFormatter.format(discountTotal)}
+                      )
                     </Typography>
-                    <Typography variant='body2' fontWeight={700} sx={{ color: '#dc2626' }}>-{currencyFormatter.format(discountTotal)}</Typography>
+                    <Typography
+                      variant='body2'
+                      fontWeight={700}
+                      sx={{ color: '#dc2626' }}
+                    >
+                      -{currencyFormatter.format(discountTotal)}
+                    </Typography>
                   </Box>
                 ) : null}
-                <Box sx={{ borderTop: '1px dashed rgba(0,0,0,0.12)', pt: 1.5, display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant='subtitle1' fontWeight={800}>TOTAL</Typography>
-                  <Typography variant='h6' fontWeight={800} sx={{ color: '#059669' }}>{currencyFormatter.format(grandTotal)}</Typography>
+                <Box
+                  sx={{
+                    borderTop: '1px dashed rgba(0,0,0,0.12)',
+                    pt: 1.5,
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Typography variant='subtitle1' fontWeight={800}>
+                    TOTAL
+                  </Typography>
+                  <Typography
+                    variant='h6'
+                    fontWeight={800}
+                    sx={{ color: '#059669' }}
+                  >
+                    {currencyFormatter.format(grandTotal)}
+                  </Typography>
                 </Box>
               </Stack>
               <Stack spacing={1} sx={{ mb: 3 }}>
                 {sections.map((section, index) => (
-                  <Box key={section.key} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant='caption' color='text.secondary'>{section.label}</Typography>
+                  <Box
+                    key={section.key}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Typography variant='caption' color='text.secondary'>
+                      {section.label}
+                    </Typography>
                     <Chip
                       size='small'
                       label={`${Math.round(sectionCompletion[index] * 100)}%`}
-                      color={sectionCompletion[index] >= 1 ? 'success' : 'default'}
+                      color={
+                        sectionCompletion[index] >= 1 ? 'success' : 'default'
+                      }
                       variant='outlined'
-                      sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }}
+                      sx={{
+                        height: 20,
+                        '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 }
+                      }}
                     />
                   </Box>
                 ))}
@@ -1225,7 +1925,11 @@ const EquipmentSalesWorkspacePage = () => {
                   startIcon={<SaveOutlinedIcon />}
                   onClick={() => handleSave('draft')}
                   disabled={isBusy}
-                  sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700
+                  }}
                 >
                   Guardar borrador
                 </Button>
@@ -1235,7 +1939,11 @@ const EquipmentSalesWorkspacePage = () => {
                   startIcon={<SendOutlinedIcon />}
                   onClick={() => handleSave('pending_approval')}
                   disabled={isBusy}
-                  sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700
+                  }}
                 >
                   Guardar y enviar cotización
                 </Button>
@@ -1266,13 +1974,19 @@ const EquipmentSalesWorkspacePage = () => {
           open
           mode={customerDialogMode}
           customer={customerDialogMode === 'site' ? selectedCustomer : null}
-          isSubmitting={createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading}
+          isSubmitting={
+            createCustomerMutation.isLoading ||
+            createCustomerSiteMutation.isLoading
+          }
           onClose={() => setCustomerDialogMode(null)}
           onSubmit={(values) => {
             if (customerDialogMode === 'customer') {
               createCustomerMutation.mutate(values)
             } else {
-              createCustomerSiteMutation.mutate({ customerId: selectedCustomer?.id, values })
+              createCustomerSiteMutation.mutate({
+                customerId: selectedCustomer?.id,
+                values
+              })
             }
           }}
         />
