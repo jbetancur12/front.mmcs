@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   AppBar,
   Toolbar,
   IconButton,
-  Typography,
   Badge,
   Box,
-  Avatar,
-  Menu,
-  MenuItem,
   Tooltip,
   useTheme,
   useMediaQuery
@@ -19,30 +15,31 @@ import {
 } from '@mui/icons-material'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import { useStore } from '@nanostores/react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { userStore } from '../store/userStore'
-import LogoutButton from './Authentication/Logout'
+import { useLogout } from './Authentication/Logout'
+import UserMenu from './Common/UserMenu'
 import useAxiosPrivate from '@utils/use-axios-private'
 import type { EquipmentData } from './DataSheet/EquipmentAlertPage'
 import { useImpersonation } from '../hooks/useImpersonation'
 import ImpersonationBar from './ImpersonationBar'
 import ImpersonationDialog from './ImpersonationDialog'
 
-import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { ROLE_GROUPS, getRoleLabelEs, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 interface HeaderProps {
   toggleMobileMenu: () => void
 }
 
-function Header({ toggleMobileMenu }: HeaderProps) {
+function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
-  
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+
+  const logout = useLogout()
   const [hasAlert, setHasAlert] = useState<EquipmentData[]>([])
   const [impersonationDialogOpen, setImpersonationDialogOpen] = useState(false)
   const {
@@ -54,23 +51,17 @@ function Header({ toggleMobileMenu }: HeaderProps) {
     searchUsers,
     startImpersonation,
     stopImpersonation,
-    clearSearch,
+    clearSearch
   } = useImpersonation()
-  
-  const isMenuOpen = Boolean(anchorEl)
+
   const canImpersonate = useCan(PERMISSIONS.USERS_IMPERSONATION_USE)
-
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-  }
 
   useEffect(() => {
     // Only fetch alerts for admin users to avoid authentication issues
-    if (hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && $userStore.email) {
+    if (
+      hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) &&
+      $userStore.email
+    ) {
       const fetchAlerts = async () => {
         try {
           const response = await axiosPrivate('/dataSheet/alerts')
@@ -79,7 +70,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
           console.error('Error fetching alerts:', error)
         }
       }
-      
+
       fetchAlerts()
       const interval = setInterval(fetchAlerts, 5 * 60 * 1000)
       return () => clearInterval(interval)
@@ -91,9 +82,24 @@ function Header({ toggleMobileMenu }: HeaderProps) {
   const totalAlerts = hasAlert.length
   const hasAlerts = totalAlerts > 0
 
+  // La campana se mueve una sola vez cuando aparecen alertas nuevas;
+  // con alertas viejas se queda quieta y solo muestra el número.
+  const lastAlertCount = useRef<number | null>(null)
+  const [ringKey, setRingKey] = useState(0)
+  useEffect(() => {
+    const previous =
+      lastAlertCount.current ??
+      Number(sessionStorage.getItem('headerAlertCount') ?? totalAlerts)
+    if (totalAlerts > previous) setRingKey((key) => key + 1)
+    lastAlertCount.current = totalAlerts
+    sessionStorage.setItem('headerAlertCount', String(totalAlerts))
+  }, [totalAlerts])
+
   const handleAlertsClick = () => {
     navigate('/datasheets/alerts')
   }
+
+  const roleLabel = getRoleLabelEs($userStore.rol?.[0])
 
   return (
     <>
@@ -106,192 +112,164 @@ function Header({ toggleMobileMenu }: HeaderProps) {
         />
       )}
       <AppBar
-      position="fixed"
-      elevation={1}
-      sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        backgroundColor: 'background.paper',
-        color: 'text.primary',
-        borderBottom: '1px solid',
-        borderColor: 'divider'
-      }}
-    >
-      <Toolbar>
-        {/* Botón de menú móvil */}
-        {isMobile && (
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={toggleMobileMenu}
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-        )}
-
-        {/* Logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-          <Box
-            component="a"
-            href="https://metromedicslab.com"
-            sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-          >
-            <Box
-              component="img"
-              src="/images/logo2.png"
-              alt="MetroMedics Logo"
-              sx={{ height: 32, mr: 2 }}
-            />
-          </Box>
-        </Box>
-
-        {/* Controles del header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {/* Botón de alertas - Solo para admins */}
-          {!$userStore.lmsOnly && hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
-            <Tooltip 
-              title={hasAlerts ? `${totalAlerts} equipos con alertas pendientes` : 'No hay alertas'}
+        position='fixed'
+        elevation={0}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          backgroundColor: '#ffffff',
+          color: '#111827',
+          // Escala de calibración tenue como borde inferior: marcas cada
+          // 8px y una más larga cada 80px, la misma de las pantallas de acceso.
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 7,
+            pointerEvents: 'none',
+            backgroundImage: [
+              'linear-gradient(rgba(0,105,92,0.22), rgba(0,105,92,0.22))',
+              'repeating-linear-gradient(to right, rgba(0,105,92,0.45) 0 1px, transparent 1px 80px)',
+              'repeating-linear-gradient(to right, rgba(0,105,92,0.25) 0 1px, transparent 1px 8px)'
+            ].join(','),
+            backgroundSize: '100% 1px, 100% 7px, 100% 4px',
+            backgroundPosition: 'bottom, bottom, bottom',
+            backgroundRepeat: 'no-repeat'
+          }
+        }}
+      >
+        <Toolbar sx={{ minHeight: { xs: 64 }, gap: 1 }}>
+          {isMobile && (
+            <IconButton
+              edge='start'
+              aria-label='Abrir menú'
+              onClick={toggleMobileMenu}
+              sx={{ mr: 0.5, color: '#374151' }}
             >
-              <IconButton
-                color="inherit"
-                onClick={handleAlertsClick}
-                sx={{
-                  color: hasAlerts ? 'error.main' : 'text.secondary',
-                  animation: hasAlerts ? 'alertBounce 1.5s ease-in-out infinite' : 'none',
-                  '&:hover': {
-                    backgroundColor: hasAlerts ? 'error.light' : 'action.hover',
-                    color: hasAlerts ? 'error.contrastText' : 'text.primary'
-                  },
-                  '@keyframes alertBounce': {
-                    '0%, 20%, 50%, 80%, 100%': {
-                      transform: 'translateY(0)'
-                    },
-                    '40%': {
-                      transform: 'translateY(-8px)'
-                    },
-                    '60%': {
-                      transform: 'translateY(-4px)'
-                    }
+              <MenuIcon />
+            </IconButton>
+          )}
+
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <Box
+              component={Link}
+              to='/'
+              aria-label='Ir al inicio'
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: '8px',
+                '&:focus-visible': {
+                  outline: '3px solid #00695c',
+                  outlineOffset: 4
+                }
+              }}
+            >
+              <Box
+                component='img'
+                src='/images/logo2.png'
+                alt='Metromedics'
+                sx={{ height: { xs: 32, md: 40 }, width: 'auto' }}
+              />
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            {!$userStore.lmsOnly &&
+              hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+                <Tooltip
+                  title={
+                    hasAlerts
+                      ? `${totalAlerts} equipos con alertas pendientes`
+                      : 'Sin alertas pendientes'
                   }
-                }}
-              >
-                <Badge 
-                  badgeContent={totalAlerts} 
-                  color="error"
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      animation: hasAlerts ? 'badgePulse 2s ease-in-out infinite' : 'none',
-                      '@keyframes badgePulse': {
-                        '0%': {
-                          transform: 'scale(1)',
-                          boxShadow: '0 0 0 0 rgba(244, 67, 54, 0.7)'
-                        },
-                        '70%': {
-                          transform: 'scale(1.1)',
-                          boxShadow: '0 0 0 8px rgba(244, 67, 54, 0)'
-                        },
-                        '100%': {
-                          transform: 'scale(1)',
-                          boxShadow: '0 0 0 0 rgba(244, 67, 54, 0)'
-                        }
-                      }
-                    }
-                  }}
                 >
-                  <NotificationsIcon 
+                  <IconButton
+                    onClick={handleAlertsClick}
+                    aria-label={
+                      hasAlerts
+                        ? `Ver ${totalAlerts} equipos con alertas`
+                        : 'Ver alertas de equipos'
+                    }
                     sx={{
-                      animation: hasAlerts ? 'iconShake 0.8s ease-in-out infinite' : 'none',
-                      '@keyframes iconShake': {
-                        '0%, 100%': { transform: 'rotate(0deg)' },
-                        '10%, 30%, 50%, 70%, 90%': { transform: 'rotate(-10deg)' },
-                        '20%, 40%, 60%, 80%': { transform: 'rotate(10deg)' }
+                      color: hasAlerts ? '#b91c1c' : '#4b5563',
+                      '&:hover': {
+                        bgcolor: hasAlerts ? '#fef2f2' : '#f3f4f6'
                       }
                     }}
-                  />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-          )}
+                  >
+                    <Badge
+                      badgeContent={totalAlerts}
+                      max={99}
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          bgcolor: '#dc2626',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontVariantNumeric: 'tabular-nums'
+                        }
+                      }}
+                    >
+                      <NotificationsIcon
+                        key={ringKey}
+                        sx={{
+                          animation:
+                            ringKey > 0 ? 'bellRing .9s ease-in-out 1' : 'none',
+                          '@keyframes bellRing': {
+                            '0%, 100%': { transform: 'rotate(0deg)' },
+                            '15%, 45%, 75%': { transform: 'rotate(-12deg)' },
+                            '30%, 60%': { transform: 'rotate(12deg)' }
+                          },
+                          '@media (prefers-reduced-motion: reduce)': {
+                            animation: 'none'
+                          }
+                        }}
+                      />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
+              )}
 
-          {/* Botón de suplantación: según la capacidad */}
-          {canImpersonate && !$userStore.lmsOnly && (
-            <Tooltip title="Suplantar usuario">
-              <IconButton
-                color='inherit'
-                onClick={() => {
-                  clearSearch()
-                  setImpersonationDialogOpen(true)
-                }}
-                sx={{ color: isImpersonating ? '#d97706' : 'text.secondary' }}
-              >
-                <AdminPanelSettingsOutlinedIcon />
-              </IconButton>
-            </Tooltip>
-          )}
+            {canImpersonate && !$userStore.lmsOnly && (
+              <Tooltip title='Suplantar usuario'>
+                <IconButton
+                  aria-label='Suplantar usuario'
+                  onClick={() => {
+                    clearSearch()
+                    setImpersonationDialogOpen(true)
+                  }}
+                  sx={{
+                    color: isImpersonating ? '#b45309' : '#4b5563',
+                    '&:hover': { bgcolor: '#f3f4f6' }
+                  }}
+                >
+                  <AdminPanelSettingsOutlinedIcon />
+                </IconButton>
+              </Tooltip>
+            )}
 
-          {/* Botón de perfil */}
-          <Tooltip title="Perfil de usuario">
-            <IconButton
-              edge="end"
-              aria-label="account of current user"
-              aria-controls="primary-search-account-menu"
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-              <Avatar
-                sx={{ 
-                  width: 32, 
-                  height: 32, 
-                  backgroundColor: 'primary.main',
-                  fontSize: '0.875rem'
-                }}
-              >
-                {$userStore.nombre ? $userStore.nombre.charAt(0).toUpperCase() : 'U'}
-              </Avatar>
-            </IconButton>
-          </Tooltip>
-        </Box>
+            <Box
+              sx={{
+                width: '1px',
+                height: 28,
+                bgcolor: '#e5e7eb',
+                mx: 1,
+                display: { xs: 'none', md: 'block' }
+              }}
+            />
 
-        {/* Menú de perfil */}
-        <Menu
-          anchorEl={anchorEl}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          keepMounted
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-          open={isMenuOpen}
-          onClose={handleMenuClose}
-        >
-          <MenuItem disabled>
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                {$userStore.nombre || 'Usuario'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {$userStore.email}
-              </Typography>
-            </Box>
-          </MenuItem>
-          {isImpersonating && (
-            <MenuItem onClick={stopImpersonation} sx={{ color: '#d97706', fontWeight: 600 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18 }} />
-                <span>Volver a mi sesión</span>
-              </Box>
-            </MenuItem>
-          )}
-          <MenuItem>
-            <LogoutButton />
-          </MenuItem>
-        </Menu>
-      </Toolbar>
+            <UserMenu
+              name={$userStore.nombre}
+              email={$userStore.email}
+              roleLabel={roleLabel || undefined}
+              impersonating={isImpersonating}
+              onStopImpersonation={stopImpersonation}
+              onLogout={logout}
+            />
+          </Box>
+        </Toolbar>
+      </AppBar>
       <ImpersonationDialog
         open={impersonationDialogOpen}
         searching={searching}
@@ -306,21 +284,6 @@ function Header({ toggleMobileMenu }: HeaderProps) {
           clearSearch()
         }}
       />
-    </AppBar>
-    <ImpersonationDialog
-      open={impersonationDialogOpen}
-      searching={searching}
-      candidates={candidates}
-      onSearch={searchUsers}
-      onSelect={(userId) => {
-        setImpersonationDialogOpen(false)
-        startImpersonation(userId)
-      }}
-      onClose={() => {
-        setImpersonationDialogOpen(false)
-        clearSearch()
-      }}
-    />
     </>
   )
 }

@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom'
 import { bigToast, Toast } from '../ExcelManipulation/Utils'
 import { userStore } from '../../store/userStore'
 
-const LogoutButton: React.FC = () => {
+/** Cierra la sesión en el servidor, limpia el estado local y lleva al login. */
+export const useLogout = () => {
   const navigate = useNavigate()
-  const handleLogout = async () => {
+  return async () => {
     // Borra el token del localStorage
     const response = await axiosPublic.post(
       '/auth/logout',
@@ -44,6 +45,10 @@ const LogoutButton: React.FC = () => {
     // Redirige al usuario a la página de inicio de sesión
     navigate('/login') // Cambia '/login' por la ruta de tu página de inicio de sesión
   }
+}
+
+const LogoutButton: React.FC = () => {
+  const handleLogout = useLogout()
 
   return (
     <a
