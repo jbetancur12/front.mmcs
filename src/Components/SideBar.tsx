@@ -256,19 +256,13 @@ const sidebarItems = ($userStore: UserData) => [
     moduleName: 'Basic'
   },
   {
-    type: 'dropdown',
-    buttonText: 'Calidad',
+    type: 'link',
+    label: 'Trabajo no conforme',
+    to: '/non-conform-work-reports',
+    icon: <VerifiedOutlined />,
     roles: [] as string[],
     permission: PERMISSIONS.NONCONFORM_REPORT_VIEW,
-    moduleName: 'Basic',
-    icon: <VerifiedOutlined />,
-    menuItems: [
-      {
-        label: 'Trabajo no conforme',
-        url: '/non-conform-work-reports',
-        permission: PERMISSIONS.NONCONFORM_REPORT_VIEW
-      }
-    ]
+    moduleName: 'Basic'
   },
 
   {
@@ -473,6 +467,86 @@ const sidebarItems = ($userStore: UserData) => [
   // Otros ítems...
 ]
 
+// Secciones del menú, en orden. Cada entrada es el `label` o `buttonText`
+// del ítem. Una sección sin ítems visibles para el usuario no se muestra.
+const SIDEBAR_SECTIONS: { title?: string; items: string[] }[] = [
+  { items: ['Inicio', 'Equipos'] },
+  {
+    title: 'Metrología',
+    items: [
+      'Empresas',
+      'Calibraciones',
+      'Servicios de calibración',
+      'Laboratorio',
+      'Inventario',
+      'Trazabilidades',
+      'Biomédicos'
+    ]
+  },
+  {
+    title: 'Operación',
+    items: ['Mantenimiento', 'Venta de equipos', 'Compras', 'Flota']
+  },
+  { title: 'Calidad y personas', items: ['Trabajo no conforme', 'Academia'] },
+  { title: 'Administración', items: ['Ajustes'] }
+]
+
+const itemKey = (item: { label?: string; buttonText?: string }) =>
+  item.label ?? item.buttonText ?? ''
+
+const sidebarSections = (
+  $userStore: UserData,
+  renderItem: (
+    item: ReturnType<typeof sidebarItems>[number],
+    key: string
+  ) => JSX.Element | null,
+  minimized: boolean
+) => {
+  const items = sidebarItems($userStore)
+  const placed = new Set(SIDEBAR_SECTIONS.flatMap((section) => section.items))
+  // Un ítem nuevo que nadie ubicó aparece al final en vez de perderse.
+  const layout = [
+    ...SIDEBAR_SECTIONS,
+    { items: items.map(itemKey).filter((key) => !placed.has(key)) }
+  ]
+
+  return layout.map((section, index) => {
+    const rows = section.items
+      .flatMap((name) => items.filter((item) => itemKey(item) === name))
+      .map((item) => renderItem(item, itemKey(item)))
+      .filter(Boolean)
+
+    if (rows.length === 0) return null
+
+    const headingId = `sidebar-section-${index}`
+    return (
+      <div key={headingId} className={index === 0 ? '' : 'mt-4'}>
+        {section.title &&
+          (minimized ? (
+            <div
+              role='separator'
+              aria-label={section.title}
+              className='mx-auto mb-2 h-px w-8 bg-gray-200'
+            />
+          ) : (
+            <p
+              id={headingId}
+              className='mb-1 px-3 text-xs font-semibold text-gray-500'
+            >
+              {section.title}
+            </p>
+          ))}
+        <ul
+          className='space-y-0.5'
+          aria-labelledby={section.title && !minimized ? headingId : undefined}
+        >
+          {rows}
+        </ul>
+      </div>
+    )
+  })
+}
+
 const isLmsSidebarItem = (item: ReturnType<typeof sidebarItems>[number]) => {
   if (item.type === 'link') {
     return item.to?.startsWith('/lms') || item.to?.startsWith('lms')
@@ -584,6 +658,67 @@ const SideBar = ({
   const isLinkActive = (to: string) =>
     pathname === to || (to !== '/' && pathname.startsWith(`${to}/`))
 
+  type SidebarItem = ReturnType<typeof sidebarItems>[number]
+
+  // Devuelve la fila del ítem o null si el usuario no debe verlo.
+  const renderItem = (item: SidebarItem, key: string) => {
+    if (
+      isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
+      !isLmsSidebarItem(item)
+    ) {
+      return null
+    }
+
+    const permission = getItemPermission(item)
+    const isAcademia =
+      item.buttonText === 'Academia' || item.buttonText === 'LMS'
+    const roles = isAcademia ? effectiveLmsMenuRoles : $userStore.rol
+    const allowed = permission
+      ? hasPermission(
+          $userStore.permissions,
+          permission as PermissionKey | readonly PermissionKey[]
+        )
+      : canViewModule(item.roles, roles)
+
+    if (
+      item.type === 'link' &&
+      item.to &&
+      allowed &&
+      hasModuleAccess(item.moduleName)
+    ) {
+      return (
+        <li key={key}>
+          <NavItem
+            label={item.label ?? ''}
+            icon={item.icon}
+            to={item.to}
+            active={isLinkActive(item.to)}
+            minimized={minimized}
+            onClick={handleLinkClick}
+          />
+        </li>
+      )
+    }
+
+    if (item.type === 'dropdown' && allowed) {
+      return (
+        <DropdownButton
+          key={key}
+          buttonText={item.buttonText ?? ''}
+          menuItems={item.menuItems ?? []}
+          icon={item.icon}
+          rol={roles}
+          permissions={$userStore.permissions}
+          currentPath={pathname}
+          onlyIcons={minimized}
+          onItemClick={handleLinkClick}
+        />
+      )
+    }
+
+    return null
+  }
+
   return (
     <aside
       onMouseEnter={handleMouseEnter}
@@ -598,77 +733,7 @@ const SideBar = ({
         aria-label='Menú principal'
         className='flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 scrollbar-track-transparent'
       >
-        <ul className='space-y-0.5'>
-          {sidebarItems($userStore).map((item, index) => {
-            if (
-              isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
-              !isLmsSidebarItem(item)
-            ) {
-              return null
-            }
-
-            if (
-              item.type === 'link' &&
-              item.to &&
-              (getItemPermission(item)
-                ? hasPermission(
-                    $userStore.permissions,
-                    getItemPermission(item) as
-                      | PermissionKey
-                      | readonly PermissionKey[]
-                  )
-                : canViewModule(item.roles, $userStore.rol)) &&
-              hasModuleAccess(item.moduleName)
-            ) {
-              return (
-                <li key={index}>
-                  <NavItem
-                    label={item.label ?? ''}
-                    icon={item.icon}
-                    to={item.to}
-                    active={isLinkActive(item.to)}
-                    minimized={minimized}
-                    onClick={handleLinkClick}
-                  />
-                </li>
-              )
-            } else if (
-              item.type === 'dropdown' &&
-              (getItemPermission(item)
-                ? hasPermission(
-                    $userStore.permissions,
-                    getItemPermission(item) as
-                      | PermissionKey
-                      | readonly PermissionKey[]
-                  )
-                : canViewModule(
-                    item.roles,
-                    item.buttonText === 'Academia' || item.buttonText === 'LMS'
-                      ? effectiveLmsMenuRoles
-                      : $userStore.rol
-                  ))
-            ) {
-              return (
-                <DropdownButton
-                  key={index}
-                  buttonText={item.buttonText ?? ''}
-                  menuItems={item.menuItems ?? []}
-                  icon={item.icon}
-                  rol={
-                    item.buttonText === 'Academia' || item.buttonText === 'LMS'
-                      ? effectiveLmsMenuRoles
-                      : $userStore.rol
-                  }
-                  permissions={$userStore.permissions}
-                  currentPath={pathname}
-                  onlyIcons={minimized}
-                  onItemClick={handleLinkClick}
-                />
-              )
-            }
-            return null
-          })}
-        </ul>
+        {sidebarSections($userStore, renderItem, minimized)}
       </nav>
 
       {/* En móvil no hay nada que minimizar: el pie solo existe en escritorio. */}
