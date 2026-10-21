@@ -77,14 +77,21 @@ export const useUserForm = <T extends UserFormValues>(initialValues: T) => {
     return !nameError && !emailError && !phoneError && !rolesError
   }, [values.nombre, values.email, values.phone, values.roles])
 
-  // Mark all fields as touched to show validation errors
-  const touchAll = () =>
+  // Marca todos los campos y calcula sus errores, para mostrarlos al intentar guardar
+  const touchAll = () => {
     setTouched({
       nombre: true,
       email: true,
       phone: true,
       roles: true
     })
+    setErrors({
+      nombre: validateName(values.nombre || ''),
+      email: validateEmail(values.email || ''),
+      phone: validatePhone(values.phone || '', values.roles || []),
+      roles: validateRoles(values.roles || [])
+    })
+  }
 
   const resetState = () => {
     setErrors({})

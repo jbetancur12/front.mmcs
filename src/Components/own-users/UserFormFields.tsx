@@ -15,36 +15,10 @@ import React from 'react'
 import { Role } from './types'
 import { getRoleChipLabel } from './userValidation'
 
-// Estilo de los campos de los diálogos (borde esmeralda al pasar/enfocar)
-export const userFieldSx = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '12px',
-    transition: 'all 0.3s ease-in-out',
-    '&:hover .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#10b981'
-    },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#10b981',
-      borderWidth: '2px'
-    }
-  },
-  '& .MuiInputLabel-root': {
-    fontWeight: 600
-  }
-}
-
 /** TextField de los diálogos de usuario (reenvía la ref para usarlo dentro de Fade). */
 export const UserTextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
   function UserTextField(props, ref) {
-    return (
-      <TextField
-        ref={ref}
-        variant='outlined'
-        fullWidth
-        sx={userFieldSx}
-        {...props}
-      />
-    )
+    return <TextField ref={ref} variant='outlined' fullWidth {...props} />
   }
 )
 
@@ -83,8 +57,9 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
             variant='text'
             startIcon={<HelpOutline fontSize='small' />}
             onClick={onShowHelp}
+            sx={{ color: '#00695C', textTransform: 'none', fontWeight: 600 }}
           >
-            Ver roles
+            Qué permite cada rol
           </Button>
         </Box>
         <Autocomplete
@@ -115,11 +90,11 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
                 label={getRoleChipLabel(option)}
                 size='small'
                 sx={{
-                  backgroundColor: '#d1fae5',
-                  color: '#059669',
+                  backgroundColor: '#E0F7F4',
+                  color: '#00695C',
                   fontWeight: 500,
                   '& .MuiChip-deleteIcon': {
-                    color: '#059669'
+                    color: '#00695C'
                   }
                 }}
               />
@@ -128,7 +103,8 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
           renderInput={(params) => (
             <TextField
               {...params}
-              label='Roles *'
+              label='Roles'
+              required
               variant='outlined'
               error={error}
               helperText={helperText}
@@ -143,7 +119,6 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
                   </>
                 )
               }}
-              sx={userFieldSx}
             />
           )}
           filterOptions={(options, state) => {
@@ -164,16 +139,8 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
 /** Aviso de errores del formulario. */
 export const FormErrorsAlert: React.FC = () => (
   <Fade in>
-    <Alert
-      severity='warning'
-      sx={{
-        borderRadius: '12px',
-        '& .MuiAlert-message': {
-          fontWeight: 500
-        }
-      }}
-    >
-      Por favor, corrige los errores antes de continuar
+    <Alert severity='warning' sx={{ borderRadius: '8px' }}>
+      Revisa los campos marcados en rojo antes de guardar.
     </Alert>
   </Fade>
 )
@@ -185,42 +152,4 @@ export const srOnlySx = {
   width: '1px',
   height: '1px',
   overflow: 'hidden'
-} as const
-
-// Botón secundario (cancelar/descartar) de los diálogos
-export const cancelButtonSx = {
-  borderRadius: '12px',
-  textTransform: 'none',
-  fontWeight: 600,
-  px: 4,
-  py: 1.5,
-  borderColor: '#d1d5db',
-  color: '#6b7280',
-  '&:hover': {
-    borderColor: '#9ca3af',
-    backgroundColor: '#f9fafb',
-    transform: 'translateY(-1px)'
-  }
-} as const
-
-// Botón principal con degradado esmeralda de los diálogos
-export const submitButtonSx = {
-  borderRadius: '12px',
-  textTransform: 'none',
-  fontWeight: 700,
-  px: 4,
-  py: 1.5,
-  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-  transition: 'all 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.6)'
-  },
-  '&:disabled': {
-    background: '#e5e7eb',
-    color: '#9ca3af',
-    transform: 'none',
-    boxShadow: 'none'
-  }
 } as const
