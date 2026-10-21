@@ -57,7 +57,7 @@ Alias de imports: `src/...` (baseUrl `.`), `@utils/*`, `@stores/*`, `@hooks/*`, 
 Toda pantalla nueva o que se rediseñe, de cualquier módulo (Compras, Calibración, Mantenimiento, Flota, LMS, etc.), usa el mismo estilo del dashboard (`/`) y de `/customers`; no inventes uno propio.
 
 - Encabezado de página: `src/Components/lms/admin/LmsPageHeader.tsx` (ícono en círculo de color, título h4 en negrita, frase corta, acciones a la derecha).
-- Indicadores/KPIs: `src/Components/lms/admin/LmsStatCard.tsx` (degradados `blue|green|orange|red|teal`; con `onClick` sirven de filtro o atajo de pestaña). Aunque estén en la carpeta `lms`, son genéricos: impórtalos, no los dupliques.
+- Indicadores/KPIs: `src/Components/lms/admin/LmsStatCard.tsx` (tarjeta blanca con el color en el número; tono por significado: `red` vencido, `orange` pendiente, `green` correcto, `blue` información, `teal` totales; en 0 queda gris sola; con `onClick` sirven de filtro, y si la tabla ya muestra el total no se agrega tarjeta "Todas"). Aunque estén en la carpeta `lms`, son genéricos: impórtalos, no los dupliques.
 - Tablas de datos: Material React Table con `MRT_Localization_ES`, búsqueda global visible y acciones fijas a la derecha (`enablePinning`, `columnPinning: { right: ['mrt-row-actions'] }`). Con paginación en servidor: `manualPagination` y `manualFiltering`.
 - Paleta: verde azulado `#00BFA5` (hover `#00897B`, fondo suave `#E0F7F4`); éxito `#4caf50 → #00BFA5`.
 - Layout: `Container maxWidth='xl'`, sin fondo gris propio, `spacing={3}` entre tarjetas, sin saturación visual y vista móvil revisada.
