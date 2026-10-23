@@ -46,7 +46,9 @@ export interface CertificateTypeData {
 
 // Main component
 const Table: React.FC = () => {
-  const canManageCertificateTypes = useCan(PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE)
+  const canManageCertificateTypes = useCan(
+    PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE
+  )
   const queryClient = useQueryClient()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const { data: certificateTypesData } = useCertificateTypes()
@@ -248,7 +250,16 @@ const Table: React.FC = () => {
         icon={<WorkspacePremium />}
         actions={
           canManageCertificateTypes ? (
-            <Button variant='contained' startIcon={<Add />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={() => setCreateModalOpen(true)}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Crear tipo de certificado
             </Button>
           ) : undefined
@@ -257,46 +268,54 @@ const Table: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Tipos de certificado' value={tableData.length} icon={<WorkspacePremium />} tone='teal' />
+          <LmsStatCard
+            label='Tipos de certificado'
+            value={tableData.length}
+            icon={<WorkspacePremium />}
+            tone='teal'
+          />
         </Grid>
       </Grid>
 
       <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <MaterialReactTable
-            {...purchaseTableStyle}
-            displayColumnDefOptions={{
-              'mrt-row-actions': {
-                muiTableHeadCellProps: {
-                  align: 'center'
-                },
-                size: 120
-              }
-            }}
-            columns={columns}
-            data={tableData}
-            editingMode='modal' //default
-            enableColumnOrdering
-            enableEditing={canManageCertificateTypes}
-            enableRowActions={canManageCertificateTypes}
-            enablePinning
-            initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
-            onEditingRowSave={handleSaveRowEdits}
-            onEditingRowCancel={handleCancelRowEdits}
-            renderRowActions={({ row, table }) => (
-              <Box sx={{ display: 'flex', gap: '1rem' }}>
-                <Tooltip arrow placement='left' title='Edit'>
-                  <IconButton color='primary' onClick={() => table.setEditingRow(row)}>
-                    <Edit />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip arrow placement='right' title='Delete'>
-                  <IconButton color='error' onClick={() => handleDeleteRow(row)}>
-                    <Delete />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            )}
-          />
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          displayColumnDefOptions={{
+            'mrt-row-actions': {
+              muiTableHeadCellProps: {
+                align: 'center'
+              },
+              size: 120
+            }
+          }}
+          columns={columns}
+          data={tableData}
+          editingMode='modal' //default
+          enableColumnOrdering
+          enableEditing={canManageCertificateTypes}
+          enableRowActions={canManageCertificateTypes}
+          enablePinning
+          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          onEditingRowSave={handleSaveRowEdits}
+          onEditingRowCancel={handleCancelRowEdits}
+          renderRowActions={({ row, table }) => (
+            <Box sx={{ display: 'flex', gap: '1rem' }}>
+              <Tooltip arrow placement='left' title='Edit'>
+                <IconButton
+                  color='primary'
+                  onClick={() => table.setEditingRow(row)}
+                >
+                  <Edit />
+                </IconButton>
+              </Tooltip>
+              <Tooltip arrow placement='right' title='Delete'>
+                <IconButton color='error' onClick={() => handleDeleteRow(row)}>
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+        />
       </Paper>
       <CreateNewAccountModal
         columns={columns}

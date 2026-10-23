@@ -1,20 +1,18 @@
 import { useEffect, useState } from 'react'
 import {
-  Alert,
   Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControlLabel,
-  Grid,
-  Stack,
   Switch,
   TextField,
   Typography
 } from '@mui/material'
-import { CalibrationServiceCustomer, CalibrationServiceCustomerSite } from '../../types/calibrationService'
+import FormDialog, {
+  FormDialogSection
+} from '../../Components/Common/FormDialog'
+import {
+  CalibrationServiceCustomer,
+  CalibrationServiceCustomerSite
+} from '../../types/calibrationService'
 
 export interface CalibrationServiceCustomerDialogValues {
   customer: {
@@ -40,6 +38,8 @@ interface CalibrationServiceCustomerDialogProps {
   onClose: () => void
   onSubmit: (values: CalibrationServiceCustomerDialogValues) => void
 }
+
+const FULL_ROW = { gridColumn: { sm: '1 / -1' } }
 
 const emptyValues: CalibrationServiceCustomerDialogValues = {
   customer: {
@@ -76,7 +76,8 @@ const CalibrationServiceCustomerDialog = ({
   onClose,
   onSubmit
 }: CalibrationServiceCustomerDialogProps) => {
-  const [values, setValues] = useState<CalibrationServiceCustomerDialogValues>(emptyValues)
+  const [values, setValues] =
+    useState<CalibrationServiceCustomerDialogValues>(emptyValues)
 
   useEffect(() => {
     if (!open) return
@@ -146,7 +147,10 @@ const CalibrationServiceCustomerDialog = ({
     }))
   }
 
-  const setSiteField = (field: keyof CalibrationServiceCustomerSite, value: string) => {
+  const setSiteField = (
+    field: keyof CalibrationServiceCustomerSite,
+    value: string
+  ) => {
     setValues((previous) => ({
       ...previous,
       site: {
@@ -171,192 +175,155 @@ const CalibrationServiceCustomerDialog = ({
         ? 'Editar sede del cliente'
         : 'Crear sede del cliente'
 
+  const siteSection = (
+    <FormDialogSection title='Sede'>
+      <TextField
+        required
+        label='Nombre de la sede'
+        value={values.site.name}
+        onChange={(event) => setSiteField('name', event.target.value)}
+      />
+      <TextField
+        label='Contacto de la sede'
+        value={values.site.contactName || ''}
+        onChange={(event) => setSiteField('contactName', event.target.value)}
+      />
+      <TextField
+        type='email'
+        label='Email del contacto'
+        value={values.site.contactEmail || ''}
+        onChange={(event) => setSiteField('contactEmail', event.target.value)}
+      />
+      <TextField
+        label='Teléfono del contacto'
+        value={values.site.contactPhone || ''}
+        onChange={(event) => setSiteField('contactPhone', event.target.value)}
+      />
+      <TextField
+        label='Dirección'
+        sx={FULL_ROW}
+        value={values.site.address || ''}
+        onChange={(event) => setSiteField('address', event.target.value)}
+      />
+      <TextField
+        label='Ciudad'
+        value={values.site.city || ''}
+        onChange={(event) => setSiteField('city', event.target.value)}
+      />
+      <TextField
+        label='Departamento'
+        value={values.site.department || ''}
+        onChange={(event) => setSiteField('department', event.target.value)}
+      />
+      <TextField
+        label='País'
+        value={values.site.country || ''}
+        onChange={(event) => setSiteField('country', event.target.value)}
+      />
+      <TextField
+        multiline
+        minRows={2}
+        label='Notas de la sede'
+        sx={FULL_ROW}
+        value={values.site.notes || ''}
+        onChange={(event) => setSiteField('notes', event.target.value)}
+      />
+    </FormDialogSection>
+  )
+
+  const isIncomplete =
+    (mode === 'customer' && !values.customer.nombre.trim()) ||
+    (!isEdit && !values.site.name.trim())
+
   return (
-    <Dialog open={open} onClose={isSubmitting ? undefined : onClose} maxWidth='md' fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={3}>
-          <Alert severity='info'>
-            Estos datos alimentan la cotización y la ODS. Si después se necesita emitir
-            certificados, el módulo de certificados podrá tomar esta información como base.
-          </Alert>
-
-          {mode === 'customer' ? (
-            <Box>
-              <Typography variant='subtitle1' fontWeight={800} mb={2}>
-                Datos de la empresa
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={7}>
-                  <TextField
-                    fullWidth
-                    required
-                    label='Nombre / razón social'
-                    value={values.customer.nombre}
-                    onChange={(event) => setCustomerField('nombre', event.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={5}>
-                  <TextField
-                    fullWidth
-                    label='NIT / identificación'
-                    value={values.customer.identificacion}
-                    onChange={(event) => setCustomerField('identificacion', event.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    type='email'
-                    label='Email principal'
-                    value={values.customer.email}
-                    onChange={(event) => setCustomerField('email', event.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label='Teléfono principal'
-                    value={values.customer.telefono}
-                    onChange={(event) => setCustomerField('telefono', event.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={values.customer.certificateProfileEnabled}
-                        onChange={(event) =>
-                          setValues((previous) => ({
-                            ...previous,
-                            customer: {
-                              ...previous.customer,
-                              certificateProfileEnabled: event.target.checked
-                            }
-                          }))
-                        }
-                      />
+    <FormDialog
+      open={open}
+      onClose={isSubmitting ? () => undefined : onClose}
+      title={title}
+      subtitle={
+        mode === 'site'
+          ? customer?.nombre || 'Cliente seleccionado'
+          : 'Estos datos alimentan la cotización y la ODS'
+      }
+      submitLabel={
+        mode === 'customer'
+          ? isEdit
+            ? 'Guardar cambios'
+            : 'Crear cliente'
+          : site?.id
+            ? 'Guardar sede'
+            : 'Crear sede'
+      }
+      onSubmit={handleSubmit}
+      loading={isSubmitting}
+      submitDisabled={isIncomplete}
+      maxWidth='md'
+    >
+      {mode === 'customer' ? (
+        <FormDialogSection title='Datos de la empresa'>
+          <TextField
+            required
+            label='Nombre / razón social'
+            value={values.customer.nombre}
+            onChange={(event) => setCustomerField('nombre', event.target.value)}
+          />
+          <TextField
+            label='NIT / identificación'
+            value={values.customer.identificacion}
+            onChange={(event) =>
+              setCustomerField('identificacion', event.target.value)
+            }
+          />
+          <TextField
+            type='email'
+            label='Email principal'
+            value={values.customer.email}
+            onChange={(event) => setCustomerField('email', event.target.value)}
+          />
+          <TextField
+            label='Teléfono principal'
+            value={values.customer.telefono}
+            onChange={(event) =>
+              setCustomerField('telefono', event.target.value)
+            }
+          />
+          <Box sx={FULL_ROW}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={values.customer.certificateProfileEnabled}
+                  onChange={(event) =>
+                    setValues((previous) => ({
+                      ...previous,
+                      customer: {
+                        ...previous.customer,
+                        certificateProfileEnabled: event.target.checked
+                      }
+                    }))
+                  }
+                  sx={{
+                    '& .Mui-checked': { color: '#00BFA5' },
+                    '& .Mui-checked + .MuiSwitch-track': {
+                      bgcolor: '#00BFA5'
                     }
-                    label='También visible en clientes para certificados'
-                  />
-                  <Typography variant='caption' color='text.secondary' display='block'>
-                    Déjalo apagado si el cliente solo se usará para cotización, ODS y operación
-                    de calibración.
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Box>
-          ) : (
-            <Alert severity='success'>
-              {site?.id ? 'Editando sede de' : 'Nueva sede para'}{' '}
-              <strong>{customer?.nombre || 'cliente seleccionado'}</strong>.
-            </Alert>
-          )}
-
-          {isEdit ? null : (
-          <Box>
-            <Typography variant='subtitle1' fontWeight={800} mb={2}>
-              Sede
+                  }}
+                />
+              }
+              label='También visible en clientes para certificados'
+            />
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              display='block'
+            >
+              Déjalo apagado si el cliente solo se usará para cotización, ODS y
+              operación de calibración.
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Nombre de la sede'
-                  value={values.site.name}
-                  onChange={(event) => setSiteField('name', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Contacto de la sede'
-                  value={values.site.contactName || ''}
-                  onChange={(event) => setSiteField('contactName', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  type='email'
-                  label='Email contacto sede'
-                  value={values.site.contactEmail || ''}
-                  onChange={(event) => setSiteField('contactEmail', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Teléfono contacto sede'
-                  value={values.site.contactPhone || ''}
-                  onChange={(event) => setSiteField('contactPhone', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label='Dirección sede'
-                  value={values.site.address || ''}
-                  onChange={(event) => setSiteField('address', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='Ciudad'
-                  value={values.site.city || ''}
-                  onChange={(event) => setSiteField('city', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='Departamento'
-                  value={values.site.department || ''}
-                  onChange={(event) => setSiteField('department', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='País'
-                  value={values.site.country || ''}
-                  onChange={(event) => setSiteField('country', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  label='Notas de sede'
-                  value={values.site.notes || ''}
-                  onChange={(event) => setSiteField('notes', event.target.value)}
-                />
-              </Grid>
-            </Grid>
           </Box>
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isSubmitting}>
-          Cancelar
-        </Button>
-        <Button variant='contained' onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting
-            ? 'Guardando...'
-            : mode === 'customer'
-              ? isEdit
-                ? 'Guardar cambios'
-                : 'Crear cliente'
-              : site?.id
-                ? 'Guardar sede'
-                : 'Crear sede'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        </FormDialogSection>
+      ) : null}
+      {isEdit ? null : siteSection}
+    </FormDialog>
   )
 }
 

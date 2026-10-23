@@ -1,21 +1,13 @@
 // src/components/Admin/PersonnelFormModal.tsx
-import React, { useState, useEffect, FormEvent } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid,
-  CircularProgress,
-  Box,
-  IconButton,
   Alert,
+  FormControlLabel,
+  Stack,
   Switch,
-  FormControlLabel
+  TextField
 } from '@mui/material'
-import { Save, Cancel, Close as CloseIcon } from '@mui/icons-material'
+import FormDialog from '../../Components/Common/FormDialog'
 import { Personnel } from './PersonnelManagementPage' // Asumiendo que el tipo está en la página
 
 interface PersonnelFormModalProps {
@@ -73,8 +65,7 @@ const PersonnelFormModal: React.FC<PersonnelFormModalProps> = ({
     }))
   }
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = () => {
     if (!formData.name.trim() || !formData.position.trim()) {
       setFormError('El nombre y el cargo son obligatorios.')
       return
@@ -87,104 +78,56 @@ const PersonnelFormModal: React.FC<PersonnelFormModalProps> = ({
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
-      onClose={onClose}
-      maxWidth='sm'
-      fullWidth
-      PaperProps={{ component: 'form', onSubmit: handleSubmit }}
+      onClose={isLoading ? () => undefined : onClose}
+      title={
+        existingPersonnel ? 'Editar persona o cargo' : 'Agregar persona o cargo'
+      }
+      subtitle={existingPersonnel?.name}
+      submitLabel={existingPersonnel ? 'Guardar cambios' : 'Agregar'}
+      onSubmit={handleSubmit}
+      loading={isLoading}
+      submitDisabled={!formData.name.trim() || !formData.position.trim()}
     >
-      <DialogTitle
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
-      >
-        {existingPersonnel ? 'Editar Persona/Cargo' : 'Agregar Persona/Cargo'}
-        <IconButton aria-label='close' onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ mt: 1 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                autoFocus
-                margin='dense'
-                name='name'
-                label='Nombre Completo *'
-                fullWidth
-                required
-                value={formData.name}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                margin='dense'
-                name='position'
-                label='Cargo *'
-                fullWidth
-                required
-                value={formData.position}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.isActive}
-                    onChange={handleChange}
-                    name='isActive'
-                  />
-                }
-                label='Activo'
-                disabled={isLoading}
-              />
-            </Grid>
-          </Grid>
-          {formError && (
-            <Alert severity='error' sx={{ mt: 2 }}>
-              {formError}
-            </Alert>
-          )}
-        </Box>
-      </DialogContent>
-      <DialogActions sx={{ p: '16px 24px' }}>
-        <Button
-          onClick={onClose}
-          startIcon={<Cancel />}
-          color='inherit'
+      <Stack spacing={2}>
+        <TextField
+          autoFocus
+          name='name'
+          label='Nombre completo'
+          fullWidth
+          required
+          value={formData.name}
+          onChange={handleChange}
           disabled={isLoading}
-        >
-          Cancelar
-        </Button>
-        <Button
-          type='submit'
-          variant='contained'
-          startIcon={
-            isLoading ? (
-              <CircularProgress size={20} color='inherit' />
-            ) : (
-              <Save />
-            )
+        />
+        <TextField
+          name='position'
+          label='Cargo'
+          fullWidth
+          required
+          value={formData.position}
+          onChange={handleChange}
+          disabled={isLoading}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.isActive}
+              onChange={handleChange}
+              name='isActive'
+              sx={{
+                '& .Mui-checked': { color: '#00BFA5' },
+                '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#00BFA5' }
+              }}
+            />
           }
-          disabled={isLoading || !formData.name || !formData.position}
-        >
-          {isLoading
-            ? 'Guardando...'
-            : existingPersonnel
-              ? 'Guardar Cambios'
-              : 'Agregar'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          label='Activo'
+          disabled={isLoading}
+        />
+        {formError && <Alert severity='error'>{formError}</Alert>}
+      </Stack>
+    </FormDialog>
   )
 }
 export default PersonnelFormModal
