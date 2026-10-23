@@ -38,8 +38,10 @@ import {
 } from 'src/hooks/useServerTable'
 import { NonConformWorkReport } from './NonConformWorkReport.types'
 import { format } from 'date-fns'
-import Swal from 'sweetalert2'
 import { NonConformWorkReportAlert } from './NonConformWorkReport.types'
+import { notify } from 'src/utils/notify'
+import { notify as appNotify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 // Traducciones y mapeos
 const impactMap: Record<string, string> = {
@@ -169,24 +171,13 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   }
 
   const handleDelete = async (id: number) => {
-    const result = await Swal.fire({
-      title: '¿Está seguro de eliminar este reporte?',
-      text: 'Esta acción no se puede deshacer.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    })
+    const result = await confirmDialog({ title: '¿Está seguro de eliminar este reporte?', text: 'Esta acción no se puede deshacer.', confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
     if (!result.isConfirmed) return
     try {
       await deleteReport.mutateAsync(id)
-      await Swal.fire({
-        icon: 'success',
-        title: '¡Eliminado!',
-        text: 'El reporte fue eliminado correctamente.'
-      })
+      await appNotify.success('¡Eliminado!', 'El reporte fue eliminado correctamente.')
     } catch (err) {
-      alert('Error al eliminar el reporte')
+      notify.error('Error al eliminar el reporte')
     }
   }
 

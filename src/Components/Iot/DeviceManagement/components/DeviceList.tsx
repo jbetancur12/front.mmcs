@@ -11,9 +11,10 @@ import AddDeviceModal from './AddDeviceModal'
 import { loadDevices } from 'src/store/deviceIotStore'
 import { DeviceIot } from '../../types'
 import { useDeleteDevice } from '../hooks/useDeviceMutations'
-import Swal from 'sweetalert2'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 const DeviceList = () => {
   const { data: devices } = useDevices()
@@ -35,23 +36,11 @@ const DeviceList = () => {
   }
 
   const handleDelete = (device: DeviceIot) => {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: '¡No podrás revertir esta acción!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar!'
-    }).then((result) => {
+    confirmDialog({ title: '¿Estás seguro?', text: '¡No podrás revertir esta acción!', confirmLabel: 'Sí, eliminar!', tone: 'danger' }).then((result) => {
       if (result.isConfirmed) {
         deleteDevice.mutate(device.id, {
           onSuccess: () => {
-            Swal.fire(
-              'Eliminado!',
-              'El dispositivo ha sido eliminado.',
-              'success'
-            )
+            notify.success('Eliminado!', 'El dispositivo ha sido eliminado.')
           }
         })
       }

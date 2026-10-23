@@ -1,4 +1,4 @@
-import { bigToast } from '../../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 import { useDataSheetMutations, useDownloadInvoice } from './useDataSheets'
 import { downloadBlob } from './utils'
@@ -24,7 +24,7 @@ export const useDataSheetActions = () => {
       const response = await updateDataSheet.mutateAsync({ id, values })
 
       if (response.status === 200) {
-        bigToast('Hoja de Datos Modificada Exitosamente!', 'success')
+        notify.success('Hoja de Datos Modificada Exitosamente!')
       } else {
         console.error('Error al modificar la hoja de datos')
       }
@@ -38,14 +38,14 @@ export const useDataSheetActions = () => {
       const response = await deleteDataSheet.mutateAsync(id)
 
       if (response.status === 204) {
-        bigToast('Hoja de Datos Eliminada Exitosamente!', 'success')
+        notify.success('Hoja de Datos Eliminada Exitosamente!')
       } else {
         console.error('Error al eliminar la hoja de datos')
-        bigToast('Error al eliminar la hoja de datos', 'error')
+        notify.error('Error al eliminar la hoja de datos')
       }
     } catch (error) {
       console.error('Error de red:', error)
-      bigToast('Error al eliminar la hoja de datos', 'error')
+      notify.error('Error al eliminar la hoja de datos')
     }
   }
 
@@ -63,13 +63,13 @@ export const useDataSheetActions = () => {
       const response = await uploadImage.mutateAsync({ id, image })
 
       if (response.status >= 200 && response.status < 300) {
-        bigToast('Foto subida correctamente', 'success')
+        notify.success('Foto subida correctamente')
       } else {
-        bigToast('Error al subir la foto', 'error')
+        notify.error('Error al subir la foto')
       }
     } catch (error) {
       console.error('Error al subir la foto:', error)
-      bigToast('Error al subir la foto', 'error')
+      notify.error('Error al subir la foto')
     }
   }
 
@@ -78,10 +78,10 @@ export const useDataSheetActions = () => {
       const response = await uploadInvoice.mutateAsync({ id, pdfFile })
 
       if (response.status === 200) {
-        bigToast('PDF subido exitosamente', 'success')
+        notify.success('PDF subido exitosamente')
       }
     } catch (error) {
-      bigToast('Error subiendo PDF', 'error')
+      notify.error('Error subiendo PDF')
     }
   }
 
@@ -90,7 +90,7 @@ export const useDataSheetActions = () => {
       const response = await downloadInvoice(id)
       downloadBlob(response.data, `factura-${id}.pdf`)
     } catch (error) {
-      bigToast('Error descargando la factura', 'error')
+      notify.error('Error descargando la factura')
     }
   }
 

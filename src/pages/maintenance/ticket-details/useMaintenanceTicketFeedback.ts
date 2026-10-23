@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { notify } from 'src/utils/notify'
 
-/** Aviso flotante (toast) y diálogo de confirmación del detalle del ticket. */
+/** Avisos (notify) y diálogo de confirmación del detalle del ticket. */
 const useMaintenanceTicketFeedback = () => {
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
@@ -10,16 +11,12 @@ const useMaintenanceTicketFeedback = () => {
     severity?: 'warning' | 'error' | 'info'
   }>({ open: false, title: '', message: '', onConfirm: () => {} })
 
-  const [toast, setToast] = useState<{
-    open: boolean
-    message: string
-    severity: 'success' | 'error' | 'warning' | 'info'
-  }>({ open: false, message: '', severity: 'info' })
+  // Los avisos los muestra el AppToaster global (notify); aquí solo se conserva la firma de showToast
   const showToast = (
     message: string,
     severity: 'success' | 'error' | 'warning' | 'info'
   ) => {
-    setToast({ open: true, message, severity })
+    notify[severity](message)
   }
 
   // Confirmation dialog helper
@@ -42,19 +39,12 @@ const useMaintenanceTicketFeedback = () => {
     })
   }
 
-  const closeToast = () => {
-    setToast({ open: false, message: '', severity: 'info' })
-  }
-
   return {
     showToast,
     showConfirmDialog,
     closeConfirmDialog,
-    closeToast,
     confirmDialog,
-    setConfirmDialog,
-    toast,
-    setToast
+    setConfirmDialog
   }
 }
 

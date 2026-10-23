@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import React, { useMemo, useState } from 'react'
 
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import Loader from './Loader2'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import {
@@ -190,7 +190,6 @@ const Repository = () => {
 
   return (
     <>
-      <Toaster />
       <Loader loading={loading} />
       <MaterialReactTable
         columns={columns}

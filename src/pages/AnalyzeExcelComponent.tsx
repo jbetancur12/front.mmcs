@@ -17,7 +17,7 @@ import { Add, CloudUpload, Warning } from '@mui/icons-material'
 import ModalCustomer from '../Components/ModalCustomer'
 import { AnalyzeExcelComponentProps } from '../Components/ExcelManipulation/Types'
 import { ResourceOption } from '../utils/loadOptions'
-import { bigToast, styles } from '../Components/ExcelManipulation/Utils'
+import { styles } from '../Components/ExcelManipulation/Utils'
 import ModalDevice from '../Components/ModalDevice'
 import { VisuallyHiddenInput } from '../Components/TableFiles'
 import Loader from '../Components/Loader2'
@@ -25,6 +25,7 @@ import { addMonths, set } from 'date-fns'
 import Select from 'react-select'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useUploadRawCertificate } from '@hooks/calibration/useUploadRawCertificate'
+import { notify } from 'src/utils/notify'
 
 // Importa los componentes de MUI
 
@@ -156,7 +157,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
     if (!workbook) {
       setLoading(false)
-      bigToast('Contraseña incorrecta', 'error')
+      notify.error('Contraseña incorrecta')
       throw new Error('Failed to open file with any password')
     }
 
@@ -194,10 +195,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         sheetName = 'CC'
       }
       if (!sheet) {
-        bigToast(
-          'El archivo no contiene una hoja llamada CERTIFICADO o CC',
-          'error'
-        )
+        notify.error('El archivo no contiene una hoja llamada CERTIFICADO o CC')
         throw new Error(
           'The workbook does not contain a sheet named CERTIFICADO or CC'
         )
@@ -308,7 +306,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       event.target.value = ''
     } else {
       setLoading(false)
-      bigToast('No se ha seleccionado un archivo', 'error')
+      notify.error('No se ha seleccionado un archivo')
     }
   }
 
@@ -497,7 +495,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         removeSelectedFile()
         resetForm()
 
-        bigToast('Datos enviados correctamente', 'success')
+        notify.success('Datos enviados correctamente')
       }
     } catch (error: any) {
       if (error.response.status === 409) {
@@ -554,9 +552,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             //   "success"
             // );
 
-            bigToast(
-              obj.value === 'create' ? 'Archivo Creado' : 'Archivo Actualizado',
-              'success'
+            notify.success(
+              obj.value === 'create' ? 'Archivo Creado' : 'Archivo Actualizado'
             )
           }
         })

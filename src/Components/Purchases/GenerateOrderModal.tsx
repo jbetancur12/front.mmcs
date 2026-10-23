@@ -25,7 +25,6 @@ import {
 } from '@mui/material'
 import { Close, DeleteOutline } from '@mui/icons-material'
 import { PURCHASE_TEAL, PURCHASE_TEAL_HOVER } from './purchaseTableStyle'
-import Swal from 'sweetalert2'
 import {
   useCreatePurchaseOrder,
   useFiscalSettings
@@ -37,6 +36,7 @@ import {
   PurchaseOrder
 } from 'src/pages/Purchases/Types' // Asegúrate que estas rutas sean correctas
 import { NumericFormat } from 'react-number-format'
+import { notify } from 'src/utils/notify'
 
 interface AssignedItem {
   purchaseRequestItemId: string
@@ -99,31 +99,19 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
 
   const handleSubmitOrder = async () => {
     if (!selectedSupplier) {
-      Swal.fire('Advertencia', 'Por favor, seleccione un proveedor.', 'warning')
+      notify.warning('Advertencia', 'Por favor, seleccione un proveedor.')
       return
     }
     if (assignedItems.length === 0) {
-      Swal.fire(
-        'Advertencia',
-        'No hay ítems asignados para este proveedor.',
-        'warning'
-      )
+      notify.warning('Advertencia', 'No hay ítems asignados para este proveedor.')
       return
     }
     if (isLoadingFiscalSettings) {
-      Swal.fire(
-        'Info',
-        'Cargando configuración fiscal, por favor espere.',
-        'info'
-      )
+      notify.info('Info', 'Cargando configuración fiscal, por favor espere.')
       return
     }
     if (fiscalSettingsError || !fiscalSettings) {
-      Swal.fire(
-        'Error',
-        'No se pudo cargar la configuración fiscal necesaria.',
-        'error'
-      )
+      notify.error('Error', 'No se pudo cargar la configuración fiscal necesaria.')
       return
     }
 
@@ -157,7 +145,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
 
     try {
       await createOrder.mutateAsync(payload)
-      Swal.fire('Éxito', 'La orden de compra ha sido generada.', 'success')
+      notify.success('Éxito', 'La orden de compra ha sido generada.')
       const processedIds = assignedItems.map(
         (item) => item.purchaseRequestItemId
       )
@@ -168,7 +156,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
       onClose()
     } catch (error) {
       console.error('Error generating purchase order:', error)
-      Swal.fire('Error', 'No se pudo generar la orden de compra.', 'error')
+      notify.error('Error', 'No se pudo generar la orden de compra.')
     }
   }
 

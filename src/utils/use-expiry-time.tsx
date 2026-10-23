@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie'
 import { useEffect } from 'react'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 interface UseSessionTimeoutWarningProps {
   warningMsBefore?: number
@@ -34,10 +34,8 @@ const useSessionTimeoutWarning = ({
       )
 
       sessionStorage.setItem('session-expiry-warning-for', warningKey)
-      Toast.fire(
-        `Tu sesión expirará en aproximadamente ${secondsLeft} segundos. Guarda tu trabajo o renueva la sesión.`,
-        '',
-        'warning'
+      notify.warning(
+        `Tu sesión expirará en aproximadamente ${secondsLeft} segundos. Guarda tu trabajo o renueva la sesión.`
       )
     }, warningTime)
 

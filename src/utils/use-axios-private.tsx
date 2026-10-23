@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { axiosPrivate } from './api'
 import useRefreshToken from './use-refresh-token'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from './notify'
 import {
   clearLocalSession,
   getSessionRevokedReason,
@@ -78,9 +78,9 @@ const useAxiosPrivate = () => {
     clearLocalSession()
     if (revokedReason) {
       rememberSessionEnded(revokedReason)
-      Toast.fire('Tu sesión se cerró', '', 'info')
+      notify.info('Tu sesión se cerró')
     } else {
-      Toast.fire('Sesión expirada', '', 'error')
+      notify.error('Sesión expirada')
     }
     navigate('/login', { replace: true })
   }

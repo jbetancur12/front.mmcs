@@ -5,8 +5,8 @@ import { ConfigButton } from '../parts/ConfigButton'
 import { SensorType } from '../types'
 import { ArrowBack } from '@mui/icons-material'
 import ModuleConfigForm from 'src/Components/Iot/ModuleConfigForm'
+import { notify } from 'src/utils/notify'
 
-import Swal from 'sweetalert2'
 
 interface ConfigTabProps {
   selectedSensorType: SensorType | null
@@ -34,27 +34,12 @@ export const ConfigTab = ({
     try {
       await onConfigUpdated()
       onResetSelection()
-      Swal.fire({
-        title: '¡Configuración actualizada!',
-        text: 'Los cambios se han aplicado correctamente',
-        icon: 'success',
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true,
-        didOpen: () => {
-          Swal.showLoading()
-        }
-      })
+      notify.success('¡Configuración actualizada!', 'Los cambios se han aplicado correctamente')
     } catch (error) {
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo actualizar la configuración',
-        icon: 'error',
-        confirmButtonText: 'Reintentar',
-        willClose: () => {
-          onResetSelection()
-        }
-      })
+      {
+        notify.error('No se pudo actualizar la configuración')
+        onResetSelection()
+      }
     }
   }
   return (

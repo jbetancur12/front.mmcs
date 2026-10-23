@@ -22,7 +22,7 @@ import {
   Straighten,
   Visibility
 } from '@mui/icons-material'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   useDataSheet,
   useDeleteDataSheetRecord
@@ -136,10 +136,7 @@ const InspectionMaintenance: React.FC = () => {
 
   const handleView = (row: InspectionHistoryData) => {
     if (row.activity === CALIBRATION) {
-      bigToast(
-        'Buscar certificado de calibración en las trazabilidades',
-        'success'
-      )
+      notify.success('Buscar certificado de calibración en las trazabilidades')
       return
     }
     navigate(`${row.id}`)
@@ -167,12 +164,12 @@ const InspectionMaintenance: React.FC = () => {
     try {
       const response = await deleteRecordMutation.mutateAsync(endpoint)
       if (response.status === 204 || response.status === 200) {
-        bigToast(`${row.activity} eliminada correctamente`, 'success')
+        notify.success(`${row.activity} eliminada correctamente`)
       } else {
-        bigToast('Error al eliminar', 'error')
+        notify.error('Error al eliminar')
       }
     } catch (error) {
-      bigToast('Error al eliminar', 'error')
+      notify.error('Error al eliminar')
     } finally {
       setRecordToDelete(null)
     }

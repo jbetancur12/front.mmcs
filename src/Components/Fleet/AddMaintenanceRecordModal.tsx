@@ -13,7 +13,7 @@ import {
 import { InterventionType, MaintenanceRecord, Reminder } from './types'
 
 import { addMonths } from 'date-fns'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { AxiosError, isAxiosError } from 'axios'
 import { useCreateMaintenanceRecord } from '@hooks/fleet/useFleetQueries'
 
@@ -97,26 +97,18 @@ const AddMaintenanceRecordModal: React.FC<AddMaintenanceRecordModalProps> = ({
         // Use isAxiosError to check if the error is an Axios error
         const axiosError = error as AxiosError
         if (axiosError.response) {
-          bigToast(
-            `Error al descargar el archivo: ${axiosError.response.statusText}`,
-            'error'
+          notify.error(
+            `Error al descargar el archivo: ${axiosError.response.statusText}`
           )
         } else {
-          bigToast(
-            `Error al descargar el archivo: ${axiosError.message}`,
-            'error'
-          )
+          notify.error(`Error al descargar el archivo: ${axiosError.message}`)
         }
       } else if (error instanceof Error) {
-        bigToast(
-          `Error desconocido al descargar el archivo: ${error.message}`,
-          'error'
+        notify.error(
+          `Error desconocido al descargar el archivo: ${error.message}`
         )
       } else {
-        bigToast(
-          'Ocurrió un error desconocido al descargar el archivo.',
-          'error'
-        )
+        notify.error('Ocurrió un error desconocido al descargar el archivo.')
       }
     }
   }

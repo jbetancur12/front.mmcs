@@ -35,10 +35,10 @@ import PercentOutlinedIcon from '@mui/icons-material/PercentOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import React, { useEffect, useMemo, useState } from 'react'
 import { NumericFormatCustom } from './NumericFormatCustom'
-import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useProductMutations, useProducts } from 'src/hooks/purchases/useProducts'
-import Swal from 'sweetalert2'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 export interface ProductVariant {
   id: number
@@ -123,7 +123,7 @@ const EMPTY_PRODUCTS: ProductData[] = []
 const TableProducts: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const { data: tableData = EMPTY_PRODUCTS } = useProducts<ProductData>({
-    onError: () => bigToast('No se pudo cargar el catálogo.', 'error')
+    onError: () => notify.error('No se pudo cargar el catálogo.')
   })
   const {
     createProduct,
@@ -170,24 +170,22 @@ const TableProducts: React.FC = () => {
     setConfirmationDialogOpen(false)
     const parsedPercentage = parseFloat(percentage)
     if (Number.isNaN(parsedPercentage)) {
-      bigToast('Porcentaje inválido', 'error')
+      notify.error('Porcentaje inválido')
       return
     }
     try {
       // La mutación recarga el catálogo antes de resolver
       const response = await updatePrices.mutateAsync(parsedPercentage)
       if (response.status === 200) {
-        bigToast('Precios actualizados exitosamente.', 'success')
-      } else bigToast('Error al actualizar los precios.', 'error')
+        notify.success('Precios actualizados exitosamente.')
+      } else notify.error('Error al actualizar los precios.')
     } catch {
-      bigToast('Error al actualizar los precios.', 'error')
+      notify.error('Error al actualizar los precios.')
     }
   }
 
   const handleDeleteProduct = async (product: ProductData) => {
-    const result = await Swal.fire({
-      title: '¿Eliminar producto?',
-      html: `
+    const result = await confirmDialog({ title: '¿Eliminar producto?', html: `
         <div style="text-align: left;">
           <p><strong>Producto:</strong> ${product.name}</p>
           <p style="color: #6b7280; font-size: 0.9rem; margin-top: 12px;">
@@ -197,22 +195,13 @@ const TableProducts: React.FC = () => {
           </p>
           <p style="color: #dc2626; font-size: 0.85rem;"><strong>Esta acción no se puede deshacer.</strong></p>
         </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#9ca3af',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusCancel: true
-    })
+      `, confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
     if (!result.isConfirmed) return
     try {
       await deleteProduct.mutateAsync(product.id)
-      bigToast('Producto eliminado.', 'success')
+      notify.success('Producto eliminado.')
     } catch {
-      bigToast('Error al eliminar el producto.', 'error')
+      notify.error('Error al eliminar el producto.')
     }
   }
 
@@ -230,7 +219,7 @@ const TableProducts: React.FC = () => {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
     } catch {
-      bigToast('Error al descargar la plantilla.', 'error')
+      notify.error('Error al descargar la plantilla.')
     }
   }
 
@@ -239,21 +228,20 @@ const TableProducts: React.FC = () => {
 
   const handleImportProducts = async () => {
     if (!importFile) {
-      bigToast('Selecciona un archivo Excel.', 'warning')
+      notify.warning('Selecciona un archivo Excel.')
       return
     }
     setIsImporting(true)
     try {
       const response = await importProducts.mutateAsync(importFile)
       const result = response.data
-      bigToast(
-        `Importación completada: ${result.created} creados, ${result.updated} actualizados${result.errors?.length ? `, ${result.errors.length} errores.` : '.'}`,
-        result.errors?.length ? 'warning' : 'success'
-      )
+      const importSummary = `Importación completada: ${result.created} creados, ${result.updated} actualizados${result.errors?.length ? `, ${result.errors.length} errores.` : '.'}`
+      if (result.errors?.length) notify.warning(importSummary)
+      else notify.success(importSummary)
       setImportDialogOpen(false)
       setImportFile(null)
     } catch {
-      bigToast('Error al importar productos.', 'error')
+      notify.error('Error al importar productos.')
     } finally {
       setIsImporting(false)
     }
@@ -271,10 +259,10 @@ const TableProducts: React.FC = () => {
         variants
       })
       if (response.status === 201) {
-        bigToast('Producto creado.', 'success')
-      } else bigToast('No se pudo crear el registro.', 'error')
+        notify.success('Producto creado.')
+      } else notify.error('No se pudo crear el registro.')
     } catch {
-      bigToast('No se pudo crear el registro.', 'error')
+      notify.error('No se pudo crear el registro.')
     }
   }
 
@@ -292,10 +280,10 @@ const TableProducts: React.FC = () => {
         variants
       })
       if (response.status === 200) {
-        bigToast('Producto actualizado.', 'success')
-      } else bigToast('No se pudo actualizar.', 'error')
+        notify.success('Producto actualizado.')
+      } else notify.error('No se pudo actualizar.')
     } catch {
-      bigToast('No se pudo actualizar.', 'error')
+      notify.error('No se pudo actualizar.')
     }
   }
 
@@ -658,7 +646,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   const addVariant = () => {
     if (variants.some((v) => v.serviceType === newVariantType)) {
-      bigToast(`Ya existe una variante "${newVariantType}".`, 'warning')
+      notify.warning(`Ya existe una variante "${newVariantType}".`)
       return
     }
     setVariants((prev) => [
@@ -681,11 +669,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      bigToast('El nombre del producto es obligatorio.', 'warning')
+      notify.warning('El nombre del producto es obligatorio.')
       return
     }
     if (variants.length === 0) {
-      bigToast('Debe agregar al menos una variante de precio.', 'warning')
+      notify.warning('Debe agregar al menos una variante de precio.')
       return
     }
     onSubmit(name.trim(), intervalText, variants)

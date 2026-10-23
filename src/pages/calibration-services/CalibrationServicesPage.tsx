@@ -1,7 +1,6 @@
 import { useStore } from '@nanostores/react'
 import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from '@mui/material'
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
-import { Toaster } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { useCalibrationServices } from '../../hooks/useCalibrationServices'
 import { userStore } from '../../store/userStore'
@@ -113,7 +112,6 @@ const CalibrationServicesPage = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster position='top-center' />
 
       <LmsPageHeader
         title='Servicios de calibración'

@@ -15,9 +15,9 @@ import {
 import { Save, Cancel } from '@mui/icons-material'
 import { useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
-import Swal from 'sweetalert2'
 import { isAxiosError } from 'axios' // Importar AxiosResponse
 import { SelectChangeEvent } from '@mui/material/Select'
+import { notify } from 'src/utils/notify'
 
 // Asumiendo que estos tipos están en 'src/pages/Purchases/Types'
 // o en un archivo central de tipos.
@@ -255,13 +255,10 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
     {
       onSuccess: (responseData) => {
         // responseData es SupplierEvaluationData devuelta por el backend
-        Swal.fire({
-          title: 'Éxito',
-          text: `Evaluación ${existingEvaluation ? 'actualizada' : 'guardada'} correctamente.`,
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        notify.success(
+          'Éxito',
+          `Evaluación ${existingEvaluation ? 'actualizada' : 'guardada'} correctamente.`
+        )
         queryClient.invalidateQueries([
           'supplierEvaluations',
           supplier.id.toString()
@@ -280,7 +277,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
         } else if (err instanceof Error) {
           message = err.message
         }
-        Swal.fire('Error', message, 'error')
+        notify.error('Error', message)
       }
     }
   )
@@ -288,10 +285,9 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     if (!validateForm()) {
-      Swal.fire(
+      notify.warning(
         'Atención',
-        'Por favor corrige los errores en el formulario.',
-        'warning'
+        'Por favor corrige los errores en el formulario.'
       )
       return
     }

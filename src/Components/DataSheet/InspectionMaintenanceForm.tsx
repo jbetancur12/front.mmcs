@@ -4,7 +4,7 @@ import { Build, Delete } from '@mui/icons-material'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
 
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import Profile from '../../pages/Profile'
@@ -250,19 +250,18 @@ const InspectionMaintenanceDataForm: React.FC = () => {
           payload: { ...values, name: 'Mantenimiento' }
         })
         if (response.status >= 200 && response.status < 300) {
-          bigToast(
+          notify.success(
             isEdit
               ? 'Mantenimiento actualizado correctamente'
-              : 'Mantenimiento/Inspección enviada correctamente',
-            'success'
+              : 'Mantenimiento/Inspección enviada correctamente'
           )
           resetForm()
           navigate(`/datasheets/${equipoId}/inspection-maintenance`)
         } else {
-          bigToast('Error al enviar mantenimiento/inspección', 'error')
+          notify.error('Error al enviar mantenimiento/inspección')
         }
       } catch (error) {
-        bigToast('Error al enviar mantenimiento/inspección', 'error')
+        notify.error('Error al enviar mantenimiento/inspección')
         console.error('Error al enviar mantenimiento/inspección:', error)
       }
     }
@@ -275,13 +274,13 @@ const InspectionMaintenanceDataForm: React.FC = () => {
         `/inspectionMaintenance/${editId}`
       )
       if (response.status === 204 || response.status === 200) {
-        bigToast('Mantenimiento eliminado correctamente', 'success')
+        notify.success('Mantenimiento eliminado correctamente')
         navigate(-1)
       } else {
-        bigToast('Error al eliminar', 'error')
+        notify.error('Error al eliminar')
       }
     } catch (error) {
-      bigToast('Error al eliminar', 'error')
+      notify.error('Error al eliminar')
     }
     setConfirmDelete(false)
   }

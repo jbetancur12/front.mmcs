@@ -36,8 +36,8 @@ import { Supplier } from 'src/pages/Suppliers/SupplierDetailsPage'
 import SupplierEvaluationForm, {
   SupplierEvaluationData
 } from './SupplierEvaluationForm'
-import Swal from 'sweetalert2'
 import { isAxiosError } from 'axios'
+import { notify } from 'src/utils/notify'
 
 // Interfaz para el objeto de evaluación como se espera de la API (con proveedor anidado)
 interface EvaluationWithSupplier extends SupplierEvaluationData {
@@ -103,10 +103,9 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
         // Opcional: intentar nombrar la pestaña (puede no funcionar en todos los navegadores)
         // setTimeout(() => { try { pdfWindow.document.title = `Evaluacion_${supplierName}_${evaluationDate}`; } catch(e){} }, 500);
       } else {
-        Swal.fire(
+        notify.warning(
           'Error',
-          'El navegador bloqueó la apertura de una nueva pestaña. Revisa la configuración de pop-ups.',
-          'warning'
+          'El navegador bloqueó la apertura de una nueva pestaña. Revisa la configuración de pop-ups.'
         )
       }
       // No necesitas URL.revokeObjectURL(fileURL) inmediatamente si se abre en una nueva pestaña,
@@ -119,7 +118,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
       } else if (err instanceof Error) {
         message = err.message
       }
-      Swal.fire('Error', message, 'error')
+      notify.error('Error', message)
     }
   }
 
@@ -137,19 +136,17 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
     //   Swal.fire("Info", "Por favor, selecciona un proveedor para evaluar.", "info");
     // }
     navigate('/purchases/suppliers') // Navegar a la lista de proveedores para seleccionar uno y luego evaluar
-    Swal.fire(
+    notify.info(
       'Info',
-      "Selecciona un proveedor de la lista y usa la opción 'Evaluar Proveedor' en su página de detalles.",
-      'info'
+      "Selecciona un proveedor de la lista y usa la opción 'Evaluar Proveedor' en su página de detalles."
     )
   }
 
   const handleOpenEditModal = (evaluation: EvaluationWithSupplier) => {
     if (!evaluation.supplier) {
-      Swal.fire(
+      notify.error(
         'Error',
-        'Faltan datos del proveedor en esta evaluación para poder editarla.',
-        'error'
+        'Faltan datos del proveedor en esta evaluación para poder editarla.'
       )
       return
     }

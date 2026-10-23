@@ -42,12 +42,11 @@ import ViewStreamOutlinedIcon from '@mui/icons-material/ViewStreamOutlined'
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import DataTable from 'src/Components/Common/DataTable'
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import ListItemCard from 'src/Components/Common/ListItemCard'
 import StagePipeline from 'src/Components/Common/StagePipeline'
 import StatusPill from 'src/Components/Common/StatusPill'
-import Swal from 'sweetalert2'
 import {
   useEquipmentQuotations,
   useEquipmentSalesMutations,
@@ -71,6 +70,7 @@ import {
 } from './equipmentQuoteTerms'
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
 import { ROLE_GROUPS } from 'src/constants/roles'
+import { confirmDialog } from 'src/utils/confirm'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -185,15 +185,7 @@ const EquipmentSalesPage = () => {
   }
 
   const handleSend = async (quotation: EquipmentQuotation) => {
-    const result = await Swal.fire({
-      icon: 'question',
-      title: `¿Marcar la cotización ${quotation.quoteCode} como enviada al cliente?`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, marcar como enviada',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#3085d6',
-      reverseButtons: true
-    })
+    const result = await confirmDialog({ title: `¿Marcar la cotización ${quotation.quoteCode} como enviada al cliente?`, confirmLabel: 'Sí, marcar como enviada', cancelLabel: 'Cancelar' })
     if (!result.isConfirmed) return
     try {
       await mutations.requestApproval.mutateAsync(quotation.id)
@@ -327,7 +319,6 @@ const EquipmentSalesPage = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster position='top-center' />
 
       <LmsPageHeader
         title='Cotizaciones de venta de equipos'

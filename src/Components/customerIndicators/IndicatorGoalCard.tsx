@@ -3,11 +3,10 @@ import { Box, Button, Card, CardContent, Chip, Typography } from '@mui/material'
 import { Flag } from '@mui/icons-material'
 import { useCan } from '@utils/functions'
 import { getApiErrorMessage } from '@utils/apiError'
-import { MySwal } from '@utils/sweetAlert'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useSaveIndicatorGoal } from 'src/hooks/useCustomerIndicators'
 import { IndicatorGoal } from 'src/types/customerIndicators'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import GoalOverrideDialog from './GoalOverrideDialog'
 import {
   TEAL_TEXT,
@@ -15,6 +14,7 @@ import {
   formatDate,
   emeraldButtonSx
 } from './indicatorFormat'
+import { confirmDialog } from 'src/utils/confirm'
 
 interface Props {
   customerId: number | string
@@ -30,23 +30,18 @@ const IndicatorGoalCard: React.FC<Props> = ({ customerId, year, goal }) => {
   const isManual = goal.mode === 'manual'
 
   const handleBackToAuto = async () => {
-    const result = await MySwal.fire({
+    const result = await confirmDialog({
       title: '¿Volver a la meta automática?',
       text: `Se quitará la meta manual de ${year} y se usará el total de las ODS del año.`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, volver a automática',
-      cancelButtonText: 'Cancelar'
+      confirmLabel: 'Sí, volver a automática',
+      cancelLabel: 'Cancelar'
     })
     if (!result.isConfirmed) return
     try {
       await mutateAsync({ customerId, year, mode: 'auto' })
-      bigToast('Meta automática restablecida', 'success')
+      notify.success('Meta automática restablecida')
     } catch (error) {
-      bigToast(
-        getApiErrorMessage(error, 'No se pudo cambiar la meta.'),
-        'error'
-      )
+      notify.error(getApiErrorMessage(error, 'No se pudo cambiar la meta.'))
     }
   }
 

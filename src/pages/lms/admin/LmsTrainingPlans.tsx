@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react'
-import Swal from 'sweetalert2'
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import {
@@ -34,8 +33,9 @@ import PlanDestinationsDialog from 'src/Components/lms/admin/plans/PlanDestinati
 import { PLAN_TEAL, formatPlanDate, primaryButtonSx } from 'src/Components/lms/admin/plans/planUi'
 import { useDeleteTrainingPlan, useTrainingPlans } from 'src/hooks/useLms'
 import type { TrainingPlanSummary } from 'src/services/lmsService'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { getApiErrorCode, getStructuredApiErrorMessage } from 'src/utils/apiError'
+import { confirmDialog } from 'src/utils/confirm'
 
 type PlanFilter = 'all' | 'assigned' | 'unassigned'
 
@@ -69,32 +69,24 @@ const LmsTrainingPlans: React.FC = () => {
 
   const handleDelete = async (plan: TrainingPlanSummary) => {
     if (plan.included_by_count > 0) {
-      Toast.fire({ icon: 'warning', title: 'Este plan está incluido en otros planes. Quítalo de ellos antes de eliminarlo.' })
+      notify.warning('Este plan está incluido en otros planes. Quítalo de ellos antes de eliminarlo.')
       return
     }
 
     const assigned = plan.assignment_count > 0
-    const confirmation = await Swal.fire({
-      icon: 'warning',
-      title: `¿Eliminar "${plan.name}"?`,
-      html: assigned
+    const confirmation = await confirmDialog({ title: `¿Eliminar "${plan.name}"?`, html: assigned
         ? `El plan está asignado a <b>${plan.assignment_count}</b> destino(s). Se desasignará en todos y luego se eliminará.<br/>Se conservan las asignaciones directas, el progreso y los certificados.`
-        : 'Esta acción no se puede deshacer.',
-      showCancelButton: true,
-      confirmButtonText: assigned ? 'Desasignar y eliminar' : 'Eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#d32f2f'
-    })
+        : 'Esta acción no se puede deshacer.', confirmLabel: assigned ? 'Desasignar y eliminar' : 'Eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
     if (!confirmation.isConfirmed) return
 
     try {
       await deleteMutation.mutateAsync({ id: plan.id, cascade: assigned })
-      Toast.fire({ icon: 'success', title: 'Plan eliminado' })
+      notify.success('Plan eliminado')
     } catch (deleteError) {
       const message = getApiErrorCode(deleteError) === 'PLAN_IS_INCLUDED'
         ? 'Este plan está incluido en otros planes. Quítalo de ellos antes de eliminarlo.'
         : getStructuredApiErrorMessage(deleteError, 'No se pudo eliminar el plan.')
-      Toast.fire({ icon: 'error', title: message })
+      notify.error(message)
     }
   }
 

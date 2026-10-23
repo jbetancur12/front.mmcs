@@ -8,7 +8,7 @@ import {
 } from '@mui/material'
 import React, { useState } from 'react'
 
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import Loader from '../Loader2'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
@@ -258,7 +258,6 @@ const ExcelManipulation: React.FC = () => {
 
   return (
     <Stack spacing={2} marginBottom={10}>
-      <Toaster />
       <Loader loading={loading} />
       <Header
         formData={formData}

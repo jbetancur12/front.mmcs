@@ -34,7 +34,7 @@ import {
   CustomerModulesRow,
   LicensableModule
 } from 'src/types/customerModules'
-import { bigToast } from '../../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 type RowProps = { row: MRT_Row<CustomerModulesRow> }
 
@@ -114,16 +114,13 @@ const CustomerModulesMatrix: React.FC = () => {
       })
       const changed = result.updated + result.created
       const verb = change.isActive ? 'activado' : 'desactivado'
-      bigToast(
-        change.customerIds.length === 1
+      notify.success(change.customerIds.length === 1
           ? `${change.module.label} ${verb}`
           : `${change.module.label} ${verb} en ${changed} cliente${changed === 1 ? '' : 's'}` +
-              (result.unchanged ? ` (${result.unchanged} ya estaban así)` : ''),
-        'success'
-      )
+              (result.unchanged ? ` (${result.unchanged} ya estaban así)` : ''))
       if (change.customerIds.length > 1) setRowSelection({})
     } catch (error) {
-      bigToast(errorMessage(error), 'error')
+      notify.error(errorMessage(error))
     } finally {
       setPending(null)
     }

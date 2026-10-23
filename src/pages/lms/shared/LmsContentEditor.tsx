@@ -23,7 +23,6 @@ import {
   MenuItem,
   Paper,
   Select,
-  Snackbar,
   Stack,
   TextField,
   Typography
@@ -45,6 +44,7 @@ import 'quill/dist/quill.snow.css'
 import './quill-custom.css'
 import LmsQuizManagement from '../admin/LmsQuizManagement'
 import { lmsService } from '../../../services/lmsService'
+import { notify } from 'src/utils/notify'
 
 export type LessonDraftType = 'text' | 'video' | 'quiz'
 export type LessonResourceType = 'pdf' | 'document' | 'link'
@@ -290,7 +290,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       existingFileName: ''
     }
   })
-  const [editorNotice, setEditorNotice] = useState<string | null>(null)
   const [quizEditorLessonId, setQuizEditorLessonId] = useState<string | null>(null)
   const [videoUploadState, setVideoUploadState] = useState<{
     lessonId: string | null
@@ -370,7 +369,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     }
 
     if (!selectedLesson || !canUploadLessonVideo || !courseId) {
-      setEditorNotice('Guarda el curso y la lección primero para subir el video al LMS.')
+      notify.info('Guarda el curso y la lección primero para subir el video al LMS.')
       return
     }
 
@@ -409,10 +408,10 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       const optimizationMessage = uploadResult.optimized
         ? ' El archivo fue optimizado antes de guardarse.'
         : ''
-      setEditorNotice(`Video cargado correctamente en MinIO.${optimizationMessage}`)
+      notify.info(`Video cargado correctamente en MinIO.${optimizationMessage}`)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No fue posible subir el video.'
-      setEditorNotice(message)
+      notify.error(message)
     } finally {
       setVideoUploadState({
         lessonId: null,
@@ -425,7 +424,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
   const handleAddModule = () => {
     if (!moduleDraft.title.trim()) {
-      setEditorNotice('Agrega un título para crear la sección.')
+      notify.info('Agrega un título para crear la sección.')
       return
     }
 
@@ -442,7 +441,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     setSelectedLessonId(null)
     setModuleDraft({ title: '', description: '' })
     setModuleDialogOpen(false)
-    setEditorNotice('Sección creada. Ahora agrega la primera lección.')
+    notify.info('Sección creada. Ahora agrega la primera lección.')
   }
 
   const handleDeleteModule = (moduleId: string) => {
@@ -452,12 +451,12 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         .map((module, index) => ({ ...module, order: index + 1 }))
     )
     onDeleteModule?.(moduleId)
-    setEditorNotice('Se eliminó la sección seleccionada.')
+    notify.info('Se eliminó la sección seleccionada.')
   }
 
   const handleAddLesson = () => {
     if (!selectedModule || !lessonDraft.title.trim()) {
-      setEditorNotice('Selecciona una sección y agrega un título para la lección.')
+      notify.info('Selecciona una sección y agrega un título para la lección.')
       return
     }
 
@@ -484,7 +483,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     setSelectedLessonId(newLesson.id)
     setLessonDraft({ title: '', type: 'text', estimatedMinutes: 10, description: '' })
     setLessonDialogOpen(false)
-    setEditorNotice('Lección creada. Completa ahora su contenido.')
+    notify.info('Lección creada. Completa ahora su contenido.')
   }
 
   const handleDeleteLesson = (moduleId: string, lessonId: string) => {
@@ -495,7 +494,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         .map((lesson, index) => ({ ...lesson, order: index + 1 }))
     }))
     onDeleteLesson?.(lessonId)
-    setEditorNotice('Se eliminó la lección seleccionada.')
+    notify.info('Se eliminó la lección seleccionada.')
   }
 
   const handleModuleReorder = async (targetModuleId: string) => {
@@ -516,16 +515,16 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
     if (!canPersistReorder) {
       setSelectedModuleId(draggedModuleId)
-      setEditorNotice('Orden de secciones actualizado. Guarda el contenido para persistir también las nuevas secciones.')
+      notify.info('Orden de secciones actualizado. Guarda el contenido para persistir también las nuevas secciones.')
       return
     }
 
     try {
       await onModulesReorder?.(reorderedModules)
-      setEditorNotice('Orden de secciones actualizado y guardado.')
+      notify.info('Orden de secciones actualizado y guardado.')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo guardar el nuevo orden de las secciones.'
-      setEditorNotice(message)
+      notify.error(message)
     }
     setSelectedModuleId(draggedModuleId)
   }
@@ -557,23 +556,23 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
     if (!canPersistReorder) {
       setSelectedLessonId(draggedLessonId)
-      setEditorNotice('Orden de lecciones actualizado. Guarda el contenido para persistir también las nuevas lecciones.')
+      notify.info('Orden de lecciones actualizado. Guarda el contenido para persistir también las nuevas lecciones.')
       return
     }
 
     try {
       await onLessonsReorder?.(selectedModule.id, reorderedLessons)
-      setEditorNotice('Orden de lecciones actualizado y guardado.')
+      notify.info('Orden de lecciones actualizado y guardado.')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo guardar el nuevo orden de las lecciones.'
-      setEditorNotice(message)
+      notify.error(message)
     }
     setSelectedLessonId(draggedLessonId)
   }
 
   const openCreateResourceDialog = () => {
     if (!selectedLesson) {
-      setEditorNotice('Selecciona una lección para agregar recursos.')
+      notify.info('Selecciona una lección para agregar recursos.')
       return
     }
 
@@ -636,17 +635,17 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     )
 
     if (!normalizedTitle) {
-      setEditorNotice('Cada recurso necesita un título claro.')
+      notify.info('Cada recurso necesita un título claro.')
       return
     }
 
     if (isLinkResource && !normalizedExternalUrl) {
-      setEditorNotice('Agrega el enlace externo para este recurso.')
+      notify.info('Agrega el enlace externo para este recurso.')
       return
     }
 
     if (!isLinkResource && !hasUploadedFile && !hasExistingStoredFile && !hasLegacyFileUrl) {
-      setEditorNotice('Sube un archivo para este recurso.')
+      notify.info('Sube un archivo para este recurso.')
       return
     }
 
@@ -684,7 +683,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     }))
 
     setResourceDialog((current) => ({ ...current, open: false }))
-    setEditorNotice(
+    notify.info(
       resourceDialog.editingResourceId
         ? 'Recurso actualizado dentro de la lección.'
         : 'Recurso agregado a la lección.'
@@ -702,7 +701,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       }
     }))
     onDeleteResource?.(resourceId)
-    setEditorNotice('Recurso eliminado.')
+    notify.info('Recurso eliminado.')
   }
 
   const canOpenQuizBuilder = Boolean(
@@ -1282,7 +1281,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   content: { ...lesson.content, quizId }
                 }))
                 setQuizEditorLessonId(null)
-                setEditorNotice('Quiz guardado y asociado a esta lección.')
+                notify.info('Quiz guardado y asociado a esta lección.')
               }}
             />
           ) : (
@@ -1294,7 +1293,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={Boolean(editorNotice)} autoHideDuration={3500} onClose={() => setEditorNotice(null)} message={editorNotice} />
     </Stack>
   )
 }

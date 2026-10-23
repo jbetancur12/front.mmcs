@@ -23,7 +23,7 @@ import {
   Visibility
 } from '@mui/icons-material'
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import PDFViewer from '../Components/PDFViewer.js'
 import {
   TraceabilityDocument,
@@ -199,7 +199,6 @@ const Traceability: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster />
 
       <LmsPageHeader
         title='Trazabilidades'

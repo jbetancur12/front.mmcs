@@ -6,7 +6,6 @@ import MaterialReactTable, {
   MRT_ColumnDef,
   MRT_Row
 } from 'material-react-table'
-import { bigToast, MySwal } from '../ExcelManipulation/Utils'
 import {
   Box,
   Button,
@@ -38,6 +37,8 @@ import {
   useKeepPageInRange,
   useServerTableState
 } from 'src/hooks/useServerTable'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 // Tipos e interfaces para los datos de Trip
 
@@ -80,7 +81,7 @@ const TripsTable = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('trips')
-        bigToast('Viaje Modificado Exitosamente!', 'success')
+        notify.success('Viaje Modificado Exitosamente!')
       }
     }
   )
@@ -95,7 +96,7 @@ const TripsTable = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('trips')
-        bigToast('Viaje Eliminado Exitosamente!', 'success')
+        notify.success('Viaje Eliminado Exitosamente!')
       }
     }
   )
@@ -122,12 +123,7 @@ const TripsTable = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<Trip>) => {
-      MySwal.fire({
-        title: `¿Está seguro que desea eliminar el viaje?`,
-        text: 'No podrá recuperar esta información una vez eliminada',
-        showCancelButton: true,
-        confirmButtonText: 'Sí'
-      }).then((result) => {
+      confirmDialog({ title: `¿Está seguro que desea eliminar el viaje?`, text: 'No podrá recuperar esta información una vez eliminada', confirmLabel: 'Sí' }).then((result) => {
         if (result.isConfirmed) {
           deleteTrip.mutate(row.getValue('id'))
         }

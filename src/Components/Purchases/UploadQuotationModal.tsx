@@ -37,7 +37,6 @@ const tealButton = {
   '&:hover': { bgcolor: PURCHASE_TEAL_HOVER }
 }
 import useAxiosPrivate from '@utils/use-axios-private'
-import Swal from 'sweetalert2'
 import { useMutation, useQueryClient } from 'react-query'
 import { useSupplierSearch } from 'src/hooks/purchases/useSuppliers'
 import { isAxiosError } from 'axios' // Importar AxiosResponse
@@ -48,6 +47,8 @@ import {
   // PurchaseOrder, // No se usa directamente en este modal más que para tipos internos
 } from 'src/pages/Purchases/Types' // Asegúrate que estas rutas sean correctas
 import debounce from 'lodash/debounce'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 // Definir localmente si no está en Types.ts, pero idealmente debería estar allí
 interface Quotation {
@@ -205,7 +206,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
       } else if (error instanceof Error) {
         userMessage = error.message
       }
-      Swal.fire('Error', userMessage, 'error')
+      notify.error('Error', userMessage)
     }
   }
 
@@ -232,11 +233,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
     },
     {
       onSuccess: (_data, variables) => {
-        Swal.fire(
-          'Éxito',
-          'La cotización ha sido subida correctamente.',
-          'success'
-        )
+        notify.success('Éxito', 'La cotización ha sido subida correctamente.')
         setSelectedFiles((prev) => ({ ...prev, [variables.supplierId]: null }))
         commonMutationOptions.onSuccessInvalidatePR()
       },
@@ -340,7 +337,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
     },
     {
       onSuccess: () => {
-        Swal.fire('Aceptado', 'La cotización ha sido aceptada.', 'success')
+        notify.success('Aceptado', 'La cotización ha sido aceptada.')
         commonMutationOptions.onSuccessInvalidatePR()
       },
       onError: (error, supplierId) => {
@@ -373,15 +370,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
     },
     {
       onSuccess: () => {
-        Swal.fire({
-          title: 'Proveedores Asociados',
-          text: 'Los nuevos proveedores se han vinculado a los ítems de la solicitud.',
-          icon: 'success',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000
-        })
+        notify.success('Proveedores Asociados', 'Los nuevos proveedores se han vinculado a los ítems de la solicitud.')
         commonMutationOptions.onSuccessInvalidatePR() // Esto refrescará purchaseRequest y el useEffect actualizará displayedSuppliers
       },
       onError: (error) => {
@@ -407,14 +396,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
   }
 
   const handleAcceptQuotation = async (supplierId: string) => {
-    const result = await Swal.fire({
-      title: '¿Estás seguro?',
-      text: '¿Deseas aceptar esta cotización?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, aceptar',
-      cancelButtonText: 'Cancelar'
-    })
+    const result = await confirmDialog({ title: '¿Estás seguro?', text: '¿Deseas aceptar esta cotización?', confirmLabel: 'Sí, aceptar', cancelLabel: 'Cancelar', tone: 'danger' })
     if (result.isConfirmed) acceptQuotationMutation.mutate(supplierId)
   }
 

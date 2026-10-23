@@ -12,7 +12,7 @@ import {
 import { useFormik } from 'formik'
 import * as yup from 'yup'
 
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 // Definir el esquema de validación con yup
@@ -112,15 +112,15 @@ const EquipmentLifeCycleForm: React.FC = () => {
 
         if (response.status >= 200 && response.status < 300) {
           // Se ha enviado correctamente la hoja de vida
-          bigToast('Hoja de vida enviada correctamente', 'success')
+          notify.success('Hoja de vida enviada correctamente')
           resetForm()
         } else {
           // Ha ocurrido un error al enviar la hoja de vida
-          bigToast('Error al enviar la hoja de vida', 'error')
+          notify.error('Error al enviar la hoja de vida')
         }
       } catch (error) {
         // Ha ocurrido un error al enviar la hoja de vida
-        bigToast('Error al enviar la hoja de vida', 'error')
+        notify.error('Error al enviar la hoja de vida')
         console.error('Error al enviar la hoja de vida:', error)
       }
       // Aquí se manejaría el envío de datos al backend

@@ -31,7 +31,7 @@ import {
   type MaterialReactTableProps
 } from 'material-react-table'
 import React, { useCallback, useMemo, useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { showActivationLinkDialog } from '../utils/sweetAlert'
 
 // Define interfaces
@@ -286,7 +286,6 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <Toaster />
       <MaterialReactTable
         displayColumnDefOptions={{
           'mrt-row-actions': {

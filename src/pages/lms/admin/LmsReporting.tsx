@@ -37,7 +37,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 type ReportType = 'user_progress' | 'course_analytics' | 'compliance' | 'quiz_performance' | 'custom'
@@ -246,20 +246,12 @@ const LmsReporting: React.FC = () => {
         setEditingTemplate(null)
         setTemplateForm(emptyTemplateForm)
         setCustomColumnInput('')
-        Toast.fire({
-          icon: 'success',
-          title: editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada',
-          text: editingTemplate
+        notify.success(editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada', editingTemplate
             ? 'La plantilla quedó lista para seguir generando o programando reportes.'
-            : 'La plantilla ya puede usarse para generar o programar reportes.'
-        })
+            : 'La plantilla ya puede usarse para generar o programar reportes.')
       },
       onError: (error: any) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al guardar plantilla',
-          text: getApiMessage(error, 'No se pudo guardar la plantilla.')
-        })
+        notify.error('Error al guardar plantilla', getApiMessage(error, 'No se pudo guardar la plantilla.'))
       }
     }
   )
@@ -269,18 +261,10 @@ const LmsReporting: React.FC = () => {
     {
       onSuccess: () => {
         invalidateReporting()
-        Toast.fire({
-          icon: 'success',
-          title: 'Plantilla eliminada',
-          text: 'La plantilla ya no aparecerá en generación ni programación.'
-        })
+        notify.success('Plantilla eliminada', 'La plantilla ya no aparecerá en generación ni programación.')
       },
       onError: (error: any) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al eliminar plantilla',
-          text: getApiMessage(error, 'No se pudo eliminar la plantilla.')
-        })
+        notify.error('Error al eliminar plantilla', getApiMessage(error, 'No se pudo eliminar la plantilla.'))
       }
     }
   )
@@ -297,18 +281,10 @@ const LmsReporting: React.FC = () => {
     {
       onSuccess: () => {
         invalidateReporting()
-        Toast.fire({
-          icon: 'success',
-          title: 'Reporte generado',
-          text: 'Quedó registrado en reportes recientes y podrás descargarlo cuando termine.'
-        })
+        notify.success('Reporte generado', 'Quedó registrado en reportes recientes y podrás descargarlo cuando termine.')
       },
       onError: (error: any) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al generar reporte',
-          text: getApiMessage(error, 'No se pudo generar el reporte.')
-        })
+        notify.error('Error al generar reporte', getApiMessage(error, 'No se pudo generar el reporte.'))
       }
     }
   )
@@ -340,20 +316,12 @@ const LmsReporting: React.FC = () => {
         setEditingSchedule(null)
         setScheduleForm(emptyScheduleForm)
         setRecipientInput('')
-        Toast.fire({
-          icon: 'success',
-          title: editingSchedule ? 'Programación actualizada' : 'Reporte programado',
-          text: editingSchedule
+        notify.success(editingSchedule ? 'Programación actualizada' : 'Reporte programado', editingSchedule
             ? 'La programación quedó ajustada con los nuevos datos.'
-            : 'La programación quedó activa para futuros envíos.'
-        })
+            : 'La programación quedó activa para futuros envíos.')
       },
       onError: (error: any) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al guardar programación',
-          text: getApiMessage(error, 'No se pudo guardar la programación.')
-        })
+        notify.error('Error al guardar programación', getApiMessage(error, 'No se pudo guardar la programación.'))
       }
     }
   )
@@ -363,18 +331,10 @@ const LmsReporting: React.FC = () => {
     {
       onSuccess: () => {
         invalidateReporting()
-        Toast.fire({
-          icon: 'success',
-          title: 'Programación eliminada',
-          text: 'Ese envío ya no se ejecutará automáticamente.'
-        })
+        notify.success('Programación eliminada', 'Ese envío ya no se ejecutará automáticamente.')
       },
       onError: (error: any) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al eliminar programación',
-          text: getApiMessage(error, 'No se pudo eliminar la programación.')
-        })
+        notify.error('Error al eliminar programación', getApiMessage(error, 'No se pudo eliminar la programación.'))
       }
     }
   )
@@ -536,11 +496,7 @@ const LmsReporting: React.FC = () => {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (error: any) {
-      Toast.fire({
-        icon: 'error',
-        title: 'Error al descargar reporte',
-        text: getApiMessage(error, 'No se pudo descargar el reporte.')
-      })
+      notify.error('Error al descargar reporte', getApiMessage(error, 'No se pudo descargar el reporte.'))
     }
   }
 

@@ -8,7 +8,6 @@ import {
   Tab,
   Tabs
 } from '@mui/material'
-import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
@@ -339,7 +338,6 @@ const CalibrationServiceDetailsView = ({
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster position='top-center' />
       <CalibrationServiceDetailHeader
         service={service}
         permissions={permissions}

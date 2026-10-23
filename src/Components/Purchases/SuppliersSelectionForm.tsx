@@ -22,10 +22,9 @@ import {
   useSaveSupplierSelection,
   useSupplierSelectionCriteria
 } from 'src/hooks/purchases/useSuppliers'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
 import SuppliersSelection from '../../pages/Purchases/SupplierSelection'
 import { Criterion, FormState } from 'src/pages/Purchases/Types'
+import { notify } from 'src/utils/notify'
 
 const initialSupplierData = {
   name: '',
@@ -43,7 +42,6 @@ const initialSupplierData = {
 }
 
 const SupplierSelectionForm = () => {
-  const MySwal = withReactContent(Swal)
   const [formState, setFormState] = useState<FormState>({
     supplierData: initialSupplierData,
     providerType: '',
@@ -245,22 +243,14 @@ const SupplierSelectionForm = () => {
       await saveSelection.mutateAsync({ payload })
 
       const finalDecision = payload.evaluationData.finalDecision
-      MySwal.fire({
-        toast: true,
-        position: 'top-end',
-        icon:
-          finalDecision === 'APPROVED' ||
-          finalDecision === 'APPROVED WITH RESERVE'
-            ? 'success'
-            : 'error',
-        title:
-          finalDecision === 'APPROVED' ||
-          finalDecision === 'APPROVED WITH RESERVE'
-            ? 'Proveedor aprobado'
-            : 'Proveedor no aprobado',
-        showConfirmButton: false,
-        timer: 3000
-      })
+      if (
+        finalDecision === 'APPROVED' ||
+        finalDecision === 'APPROVED WITH RESERVE'
+      ) {
+        notify.success('Proveedor aprobado')
+      } else {
+        notify.error('Proveedor no aprobado')
+      }
 
       // Reiniciar el formulario
       setFormState({

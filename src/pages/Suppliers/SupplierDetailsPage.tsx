@@ -33,7 +33,6 @@ import {
   Close
 } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
-import Swal from 'sweetalert2'
 import { useMutation, useQueryClient } from 'react-query'
 import {
   useSupplierDetails,
@@ -43,6 +42,7 @@ import { supplierKeys } from 'src/hooks/purchases/queryKeys'
 import { isAxiosError } from 'axios'
 import SupplierEvaluationForm from 'src/Components/Purchases/SupplierEvaluationForm'
 import SupplierPurchaseHistoryTable from 'src/Components/Purchases/SupplierPurchaseHistoryTable'
+import { notify } from 'src/utils/notify'
 
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
 export interface Supplier {
@@ -253,7 +253,7 @@ const SupplierDetailsPage: React.FC = () => {
     const file = event.target.files?.[0] || null
     if (file) {
       if (file && file.type !== 'application/pdf') {
-        Swal.fire('Error', 'Solo se permiten archivos PDF.', 'error')
+        notify.error('Error', 'Solo se permiten archivos PDF.')
         event.target.value = '' // Limpiar el input de archivo
         setFilesToUpload((prevSlots) =>
           prevSlots.map((slot) =>
@@ -265,11 +265,7 @@ const SupplierDetailsPage: React.FC = () => {
 
       const maxSizeInBytes = 10 * 1024 * 1024 // 10MB
       if (file.size > maxSizeInBytes) {
-        Swal.fire(
-          'Archivo Demasiado Grande',
-          `El archivo seleccionado excede el tamaño máximo permitido de 10MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
-          'error'
-        )
+        notify.error('Archivo Demasiado Grande', `El archivo seleccionado excede el tamaño máximo permitido de 10MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
         event.target.value = '' // Limpiar el input
         setFilesToUpload((prevFiles) =>
           prevFiles.map((doc) =>
@@ -315,11 +311,7 @@ const SupplierDetailsPage: React.FC = () => {
     },
     {
       onSuccess: (_, variables) => {
-        Swal.fire(
-          'Éxito',
-          `Documento '${variables.documentTypeLabel}' subido correctamente.`,
-          'success'
-        )
+        notify.success('Éxito', `Documento '${variables.documentTypeLabel}' subido correctamente.`)
         queryClient.invalidateQueries(supplierKeys.details(supplierId)) // Invalidate para refrescar
         setFilesToUpload((prevFiles) =>
           prevFiles.map((doc) =>
@@ -329,11 +321,7 @@ const SupplierDetailsPage: React.FC = () => {
       },
       onError: (error, variables) => {
         console.error('Error uploading document:', error)
-        Swal.fire(
-          'Error',
-          `Error al subir ${variables.documentTypeLabel}.`,
-          'error'
-        )
+        notify.error('Error', `Error al subir ${variables.documentTypeLabel}.`)
       }
     }
   )
@@ -363,17 +351,13 @@ const SupplierDetailsPage: React.FC = () => {
         const message = newRetentionValue
           ? 'Se ha activado la retención en fuente para el proveedor.'
           : 'Se ha desactivado la retención en fuente para el proveedor.'
-        Swal.fire('Actualizado', message, 'success')
+        notify.success('Actualizado', message)
         queryClient.invalidateQueries(supplierKeys.details(supplierId)) // Invalidate para refrescar
         // El estado local 'applyRetention' se actualiza optimistamente o en el onSuccess de useQuery
       },
       onError: (error, newRetentionValue) => {
         console.error('Error updating retention status:', error)
-        Swal.fire(
-          'Error',
-          'No se pudo actualizar el estado de retención.',
-          'error'
-        )
+        notify.error('Error', 'No se pudo actualizar el estado de retención.')
         setApplyRetention(!newRetentionValue) // Revertir cambio en UI
       }
     }
@@ -393,11 +377,7 @@ const SupplierDetailsPage: React.FC = () => {
 
   const handleEvaluationSuccess = () => {
     handleCloseEvaluationModal()
-    Swal.fire(
-      'Evaluación Guardada',
-      'La evaluación del proveedor ha sido guardada con éxito.',
-      'success'
-    )
+    notify.success('Evaluación Guardada', 'La evaluación del proveedor ha sido guardada con éxito.')
     // Opcional: Invalidar queries si esta página muestra una lista de evaluaciones o un resumen
     queryClient.invalidateQueries(['supplierEvaluations', supplierId])
     // queryClient.invalidateQueries(['supplierDetails', supplierId]); // Si la evaluación afecta detalles del proveedor
@@ -418,7 +398,7 @@ const SupplierDetailsPage: React.FC = () => {
   ) => {
     if (!documentId) {
       console.error('handleViewDocument: No documentId provided')
-      Swal.fire('Error', 'No se pudo obtener el ID del documento.', 'error')
+      notify.error('Error', 'No se pudo obtener el ID del documento.')
       return
     }
 
@@ -450,11 +430,7 @@ const SupplierDetailsPage: React.FC = () => {
           }
         }, 500)
       } else {
-        Swal.fire(
-          'Error',
-          'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.',
-          'warning'
-        )
+        notify.warning('Error', 'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.')
       }
     } catch (error) {
       // En TypeScript, 'error' aquí es de tipo 'unknown' por defecto
@@ -522,7 +498,7 @@ const SupplierDetailsPage: React.FC = () => {
           'Ocurrió un error inesperado durante la solicitud del documento.'
       }
 
-      Swal.fire('Error', errorMessage, 'error')
+      notify.error('Error', errorMessage)
     }
   }
 

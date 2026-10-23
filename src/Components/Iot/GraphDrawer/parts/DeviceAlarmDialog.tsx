@@ -17,9 +17,9 @@ import {
 } from '@mui/material'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import Swal from 'sweetalert2'
 import { useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { notify } from 'src/utils/notify'
 
 // Tipos y constantes
 export type DeviceAlarm = {
@@ -163,38 +163,25 @@ const DeviceAlarmDialog: React.FC<DeviceAlarmDialogProps> = ({
   const handleCreate = async (data: AlarmFormValues) => {
     try {
       await createMutation.mutateAsync(data)
-      Swal.fire({
-        title: '¡Alarma creada!',
-        text: 'La alarma se ha creado exitosamente',
-        icon: 'success'
-      })
+      notify.success('¡Alarma creada!', 'La alarma se ha creado exitosamente')
       invalidateQueries()
       onClose()
     } catch (error: any) {
-      Swal.fire({
-        title: 'Error',
-        text: error.message || 'Error al crear la alarma',
-        icon: 'error'
-      })
+      notify.error('Error', error.message || 'Error al crear la alarma')
     }
   }
 
   const handleUpdate = async (data: AlarmFormValues) => {
     try {
       await updateMutation.mutateAsync(data)
-      Swal.fire({
-        title: '¡Alarma actualizada!',
-        text: 'La alarma se ha actualizado exitosamente',
-        icon: 'success'
-      })
+      notify.success(
+        '¡Alarma actualizada!',
+        'La alarma se ha actualizado exitosamente'
+      )
       invalidateQueries()
       onClose()
     } catch (error: any) {
-      Swal.fire({
-        title: 'Error',
-        text: error.message || 'Error al actualizar la alarma',
-        icon: 'error'
-      })
+      notify.error('Error', error.message || 'Error al actualizar la alarma')
     }
   }
 

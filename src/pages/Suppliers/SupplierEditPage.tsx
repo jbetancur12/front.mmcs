@@ -19,10 +19,10 @@ import {
 } from '@mui/material'
 import { Save, Cancel } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
-import Swal from 'sweetalert2'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { isAxiosError } from 'axios'
 import { SelectChangeEvent } from '@mui/material/Select'
+import { notify } from 'src/utils/notify'
 
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
 interface Supplier {
@@ -69,10 +69,9 @@ const SupplierEditPage: React.FC = () => {
       onError: (err) => {
         console.error('Error fetching supplier details for edit:', err)
         // Opcional: Mostrar un error al usuario
-        Swal.fire(
+        notify.error(
           'Error',
-          'No se pudieron cargar los datos del proveedor para editar.',
-          'error'
+          'No se pudieron cargar los datos del proveedor para editar.'
         )
       }
     }
@@ -90,7 +89,7 @@ const SupplierEditPage: React.FC = () => {
     },
     {
       onSuccess: () => {
-        Swal.fire('Éxito', 'Proveedor actualizado correctamente.', 'success')
+        notify.success('Éxito', 'Proveedor actualizado correctamente.')
         // Invalida la query de detalles para que se refresque en la página de detalles
         queryClient.invalidateQueries(['supplierDetails', supplierId])
         // Navega de vuelta a la página de detalles
@@ -104,7 +103,7 @@ const SupplierEditPage: React.FC = () => {
         } else if (error instanceof Error) {
           errorMessage = error.message
         }
-        Swal.fire('Error', errorMessage, 'error')
+        notify.error('Error', errorMessage)
       }
     }
   )
@@ -149,7 +148,7 @@ const SupplierEditPage: React.FC = () => {
         supplierId,
         formData
       })
-      Swal.fire('Advertencia', 'Datos incompletos para guardar.', 'warning')
+      notify.warning('Advertencia', 'Datos incompletos para guardar.')
     }
   }
 

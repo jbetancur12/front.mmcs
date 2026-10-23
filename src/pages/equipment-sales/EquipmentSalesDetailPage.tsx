@@ -20,8 +20,7 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
-import { Toaster, toast } from 'react-hot-toast'
-import Swal from 'sweetalert2'
+import { toast } from 'react-hot-toast'
 import { useCan, useHasRole } from '../../utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
@@ -51,6 +50,7 @@ import {
   DetailField,
   DetailSection
 } from 'src/Components/Common/DetailBlocks'
+import { confirmDialog } from 'src/utils/confirm'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -164,15 +164,7 @@ const EquipmentSalesDetailPage = () => {
   )
 
   const handleRequestApproval = async () => {
-    const result = await Swal.fire({
-      icon: 'question',
-      title: '¿Marcar la cotización como enviada al cliente?',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, marcar como enviada',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#3085d6',
-      reverseButtons: true
-    })
+    const result = await confirmDialog({ title: '¿Marcar la cotización como enviada al cliente?', confirmLabel: 'Sí, marcar como enviada', cancelLabel: 'Cancelar' })
     if (!result.isConfirmed || !quotation) return
     try {
       await mutations.requestApproval.mutateAsync(quotation.id)
@@ -326,15 +318,7 @@ const EquipmentSalesDetailPage = () => {
   }
 
   const handleReadyForInvoice = async () => {
-    const result = await Swal.fire({
-      icon: 'question',
-      title: '¿Marcar esta cotización como lista para facturar?',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, continuar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#3085d6',
-      reverseButtons: true
-    })
+    const result = await confirmDialog({ title: '¿Marcar esta cotización como lista para facturar?', confirmLabel: 'Sí, continuar', cancelLabel: 'Cancelar' })
     if (!result.isConfirmed || !quotation) return
     try {
       await mutations.readyForInvoice.mutateAsync(quotation.id)
@@ -346,15 +330,7 @@ const EquipmentSalesDetailPage = () => {
   }
 
   const handleInvoice = async () => {
-    const result = await Swal.fire({
-      icon: 'question',
-      title: '¿Marcar esta cotización como facturada?',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, facturar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#3085d6',
-      reverseButtons: true
-    })
+    const result = await confirmDialog({ title: '¿Marcar esta cotización como facturada?', confirmLabel: 'Sí, facturar', cancelLabel: 'Cancelar' })
     if (!result.isConfirmed || !quotation) return
     try {
       await mutations.invoiceQuotation.mutateAsync(quotation.id)
@@ -430,7 +406,6 @@ const EquipmentSalesDetailPage = () => {
         backgroundColor: '#f8fafb'
       }}
     >
-      <Toaster position='top-center' />
 
       {/* ── Header banner ── */}
       <Box

@@ -21,7 +21,7 @@ import {
   Person,
   UploadFile
 } from '@mui/icons-material'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 
 import PDFViewer from '../Components/PDFViewer'
 import IMGViewer from '../Components/IMGViewer'
@@ -202,7 +202,6 @@ const Profile: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster />
 
       <LmsPageHeader
         title={profile.name}

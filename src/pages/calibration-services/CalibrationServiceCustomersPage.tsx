@@ -31,7 +31,7 @@ import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { axiosPrivate } from '@utils/api'
 import {
@@ -224,7 +224,6 @@ const CalibrationServiceCustomersPage = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster position='top-center' />
 
       <Button
         startIcon={<ArrowBackOutlinedIcon />}

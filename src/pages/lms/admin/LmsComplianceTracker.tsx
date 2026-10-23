@@ -40,7 +40,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
-  Snackbar
 } from '@mui/material'
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
@@ -78,6 +77,7 @@ import {
   useResetUserCourseProgress
 } from '../../../hooks/useLms'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { notify } from 'src/utils/notify'
 
 interface ComplianceRecord {
   id: number
@@ -227,11 +227,6 @@ const LmsComplianceTracker: React.FC = () => {
   const [bulkDeadline, setBulkDeadline] = useState<Date | null>(null)
   const [bulkSaving, setBulkSaving] = useState(false)
 
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success'
-  })
 
   // Modo edición oculto por defecto: se habilita con ?show=true (se recuerda
   // en sessionStorage); ?show=false lo apaga. La protección real está en el backend.
@@ -408,11 +403,7 @@ const LmsComplianceTracker: React.FC = () => {
       editAssignedAt &&
       editCompletedAt < editAssignedAt
     ) {
-      setSnackbar({
-        open: true,
-        message: 'La fecha de finalización no puede ser anterior a la fecha de asignación',
-        severity: 'error'
-      })
+      notify.error('La fecha de finalización no puede ser anterior a la fecha de asignación')
       return
     }
 
@@ -440,14 +431,10 @@ const LmsComplianceTracker: React.FC = () => {
       }
 
       await Promise.all(jobs)
-      setSnackbar({ open: true, message: 'Fechas actualizadas', severity: 'success' })
+      notify.success('Fechas actualizadas')
       handleCloseDetails()
     } catch (e: any) {
-      setSnackbar({
-        open: true,
-        message: e?.message || 'No se pudieron actualizar las fechas',
-        severity: 'error'
-      })
+      notify.error(e?.message || 'No se pudieron actualizar las fechas')
     } finally {
       setSavingDates(false)
     }
@@ -462,10 +449,10 @@ const LmsComplianceTracker: React.FC = () => {
         userId: detailsRecord.userId,
         courseId: detailsRecord.courseId
       })
-      setSnackbar({ open: true, message: 'Fechas restablecidas al grupo', severity: 'success' })
+      notify.success('Fechas restablecidas al grupo')
       handleCloseDetails()
     } catch (e: any) {
-      setSnackbar({ open: true, message: e?.message || 'No se pudo restablecer', severity: 'error' })
+      notify.error(e?.message || 'No se pudo restablecer')
     } finally {
       setSavingDates(false)
     }
@@ -482,10 +469,10 @@ const LmsComplianceTracker: React.FC = () => {
         userId: detailsRecord.userId,
         courseId: detailsRecord.courseId
       })
-      setSnackbar({ open: true, message: 'Curso reiniciado', severity: 'success' })
+      notify.success('Curso reiniciado')
       handleCloseDetails()
     } catch (e: any) {
-      setSnackbar({ open: true, message: e?.message || 'No se pudo reiniciar el curso', severity: 'error' })
+      notify.error(e?.message || 'No se pudo reiniciar el curso')
     }
   }
 
@@ -497,11 +484,7 @@ const LmsComplianceTracker: React.FC = () => {
     if (selected.length === 0) return
 
     if (bulkCompletedAt && bulkAssignedAt && bulkCompletedAt < bulkAssignedAt) {
-      setSnackbar({
-        open: true,
-        message: 'La fecha de finalización no puede ser anterior a la fecha de asignación',
-        severity: 'error'
-      })
+      notify.error('La fecha de finalización no puede ser anterior a la fecha de asignación')
       return
     }
 
@@ -533,14 +516,14 @@ const LmsComplianceTracker: React.FC = () => {
       }
 
       await Promise.all(jobs)
-      setSnackbar({ open: true, message: `Fechas aplicadas a ${selected.length} registro(s)`, severity: 'success' })
+      notify.success(`Fechas aplicadas a ${selected.length} registro(s)`)
       setBulkOpen(false)
       setSelectedKeys([])
       setBulkCompletedAt(null)
       setBulkAssignedAt(null)
       setBulkDeadline(null)
     } catch (e: any) {
-      setSnackbar({ open: true, message: e?.message || 'No se pudo aplicar en lote', severity: 'error' })
+      notify.error(e?.message || 'No se pudo aplicar en lote')
     } finally {
       setBulkSaving(false)
     }
@@ -1815,16 +1798,6 @@ const LmsComplianceTracker: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   )
 }

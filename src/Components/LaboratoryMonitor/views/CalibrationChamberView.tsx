@@ -12,7 +12,6 @@ import {
   CircularProgress,
   Alert,
   Paper,
-  Snackbar
 } from '@mui/material'
 import EmptyState from 'src/Components/Common/EmptyState'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
@@ -46,11 +45,13 @@ import {
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useCalibrationRealtimeUpdates } from '@utils/useCalibrationRealtimeUpdates'
 import { getApiErrorMessage } from '@utils/apiError'
-import Swal from 'sweetalert2'
 import { PatternConfigModal } from '../PatternConfigModal'
 import { useDeviceNotifications } from '@utils/useDeviceNotifications'
 import LaboratoryMqttGuide from 'src/Components/LaboratoryMqttGuide'
 import { useStabilityAlerts } from '@hooks/useStabilityAlerts'
+import { notify } from 'src/utils/notify'
+import { notify as appNotify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 // Función para generar el resumen de sensores
 export const generateSensorSummary = (
@@ -90,15 +91,6 @@ const CalibrationChamberView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingChamber, setEditingChamber] = useState<Chamber | null>(null)
 
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean
-    message: string
-    severity: 'success' | 'error'
-  }>({
-    open: false,
-    message: '',
-    severity: 'success'
-  })
 
   // Estados para manejar IDs activos para mutaciones específicas (para los Record<string, boolean>)
   const [activePatternForSensorAddition, setActivePatternForSensorAddition] =
@@ -165,19 +157,11 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(chambersQueryKey) // ¡Crucial para refrescar los datos!
-        setSnackbar({
-          open: true,
-          message: 'Configuración del patrón actualizada.',
-          severity: 'success'
-        })
+        notify.success('Configuración del patrón actualizada.')
         handleClosePatternConfigModal()
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al guardar configuración.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al guardar configuración.'))
       }
     }
   )
@@ -190,18 +174,10 @@ const CalibrationChamberView: React.FC = () => {
         queryClient.invalidateQueries(chambersQueryKey)
         setSelectedChamberId(newChamber.id)
         setIsModalOpen(false)
-        setSnackbar({
-          open: true,
-          message: `Cámara "${newChamber.name}" creada.`,
-          severity: 'success'
-        })
+        notify.success(`Cámara "${newChamber.name}" creada.`)
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al crear cámara.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al crear cámara.'))
       }
     }
   )
@@ -212,18 +188,10 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: (updatedChamber) => {
         queryClient.invalidateQueries(chambersQueryKey)
-        setSnackbar({
-          open: true,
-          message: `Cámara "${updatedChamber.name}" actualizada a "${updatedChamber.status}".`,
-          severity: 'success'
-        })
+        notify.success(`Cámara "${updatedChamber.name}" actualizada a "${updatedChamber.status}".`)
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al actualizar estado.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al actualizar estado.'))
       }
     }
   )
@@ -239,18 +207,10 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(chambersQueryKey)
-        setSnackbar({
-          open: true,
-          message: 'Patrón creado.',
-          severity: 'success'
-        })
+        notify.success('Patrón creado.')
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al crear patrón.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al crear patrón.'))
       }
     }
   )
@@ -261,19 +221,11 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: (updatedChamber) => {
         queryClient.invalidateQueries(chambersQueryKey)
-        setSnackbar({
-          open: true,
-          message: `Cámara "${updatedChamber.name}" actualizada.`,
-          severity: 'success'
-        })
+        notify.success(`Cámara "${updatedChamber.name}" actualizada.`)
         setIsModalOpen(false) // Cierra el modal de edición
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al actualizar cámara.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al actualizar cámara.'))
       }
     }
   )
@@ -283,19 +235,11 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(chambersQueryKey)
-        setSnackbar({
-          open: true,
-          message: 'Cámara eliminada exitosamente.',
-          severity: 'success'
-        })
+        notify.success('Cámara eliminada exitosamente.')
         // setSelectedChamberId(null) se manejará en el useEffect que depende de 'chambers'
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al eliminar cámara.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al eliminar cámara.'))
       }
     }
   )
@@ -308,18 +252,10 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(chambersQueryKey)
-        setSnackbar({
-          open: true,
-          message: 'Patrón eliminado.',
-          severity: 'success'
-        })
+        notify.success('Patrón eliminado.')
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al eliminar patrón.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al eliminar patrón.'))
       },
       onSettled: () => {
         setActivePatternForDeletion(null)
@@ -341,18 +277,10 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(chambersQueryKey)
-        setSnackbar({
-          open: true,
-          message: 'Sensor creado.',
-          severity: 'success'
-        })
+        notify.success('Sensor creado.')
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: getApiErrorMessage(error, 'Error al crear sensor.'),
-          severity: 'error'
-        })
+        notify.error(getApiErrorMessage(error, 'Error al crear sensor.'))
       },
       onSettled: () => {
         setActivePatternForSensorAddition(null)
@@ -368,14 +296,10 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(chambersQueryKey)
-        Swal.fire('¡Eliminado!', 'El sensor ha sido eliminado.', 'success')
+        appNotify.success('¡Eliminado!', 'El sensor ha sido eliminado.')
       },
       onError: (error: Error) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al eliminar sensor',
-          text: getApiErrorMessage(error, 'No se pudo eliminar el sensor.')
-        })
+        appNotify.error('Error al eliminar sensor', getApiErrorMessage(error, 'No se pudo eliminar el sensor.'))
       },
       onSettled: () => {
         setActiveSensorForDeletion(null)
@@ -445,16 +369,7 @@ const CalibrationChamberView: React.FC = () => {
 
   const handleStopCalibration = (chamberIdToStop: string | number) => {
     // Al detener, el backend borra todas las lecturas de calibración de la cámara
-    Swal.fire({
-      title: '¿Detener la calibración?',
-      text: 'Se borrarán las lecturas de calibración registradas en esta cámara. No podrás recuperarlas.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, detener',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    confirmDialog({ title: '¿Detener la calibración?', text: 'Se borrarán las lecturas de calibración registradas en esta cámara. No podrás recuperarlas.', confirmLabel: 'Sí, detener', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
       if (result.isConfirmed) {
         updateChamberStatusMutation.mutate({
           chamberId: chamberIdToStop,
@@ -472,16 +387,7 @@ const CalibrationChamberView: React.FC = () => {
     await createPatternMutation.mutateAsync({ chamberId, patternName })
   }
   const handleDeletePattern = (patternId: string | number) => {
-    Swal.fire({
-      title: '¿Eliminar este patrón?',
-      text: 'Se eliminarán también todos sus sensores y lecturas. No podrás revertirlo.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, ¡eliminar!',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    confirmDialog({ title: '¿Eliminar este patrón?', text: 'Se eliminarán también todos sus sensores y lecturas. No podrás revertirlo.', confirmLabel: 'Sí, ¡eliminar!', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
       if (result.isConfirmed) {
         deletePatternMutation.mutate(patternId)
       }
@@ -494,16 +400,7 @@ const CalibrationChamberView: React.FC = () => {
     await createSensorMutation.mutateAsync({ patternId, sensorData })
   }
   const handleDeleteSensorFromPattern = (sensorId: string | number) => {
-    Swal.fire({
-      title: '¿Estás seguro de eliminar este sensor?',
-      text: 'Esta acción no se puede revertir.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, ¡eliminar!',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    confirmDialog({ title: '¿Estás seguro de eliminar este sensor?', text: 'Esta acción no se puede revertir.', confirmLabel: 'Sí, ¡eliminar!', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
       // Si el usuario confirma la acción
       if (result.isConfirmed) {
         // Llamar a la mutación para eliminar el sensor
@@ -522,16 +419,7 @@ const CalibrationChamberView: React.FC = () => {
   }
 
   const handleDeleteChamber = (chamberId: string | number) => {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: '¡Esta acción eliminará la cámara y todos sus patrones y sensores asociados! No podrás revertirlo.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, ¡eliminar!',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    confirmDialog({ title: '¿Estás seguro?', text: '¡Esta acción eliminará la cámara y todos sus patrones y sensores asociados! No podrás revertirlo.', confirmLabel: 'Sí, ¡eliminar!', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
       if (result.isConfirmed) {
         deleteChamberMutation.mutate(chamberId)
       }
@@ -794,20 +682,6 @@ const CalibrationChamberView: React.FC = () => {
         />
       )}
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   )
 }

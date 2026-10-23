@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { useEffect, useState } from 'react'
+import { notify } from 'src/utils/notify'
 
 const APPROVAL_CHANNEL_OPTIONS = [
   'En persona',
@@ -226,7 +227,7 @@ const EquipmentQuotationApprovalDialog = ({
           disabled={isLoading}
           onClick={() => {
             if (!values.evidenceFile) {
-              alert('Debes adjuntar la evidencia de la respuesta del cliente.')
+              notify.error('Debes adjuntar la evidencia de la respuesta del cliente.')
               return
             }
             void onSubmit(values)

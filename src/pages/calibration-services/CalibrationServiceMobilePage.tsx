@@ -6,7 +6,7 @@ import {
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from 'react-query'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -353,7 +353,6 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, pb: 22 }}>
-      <Toaster position='top-center' />
       {isLoading ? <Box sx={{ textAlign: 'center', py: 8 }}><CircularProgress /></Box> :
       !s ? <Box sx={{ p: 2 }}><Alert severity='error'>Servicio no encontrado</Alert></Box> : (
       <Box sx={{ maxWidth: 430, mx: 'auto' }}>

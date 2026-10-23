@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
-import Swal from 'sweetalert2'
 import {
   Box,
   Card,
@@ -63,6 +62,8 @@ import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
 
 
 import { ROLES } from 'src/constants/roles'
+import { notify } from 'src/utils/notify'
+import { busyDialog } from 'src/utils/confirm'
 interface CourseUnit {
   id: number
   title: string
@@ -412,25 +413,13 @@ const LmsCoursePreview: React.FC = () => {
     if (isPreview || previewMode === 'admin') {
       // En modo preview admin, solo simular
       console.log('✅ Unidad completada (preview):', unitId);
-      Swal.fire({
-        icon: 'info',
-        title: 'Modo Preview',
-        text: 'En modo administrador el progreso no se guarda',
-        timer: 2000,
-        showConfirmButton: false
-      });
+      notify.info('Modo Preview', 'En modo administrador el progreso no se guarda');
       return;
     }
 
     try {
       // Mostrar loading
-      Swal.fire({
-        title: 'Guardando progreso...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
+      busyDialog.show('Guardando progreso...')
 
       // Marcar lección como completada en el backend
       await completeLessonMutation.mutateAsync({
@@ -445,22 +434,13 @@ const LmsCoursePreview: React.FC = () => {
       console.log('✅ Lección completada exitosamente');
 
       // Mostrar éxito
-      Swal.fire({
-        icon: 'success',
-        title: '¡Lección completada!',
-        text: 'Tu progreso ha sido guardado. La siguiente lección está desbloqueada.',
-        timer: 2000,
-        showConfirmButton: false
-      });
+      notify.success('¡Lección completada!', 'Tu progreso ha sido guardado. La siguiente lección está desbloqueada.');
     } catch (error: any) {
       console.error('❌ Error al completar lección:', error);
 
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al guardar progreso',
-        text: error.response?.data?.error?.message || 'No se pudo marcar la lección como completada',
-        confirmButtonText: 'OK'
-      });
+      notify.error('Error al guardar progreso', error.response?.data?.error?.message || 'No se pudo marcar la lección como completada');
+    } finally {
+      busyDialog.hide()
     }
   }
 
@@ -478,12 +458,7 @@ const LmsCoursePreview: React.FC = () => {
         setCurrentUnit(currentUnit + 1)
       } else {
         console.log('⚠️ La siguiente unidad está bloqueada. Completa la unidad actual primero.');
-        Swal.fire({
-          icon: 'warning',
-          title: 'Lección bloqueada',
-          text: 'Completa la lección actual antes de continuar',
-          confirmButtonText: 'Entendido'
-        });
+        notify.warning('Lección bloqueada', 'Completa la lección actual antes de continuar');
       }
     }
   }
@@ -802,13 +777,7 @@ const LmsCoursePreview: React.FC = () => {
 
                         if (isPreview || previewMode === 'admin') {
                           console.log('✅ Quiz completado en preview:', { score, totalPoints, percentage });
-                          Swal.fire({
-                            icon: 'info',
-                            title: 'Quiz Completado (Preview)',
-                            html: `<p>Puntuación: <strong>${score}/${totalPoints}</strong> (${percentage}%)</p>
-                                   <p><em>Modo administrador - El progreso no se guarda</em></p>`,
-                            confirmButtonText: 'OK'
-                          });
+                          notify.info('Quiz Completado (Preview)', `Puntuación: ${score}/${totalPoints} (${percentage}%). Modo administrador: el progreso no se guarda`)
                           return;
                         }
 
@@ -818,13 +787,7 @@ const LmsCoursePreview: React.FC = () => {
                             throw new Error('No se encontró la configuración del quiz para esta lección')
                           }
 
-                          Swal.fire({
-                            title: 'Guardando resultados del quiz...',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                              Swal.showLoading();
-                            }
-                          });
+                          busyDialog.show('Guardando resultados del quiz...')
 
                           const formattedAnswers = (currentUnitData.content.questions ?? []).reduce(
                             (acc: Record<number, number[]>, question: any, index: number) => {
@@ -847,6 +810,7 @@ const LmsCoursePreview: React.FC = () => {
                             }
                           })
 
+                          busyDialog.hide()
                           const passed = quizResult.results.passed
                           const backendPercentage = quizResult.results.percentage ?? percentage
 
@@ -865,22 +829,15 @@ const LmsCoursePreview: React.FC = () => {
                             percentage: backendPercentage
                           });
 
-                          Swal.fire({
-                            icon: passed ? 'success' : 'warning',
-                            title: passed ? '¡Quiz Aprobado!' : 'Quiz Completado',
-                            html: `<p>Puntuación: <strong>${score}/${totalPoints}</strong> (${backendPercentage}%)</p>
-                                   <p>${passed ? 'La siguiente lección está desbloqueada' : 'Necesitas 70% o más para aprobar'}</p>`,
-                            confirmButtonText: 'OK'
-                          });
+                          (passed ? notify.success : notify.warning)(
+                            passed ? '¡Quiz Aprobado!' : 'Quiz Completado',
+                            `Puntuación: ${score}/${totalPoints} (${backendPercentage}%). ${passed ? 'La siguiente lección está desbloqueada' : 'Necesitas 70% o más para aprobar'}`
+                          )
                         } catch (error: any) {
+                          busyDialog.hide()
                           console.error('❌ Error al completar quiz:', error);
 
-                          Swal.fire({
-                            icon: 'error',
-                            title: 'Error al guardar resultados',
-                            text: error.response?.data?.error?.message || 'No se pudo guardar el quiz',
-                            confirmButtonText: 'OK'
-                          });
+                          notify.error('Error al guardar resultados', error.response?.data?.error?.message || 'No se pudo guardar el quiz');
                         }
                       }}
                     />
@@ -974,12 +931,7 @@ const LmsCoursePreview: React.FC = () => {
                         setCurrentUnit(index);
                       } else if (!isPreview && previewMode !== 'admin') {
                         // Solo mostrar alerta en modo estudiante
-                        Swal.fire({
-                          icon: 'warning',
-                          title: 'Lección bloqueada',
-                          text: 'Completa las lecciones anteriores para desbloquear esta lección',
-                          confirmButtonText: 'Entendido'
-                        });
+                        notify.warning('Lección bloqueada', 'Completa las lecciones anteriores para desbloquear esta lección');
                       }
                     }}
                     sx={{

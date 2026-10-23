@@ -14,7 +14,7 @@ import {
 import { getApiErrorMessage } from '@utils/apiError'
 import { useCreateTypeAlias } from 'src/hooks/useCustomerIndicators'
 import { IndicatorTypeRow } from 'src/types/customerIndicators'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   EMERALD_GRADIENT,
   cleanTypeLabel,
@@ -46,13 +46,10 @@ const TypeAliasDialog: React.FC<Props> = ({ source, rows, onClose }) => {
     if (!source || !target) return
     try {
       await mutateAsync({ sourceName: source.label, targetName: target.label })
-      bigToast('Tipos asociados', 'success')
+      notify.success('Tipos asociados')
       onClose()
     } catch (error) {
-      bigToast(
-        getApiErrorMessage(error, 'No se pudo asociar el tipo.'),
-        'error'
-      )
+      notify.error(getApiErrorMessage(error, 'No se pudo asociar el tipo.'))
     }
   }
 

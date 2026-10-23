@@ -14,7 +14,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { getApiErrorMessage } from '@utils/apiError'
 import { useSaveIndicatorGoal } from 'src/hooks/useCustomerIndicators'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   EMERALD_GRADIENT,
   formatCount,
@@ -73,13 +73,10 @@ const GoalOverrideDialog: React.FC<Props> = ({
           manualGoal: Number(values.manualGoal),
           reason: values.reason.trim()
         })
-        bigToast('Meta guardada', 'success')
+        notify.success('Meta guardada')
         onClose()
       } catch (error) {
-        bigToast(
-          getApiErrorMessage(error, 'No se pudo guardar la meta.'),
-          'error'
-        )
+        notify.error(getApiErrorMessage(error, 'No se pudo guardar la meta.'))
       }
     }
   })

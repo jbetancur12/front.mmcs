@@ -53,8 +53,8 @@ import {
 } from '../../../Components/lms/ErrorBoundary/DashboardErrorBoundaries'
 import { useErrorReporting } from '../../../services/errorReportingService'
 import { MetricCardSkeleton } from '../../../Components/lms/LoadingStates/SkeletonComponents'
-import { useToast } from '../../../Components/lms/Notifications/ToastNotifications'
 import { MetricHelp, LMSMetricHelp } from '../../../Components/lms/Help/ContextualHelp'
+import { notify } from 'src/utils/notify'
 
 // Modern color palette following design system
 const colors = {
@@ -95,7 +95,6 @@ const LmsAdmin: React.FC = () => {
 
   const roleInfo = getRoleDisplayInfo(userRole)
   const { reportError } = useErrorReporting()
-  const { showError, showSuccess, showWarning } = useToast()
 
   // Fetch comprehensive dashboard data
   const {
@@ -222,9 +221,7 @@ const LmsAdmin: React.FC = () => {
   const handleQuickAction = (route: string, actionName?: string) => {
     navigate(route)
     if (actionName) {
-      showSuccess(`Navegando a ${actionName}`, {
-        duration: 2000
-      })
+      notify.success(`Navegando a ${actionName}`)
     }
   }
 
@@ -250,24 +247,15 @@ const LmsAdmin: React.FC = () => {
   // Handle API errors with toast notifications
   React.useEffect(() => {
     if (dashboardError) {
-      showError('Error al cargar datos del dashboard', {
-        title: 'Error de Conexión',
-        metadata: { section: 'dashboard' }
-      })
+      notify.error('Error al cargar datos del dashboard')
     }
     if (coursesError) {
-      showWarning('No se pudieron cargar algunos cursos', {
-        title: 'Advertencia',
-        metadata: { section: 'courses' }
-      })
+      notify.warning('No se pudieron cargar algunos cursos')
     }
     if (quizError) {
-      showError('Error al cargar analíticas de quizzes', {
-        title: 'Error de Datos',
-        metadata: { section: 'quizzes' }
-      })
+      notify.error('Error al cargar analíticas de quizzes')
     }
-  }, [dashboardError, coursesError, quizError, showError, showWarning])
+  }, [dashboardError, coursesError, quizError])
 
 
 

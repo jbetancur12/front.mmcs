@@ -10,7 +10,6 @@ import {
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { NonConformWorkReport } from './NonConformWorkReport.types'
-import Swal from 'sweetalert2'
 import {
   useCheckNonConformCode,
   useSaveNonConformWorkReport
@@ -28,6 +27,7 @@ import FormDateField from 'src/Components/Common/FormDateField'
 import FormErrorSummary from 'src/Components/Common/FormErrorSummary'
 import ScoreSelect, { ScoreSummary } from 'src/Components/Common/ScoreSelect'
 import RiskBadge from 'src/Components/Common/RiskBadge'
+import { notify } from 'src/utils/notify'
 
 type TabKey = 'hallazgo' | 'evaluacion' | 'riesgo' | 'acciones' | 'cierre'
 
@@ -365,21 +365,19 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
         }
         const isEdit = Boolean(initialData && initialData.id)
         await saveReport.mutateAsync({ id: initialData.id, payload })
-        await Swal.fire({
-          icon: 'success',
-          title: isEdit ? '¡Edición exitosa!' : '¡Creación exitosa!',
-          text: isEdit
+        await notify.success(
+          isEdit ? '¡Edición exitosa!' : '¡Creación exitosa!',
+          isEdit
             ? 'El reporte fue actualizado correctamente.'
             : 'El reporte fue creado correctamente.'
-        })
+        )
         if (onSuccess) onSuccess()
         resetForm()
       } catch (error) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'No se pudo guardar',
-          text: 'Ocurrió un error al guardar el reporte. Inténtalo de nuevo.'
-        })
+        await notify.error(
+          'No se pudo guardar',
+          'Ocurrió un error al guardar el reporte. Inténtalo de nuevo.'
+        )
       } finally {
         setSubmitting(false)
       }

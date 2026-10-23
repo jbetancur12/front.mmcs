@@ -23,7 +23,6 @@ import { QueryClient, useMutation } from 'react-query'
 import { Link } from 'react-router-dom'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 import { userStore } from 'src/store/userStore'
-import Swal from 'sweetalert2'
 import GenerateOrderModal from './GenerateOrderModal'
 
 import { PurchaseRequest, PurchaseRequestItem } from 'src/pages/Purchases/Types'
@@ -32,6 +31,9 @@ import UploadQuotationModal from './UploadQuotationModal'
 import { useState } from 'react'
 
 import { PERMISSIONS } from 'src/constants/permissions'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
+import { promptDialog } from 'src/utils/confirm'
 type RenderRowActionsProps = {
   row: { original: PurchaseRequest }
   queryClient: QueryClient
@@ -96,13 +98,11 @@ const RenderRowActions = ({
 
     // Si la acción es "reject", solicitamos el motivo
     if (action === 'reject') {
-      const { value: reason } = await Swal.fire({
+      const { value: reason } = await promptDialog({
         title: 'Motivo de rechazo',
-        input: 'text',
-        inputLabel: 'Ingrese el motivo de rechazo',
-        inputPlaceholder: 'Motivo de rechazo...',
-        showCancelButton: true,
-        cancelButtonText: 'Cancelar'
+        label: 'Ingrese el motivo de rechazo',
+        placeholder: 'Motivo de rechazo...',
+        confirmLabel: 'Rechazar'
       })
 
       if (!reason) return
@@ -114,21 +114,20 @@ const RenderRowActions = ({
       message = '¿Está seguro de que desea aprobar esta solicitud?'
     }
 
-    const result = await Swal.fire({
+    const result = await confirmDialog({
       title: 'Confirmación',
       text: message,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, continuar',
-      cancelButtonText: 'Cancelar'
+      confirmLabel: 'Sí, continuar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
     })
 
     if (result.isConfirmed) {
       try {
         await mutation.mutateAsync({ id, action, payload })
-        Swal.fire('Éxito', 'La acción se realizó correctamente.', 'success')
+        notify.success('Éxito', 'La acción se realizó correctamente.')
       } catch (error) {
-        Swal.fire('Error', 'No se pudo completar la acción.', 'error')
+        notify.error('Error', 'No se pudo completar la acción.')
       }
     }
   }

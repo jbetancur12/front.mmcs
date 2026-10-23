@@ -28,7 +28,7 @@ import {
 } from 'src/hooks/useCustomerIndicators'
 import { IndicatorTypeRow } from 'src/types/customerIndicators'
 import ProfileStatCard from '../Common/ProfileStatCard'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import ContractedServicesPanel from './ContractedServicesPanel'
 import IndicatorByTypeCard from './IndicatorByTypeCard'
 import IndicatorGoalCard from './IndicatorGoalCard'
@@ -91,9 +91,8 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
         { year, headquarter: headquarter || undefined }
       )
     } catch (error) {
-      bigToast(
-        getApiErrorMessage(error, 'No se pudo descargar el informe.'),
-        'error'
+      notify.error(
+        getApiErrorMessage(error, 'No se pudo descargar el informe.')
       )
     } finally {
       setDownloading(false)

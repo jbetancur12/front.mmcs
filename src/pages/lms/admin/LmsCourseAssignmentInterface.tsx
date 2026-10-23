@@ -48,10 +48,11 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient, useMutation } from 'react-query'
-import Swal from 'sweetalert2'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 interface Course {
   id: number
   title: string
@@ -306,11 +307,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al cargar cursos',
-          text: error.response?.data?.message || error.message || 'Ocurrió un error'
-        })
+        notify.error('Error al cargar cursos', error.response?.data?.message || error.message || 'Ocurrió un error')
       }
     }
   )
@@ -331,11 +328,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al cargar asignaciones',
-          text: error.response?.data?.message || error.message || 'Ocurrió un error'
-        })
+        notify.error('Error al cargar asignaciones', error.response?.data?.message || error.message || 'Ocurrió un error')
       }
     }
   )
@@ -373,12 +366,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
-        Swal.fire({
-          icon: 'success',
-          title: 'Asignación creada',
-          text: 'La regla quedó lista y ya puedes revisar su progreso o reenviar recordatorios.',
-          timer: 2000
-        })
+        notify.success('Asignación creada', 'La regla quedó lista y ya puedes revisar su progreso o reenviar recordatorios.')
         setActiveTab(0) // Volver al tab de asignaciones
         const nextParams = new URLSearchParams(searchParams)
         nextParams.set('tab', 'active')
@@ -391,11 +379,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         setSearchParams(nextParams, { replace: true })
       },
       onError: (error: any) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al crear asignación',
-          text: getApiMessage(error, 'No se pudo crear la asignación.')
-        })
+        notify.error('Error al crear asignación', getApiMessage(error, 'No se pudo crear la asignación.'))
       }
     }
   )
@@ -417,19 +401,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
-        Swal.fire({
-          icon: 'success',
-          title: 'Asignación actualizada',
-          text: 'La nueva fecha límite ya quedó guardada.',
-          timer: 2000
-        })
+        notify.success('Asignación actualizada', 'La nueva fecha límite ya quedó guardada.')
       },
       onError: (error: any) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al actualizar asignación',
-          text: getApiMessage(error, 'No se pudo actualizar la asignación.')
-        })
+        notify.error('Error al actualizar asignación', getApiMessage(error, 'No se pudo actualizar la asignación.'))
       }
     }
   )
@@ -441,19 +416,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
-        Swal.fire({
-          icon: 'success',
-          title: 'Asignación eliminada',
-          text: 'La regla ya no estará activa para ese curso.',
-          timer: 2000
-        })
+        notify.success('Asignación eliminada', 'La regla ya no estará activa para ese curso.')
       },
       onError: (error: any) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al eliminar asignación',
-          text: getApiMessage(error, 'No se pudo eliminar la asignación.')
-        })
+        notify.error('Error al eliminar asignación', getApiMessage(error, 'No se pudo eliminar la asignación.'))
       }
     }
   )
@@ -467,21 +433,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     },
     {
       onSuccess: (data: any) => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Recordatorio enviado',
-          text: `${data?.totalNotifications || 0} notificación(es) enviadas para esta asignación.`,
-          timer: 2000
-        })
+        notify.success('Recordatorio enviado', `${data?.totalNotifications || 0} notificación(es) enviadas para esta asignación.`)
         queryClient.invalidateQueries(['lms-all-assignments'])
         queryClient.invalidateQueries(['analytics', 'mandatory-training'])
       },
       onError: (error: any) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al enviar recordatorio',
-          text: getApiMessage(error, 'No se pudo enviar el recordatorio.')
-        })
+        notify.error('Error al enviar recordatorio', getApiMessage(error, 'No se pudo enviar el recordatorio.'))
       }
     }
   )
@@ -562,57 +519,33 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
   const handleCreateAssignment = () => {
     if (!selectedCourse) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Curso requerido',
-        text: 'Debes seleccionar un curso'
-      })
+      notify.warning('Curso requerido', 'Debes seleccionar un curso')
       return
     }
 
     if (assignmentType === 'users' && (!deadlineDays || deadlineDays < 1)) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Días requeridos',
-        text: 'Debes especificar el número de días para la fecha límite'
-      })
+      notify.warning('Días requeridos', 'Debes especificar el número de días para la fecha límite')
       return
     }
 
     if (assignmentType !== 'users' && !deadline) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Fecha límite requerida',
-        text: 'Debes seleccionar una fecha límite'
-      })
+      notify.warning('Fecha límite requerida', 'Debes seleccionar una fecha límite')
       return
     }
 
     if (assignmentType === 'role' && !selectedRole) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Rol requerido',
-        text: 'Debes seleccionar un rol'
-      })
+      notify.warning('Rol requerido', 'Debes seleccionar un rol')
       return
     }
 
     if (assignmentType === 'users' && selectedUsers.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Usuarios requeridos',
-        text: 'Debes seleccionar al menos un usuario'
-      })
+      notify.warning('Usuarios requeridos', 'Debes seleccionar al menos un usuario')
       return
     }
 
     const selectedCourseData = assignableCourses.find((course) => course.id === selectedCourse)
     if (!selectedCourseData) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Curso no asignable',
-        text: 'Las asignaciones LMS solo aplican a cursos internos o de audiencia mixta.'
-      })
+      notify.warning('Curso no asignable', 'Las asignaciones LMS solo aplican a cursos internos o de audiencia mixta.')
       return
     }
 
@@ -645,14 +578,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   }
 
   const handleSendNotification = (assignmentId: number) => {
-    Swal.fire({
-      icon: 'question',
-      title: '¿Enviar recordatorio?',
-      text: 'Se enviará un recordatorio a todos los usuarios asignados',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, enviar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    confirmDialog({ title: '¿Enviar recordatorio?', text: 'Se enviará un recordatorio a todos los usuarios asignados', confirmLabel: 'Sí, enviar', cancelLabel: 'Cancelar' }).then((result) => {
       if (result.isConfirmed) {
         sendNotificationMutation.mutate(assignmentId)
       }
@@ -662,17 +588,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const handleDeleteAssignment = (assignment: Assignment) => {
     const assignmentId = assignment.id
     const planNames = assignment.planOrigins.map((origin) => origin.plan_name).filter(Boolean).join(', ')
-    Swal.fire({
-      icon: 'warning',
-      title: '¿Eliminar asignación?',
-      text: planNames
+    confirmDialog({ title: '¿Eliminar asignación?', text: planNames
         ? `Se quita la asignación directa; el curso sigue asignado por el plan ${planNames}.`
-        : 'Esta acción no se puede deshacer',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#d33'
-    }).then((result) => {
+        : 'Esta acción no se puede deshacer', confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
       if (result.isConfirmed) {
         deleteAssignmentMutation.mutate(assignmentId)
       }
@@ -709,29 +627,17 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
 
     if (editAssignmentType !== 'users' && !editDeadline) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Fecha requerida',
-        text: 'Debes seleccionar una nueva fecha límite'
-      })
+      notify.warning('Fecha requerida', 'Debes seleccionar una nueva fecha límite')
       return
     }
 
     if (editAssignmentType === 'users' && editSelectedUsers.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Usuarios requeridos',
-        text: 'Debes seleccionar al menos un usuario.'
-      })
+      notify.warning('Usuarios requeridos', 'Debes seleccionar al menos un usuario.')
       return
     }
 
     if (editAssignmentType === 'users' && (!editDeadlineDays || editDeadlineDays < 1)) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Días requeridos',
-        text: 'Debes especificar el número de días para la fecha límite.'
-      })
+      notify.warning('Días requeridos', 'Debes especificar el número de días para la fecha límite.')
       return
     }
 

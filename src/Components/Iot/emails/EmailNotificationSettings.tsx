@@ -17,12 +17,11 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon
 } from '@mui/icons-material'
-import withReactContent from 'sweetalert2-react-content'
-import Swal from 'sweetalert2'
 import {
   useIotNotificationEmailMutations,
   useIotNotificationEmails
 } from '@hooks/iot/useIotNotificationEmails'
+import { notify } from 'src/utils/notify'
 // Utilidad para manejar peticiones API
 const apiRequest = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(url, options)
@@ -49,7 +48,6 @@ export const EmailNotificationSettings = ({
     emailConfig?: any
   } | null>(null)
 
-  const MySwal = withReactContent(Swal)
 
   // Cargar la lista de emails de notificación
   const { data: emails = [], isLoading: emailsLoading } =
@@ -81,12 +79,10 @@ export const EmailNotificationSettings = ({
       setError(null)
       setSuccess('Correo electrónico añadido correctamente')
 
-      MySwal.fire({
-        icon: 'success',
-        title: 'Correo electrónico añadido',
-        text: `El correo ${email} recibirá notificaciones de alarmas`,
-        confirmButtonText: 'Aceptar'
-      })
+      notify.success(
+        'Correo electrónico añadido',
+        `El correo ${email} recibirá notificaciones de alarmas`
+      )
 
       // Resetear el mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccess(null), 3000)
@@ -103,12 +99,10 @@ export const EmailNotificationSettings = ({
       setError(null)
       setSuccess('Correo electrónico eliminado correctamente')
 
-      MySwal.fire({
-        icon: 'warning',
-        title: 'Correo electrónico eliminado',
-        text: `${emailToRemove} ya no recibirá notificaciones`,
-        confirmButtonText: 'Entendido'
-      })
+      notify.warning(
+        'Correo electrónico eliminado',
+        `${emailToRemove} ya no recibirá notificaciones`
+      )
 
       // Resetear el mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccess(null), 3000)
@@ -134,21 +128,14 @@ export const EmailNotificationSettings = ({
       setTestResult(response)
 
       if (response.success) {
-        MySwal.fire({
-          icon: 'success',
-          title: 'Correo de prueba enviado',
-          text: response.fallbackUsed
+        notify.success(
+          'Correo de prueba enviado',
+          response.fallbackUsed
             ? 'El correo se guardó como un archivo de texto (modo de respaldo)'
-            : 'El correo se envió correctamente',
-          confirmButtonText: 'Aceptar'
-        })
+            : 'El correo se envió correctamente'
+        )
       } else {
-        MySwal.fire({
-          icon: 'error',
-          title: 'Error al enviar correo de prueba',
-          text: response.message,
-          confirmButtonText: 'Aceptar'
-        })
+        notify.error('Error al enviar correo de prueba', response.message)
       }
     } catch (err) {
       console.error('Error sending test email:', err)

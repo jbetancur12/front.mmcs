@@ -39,7 +39,6 @@ import {
   useServerTableState
 } from 'src/hooks/useServerTable'
 import { useSuppliers } from 'src/hooks/purchases/useSuppliers'
-import Swal from 'sweetalert2'
 import { useCan } from '@utils/functions'
 import { PurchaseRequestModal } from 'src/Components/Purchases/purchase-request-modal'
 import { useNavigate } from 'react-router-dom'
@@ -64,6 +63,8 @@ import {
 type QuickFilter = 'all' | 'pending' | 'toOrder' | 'late'
 
 import { PERMISSIONS } from 'src/constants/permissions'
+import { notify } from 'src/utils/notify'
+import { promptDialog } from 'src/utils/confirm'
 
 const PurchaseRequest: React.FC = () => {
   const navigate = useNavigate()
@@ -202,30 +203,23 @@ const PurchaseRequest: React.FC = () => {
 
   // Función para mostrar el popup de configuración del número inicial
   const showInitialSetupPopup = async () => {
-    const { value: initialId } = await Swal.fire({
+    const { value: initialId } = await promptDialog({
       title: 'Configurar número inicial',
-      input: 'number',
-      inputAttributes: {
-        min: '1'
-      },
-      inputPlaceholder: 'Ingrese el número inicial (ej. 1000)',
-      showCancelButton: true,
-      confirmButtonText: 'Guardar'
+      type: 'number',
+      min: 1,
+      placeholder: 'Ingrese el número inicial (ej. 1000)',
+      confirmLabel: 'Guardar'
     })
 
     if (initialId) {
       try {
         await setInitialId.mutateAsync(initialId)
-        Swal.fire(
-          '¡Configurado!',
-          'El número inicial ha sido establecido.',
-          'success'
-        )
+        notify.success('¡Configurado!', 'El número inicial ha sido establecido.')
         // La mutación invalida 'purchaseRequests' para refrescar el count
         // Abre el modal para crear la solicitud
         setModalOpen(true)
       } catch (error) {
-        Swal.fire('Error', 'No se pudo establecer el número inicial.', 'error')
+        notify.error('Error', 'No se pudo establecer el número inicial.')
       }
     }
   }

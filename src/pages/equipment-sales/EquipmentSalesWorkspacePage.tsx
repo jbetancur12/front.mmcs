@@ -37,7 +37,7 @@ import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   EQUIPMENT_QUOTATION_STATUS_TONES,
@@ -830,7 +830,6 @@ const EquipmentSalesWorkspacePage = () => {
         backgroundColor: '#f8fafb'
       }}
     >
-      <Toaster position='top-center' />
 
       <Button
         startIcon={<ArrowBackOutlinedIcon />}

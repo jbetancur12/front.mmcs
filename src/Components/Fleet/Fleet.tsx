@@ -6,7 +6,6 @@ import MaterialReactTable, {
   MRT_ColumnDef,
   MRT_Row
 } from 'material-react-table'
-import { bigToast, MySwal } from '../ExcelManipulation/Utils'
 import {
   Box,
   Button,
@@ -49,6 +48,8 @@ import { useCan } from '@utils/functions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 const validationSchema = yup.object().shape({
   pictureUrl: yup.mixed().required('Imagen es obligatoria'),
   vin: yup.string().required('Número de Identificación es obligatorio'),
@@ -156,7 +157,7 @@ const Fleet = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('vehicles')
-        bigToast('Hoja de Datos Modificada Exitosamente!', 'success')
+        notify.success('Hoja de Datos Modificada Exitosamente!')
       }
     }
   )
@@ -171,7 +172,7 @@ const Fleet = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('vehicles')
-        bigToast('Hoja de Datos Eliminada Exitosamente!', 'success')
+        notify.success('Hoja de Datos Eliminada Exitosamente!')
       }
     }
   )
@@ -200,12 +201,7 @@ const Fleet = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<Vehicle>) => {
-      MySwal.fire({
-        title: `¿Está seguro que desea eliminar la hoja de datos ${row.getValue('licensePlate')}?`,
-        text: 'No podrá recuperar esta información una vez eliminada',
-        showCancelButton: true,
-        confirmButtonText: 'Sí'
-      }).then((result) => {
+      confirmDialog({ title: `¿Está seguro que desea eliminar la hoja de datos ${row.getValue('licensePlate')}?`, text: 'No podrá recuperar esta información una vez eliminada', confirmLabel: 'Sí' }).then((result) => {
         if (result.isConfirmed) {
           deleteVehicle.mutate(row.getValue('id'))
         }
@@ -290,7 +286,7 @@ const Fleet = () => {
       vehicleStore.set(vehicle)
       navigate(`${vehicle.id}/trip`)
     } else {
-      bigToast('No se ha seleccionado un vehículo', 'error')
+      notify.error('No se ha seleccionado un vehículo')
     }
   }
 
@@ -333,13 +329,13 @@ const Fleet = () => {
           {
             onSuccess: () => {
               queryClient.invalidateQueries('vehicles')
-              bigToast('Vehículo Creado Exitosamente!', 'success')
+              notify.success('Vehículo Creado Exitosamente!')
               setCreateModalOpen(false)
               refetch()
             },
             onError: (error) => {
               console.error('Error al crear el vehículo:', error)
-              bigToast('Error al crear el vehículo', 'error')
+              notify.error('Error al crear el vehículo')
             }
           }
         )

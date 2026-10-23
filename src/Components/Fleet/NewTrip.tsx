@@ -13,7 +13,7 @@ import {
 import { Inspection, Trip, TripsResponse } from './types'
 import { addTripWithInspection, updateTripWithInspection } from './tripUtils'
 import InspectionComponent from './InspectionComponent'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { ArrowBack } from '@mui/icons-material'
 
 const NewTrip = () => {
@@ -54,19 +54,19 @@ const NewTrip = () => {
             ...inspection,
             inspectionType: 'Inspección de Entrada'
           })
-          bigToast('Viaje Actualizado Exitosamente!', 'success')
+          notify.success('Viaje Actualizado Exitosamente!')
         } else {
           await addTripWithInspection(trip, {
             ...inspection,
             inspectionType: 'Inspección de Salida'
           })
-          bigToast('Viaje Creado Exitosamente!', 'success')
+          notify.success('Viaje Creado Exitosamente!')
         }
 
         navigate(-1)
       } catch (error: any) {
         console.log(error)
-        bigToast(error.error, 'error')
+        notify.error(error.error)
       }
     }
   }

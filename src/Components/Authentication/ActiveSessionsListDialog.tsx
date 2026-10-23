@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   useCloseOtherSessions,
   useCloseSession,
@@ -45,8 +45,8 @@ const ActiveSessionsListDialog: React.FC<ActiveSessionsListDialogProps> = ({
 
   const handleClose = (sessionId: string) => {
     closeSession.mutate(sessionId, {
-      onSuccess: () => Toast.fire('Sesión cerrada', '', 'success'),
-      onError: () => Toast.fire('No se pudo cerrar la sesión', '', 'error')
+      onSuccess: () => notify.success('Sesión cerrada'),
+      onError: () => notify.error('No se pudo cerrar la sesión')
     })
   }
 
@@ -54,11 +54,11 @@ const ActiveSessionsListDialog: React.FC<ActiveSessionsListDialogProps> = ({
     closeOthers.mutate(undefined, {
       onSuccess: () => {
         setConfirmOthers(false)
-        Toast.fire('Se cerraron las demás sesiones', '', 'success')
+        notify.success('Se cerraron las demás sesiones')
       },
       onError: () => {
         setConfirmOthers(false)
-        Toast.fire('No se pudieron cerrar las sesiones', '', 'error')
+        notify.error('No se pudieron cerrar las sesiones')
       }
     })
   }

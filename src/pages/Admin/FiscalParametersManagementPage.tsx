@@ -38,13 +38,14 @@ import {
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
-import Swal from 'sweetalert2'
 import { isAxiosError, AxiosResponse } from 'axios'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { NumericFormat, NumberFormatValues } from 'react-number-format'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 // Interfaz para los parámetros fiscales
 interface FiscalParameter {
@@ -188,7 +189,7 @@ const FiscalParametersManagementPage: React.FC = () => {
     } else if (err instanceof Error) {
       errorMessage = err.message
     }
-    Swal.fire('Error', errorMessage, 'error')
+    notify.error('Error', errorMessage)
   }
 
   const createMutation = useMutation<
@@ -197,7 +198,7 @@ const FiscalParametersManagementPage: React.FC = () => {
     CreateFiscalParameterVariables
   >((paramData) => axiosPrivate.post('/fiscal-parameters', paramData), {
     onSuccess: () => {
-      Swal.fire('Creado', 'Parámetro fiscal creado con éxito.', 'success')
+      notify.success('Creado', 'Parámetro fiscal creado con éxito.')
       handleGenericMutationSuccess()
     },
     onError: (err) =>
@@ -213,11 +214,7 @@ const FiscalParametersManagementPage: React.FC = () => {
       axiosPrivate.put(`/fiscal-parameters/${paramData.id}`, paramData),
     {
       onSuccess: () => {
-        Swal.fire(
-          'Actualizado',
-          'Parámetro fiscal actualizado con éxito.',
-          'success'
-        )
+        notify.success('Actualizado', 'Parámetro fiscal actualizado con éxito.')
         handleGenericMutationSuccess()
       },
       onError: (err) =>
@@ -229,11 +226,7 @@ const FiscalParametersManagementPage: React.FC = () => {
     (id: number) => axiosPrivate.delete(`/fiscal-parameters/${id}`),
     {
       onSuccess: () => {
-        Swal.fire(
-          'Eliminado',
-          'Parámetro fiscal eliminado con éxito.',
-          'success'
-        )
+        notify.success('Eliminado', 'Parámetro fiscal eliminado con éxito.')
         queryClient.invalidateQueries('fiscalParametersListManageable')
         queryClient.invalidateQueries('activeFiscalSettings')
       },
@@ -296,19 +289,17 @@ const FiscalParametersManagementPage: React.FC = () => {
     event.preventDefault()
     if (!formValues.keyName?.trim() || !formValues.valueType) {
       // 'value' puede ser "0" que es falsy pero válido
-      Swal.fire(
+      notify.warning(
         'Validación',
-        'Los campos "Key Name" y "Tipo de Valor" son requeridos.',
-        'warning'
+        'Los campos "Key Name" y "Tipo de Valor" son requeridos.'
       )
       return
     }
     if (formValues.value.trim() === '' && formValues.valueType !== 'TEXT') {
       // Para tipos numéricos, el valor no puede estar vacío
-      Swal.fire(
+      notify.warning(
         'Validación',
-        'El campo "Valor" es requerido para tipos numéricos.',
-        'warning'
+        'El campo "Valor" es requerido para tipos numéricos.'
       )
       return
     }
@@ -317,10 +308,9 @@ const FiscalParametersManagementPage: React.FC = () => {
       formValues.valueType !== 'TEXT' &&
       isNaN(parseFloat(formValues.value))
     ) {
-      Swal.fire(
+      notify.warning(
         'Validación',
-        `El valor para el tipo '${formValues.valueType}' debe ser numérico. Ingresaste: '${formValues.value}'`,
-        'warning'
+        `El valor para el tipo '${formValues.valueType}' debe ser numérico. Ingresaste: '${formValues.value}'`
       )
       return
     }
@@ -340,15 +330,12 @@ const FiscalParametersManagementPage: React.FC = () => {
   }
 
   const handleDelete = (id: number) => {
-    Swal.fire({
+    confirmDialog({
       title: '¿Estás seguro?',
       text: 'Esta acción eliminará permanentemente el parámetro. ¡No podrás revertirlo!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, ¡eliminar!',
-      cancelButtonText: 'Cancelar'
+      confirmLabel: 'Sí, ¡eliminar!',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
     }).then((result) => {
       if (result.isConfirmed) {
         deleteMutation.mutate(id)

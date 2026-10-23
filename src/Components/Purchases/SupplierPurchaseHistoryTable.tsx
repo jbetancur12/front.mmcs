@@ -21,8 +21,9 @@ import { CheckCircleOutline, HighlightOff } from '@mui/icons-material' // Icono 
 
 // Importar el tipo desde tu archivo central de tipos
 import { PurchaseHistoryEntry } from 'src/pages/Purchases/Types' // Ajusta la ruta
-import Swal from 'sweetalert2'
 import { isAxiosError } from 'axios'
+import { notify } from 'src/utils/notify'
+import { busyDialog } from 'src/utils/confirm'
 
 interface SupplierPurchaseHistoryTableProps {
   supplierId: string | number
@@ -58,14 +59,10 @@ const SupplierPurchaseHistoryTable: React.FC<
     orderCode: string
   ) => {
     try {
-      Swal.fire({
-        title: 'Generando Reporte...',
-        text: `Por favor espera mientras se genera el PDF para la orden ${orderCode}.`,
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading()
-        }
-      })
+      busyDialog.show(
+        'Generando Reporte...',
+        `Por favor espera mientras se genera el PDF para la orden ${orderCode}.`
+      )
 
       // El endpoint que mencionaste, ajusta la ruta base si es necesario (ej. si api() da /api)
       const reportUrl = `/reports/fog-mmcs-13/${purchaseOrderId}`
@@ -74,7 +71,7 @@ const SupplierPurchaseHistoryTable: React.FC<
         responseType: 'blob' // Importante para manejar la respuesta como archivo
       })
 
-      Swal.close() // Cerrar el loader de Swal
+      busyDialog.hide()
 
       const effectiveMimeType =
         response.headers['content-type'] || 'application/pdf'
@@ -93,14 +90,13 @@ const SupplierPurchaseHistoryTable: React.FC<
           }
         }, 500)
       } else {
-        Swal.fire(
+        notify.warning(
           'Error de Navegador',
-          'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.',
-          'warning'
+          'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.'
         )
       }
     } catch (err) {
-      Swal.close() // Asegurarse de cerrar el loader de Swal en caso de error
+      busyDialog.hide()
       console.error(
         `Error obteniendo el reporte PDF para la orden ID ${purchaseOrderId}:`,
         err
@@ -122,7 +118,7 @@ const SupplierPurchaseHistoryTable: React.FC<
       } else if (err instanceof Error) {
         errorMessage = err.message
       }
-      Swal.fire('Error', errorMessage, 'error')
+      notify.error('Error', errorMessage)
     }
   }
 

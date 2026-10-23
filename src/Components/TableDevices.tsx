@@ -31,7 +31,7 @@ import AsyncSelect from 'react-select/async'
 
 import { loadOptions, mapOptions } from '../utils/loadOptions'
 
-import { bigToast, styles } from './ExcelManipulation/Utils'
+import { styles } from './ExcelManipulation/Utils'
 import { TemplatesData } from './Templates'
 import {
   DEVICE_EXACT_FILTERS,
@@ -48,6 +48,7 @@ import {
 } from 'src/hooks/useServerTable'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { notify } from 'src/utils/notify'
 
 // Define interfaces
 export interface DeviceData {
@@ -113,7 +114,7 @@ const Table: React.FC = () => {
       })
 
       if (response.status === 201) {
-        bigToast('Equipo Creado Exitosamente!', 'success')
+        notify.success('Equipo Creado Exitosamente!')
       } else {
         console.error('Error al crear equipo')
       }
@@ -143,7 +144,7 @@ const Table: React.FC = () => {
           })
 
           if (response.status >= 200 && response.status < 300) {
-            bigToast('Equipo Modificado Exitosamente!', 'success')
+            notify.success('Equipo Modificado Exitosamente!')
           } else {
             console.error('Error al crear equipo')
           }
@@ -164,7 +165,7 @@ const Table: React.FC = () => {
       const response = await deleteDeviceMutation.mutateAsync(id)
 
       if (response.status === 204) {
-        bigToast('Equipo Eliminado Exitosamente!', 'success')
+        notify.success('Equipo Eliminado Exitosamente!')
       } else {
         console.error('Error al crear equipo')
       }

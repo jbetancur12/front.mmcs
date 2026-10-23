@@ -20,7 +20,7 @@ import {
 } from '@mui/material'
 
 import Loader from './Loader2'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
   CertificateHistoryItem,
@@ -110,21 +110,12 @@ function CertificatesList() {
         if (axiosError.response) {
           // La solicitud recibió una respuesta del servidor
 
-          bigToast(
-            `Error al descargar el archivo: ${axiosError.response.statusText}`,
-            'error'
-          )
+          notify.error(`Error al descargar el archivo: ${axiosError.response.statusText}`)
         } else {
-          bigToast(
-            `Error al descargar el archivo: ${axiosError.message}`,
-            'error'
-          )
+          notify.error(`Error al descargar el archivo: ${axiosError.message}`)
         }
       } else {
-        bigToast(
-          `Error desconocido al descargar el archivo: ${error.message}`,
-          'error'
-        )
+        notify.error(`Error desconocido al descargar el archivo: ${error.message}`)
       }
     }
   }
@@ -134,7 +125,7 @@ function CertificatesList() {
       const response = await deleteCertificateMutation.mutateAsync(id)
 
       if (response.status === 200) {
-        bigToast('Certificado eliminado con éxito', 'success')
+        notify.success('Certificado eliminado con éxito')
       }
     } catch (error) {
       console.error('Error al eliminar el certificado:', error)

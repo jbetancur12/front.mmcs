@@ -23,11 +23,12 @@ import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
-import Swal from 'sweetalert2'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import PersonnelFormModal from './PersonnelFormModal' // Ajusta la ruta
 import { useNavigate } from 'react-router-dom'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 export interface Personnel {
   id: number | string
@@ -72,19 +73,14 @@ const PersonnelManagementPage: React.FC = () => {
     },
     {
       onSuccess: () => {
-        Swal.fire(
-          '¡Éxito!',
-          'Los datos se han guardado correctamente.',
-          'success'
-        )
+        notify.success('¡Éxito!', 'Los datos se han guardado correctamente.')
         queryClient.invalidateQueries('personnelList') // Refrescar la tabla
         handleCloseModal()
       },
       onError: (err: any) => {
-        Swal.fire(
+        notify.error(
           'Error',
-          err.response?.data?.message || 'No se pudo guardar la información.',
-          'error'
+          err.response?.data?.message || 'No se pudo guardar la información.'
         )
       }
     }
@@ -96,14 +92,13 @@ const PersonnelManagementPage: React.FC = () => {
       axiosPrivate.delete(`/personnel/${personId}`),
     {
       onSuccess: () => {
-        Swal.fire('Eliminado', 'La persona ha sido eliminada.', 'success')
+        notify.success('Eliminado', 'La persona ha sido eliminada.')
         queryClient.invalidateQueries('personnelList')
       },
       onError: (err: any) => {
-        Swal.fire(
+        notify.error(
           'Error',
-          err.response?.data?.message || 'No se pudo eliminar a la persona.',
-          'error'
+          err.response?.data?.message || 'No se pudo eliminar a la persona.'
         )
       }
     }
@@ -130,13 +125,11 @@ const PersonnelManagementPage: React.FC = () => {
   }
 
   const handleDelete = (personId: number | string) => {
-    Swal.fire({
+    confirmDialog({
       title: '¿Estás seguro?',
       text: 'Esta acción es irreversible.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar'
+      confirmLabel: 'Sí, eliminar',
+      tone: 'danger'
     }).then((result) => {
       if (result.isConfirmed) {
         deleteMutation.mutate(personId)

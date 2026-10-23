@@ -14,6 +14,7 @@ import useAxiosPrivate from '@utils/use-axios-private' // Tu hook de Axios priva
 
 // Importar la interfaz ApiDeviceData para la actualización de caché
 import { ApiDeviceData } from './LaboratoryMonitor'
+import { notify } from 'src/utils/notify'
 
 interface DeleteConfirmDialogProps {
   open: boolean
@@ -71,8 +72,8 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           'Ocurrió un error al eliminar el sensor.'
         // Mostrar el error en el diálogo mismo
         // Puedes usar un estado local para mostrar este error si quieres.
-        // Por ahora, solo lo logueamos y mostramos un alert simple.
-        alert(`Error al eliminar: ${apiErrorMessage}`)
+        // Por ahora, lo logueamos y mostramos un aviso.
+        notify.error('Error al eliminar', apiErrorMessage)
         // No cerramos automáticamente en caso de error para que el usuario vea el mensaje si se implementa en UI
       }
     }

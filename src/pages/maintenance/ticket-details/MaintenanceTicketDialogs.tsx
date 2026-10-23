@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogActions,
   Alert,
-  Snackbar,
   CircularProgress,
   LinearProgress
 } from '@mui/material'
@@ -65,9 +64,7 @@ const MaintenanceTicketDialogs = ({ ticket, details }: MaintenanceTicketDialogsP
     technicalReport,
     technicalReportLoading,
     closeConfirmDialog,
-    closeToast,
     confirmDialog,
-    toast,
     handleClosePreview,
     handleDownloadPreviewFile,
     previewOpen,
@@ -325,22 +322,6 @@ const MaintenanceTicketDialogs = ({ ticket, details }: MaintenanceTicketDialogsP
         onGeneratePdf={handleGenerateTechnicalReport}
       />
 
-      {/* Toast Notifications */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={6000}
-        onClose={closeToast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={closeToast}
-          severity={toast.severity}
-          variant='filled'
-          sx={{ width: '100%' }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
     </>
   )
 }

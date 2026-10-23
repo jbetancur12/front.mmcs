@@ -34,7 +34,7 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useMemo, useState } from 'react'
 import { useQueryClient } from 'react-query'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { userStore } from '../store/userStore'
 import { certificateTypeStore } from '../store/certificateTypeStore'
 import { deviceStore } from '../store/deviceStore'
@@ -47,13 +47,7 @@ import PDFViewer from './PDFViewer'
 import AsyncSelect from 'react-select/async'
 import { RepositoryData } from './Repository'
 import { loadOptions, mapOptions } from '../utils/loadOptions'
-import {
-  bigToast,
-  limitArraySize,
-  limitArraySizeCustomer,
-  limitArraySizeDevice,
-  styles
-} from './ExcelManipulation/Utils'
+import { limitArraySize, limitArraySizeCustomer, limitArraySizeDevice, styles } from './ExcelManipulation/Utils'
 import { customerStore } from '../store/customerStore'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
@@ -67,6 +61,7 @@ import {
 import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { notify } from 'src/utils/notify'
 export function convertirCadena(cadena) {
   // Reemplazar espacios con guiones y convertir a minúsculas
   const cadenaFormateada = cadena.replace(/\s+/g, '-').toLowerCase()
@@ -156,15 +151,12 @@ const Table: React.FC = () => {
       const response = await createFileMutation.mutateAsync(fileData)
 
       if (response.status === 201) {
-        bigToast(
-          response.data.message || 'Certificado creado exitosamente!',
-          'success'
-        )
+        notify.success(response.data.message || 'Certificado creado exitosamente!')
       } else {
         // Manejar otros códigos de estado no exitosos
         const errorMessage =
           response.data?.error || 'Error desconocido al crear certificado'
-        bigToast(errorMessage, 'error')
+        notify.error(errorMessage)
         console.error('Error del servidor:', response.data)
       }
     } catch (error: any) {
@@ -191,7 +183,7 @@ const Table: React.FC = () => {
         errorMessage = 'El servidor no respondió'
       }
 
-      bigToast(errorMessage, 'error')
+      notify.error(errorMessage)
       console.error('Error detallado:', error)
     }
   }
@@ -553,7 +545,6 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <Toaster />
       <Loader loading={loading} />
       {/* <Pdf/> */}
       <MaterialReactTable
@@ -758,7 +749,7 @@ export const CreateNewFileModal = ({
       onSubmit(formData)
       onClose()
     } catch (error) {
-      bigToast('Error al crear equipo', 'error')
+      notify.error('Error al crear equipo')
       console.error('Error de red:', error)
     }
   }

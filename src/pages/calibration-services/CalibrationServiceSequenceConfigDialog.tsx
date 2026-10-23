@@ -3,10 +3,11 @@ import { Button, MenuItem, TextField, Typography } from '@mui/material'
 import FormDialog, {
   FormDialogSection
 } from '../../Components/Common/FormDialog'
-import Swal from 'sweetalert2'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { useCalibrationAssignableMetrologists } from '../../hooks/useCalibrationServices'
 import { CalibrationServiceSequenceConfig } from '../../types/calibrationService'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 interface CalibrationServiceSequenceConfigDialogProps {
   open: boolean
@@ -64,8 +65,7 @@ const CalibrationServiceSequenceConfigDialog = ({
     Number(nextOdsNumber) !== (config?.nextOdsNumber ?? 0)
 
   const handleEnableEdit = async () => {
-    const result = await Swal.fire({
-      icon: 'warning',
+    const result = await confirmDialog({
       title: 'Habilitar edición',
       html: `
         <p style="text-align:left;margin-bottom:12px">Vas a habilitar la edición de la configuración de laboratorio. Esta operación tiene <strong>riesgos</strong>:</p>
@@ -76,11 +76,9 @@ const CalibrationServiceSequenceConfigDialog = ({
         </ul>
         <p style="text-align:left;font-weight:600">¿Confirmas que deseas habilitar la edición?</p>
       `,
-      confirmButtonText: 'Sí, habilitar edición',
-      cancelButtonText: 'Cancelar',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      reverseButtons: true
+      confirmLabel: 'Sí, habilitar edición',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
     })
     if (result.isConfirmed) {
       setEditMode(true)
@@ -94,27 +92,24 @@ const CalibrationServiceSequenceConfigDialog = ({
     // Validar que no sean menores a los actuales
     if (isAlreadyInitialized) {
       if (newQuote < (config?.nextQuoteNumber ?? 0)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Consecutivo inválido',
-          text: `El consecutivo de oferta no puede ser menor al actual (${config?.nextQuoteNumber}). Ya se emitieron documentos hasta ese número.`
-        })
+        notify.error(
+          'Consecutivo inválido',
+          `El consecutivo de oferta no puede ser menor al actual (${config?.nextQuoteNumber}). Ya se emitieron documentos hasta ese número.`
+        )
         return
       }
       if (newOds < (config?.nextOdsNumber ?? 0)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Consecutivo inválido',
-          text: `El consecutivo de ODS no puede ser menor al actual (${config?.nextOdsNumber}). Ya se emitieron documentos hasta ese número.`
-        })
+        notify.error(
+          'Consecutivo inválido',
+          `El consecutivo de ODS no puede ser menor al actual (${config?.nextOdsNumber}). Ya se emitieron documentos hasta ese número.`
+        )
         return
       }
     }
 
     // SweetAlert si hay cambios en consecutivos
     if (hasQuoteChanged || hasOdsChanged) {
-      const result = await Swal.fire({
-        icon: 'warning',
+      const result = await confirmDialog({
         title: '¿Cambiar consecutivos?',
         html: `
           <p style="text-align:left;margin-bottom:12px">Vas a modificar los consecutivos del módulo de calibración. Esta operación tiene <strong>riesgos</strong>:</p>
@@ -125,11 +120,9 @@ const CalibrationServiceSequenceConfigDialog = ({
           </ul>
           <p style="text-align:left;font-weight:600">¿Confirmas que deseas continuar?</p>
         `,
-        confirmButtonText: 'Sí, cambiar consecutivos',
-        cancelButtonText: 'Cancelar',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        reverseButtons: true
+        confirmLabel: 'Sí, cambiar consecutivos',
+        cancelLabel: 'Cancelar',
+        tone: 'danger'
       })
       if (!result.isConfirmed) return
     }

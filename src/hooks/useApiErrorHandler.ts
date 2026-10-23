@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { useSnackbar } from 'notistack'
+import { notify } from 'src/utils/notify'
 
 interface ApiError {
   status?: number
@@ -44,7 +44,6 @@ export const useApiErrorHandler = (
     onError
   } = options
 
-  const { enqueueSnackbar } = useSnackbar()
   const [error, setError] = useState<ApiError | null>(null)
   const [isRetrying, setIsRetrying] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
@@ -142,21 +141,14 @@ export const useApiErrorHandler = (
     // Show toast notification if enabled
     if (showToast) {
       const message = getErrorMessage(formattedError)
-      enqueueSnackbar(message, {
-        variant: 'error',
-        autoHideDuration: 5000,
-        anchorOrigin: {
-          vertical: 'top',
-          horizontal: 'right'
-        }
-      })
+      notify.error(message)
     }
 
     // Call custom error handler if provided
     if (onError) {
       onError(formattedError)
     }
-  }, [formatError, logErrors, showToast, getErrorMessage, enqueueSnackbar, onError])
+  }, [formatError, logErrors, showToast, getErrorMessage, onError])
 
   const executeWithRetry = useCallback(async <T>(
     operation: () => Promise<T>,

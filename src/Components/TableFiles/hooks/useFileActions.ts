@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { bigToast } from '../../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 export const useFileActions = (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>,
@@ -10,10 +10,10 @@ export const useFileActions = (
     async (id: number) => {
       try {
         await axiosPrivate.delete(`/files/${id}`)
-        bigToast('Archivo eliminado exitosamente', 'success')
+        notify.success('Archivo eliminado exitosamente')
         await fetchFiles({ force: true })
       } catch (error) {
-        bigToast('Error al eliminar archivo', 'error')
+        notify.error('Error al eliminar archivo')
         console.error('Delete error:', error)
       }
     },

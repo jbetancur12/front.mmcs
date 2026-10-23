@@ -19,7 +19,7 @@ import {
   useInternalUsers,
   useUpdatePlanAssignmentUsers
 } from 'src/hooks/useLms'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify as appNotify } from 'src/utils/notify'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 import {
   PlanDialogHeader,
@@ -83,25 +83,20 @@ const PlanAssignmentUsersDialog: React.FC<PlanAssignmentUsersDialogProps> = ({
         userIds: selected,
         notify
       })
-      Toast.fire({
-        icon: 'success',
-        title: 'Destino actualizado',
-        text: [
+      appNotify.success(
+        'Destino actualizado',
+        [
           added.length > 0 ? `${added.length} agregado(s)` : null,
           removed.length > 0 ? `${removed.length} quitado(s)` : null
         ]
           .filter(Boolean)
           .join(' · ')
-      })
+      )
       onClose()
     } catch (error) {
-      Toast.fire({
-        icon: 'error',
-        title: getStructuredApiErrorMessage(
-          error,
-          'No se pudo actualizar el destino.'
-        )
-      })
+      appNotify.error(
+        getStructuredApiErrorMessage(error, 'No se pudo actualizar el destino.')
+      )
     }
   }
 

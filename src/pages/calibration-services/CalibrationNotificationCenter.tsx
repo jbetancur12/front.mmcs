@@ -16,7 +16,7 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import DoneAllOutlinedIcon from '@mui/icons-material/DoneAllOutlined'
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
   useCalibrationNotifications,
@@ -81,7 +81,6 @@ const CalibrationNotificationCenter = () => {
 
   return (
     <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 }, minHeight: '100vh', backgroundColor: '#f8fafb' }}>
-      <Toaster position='top-center' />
 
       <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 3 }}>
         <Box>
