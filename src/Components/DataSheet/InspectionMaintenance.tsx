@@ -10,7 +10,7 @@ import {
   Tooltip
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
-import { format, isValid } from 'date-fns'
+import { formatDateOnly } from '@utils/dateOnly'
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import {
   Add,
@@ -89,10 +89,8 @@ const InspectionMaintenance: React.FC = () => {
         accessorKey: 'date',
         header: 'Fecha',
         size: 110,
-        Cell: ({ cell }: { cell: MRT_Cell<InspectionHistoryData> }) => {
-          const date = new Date(cell.getValue<string>())
-          return isValid(date) ? format(date, 'dd/MM/yyyy') : '—'
-        }
+        Cell: ({ cell }: { cell: MRT_Cell<InspectionHistoryData> }) =>
+          formatDateOnly(cell.getValue<string>()) ?? '—'
       },
       {
         accessorKey: 'activity',

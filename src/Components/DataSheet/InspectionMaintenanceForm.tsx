@@ -1,25 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  TextField,
-  Typography,
-  Grid,
-  Paper,
-  Divider,
-  Button,
-  Box,
-  MenuItem,
-  Select,
-  FormHelperText,
-  InputLabel,
-  FormControl
-} from '@mui/material'
+import { Box, Button, Paper } from '@mui/material'
+import { Build, Delete } from '@mui/icons-material'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
 
 import { bigToast } from '../ExcelManipulation/Utils'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
-import AsyncSelect from 'react-select/async'
 import Profile from '../../pages/Profile'
 import { loadOptions, mapOptions } from '../../utils/loadOptions'
 import {
@@ -28,8 +15,20 @@ import {
   useInspectionMaintenanceRecord,
   useSaveInspectionMaintenance
 } from '@hooks/dataSheets/useDataSheets'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
+import FormPage from 'src/Components/Common/FormPage'
+import FormSection, { FormGridItem } from 'src/Components/Common/FormSection'
+import FormikField from 'src/Components/Common/FormikField'
+import FormDateField from 'src/Components/Common/FormDateField'
+import FormErrorSummary from 'src/Components/Common/FormErrorSummary'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+import AsyncSelectField, {
+  type AsyncSelectOption
+} from 'src/Components/Common/AsyncSelectField'
+import {
+  DetailCell,
+  DetailField,
+  DetailSection
+} from 'src/Components/Common/DetailBlocks'
 
 // Definir los tipos para los valores del formulario
 export interface InspectionMaintenanceData {
@@ -138,7 +137,19 @@ const InspectionMaintenanceDataForm: React.FC = () => {
 
   const navigate = useNavigate()
 
-  const MySwal = withReactContent(Swal)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [profileOptions, setProfileOptions] = useState<AsyncSelectOption[]>([])
+
+  const searchProfiles = (input: string) =>
+    loadOptions<Profile>(input, 'profiles', (item) =>
+      mapOptions(item, 'id', 'name')
+    ) as unknown as Promise<AsyncSelectOption[]>
+
+  useEffect(() => {
+    searchProfiles('')
+      .then(setProfileOptions)
+      .catch(() => setProfileOptions([]))
+  }, [])
   const isEdit = Boolean(location.state && location.state.edit)
   const [editId, setEditId] = useState<number | null>(null)
   const equipoId = isEdit ? location.state.data.equipmentId : createId
@@ -202,7 +213,9 @@ const InspectionMaintenanceDataForm: React.FC = () => {
   const options = ['Bueno', 'Malo', 'No Aplica']
 
   const today = new Date()
-  const formattedDate = today.toISOString().split('T')[0]
+  const pad = (n: number) => String(n).padStart(2, '0')
+  // Fecha local (toISOString devolvía la del día siguiente por la tarde)
+  const formattedDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
 
   const formik = useFormik<InspectionMaintenanceData>({
     initialValues: {
@@ -257,29 +270,20 @@ const InspectionMaintenanceDataForm: React.FC = () => {
 
   const handleDelete = async () => {
     if (!editId) return
-    const result = await MySwal.fire({
-      title: '¿Está seguro que desea eliminar este mantenimiento?',
-      text: 'No podrá recuperar esta información una vez eliminada',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      icon: 'warning'
-    })
-    if (result.isConfirmed) {
-      try {
-        const response = await deleteInspectionMutation.mutateAsync(
-          `/inspectionMaintenance/${editId}`
-        )
-        if (response.status === 204 || response.status === 200) {
-          bigToast('Mantenimiento eliminado correctamente', 'success')
-          navigate(-1)
-        } else {
-          bigToast('Error al eliminar', 'error')
-        }
-      } catch (error) {
+    try {
+      const response = await deleteInspectionMutation.mutateAsync(
+        `/inspectionMaintenance/${editId}`
+      )
+      if (response.status === 204 || response.status === 200) {
+        bigToast('Mantenimiento eliminado correctamente', 'success')
+        navigate(-1)
+      } else {
         bigToast('Error al eliminar', 'error')
       }
+    } catch (error) {
+      bigToast('Error al eliminar', 'error')
     }
+    setConfirmDelete(false)
   }
 
   const fieldLabels: { [key in keyof InspectionMaintenanceData]: string } = {
@@ -307,263 +311,203 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     elaboradoPor: 'Elaborado Por'
   }
 
+  const buildSelects = (names: Array<keyof InspectionMaintenanceData>) =>
+    names.map((name) => (
+      <FormikField
+        key={name}
+        formik={formik}
+        name={name}
+        label={fieldLabels[name]}
+        options={options}
+      />
+    ))
+
   return (
     <>
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }} style={{ width: '100%' }}>
-        <Button
-          variant='contained'
-          color='secondary'
-          onClick={() => navigate(-1)}
-          sx={{ ml: 0, mb: 2 }}
-        >
-          Volver
-        </Button>
-        <Typography variant='h4' gutterBottom>
-          Inspección y Mantenimiento
-        </Typography>
-        <Divider sx={{ mb: 4 }} />
-        {equipmentInfo && (
-          <Box mb={4}>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Nombre:</strong> {equipmentInfo.equipmentName}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Marca:</strong> {equipmentInfo.serialNumber}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Marca:</strong> {equipmentInfo.brand}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Código Interno:</strong> {equipmentInfo.internalCode}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Modelo:</strong> {equipmentInfo.model}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Tipo de Servicio:</strong> {equipmentInfo.serviceType}
-                </Typography>
-              </Grid>
-            </Grid>
+      <FormPage
+        title={isEdit ? 'Editar mantenimiento' : 'Nuevo mantenimiento'}
+        subtitle={
+          equipmentInfo
+            ? `Inspección y mantenimiento · ${equipmentInfo.equipmentName} · ${equipmentInfo.internalCode}`
+            : 'Inspección y mantenimiento'
+        }
+        icon={<Build />}
+        onSubmit={formik.handleSubmit}
+        onCancel={() => navigate(-1)}
+        submitLabel={isEdit ? 'Actualizar' : 'Guardar'}
+        loading={formik.isSubmitting}
+        notices={
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              flexWrap: 'wrap'
+            }}
+          >
+            {formik.submitCount > 0 && (
+              <FormErrorSummary count={Object.keys(formik.errors).length} />
+            )}
+            {isEdit && (
+              <Button
+                color='error'
+                variant='outlined'
+                startIcon={<Delete />}
+                onClick={() => setConfirmDelete(true)}
+                sx={{ textTransform: 'none', fontWeight: 600 }}
+              >
+                Eliminar
+              </Button>
+            )}
           </Box>
+        }
+      >
+        {equipmentInfo && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, md: 3 },
+              borderRadius: '16px',
+              border: '1px solid #e5e7eb'
+            }}
+          >
+            <DetailSection title='Datos del equipo'>
+              <DetailCell>
+                <DetailField label='Nombre'>
+                  {equipmentInfo.equipmentName}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Código interno'>
+                  {equipmentInfo.internalCode}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Marca'>
+                  {equipmentInfo.brand || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Modelo'>
+                  {equipmentInfo.model || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Número de serie'>
+                  {equipmentInfo.serialNumber || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Tipo de servicio'>
+                  {equipmentInfo.serviceType || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+            </DetailSection>
+          </Paper>
         )}
-        <Box sx={{ p: 4, mt: 4 }} style={{ width: '100%', margin: 'auto' }}>
-          <form onSubmit={formik.handleSubmit}>
-            <Grid container spacing={3}>
-              {/* Renderizar cada campo del formulario */}
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='ID del equipo'
-                  name='equipmentId'
-                  disabled={true}
-                  value={formik.values.equipmentId}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.equipmentId &&
-                    Boolean(formik.errors.equipmentId)
+
+        <FormSection
+          title='1. Fecha y entorno'
+          description='Cuándo se hizo la intervención y cómo está el equipo por fuera.'
+        >
+          <FormDateField
+            label='Fecha'
+            name='date'
+            value={formik.values.date}
+            onChange={(value) => formik.setFieldValue('date', value)}
+            error={formik.touched.date && formik.errors.date}
+          />
+          {buildSelects([
+            'estadoCondicionesAmbientales',
+            'estadoSuperficieExterna'
+          ])}
+        </FormSection>
+
+        <FormSection
+          title='2. Sistema eléctrico'
+          description='Conexiones, alimentación y componentes electrónicos.'
+        >
+          {buildSelects([
+            'estadoConexionElectrica',
+            'estadoCambioDePoder',
+            'voltaje',
+            'verificarFusibles',
+            'tarjetasElectronicas',
+            'conexionesYSoldaduras'
+          ])}
+        </FormSection>
+
+        <FormSection
+          title='3. Sistema mecánico y neumático'
+          description='Limpieza, lubricación y estado de las partes móviles.'
+        >
+          {buildSelects([
+            'estadoValvulaAireComprimido',
+            'limpiezaFiltros',
+            'lubricacionRodamientos',
+            'sujecionTornillos',
+            'limpiezaSensoresOLentes',
+            'bandasDeTraccionOMovimiento',
+            'estadoManguerasDeAire'
+          ])}
+        </FormSection>
+
+        <FormSection
+          title='4. Funcionamiento'
+          description='Verificación de sensores y operación del equipo.'
+        >
+          {buildSelects(['funcionamientoSensores', 'comprobacionOperacion'])}
+        </FormSection>
+
+        <FormSection title='5. Conclusión'>
+          <FormGridItem>
+            <FormikField
+              formik={formik}
+              name='conclusion'
+              label={fieldLabels.conclusion}
+              multiline
+            />
+          </FormGridItem>
+          <FormikField
+            formik={formik}
+            name='comentarios'
+            label={fieldLabels.comentarios}
+            multiline
+          />
+          <AsyncSelectField<AsyncSelectOption>
+            label={fieldLabels.elaboradoPor}
+            value={
+              formik.values.elaboradoPor
+                ? {
+                    value: formik.values.elaboradoPor,
+                    label: formik.values.elaboradoPor
                   }
-                  helperText={
-                    formik.touched.equipmentId && formik.errors.equipmentId
-                  }
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='Fecha'
-                  type='date'
-                  name='date'
-                  value={formik.values.date}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.date && Boolean(formik.errors.date)}
-                  helperText={formik.touched.date && formik.errors.date}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
+                : null
+            }
+            onChange={(option) =>
+              formik.setFieldValue('elaboradoPor', option ? option.label : '')
+            }
+            loadOptions={searchProfiles}
+            defaultOptions={profileOptions}
+            helperText={
+              formik.touched.elaboradoPor && formik.errors.elaboradoPor
+                ? formik.errors.elaboradoPor
+                : undefined
+            }
+          />
+        </FormSection>
+      </FormPage>
 
-              {/* Añadir campos específicos */}
-              {[
-                'estadoCondicionesAmbientales',
-                'estadoSuperficieExterna',
-                'estadoConexionElectrica',
-                'estadoCambioDePoder',
-                'voltaje',
-                'verificarFusibles',
-                'tarjetasElectronicas',
-                'conexionesYSoldaduras',
-                'estadoValvulaAireComprimido',
-                'limpiezaFiltros',
-                'lubricacionRodamientos',
-                'sujecionTornillos',
-                'limpiezaSensoresOLentes',
-                'bandasDeTraccionOMovimiento',
-                'estadoManguerasDeAire',
-                'funcionamientoSensores',
-                'comprobacionOperacion'
-              ].map((field) => (
-                <Grid item xs={12} md={6} key={field}>
-                  <FormControl
-                    fullWidth
-                    error={
-                      formik.touched[
-                        field as keyof InspectionMaintenanceData
-                      ] &&
-                      Boolean(
-                        formik.errors[field as keyof InspectionMaintenanceData]
-                      )
-                    }
-                  >
-                    <InputLabel>
-                      {fieldLabels[field as keyof InspectionMaintenanceData]}
-                    </InputLabel>
-                    <Select
-                      label={
-                        fieldLabels[field as keyof InspectionMaintenanceData]
-                      }
-                      name={field}
-                      value={
-                        formik.values[field as keyof InspectionMaintenanceData]
-                      }
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    >
-                      {options.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    <FormHelperText>
-                      {formik.touched[
-                        field as keyof InspectionMaintenanceData
-                      ] &&
-                        formik.errors[field as keyof InspectionMaintenanceData]}
-                    </FormHelperText>
-                  </FormControl>
-                </Grid>
-              ))}
-
-              {['conclusion', 'comentarios', 'elaboradoPor'].map((field) => {
-                if (field === 'elaboradoPor') {
-                  return (
-                    <Grid item xs={12} md={6} key={field}>
-                      <AsyncSelect
-                        cacheOptions
-                        defaultOptions
-                        placeholder='Elaborado por'
-                        loadOptions={(inputValue) =>
-                          loadOptions<Profile>(inputValue, 'profiles', (item) =>
-                            mapOptions(item, 'id', 'name')
-                          )
-                        }
-                        onChange={(selectedOption: any) => {
-                          formik.setFieldValue(
-                            'elaboradoPor',
-                            selectedOption ? selectedOption.label : ''
-                          )
-                        }}
-                        value={
-                          formik.values.elaboradoPor
-                            ? {
-                                value: formik.values.elaboradoPor,
-                                label: formik.values.elaboradoPor
-                              }
-                            : null
-                        }
-                        styles={{
-                          control: (provided: any) => ({
-                            ...provided,
-                            minHeight: '40px',
-                            height: '55px',
-                            borderColor:
-                              formik.touched.elaboradoPor &&
-                              formik.errors.elaboradoPor
-                                ? 'red'
-                                : provided.borderColor
-                          })
-                        }}
-                        onBlur={() =>
-                          formik.setFieldTouched('elaboradoPor', true)
-                        }
-                      />
-                      {formik.touched.elaboradoPor &&
-                        formik.errors.elaboradoPor && (
-                          <div
-                            style={{ color: 'red', fontSize: 12, marginTop: 4 }}
-                          >
-                            {formik.errors.elaboradoPor}
-                          </div>
-                        )}
-                    </Grid>
-                  )
-                }
-                return (
-                  <Grid item xs={12} md={6} key={field}>
-                    <TextField
-                      label={
-                        fieldLabels[field as keyof InspectionMaintenanceData]
-                      }
-                      name={field}
-                      value={
-                        formik.values[field as keyof InspectionMaintenanceData]
-                      }
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={
-                        formik.touched[
-                          field as keyof InspectionMaintenanceData
-                        ] &&
-                        Boolean(
-                          formik.errors[
-                            field as keyof InspectionMaintenanceData
-                          ]
-                        )
-                      }
-                      helperText={
-                        formik.touched[
-                          field as keyof InspectionMaintenanceData
-                        ] &&
-                        formik.errors[field as keyof InspectionMaintenanceData]
-                      }
-                      fullWidth
-                    />
-                  </Grid>
-                )
-              })}
-
-              <Grid item xs={12}>
-                <Button variant='contained' color='primary' type='submit'>
-                  {isEdit ? 'Actualizar' : 'Guardar'}
-                </Button>
-                {isEdit && (
-                  <Button
-                    variant='outlined'
-                    color='error'
-                    onClick={handleDelete}
-                    sx={{ ml: 2 }}
-                  >
-                    Eliminar
-                  </Button>
-                )}
-              </Grid>
-            </Grid>
-          </form>
-        </Box>
-      </Paper>
+      <ConfirmDialog
+        open={confirmDelete}
+        tone='danger'
+        title='Eliminar mantenimiento'
+        message='No podrá recuperar esta información una vez eliminada.'
+        confirmLabel='Eliminar'
+        loading={deleteInspectionMutation.isLoading}
+        onConfirm={handleDelete}
+        onClose={() => setConfirmDelete(false)}
+      />
     </>
   )
 }

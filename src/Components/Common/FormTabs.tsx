@@ -25,7 +25,6 @@ const FormTabs: React.FC<FormTabsProps> = ({ tabs, value, onChange }) => (
     elevation={0}
     sx={{
       mb: 3,
-      maxWidth: 1100,
       borderRadius: '14px',
       border: '1px solid #e5e7eb',
       overflow: 'hidden'

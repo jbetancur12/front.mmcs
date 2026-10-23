@@ -12,16 +12,15 @@ interface FormSectionProps {
 const gridSx = {
   display: 'grid',
   gap: 2,
-  gridTemplateColumns: {
-    xs: 'minmax(0, 1fr)',
-    sm: 'repeat(2, minmax(0, 1fr))'
-  }
+  // Columnas según el ancho: mínimo 300px por campo y como máximo 3 por fila
+  gridTemplateColumns:
+    'repeat(auto-fill, minmax(min(100%, max(300px, calc((100% - 32px) / 3))), 1fr))'
 }
 
 /**
  * Sección de un formulario de página completa: tarjeta blanca con borde
- * `#e5e7eb`, título en negrita y los campos en una cuadrícula de 2 columnas
- * (1 en móvil). Es el equivalente de `FormDialogSection` fuera de un diálogo.
+ * `#e5e7eb`, título en negrita y los campos en una cuadrícula que se adapta al ancho
+ * (1 a 3 columnas, mínimo 300px por campo). Es el equivalente de `FormDialogSection` fuera de un diálogo.
  * Los hijos directos son subsecciones (`FormSubsection`) o campos.
  */
 const FormSection: React.FC<FormSectionProps> = ({

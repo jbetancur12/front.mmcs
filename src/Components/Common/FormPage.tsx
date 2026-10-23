@@ -54,7 +54,7 @@ const FormPage: React.FC<FormPageProps> = ({
   >
     <LmsPageHeader title={title} subtitle={subtitle} icon={icon} />
     {tabs}
-    <Box sx={{ display: 'grid', gap: 3, maxWidth: 1100 }}>{children}</Box>
+    <Box sx={{ display: 'grid', gap: 3 }}>{children}</Box>
     <Paper
       elevation={0}
       sx={{
@@ -62,7 +62,6 @@ const FormPage: React.FC<FormPageProps> = ({
         bottom: 0,
         zIndex: 2,
         mt: 3,
-        maxWidth: 1100,
         px: 3,
         py: 1.5,
         borderRadius: '16px',

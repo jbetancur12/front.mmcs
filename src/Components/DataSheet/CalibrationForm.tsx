@@ -3,19 +3,12 @@ import * as yup from 'yup'
 import { InspectionHistoryData } from './InspectionMaintenance'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { EquipmentInfo } from './InspectionMaintenanceForm'
 import { bigToast } from '../ExcelManipulation/Utils'
 import { useFormik } from 'formik'
-import {
-  Box,
-  Button,
-  Divider,
-  Grid,
-  Paper,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Box, Button, Paper } from '@mui/material'
+import { Delete, Straighten } from '@mui/icons-material'
 import { addMonths } from 'date-fns'
 import {
   useCalibrationRecord,
@@ -23,8 +16,17 @@ import {
   useDeleteDataSheetRecord,
   useSaveCalibration
 } from '@hooks/dataSheets/useDataSheets'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
+import FormPage from 'src/Components/Common/FormPage'
+import FormSection from 'src/Components/Common/FormSection'
+import FormikField from 'src/Components/Common/FormikField'
+import FormDateField from 'src/Components/Common/FormDateField'
+import FormErrorSummary from 'src/Components/Common/FormErrorSummary'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+import {
+  DetailCell,
+  DetailField,
+  DetailSection
+} from 'src/Components/Common/DetailBlocks'
 
 export interface CalibrationData {
   equipmentId: string | number
@@ -67,9 +69,7 @@ const validationSchema = yup.object().shape({
     .min(1, 'El ciclo debe ser al menos 1 mes')
 })
 
-const MySwal = withReactContent(Swal)
-
-const CalibrationForm = () => {
+const CalibrationForm: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
   // El equipo sale del estado de la navegación o, si se entra por enlace directo, de la ruta
@@ -78,6 +78,7 @@ const CalibrationForm = () => {
 
   const isEdit = Boolean(location.state && location.state.edit)
   const [editId, setEditId] = useState<number | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const equipoId = isEdit ? location.state.data.equipmentId : id
 
   const calibrationHistoryId: number | undefined =
@@ -206,196 +207,189 @@ const CalibrationForm = () => {
 
   const handleDelete = async () => {
     if (!editId) return
-    const result = await MySwal.fire({
-      title: '¿Está seguro que desea eliminar esta calibración?',
-      text: 'No podrá recuperar esta información una vez eliminada',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      icon: 'warning'
-    })
-    if (result.isConfirmed) {
-      try {
-        const response = await deleteCalibrationMutation.mutateAsync(
-          `/calibration/${editId}`
-        )
-        if (response.status === 204 || response.status === 200) {
-          bigToast('Calibración eliminada correctamente', 'success')
-          navigate(-1)
-        } else {
-          bigToast('Error al eliminar', 'error')
-        }
-      } catch (error) {
+    try {
+      const response = await deleteCalibrationMutation.mutateAsync(
+        `/calibration/${editId}`
+      )
+      if (response.status === 204 || response.status === 200) {
+        bigToast('Calibración eliminada correctamente', 'success')
+        navigate(-1)
+      } else {
         bigToast('Error al eliminar', 'error')
       }
+    } catch (error) {
+      bigToast('Error al eliminar', 'error')
     }
+    setConfirmDelete(false)
   }
 
+  const dateError = (name: 'date' | 'calibrationDate') =>
+    formik.touched[name] && formik.errors[name]
+      ? String(formik.errors[name])
+      : false
+
+  // La próxima calibración se calcula con la fecha de calibración y el ciclo del equipo
+  const nextCalibrationText = formik.values.calibrationDate
+    ? addMonths(
+        new Date(formik.values.calibrationDate),
+        Number(equipmentInfo?.calibrationCycle)
+      )
+        .toISOString()
+        .split('T')[0]
+    : ''
+
   return (
-    <Paper elevation={3} sx={{ p: 4, mt: 4 }} style={{ width: '100%' }}>
-      <Button
-        variant='contained'
-        color='secondary'
-        onClick={() =>
+    <>
+      <FormPage
+        title={isEdit ? 'Editar calibración' : 'Nueva calibración'}
+        subtitle={
+          equipmentInfo
+            ? `Inspección y mantenimiento · ${equipmentInfo.equipmentName} · ${equipmentInfo.internalCode}`
+            : 'Inspección y mantenimiento'
+        }
+        icon={<Straighten />}
+        onSubmit={formik.handleSubmit}
+        onCancel={() =>
           navigate(`/datasheets/${equipoId}/inspection-maintenance`)
         }
-        sx={{ ml: 0, mb: 2 }}
+        submitLabel={isEdit ? 'Actualizar' : 'Guardar'}
+        loading={formik.isSubmitting}
+        notices={
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              flexWrap: 'wrap'
+            }}
+          >
+            {formik.submitCount > 0 && (
+              <FormErrorSummary count={Object.keys(formik.errors).length} />
+            )}
+            {isEdit && (
+              <Button
+                color='error'
+                variant='outlined'
+                startIcon={<Delete />}
+                onClick={() => setConfirmDelete(true)}
+                sx={{ textTransform: 'none', fontWeight: 600 }}
+              >
+                Eliminar
+              </Button>
+            )}
+          </Box>
+        }
       >
-        Volver
-      </Button>
-      <Typography variant='h4' gutterBottom>
-        Calibración
-      </Typography>
-      <Divider sx={{ mb: 4 }} />
-      {equipmentInfo && (
-        <Box mb={4}>
-          <form onSubmit={formik.handleSubmit}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='ID del equipo'
-                  name='equipmentId'
-                  disabled={true}
-                  value={formik.values.equipmentId}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.equipmentId &&
-                    Boolean(formik.errors.equipmentId)
-                  }
-                  helperText={
-                    formik.touched.equipmentId && formik.errors.equipmentId
-                  }
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='Fecha'
-                  type='date'
-                  name='date'
-                  value={formik.values.date}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.date && Boolean(formik.errors.date)}
-                  helperText={formik.touched.date && formik.errors.date}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
+        {equipmentInfo && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, md: 3 },
+              borderRadius: '16px',
+              border: '1px solid #e5e7eb'
+            }}
+          >
+            <DetailSection title='Datos del equipo'>
+              <DetailCell>
+                <DetailField label='Nombre'>
+                  {equipmentInfo.equipmentName}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Código interno'>
+                  {equipmentInfo.internalCode}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Marca'>
+                  {equipmentInfo.brand || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Modelo'>
+                  {equipmentInfo.model || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Número de serie'>
+                  {equipmentInfo.serialNumber || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Tipo de servicio'>
+                  {equipmentInfo.serviceType || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+            </DetailSection>
+          </Paper>
+        )}
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='Fecha de Calibración'
-                  type='date'
-                  name='calibrationDate'
-                  value={formik.values.calibrationDate}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.date && Boolean(formik.errors.date)}
-                  helperText={formik.touched.date && formik.errors.date}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='Próxima Fecha de Calibración'
-                  type='date'
-                  name='nextCalibrationDate'
-                  value={
-                    formik.values.calibrationDate
-                      ? addMonths(
-                          new Date(formik.values.calibrationDate),
-                          Number(equipmentInfo.calibrationCycle)
-                        )
-                          .toISOString()
-                          .split('T')[0]
-                      : ''
-                  }
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.date && Boolean(formik.errors.date)}
-                  helperText={formik.touched.date && formik.errors.date}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='Nª de Certificado'
-                  type='text'
-                  name='certificateNumber'
-                  value={formik.values.certificateNumber}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.date && Boolean(formik.errors.date)}
-                  helperText={formik.touched.date && formik.errors.date}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label='Ciclo de Calibración'
-                  type='number'
-                  name='calibrationCycle'
-                  value={formik.values.calibrationCycle}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.calibrationCycle &&
-                    Boolean(formik.errors.calibrationCycle)
-                  }
-                  helperText={
-                    formik.touched.calibrationCycle &&
-                    formik.errors.calibrationCycle
-                  }
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  disabled // Si es un campo de solo lectura
-                />
-              </Grid>
-              {['comments', 'elaboratedBy'].map((field) => (
-                <Grid item xs={12} md={6} key={field}>
-                  <TextField
-                    label={fieldLabels[field as keyof CalibrationData]}
-                    name={field}
-                    value={formik.values[field as keyof CalibrationData]}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched[field as keyof CalibrationData] &&
-                      Boolean(formik.errors[field as keyof CalibrationData])
-                    }
-                    helperText={
-                      formik.touched[field as keyof CalibrationData] &&
-                      formik.errors[field as keyof CalibrationData]
-                    }
-                    fullWidth
-                  />
-                </Grid>
-              ))}
-              <Grid item xs={12}>
-                <Button variant='contained' color='primary' type='submit'>
-                  {isEdit ? 'Actualizar' : 'Guardar'}
-                </Button>
-                {isEdit && (
-                  <Button
-                    variant='outlined'
-                    color='error'
-                    onClick={handleDelete}
-                    sx={{ ml: 2 }}
-                  >
-                    Eliminar
-                  </Button>
-                )}
-              </Grid>
-            </Grid>
-          </form>
-        </Box>
-      )}
-    </Paper>
+        <FormSection
+          title='1. Calibración'
+          description='Fechas del servicio y número del certificado.'
+        >
+          <FormDateField
+            label='Fecha'
+            name='date'
+            value={formik.values.date}
+            onChange={(value) => formik.setFieldValue('date', value)}
+            error={dateError('date')}
+          />
+          <FormDateField
+            label='Fecha de calibración'
+            name='calibrationDate'
+            value={formik.values.calibrationDate}
+            onChange={(value) => formik.setFieldValue('calibrationDate', value)}
+            error={dateError('calibrationDate')}
+          />
+          <FormikField
+            formik={formik}
+            name='calibrationCycle'
+            type='number'
+            label='Ciclo de calibración (meses)'
+            helperText='Lo define el equipo; no se edita aquí.'
+            disabled
+          />
+          <FormDateField
+            label='Próxima fecha de calibración'
+            name='nextCalibrationDate'
+            value={nextCalibrationText}
+            onChange={() => undefined}
+            disabled
+          />
+          <FormikField
+            formik={formik}
+            name='certificateNumber'
+            label='Número de certificado'
+          />
+        </FormSection>
+
+        <FormSection title='2. Responsable'>
+          <FormikField
+            formik={formik}
+            name='elaboratedBy'
+            label={fieldLabels.elaboratedBy}
+          />
+          <FormikField
+            formik={formik}
+            name='comments'
+            label={fieldLabels.comments}
+            multiline
+          />
+        </FormSection>
+      </FormPage>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        tone='danger'
+        title='Eliminar calibración'
+        message='No podrá recuperar esta información una vez eliminada.'
+        confirmLabel='Eliminar'
+        loading={deleteCalibrationMutation.isLoading}
+        onConfirm={handleDelete}
+        onClose={() => setConfirmDelete(false)}
+      />
+    </>
   )
 }
 

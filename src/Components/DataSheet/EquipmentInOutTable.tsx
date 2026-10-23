@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import { Button, Chip, Container, Grid, Typography } from '@mui/material'
-import { format, isValid } from 'date-fns'
+import { formatDateOnly } from '@utils/dateOnly'
 import { ArrowBack, Download, History, SyncAlt } from '@mui/icons-material'
 import { useEquipmentInOutReport } from '@hooks/dataSheets/useDataSheets'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -44,11 +44,7 @@ const buttonSx = {
   '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
 } as const
 
-const dateText = (value?: string | null) => {
-  if (!value) return null
-  const date = new Date(value)
-  return isValid(date) ? format(date, 'dd/MM/yyyy') : null
-}
+const dateText = formatDateOnly
 
 /** Chip por significado: bueno/funciona en verde, malo/no funciona en rojo. */
 const resultChip = (value?: string | null) => {

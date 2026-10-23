@@ -1,6 +1,6 @@
 import { useDevicesOnLoan } from '@hooks/dataSheets/useDataSheets'
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
-import { format, isValid } from 'date-fns'
+import { formatDateOnly } from '@utils/dateOnly'
 import {
   Box,
   Button,
@@ -118,11 +118,8 @@ const DevicesOnLoan: React.FC = () => {
         accessorKey: 'loanDate',
         header: 'Fecha de salida',
         size: 140,
-        Cell: ({ cell }: { cell: MRT_Cell<Device> }) => {
-          const value = cell.getValue<string | null>()
-          const date = value ? new Date(value) : null
-          return date && isValid(date) ? format(date, 'dd/MM/yyyy') : '—'
-        }
+        Cell: ({ cell }: { cell: MRT_Cell<Device> }) =>
+          formatDateOnly(cell.getValue<string | null>()) ?? '—'
       },
       {
         accessorKey: 'observationsOut',

@@ -18,6 +18,7 @@ import {
   useSaveEquipmentInOut
 } from '@hooks/dataSheets/useDataSheets'
 import { ROLES } from 'src/constants/roles'
+import { formatDateOnly } from '@utils/dateOnly'
 import { loadOptions, mapOptions } from '@utils/loadOptions'
 import { Profile } from '../../pages/Profiles'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -78,13 +79,8 @@ const todayText = () => {
 /** `yyyy-MM-dd` a `Date` a mediodía local, para que no cambie de día por la zona horaria. */
 const toDate = (text: string) => new Date(`${text}T12:00:00`)
 
-const formatDate = (value?: string) => {
-  if (!value) return 'Sin información'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? 'Sin información'
-    : date.toLocaleDateString('es-CO')
-}
+const formatDate = (value?: string) =>
+  formatDateOnly(value) ?? 'Sin información'
 
 const orMissing = (value?: string) => value || 'Sin información'
 
@@ -351,7 +347,6 @@ const EquipmentForm: React.FC = () => {
                         onChange={(v) => formik.setFieldValue('inDate', v)}
                         error={formik.touched.inDate && formik.errors.inDate}
                       />
-                      <Box />
                       <FormikField
                         formik={formik}
                         name='visualInInspection'
