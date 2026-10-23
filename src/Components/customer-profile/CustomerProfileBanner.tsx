@@ -1,4 +1,4 @@
-import { Edit, Email, LocationOn, Phone } from '@mui/icons-material'
+import { ArrowBack, Edit, Email, LocationOn, Phone } from '@mui/icons-material'
 import {
   Avatar,
   Box,
@@ -22,6 +22,8 @@ interface CustomerProfileBannerProps {
   canUpdateCustomer: boolean
   handleImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleStatusChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  /** Si se pasa, muestra el botón de volver dentro del banner (esquina superior izquierda). */
+  onBack?: () => void
 }
 
 /** Dato de contacto del banner: ícono en círculo, etiqueta y valor. */
@@ -72,7 +74,8 @@ const CustomerProfileBanner = ({
   canChangeAvatar,
   canUpdateCustomer,
   handleImageChange,
-  handleStatusChange
+  handleStatusChange,
+  onBack
 }: CustomerProfileBannerProps) => (
   <Card
     elevation={0}
@@ -110,6 +113,27 @@ const CustomerProfileBanner = ({
         zIndex: 0
       }}
     />
+
+    {onBack && (
+      <Tooltip title='Volver a clientes'>
+        <IconButton
+          aria-label='Volver a clientes'
+          onClick={onBack}
+          size='small'
+          sx={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            zIndex: 2,
+            color: 'white',
+            bgcolor: 'rgba(255,255,255,0.18)',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
+          }}
+        >
+          <ArrowBack fontSize='small' />
+        </IconButton>
+      </Tooltip>
+    )}
 
     <CardContent sx={{ p: 4, position: 'relative', zIndex: 1 }}>
       <Grid container spacing={3} alignItems='center'>

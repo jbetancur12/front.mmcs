@@ -5,14 +5,12 @@ import {
   Card,
   CardContent,
   Typography,
-  IconButton,
   CircularProgress,
   useTheme,
   useMediaQuery,
   Container,
   Alert
 } from '@mui/material'
-import { ArrowBack } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -367,22 +365,9 @@ const ModernCustomerProfile: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 2 }}>
-      {/* Header with Back Button */}
-      <Box sx={{ mb: 3 }}>
-        <IconButton
-          onClick={() => navigate('/customers')}
-          sx={{
-            mb: 2,
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.2)' }
-          }}
-        >
-          <ArrowBack sx={{ color: '#10b981' }} />
-        </IconButton>
-      </Box>
-
-      {/* Customer Profile Header */}
+      {/* Customer Profile Header (el botón de volver va dentro del banner) */}
       <CustomerProfileBanner
+        onBack={() => navigate('/customers')}
         image={image}
         customerData={customerData}
         canChangeAvatar={canChangeAvatar}
