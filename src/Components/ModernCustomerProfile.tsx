@@ -39,8 +39,7 @@ import {
   UsersTab
 } from './customer-profile/CustomerSectionTabs'
 import CustomerStatsCards from './customer-profile/CustomerStatsCards'
-import EquipmentFilters from './customer-profile/EquipmentFilters'
-import EquipmentList from './customer-profile/EquipmentList'
+import EquipmentTable from './customer-profile/EquipmentTable'
 import {
   exportOverviewReport,
   exportToExcel,
@@ -169,21 +168,6 @@ const ModernCustomerProfile: React.FC = () => {
     await changeStatus(newStatus)
   }
 
-  const handlePageChange = useCallback(
-    (direction: 'prev' | 'next') => {
-      if (direction === 'prev' && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1)
-      } else if (
-        direction === 'next' &&
-        apiResponse &&
-        currentPage < apiResponse.totalPages
-      ) {
-        setCurrentPage((prev) => prev + 1)
-      }
-    },
-    [currentPage, apiResponse]
-  )
-
   const handleStatusFilter = useCallback(
     (status: StatusFilter) => {
       const next = statusFilter === status ? null : status
@@ -198,11 +182,6 @@ const ModernCustomerProfile: React.FC = () => {
     },
     [statusFilter, setSearchParams]
   )
-
-  const clearSearch = useCallback(() => {
-    setSearchTerm('')
-    setCurrentPage(1)
-  }, [])
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value)
@@ -432,7 +411,7 @@ const ModernCustomerProfile: React.FC = () => {
           minHeight: '400px'
         }}
       >
-        <CardContent sx={{ p: 4 }}>
+        <CardContent sx={{ p: activeTab === 'equipment' ? 2 : 4 }}>
           {activeTab === 'overview' && (
             <OverviewTab
               handleTabChange={handleTabChange}
@@ -442,39 +421,25 @@ const ModernCustomerProfile: React.FC = () => {
           )}
 
           {activeTab === 'equipment' && (
-            <Box>
-              <Typography variant='h5' fontWeight='bold' gutterBottom>
-                Gestión de Equipos
-              </Typography>
-
-              {/* Advanced Search and Filters */}
-              <EquipmentFilters
-                apiResponse={apiResponse}
-                statusFilter={statusFilter}
-                handleStatusFilter={handleStatusFilter}
-                searchTerm={searchTerm}
-                handleSearchChange={handleSearchChange}
-                clearSearch={clearSearch}
-                matchedFields={matchedFields}
-                canCreateFile={canCreateFile}
-                onOpenCreateModal={() => setIsCreateModalOpen(true)}
-                isDownloading={isDownloading}
-                onDownload={handleDownloadOption}
-              />
-
-              {/* Equipment Grid */}
-              <EquipmentList
-                apiResponse={apiResponse}
-                certificatesData={certificatesData}
-                searchTerm={searchTerm}
-                clearSearch={clearSearch}
-                handleDelete={handleDelete}
-                sedes={customerData?.sede || []}
-                rol={$userStore.rol}
-                currentPage={currentPage}
-                handlePageChange={handlePageChange}
-              />
-            </Box>
+            <EquipmentTable
+              apiResponse={apiResponse}
+              certificatesData={certificatesData}
+              searchTerm={searchTerm}
+              onSearchChange={handleSearchChange}
+              statusFilter={statusFilter}
+              onStatusFilter={handleStatusFilter}
+              matchedFields={matchedFields}
+              canCreateFile={canCreateFile}
+              onOpenCreateModal={() => setIsCreateModalOpen(true)}
+              isDownloading={isDownloading}
+              onDownload={handleDownloadOption}
+              handleDelete={handleDelete}
+              onChanged={() => void refetch()}
+              sedes={customerData?.sede || []}
+              rol={$userStore.rol}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
           )}
 
           {activeTab === 'indicators' && showIndicatorsTab && id && (
