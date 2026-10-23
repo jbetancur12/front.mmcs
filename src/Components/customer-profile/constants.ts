@@ -34,5 +34,7 @@ export const customerProfileKeys = {
     statusFilter: StatusFilter | null
   ) =>
     ['certificates-data', id, searchTerm, currentPage, statusFilter] as const,
+  // Empieza por 'certificates-data' para refrescarse junto con la lista de equipos
+  overview: (id?: string) => ['certificates-data', id, 'overview'] as const,
   lmsCourses: (id?: string) => ['customer-lms-courses', id] as const
 }

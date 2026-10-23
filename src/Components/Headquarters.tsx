@@ -1,36 +1,35 @@
-import React from 'react'
 import {
+  Add,
+  ArrowBack,
+  Business,
+  DeleteOutline,
+  EditOutlined,
+  VisibilityOutlined
+} from '@mui/icons-material'
+import {
+  Avatar,
   Box,
   Button,
-  TextField,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  Avatar,
   IconButton,
-  Fade,
-  Chip,
-  Alert,
-  Tooltip
+  TextField,
+  Tooltip,
+  Typography
 } from '@mui/material'
-import {
-  ArrowBack,
-  Add,
-  Edit,
-  Check,
-  Cancel,
-  LocationOn,
-  Business,
-  Visibility,
-  Delete
-} from '@mui/icons-material'
+import { MRT_ColumnDef } from 'material-react-table'
+import React, { useMemo, useState } from 'react'
 
+import { useCan } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
+
+import DataTable from './Common/DataTable'
+import EmptyState from './Common/EmptyState'
+import FormDialog from './Common/FormDialog'
+import StatusPill from './Common/StatusPill'
+import { useCustomerOverview } from './customer-profile/useCustomerProfileData'
 import SelectedHq from './SelectedHq'
 
-import { PERMISSIONS } from 'src/constants/permissions'
-import { useCan } from '@utils/functions'
 interface HeadquartersProps {
+  customerId?: string
   setSelectedSede: (sede: string | null) => void
   selectedSede: string | null
   onDelete: (id: number) => void
@@ -40,7 +39,24 @@ interface HeadquartersProps {
   onEditSede: (oldSede: string, newSede: string) => void
 }
 
+interface SedeRow {
+  name: string
+  equipment: number | null
+}
+
+const primaryButtonSx = {
+  bgcolor: '#00BFA5',
+  borderRadius: '10px',
+  textTransform: 'none',
+  fontWeight: 700,
+  boxShadow: 'none',
+  whiteSpace: 'nowrap',
+  '&:hover': { bgcolor: '#00ACC1', boxShadow: 'none' }
+} as const
+
+/** Sedes del cliente en una tabla; agregar y editar con un diálogo. */
 const Headquarters: React.FC<HeadquartersProps> = ({
+  customerId,
   setSelectedSede,
   selectedSede,
   onDelete,
@@ -49,399 +65,224 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   onAddSede,
   onEditSede
 }) => {
-  const [selectedSedeString, setSelectedSedeString] = React.useState<
-    string | null
-  >(null)
+  const [selectedSedeString, setSelectedSedeString] = useState<string | null>(
+    null
+  )
   const canManageSites = useCan(PERMISSIONS.CUSTOMERS_SITE_MANAGE)
-  const [isAdding, setIsAdding] = React.useState(false)
-  const [newSede, setNewSede] = React.useState('')
+  // null = cerrado; '' = agregar; texto = editar esa sede
+  const [dialogSede, setDialogSede] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
+  const { data: overview } = useCustomerOverview(customerId)
 
-  // Estados para la edición en línea
-  const [editingIndex, setEditingIndex] = React.useState<number | null>(null)
-  const [editingValue, setEditingValue] = React.useState<string>('')
+  const rows = useMemo<SedeRow[]>(() => {
+    const counts = new Map(
+      (overview?.headquarters ?? []).map((hq) => [
+        hq.name.toLowerCase(),
+        hq.count
+      ])
+    )
+    return sedes.map((name) => ({
+      name,
+      equipment: overview ? counts.get(name.toLowerCase()) ?? 0 : null
+    }))
+  }, [sedes, overview])
 
-  const onSedeClick = (sede: string) => {
+  const columns = useMemo<MRT_ColumnDef<SedeRow>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Sede',
+        Cell: ({ cell }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              sx={{ width: 32, height: 32, bgcolor: '#00BFA5', fontSize: 14 }}
+            >
+              <Business fontSize='small' />
+            </Avatar>
+            <Typography variant='body2' fontWeight={600}>
+              {cell.getValue<string>().toUpperCase()}
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        id: 'estado',
+        header: 'Estado',
+        size: 120,
+        accessorFn: () => 'Activa',
+        Cell: () => <StatusPill size='small' tone='success' label='Activa' />
+      },
+      {
+        accessorKey: 'equipment',
+        header: 'Equipos',
+        size: 110,
+        Cell: ({ cell }) => cell.getValue<number | null>() ?? '—'
+      }
+    ],
+    []
+  )
+
+  const openSede = (sede: string) => {
     setSelectedSede(sede)
     setSelectedSedeString(sede)
   }
 
-  const handleAddClick = () => setIsAdding(true)
-
-  const handleCancelAdd = () => {
-    setIsAdding(false)
-    setNewSede('')
+  const closeDialog = () => {
+    setDialogSede(null)
+    setDraft('')
   }
 
-  const handleSubmitAdd = () => {
-    if (newSede.trim()) {
-      onAddSede(newSede.trim())
-      setNewSede('')
-      setIsAdding(false)
-    }
+  const submitDialog = () => {
+    const value = draft.trim()
+    if (!value) return
+    if (dialogSede) onEditSede(dialogSede, value)
+    else onAddSede(value)
+    closeDialog()
   }
 
-  const handleEditClick = (index: number, sede: string) => {
-    setEditingIndex(index)
-    setEditingValue(sede)
-  }
+  if (selectedSede) {
+    return (
+      <Box>
+        <Box display='flex' alignItems='center' mb={3}>
+          <IconButton
+            aria-label='Volver a las sedes'
+            onClick={() => setSelectedSede(null)}
+            sx={{ mr: 2, color: '#374151' }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+            Detalles de {selectedSedeString}
+          </Typography>
+        </Box>
 
-  const handleEditSave = (index: number) => {
-    const oldSede = sedes[index]
-    onEditSede(oldSede, editingValue)
-    setEditingIndex(null)
-  }
-
-  const handleEditCancel = () => {
-    setEditingIndex(null)
+        <SelectedHq
+          onDelete={onDelete}
+          sedes={sedes}
+          selectedSede={selectedSedeString}
+        />
+      </Box>
+    )
   }
 
   return (
-    <Box sx={{ py: 2 }}>
-      {!selectedSede ? (
-        <>
-          {/* Header with Add Button */}
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
-            <Box display="flex" alignItems="center">
-              <Avatar
-                sx={{
-                  backgroundColor: '#10b981',
-                  mr: 2,
-                  width: 40,
-                  height: 40
-                }}
-              >
-                <Business />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#1f2937' }}>
-                  Gestión de Sedes
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                  {sedes.length} {sedes.length === 1 ? 'sede registrada' : 'sedes registradas'}
-                </Typography>
-              </Box>
-            </Box>
-
-            {canManageSites && (
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleAddClick}
-                sx={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  }
-                }}
-              >
-                Agregar Sede
-              </Button>
-            )}
-          </Box>
-
-          {/* Add New Sede Form */}
-          {isAdding && (
-            <Fade in={isAdding}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '2px solid #10b981',
-                  borderRadius: '12px',
-                  mb: 3,
-                  backgroundColor: '#f0fdf4'
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" fontWeight="600" gutterBottom sx={{ color: '#1f2937' }}>
-                    Nueva Sede
-                  </Typography>
-                  <Box display="flex" gap={2} alignItems="end">
-                    <TextField
-                      label="Nombre de la sede"
-                      variant="outlined"
-                      fullWidth
-                      value={newSede}
-                      onChange={(e) => setNewSede(e.target.value)}
-                      placeholder="Ej: Sede Principal, Sucursal Norte..."
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                          '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#10b981'
-                          },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#10b981'
-                          }
-                        }
-                      }}
-                    />
-                    <Button
-                      variant="contained"
-                      onClick={handleSubmitAdd}
-                      disabled={!newSede.trim()}
-                      sx={{
-                        backgroundColor: '#10b981',
-                        borderRadius: '8px',
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        px: 3,
-                        '&:hover': {
-                          backgroundColor: '#059669'
-                        }
-                      }}
-                    >
-                      <Check />
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={handleCancelAdd}
-                      sx={{
-                        borderColor: '#d1d5db',
-                        color: '#374151',
-                        borderRadius: '8px',
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        '&:hover': {
-                          borderColor: '#9ca3af',
-                          backgroundColor: '#f9fafb'
-                        }
-                      }}
-                    >
-                      <Cancel />
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Fade>
-          )}
-
-          {/* Sedes Grid */}
-          {sedes.length === 0 ? (
-            <Alert
-              severity="info"
-              sx={{
-                borderRadius: '12px',
-                backgroundColor: '#f0f9ff',
-                border: '1px solid #bfdbfe'
-              }}
-            >
-              <Typography variant="body2">
-                No hay sedes registradas. Agrega la primera sede para comenzar.
-              </Typography>
-            </Alert>
-          ) : (
-            <Grid container spacing={3}>
-              {sedes.map((sede, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Fade in={true} timeout={300 + index * 100}>
-                    <Card
-                      elevation={0}
-                      sx={{
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '12px',
-                        transition: 'all 0.3s ease-in-out',
-                        cursor: 'pointer',
-                        '&:hover': {
-                          borderColor: '#10b981',
-                          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
-                          transform: 'translateY(-2px)'
-                        }
-                      }}
-                    >
-                      <CardContent sx={{ p: 3 }}>
-                        {editingIndex === index ? (
-                          // Edit Mode
-                          <Box>
-                            <TextField
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              autoFocus
-                              fullWidth
-                              variant="outlined"
-                              sx={{
-                                mb: 2,
-                                '& .MuiOutlinedInput-root': {
-                                  borderRadius: '8px'
-                                }
-                              }}
-                            />
-                            <Box display="flex" gap={1} justifyContent="end">
-                              <Tooltip title="Guardar cambios">
-                                <IconButton
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleEditSave(index)
-                                  }}
-                                  sx={{
-                                    color: '#10b981',
-                                    '&:hover': {
-                                      backgroundColor: '#f0fdf4'
-                                    }
-                                  }}
-                                >
-                                  <Check />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Cancelar">
-                                <IconButton
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleEditCancel()
-                                  }}
-                                  sx={{
-                                    color: '#6b7280',
-                                    '&:hover': {
-                                      backgroundColor: '#f9fafb'
-                                    }
-                                  }}
-                                >
-                                  <Cancel />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </Box>
-                        ) : (
-                          // View Mode
-                          <Box>
-                            <Box display="flex" alignItems="start" justifyContent="space-between" mb={2}>
-                              <Box display="flex" alignItems="center">
-                                <Avatar
-                                  sx={{
-                                    backgroundColor: '#f0fdf4',
-                                    mr: 2,
-                                    width: 32,
-                                    height: 32
-                                  }}
-                                >
-                                  <LocationOn sx={{ color: '#10b981', fontSize: 18 }} />
-                                </Avatar>
-                                <Typography
-                                  variant="h6"
-                                  fontWeight="600"
-                                  sx={{
-                                    color: '#1f2937',
-                                    fontSize: '1rem',
-                                    wordBreak: 'break-word'
-                                  }}
-                                >
-                                  {sede.toUpperCase()}
-                                </Typography>
-                              </Box>
-
-                              {canManageSites && (
-                                <Box display="flex">
-                                  <Tooltip title="Editar sede">
-                                    <IconButton
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleEditClick(index, sede)
-                                      }}
-                                      sx={{
-                                        color: '#6b7280',
-                                        '&:hover': {
-                                          backgroundColor: '#f0fdf4',
-                                          color: '#10b981'
-                                        }
-                                      }}
-                                    >
-                                      <Edit fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Eliminar sede">
-                                    <IconButton
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        onDeleteSede(sede)
-                                      }}
-                                      sx={{
-                                        color: '#ef4444',
-                                        '&:hover': {
-                                          backgroundColor: '#fef2f2',
-                                          color: '#dc2626'
-                                        }
-                                      }}
-                                    >
-                                      <Delete fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Box>
-                              )}
-                            </Box>
-
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                              <Chip
-                                label="Activa"
-                                size="small"
-                                sx={{
-                                  backgroundColor: '#f0fdf4',
-                                  color: '#059669',
-                                  fontWeight: 600,
-                                  fontSize: '0.75rem'
-                                }}
-                              />
-
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<Visibility />}
-                                onClick={() => onSedeClick(sede)}
-                                sx={{
-                                  borderColor: '#10b981',
-                                  color: '#10b981',
-                                  borderRadius: '8px',
-                                  textTransform: 'none',
-                                  fontWeight: 600,
-                                  fontSize: '0.875rem',
-                                  '&:hover': {
-                                    borderColor: '#059669',
-                                    backgroundColor: '#f0fdf4',
-                                    color: '#059669'
-                                  }
-                                }}
-                              >
-                                Ver Detalles
-                              </Button>
-                            </Box>
-                          </Box>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Fade>
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </>
-      ) : (
-        // Selected Sede View
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          flexWrap: 'wrap',
+          mb: 3
+        }}
+      >
         <Box>
-          <Box display="flex" alignItems="center" mb={3}>
-            <IconButton
-              onClick={() => setSelectedSede(null)}
-              sx={{
-                mr: 2,
-                color: '#374151',
-                '&:hover': { backgroundColor: '#f3f4f6' }
-              }}
-            >
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#1f2937' }}>
-              Detalles de {selectedSedeString}
-            </Typography>
-          </Box>
-
-          <SelectedHq
-            onDelete={onDelete}
-            sedes={sedes}
-            selectedSede={selectedSedeString}
-          />
+          <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+            Sedes
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Las ubicaciones del cliente y cuántos equipos tiene cada una.
+          </Typography>
         </Box>
-      )}
+        {canManageSites ? (
+          <Button
+            variant='contained'
+            startIcon={<Add />}
+            onClick={() => {
+              setDraft('')
+              setDialogSede('')
+            }}
+            sx={primaryButtonSx}
+          >
+            Agregar sede
+          </Button>
+        ) : null}
+      </Box>
+
+      <DataTable<SedeRow>
+        columns={columns}
+        data={rows}
+        itemLabel={['sede', 'sedes']}
+        searchPlaceholder='Buscar sede'
+        enableRowActions
+        muiTableContainerProps={{ sx: { maxHeight: 'none' } }}
+        muiTableBodyRowProps={({ row }) => ({
+          onClick: () => openSede(row.original.name),
+          sx: { cursor: 'pointer' }
+        })}
+        renderRowActions={({ row }) => (
+          <Box
+            sx={{ display: 'flex', gap: 0.5 }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Tooltip title='Ver detalles'>
+              <IconButton
+                size='small'
+                aria-label={`Ver detalles de ${row.original.name}`}
+                sx={{ color: '#00695C' }}
+                onClick={() => openSede(row.original.name)}
+              >
+                <VisibilityOutlined fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {canManageSites ? (
+              <>
+                <Tooltip title='Editar sede'>
+                  <IconButton
+                    size='small'
+                    aria-label={`Editar ${row.original.name}`}
+                    sx={{ color: '#2563eb' }}
+                    onClick={() => {
+                      setDraft(row.original.name)
+                      setDialogSede(row.original.name)
+                    }}
+                  >
+                    <EditOutlined fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Eliminar sede'>
+                  <IconButton
+                    size='small'
+                    aria-label={`Eliminar ${row.original.name}`}
+                    color='error'
+                    onClick={() => onDeleteSede(row.original.name)}
+                  >
+                    <DeleteOutline fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              </>
+            ) : null}
+          </Box>
+        )}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            icon={<Business />}
+            title='No hay sedes registradas'
+            hint='Agrega la primera sede para organizar los equipos del cliente.'
+          />
+        )}
+      />
+
+      <FormDialog
+        open={dialogSede !== null}
+        onClose={closeDialog}
+        title={dialogSede ? 'Editar sede' : 'Agregar sede'}
+        subtitle={dialogSede || undefined}
+        submitLabel={dialogSede ? 'Guardar cambios' : 'Agregar sede'}
+        onSubmit={submitDialog}
+        submitDisabled={!draft.trim() || draft.trim() === dialogSede}
+      >
+        <TextField
+          autoFocus
+          fullWidth
+          required
+          label='Nombre de la sede'
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder='Ej: Sede Principal, Sucursal Norte…'
+        />
+      </FormDialog>
     </Box>
   )
 }

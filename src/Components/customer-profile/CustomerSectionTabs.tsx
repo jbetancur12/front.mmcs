@@ -7,6 +7,7 @@ import Modules from '../Modules'
 import TableUsersCustomer from '../TableUsersCustomer'
 
 interface HeadquartersTabProps {
+  customerId?: string
   selectedSede: string | null
   setSelectedSede: (sede: string | null) => void
   sedes: string[]
@@ -17,6 +18,7 @@ interface HeadquartersTabProps {
 }
 
 export const HeadquartersTab = ({
+  customerId,
   selectedSede,
   setSelectedSede,
   sedes,
@@ -26,14 +28,8 @@ export const HeadquartersTab = ({
   handleEditSede
 }: HeadquartersTabProps) => (
   <Box>
-    <Typography variant='h5' fontWeight='bold' gutterBottom>
-      Sedes del Cliente
-    </Typography>
-    <Typography variant='body1' color='text.secondary' paragraph>
-      Gestiona las diferentes sedes y ubicaciones del cliente.
-    </Typography>
-
     <Headquarters
+      customerId={customerId}
       setSelectedSede={setSelectedSede}
       selectedSede={selectedSede}
       sedes={sedes}
@@ -64,13 +60,6 @@ export const UsersTab = ({
   canListCustomerUsers: boolean
 }) => (
   <Box>
-    <Typography variant='h5' fontWeight='bold' gutterBottom>
-      Usuarios del Cliente
-    </Typography>
-    <Typography variant='body1' color='text.secondary' paragraph>
-      Administra los usuarios asociados a este cliente.
-    </Typography>
-
     {!canListCustomerUsers ? (
       <Alert severity='warning' sx={{ mt: 3 }}>
         Tu rol no tiene acceso a esta sección.
@@ -100,11 +89,11 @@ export const ModulesTab = ({
   id?: string
 }) => (
   <Box>
-    <Typography variant='h5' fontWeight='bold' gutterBottom>
-      Módulos del Cliente
+    <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+      Módulos
     </Typography>
-    <Typography variant='body1' color='text.secondary' paragraph>
-      Configura los módulos y funcionalidades disponibles.
+    <Typography variant='body2' color='text.secondary'>
+      Activa o desactiva lo que este cliente puede usar.
     </Typography>
 
     {!canViewModules ? (

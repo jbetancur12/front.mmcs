@@ -44,6 +44,8 @@ export interface CertificatesApiResponse {
     term: string
     searchableFields: string[]
   }
+  /** Equipos por sede de toda la empresa; solo con `withHeadquarters`. */
+  headquarters?: { name: string; count: number }[]
   statistics: {
     expired: number
     expiringSoon: number

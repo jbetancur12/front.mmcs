@@ -311,6 +311,14 @@ const ModernCustomerProfile: React.FC = () => {
   }, [id, canManageCustomer, canViewCustomer, $userStore.customer, navigate])
 
   const matchedFields = getMatchedFields(apiResponse?.files ?? [])
+  // Resumen y Equipos dibujan sus propias tarjetas: sin marco exterior
+  const isBareTab = [
+    'equipment',
+    'overview',
+    'headquarters',
+    'users',
+    'modules'
+  ].includes(activeTab)
 
   if (loading) {
     return (
@@ -405,8 +413,13 @@ const ModernCustomerProfile: React.FC = () => {
       <Card
         elevation={0}
         sx={
-          activeTab === 'equipment'
-            ? { background: 'transparent' }
+          isBareTab
+            ? {
+                background: 'transparent',
+                border: 0,
+                boxShadow: 'none',
+                overflow: 'visible'
+              }
             : {
                 borderRadius: '16px',
                 border: '1px solid #e5e7eb',
@@ -416,12 +429,13 @@ const ModernCustomerProfile: React.FC = () => {
       >
         <CardContent
           sx={{
-            p: activeTab === 'equipment' ? 0 : 4,
-            '&:last-child': { pb: activeTab === 'equipment' ? 0 : 4 }
+            p: isBareTab ? 0 : 4,
+            '&:last-child': { pb: isBareTab ? 0 : 4 }
           }}
         >
           {activeTab === 'overview' && (
             <OverviewTab
+              customerId={id}
               handleTabChange={handleTabChange}
               isDownloading={isDownloading}
               handleDownloadOverviewReport={handleDownloadOverviewReport}
@@ -459,6 +473,7 @@ const ModernCustomerProfile: React.FC = () => {
 
           {activeTab === 'headquarters' && (
             <HeadquartersTab
+              customerId={id}
               setSelectedSede={setSelectedSede}
               selectedSede={selectedSede}
               sedes={customerData?.sede || []}

@@ -76,6 +76,27 @@ export const useCustomerCertificates = (
   return { ...query, apiResponse, stats }
 }
 
+/** Datos de la pestaña Resumen: los 5 que vencen primero y los equipos por sede. */
+export const useCustomerOverview = (id: string | undefined) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<CertificatesApiResponse>(
+    customerProfileKeys.overview(id),
+    async () => {
+      if (!id) throw new Error('No customer ID provided')
+      const response = await axiosPrivate.get(`/files/customer/${id}`, {
+        params: {
+          filter: 'nextOrExpired',
+          sort: 'nextCalibrationDate',
+          limit: 5,
+          withHeadquarters: true
+        }
+      })
+      return response.data
+    },
+    { enabled: !!id }
+  )
+}
+
 /** Cursos LMS visibles/asignables del cliente. */
 export const useCustomerLmsCourses = (
   id: string | undefined,

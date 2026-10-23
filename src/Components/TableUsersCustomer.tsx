@@ -1,42 +1,29 @@
 import {
-  Delete,
-  Edit,
   Add,
-  Person,
-  Email,
-  VpnKey,
-  Link as LinkIcon,
+  DeleteOutline,
+  EditOutlined,
   ForwardToInbox,
-  CheckCircle,
-  Cancel
+  Link as LinkIcon,
+  PersonOutline,
+  VpnKey
 } from '@mui/icons-material'
 import {
+  Avatar,
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  FormControlLabel,
   IconButton,
   Stack,
+  Switch,
   TextField,
   Tooltip,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  Avatar,
-  Chip,
-  Fade,
-  Alert,
-  Switch
+  Typography
 } from '@mui/material'
-
-import React, { useEffect, useState } from 'react'
-
+import { MRT_ColumnDef } from 'material-react-table'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-import { bigToast } from './ExcelManipulation/Utils'
+import { PERMISSIONS } from 'src/constants/permissions'
 import {
   useCustomerUsers,
   useDeleteUserById,
@@ -44,13 +31,20 @@ import {
   useResetUserPassword,
   useUpdateUserById
 } from 'src/hooks/useUsers'
-import ResetPasswordModal from './ResetPasswordModal'
 import { useCan } from '@utils/functions'
-import { PERMISSIONS } from 'src/constants/permissions'
-import Swal from 'sweetalert2'
+
 import { showActivationLinkDialog } from '../utils/sweetAlert'
-import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
-import withReactContent from 'sweetalert2-react-content'
+import {
+  fetchActivationLink,
+  resendActivationEmail
+} from '../utils/userActivation'
+
+import ConfirmDialog from './Common/ConfirmDialog'
+import DataTable from './Common/DataTable'
+import EmptyState from './Common/EmptyState'
+import FormDialog from './Common/FormDialog'
+import { bigToast } from './ExcelManipulation/Utils'
+import ResetPasswordModal from './ResetPasswordModal'
 
 // Define interfaces
 export interface UserData {
@@ -68,7 +62,15 @@ export interface UserData {
   rol: string
 }
 
-// API URL
+const primaryButtonSx = {
+  bgcolor: '#00BFA5',
+  borderRadius: '10px',
+  textTransform: 'none',
+  fontWeight: 700,
+  boxShadow: 'none',
+  whiteSpace: 'nowrap',
+  '&:hover': { bgcolor: '#00ACC1', boxShadow: 'none' }
+} as const
 
 // Main component
 const Table: React.FC = () => {
@@ -81,6 +83,7 @@ const Table: React.FC = () => {
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null)
   const [editingUser, setEditingUser] = useState<UserData | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<UserData | null>(null)
   const { id } = useParams()
   const { data: tableData = [], isLoading: loading } =
     useCustomerUsers<UserData>(id, {
@@ -92,9 +95,6 @@ const Table: React.FC = () => {
   const resetUserPassword = useResetUserPassword()
   const updateUserById = useUpdateUserById()
   const deleteUserById = useDeleteUserById()
-
-  // Initialize SweetAlert with React content
-  const MySwal = withReactContent(Swal)
 
   // Create a new user
   const onCreateUser = async (userData: UserData) => {
@@ -122,7 +122,6 @@ const Table: React.FC = () => {
       bigToast('Error al crear usuario', 'error')
     }
   }
-
 
   // Enlace de activación / reenvío de correo para usuarios que aún no activan su cuenta
   const handleActivationLink = async (target: { id: number }) => {
@@ -206,6 +205,8 @@ const Table: React.FC = () => {
     } catch (error) {
       console.error('Error de red:', error)
       bigToast('Error al eliminar usuario', 'error')
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -225,420 +226,190 @@ const Table: React.FC = () => {
     }
   }
 
-  const handleDeleteUser = async (user: UserData) => {
-    const result = await MySwal.fire({
-      title: '¿Eliminar usuario?',
-      html: `
-        <div style="text-align: center; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); 
-                      border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-            <div style="width: 60px; height: 60px; background: #dc2626; border-radius: 50%; 
-                        display: flex; align-items: center; justify-content: center; 
-                        margin: 0 auto 15px auto;">
-              <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-              </svg>
-            </div>
-            <h3 style="color: #dc2626; margin: 0 0 10px 0; font-size: 1.2rem; font-weight: 600;">
-              ${user.nombre}
-            </h3>
-            <p style="color: #6b7280; margin: 0; font-size: 0.9rem;">
-              ${user.email}
-            </p>
-          </div>
-          <p style="color: #374151; font-size: 1rem; margin: 0;">
-            Esta acción no se puede deshacer. El usuario será eliminado permanentemente del sistema.
-          </p>
-        </div>
-      `,
-      icon: undefined,
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      customClass: {
-        popup: 'swal-modern-popup',
-        confirmButton: 'swal-modern-confirm',
-        cancelButton: 'swal-modern-cancel'
+  const columns = useMemo<MRT_ColumnDef<UserData>[]>(
+    () => [
+      {
+        accessorKey: 'nombre',
+        header: 'Usuario',
+        size: 300,
+        Cell: ({ row }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: '#00BFA5',
+                fontSize: 14,
+                fontWeight: 700
+              }}
+            >
+              {row.original.nombre?.charAt(0).toUpperCase()}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='body2' fontWeight={600}>
+                {row.original.nombre}
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                {row.original.email}
+              </Typography>
+            </Box>
+          </Box>
+        )
       },
-      buttonsStyling: false,
-      didOpen: () => {
-        // Add custom styles
-        const style = document.createElement('style')
-        style.textContent = `
-          .swal-modern-popup {
-            border-radius: 16px !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-          }
-          .swal-modern-confirm {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 12px 24px !important;
-            font-weight: 600 !important;
-            font-size: 0.875rem !important;
-            color: white !important;
-            margin-left: 8px !important;
-          }
-          .swal-modern-confirm:hover {
-            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
-            transform: translateY(-1px) !important;
-          }
-          .swal-modern-cancel {
-            background: #f9fafb !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 8px !important;
-            padding: 12px 24px !important;
-            font-weight: 600 !important;
-            font-size: 0.875rem !important;
-            color: #374151 !important;
-          }
-          .swal-modern-cancel:hover {
-            background: #f3f4f6 !important;
-            border-color: #9ca3af !important;
-          }
-        `
-        document.head.appendChild(style)
+      {
+        accessorKey: 'active',
+        header: 'Acceso',
+        size: 150,
+        Cell: ({ row }) => (
+          <FormControlLabel
+            sx={{ m: 0 }}
+            control={
+              <Switch
+                size='small'
+                checked={row.original.active}
+                onChange={() => handleToggleActive(row.original)}
+                disabled={!canUpdateUsers}
+                sx={{
+                  '& .MuiSwitch-switchBase.Mui-checked': { color: '#00BFA5' },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#00BFA5'
+                  }
+                }}
+              />
+            }
+            label={
+              <Typography variant='body2'>
+                {row.original.active ? 'Activo' : 'Inactivo'}
+              </Typography>
+            }
+          />
+        )
       }
-    })
-
-    if (result.isConfirmed) {
-      deleteUser(user.id)
-    }
-  }
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'user':
-        return { bg: '#f0f9ff', color: '#1e40af', label: 'Usuario' }
-      default:
-        return { bg: '#f3f4f6', color: '#374151', label: role }
-    }
-  }
-
-  if (loading) {
-    return (
-      <Box sx={{ py: 4 }}>
-        <Grid container spacing={3}>
-          {[...Array(6)].map((_, i) => (
-            <Grid item xs={12} sm={6} md={4} key={i}>
-              <Card
-                elevation={0}
-                sx={{ border: '1px solid #e5e7eb', borderRadius: '12px' }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box display='flex' alignItems='center' mb={2}>
-                    <Avatar sx={{ mr: 2, width: 40, height: 40 }} />
-                    <Box flex={1}>
-                      <Box
-                        sx={{
-                          height: 20,
-                          backgroundColor: '#f3f4f6',
-                          borderRadius: '4px',
-                          mb: 1
-                        }}
-                      />
-                      <Box
-                        sx={{
-                          height: 16,
-                          backgroundColor: '#f3f4f6',
-                          borderRadius: '4px',
-                          width: '70%'
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    )
-  }
+    ],
+    // handleToggleActive cambia en cada render; la fila siempre trae el usuario actual
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canUpdateUsers]
+  )
 
   return (
-    <Box sx={{ py: 2 }}>
-      {/* Header with Add Button */}
+    <Box>
       <Box
-        display='flex'
-        alignItems='center'
-        justifyContent='space-between'
-        mb={4}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          flexWrap: 'wrap',
+          mb: 3
+        }}
       >
-        <Box display='flex' alignItems='center'>
-          <Avatar
-            sx={{
-              backgroundColor: '#10b981',
-              mr: 2,
-              width: 40,
-              height: 40
-            }}
-          >
-            <Person />
-          </Avatar>
-          <Box>
-            <Typography
-              variant='h6'
-              fontWeight='bold'
-              sx={{ color: '#1f2937' }}
-            >
-              Usuarios del Cliente
-            </Typography>
-            <Typography variant='body2' sx={{ color: '#6b7280' }}>
-              {tableData.length}{' '}
-              {tableData.length === 1
-                ? 'usuario registrado'
-                : 'usuarios registrados'}
-            </Typography>
-          </Box>
+        <Box>
+          <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+            Usuarios
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Las personas del cliente que pueden entrar al sistema.
+          </Typography>
         </Box>
-
-{canCreateUsers && (
-        <Button
-          variant='contained'
-          startIcon={<Add />}
-          onClick={() => setCreateModalOpen(true)}
-          sx={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            borderRadius: '12px',
-            textTransform: 'none',
-            fontWeight: 600,
-            px: 3,
-            '&:hover': {
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-            }
-          }}
-        >
-          Crear Usuario
-        </Button>
-)}
+        {canCreateUsers && (
+          <Button
+            variant='contained'
+            startIcon={<Add />}
+            onClick={() => setCreateModalOpen(true)}
+            sx={primaryButtonSx}
+          >
+            Crear usuario
+          </Button>
+        )}
       </Box>
 
-      {/* Users Grid */}
-      {tableData.length === 0 ? (
-        <Alert
-          severity='info'
-          sx={{
-            borderRadius: '12px',
-            backgroundColor: '#f0f9ff',
-            border: '1px solid #bfdbfe'
-          }}
-        >
-          <Typography variant='body2'>
-            No hay usuarios registrados para este cliente. Crea el primer
-            usuario para comenzar.
-          </Typography>
-        </Alert>
-      ) : (
-        <Grid container spacing={3}>
-          {tableData.map((user, index) => (
-            <Grid item xs={12} sm={6} md={4} key={user.id}>
-              <Fade in={true} timeout={300 + index * 100}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      borderColor: '#10b981',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
-                      transform: 'translateY(-2px)'
-                    }
-                  }}
+      <DataTable<UserData>
+        columns={columns}
+        data={tableData}
+        itemLabel={['usuario', 'usuarios']}
+        searchPlaceholder='Buscar por nombre o correo'
+        state={{ isLoading: loading }}
+        muiTableContainerProps={{ sx: { maxHeight: 'none' } }}
+        enableRowActions
+        renderRowActions={({ row }) => {
+          const user = row.original
+          return (
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Tooltip title='Editar usuario'>
+                <IconButton
+                  size='small'
+                  aria-label={`Editar ${user.nombre}`}
+                  sx={{ color: '#2563eb' }}
+                  onClick={() => setEditingUser(user)}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    {/* User Header */}
-                    <Box
-                      display='flex'
-                      alignItems='center'
-                      justifyContent='space-between'
-                      mb={2}
+                  <EditOutlined fontSize='small' />
+                </IconButton>
+              </Tooltip>
+              {user.active !== true && (
+                <>
+                  <Tooltip title='Enlace de activación (copiar o WhatsApp)'>
+                    <IconButton
+                      size='small'
+                      aria-label={`Enlace de activación de ${user.nombre}`}
+                      sx={{ color: '#00695C' }}
+                      onClick={() => handleActivationLink(user)}
                     >
-                      <Box display='flex' alignItems='center'>
-                        <Avatar
-                          sx={{
-                            backgroundColor: '#f0fdf4',
-                            mr: 2,
-                            width: 40,
-                            height: 40
-                          }}
-                        >
-                          <Person sx={{ color: '#10b981' }} />
-                        </Avatar>
-                        <Box>
-                          <Typography
-                            variant='h6'
-                            fontWeight='600'
-                            sx={{
-                              color: '#1f2937',
-                              fontSize: '1rem'
-                            }}
-                          >
-                            {user.nombre}
-                          </Typography>
-                          <Box display='flex' alignItems='center' gap={1}>
-                            <Email sx={{ fontSize: 14, color: '#6b7280' }} />
-                            <Typography
-                              variant='body2'
-                              sx={{ color: '#6b7280', fontSize: '0.875rem' }}
-                            >
-                              {user.email}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Box>
-                    </Box>
-
-                    {/* User Details */}
-                    <Box
-                      display='flex'
-                      justifyContent='space-between'
-                      alignItems='center'
+                      <LinkIcon fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title='Reenviar correo de activación'>
+                    <IconButton
+                      size='small'
+                      aria-label={`Reenviar activación a ${user.nombre}`}
+                      sx={{ color: '#00695C' }}
+                      onClick={() => handleResendActivation(user)}
                     >
-                      <Box display='flex' gap={1}>
-                        <Chip
-                          label={getRoleColor(user.rol).label}
-                          size='small'
-                          sx={{
-                            backgroundColor: getRoleColor(user.rol).bg,
-                            color: getRoleColor(user.rol).color,
-                            fontWeight: 600,
-                            fontSize: '0.75rem'
-                          }}
-                        />
-
-                        <Chip
-                          icon={user.active ? <CheckCircle /> : <Cancel />}
-                          label={user.active ? 'Activo' : 'Inactivo'}
-                          size='small'
-                          sx={{
-                            backgroundColor: user.active
-                              ? '#f0fdf4'
-                              : '#fef2f2',
-                            color: user.active ? '#059669' : '#dc2626',
-                            fontWeight: 600,
-                            fontSize: '0.75rem',
-                            '& .MuiChip-icon': {
-                              color: user.active ? '#059669' : '#dc2626'
-                            }
-                          }}
-                        />
-                      </Box>
-
-                      <Box display='flex' alignItems='center' gap={0.5}>
-                        <Tooltip
-                          title={
-                            user.active
-                              ? 'Desactivar usuario'
-                              : 'Activar usuario'
-                          }
-                        >
-                          <Switch
-                            size='small'
-                            checked={user.active}
-                            onChange={() => handleToggleActive(user)}
-                            disabled={!canUpdateUsers}
-                            sx={{
-                              '& .MuiSwitch-switchBase.Mui-checked': {
-                                color: '#10b981',
-                                '& + .MuiSwitch-track': {
-                                  backgroundColor: '#10b981'
-                                }
-                              }
-                            }}
-                          />
-                        </Tooltip>
-
-                        <Tooltip title='Editar usuario'>
-                          <IconButton
-                            size='small'
-                            onClick={() => setEditingUser(user)}
-                            sx={{
-                              color: '#6b7280',
-                              '&:hover': {
-                                backgroundColor: '#f0fdf4',
-                                color: '#10b981'
-                              }
-                            }}
-                          >
-                            <Edit fontSize='small' />
-                          </IconButton>
-                        </Tooltip>
-
-                        {user.active !== true && (
-                          <>
-                            <Tooltip title='Enlace de activación (copiar / WhatsApp)'>
-                              <IconButton
-                                size='small'
-                                onClick={() => handleActivationLink(user)}
-                                sx={{ color: '#6b7280', '&:hover': { backgroundColor: '#eff6ff', color: '#2563eb' } }}
-                              >
-                                <LinkIcon fontSize='small' />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title='Reenviar correo de activación'>
-                              <IconButton
-                                size='small'
-                                onClick={() => handleResendActivation(user)}
-                                sx={{ color: '#6b7280', '&:hover': { backgroundColor: '#eff6ff', color: '#2563eb' } }}
-                              >
-                                <ForwardToInbox fontSize='small' />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-
-{canResetPassword && (
-                        <Tooltip title='Restablecer contraseña'>
-                          <IconButton
-                            size='small'
-                            onClick={() => {
-                              setSelectedUser(user)
-                              setResetPasswordModalOpen(true)
-                            }}
-                            sx={{
-                              color: '#6b7280',
-                              '&:hover': {
-                                backgroundColor: '#fffbeb',
-                                color: '#d97706'
-                              }
-                            }}
-                          >
-                            <VpnKey fontSize='small' />
-                          </IconButton>
-                        </Tooltip>
-)}
-
-                        {canDeleteUsers && (
-                          <Tooltip title='Eliminar usuario'>
-                            <IconButton
-                              size='small'
-                              onClick={() => handleDeleteUser(user)}
-                              sx={{
-                                color: '#6b7280',
-                                '&:hover': {
-                                  backgroundColor: '#fef2f2',
-                                  color: '#dc2626'
-                                }
-                              }}
-                            >
-                              <Delete fontSize='small' />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Fade>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+                      <ForwardToInbox fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+              {canResetPassword && (
+                <Tooltip title='Restablecer contraseña'>
+                  <IconButton
+                    size='small'
+                    aria-label={`Restablecer contraseña de ${user.nombre}`}
+                    sx={{ color: '#b45309' }}
+                    onClick={() => {
+                      setSelectedUser(user)
+                      setResetPasswordModalOpen(true)
+                    }}
+                  >
+                    <VpnKey fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {canDeleteUsers && (
+                <Tooltip title='Eliminar usuario'>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    aria-label={`Eliminar ${user.nombre}`}
+                    onClick={() => setDeleteTarget(user)}
+                  >
+                    <DeleteOutline fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          )
+        }}
+        displayColumnDefOptions={{
+          'mrt-row-actions': { header: 'Acciones', size: 190 }
+        }}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            icon={<PersonOutline />}
+            title='No hay usuarios registrados'
+            hint='Crea el primer usuario para que el cliente pueda entrar.'
+          />
+        )}
+      />
 
       {/* Modals */}
       <CreateNewAccountModal
@@ -660,6 +431,23 @@ const Table: React.FC = () => {
         onSubmit={handleResetPassword}
         user={selectedUser}
       />
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title='Eliminar usuario'
+        tone='danger'
+        message={
+          <>
+            Vas a eliminar a <strong>{deleteTarget?.nombre}</strong> (
+            {deleteTarget?.email}). Esta acción no se puede deshacer: el usuario
+            se borra del sistema.
+          </>
+        }
+        confirmLabel='Eliminar'
+        loading={deleteUserById.isLoading}
+        onConfirm={() => deleteTarget && deleteUser(deleteTarget.id)}
+        onClose={() => setDeleteTarget(null)}
+      />
     </Box>
   )
 }
@@ -677,39 +465,76 @@ interface EditModalProps {
   open: boolean
 }
 
-// Modern Create User Modal
+const validateEmail = (email: string) =>
+  !!email.length &&
+  email
+    .toLowerCase()
+    .match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    )
+
+const validateUserFields = (values: { nombre: string; email: string }) => {
+  const errors: { [key: string]: string } = {}
+  if (!values.nombre) errors.nombre = 'Nombre es requerido'
+  if (!values.email) errors.email = 'Email es requerido'
+  if (!validateEmail(values.email) && values.email)
+    errors.email = 'Email inválido'
+  return errors
+}
+
+/** Los dos campos del usuario del cliente: nombre y correo. */
+const UserFields = ({
+  values,
+  errors,
+  onChange
+}: {
+  values: { nombre: string; email: string }
+  errors: { [key: string]: string }
+  onChange: (values: { nombre: string; email: string }) => void
+}) => (
+  <Stack spacing={2}>
+    <TextField
+      label='Nombre completo'
+      required
+      autoFocus
+      value={values.nombre}
+      error={!!errors.nombre}
+      helperText={errors.nombre}
+      onChange={(e) => onChange({ ...values, nombre: e.target.value })}
+      fullWidth
+    />
+    <TextField
+      label='Correo electrónico'
+      type='email'
+      required
+      value={values.email}
+      error={!!errors.email}
+      helperText={errors.email}
+      onChange={(e) => onChange({ ...values, email: e.target.value })}
+      fullWidth
+    />
+  </Stack>
+)
+
 const CreateNewAccountModal = ({
   open,
   onClose,
   onSubmit
 }: CreateModalProps) => {
   const { id } = useParams()
-  const [values, setValues] = useState({
-    nombre: '',
-    email: ''
-  })
-
+  const [values, setValues] = useState({ nombre: '', email: '' })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
-  const validateFields = () => {
-    const newErrors: { [key: string]: string } = {}
-    if (!values.nombre) newErrors.nombre = 'Nombre es requerido'
-    if (!values.email) newErrors.email = 'Email es requerido'
-    if (!validateEmail(values.email) && values.email)
-      newErrors.email = 'Email inválido'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
   const handleSubmit = () => {
-    if (validateFields()) {
+    const newErrors = validateUserFields(values)
+    setErrors(newErrors)
+    if (Object.keys(newErrors).length === 0) {
       onSubmit({
         ...values,
         roles: [{ id: 3 }],
         customerId: parseInt(id || '0')
       })
       setValues({ nombre: '', email: '' })
-      setErrors({})
     }
   }
 
@@ -720,156 +545,34 @@ const CreateNewAccountModal = ({
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
       onClose={handleClose}
-      maxWidth='sm'
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: '16px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-        }
-      }}
+      title='Crear usuario'
+      subtitle='Recibirá un enlace para activar su cuenta'
+      submitLabel='Crear usuario'
+      onSubmit={handleSubmit}
     >
-      <DialogTitle
-        sx={{
-          textAlign: 'center',
-          fontWeight: 'bold',
-          pb: 1,
-          borderBottom: '1px solid #e5e7eb'
-        }}
-      >
-        <Box
-          display='flex'
-          alignItems='center'
-          justifyContent='center'
-          gap={1}
-          mb={1}
-        >
-          <Person sx={{ color: '#10b981' }} />
-          <Typography variant='h6' fontWeight='bold'>
-            Crear Nuevo Usuario
-          </Typography>
-        </Box>
-      </DialogTitle>
-
-      <DialogContent sx={{ pt: 3 }}>
-        <Stack spacing={3}>
-          <TextField
-            label='Nombre completo'
-            value={values.nombre}
-            error={!!errors.nombre}
-            helperText={errors.nombre}
-            onChange={(e) => setValues({ ...values, nombre: e.target.value })}
-            fullWidth
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                }
-              }
-            }}
-          />
-
-          <TextField
-            label='Correo electrónico'
-            type='email'
-            value={values.email}
-            error={!!errors.email}
-            helperText={errors.email}
-            onChange={(e) => setValues({ ...values, email: e.target.value })}
-            fullWidth
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                }
-              }
-            }}
-          />
-        </Stack>
-      </DialogContent>
-
-      <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button
-          onClick={handleClose}
-          variant='outlined'
-          sx={{
-            borderRadius: '8px',
-            textTransform: 'none',
-            fontWeight: 600,
-            borderColor: '#d1d5db',
-            color: '#374151',
-            '&:hover': {
-              borderColor: '#9ca3af',
-              backgroundColor: '#f9fafb'
-            }
-          }}
-        >
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant='contained'
-          sx={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            borderRadius: '8px',
-            textTransform: 'none',
-            fontWeight: 600,
-            ml: 2,
-            '&:hover': {
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-            }
-          }}
-        >
-          Crear Usuario
-        </Button>
-      </DialogActions>
-    </Dialog>
+      <UserFields values={values} errors={errors} onChange={setValues} />
+    </FormDialog>
   )
 }
 
-// Modern Edit User Modal
 const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
-  const [values, setValues] = useState({
-    nombre: '',
-    email: ''
-  })
-
+  const [values, setValues] = useState({ nombre: '', email: '' })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
   useEffect(() => {
     if (user) {
-      setValues({
-        nombre: user.nombre,
-        email: user.email
-      })
+      setValues({ nombre: user.nombre, email: user.email })
     }
   }, [user])
 
-  const validateFields = () => {
-    const newErrors: { [key: string]: string } = {}
-    if (!values.nombre) newErrors.nombre = 'Nombre es requerido'
-    if (!values.email) newErrors.email = 'Email es requerido'
-    if (!validateEmail(values.email) && values.email)
-      newErrors.email = 'Email inválido'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
   const handleSubmit = () => {
-    if (validateFields() && user) {
+    const newErrors = validateUserFields(values)
+    setErrors(newErrors)
+    if (Object.keys(newErrors).length === 0 && user) {
       onSubmit({ ...user, ...values, rol: user.rol })
-      setErrors({})
     }
   }
 
@@ -879,130 +582,17 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
       onClose={handleClose}
-      maxWidth='sm'
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: '16px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-        }
-      }}
+      title='Editar usuario'
+      subtitle={user?.nombre}
+      submitLabel='Guardar cambios'
+      onSubmit={handleSubmit}
     >
-      <DialogTitle
-        sx={{
-          textAlign: 'center',
-          fontWeight: 'bold',
-          pb: 1,
-          borderBottom: '1px solid #e5e7eb'
-        }}
-      >
-        <Box
-          display='flex'
-          alignItems='center'
-          justifyContent='center'
-          gap={1}
-          mb={1}
-        >
-          <Edit sx={{ color: '#10b981' }} />
-          <Typography variant='h6' fontWeight='bold'>
-            Editar Usuario
-          </Typography>
-        </Box>
-      </DialogTitle>
-
-      <DialogContent sx={{ pt: 3 }}>
-        <Stack spacing={3}>
-          <TextField
-            label='Nombre completo'
-            value={values.nombre}
-            error={!!errors.nombre}
-            helperText={errors.nombre}
-            onChange={(e) => setValues({ ...values, nombre: e.target.value })}
-            fullWidth
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                }
-              }
-            }}
-          />
-
-          <TextField
-            label='Correo electrónico'
-            type='email'
-            value={values.email}
-            error={!!errors.email}
-            helperText={errors.email}
-            onChange={(e) => setValues({ ...values, email: e.target.value })}
-            fullWidth
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#10b981'
-                }
-              }
-            }}
-          />
-        </Stack>
-      </DialogContent>
-
-      <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button
-          onClick={handleClose}
-          variant='outlined'
-          sx={{
-            borderRadius: '8px',
-            textTransform: 'none',
-            fontWeight: 600,
-            borderColor: '#d1d5db',
-            color: '#374151',
-            '&:hover': {
-              borderColor: '#9ca3af',
-              backgroundColor: '#f9fafb'
-            }
-          }}
-        >
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant='contained'
-          sx={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            borderRadius: '8px',
-            textTransform: 'none',
-            fontWeight: 600,
-            ml: 2,
-            '&:hover': {
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-            }
-          }}
-        >
-          Guardar Cambios
-        </Button>
-      </DialogActions>
-    </Dialog>
+      <UserFields values={values} errors={errors} onChange={setValues} />
+    </FormDialog>
   )
 }
-
-const validateEmail = (email: string) =>
-  !!email.length &&
-  email
-    .toLowerCase()
-    .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    )
 
 export default Table
