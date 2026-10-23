@@ -164,7 +164,7 @@ const sidebarItems = ($userStore: UserData) => [
     type: 'dropdown',
     buttonText: 'Academia',
     roles: [...LMS_ACCESS_MENU_ROLES],
-    moduleName: 'Basic',
+    moduleName: 'lms',
     icon: <SchoolOutlined />,
     menuItems: [
       {
@@ -469,7 +469,12 @@ const sidebarItems = ($userStore: UserData) => [
 
 // Secciones del menú, en orden. Cada entrada es el `label` o `buttonText`
 // del ítem. Una sección sin ítems visibles para el usuario no se muestra.
-const SIDEBAR_SECTIONS: { title?: string; items: string[] }[] = [
+const SIDEBAR_SECTIONS: {
+  title?: string
+  /** Título para usuarios de cliente, cuando el interno no tiene sentido */
+  clientTitle?: string
+  items: string[]
+}[] = [
   { items: ['Inicio', 'Equipos'] },
   {
     title: 'Metrología',
@@ -487,7 +492,11 @@ const SIDEBAR_SECTIONS: { title?: string; items: string[] }[] = [
     title: 'Operación',
     items: ['Mantenimiento', 'Venta de equipos', 'Compras', 'Flota']
   },
-  { title: 'Calidad y personas', items: ['Trabajo no conforme', 'Academia'] },
+  {
+    title: 'Calidad y personas',
+    clientTitle: 'Capacitación',
+    items: ['Trabajo no conforme', 'Academia']
+  },
   { title: 'Administración', items: ['Ajustes'] }
 ]
 
@@ -519,13 +528,17 @@ const sidebarSections = (
     if (rows.length === 0) return null
 
     const headingId = `sidebar-section-${index}`
+    const title =
+      'clientTitle' in section && $userStore.customer
+        ? section.clientTitle
+        : section.title
     return (
       <div key={headingId} className={index === 0 ? '' : 'mt-4'}>
-        {section.title &&
+        {title &&
           (minimized ? (
             <div
               role='separator'
-              aria-label={section.title}
+              aria-label={title}
               className='mx-auto mb-2 h-px w-8 bg-gray-200'
             />
           ) : (
@@ -533,12 +546,12 @@ const sidebarSections = (
               id={headingId}
               className='mb-1 px-3 text-xs font-semibold text-gray-500'
             >
-              {section.title}
+              {title}
             </p>
           ))}
         <ul
           className='space-y-0.5'
-          aria-labelledby={section.title && !minimized ? headingId : undefined}
+          aria-labelledby={title && !minimized ? headingId : undefined}
         >
           {rows}
         </ul>
@@ -700,7 +713,11 @@ const SideBar = ({
       )
     }
 
-    if (item.type === 'dropdown' && allowed) {
+    if (
+      item.type === 'dropdown' &&
+      allowed &&
+      hasModuleAccess(item.moduleName)
+    ) {
       return (
         <DropdownButton
           key={key}

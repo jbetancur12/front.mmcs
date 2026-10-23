@@ -81,6 +81,23 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
     onItemClick?.()
   }
 
+  // Con una sola opción visible (p. ej. un cliente en Academia) el desplegable
+  // sobra: el grupo es un enlace directo.
+  if (visibleItems.length === 1) {
+    return (
+      <li>
+        <NavItem
+          label={buttonText}
+          icon={icon}
+          to={toPath(visibleItems[0].url)}
+          active={containsCurrentPage}
+          minimized={onlyIcons}
+          onClick={handleItemClick}
+        />
+      </li>
+    )
+  }
+
   return (
     <li>
       <NavItem
