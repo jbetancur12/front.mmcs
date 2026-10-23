@@ -136,7 +136,9 @@ const CalibrationServicesFiltersCard = ({
 
   const toggleStatusShortcut = (value: 'ready_for_invoicing' | 'invoiced') =>
     setStatusFilter((previous) =>
-      (previous as string) === value ? FILTER_ALL : (value as unknown as typeof previous)
+      (previous as string) === value
+        ? FILTER_ALL
+        : (value as unknown as typeof previous)
     )
 
   return (
@@ -165,10 +167,11 @@ const CalibrationServicesFiltersCard = ({
               bgcolor: '#fff',
               borderRadius: '10px'
             },
-            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#00897B',
-              borderWidth: 2
-            }
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+              {
+                borderColor: '#00897B',
+                borderWidth: 2
+              }
           }}
         />
 
@@ -193,7 +196,9 @@ const CalibrationServicesFiltersCard = ({
             active={isAtRisk}
             onClick={() =>
               setSlaFilter(
-                isAtRisk ? FILTER_ALL : (SLA_FILTER_ALERT as CalibrationServiceSlaIndicatorColor)
+                isAtRisk
+                  ? FILTER_ALL
+                  : (SLA_FILTER_ALERT as CalibrationServiceSlaIndicatorColor)
               )
             }
           />
@@ -253,7 +258,10 @@ const CalibrationServicesFiltersCard = ({
           exclusive
           value={viewMode}
           aria-label='Vista'
-          onChange={(_event, nextViewMode: CalibrationServicesViewMode | null) => {
+          onChange={(
+            _event,
+            nextViewMode: CalibrationServicesViewMode | null
+          ) => {
             if (nextViewMode) {
               setViewMode(nextViewMode)
             }
@@ -299,9 +307,10 @@ const CalibrationServicesFiltersCard = ({
             border: '1px solid #e5e7eb',
             borderRadius: '12px',
             bgcolor: '#fff',
-            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#00897B'
-            },
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+              {
+                borderColor: '#00897B'
+              },
             '& .MuiInputLabel-root.Mui-focused': { color: TEAL_INK }
           }}
         >
@@ -316,7 +325,9 @@ const CalibrationServicesFiltersCard = ({
                   value={approvalFilter}
                   onChange={(event) =>
                     setApprovalFilter(
-                      event.target.value as CalibrationServiceApprovalStatus | typeof FILTER_ALL
+                      event.target.value as
+                        | CalibrationServiceApprovalStatus
+                        | typeof FILTER_ALL
                     )
                   }
                 >
@@ -357,7 +368,9 @@ const CalibrationServicesFiltersCard = ({
                 value={slaFilter}
                 onChange={(event) =>
                   setSlaFilter(
-                    event.target.value as CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL
+                    event.target.value as
+                      | CalibrationServiceSlaIndicatorColor
+                      | typeof FILTER_ALL
                   )
                 }
               >
@@ -377,7 +390,9 @@ const CalibrationServicesFiltersCard = ({
                 value={scopeFilter}
                 onChange={(event) =>
                   setScopeFilter(
-                    event.target.value as CalibrationServiceScopeType | typeof FILTER_ALL
+                    event.target.value as
+                      | CalibrationServiceScopeType
+                      | typeof FILTER_ALL
                   )
                 }
               >
@@ -395,7 +410,9 @@ const CalibrationServicesFiltersCard = ({
                 size='small'
                 label='Novedades'
                 value={hasAdjustmentsFilter}
-                onChange={(event) => setHasAdjustmentsFilter(event.target.value)}
+                onChange={(event) =>
+                  setHasAdjustmentsFilter(event.target.value)
+                }
               >
                 <MenuItem value={FILTER_ALL}>Todas</MenuItem>
                 <MenuItem value='true'>Con novedades</MenuItem>
@@ -412,7 +429,9 @@ const CalibrationServicesFiltersCard = ({
                   value={billingStatusFilter ?? FILTER_ALL}
                   onChange={(event) =>
                     setBillingStatusFilter(
-                      event.target.value === FILTER_ALL ? undefined : event.target.value
+                      event.target.value === FILTER_ALL
+                        ? undefined
+                        : event.target.value
                     )
                   }
                 >
@@ -432,7 +451,9 @@ const CalibrationServicesFiltersCard = ({
                   value={paymentStatusFilter ?? FILTER_ALL}
                   onChange={(event) =>
                     setPaymentStatusFilter(
-                      event.target.value === FILTER_ALL ? undefined : event.target.value
+                      event.target.value === FILTER_ALL
+                        ? undefined
+                        : event.target.value
                     )
                   }
                 >

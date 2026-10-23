@@ -42,8 +42,12 @@ const CalibrationServicesPipeline = ({
         { key: 'cancelled', label: 'Cancelada' }
       ]
   const count = (key: string) => statusCounts[key] ?? 0
-  const total = Object.values(statusCounts).reduce<number>((sum, value) => sum + (value ?? 0), 0)
-  const selected = filters.statusFilter === FILTER_ALL ? '' : String(filters.statusFilter)
+  const total = Object.values(statusCounts).reduce<number>(
+    (sum, value) => sum + (value ?? 0),
+    0
+  )
+  const selected =
+    filters.statusFilter === FILTER_ALL ? '' : String(filters.statusFilter)
 
   return (
     <StagePipeline
@@ -51,7 +55,9 @@ const CalibrationServicesPipeline = ({
       total={total}
       selected={selected}
       onSelect={(key) =>
-        filters.setStatusFilter((key || FILTER_ALL) as CalibrationServiceStatus | typeof FILTER_ALL)
+        filters.setStatusFilter(
+          (key || FILTER_ALL) as CalibrationServiceStatus | typeof FILTER_ALL
+        )
       }
       stages={stages.map((stage) => ({ ...stage, count: count(stage.key) }))}
       outside={outside.map((stage) => ({ ...stage, count: count(stage.key) }))}

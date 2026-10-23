@@ -7,7 +7,10 @@ import {
   CALIBRATION_SERVICE_SLA_COLORS,
   chipColorToStatusTone
 } from '../../../constants/calibrationServices'
-import { CalibrationService, CalibrationServiceStatus } from '../../../types/calibrationService'
+import {
+  CalibrationService,
+  CalibrationServiceStatus
+} from '../../../types/calibrationService'
 import CalibrationServiceStatusChip from '../CalibrationServiceStatusChip'
 import {
   currencyFormatter,
@@ -91,8 +94,13 @@ const CalibrationServicesTable = ({
       size: 170,
       Cell: ({ row }: ServiceCellProps) => (
         <Stack spacing={0.25}>
-          <Typography variant='body2' sx={{ color: ui.text, fontWeight: 600, lineHeight: 1.3 }}>
-            {row.original.customer?.nombre || row.original.executionCustomerName || ''}
+          <Typography
+            variant='body2'
+            sx={{ color: ui.text, fontWeight: 600, lineHeight: 1.3 }}
+          >
+            {row.original.customer?.nombre ||
+              row.original.executionCustomerName ||
+              ''}
           </Typography>
           {row.original.scopeType === 'site' ? (
             <Typography variant='caption' sx={{ color: ui.textSecondary }}>
@@ -107,12 +115,16 @@ const CalibrationServicesTable = ({
       header: 'Estado',
       size: 150,
       filterVariant: 'select',
-      filterSelectOptions: STATUS_OPTIONS.filter((o) => o.value !== FILTER_ALL).map((o) => ({
+      filterSelectOptions: STATUS_OPTIONS.filter(
+        (o) => o.value !== FILTER_ALL
+      ).map((o) => ({
         text: o.label,
         value: o.value
       })),
       Cell: ({ cell }: ServiceCellProps) => (
-        <CalibrationServiceStatusChip status={cell.getValue<CalibrationServiceStatus>()} />
+        <CalibrationServiceStatusChip
+          status={cell.getValue<CalibrationServiceStatus>()}
+        />
       )
     },
     {
@@ -133,7 +145,11 @@ const CalibrationServicesTable = ({
       Cell: ({ row }: ServiceCellProps) => {
         const focus = getServiceOperationalFocus(row.original)
         return focus ? (
-          <StatusPill size='small' tone={chipColorToStatusTone(focus.color)} label={focus.label} />
+          <StatusPill
+            size='small'
+            tone={chipColorToStatusTone(focus.color)}
+            label={focus.label}
+          />
         ) : (
           <Empty />
         )
@@ -146,14 +162,17 @@ const CalibrationServicesTable = ({
       size: 130,
       filterVariant: 'select',
       filterSelectOptions: SLA_OPTIONS.filter(
-        (o) => o.value !== FILTER_ALL && (o.value as string) !== SLA_FILTER_ALERT
+        (o) =>
+          o.value !== FILTER_ALL && (o.value as string) !== SLA_FILTER_ALERT
       ).map((o) => ({ text: o.label, value: o.value })),
       Cell: ({ row }: ServiceCellProps) =>
         row.original.slaIndicator?.label ? (
           <StatusPill
             size='small'
             tone={chipColorToStatusTone(
-              CALIBRATION_SERVICE_SLA_COLORS[row.original.slaIndicator?.color || 'gray']
+              CALIBRATION_SERVICE_SLA_COLORS[
+                row.original.slaIndicator?.color || 'gray'
+              ]
             )}
             label={row.original.slaIndicator.label}
           />
@@ -169,7 +188,11 @@ const CalibrationServicesTable = ({
             header: 'Valor',
             size: 110,
             Cell: ({ cell }: ServiceCellProps) => (
-              <Typography variant='body2' fontWeight={700} sx={{ color: '#00695C' }}>
+              <Typography
+                variant='body2'
+                fontWeight={700}
+                sx={{ color: '#00695C' }}
+              >
                 {currencyFormatter.format(cell.getValue() as number)}
               </Typography>
             )
@@ -233,7 +256,11 @@ const CalibrationServicesTable = ({
           </IconButton>
         </Tooltip>
       )}
-      muiTableBodyRowProps={({ row }: { row: MRT_Row<CalibrationService> }) => ({
+      muiTableBodyRowProps={({
+        row
+      }: {
+        row: MRT_Row<CalibrationService>
+      }) => ({
         onClick: () => openServiceDetail(row.original.id),
         sx: { cursor: 'pointer' }
       })}
