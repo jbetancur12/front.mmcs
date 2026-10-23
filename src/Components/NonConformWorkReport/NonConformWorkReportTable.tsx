@@ -8,16 +8,22 @@ import {
   Chip,
   Grid,
   Tooltip,
-  Paper
+  Typography
 } from '@mui/material'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import VisibilityIcon from '@mui/icons-material/Visibility'
-import { Add, CheckCircle, FolderOpen, ListAlt, NotificationsActive, ReportProblemOutlined } from '@mui/icons-material'
+import {
+  Add,
+  CheckCircle,
+  FolderOpen,
+  NotificationsActive,
+  ReportProblemOutlined
+} from '@mui/icons-material'
 import {
   NON_CONFORM_EXACT_FILTERS,
   NON_CONFORM_SORTABLE_FIELDS,
@@ -73,34 +79,35 @@ const acceptanceMap: Record<
   'No aceptado': { label: 'No aceptado', color: 'error' }
 }
 
-// Colores igual que en el formulario
-const riskLevelColor = (nivel: string) => {
+type ChipColor = 'success' | 'error' | 'warning' | 'info' | 'default'
+
+// Color por significado (Chip outlined, igual que el resto de listados)
+const riskLevelColor = (nivel: string): ChipColor => {
   switch (nivel) {
     case 'Crítico':
-      return { bg: '#e53935', color: '#fff' }
+      return 'error'
     case 'Alto':
-      return { bg: '#ff7043', color: '#fff' }
+      return 'warning'
     case 'Media':
-      return { bg: '#fff176', color: '#333' }
+      return 'info'
     case 'Baja':
-      return { bg: '#81c784', color: '#333' }
     case 'Muy Baja':
-      return { bg: '#388e3c', color: '#fff' }
+      return 'success'
     default:
-      return { bg: '#bdbdbd', color: '#333' }
+      return 'default'
   }
 }
-const impactProbColor = (valor: string) => {
+const impactProbColor = (valor: string): ChipColor => {
   switch (valor) {
     case 'Alta':
-      return { bg: '#ff7043', color: '#fff' }
+      return 'error'
     case 'Media':
-      return { bg: '#fff176', color: '#333' }
+      return 'warning'
     case 'Baja':
     case 'Muy Baja':
-      return { bg: '#81c784', color: '#333' }
+      return 'success'
     default:
-      return { bg: '#bdbdbd', color: '#333' }
+      return 'default'
   }
 }
 
@@ -150,6 +157,16 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     setShowOnlyAlerts(value)
     server.goToFirstPage()
   }
+  // "Abiertos" y "Cerrados" filtran por la misma columna Estatus del servidor
+  const statusFilter = server.columnFilters.find((f) => f.id === 'status')
+    ?.value as string | undefined
+  const toggleStatus = (value: 'Open' | 'Closed') => {
+    setShowOnlyAlerts(false)
+    server.setColumnFilters((old) => [
+      ...old.filter((f) => f.id !== 'status'),
+      ...(statusFilter === value ? [] : [{ id: 'status', value }])
+    ])
+  }
 
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
@@ -180,6 +197,11 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         header: 'Código TNC',
         size: 150,
         enableColumnFilter: false,
+        Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => (
+          <Typography variant='body2' fontWeight={600}>
+            {cell.getValue<string>()}
+          </Typography>
+        ),
         sortingFn: (rowA, rowB, columnId) => {
           return rowA
             .getValue<string>(columnId)
@@ -195,7 +217,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         size: 150,
         enableSorting: false,
         enableColumnFilter: false,
-        Cell: ({ cell }) => {
+        Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => {
           const value = cell.getValue<string>()
           const acceptance = acceptanceMap[value] || {
             label: value,
@@ -204,28 +226,28 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           return (
             <Chip
               label={acceptance.label}
-              color={acceptance.color as any}
+              color={acceptance.color}
               size='small'
-              sx={{ fontWeight: 600 }}
+              variant='outlined'
             />
           )
         }
       },
       {
         accessorKey: 'iso17025Clause',
-        header: 'Numeral ISO/IEC 17025',
-        size: 180,
+        header: 'Numeral ISO 17025',
+        size: 170,
         enableSorting: false,
         enableColumnFilter: false
       },
       {
         accessorKey: 'registerDate',
         header: 'Fecha de registro',
-        size: 150,
+        size: 140,
         enableColumnFilter: false,
-        Cell: ({ cell }) => {
+        Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => {
           const value = cell.getValue<string>()
-          return value ? format(new Date(value), 'dd/MM/yyyy') : ''
+          return <span>{value ? format(new Date(value), 'dd/MM/yyyy') : ''}</span>
         }
       },
       {
@@ -238,14 +260,14 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
       },
       {
         accessorKey: 'status',
-        header: 'Estatus',
+        header: 'Estado',
         size: 130,
         filterVariant: 'select',
         filterSelectOptions: [
           { text: 'Abierta', value: 'Open' },
           { text: 'Cerrada', value: 'Closed' }
         ],
-        Cell: ({ cell }) => {
+        Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => {
           const value = cell.getValue<string>()
           const status = statusMap[value] || {
             label: value,
@@ -254,9 +276,9 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           return (
             <Chip
               label={status.label}
-              color={status.color as any}
+              color={status.color}
               size='small'
-              sx={{ fontWeight: 600 }}
+              variant='outlined'
             />
           )
         }
@@ -267,15 +289,15 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         size: 130,
         enableSorting: false,
         enableColumnFilter: false,
-        Cell: ({ cell }) => {
+        Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => {
           const value = cell.getValue<string>()
           const displayValue = impactMap[value] || value
-          const { bg, color } = impactProbColor(displayValue)
           return (
             <Chip
               label={displayValue}
-              sx={{ bgcolor: bg, color, fontWeight: 600 }}
+              color={impactProbColor(displayValue)}
               size='small'
+              variant='outlined'
             />
           )
         }
@@ -286,15 +308,15 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         size: 130,
         enableSorting: false,
         enableColumnFilter: false,
-        Cell: ({ cell }) => {
+        Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => {
           const value = cell.getValue<string>()
           const displayValue = probabilityMap[value] || value
-          const { bg, color } = impactProbColor(displayValue)
           return (
             <Chip
               label={displayValue}
-              sx={{ bgcolor: bg, color, fontWeight: 600 }}
+              color={impactProbColor(displayValue)}
               size='small'
+              variant='outlined'
             />
           )
         }
@@ -304,18 +326,22 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         header: 'Nivel de riesgo',
         size: 150,
         filterVariant: 'select',
-        filterSelectOptions: ['Critical', 'High', 'Medium', 'Low', 'Very Low'].map(
-          (value) => ({ text: riskLevelMap[value], value })
-        ),
-        Cell: ({ cell }) => {
+        filterSelectOptions: [
+          'Critical',
+          'High',
+          'Medium',
+          'Low',
+          'Very Low'
+        ].map((value) => ({ text: riskLevelMap[value], value })),
+        Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => {
           const value = cell.getValue<string>()
           const displayValue = riskLevelMap[value] || value
-          const { bg, color } = riskLevelColor(displayValue)
           return (
             <Chip
               label={displayValue}
-              sx={{ bgcolor: bg, color, fontWeight: 600 }}
+              color={riskLevelColor(displayValue)}
               size='small'
+              variant='outlined'
             />
           )
         }
@@ -337,7 +363,16 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         icon={<ReportProblemOutlined />}
         actions={
           canManage ? (
-            <Button variant='contained' startIcon={<Add />} onClick={onCreate} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={onCreate}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Nuevo reporte
             </Button>
           ) : undefined
@@ -345,96 +380,106 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
       />
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet'
-            label='Reportes'
-            value={counts?.total ?? reportsPage?.totalItems ?? 0}
-            icon={<ListAlt />}
-            tone='teal'
-            active={!showOnlyAlerts}
-            onClick={() => toggleAlerts(false)}
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            variant='quiet'
+            label='Abiertos'
+            value={openCount}
+            icon={<FolderOpen />}
+            tone='orange'
+            active={!showOnlyAlerts && statusFilter === 'Open'}
+            onClick={() => toggleStatus('Open')}
           />
         </Grid>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet' label='Abiertos' value={openCount} icon={<FolderOpen />} tone='orange' />
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            variant='quiet'
+            label='Cerrados'
+            value={closedCount}
+            icon={<CheckCircle />}
+            tone='green'
+            active={!showOnlyAlerts && statusFilter === 'Closed'}
+            onClick={() => toggleStatus('Closed')}
+          />
         </Grid>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet' label='Cerrados' value={closedCount} icon={<CheckCircle />} tone='green' />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet'
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            variant='quiet'
             label='Con revisión pendiente'
             value={alerts.length}
             icon={<NotificationsActive />}
             tone='red'
             active={showOnlyAlerts}
-            onClick={alerts.length > 0 ? () => toggleAlerts(!showOnlyAlerts) : undefined}
+            onClick={
+              alerts.length > 0
+                ? () => toggleAlerts(!showOnlyAlerts)
+                : undefined
+            }
           />
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable
-          {...purchaseTableStyle}
-          columns={columns}
-          data={filteredRows}
-          {...(showOnlyAlerts
-            ? {
-                onPaginationChange: server.setPagination,
-                onSortingChange: server.setSorting,
-                onColumnFiltersChange: server.setColumnFilters,
-                onGlobalFilterChange: server.setGlobalFilter
-              }
-            : { ...server.tableProps, rowCount: reportsPage?.totalItems ?? 0 })}
-          state={{
-            ...server.tableState,
-            isLoading: loading,
-            showProgressBars: !showOnlyAlerts && pageFetching && !pageLoading
-          }}
-          enableRowActions
-          enablePinning
-          renderRowActions={({ row }) => (
-            <Box sx={{ display: 'flex' }}>
-              <Tooltip title='Ver'>
-                <IconButton
-                  size='small'
-                  sx={{ color: '#00BFA5' }}
-                  onClick={() => onView && onView(row.original)}
-                >
-                  <VisibilityIcon fontSize='small' />
-                </IconButton>
-              </Tooltip>
-              {canManage && (
-                <>
-                  <Tooltip title='Editar'>
-                    <IconButton
-                      size='small'
-                      color='primary'
-                      onClick={() => onEdit && onEdit(row.original)}
-                    >
-                      <EditIcon fontSize='small' />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title='Eliminar'>
-                    <IconButton
-                      size='small'
-                      onClick={() =>
-                        row.original.id && handleDelete(row.original.id)
-                      }
-                    >
-                      <DeleteIcon color='error' fontSize='small' />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-            </Box>
-          )}
-          initialState={{
-            density: 'compact',
-            columnPinning: { right: ['mrt-row-actions'] }
-          }}
-        />
-      </Paper>
+      <DataTable
+        columns={columns}
+        data={filteredRows}
+        itemLabel={['reporte', 'reportes']}
+        searchPlaceholder='Buscar reportes'
+        {...(showOnlyAlerts
+          ? {
+              onPaginationChange: server.setPagination,
+              onSortingChange: server.setSorting,
+              onColumnFiltersChange: server.setColumnFilters,
+              onGlobalFilterChange: server.setGlobalFilter
+            }
+          : { ...server.tableProps, rowCount: reportsPage?.totalItems ?? 0 })}
+        state={{
+          ...server.tableState,
+          isLoading: loading,
+          showProgressBars: !showOnlyAlerts && pageFetching && !pageLoading
+        }}
+        enableRowActions
+        initialState={{ density: 'compact' }}
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: 'flex' }}>
+            <Tooltip title='Ver'>
+              <IconButton
+                size='small'
+                aria-label={`Ver reporte ${row.original.tncCode}`}
+                sx={{ color: '#00695C' }}
+                onClick={() => onView && onView(row.original)}
+              >
+                <VisibilityIcon fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {canManage && (
+              <>
+                <Tooltip title='Editar'>
+                  <IconButton
+                    size='small'
+                    aria-label={`Editar reporte ${row.original.tncCode}`}
+                    sx={{ color: '#2563eb' }}
+                    onClick={() => onEdit && onEdit(row.original)}
+                  >
+                    <EditIcon fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Eliminar'>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    aria-label={`Eliminar reporte ${row.original.tncCode}`}
+                    onClick={() =>
+                      row.original.id && handleDelete(row.original.id)
+                    }
+                  >
+                    <DeleteIcon fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+          </Box>
+        )}
+      />
     </>
   )
 }
