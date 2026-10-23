@@ -1,42 +1,32 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
-import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  Alert,
+  Avatar,
   Box,
-  Collapse,
-  Button,
-  Paper,
-  Typography,
   Container,
   Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Chip,
   IconButton,
-  Tooltip,
   Skeleton,
-  Fade,
-  TextField,
-  InputAdornment,
-  Avatar
+  Tooltip,
+  Typography
 } from '@mui/material'
 import {
   Build as BuildIcon,
-  Schedule as ScheduleIcon,
-  Search as SearchIcon,
-  Clear as ClearIcon,
-  Refresh as RefreshIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  Visibility as VisibilityIcon,
   Engineering as EngineeringIcon,
-  NotificationsActive as NotificationsActiveIcon
+  NotificationsActive as NotificationsActiveIcon,
+  Refresh as RefreshIcon,
+  Schedule as ScheduleIcon,
+  TaskAltOutlined,
+  VisibilityOutlined
 } from '@mui/icons-material'
+import { type MRT_ColumnDef } from 'material-react-table'
+import { useNavigate } from 'react-router-dom'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { Link } from 'react-router-dom'
-import Swal from 'sweetalert2'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import DataTable from '../Common/DataTable'
+import EmptyState from '../Common/EmptyState'
+import StatusPill, { StatusPillTone } from '../Common/StatusPill'
+import { bigToast } from '../ExcelManipulation/Utils'
 
 export type EquipmentData = {
   id: number
@@ -54,16 +44,46 @@ export type EquipmentData = {
   priority?: 'high' | 'medium' | 'low'
 }
 
+type AlertFilter = 'all' | 'calibration' | 'inspection'
+
+/** Equipo con los días de su alerta más atrasada, para ordenar y priorizar. */
+type AlertRow = EquipmentData & { worstDays: number }
+
+/**
+ * Prioridad por antigüedad: la que manda el servidor es "alta" para todos y
+ * no ayuda a decidir qué atender primero.
+ */
+const priorityOf = (days: number): { tone: StatusPillTone; label: string } => {
+  if (days >= 0) return { tone: 'warning', label: 'Por vencer' }
+  if (days < -365) return { tone: 'error', label: 'Más de 1 año vencido' }
+  if (days < -90) return { tone: 'warning', label: '3 a 12 meses vencido' }
+  return { tone: 'idle', label: 'Menos de 3 meses' }
+}
+
+const daysText = (days?: number | null) => {
+  if (days === null || days === undefined) return ''
+  if (days === 0) return 'vence hoy'
+  const abs = Math.abs(days).toLocaleString('es-CO')
+  const unit = Math.abs(days) === 1 ? 'día' : 'días'
+  return days < 0 ? `hace ${abs} ${unit}` : `en ${abs} ${unit}`
+}
+
+const formatDate = (value?: string) =>
+  value ? new Date(`${value}T00:00:00`).toLocaleDateString('es-CO') : '—'
+
+/**
+ * Alertas de la hoja de vida: equipos con calibración o inspección vencida
+ * o por vencer. La tabla arranca con lo más atrasado arriba.
+ */
 const EquipmentAlertsPage: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  const navigate = useNavigate()
   const [equipments, setEquipments] = useState<EquipmentData[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCalibrationDetails, setShowCalibrationDetails] = useState(false)
-  const [showInspectionDetails, setShowInspectionDetails] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+  const [filter, setFilter] = useState<AlertFilter>('all')
 
-  const fetchEquipmentData = async () => {
+  const fetchEquipmentData = useCallback(async () => {
     try {
       setLoading(true)
       const response = await axiosPrivate('/dataSheet/alerts')
@@ -71,533 +91,317 @@ const EquipmentAlertsPage: React.FC = () => {
       return true
     } catch (error) {
       console.error('Error fetching equipment data:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar las alertas de equipos',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      bigToast('No se pudieron cargar las alertas de equipos', 'error')
       return false
     } finally {
       setLoading(false)
     }
-  }
+  }, [axiosPrivate])
 
   useEffect(() => {
     fetchEquipmentData()
-  }, [axiosPrivate])
+  }, [fetchEquipmentData])
 
   const handleRefresh = async () => {
     setRefreshing(true)
     const success = await fetchEquipmentData()
     setRefreshing(false)
-    if (success) {
-      Swal.fire({
-        title: '¡Actualizado!',
-        text: 'Las alertas han sido actualizadas',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      })
-    }
+    if (success) bigToast('Alertas actualizadas', 'success')
   }
 
-  const filteredEquipments = useMemo(() => {
-    if (!searchTerm) return equipments
-    return equipments.filter(equipment =>
-      equipment.equipmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.internalCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (equipment.brand && equipment.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (equipment.location && equipment.location.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-  }, [equipments, searchTerm])
-
-  const calibrationDueSoon = filteredEquipments.filter(
-    (equipment) => equipment.isCalibrationDueSoon
-  )
-  const inspectionDueSoon = filteredEquipments.filter(
-    (equipment) => equipment.isInspectionDueSoon
+  const rows = useMemo<AlertRow[]>(
+    () =>
+      equipments
+        .map((equipment) => {
+          const days = [
+            equipment.isCalibrationDueSoon
+              ? equipment.calibrationDaysRemaining
+              : null,
+            equipment.isInspectionDueSoon
+              ? equipment.inspectionDaysRemaining
+              : null
+          ].filter((value): value is number => typeof value === 'number')
+          return {
+            ...equipment,
+            worstDays: days.length > 0 ? Math.min(...days) : 0
+          }
+        })
+        .sort((a, b) => a.worstDays - b.worstDays),
+    [equipments]
   )
 
-  const totalAlerts = filteredEquipments.length
+  const counts = useMemo(
+    () => ({
+      all: rows.length,
+      calibration: rows.filter((row) => row.isCalibrationDueSoon).length,
+      inspection: rows.filter((row) => row.isInspectionDueSoon).length
+    }),
+    [rows]
+  )
 
-  const clearSearch = () => {
-    setSearchTerm('')
-  }
+  const visibleRows = useMemo(
+    () =>
+      filter === 'calibration'
+        ? rows.filter((row) => row.isCalibrationDueSoon)
+        : filter === 'inspection'
+          ? rows.filter((row) => row.isInspectionDueSoon)
+          : rows,
+    [rows, filter]
+  )
 
-  const getPriorityColor = (priority?: string) => {
-    switch (priority) {
-      case 'high': return '#f44336'
-      case 'medium': return '#ff9800'
-      case 'low': return '#4caf50'
-      default: return '#2196f3'
-    }
-  }
+  const toggleFilter = (next: Exclude<AlertFilter, 'all'>) =>
+    setFilter((current) => (current === next ? 'all' : next))
 
-  const getPriorityLabel = (priority?: string) => {
-    switch (priority) {
-      case 'high': return 'Alta'
-      case 'medium': return 'Media'
-      case 'low': return 'Baja'
-      default: return 'Normal'
-    }
-  }
+  const columns = useMemo<MRT_ColumnDef<AlertRow>[]>(
+    () => [
+      {
+        id: 'equipo',
+        header: 'Equipo',
+        size: 280,
+        accessorFn: (row) => `${row.equipmentName} ${row.internalCode}`,
+        Cell: ({ row }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: '#00BFA5',
+                fontSize: 14,
+                fontWeight: 700
+              }}
+            >
+              {row.original.equipmentName.charAt(0).toUpperCase()}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='body2' fontWeight={600}>
+                {row.original.equipmentName}
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                {row.original.internalCode}
+              </Typography>
+            </Box>
+          </Box>
+        )
+      },
+      {
+        id: 'ubicacion',
+        header: 'Marca y ubicación',
+        size: 230,
+        accessorFn: (row) => `${row.brand ?? ''} ${row.location ?? ''}`,
+        Cell: ({ row }) => (
+          <Box>
+            <Typography variant='body2'>{row.original.brand || '—'}</Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {row.original.location || 'Sin ubicación'}
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        id: 'alertas',
+        header: 'Pendiente',
+        size: 300,
+        enableSorting: false,
+        accessorFn: (row) =>
+          [
+            row.isCalibrationDueSoon ? 'calibración' : '',
+            row.isInspectionDueSoon ? 'inspección' : ''
+          ].join(' '),
+        Cell: ({ row }) => (
+          <Box sx={{ display: 'grid', gap: 0.5 }}>
+            {row.original.isCalibrationDueSoon ? (
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                <Typography
+                  variant='body2'
+                  fontWeight={600}
+                  sx={{ minWidth: 86 }}
+                >
+                  Calibración
+                </Typography>
+                <Typography variant='body2'>
+                  {formatDate(row.original.calibrationDueDate)}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {daysText(row.original.calibrationDaysRemaining)}
+                </Typography>
+              </Box>
+            ) : null}
+            {row.original.isInspectionDueSoon ? (
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                <Typography
+                  variant='body2'
+                  fontWeight={600}
+                  sx={{ minWidth: 86 }}
+                >
+                  Inspección
+                </Typography>
+                <Typography variant='body2'>
+                  {formatDate(row.original.inspectionDueDate)}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {daysText(row.original.inspectionDaysRemaining)}
+                </Typography>
+              </Box>
+            ) : null}
+          </Box>
+        )
+      },
+      {
+        id: 'prioridad',
+        header: 'Prioridad',
+        size: 200,
+        // Se ordena por los días de la alerta más atrasada
+        accessorFn: (row) => row.worstDays,
+        Cell: ({ row }) => {
+          const priority = priorityOf(row.original.worstDays)
+          return (
+            <StatusPill
+              size='small'
+              tone={priority.tone}
+              label={priority.label}
+            />
+          )
+        }
+      }
+    ],
+    []
+  )
 
-  const getDaysLabel = (daysRemaining?: number | null) => {
-    if (daysRemaining === null || daysRemaining === undefined) return null
-    if (daysRemaining < 0) {
-      return `Vencido hace ${Math.abs(daysRemaining)} día${Math.abs(daysRemaining) === 1 ? '' : 's'}`
-    }
-    if (daysRemaining === 0) return 'Vence hoy'
-    if (daysRemaining === 1) return 'Vence en 1 día'
-    return `Vence en ${daysRemaining} días`
-  }
-
-  if (loading) {
+  if (loading && equipments.length === 0) {
     return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
-          <Skeleton variant="text" width={300} height={40} />
-        </Box>
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {[...Array(3)].map((_, index) => (
-            <Grid item xs={12} md={4} key={index}>
-              <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <Skeleton variant='text' width={360} height={48} sx={{ mb: 3 }} />
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          {[0, 1, 2].map((key) => (
+            <Grid item xs={12} sm={4} key={key}>
+              <Skeleton
+                variant='rectangular'
+                height={78}
+                sx={{ borderRadius: '16px' }}
+              />
             </Grid>
           ))}
         </Grid>
-        <Grid container spacing={3}>
-          {[...Array(6)].map((_, index) => (
-            <Grid item xs={12} md={6} key={index}>
-              <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
-            </Grid>
-          ))}
-        </Grid>
+        <Skeleton
+          variant='rectangular'
+          height={400}
+          sx={{ borderRadius: '16px' }}
+        />
       </Container>
     )
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
-        title='Resumen de Alertas'
-        subtitle='Monitoreo de calibraciones e inspecciones próximas'
+        title='Alertas de equipos'
+        subtitle='Calibraciones e inspecciones vencidas o por vencer, las más atrasadas primero'
         icon={<NotificationsActiveIcon />}
         actions={
           <Tooltip title='Actualizar alertas'>
             <span>
-              <IconButton onClick={handleRefresh} disabled={refreshing}>
-                <RefreshIcon
-                  sx={{
-                    animation: refreshing ? 'spin 1s linear infinite' : 'none',
-                    '@keyframes spin': {
-                      '0%': { transform: 'rotate(0deg)' },
-                      '100%': { transform: 'rotate(360deg)' }
-                    }
-                  }}
-                />
+              <IconButton
+                aria-label='Actualizar alertas'
+                onClick={handleRefresh}
+                disabled={refreshing}
+                sx={{ border: '1px solid #e5e7eb', borderRadius: '10px' }}
+              >
+                <RefreshIcon />
               </IconButton>
             </span>
           </Tooltip>
         }
       />
 
-      <Box component='header' sx={{ mb: 3 }}>
-        {/* Search Bar */}
-        <TextField
-          label="Buscar equipos"
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ 
-            maxWidth: 400,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 3
+      {/* Los indicadores filtran la tabla; un segundo clic quita el filtro */}
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Equipos con alertas'
+            value={counts.all}
+            icon={<EngineeringIcon />}
+            tone='red'
+            caption={
+              filter === 'all' ? 'Mostrando todos' : 'Clic para ver todos'
             }
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: searchTerm && (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={clearSearch}
-                  edge="end"
-                >
-                  <ClearIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-
-      {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <LmsStatCard label='Equipos con alertas' value={totalAlerts} icon={<NotificationsActiveIcon />} tone='red' />
+            active={filter === 'all'}
+            onClick={() => setFilter('all')}
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <LmsStatCard label='Calibraciones' value={calibrationDueSoon.length} icon={<BuildIcon />} tone='orange' />
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Calibraciones'
+            value={counts.calibration}
+            icon={<BuildIcon />}
+            tone='orange'
+            caption={
+              filter === 'calibration' ? 'Filtro activo' : 'Clic para filtrar'
+            }
+            active={filter === 'calibration'}
+            onClick={() => toggleFilter('calibration')}
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <LmsStatCard label='Inspecciones' value={inspectionDueSoon.length} icon={<ScheduleIcon />} tone='blue' />
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Inspecciones'
+            value={counts.inspection}
+            icon={<ScheduleIcon />}
+            tone='blue'
+            caption={
+              filter === 'inspection' ? 'Filtro activo' : 'Clic para filtrar'
+            }
+            active={filter === 'inspection'}
+            onClick={() => toggleFilter('inspection')}
+          />
         </Grid>
       </Grid>
 
-      {/* Empty State */}
-      {searchTerm && filteredEquipments.length === 0 && (
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 6, 
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, #fff8e1 0%, #fffde7 100%)'
-          }}
-        >
-          <SearchIcon sx={{ fontSize: 64, color: '#ff9800', mb: 2 }} />
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: '#e65100' }}>
-            Sin resultados
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            No encontramos equipos con alertas que coincidan con tu búsqueda.
-          </Typography>
-        </Paper>
-      )}
-
-      {!searchTerm && totalAlerts === 0 && (
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 6, 
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)'
-          }}
-        >
-          <EngineeringIcon sx={{ fontSize: 64, color: '#4caf50', mb: 2 }} />
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: '#2e7d32' }}>
-            ¡Excelente!
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            No hay alertas pendientes en este momento. Todos los equipos están al día.
-          </Typography>
-        </Paper>
-      )}
-
-      {/* Calibration Alerts Section */}
-      {calibrationDueSoon.length > 0 && (
-        <Paper elevation={2} sx={{ mb: 4, overflow: 'hidden' }}>
-          <Box
-            sx={{
-              bgcolor: '#fff3e0',
-              p: 3,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderBottom: '1px solid #ffcc02'
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
-                <BuildIcon sx={{ fontSize: 28, color: '#ff9800', mr: 2 }} />
-                <Chip
-                  label={calibrationDueSoon.length}
-                  size="small"
-                  sx={{
-                    bgcolor: '#ff9800',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    minWidth: '32px'
-                  }}
-                />
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#e65100' }}>
-                  Calibraciones Próximas
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Equipos que requieren calibración próximamente
-                </Typography>
-              </Box>
-            </Box>
-            <Button
-              variant="outlined"
-              startIcon={showCalibrationDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              onClick={() => setShowCalibrationDetails(!showCalibrationDetails)}
-              sx={{
-                borderColor: '#ff9800',
-                color: '#ff9800',
-                '&:hover': {
-                  borderColor: '#f57c00',
-                  bgcolor: 'rgba(255, 152, 0, 0.04)'
-                }
+      <DataTable<AlertRow>
+        columns={columns}
+        data={visibleRows}
+        itemLabel={['equipo', 'equipos']}
+        searchPlaceholder='Buscar por equipo, código, marca o ubicación'
+        state={{ isLoading: loading }}
+        enableRowActions
+        initialState={{
+          sorting: [{ id: 'prioridad', desc: false }],
+          pagination: { pageIndex: 0, pageSize: 25 }
+        }}
+        muiTablePaginationProps={{ rowsPerPageOptions: [10, 25, 50, 100] }}
+        muiTableContainerProps={{ sx: { maxHeight: 'none' } }}
+        muiTableBodyRowProps={({ row }) => ({
+          onClick: () => navigate(`/datasheets/${row.original.id}`),
+          sx: { cursor: 'pointer' }
+        })}
+        renderRowActions={({ row }) => (
+          <Tooltip title='Ver hoja de vida'>
+            <IconButton
+              size='small'
+              aria-label={`Ver hoja de vida de ${row.original.equipmentName}`}
+              sx={{ color: '#00695C' }}
+              onClick={(event) => {
+                event.stopPropagation()
+                navigate(`/datasheets/${row.original.id}`)
               }}
             >
-              {showCalibrationDetails ? 'Ocultar' : 'Ver Detalles'}
-            </Button>
-          </Box>
-
-          <Collapse in={showCalibrationDetails} timeout={500}>
-            <Box sx={{ p: 3 }}>
-              <Grid container spacing={3}>
-                {calibrationDueSoon.map((equipment) => (
-                  <Grid item xs={12} md={6} key={equipment.id}>
-                    <Fade in timeout={300}>
-                      <Card 
-                        elevation={1}
-                        sx={{ 
-                          height: '100%',
-                          transition: 'all 0.2s ease-in-out',
-                          '&:hover': {
-                            elevation: 4,
-                            transform: 'translateY(-2px)'
-                          }
-                        }}
-                      >
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Avatar
-                              sx={{ 
-                                bgcolor: '#ff9800', 
-                                mr: 2,
-                                width: 40,
-                                height: 40
-                              }}
-                            >
-                              <BuildIcon />
-                            </Avatar>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
-                                {equipment.equipmentName}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary" noWrap>
-                                Código: {equipment.internalCode}
-                              </Typography>
-                            </Box>
-                            {equipment.priority && (
-                              <Chip
-                                label={getPriorityLabel(equipment.priority)}
-                                size="small"
-                                sx={{
-                                  bgcolor: getPriorityColor(equipment.priority),
-                                  color: 'white',
-                                  fontWeight: 600
-                                }}
-                              />
-                            )}
-                          </Box>
-                          
-                          {equipment.brand && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                              <strong>Marca:</strong> {equipment.brand}
-                            </Typography>
-                          )}
-                          
-                          {equipment.location && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                              <strong>Ubicación:</strong> {equipment.location}
-                            </Typography>
-                          )}
-                          
-                          {equipment.calibrationDueDate && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                              <strong>Fecha límite:</strong> {equipment.calibrationDueDate}
-                            </Typography>
-                          )}
-
-                          <Alert severity="warning" sx={{ mt: 2 }}>
-                            <Typography variant="body2">
-                              {getDaysLabel(equipment.calibrationDaysRemaining) || 'Calibración próxima requerida'}
-                            </Typography>
-                          </Alert>
-                        </CardContent>
-                        
-                        <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                          <Button
-                            component={Link}
-                            to={`/datasheets/${equipment.id}/inspection-maintenance`}
-                            size="small"
-                            variant="contained"
-                            startIcon={<VisibilityIcon />}
-                            sx={{
-                              bgcolor: '#ff9800',
-                              '&:hover': {
-                                bgcolor: '#f57c00'
-                              }
-                            }}
-                          >
-                            Ver Detalles
-                          </Button>
-                        </CardActions>
-                      </Card>
-                    </Fade>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Collapse>
-        </Paper>
-      )}
-
-      {/* Inspection Alerts Section */}
-      {inspectionDueSoon.length > 0 && (
-        <Paper elevation={2} sx={{ mb: 4, overflow: 'hidden' }}>
-          <Box
-            sx={{
-              bgcolor: '#e3f2fd',
-              p: 3,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderBottom: '1px solid #2196f3'
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
-                <ScheduleIcon sx={{ fontSize: 28, color: '#2196f3', mr: 2 }} />
-                <Chip
-                  label={inspectionDueSoon.length}
-                  size="small"
-                  sx={{
-                    bgcolor: '#2196f3',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    minWidth: '32px'
-                  }}
-                />
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#1565c0' }}>
-                  Inspecciones Próximas
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Equipos que requieren inspección próximamente
-                </Typography>
-              </Box>
-            </Box>
-            <Button
-              variant="outlined"
-              startIcon={showInspectionDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              onClick={() => setShowInspectionDetails(!showInspectionDetails)}
-              sx={{
-                borderColor: '#2196f3',
-                color: '#2196f3',
-                '&:hover': {
-                  borderColor: '#1976d2',
-                  bgcolor: 'rgba(33, 150, 243, 0.04)'
-                }
-              }}
-            >
-              {showInspectionDetails ? 'Ocultar' : 'Ver Detalles'}
-            </Button>
-          </Box>
-
-          <Collapse in={showInspectionDetails} timeout={500}>
-            <Box sx={{ p: 3 }}>
-              <Grid container spacing={3}>
-                {inspectionDueSoon.map((equipment) => (
-                  <Grid item xs={12} md={6} key={equipment.id}>
-                    <Fade in timeout={300}>
-                      <Card 
-                        elevation={1}
-                        sx={{ 
-                          height: '100%',
-                          transition: 'all 0.2s ease-in-out',
-                          '&:hover': {
-                            elevation: 4,
-                            transform: 'translateY(-2px)'
-                          }
-                        }}
-                      >
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Avatar
-                              sx={{ 
-                                bgcolor: '#2196f3', 
-                                mr: 2,
-                                width: 40,
-                                height: 40
-                              }}
-                            >
-                              <ScheduleIcon />
-                            </Avatar>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
-                                {equipment.equipmentName}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary" noWrap>
-                                Código: {equipment.internalCode}
-                              </Typography>
-                            </Box>
-                            {equipment.priority && (
-                              <Chip
-                                label={getPriorityLabel(equipment.priority)}
-                                size="small"
-                                sx={{
-                                  bgcolor: getPriorityColor(equipment.priority),
-                                  color: 'white',
-                                  fontWeight: 600
-                                }}
-                              />
-                            )}
-                          </Box>
-                          
-                          {equipment.brand && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                              <strong>Marca:</strong> {equipment.brand}
-                            </Typography>
-                          )}
-                          
-                          {equipment.location && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                              <strong>Ubicación:</strong> {equipment.location}
-                            </Typography>
-                          )}
-                          
-                          {equipment.inspectionDueDate && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                              <strong>Fecha límite:</strong> {equipment.inspectionDueDate}
-                            </Typography>
-                          )}
-
-                          <Alert severity="info" sx={{ mt: 2 }}>
-                            <Typography variant="body2">
-                              {getDaysLabel(equipment.inspectionDaysRemaining) || 'Inspección próxima requerida'}
-                            </Typography>
-                          </Alert>
-                        </CardContent>
-                        
-                        <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                          <Button
-                            component={Link}
-                            to={`/datasheets/${equipment.id}/inspection-maintenance`}
-                            size="small"
-                            variant="contained"
-                            startIcon={<VisibilityIcon />}
-                            sx={{
-                              bgcolor: '#2196f3',
-                              '&:hover': {
-                                bgcolor: '#1976d2'
-                              }
-                            }}
-                          >
-                            Ver Detalles
-                          </Button>
-                        </CardActions>
-                      </Card>
-                    </Fade>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Collapse>
-        </Paper>
-      )}
+              <VisibilityOutlined fontSize='small' />
+            </IconButton>
+          </Tooltip>
+        )}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            icon={<TaskAltOutlined />}
+            title={
+              equipments.length === 0 ? 'Sin alertas' : 'Ningún equipo coincide'
+            }
+            hint={
+              equipments.length === 0
+                ? 'Todas las calibraciones e inspecciones están al día.'
+                : 'Prueba con otra búsqueda o quita el filtro de los indicadores.'
+            }
+          />
+        )}
+      />
     </Container>
   )
 }
