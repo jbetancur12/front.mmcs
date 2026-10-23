@@ -9,6 +9,11 @@ import { useNavigate } from 'react-router-dom'
 import { axiosPrivate } from './api'
 import useRefreshToken from './use-refresh-token'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import {
+  clearLocalSession,
+  getSessionRevokedReason,
+  rememberSessionEnded
+} from './sessionEnd'
 
 type QueuedRequest = {
   reject: (error?: unknown) => void
@@ -32,6 +37,8 @@ const onResponse = (response: AxiosResponse): AxiosResponse => response
 const onRequestError = (error: AxiosError): Promise<never> =>
   Promise.reject(error)
 
+let lastRevokedLogoutAt = 0
+
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken()
   const navigate = useNavigate()
@@ -50,17 +57,31 @@ const useAxiosPrivate = () => {
     failedQueue.current = []
   }
 
-  const handleLogout = async () => {
-    try {
-      await axiosPrivate.post('/auth/logout', {})
-    } catch (logoutError) {
-      console.error('Error al cerrar sesión:', logoutError)
+  // `revokedReason`: la sesión la cerraron desde otro equipo. No se llama a /auth/logout: la sesión
+  // ya no existe y la cookie puede ser la de una sesión nueva de este mismo navegador.
+  const handleLogout = async (revokedReason: string | null = null) => {
+    // Varias peticiones en vuelo (y varios hooks con su interceptor) fallan a la vez: se cierra una sola vez
+    if (revokedReason) {
+      if (Date.now() - lastRevokedLogoutAt < 5_000) return
+      lastRevokedLogoutAt = Date.now()
+    }
+
+    if (!revokedReason) {
+      try {
+        await axiosPrivate.post('/auth/logout', {})
+      } catch (logoutError) {
+        console.error('Error al cerrar sesión:', logoutError)
+      }
     }
 
     localStorage.removeItem('sessionExpiresAt')
-    localStorage.clear()
-    sessionStorage.clear()
-    Toast.fire('Sesión expirada', '', 'error')
+    clearLocalSession()
+    if (revokedReason) {
+      rememberSessionEnded(revokedReason)
+      Toast.fire('Tu sesión se cerró', '', 'info')
+    } else {
+      Toast.fire('Sesión expirada', '', 'error')
+    }
     navigate('/login', { replace: true })
   }
 
@@ -78,6 +99,13 @@ const useAxiosPrivate = () => {
           | undefined
 
         if (!originalConfig) {
+          return Promise.reject(error)
+        }
+
+        // Sesión cerrada desde otro equipo: renovar el token no sirve, se cierra aquí
+        const revokedReason = getSessionRevokedReason(error)
+        if (revokedReason) {
+          await handleLogout(revokedReason)
           return Promise.reject(error)
         }
 
@@ -116,7 +144,7 @@ const useAxiosPrivate = () => {
             return axiosPrivate(originalConfig)
           } catch (refreshError) {
             processQueue(refreshError, null)
-            await handleLogout()
+            await handleLogout(getSessionRevokedReason(refreshError))
             return Promise.reject(refreshError)
           } finally {
             isRefreshing.current = false

@@ -20,6 +20,9 @@ import {
 } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
+import ActiveSessionDialog from 'src/Components/Authentication/ActiveSessionDialog'
+import type { ActiveSessionInfo } from 'src/hooks/useSessions'
+import { clearSessionEnded, peekSessionEndedMessage } from 'src/utils/sessionEnd'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
@@ -49,6 +52,18 @@ const Login: React.FC = () => {
   })
 
   const [error, setError] = useState<string | null>(null) // Agrega estado para manejar errores
+  const [activeSessions, setActiveSessions] = useState<
+    ActiveSessionInfo[] | null
+  >(null)
+  // Por qué se cerró la sesión anterior (otro equipo, cambio de clave...)
+  const [sessionEndedMessage, setSessionEndedMessage] = useState<string | null>(
+    peekSessionEndedMessage
+  )
+
+  const answerActiveSessions = (sessionAction: 'keep' | 'replace') => {
+    setActiveSessions(null)
+    void submitLogin(sessionAction)
+  }
 
   // Define el esquema de validación del formulario con Yup
   const validationSchema = Yup.object().shape({
@@ -160,15 +175,22 @@ const Login: React.FC = () => {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    void submitLogin()
+  }
 
+  // `sessionAction`: respuesta al aviso de sesión abierta en otro equipo
+  const submitLogin = async (sessionAction?: 'keep' | 'replace') => {
     const data = {
       email: formData.email,
-      contraseña: formData.password
+      contraseña: formData.password,
+      ...(sessionAction ? { sessionAction } : {})
     }
 
     setError(null)
+    setSessionEndedMessage(null)
+    clearSessionEnded()
     setSubmitting(true)
 
     try {
@@ -245,6 +267,17 @@ const Login: React.FC = () => {
         }
       }
     } catch (error: any) {
+      // La cuenta ya tiene una sesión abierta: preguntar antes de entrar
+      if (
+        isAxiosError(error) &&
+        error.response?.status === 409 &&
+        (error.response.data as { code?: string })?.code === 'ACTIVE_SESSIONS'
+      ) {
+        setActiveSessions(
+          (error.response.data as { sessions: ActiveSessionInfo[] }).sessions
+        )
+        return
+      }
       // Handle network error or other exceptions
       handleValidationOrNetworkError(error)
       // Toast.fire('Error', error.message, 'error')
@@ -348,6 +381,12 @@ const Login: React.FC = () => {
             </Box>
           </Box>
 
+          {sessionEndedMessage && !error && (
+            <Alert severity='info' sx={{ borderRadius: '8px' }}>
+              {sessionEndedMessage}
+            </Alert>
+          )}
+
           {error && (
             <Alert severity='error' sx={{ borderRadius: '8px' }}>
               {error}
@@ -386,6 +425,15 @@ const Login: React.FC = () => {
           </Button>
         </Stack>
       </Box>
+
+      <ActiveSessionDialog
+        open={activeSessions !== null}
+        sessions={activeSessions ?? []}
+        loading={submitting}
+        onReplace={() => answerActiveSessions('replace')}
+        onKeep={() => answerActiveSessions('keep')}
+        onCancel={() => setActiveSessions(null)}
+      />
     </AuthLayout>
   )
 }

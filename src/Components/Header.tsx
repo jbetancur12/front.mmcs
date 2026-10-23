@@ -14,6 +14,8 @@ import { useStore } from '@nanostores/react'
 import { Link } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import { useLogout } from './Authentication/Logout'
+import ActiveSessionsListDialog from './Authentication/ActiveSessionsListDialog'
+import useSessionGuard from 'src/hooks/useSessionGuard'
 import UserMenu from './Common/UserMenu'
 import useAxiosPrivate from '@utils/use-axios-private'
 import AlertsBell from './DataSheet/AlertsBell'
@@ -45,6 +47,8 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
     // Solo al montar: la versión de la API no cambia durante la sesión.
   }, [])
   const [impersonationDialogOpen, setImpersonationDialogOpen] = useState(false)
+  const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false)
+  useSessionGuard()
   const {
     isImpersonating,
     impersonator,
@@ -175,6 +179,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
               impersonating={isImpersonating}
               onStopImpersonation={stopImpersonation}
               onLogout={logout}
+              onOpenSessions={() => setSessionsDialogOpen(true)}
               versionLabel={`Versión ${import.meta.env.VITE_APP_VERSION}${
                 apiVersion ? ` (API ${apiVersion})` : ''
               }`}
@@ -182,6 +187,10 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
           </Box>
         </Toolbar>
       </AppBar>
+      <ActiveSessionsListDialog
+        open={sessionsDialogOpen}
+        onClose={() => setSessionsDialogOpen(false)}
+      />
       <ImpersonationDialog
         open={impersonationDialogOpen}
         searching={searching}

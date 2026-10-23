@@ -10,6 +10,7 @@ import {
   Typography
 } from '@mui/material'
 import LogoutIcon from '@mui/icons-material/Logout'
+import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 
@@ -22,6 +23,8 @@ interface UserMenuProps {
   impersonating?: boolean
   onStopImpersonation?: () => void
   onLogout: () => void
+  /** Abre la lista de sesiones activas de la cuenta; sin esto el ítem no aparece. */
+  onOpenSessions?: () => void
   /** Pie del menú para soporte: "Versión 1.10.1 (API 1.8.2)". */
   versionLabel?: string
 }
@@ -49,6 +52,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   impersonating = false,
   onStopImpersonation,
   onLogout,
+  onOpenSessions,
   versionLabel
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -185,6 +189,20 @@ const UserMenu: React.FC<UserMenuProps> = ({
               <AdminPanelSettingsOutlinedIcon fontSize='small' />
             </ListItemIcon>
             Volver a mi sesión
+          </MenuItem>
+        )}
+        {onOpenSessions && (
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null)
+              onOpenSessions()
+            }}
+            sx={{ fontSize: 14, py: 1.25 }}
+          >
+            <ListItemIcon>
+              <DevicesOutlinedIcon fontSize='small' />
+            </ListItemIcon>
+            Sesiones activas
           </MenuItem>
         )}
         <MenuItem
