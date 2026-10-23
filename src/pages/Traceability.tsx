@@ -1,37 +1,28 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
+  Avatar,
   Box,
   Button,
   Dialog,
-  DialogActions,
   DialogContent,
-  IconButton,
-  TextField,
-  Typography,
-  Card,
-  CardContent,
+  DialogTitle,
   Grid,
-  Container,
-  InputAdornment,
-  Skeleton,
-  Chip,
-  CardActions,
-  CardHeader,
-  Fade,
-  LinearProgress
+  IconButton,
+  LinearProgress,
+  TextField,
+  Tooltip,
+  Typography,
+  Container
 } from '@mui/material'
-
 import {
   CloudUpload,
-  Visibility,
-
-  Search,
+  Close,
   Delete,
   Edit,
   PictureAsPdf,
-  CalendarToday,
-  Clear
+  Visibility
 } from '@mui/icons-material'
+import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import toast, { Toaster } from 'react-hot-toast'
 import PDFViewer from '../Components/PDFViewer.js'
 import {
@@ -39,140 +30,87 @@ import {
   useTraceabilities,
   useTraceabilityMutations
 } from '@hooks/traceability/useTraceabilities'
-import Swal from 'sweetalert2'
-
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { formatDateOnly } from '@utils/dateOnly'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-interface CreateDocumentForm {
-  name: string
-  file: File | null
-}
+import DataTable from 'src/Components/Common/DataTable'
+import EmptyState from 'src/Components/Common/EmptyState'
+import FormDialog, { FormDialogSection } from 'src/Components/Common/FormDialog'
+import FileDropZone from 'src/Components/Common/FileDropZone'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 
-const initialState: CreateDocumentForm = {
-  name: '',
-  file: null
-}
+const TEAL_BUTTON_SX = {
+  textTransform: 'none',
+  fontWeight: 600,
+  bgcolor: '#00BFA5',
+  whiteSpace: 'nowrap',
+  '&:hover': { bgcolor: '#00897B' }
+} as const
 
-const Traceability = () => {
-  const canManageTraceability = useCan(PERMISSIONS.CALIBRATION_TRACEABILITY_MANAGE)
+const Traceability: React.FC = () => {
+  const canManageTraceability = useCan(
+    PERMISSIONS.CALIBRATION_TRACEABILITY_MANAGE
+  )
   const { data: traceabilities = [], isLoading: loading } = useTraceabilities()
   const { createTraceability, updateTraceability, deleteTraceability } =
     useTraceabilityMutations()
-  const [openModal, setOpenModal] = useState(false)
-  const [formData, setFormData] = useState<CreateDocumentForm>(initialState)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
 
-  const [pdfModalOpen, setPdfModalOpen] = useState(false)
-  const [selectedPdfDocument, setSelectedPdfDocument] = useState<TraceabilityDocument | null>(null)
-
+  // Crear
+  const [createOpen, setCreateOpen] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newFile, setNewFile] = useState<File | null>(null)
+  const [createSubmitted, setCreateSubmitted] = useState(false)
+  // Reemplazar el PDF
+  const [updateTarget, setUpdateTarget] = useState<TraceabilityDocument | null>(
+    null
+  )
   const [updateFile, setUpdateFile] = useState<File | null>(null)
-  const [updateId, setUpdateId] = useState<number | null>(null)
+  // Eliminar y ver
+  const [deleteTarget, setDeleteTarget] = useState<TraceabilityDocument | null>(
+    null
+  )
+  const [previewTarget, setPreviewTarget] =
+    useState<TraceabilityDocument | null>(null)
+  // Progreso de subida (crear o reemplazar)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+  const closeCreate = () => {
+    if (isUploading) return
+    setCreateOpen(false)
+    setNewName('')
+    setNewFile(null)
+    setCreateSubmitted(false)
+    setUploadProgress(0)
   }
 
-  // Debounced search effect
-  useEffect(() => {
-    setIsSearching(true)
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-      setIsSearching(false)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
-
-  const handleOpenModal = () => {
-    setOpenModal(true)
+  const closeUpdate = () => {
+    if (isUploading) return
+    setUpdateTarget(null)
+    setUpdateFile(null)
+    setUploadProgress(0)
   }
 
-  const handleCloseModal = () => {
-    if (!isUploading) {
-      setOpenModal(false)
-      setFormData(initialState)
-      setUploadProgress(0)
-      setDragActive(false)
-    }
-  }
+  const handleCreate = async () => {
+    setCreateSubmitted(true)
+    if (!newName.trim() || !newFile) return
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0]
-      if (validateFile(file)) {
-        setFormData({
-          ...formData,
-          file
-        })
-        toast.success('Archivo PDF cargado correctamente')
-      }
-    }
-  }
-
-  const handleUpdateFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0]
-      if (validateFile(file)) {
-        setUpdateFile(file)
-        toast.success('Nuevo archivo PDF cargado correctamente')
-      }
-    }
-  }
-
-  const handleUpdateDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0]
-      if (validateFile(file)) {
-        setUpdateFile(file)
-        toast.success('Nuevo archivo PDF cargado correctamente')
-      }
-    }
-  }, [])
-
-  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-
-    if (!formData.name.trim()) {
-      toast.error('Por favor ingresa un nombre para el documento')
-      return
-    }
-
-    if (!formData.file) {
-      toast.error('Por favor selecciona un archivo PDF')
-      return
-    }
-
-    const formDataToSend = new FormData()
-    formDataToSend.append('name', formData.name)
-    formDataToSend.append('file', formData.file as Blob)
+    const formData = new FormData()
+    formData.append('name', newName)
+    formData.append('file', newFile as Blob)
 
     try {
       setIsUploading(true)
       setUploadProgress(0)
-
       await createTraceability.mutateAsync({
-        formData: formDataToSend,
+        formData,
         onProgress: setUploadProgress
       })
-
       toast.success('Documento de trazabilidad creado con éxito')
-      setFormData(initialState)
-      setUploadProgress(0)
-      handleCloseModal()
+      setIsUploading(false)
+      closeCreate()
     } catch (error) {
       console.error('Error al crear la trazabilidad:', error)
       toast.error('Error al crear el documento')
@@ -181,39 +119,26 @@ const Traceability = () => {
     }
   }
 
-  const handleUpdate = async (id: number) => {
-    setUpdateId(id)
-  }
-
-  const getCurrentDocument = () => {
-    return traceabilities.find(doc => doc.id === updateId)
-  }
-
-  const handleUpdateSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-
-    if (!updateFile || updateId === null) {
-      toast.error('Por favor selecciona un archivo PDF para actualizar.')
+  const handleUpdate = async () => {
+    if (!updateFile || !updateTarget) {
+      toast.error('Selecciona el PDF nuevo para reemplazar el documento.')
       return
     }
 
-    const formDataToSend = new FormData()
-    formDataToSend.append('file', updateFile)
+    const formData = new FormData()
+    formData.append('file', updateFile)
 
     try {
       setIsUploading(true)
       setUploadProgress(0)
-
       await updateTraceability.mutateAsync({
-        id: updateId,
-        formData: formDataToSend,
+        id: updateTarget.id,
+        formData,
         onProgress: setUploadProgress
       })
-
       toast.success('Documento actualizado con éxito')
-      setUpdateId(null)
-      setUpdateFile(null)
-      setUploadProgress(0)
+      setIsUploading(false)
+      closeUpdate()
     } catch (error) {
       console.error('Error al actualizar el PDF:', error)
       toast.error('Error al actualizar el documento')
@@ -222,258 +147,58 @@ const Traceability = () => {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    const document = traceabilities.find(doc => doc.id === id)
-    if (!document) return
-
-    const result = await Swal.fire({
-      title: '¿Eliminar documento?',
-      html: `
-        <div style="text-align: left; margin: 20px 0;">
-          <p><strong>Documento:</strong> ${document.name}</p>
-          <p><strong>Creado:</strong> ${formatDate(document.createdAt)}</p>
-          <p style="color: #d32f2f; margin-top: 15px;">
-            <strong>⚠️ Esta acción no se puede deshacer</strong>
-          </p>
-        </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d32f2f',
-      cancelButtonColor: '#grey',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusCancel: true
-    })
-
-    if (!result.isConfirmed) return
-
+  const handleDelete = async () => {
+    if (!deleteTarget) return
     try {
-      // Show loading state
-      Swal.fire({
-        title: 'Eliminando...',
-        text: 'Por favor espera mientras se elimina el documento',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading()
-        }
-      })
-
-      const response = await deleteTraceability.mutateAsync(id)
-
+      const response = await deleteTraceability.mutateAsync(deleteTarget.id)
       if (response.status >= 200 && response.status < 300) {
-        Swal.fire({
-          title: '¡Eliminado!',
-          text: 'El documento ha sido eliminado correctamente',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        toast.success('Documento eliminado correctamente')
       }
+      setDeleteTarget(null)
     } catch (error) {
       console.error('Error al eliminar la trazabilidad:', error)
-
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo eliminar el documento. Por favor intenta nuevamente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      toast.error('No se pudo eliminar el documento. Inténtalo de nuevo.')
     }
   }
 
-  const openPDFModal = (document: TraceabilityDocument) => {
-    setSelectedPdfDocument(document)
-    setPdfModalOpen(true)
-  }
+  const rejectFile = (message: string) => toast.error(message)
 
-  const closePDFModal = () => {
-    setPdfModalOpen(false)
-    setSelectedPdfDocument(null)
-  }
-
-  // Funciones para controles de PDF - COMENTADAS
-  /*
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
-
-  const handleZoomIn = () => {
-    if (zoomLevel < 200) {
-      setZoomLevel(zoomLevel + 25)
-    }
-  }
-
-  const handleZoomOut = () => {
-    if (zoomLevel > 50) {
-      setZoomLevel(zoomLevel - 25)
-    }
-  }
-
-  const handleDownload = () => {
-    if (selectedPdfDocument) {
-      // Crear un enlace temporal para descargar el PDF
-      const link = document.createElement('a')
-      link.href = selectedPdfDocument.filePath
-      link.download = selectedPdfDocument.name + '.pdf'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-  }
-  */
-
-
-
-
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
-  const filteredTraceabilities = useMemo(() => {
-    if (!debouncedSearchTerm) return traceabilities
-
-    return traceabilities.filter((traceability) =>
-      traceability.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    )
-  }, [traceabilities, debouncedSearchTerm])
-
-  const highlightText = useCallback((text: string, highlight: string) => {
-    if (!highlight) return text
-
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'))
-    return parts.map((part, index) =>
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <Box component="span" key={index} sx={{ bgcolor: 'yellow', fontWeight: 'bold' }}>
-          {part}
-        </Box>
-      ) : part
-    )
-  }, [])
-
-  const clearSearch = () => {
-    setSearchTerm('')
-    setDebouncedSearchTerm('')
-  }
-
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
-    }
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0]
-      if (file.type === 'application/pdf') {
-        setFormData({
-          ...formData,
-          file
-        })
-        toast.success('Archivo PDF cargado correctamente')
-      } else {
-        toast.error('Por favor selecciona un archivo PDF')
+  const columns = useMemo<MRT_ColumnDef<TraceabilityDocument>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Documento',
+        size: 320,
+        Cell: ({ cell }: { cell: MRT_Cell<TraceabilityDocument> }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              sx={{ width: 32, height: 32, bgcolor: '#00BFA5' }}
+              aria-hidden
+            >
+              <PictureAsPdf sx={{ fontSize: 18 }} />
+            </Avatar>
+            <Typography fontWeight={600}>{cell.getValue<string>()}</Typography>
+          </Box>
+        )
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'Fecha de creación',
+        size: 160,
+        Cell: ({ cell }: { cell: MRT_Cell<TraceabilityDocument> }) =>
+          formatDateOnly(cell.getValue<string>()) ?? '—'
       }
-    }
-  }, [formData])
-
-  const validateFile = (file: File) => {
-    if (file.type !== 'application/pdf') {
-      toast.error('Solo se permiten archivos PDF')
-      return false
-    }
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      toast.error('El archivo no puede ser mayor a 10MB')
-      return false
-    }
-    return true
-  }
-
-  const SkeletonCard = () => (
-    <Card elevation={2} sx={{ height: '100%' }}>
-      <CardHeader
-        avatar={<Skeleton variant="circular" width={40} height={40} />}
-        title={<Skeleton variant="text" width="60%" />}
-        subheader={<Skeleton variant="text" width="40%" />}
-      />
-      <CardContent>
-        <Skeleton variant="rectangular" height={60} />
-      </CardContent>
-      <CardActions>
-        <Skeleton variant="rectangular" width={80} height={32} />
-        <Skeleton variant="rectangular" width={80} height={32} />
-      </CardActions>
-    </Card>
+    ],
+    []
   )
 
-  const EmptyState = () => (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        py: 8,
-        textAlign: 'center'
-      }}
-    >
-      <PictureAsPdf sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-      <Typography variant="h6" color="text.secondary" gutterBottom>
-        No hay documentos de trazabilidad
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        {debouncedSearchTerm
-          ? `No se encontraron documentos que coincidan con "${debouncedSearchTerm}"`
-          : 'Comienza creando tu primer documento de trazabilidad'
-        }
-      </Typography>
-      {debouncedSearchTerm && (
-        <Button
-          variant="outlined"
-          onClick={clearSearch}
-          sx={{ mb: 2 }}
-        >
-          Limpiar búsqueda
-        </Button>
-      )}
-      {!debouncedSearchTerm && canManageTraceability && (
-        <Button
-          variant="contained"
-          startIcon={<CloudUpload />}
-          onClick={handleOpenModal}
-        >
-          Crear Primer Documento
-        </Button>
-      )}
-    </Box>
-  )
+  const createDisabledReason =
+    createSubmitted && !newName.trim()
+      ? 'Escribe el nombre del documento'
+      : undefined
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <Toaster />
 
       <LmsPageHeader
@@ -482,7 +207,12 @@ const Traceability = () => {
         icon={<PictureAsPdf />}
         actions={
           canManageTraceability && (
-            <Button variant='contained' startIcon={<CloudUpload />} onClick={handleOpenModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<CloudUpload />}
+              onClick={() => setCreateOpen(true)}
+              sx={TEAL_BUTTON_SX}
+            >
               Crear documento
             </Button>
           )
@@ -490,619 +220,223 @@ const Traceability = () => {
       />
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={6} sm={4}>
-          <LmsStatCard variant='quiet' label='Documentos' value={traceabilities.length} icon={<PictureAsPdf />} tone='teal' />
-        </Grid>
-        <Grid item xs={6} sm={4}>
-          <LmsStatCard variant='quiet' label='Mostrando' value={filteredTraceabilities.length} icon={<Search />} tone='blue' />
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            variant='quiet'
+            label='Documentos'
+            value={traceabilities.length}
+            icon={<PictureAsPdf />}
+            tone='teal'
+          />
         </Grid>
       </Grid>
 
-      <Box component="header" sx={{ mb: 3 }}>
-        {/* Search and Create Section */}
-        <Box sx={{
-          display: 'flex',
-          gap: 2,
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'stretch', sm: 'center' }
-        }}>
-          <TextField
-            label="Buscar documentos"
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ flex: 1 }}
-            aria-label="Campo de búsqueda de documentos de trazabilidad"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search color={isSearching ? "primary" : "inherit"} />
-                </InputAdornment>
-              ),
-              endAdornment: searchTerm && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={clearSearch}
-                    edge="end"
-                    aria-label="Limpiar búsqueda"
-                  >
-                    <Clear />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            helperText={
-              isSearching ? "Buscando..." :
-                searchTerm && !isSearching ? `${filteredTraceabilities.length} resultado(s) encontrado(s)` :
-                  ""
+      <DataTable
+        columns={columns}
+        data={traceabilities}
+        itemLabel={['documento', 'documentos']}
+        searchPlaceholder='Buscar documentos'
+        enableRowActions
+        state={{ isLoading: loading }}
+        initialState={{ density: 'compact' }}
+        displayColumnDefOptions={{
+          'mrt-row-actions': { header: 'Acciones', size: 140 }
+        }}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            compact
+            icon={<PictureAsPdf />}
+            title='No hay documentos de trazabilidad'
+            hint='Crea el primer documento o ajusta la búsqueda.'
+            action={
+              canManageTraceability ? (
+                <Button
+                  variant='contained'
+                  startIcon={<CloudUpload />}
+                  onClick={() => setCreateOpen(true)}
+                  sx={TEAL_BUTTON_SX}
+                >
+                  Crear documento
+                </Button>
+              ) : undefined
             }
           />
-        </Box>
-
-        {/* Results Count */}
-        {!loading && traceabilities.length > 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {filteredTraceabilities.length} de {traceabilities.length} documentos
-          </Typography>
         )}
-      </Box>
-
-      {/* Content Area */}
-      <Box component="main" role="main" aria-label="Lista de documentos de trazabilidad">
-        {loading ? (
-          <Grid container spacing={3}>
-            {[...Array(6)].map((_, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
-                <SkeletonCard />
-              </Grid>
-            ))}
-          </Grid>
-        ) : filteredTraceabilities.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <Grid container spacing={3}>
-            {filteredTraceabilities.map((traceability) => (
-              <Grid item xs={12} sm={6} lg={4} key={traceability.id}>
-                <Fade in timeout={300}>
-                  <Card
-                    elevation={2}
-                    role="article"
-                    aria-label={`Documento de trazabilidad: ${traceability.name}`}
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        elevation: 4,
-                        transform: 'translateY(-2px)'
-                      }
-                    }}
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: 'flex' }}>
+            <Tooltip title='Ver'>
+              <IconButton
+                size='small'
+                aria-label={`Ver documento ${row.original.name}`}
+                sx={{ color: '#00695C' }}
+                onClick={() => setPreviewTarget(row.original)}
+              >
+                <Visibility fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {canManageTraceability && (
+              <>
+                <Tooltip title='Reemplazar PDF'>
+                  <IconButton
+                    size='small'
+                    aria-label={`Reemplazar el PDF de ${row.original.name}`}
+                    sx={{ color: '#2563eb' }}
+                    onClick={() => setUpdateTarget(row.original)}
                   >
-                    <CardHeader
-                      avatar={
-                        <Box
-                          sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            bgcolor: 'primary.main',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          <PictureAsPdf sx={{ color: 'white', fontSize: 20 }} />
-                        </Box>
-                      }
-                      title={
-                        <Typography variant="h6" noWrap>
-                          {highlightText(traceability.name, debouncedSearchTerm)}
-                        </Typography>
-                      }
-                      subheader={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CalendarToday sx={{ fontSize: 14 }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {formatDate(traceability.createdAt)}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-
-                    <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-                      <Chip
-                        label="PDF"
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                      />
-                    </CardContent>
-
-                    <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                      <Button
-                        size="small"
-                        startIcon={<Visibility />}
-                        onClick={() => openPDFModal(traceability)}
-                        aria-label={`Ver documento ${traceability.name} en pantalla completa`}
-                      >
-                        Vista Previa
-                      </Button>
-
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        {canManageTraceability && (
-                          <>
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleUpdate(traceability.id)}
-                              aria-label={`Editar documento ${traceability.name}`}
-                            >
-                              <Edit />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDelete(traceability.id)}
-                              aria-label={`Eliminar documento ${traceability.name}`}
-                            >
-                              <Delete />
-                            </IconButton>
-                          </>
-                        )}
-                      </Box>
-                    </CardActions>
-
-
-                  </Card>
-                </Fade>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Box>
-
-      {/* Modals */}
-      <Dialog
-        open={openModal}
-        onClose={handleCloseModal}
-        maxWidth="sm"
-        fullWidth
-        aria-labelledby="create-dialog-title"
-        aria-describedby="create-dialog-description"
-        PaperProps={{
-          sx: { borderRadius: 3, overflow: 'hidden' }
-        }}
-      >
-        {/* Header colorido */}
-        <Box
-          sx={{
-            bgcolor: '#00BFA5',
-            color: 'white',
-            p: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <CloudUpload sx={{ fontSize: 28 }} />
-            <Box>
-              <Typography variant="h6" id="create-dialog-title" sx={{ fontWeight: 600 }}>
-                Crear Documento
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }} id="create-dialog-description">
-                Sube el nuevo documento PDF de trazabilidad
-              </Typography>
-            </Box>
+                    <Edit fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Eliminar'>
+                  <IconButton
+                    size='small'
+                    aria-label={`Eliminar documento ${row.original.name}`}
+                    color='error'
+                    onClick={() => setDeleteTarget(row.original)}
+                  >
+                    <Delete fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
           </Box>
-          <IconButton
-            onClick={handleCloseModal}
-            sx={{ color: 'white' }}
-            disabled={isUploading}
-          >
-            <Clear />
-          </IconButton>
-        </Box>
+        )}
+      />
 
-        <DialogContent sx={{ p: 3 }}>
-          {/* Sección Nombre */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <Edit sx={{ color: '#00BFA5', fontSize: 20 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                Nombre del Documento
-              </Typography>
-            </Box>
+      <FormDialog
+        open={createOpen}
+        onClose={closeCreate}
+        title='Crear documento'
+        subtitle='Sube el PDF de trazabilidad'
+        submitLabel='Crear documento'
+        onSubmit={handleCreate}
+        loading={isUploading}
+        maxWidth='sm'
+      >
+        <FormDialogSection title='Documento'>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <TextField
               fullWidth
-              placeholder="Ingresa el nombre del documento"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
+              label='Nombre del documento'
+              value={newName}
+              onChange={(event) => setNewName(event.target.value)}
+              error={Boolean(createDisabledReason)}
+              helperText={createDisabledReason}
               disabled={isUploading}
-              error={!formData.name.trim() && formData.name !== ''}
-              helperText={!formData.name.trim() && formData.name !== '' ? 'El nombre es requerido' : ''}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  bgcolor: '#f8f9fa'
-                }
-              }}
             />
           </Box>
-
-          {/* Sección PDF */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <PictureAsPdf sx={{ color: '#00BFA5', fontSize: 20 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                Documento PDF
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <FileDropZone
+              file={newFile}
+              onFileSelected={setNewFile}
+              onReject={rejectFile}
+              accept='application/pdf'
+              acceptLabel='PDF'
+              maxSizeMb={10}
+              disabled={isUploading}
+            />
+            {createSubmitted && !newFile && (
+              <Typography
+                variant='caption'
+                color='error'
+                sx={{ display: 'block', mt: 0.5 }}
+              >
+                Selecciona el archivo PDF
               </Typography>
-            </Box>
-
-            {/* Drag and Drop Area */}
-            <Box
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              sx={{
-                border: `2px dashed ${dragActive ? '#00BFA5' : '#e0e0e0'}`,
-                borderRadius: 2,
-                p: 4,
-                textAlign: 'center',
-                bgcolor: dragActive ? '#e0f2f1' : '#f8f9fa',
-                transition: 'all 0.2s ease-in-out',
-                cursor: 'pointer',
-                '&:hover': {
-                  borderColor: '#00BFA5',
-                  bgcolor: '#e0f2f1'
-                }
-              }}
-              onClick={() => document.getElementById('file-input')?.click()}
-            >
-              <input
-                type="file"
-                accept=".pdf"
-                id="file-input"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-                disabled={isUploading}
-              />
-
-              <CloudUpload
-                sx={{
-                  fontSize: 48,
-                  color: dragActive ? '#00BFA5' : '#9e9e9e',
-                  mb: 2
-                }}
-              />
-
-              {formData.file ? (
-                <Box>
-                  <Typography variant="h6" sx={{ color: '#00BFA5', mb: 1 }}>
-                    ✓ Archivo seleccionado
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
-                    {formData.file.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {(formData.file.size / 1024 / 1024).toFixed(2)} MB
-                  </Typography>
-                </Box>
-              ) : (
-                <Box>
-                  <Typography variant="h6" sx={{ mb: 1, color: '#424242' }}>
-                    {dragActive ? 'Suelta tu archivo PDF aquí' : 'Arrastra tu archivo PDF aquí'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    o haz clic para seleccionar
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Máximo 10MB • Solo archivos PDF
-                  </Typography>
-                </Box>
-              )}
-            </Box>
+            )}
           </Box>
-
-          {/* Upload Progress */}
           {isUploading && (
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Typography variant="body2" sx={{ flex: 1 }}>
-                  Subiendo archivo...
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {uploadProgress}%
-                </Typography>
-              </Box>
+            <Box sx={{ gridColumn: '1 / -1' }}>
               <LinearProgress
-                variant="determinate"
+                variant='determinate'
                 value={uploadProgress}
                 sx={{
-                  borderRadius: 1,
-                  height: 8,
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: '#00BFA5'
-                  }
+                  height: 6,
+                  borderRadius: 3,
+                  bgcolor: '#E0F7F4',
+                  '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' }
                 }}
               />
+              <Typography variant='caption' color='text.secondary'>
+                Subiendo… {uploadProgress}%
+              </Typography>
             </Box>
           )}
-        </DialogContent>
+        </FormDialogSection>
+      </FormDialog>
 
-        <DialogActions sx={{ p: 3, pt: 0, gap: 2, justifyContent: 'flex-end' }}>
-          <Button
-            onClick={handleCloseModal}
-            disabled={isUploading}
-            sx={{
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              color: '#666',
-              '&:hover': {
-                bgcolor: '#f5f5f5'
-              }
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={!formData.name.trim() || !formData.file || isUploading}
-            startIcon={isUploading ? null : <CloudUpload />}
-            sx={{
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              bgcolor: '#00BFA5',
-              '&:hover': {
-                bgcolor: '#00ACC1'
-              },
-              '&:disabled': {
-                bgcolor: '#e0e0e0',
-                color: '#9e9e9e'
-              }
-            }}
-          >
-            {isUploading ? 'Creando Documento...' : 'Crear Documento'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {updateId !== null && (
-        <Dialog
-          open={updateId !== null}
-          onClose={() => !isUploading && setUpdateId(null)}
-          maxWidth="sm"
-          fullWidth
-          aria-labelledby="update-dialog-title"
-          aria-describedby="update-dialog-description"
-          PaperProps={{
-            sx: { borderRadius: 3, overflow: 'hidden' }
-          }}
+      <FormDialog
+        open={Boolean(updateTarget)}
+        onClose={closeUpdate}
+        title='Reemplazar el PDF'
+        subtitle={updateTarget?.name}
+        submitLabel='Actualizar documento'
+        onSubmit={handleUpdate}
+        loading={isUploading}
+        maxWidth='sm'
+      >
+        <FormDialogSection
+          title='Nuevo archivo'
+          description='El documento conserva su nombre; solo cambia el PDF.'
         >
-          {/* Header colorido */}
-          <Box
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              p: 3,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Edit sx={{ fontSize: 28 }} />
-              <Box>
-                <Typography variant="h6" id="update-dialog-title" sx={{ fontWeight: 600 }}>
-                  Actualizar Documento
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }} id="update-dialog-description">
-                  Sube el nuevo archivo PDF para reemplazar el actual
-                </Typography>
-              </Box>
-            </Box>
-            <IconButton
-              onClick={() => {
-                setUpdateId(null)
-                setUpdateFile(null)
-                setUploadProgress(0)
-              }}
-              sx={{ color: 'white' }}
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <FileDropZone
+              file={updateFile}
+              onFileSelected={setUpdateFile}
+              onReject={rejectFile}
+              accept='application/pdf'
+              acceptLabel='PDF'
+              maxSizeMb={10}
               disabled={isUploading}
-            >
-              <Clear />
-            </IconButton>
+              inputKey={updateTarget?.id}
+            />
           </Box>
-
-          <DialogContent sx={{ p: 3 }}>
-            {/* Documento Actual */}
-            {getCurrentDocument() && (
-              <Box sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <PictureAsPdf sx={{ color: '#FF9800', fontSize: 20 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    Documento Actual
-                  </Typography>
-                </Box>
-                <Box sx={{
-                  bgcolor: '#fff3e0',
-                  border: '1px solid #ffcc02',
-                  borderRadius: 2,
-                  p: 2
-                }}>
-                  <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
-                    {getCurrentDocument()?.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Creado: {formatDate(getCurrentDocument()?.createdAt || '')}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-
-            {/* Nuevo Documento */}
-            <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <CloudUpload sx={{ color: '#FF9800', fontSize: 20 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Nuevo Documento PDF
-                </Typography>
-              </Box>
-
-              {/* Drag and Drop Area for Update */}
-              <Box
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleUpdateDrop}
+          {isUploading && (
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <LinearProgress
+                variant='determinate'
+                value={uploadProgress}
                 sx={{
-                  border: `2px dashed ${dragActive ? '#FF9800' : '#e0e0e0'}`,
-                  borderRadius: 2,
-                  p: 4,
-                  textAlign: 'center',
-                  bgcolor: dragActive ? '#fff3e0' : '#f8f9fa',
-                  transition: 'all 0.2s ease-in-out',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    borderColor: '#FF9800',
-                    bgcolor: '#fff3e0'
-                  }
+                  height: 6,
+                  borderRadius: 3,
+                  bgcolor: '#E0F7F4',
+                  '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' }
                 }}
-                onClick={() => document.getElementById('update-file-input')?.click()}
-              >
-                <input
-                  type="file"
-                  accept=".pdf"
-                  id="update-file-input"
-                  onChange={handleUpdateFileChange}
-                  style={{ display: 'none' }}
-                  disabled={isUploading}
-                />
-
-                <CloudUpload
-                  sx={{
-                    fontSize: 48,
-                    color: dragActive ? '#FF9800' : '#9e9e9e',
-                    mb: 2
-                  }}
-                />
-
-                {updateFile ? (
-                  <Box>
-                    <Typography variant="h6" sx={{ color: '#FF9800', mb: 1 }}>
-                      ✓ Nuevo archivo seleccionado
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
-                      {updateFile.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {(updateFile.size / 1024 / 1024).toFixed(2)} MB
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Box>
-                    <Typography variant="h6" sx={{ mb: 1, color: '#424242' }}>
-                      {dragActive ? 'Suelta el nuevo archivo aquí' : 'Arrastra el nuevo archivo PDF aquí'}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      o haz clic para seleccionar
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Máximo 10MB • Solo archivos PDF
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
+              />
+              <Typography variant='caption' color='text.secondary'>
+                Subiendo… {uploadProgress}%
+              </Typography>
             </Box>
+          )}
+        </FormDialogSection>
+      </FormDialog>
 
-            {/* Upload Progress */}
-            {isUploading && (
-              <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2" sx={{ flex: 1 }}>
-                    Actualizando documento...
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {uploadProgress}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={uploadProgress}
-                  sx={{
-                    borderRadius: 1,
-                    height: 8,
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: '#FF9800'
-                    }
-                  }}
-                />
-              </Box>
-            )}
-          </DialogContent>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        tone='danger'
+        title='Eliminar documento'
+        message={
+          <>
+            Vas a eliminar <strong>{deleteTarget?.name}</strong>
+            {deleteTarget
+              ? `, creado el ${formatDateOnly(deleteTarget.createdAt) ?? '—'}`
+              : ''}
+            . Esta acción no se puede deshacer.
+          </>
+        }
+        confirmLabel='Eliminar'
+        loading={deleteTraceability.isLoading}
+        onConfirm={handleDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
 
-          <DialogActions sx={{ p: 3, pt: 0, gap: 2, justifyContent: 'flex-end' }}>
-            <Button
-              onClick={() => {
-                setUpdateId(null)
-                setUpdateFile(null)
-                setUploadProgress(0)
-              }}
-              disabled={isUploading}
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                color: '#666',
-                '&:hover': {
-                  bgcolor: '#f5f5f5'
-                }
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleUpdateSubmit}
-              variant="contained"
-              disabled={!updateFile || isUploading}
-              startIcon={isUploading ? null : <Edit />}
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                bgcolor: '#FF9800',
-                '&:hover': {
-                  bgcolor: '#F57C00'
-                },
-                '&:disabled': {
-                  bgcolor: '#e0e0e0',
-                  color: '#9e9e9e'
-                }
-              }}
-            >
-              {isUploading ? 'Actualizando Documento...' : 'Actualizar Documento'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-
-      {/* PDF Preview Modal */}
       <Dialog
-        open={pdfModalOpen}
-        onClose={closePDFModal}
-        maxWidth="lg"
+        open={Boolean(previewTarget)}
+        onClose={() => setPreviewTarget(null)}
+        maxWidth='lg'
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
-            overflow: 'hidden',
+            borderRadius: '12px',
             height: '90vh',
             maxHeight: '90vh',
             display: 'flex',
@@ -1110,97 +444,65 @@ const Traceability = () => {
           }
         }}
       >
-        {/* Header del Modal PDF */}
-        <Box
+        <DialogTitle
           sx={{
-            bgcolor: '#00BFA5',
-            color: 'white',
-            p: 2,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: 1
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <PictureAsPdf sx={{ fontSize: 24 }} />
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {selectedPdfDocument?.name || 'Documento PDF'}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Vista previa del documento
-              </Typography>
-            </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant='h6' component='span' fontWeight={700}>
+              {previewTarget?.name || 'Documento PDF'}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              {previewTarget
+                ? `Creado el ${formatDateOnly(previewTarget.createdAt) ?? '—'}`
+                : 'Vista previa del documento'}
+            </Typography>
           </Box>
           <IconButton
-            onClick={closePDFModal}
-            sx={{ color: 'white' }}
+            aria-label='Cerrar'
+            edge='end'
+            onClick={() => setPreviewTarget(null)}
           >
-            <Clear />
+            <Close />
           </IconButton>
-        </Box>
-
-
-
-        {/* Contenido del PDF */}
+        </DialogTitle>
         <DialogContent
+          dividers
           sx={{
             p: 0,
             flex: 1,
-            overflow: 'auto',
             display: 'flex',
             flexDirection: 'column',
             minHeight: 0
           }}
         >
-          {selectedPdfDocument && (
-            <Box sx={{
-              flex: 1,
-              width: '100%',
-              minHeight: '600px',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
+          {previewTarget && (
+            <Box
+              sx={{
+                flex: 1,
+                width: '100%',
+                minHeight: 600,
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
               <PDFViewer
-                path={selectedPdfDocument.filePath}
-                bucket="traceabilities"
-                view="preview"
+                path={previewTarget.filePath}
+                bucket='traceabilities'
+                view='preview'
                 buttons={false}
                 allowDownload={false}
                 allowOpen={false}
-                downloadUrl={`/traceabilities/${selectedPdfDocument.id}/download`}
+                downloadUrl={`/traceabilities/${previewTarget.id}/download`}
                 disableContextMenu
               />
             </Box>
           )}
         </DialogContent>
-
-        {/* Footer con botones */}
-        <Box sx={{
-          p: 2,
-          borderTop: '1px solid #e0e0e0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          bgcolor: '#f8f9fa',
-          flexShrink: 0
-        }}>
-          <Typography variant="body2" color="text.secondary">
-            {selectedPdfDocument && `Creado: ${formatDate(selectedPdfDocument.createdAt)}`}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={closePDFModal}
-            sx={{
-              bgcolor: '#00BFA5',
-              '&:hover': {
-                bgcolor: '#00ACC1'
-              }
-            }}
-          >
-            Cerrar Vista Previa
-          </Button>
-        </Box>
       </Dialog>
     </Container>
   )
