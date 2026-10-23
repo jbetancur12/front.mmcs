@@ -75,6 +75,7 @@ Patrones por tipo de pantalla (extraídos de `/customers`, `/customers/:id` y `/
   - `FormDateField` (fecha en español, valor `yyyy-MM-dd` en hora local, sin el desfase de `toISOString`).
   - `ScoreSelect` y `ScoreSummary` (calificaciones 1/5 o 1/3/5 con su leyenda y franja de totales calculados).
   - `RiskBadge` (Chip outlined por significado: Crítico/Alta rojo, Alto naranja, Media azul, Baja/Muy Baja verde) en lugar de cajas con colores propios.
+  - `FormTabs` (pestañas con ícono y contador naranja de campos con error; se pasa a `FormPage` en `tabs`). Úsalas cuando el formulario tiene más de unas 5 secciones o se llena en momentos distintos; al guardar con errores, salta a la primera pestaña con errores.
   - `FormErrorSummary` (Alert outlined sin emojis cuando se envía con campos inválidos).
   - Guardar va en un hook con `useMutation` (`useSaveNonConformWorkReport`), no con `axiosPrivate` en el componente. Nada de títulos centrados en `secondary.main`, fondos grises propios, `alert()` ni emojis.
 - **Listado con búsqueda y paginación en el servidor**: `DataTable` con `manualFiltering`, `manualPagination`, `rowCount` y `state={{ globalFilter, pagination }}`, sin ordenar (`enableSorting={false}`); los botones de la pantalla (Exportar, Subir) van a la derecha vía `renderToolbarInternalActions`. Ejemplo: `EquipmentTable` en `/customers/:id`. Los equipos y registros se muestran como filas, no como tarjetas, y borrar siempre pide confirmación con `ConfirmDialog`.

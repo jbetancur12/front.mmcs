@@ -17,6 +17,8 @@ interface FormPageProps {
   loading?: boolean
   /** Avisos que van encima de los botones (por ejemplo `FormErrorSummary`). */
   notices?: React.ReactNode
+  /** Pestañas (`FormTabs`) bajo el encabezado, para formularios con muchas secciones. */
+  tabs?: React.ReactNode
   /** Secciones: `FormSection`. */
   children: React.ReactNode
 }
@@ -36,6 +38,7 @@ const FormPage: React.FC<FormPageProps> = ({
   submitLabel,
   loading = false,
   notices,
+  tabs,
   children
 }) => (
   <Box
@@ -50,6 +53,7 @@ const FormPage: React.FC<FormPageProps> = ({
     }}
   >
     <LmsPageHeader title={title} subtitle={subtitle} icon={icon} />
+    {tabs}
     <Box sx={{ display: 'grid', gap: 3, maxWidth: 1100 }}>{children}</Box>
     <Paper
       elevation={0}
