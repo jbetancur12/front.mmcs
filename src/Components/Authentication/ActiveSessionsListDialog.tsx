@@ -35,7 +35,8 @@ const ActiveSessionsListDialog: React.FC<ActiveSessionsListDialogProps> = ({
   open,
   onClose
 }) => {
-  const { data: sessions = [], isLoading, isError } = useSessions(open)
+  const { data, isLoading, isError } = useSessions(open)
+  const sessions = data?.sessions ?? []
   const closeSession = useCloseSession()
   const closeOthers = useCloseOtherSessions()
   const [confirmOthers, setConfirmOthers] = useState(false)
@@ -84,6 +85,9 @@ const ActiveSessionsListDialog: React.FC<ActiveSessionsListDialogProps> = ({
               Sesiones activas
             </Typography>
             <Typography variant='body2' color='text.secondary'>
+              {data
+                ? `${sessions.length} de ${data.limit} sesiones permitidas. `
+                : ''}
               Los equipos y navegadores donde tu cuenta tiene la sesión abierta.
             </Typography>
           </Box>

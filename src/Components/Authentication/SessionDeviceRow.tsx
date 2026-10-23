@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Chip, Typography } from '@mui/material'
+import { Box, Checkbox, Chip, Typography } from '@mui/material'
 import ComputerOutlinedIcon from '@mui/icons-material/ComputerOutlined'
 import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined'
 import { formatSessionActivity } from 'src/hooks/useSessions'
@@ -12,6 +12,8 @@ interface SessionDeviceRowProps {
   current?: boolean
   /** Botón de acción a la derecha (Cerrar sesión). */
   action?: React.ReactNode
+  /** Casilla a la izquierda para escoger la sesión (diálogo del login). */
+  select?: { checked: boolean; onChange: (checked: boolean) => void }
 }
 
 /** Una sesión con su equipo, IP y última actividad; la usan el login y la lista de sesiones. */
@@ -20,7 +22,8 @@ const SessionDeviceRow: React.FC<SessionDeviceRowProps> = ({
   ip,
   lastSeenAt,
   current = false,
-  action
+  action,
+  select
 }) => {
   const isMobile = /Android|iOS/.test(deviceLabel)
   const Icon = isMobile ? SmartphoneOutlinedIcon : ComputerOutlinedIcon
@@ -34,9 +37,18 @@ const SessionDeviceRow: React.FC<SessionDeviceRowProps> = ({
         gap: 1.5,
         p: 1.5,
         border: '1px solid #e5e7eb',
-        borderRadius: '12px'
+        borderRadius: '12px',
+        borderColor: select?.checked ? '#00BFA5' : '#e5e7eb'
       }}
     >
+      {select && (
+        <Checkbox
+          checked={select.checked}
+          onChange={(event) => select.onChange(event.target.checked)}
+          inputProps={{ 'aria-label': `Cerrar la sesión de ${deviceLabel}` }}
+          sx={{ p: 0.5, '&.Mui-checked': { color: '#00BFA5' } }}
+        />
+      )}
       <Box
         sx={{
           width: 40,

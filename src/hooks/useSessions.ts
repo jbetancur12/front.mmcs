@@ -14,8 +14,16 @@ export interface UserSession {
   current: boolean
 }
 
-/** Lo que el login muestra de una sesión ajena (sin id: no se puede actuar sobre ella). */
-export type ActiveSessionInfo = Omit<UserSession, 'id' | 'current'>
+/** Sesión ajena tal como la devuelve el login al avisar o al llegar al tope. */
+export type LoginSession = Omit<UserSession, 'current'>
+
+/** Aviso del login (409): sesiones abiertas y por qué no se entró directo. */
+export interface SessionPrompt {
+  /** `active`: hay otra sesión en uso; `limit`: se llegó al tope y hay que cerrar alguna. */
+  mode: 'active' | 'limit'
+  sessions: LoginSession[]
+  limit: number
+}
 
 export const SESSIONS_QUERY_KEY = ['auth-sessions']
 
@@ -29,11 +37,11 @@ export const formatSessionActivity = (lastSeenAt: string): string => {
 
 export const useSessions = (enabled: boolean) => {
   const axiosPrivate = useAxiosPrivate()
-  return useQuery<UserSession[]>(
+  return useQuery<{ sessions: UserSession[]; limit: number }>(
     SESSIONS_QUERY_KEY,
     async () => {
       const response = await axiosPrivate.get('/auth/sessions')
-      return response.data.sessions
+      return response.data
     },
     { enabled, refetchOnWindowFocus: false, staleTime: 0 }
   )

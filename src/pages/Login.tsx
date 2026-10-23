@@ -21,7 +21,7 @@ import {
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
 import ActiveSessionDialog from 'src/Components/Authentication/ActiveSessionDialog'
-import type { ActiveSessionInfo } from 'src/hooks/useSessions'
+import type { LoginSession, SessionPrompt } from 'src/hooks/useSessions'
 import { clearSessionEnded, peekSessionEndedMessage } from 'src/utils/sessionEnd'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
@@ -52,18 +52,13 @@ const Login: React.FC = () => {
   })
 
   const [error, setError] = useState<string | null>(null) // Agrega estado para manejar errores
-  const [activeSessions, setActiveSessions] = useState<
-    ActiveSessionInfo[] | null
-  >(null)
+  // Aviso de sesiones abiertas (o tope alcanzado) antes de entrar
+  const [sessionPrompt, setSessionPrompt] = useState<SessionPrompt | null>(null)
   // Por qué se cerró la sesión anterior (otro equipo, cambio de clave...)
   const [sessionEndedMessage, setSessionEndedMessage] = useState<string | null>(
     peekSessionEndedMessage
   )
 
-  const answerActiveSessions = (sessionAction: 'keep' | 'replace') => {
-    setActiveSessions(null)
-    void submitLogin(sessionAction)
-  }
 
   // Define el esquema de validación del formulario con Yup
   const validationSchema = Yup.object().shape({
@@ -180,12 +175,15 @@ const Login: React.FC = () => {
     void submitLogin()
   }
 
-  // `sessionAction`: respuesta al aviso de sesión abierta en otro equipo
-  const submitLogin = async (sessionAction?: 'keep' | 'replace') => {
+  // Respuesta al aviso de sesiones: mantenerlas (`keep`) o cerrar las escogidas (`closeSessionIds`)
+  const submitLogin = async (answer?: {
+    sessionAction?: 'keep'
+    closeSessionIds?: string[]
+  }) => {
     const data = {
       email: formData.email,
       contraseña: formData.password,
-      ...(sessionAction ? { sessionAction } : {})
+      ...answer
     }
 
     setError(null)
@@ -267,16 +265,21 @@ const Login: React.FC = () => {
         }
       }
     } catch (error: any) {
-      // La cuenta ya tiene una sesión abierta: preguntar antes de entrar
-      if (
-        isAxiosError(error) &&
-        error.response?.status === 409 &&
-        (error.response.data as { code?: string })?.code === 'ACTIVE_SESSIONS'
-      ) {
-        setActiveSessions(
-          (error.response.data as { sessions: ActiveSessionInfo[] }).sessions
-        )
-        return
+      // La cuenta ya tiene sesiones abiertas, o llegó al tope: preguntar cuáles cerrar
+      if (isAxiosError(error) && error.response?.status === 409) {
+        const body = error.response.data as {
+          code?: string
+          limit?: number
+          sessions?: LoginSession[]
+        }
+        if (body.code === 'ACTIVE_SESSIONS' || body.code === 'SESSION_LIMIT') {
+          setSessionPrompt({
+            mode: body.code === 'SESSION_LIMIT' ? 'limit' : 'active',
+            sessions: body.sessions ?? [],
+            limit: body.limit ?? 0
+          })
+          return
+        }
       }
       // Handle network error or other exceptions
       handleValidationOrNetworkError(error)
@@ -427,12 +430,11 @@ const Login: React.FC = () => {
       </Box>
 
       <ActiveSessionDialog
-        open={activeSessions !== null}
-        sessions={activeSessions ?? []}
+        prompt={sessionPrompt}
         loading={submitting}
-        onReplace={() => answerActiveSessions('replace')}
-        onKeep={() => answerActiveSessions('keep')}
-        onCancel={() => setActiveSessions(null)}
+        onConfirm={(closeSessionIds) => void submitLogin({ closeSessionIds })}
+        onKeep={() => void submitLogin({ sessionAction: 'keep' })}
+        onCancel={() => setSessionPrompt(null)}
       />
     </AuthLayout>
   )
