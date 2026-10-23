@@ -1,43 +1,43 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material'
 import {
-  Button,
-  TextField,
-  Grid,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  FormHelperText,
-  Box,
-  Typography,
-  Paper,
-  IconButton
-} from '@mui/material'
-
-import { Formik, Form, Field } from 'formik'
+  ArrowBack,
+  Download,
+  Login,
+  Logout,
+  TableChart
+} from '@mui/icons-material'
+import { Formik } from 'formik'
 import * as Yup from 'yup'
-import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-
+import Swal from 'sweetalert2'
 import { useNavigate, useParams } from 'react-router-dom'
-
-import { ArrowBack, Download, TableChart } from '@mui/icons-material'
-import AsyncSelect from 'react-select/async'
-import { loadOptions, mapOptions } from '../../utils/loadOptions'
-
-import { Profile } from '../../pages/Profiles'
+import { useStore } from '@nanostores/react'
+import { userStore } from '@stores/userStore'
 import {
   useDataSheetStatus,
   useSaveEquipmentInOut
 } from '@hooks/dataSheets/useDataSheets'
-import { useStore } from '@nanostores/react'
-import { userStore } from '@stores/userStore'
-
 import { ROLES } from 'src/constants/roles'
-// Interfaz para los valores del formulario
+import { loadOptions, mapOptions } from '@utils/loadOptions'
+import { Profile } from '../../pages/Profiles'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import AsyncSelectField, {
+  type AsyncSelectOption
+} from 'src/Components/Common/AsyncSelectField'
+import FormSection, { FormGridItem } from 'src/Components/Common/FormSection'
+import FormikField from 'src/Components/Common/FormikField'
+import FormDateField from 'src/Components/Common/FormDateField'
+import {
+  DetailCell,
+  DetailField,
+  DetailSection
+} from 'src/Components/Common/DetailBlocks'
+
 interface EquipmentFormValues {
   outReason: string
-  outDate: Date | null
-  inDate: Date | null
+  /** Fechas como `yyyy-MM-dd`; se convierten a `Date` al enviar. */
+  outDate: string
+  inDate: string
   visualOutInspection: string
   visualInInspection: string
   operationalOutTest: string
@@ -47,27 +47,73 @@ interface EquipmentFormValues {
   registeredBy: string
 }
 
-// Esquema de validación para Formik
-const validationSchema = Yup.object({
-  outReason: Yup.string().required('El motivo de salida es obligatorio'),
-  outDate: Yup.date().required('La fecha de salida es obligatoria'),
-  inDate: Yup.date().required('La fecha de entrada es obligatoria'),
-  visualOutInspection: Yup.string().required(
-    'La inspección visual de salida es obligatoria'
-  ),
-  visualInInspection: Yup.string().required(
-    'La inspección visual de entrada es obligatoria'
-  ),
-  operationalOutTest: Yup.string().required(
-    'La prueba operativa de salida es obligatoria'
-  ),
-  operationalInTest: Yup.string().required(
-    'La prueba operativa de entrada es obligatoria'
-  ),
-  observationsOut: Yup.string(),
-  observationsIn: Yup.string(),
-  registeredBy: Yup.string().required('El registro por es obligatorio')
-})
+interface LastRecord {
+  outReason?: string
+  outDate?: string
+  inDate?: string
+  visualOutInspection?: string
+  visualInInspection?: string
+  operationalOutTest?: string
+  operationalInTest?: string
+  observationsOut?: string
+  observationsIn?: string
+  registeredBy?: string
+}
+
+const OUT_REASONS = [
+  { value: 'Servicio de Calibracion', label: 'Servicio de calibración' },
+  { value: 'Calibracion Clientes', label: 'Calibración clientes' },
+  { value: 'Mantenimiento', label: 'Mantenimiento' },
+  { value: 'Reparacion', label: 'Reparación' }
+]
+const VISUAL_OPTIONS = ['Bueno', 'Malo']
+const OPERATIONAL_OPTIONS = ['Funciona', 'No Funciona', 'No Aplica']
+
+const todayText = () => {
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
+/** `yyyy-MM-dd` a `Date` a mediodía local, para que no cambie de día por la zona horaria. */
+const toDate = (text: string) => new Date(`${text}T12:00:00`)
+
+const formatDate = (value?: string) => {
+  if (!value) return 'Sin información'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? 'Sin información'
+    : date.toLocaleDateString('es-CO')
+}
+
+const orMissing = (value?: string) => value || 'Sin información'
+
+const required = (message: string) => Yup.string().required(message)
+
+const buildSchema = (isEquipmentOut: boolean) =>
+  Yup.object(
+    isEquipmentOut
+      ? {
+          inDate: required('La fecha de entrada es obligatoria'),
+          visualInInspection: required(
+            'La inspección visual de entrada es obligatoria'
+          ),
+          operationalInTest: required(
+            'La prueba operativa de entrada es obligatoria'
+          )
+        }
+      : {
+          outReason: required('El motivo de salida es obligatorio'),
+          outDate: required('La fecha de salida es obligatoria'),
+          visualOutInspection: required(
+            'La inspección visual de salida es obligatoria'
+          ),
+          operationalOutTest: required(
+            'La prueba operativa de salida es obligatoria'
+          ),
+          registeredBy: required('Indique quién registra la salida')
+        }
+  )
 
 const EquipmentForm: React.FC = () => {
   const $userStore = useStore(userStore)
@@ -75,471 +121,372 @@ const EquipmentForm: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)
-  const [lastRecord, setLastRecord] = useState<Record<any, any>>({})
+  const [lastRecord, setLastRecord] = useState<LastRecord | null>(null)
+  const [profileOptions, setProfileOptions] = useState<AsyncSelectOption[]>([])
 
   const { data: equipmentStatus } = useDataSheetStatus(id)
   const saveEquipmentInOutMutation = useSaveEquipmentInOut()
 
   useEffect(() => {
     if (!equipmentStatus) return
-
-    if (equipmentStatus.status === 'busy') {
-      setIsEquipmentOut(true)
-      setLastRecord(equipmentStatus.lastRecord?.[0] as typeof lastRecord)
-    }
-
-    if (equipmentStatus.status === 'available') {
-      setIsEquipmentOut(false)
-      setLastRecord(equipmentStatus.lastRecord?.[0] as typeof lastRecord)
+    if (
+      equipmentStatus.status === 'busy' ||
+      equipmentStatus.status === 'available'
+    ) {
+      setIsEquipmentOut(equipmentStatus.status === 'busy')
+      setLastRecord((equipmentStatus.lastRecord?.[0] as LastRecord) ?? null)
     }
   }, [equipmentStatus])
 
-  const handleSubmit = async (values: EquipmentFormValues) => {
-    try {
-      const method = !isEquipmentOut ? 'post' : 'put'
-      setIsEquipmentOut(!isEquipmentOut)
+  const searchProfiles = (input: string) =>
+    loadOptions<Profile>(input, 'profiles', (item) =>
+      mapOptions(item, 'id', 'name')
+    ) as unknown as Promise<AsyncSelectOption[]>
 
+  useEffect(() => {
+    searchProfiles('')
+      .then(setProfileOptions)
+      .catch(() => setProfileOptions([]))
+  }, [])
+
+  const schema = useMemo(() => buildSchema(isEquipmentOut), [isEquipmentOut])
+
+  const initialValues: EquipmentFormValues = {
+    outReason: '',
+    outDate: todayText(),
+    inDate: todayText(),
+    visualOutInspection: '',
+    visualInInspection: '',
+    operationalOutTest: '',
+    operationalInTest: '',
+    observationsIn: '',
+    observationsOut: '',
+    registeredBy: ''
+  }
+
+  const handleSubmit = async (
+    values: EquipmentFormValues,
+    { resetForm }: { resetForm: () => void }
+  ) => {
+    const method = !isEquipmentOut ? 'post' : 'put'
+    try {
       const response = await saveEquipmentInOutMutation.mutateAsync({
         method,
         data: {
           ...values,
+          outDate: toDate(values.outDate),
+          inDate: toDate(values.inDate),
           equipmentId: id
         }
       })
-
       if (method === 'post' && response.status === 201) {
         setLastRecord(response.data)
       }
+      setIsEquipmentOut(!isEquipmentOut)
+      resetForm()
+      await Swal.fire({
+        icon: 'success',
+        title: method === 'post' ? 'Salida registrada' : 'Entrada registrada',
+        timer: 1800,
+        showConfirmButton: false
+      })
     } catch (error) {
       console.error('Error al enviar el formulario:', error)
+      await Swal.fire({
+        icon: 'error',
+        title: 'No se pudo registrar',
+        text: 'Ocurrió un error al guardar el movimiento. Inténtalo de nuevo.'
+      })
     }
   }
 
+  const buttonSx = {
+    textTransform: 'none',
+    fontWeight: 600,
+    color: '#00695C',
+    borderColor: '#00BFA5',
+    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  } as const
+
   return (
-    <Paper elevation={3} sx={{ p: 4, mt: 4 }} style={{ width: '100%' }}>
-      <Box
-        sx={{
-          display: 'flex', // Hace que los íconos se dispongan en una fila
-          alignItems: 'center', // Alinea verticalmente en el centro
-          justifyContent: 'space-between', // Alinea horizontalmente en el centro
-          mb: 2 // Margen inferior
-        }}
-      >
-        <IconButton onClick={() => navigate('/datasheets')}>
-          <ArrowBack />
-        </IconButton>
-        {isAdmin && (
-          <div>
-            <IconButton
-              onClick={() => navigate('/dataSheets/' + id + '/in-out-table')}
-            >
-              <TableChart />
-            </IconButton>
-            <IconButton
-              onClick={() => navigate('/dataSheets/' + id + '/in-out-report')}
-            >
-              <Download />
-            </IconButton>
-          </div>
-        )}
-      </Box>
-      <Typography variant='h4' gutterBottom>
-        {!isEquipmentOut ? 'Salida de Equipo' : 'Entrada de Equipo'}
-      </Typography>
-      <Formik
-        initialValues={{
-          outReason: '',
-          outDate: new Date(),
-          inDate: new Date(),
-          visualOutInspection: '',
-          visualInInspection: '',
-          operationalOutTest: '',
-          operationalInTest: '',
-          observationsIn: '',
-          observationsOut: '',
-          registeredBy: ''
-        }}
-        validationSchema={validationSchema}
-        onSubmit={handleSubmit}
-      >
-        {({
-          values,
-          errors,
-          touched,
-          handleChange,
-          handleBlur,
-          setFieldValue
-        }) => (
-          <Form>
-            <Grid container spacing={2}>
-              {/* Campo: Motivo de Salida */}
-              {!isEquipmentOut && (
-                <Grid item xs={12} sm={6}>
-                  <FormControl
-                    fullWidth
-                    error={Boolean(touched.outReason && errors.outReason)}
-                  >
-                    <InputLabel id='outReason-label'>
-                      Motivo de Salida
-                    </InputLabel>
-                    <Field
-                      name='outReason'
-                      as={Select}
-                      labelId='outReason-label'
-                      label='Motivo de Salida'
-                      value={values.outReason}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    >
-                      <MenuItem value='Servicio de Calibracion'>
-                        Servicio de Calibración
-                      </MenuItem>
-                      <MenuItem value='Calibracion Clientes'>
-                        Calibración Clientes
-                      </MenuItem>
-                      <MenuItem value='Mantenimiento'>Mantenimiento</MenuItem>
-                      <MenuItem value='Reparacion'>Reparación</MenuItem>
-                    </Field>
-                    <FormHelperText>
-                      {touched.outReason && errors.outReason}
-                    </FormHelperText>
-                  </FormControl>
-                </Grid>
-              )}
-
-              {/* Campos relacionados con la salida */}
-              {!isEquipmentOut && (
-                <>
-                  <Grid item xs={12} sm={6}>
-                    <DatePicker
-                      label='Fecha de salida'
-                      value={values.outDate}
-                      onChange={(newValue) =>
-                        setFieldValue('outDate', newValue)
-                      }
-                      slotProps={{
-                        textField: {
-                          error: Boolean(touched.outDate && errors.outDate),
-                          helperText:
-                            touched.outDate && errors.outDate
-                              ? String(errors.outDate)
-                              : null
-                        }
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl
-                      fullWidth
-                      error={Boolean(
-                        touched.visualOutInspection &&
-                          errors.visualOutInspection
-                      )}
-                    >
-                      <InputLabel id='visualOutInspection-label'>
-                        Inspección Visual de Salida
-                      </InputLabel>
-                      <Field
-                        name='visualOutInspection'
-                        as={Select}
-                        labelId='visualOutInspection-label'
-                        label='Inspección Visual de Salida'
-                        value={values.visualOutInspection}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      >
-                        <MenuItem value='Bueno'>Bueno</MenuItem>
-                        <MenuItem value='Malo'>Malo</MenuItem>
-                      </Field>
-                      <FormHelperText>
-                        {touched.visualOutInspection &&
-                          errors.visualOutInspection}
-                      </FormHelperText>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl
-                      fullWidth
-                      error={Boolean(
-                        touched.operationalOutTest && errors.operationalOutTest
-                      )}
-                    >
-                      <InputLabel id='operationalOutTest-label'>
-                        Prueba Operativa de Salida
-                      </InputLabel>
-                      <Field
-                        name='operationalOutTest'
-                        as={Select}
-                        labelId='operationalOutTest-label'
-                        label='Prueba Operativa de Salida'
-                        value={values.operationalOutTest}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      >
-                        <MenuItem value='Funciona'>Funciona</MenuItem>
-                        <MenuItem value='No Funciona'>No Funciona</MenuItem>
-                        <MenuItem value='No Aplica'>No Aplica</MenuItem>
-                      </Field>
-                      <FormHelperText>
-                        {touched.operationalOutTest &&
-                          errors.operationalOutTest}
-                      </FormHelperText>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field
-                      name='observationsOut'
-                      as={TextField}
-                      label='Observaciones de Salida'
-                      variant='outlined'
-                      multiline
-                      rows={4}
-                      fullWidth
-                      error={Boolean(
-                        touched.observationsOut && errors.observationsOut
-                      )}
-                      helperText={
-                        touched.observationsOut && errors.observationsOut
-                      }
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <AsyncSelect
-                      cacheOptions
-                      defaultOptions
-                      placeholder='Buscar Perfil'
-                      loadOptions={(inputValue) =>
-                        loadOptions<Profile>(inputValue, 'profiles', (item) =>
-                          mapOptions(item, 'id', 'name')
-                        )
-                      }
-                      onChange={(selectedOption: any) => {
-                        // Actualiza el valor de registeredBy en Formik
-                        setFieldValue(
-                          'registeredBy',
-                          selectedOption ? selectedOption.label : ''
-                        )
-                      }}
-                      // onBlur={() => setFieldTouched('registeredBy', true)}
-                      value={
-                        values.registeredBy
-                          ? {
-                              value: values.registeredBy,
-                              label: values.registeredBy
-                            }
-                          : null
-                      }
-                    />
-                    {touched.registeredBy && errors.registeredBy ? (
-                      <FormHelperText error>
-                        {errors.registeredBy}
-                      </FormHelperText>
-                    ) : null}
-                  </Grid>
-                </>
-              )}
-
-              {/* Campos relacionados con la entrada */}
-              {isEquipmentOut && (
-                <>
-                  <Grid item xs={12} sm={12}>
-                    <DatePicker
-                      label='Fecha de entrada'
-                      value={values.inDate}
-                      onChange={(newValue) => setFieldValue('inDate', newValue)}
-                      slotProps={{
-                        textField: {
-                          error: Boolean(touched.outDate && errors.outDate),
-                          helperText:
-                            touched.outDate && errors.outDate
-                              ? String(errors.outDate)
-                              : null
-                        }
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl
-                      fullWidth
-                      error={Boolean(
-                        touched.visualInInspection && errors.visualInInspection
-                      )}
-                    >
-                      <InputLabel id='visualInInspection-label'>
-                        Inspección Visual de Entrada
-                      </InputLabel>
-                      <Field
-                        name='visualInInspection'
-                        as={Select}
-                        labelId='visualInInspection-label'
-                        label='Inspección Visual de Entrada'
-                        value={values.visualInInspection}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      >
-                        <MenuItem value='Bueno'>Bueno</MenuItem>
-                        <MenuItem value='Malo'>Malo</MenuItem>
-                      </Field>
-                      <FormHelperText>
-                        {touched.visualInInspection &&
-                          errors.visualInInspection}
-                      </FormHelperText>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl
-                      fullWidth
-                      error={Boolean(
-                        touched.operationalInTest && errors.operationalInTest
-                      )}
-                    >
-                      <InputLabel id='operationalInTest-label'>
-                        Prueba Operativa de Entrada
-                      </InputLabel>
-                      <Field
-                        name='operationalInTest'
-                        as={Select}
-                        labelId='operationalInTest-label'
-                        label='Prueba Operativa de Entrada'
-                        value={values.operationalInTest}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      >
-                        <MenuItem value='Funciona'>Funciona</MenuItem>
-                        <MenuItem value='No Funciona'>No Funciona</MenuItem>
-                        <MenuItem value='No Aplica'>No Aplica</MenuItem>
-                      </Field>
-                      <FormHelperText>
-                        {touched.operationalInTest && errors.operationalInTest}
-                      </FormHelperText>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field
-                      name='observationsIn'
-                      as={TextField}
-                      label='Observaciones de Entrada'
-                      variant='outlined'
-                      multiline
-                      rows={4}
-                      fullWidth
-                      error={Boolean(
-                        touched.observationsIn && errors.observationsIn
-                      )}
-                      helperText={
-                        touched.observationsIn && errors.observationsIn
-                      }
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    />
-                  </Grid>
-                </>
-              )}
-
-              {/* Otros campos */}
-
-              <Grid item xs={12}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title={!isEquipmentOut ? 'Salida de equipo' : 'Entrada de equipo'}
+        subtitle={
+          !isEquipmentOut
+            ? 'Registra la salida del equipo del laboratorio'
+            : 'Registra el regreso del equipo al laboratorio'
+        }
+        icon={!isEquipmentOut ? <Logout /> : <Login />}
+        actions={
+          <>
+            {isAdmin && (
+              <>
                 <Button
-                  type='button'
                   variant='outlined'
-                  onClick={() => handleSubmit(values)}
+                  startIcon={<TableChart />}
+                  onClick={() => navigate(`/datasheets/${id}/in-out-table`)}
+                  sx={buttonSx}
                 >
-                  {!isEquipmentOut ? 'Registrar Salida' : 'Registrar Entrada'}
+                  Historial
                 </Button>
-              </Grid>
-            </Grid>
-          </Form>
-        )}
-      </Formik>
-      {isEquipmentOut && lastRecord && (
-        <Grid item xs={12} mt={2}>
-          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
-            <Typography variant='h5' gutterBottom>
-              Información de Salida
-            </Typography>
-            <>
-              <Typography variant='body1'>
-                <strong>Fecha de Salida:</strong>{' '}
-                {new Date(lastRecord.outDate).toLocaleDateString()}
-              </Typography>
-              <Typography variant='body2'>
-                <strong>Motivo de Salida:</strong> {lastRecord.outReason}
-              </Typography>
-              <Typography variant='body1'>
-                <strong>Inspeccion Visual:</strong>{' '}
-                {lastRecord.visualOutInspection}
-              </Typography>
-              <Typography variant='body2'>
-                <strong>Prueba de Operación:</strong>{' '}
-                {lastRecord.operationalOutTest}
-              </Typography>
-              <Typography variant='body1'>
-                <strong>Observaciones de salida:</strong>{' '}
-                {lastRecord.observationsOut}
-              </Typography>
-              <Typography variant='body2'>
-                <strong>Registrado Por:</strong> {lastRecord.registeredBy}
-              </Typography>
-            </>
-          </Box>
+                <Button
+                  variant='outlined'
+                  startIcon={<Download />}
+                  onClick={() => navigate(`/datasheets/${id}/in-out-report`)}
+                  sx={buttonSx}
+                >
+                  Reporte PDF
+                </Button>
+              </>
+            )}
+            <Button
+              variant='outlined'
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/datasheets')}
+              sx={buttonSx}
+            >
+              Volver
+            </Button>
+          </>
+        }
+      />
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={7}>
+          <Formik
+            initialValues={initialValues}
+            validationSchema={schema}
+            onSubmit={handleSubmit}
+            enableReinitialize
+          >
+            {(formik) => (
+              <Box
+                component='form'
+                noValidate
+                onSubmit={formik.handleSubmit}
+                sx={{
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+                    { borderColor: '#00897B' },
+                  '& .MuiInputLabel-root.Mui-focused': { color: '#00695C' }
+                }}
+              >
+                <FormSection
+                  title={
+                    !isEquipmentOut
+                      ? 'Datos de la salida'
+                      : 'Datos de la entrada'
+                  }
+                  description='Estado del equipo en el momento del movimiento.'
+                >
+                  {!isEquipmentOut ? (
+                    <>
+                      <FormikField
+                        formik={formik}
+                        name='outReason'
+                        label='Motivo de salida'
+                        options={OUT_REASONS}
+                      />
+                      <FormDateField
+                        label='Fecha de salida'
+                        name='outDate'
+                        value={formik.values.outDate}
+                        onChange={(v) => formik.setFieldValue('outDate', v)}
+                        error={formik.touched.outDate && formik.errors.outDate}
+                      />
+                      <FormikField
+                        formik={formik}
+                        name='visualOutInspection'
+                        label='Inspección visual de salida'
+                        options={VISUAL_OPTIONS}
+                      />
+                      <FormikField
+                        formik={formik}
+                        name='operationalOutTest'
+                        label='Prueba operativa de salida'
+                        options={OPERATIONAL_OPTIONS}
+                      />
+                      <FormGridItem>
+                        <FormikField
+                          formik={formik}
+                          name='observationsOut'
+                          label='Observaciones de salida'
+                          multiline
+                        />
+                      </FormGridItem>
+                      <FormGridItem>
+                        <AsyncSelectField<AsyncSelectOption>
+                          label='Registrado por'
+                          value={
+                            formik.values.registeredBy
+                              ? {
+                                  value: formik.values.registeredBy,
+                                  label: formik.values.registeredBy
+                                }
+                              : null
+                          }
+                          onChange={(option) =>
+                            formik.setFieldValue(
+                              'registeredBy',
+                              option ? option.label : ''
+                            )
+                          }
+                          loadOptions={searchProfiles}
+                          defaultOptions={profileOptions}
+                          helperText={
+                            formik.touched.registeredBy &&
+                            formik.errors.registeredBy
+                              ? formik.errors.registeredBy
+                              : undefined
+                          }
+                        />
+                      </FormGridItem>
+                    </>
+                  ) : (
+                    <>
+                      <FormDateField
+                        label='Fecha de entrada'
+                        name='inDate'
+                        value={formik.values.inDate}
+                        onChange={(v) => formik.setFieldValue('inDate', v)}
+                        error={formik.touched.inDate && formik.errors.inDate}
+                      />
+                      <Box />
+                      <FormikField
+                        formik={formik}
+                        name='visualInInspection'
+                        label='Inspección visual de entrada'
+                        options={VISUAL_OPTIONS}
+                      />
+                      <FormikField
+                        formik={formik}
+                        name='operationalInTest'
+                        label='Prueba operativa de entrada'
+                        options={OPERATIONAL_OPTIONS}
+                      />
+                      <FormGridItem>
+                        <FormikField
+                          formik={formik}
+                          name='observationsIn'
+                          label='Observaciones de entrada'
+                          multiline
+                        />
+                      </FormGridItem>
+                    </>
+                  )}
+                  <FormGridItem>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button
+                        type='submit'
+                        variant='contained'
+                        disabled={formik.isSubmitting}
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          bgcolor: '#00BFA5',
+                          '&:hover': { bgcolor: '#00897B' }
+                        }}
+                      >
+                        {!isEquipmentOut
+                          ? 'Registrar salida'
+                          : 'Registrar entrada'}
+                      </Button>
+                    </Box>
+                  </FormGridItem>
+                </FormSection>
+              </Box>
+            )}
+          </Formik>
         </Grid>
-      )}
-      {!lastRecord && (
-        <Grid item xs={12} mt={2}>
-          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
-            <Typography variant='h5' gutterBottom>
-              Información Ultima Entrada
+
+        <Grid item xs={12} md={5}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, md: 3 },
+              borderRadius: '16px',
+              border: '1px solid #e5e7eb'
+            }}
+          >
+            <Typography
+              component='h2'
+              sx={{ fontSize: 17, fontWeight: 700, color: '#111827', mb: 2 }}
+            >
+              {isEquipmentOut ? 'Salida en curso' : 'Última entrada'}
             </Typography>
-            <Typography variant='body1'>
-              <strong>Fecha de Entrada:</strong> Sin Información
-            </Typography>
-            <Typography variant='body1'>
-              <strong>Motivo de Salida:</strong> Sin Información
-            </Typography>
-            <Typography variant='body1'>
-              <strong>Inspeccion Visual:</strong> Sin Información
-            </Typography>
-          </Box>
+            {lastRecord ? (
+              <DetailSection
+                title={
+                  isEquipmentOut
+                    ? 'Información de salida'
+                    : 'Información de la última entrada'
+                }
+              >
+                <DetailCell>
+                  <DetailField
+                    label={
+                      isEquipmentOut ? 'Fecha de salida' : 'Fecha de entrada'
+                    }
+                  >
+                    {formatDate(
+                      isEquipmentOut ? lastRecord.outDate : lastRecord.inDate
+                    )}
+                  </DetailField>
+                </DetailCell>
+                <DetailCell>
+                  <DetailField label='Motivo de salida'>
+                    {orMissing(lastRecord.outReason)}
+                  </DetailField>
+                </DetailCell>
+                <DetailCell>
+                  <DetailField label='Inspección visual'>
+                    {orMissing(
+                      isEquipmentOut
+                        ? lastRecord.visualOutInspection
+                        : lastRecord.visualInInspection
+                    )}
+                  </DetailField>
+                </DetailCell>
+                <DetailCell>
+                  <DetailField label='Prueba operativa'>
+                    {orMissing(
+                      isEquipmentOut
+                        ? lastRecord.operationalOutTest
+                        : lastRecord.operationalInTest
+                    )}
+                  </DetailField>
+                </DetailCell>
+                <DetailCell full>
+                  <DetailField
+                    label={
+                      isEquipmentOut
+                        ? 'Observaciones de salida'
+                        : 'Observaciones de entrada'
+                    }
+                  >
+                    {orMissing(
+                      isEquipmentOut
+                        ? lastRecord.observationsOut
+                        : lastRecord.observationsIn
+                    )}
+                  </DetailField>
+                </DetailCell>
+                <DetailCell full>
+                  <DetailField label='Registrado por'>
+                    {orMissing(lastRecord.registeredBy)}
+                  </DetailField>
+                </DetailCell>
+              </DetailSection>
+            ) : (
+              <Typography variant='body2' color='text.secondary'>
+                Este equipo aún no tiene movimientos registrados.
+              </Typography>
+            )}
+          </Paper>
         </Grid>
-      )}
-      {!isEquipmentOut && lastRecord && (
-        <Grid item xs={12} mt={2}>
-          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
-            <Typography variant='h5' gutterBottom>
-              Información Ultima Entrada
-            </Typography>
-            <>
-              <Typography variant='body1'>
-                <strong>Fecha de Entrada:</strong>{' '}
-                {new Date(lastRecord.inDate).toLocaleDateString()}
-              </Typography>
-              <Typography>
-                <strong>Motivo de Salida:</strong> {lastRecord.outReason}
-              </Typography>
-              <Typography>
-                <strong>Inspeccion Visual:</strong>{' '}
-                {lastRecord.visualInInspection}
-              </Typography>
-              <Typography>
-                <strong>Prueba de Operación:</strong>{' '}
-                {lastRecord.operationalInTest}
-              </Typography>
-              <Typography>
-                <strong>Observaciones de entrada:</strong>{' '}
-                {lastRecord.observationsIn}
-              </Typography>
-              <Typography>
-                <strong>Registrado Por:</strong> {lastRecord.registeredBy}
-              </Typography>
-            </>
-          </Box>
-        </Grid>
-      )}
-    </Paper>
+      </Grid>
+    </Container>
   )
 }
 
 export default EquipmentForm
-// @ts-nocheck

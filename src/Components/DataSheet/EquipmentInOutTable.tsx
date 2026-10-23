@@ -1,19 +1,27 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 
 import { useNavigate, useParams } from 'react-router-dom'
 
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { Box, Grid, IconButton, Typography } from '@mui/material'
-import { format } from 'date-fns'
-import { ArrowBack } from '@mui/icons-material'
+import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
+import { Button, Chip, Container, Grid, Typography } from '@mui/material'
+import { format, isValid } from 'date-fns'
+import { ArrowBack, Download, History, SyncAlt } from '@mui/icons-material'
 import { useEquipmentInOutReport } from '@hooks/dataSheets/useDataSheets'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import DataTable from 'src/Components/Common/DataTable'
+import EmptyState from 'src/Components/Common/EmptyState'
+import {
+  DetailCell,
+  DetailField,
+  DetailSection
+} from 'src/Components/Common/DetailBlocks'
 
 interface EquipmentInOutRecord {
   id: number
   outReason: string
   outDate: string
-  inDate: string
+  inDate: string | null
   visualOutInspection: string
   visualInInspection: string
   operationalOutTest: string
@@ -26,155 +34,207 @@ interface EquipmentInOutRecord {
   updatedAt: string
 }
 
-const EquipmentInOutTable = () => {
+type Cell = { cell: MRT_Cell<EquipmentInOutRecord> }
+
+const buttonSx = {
+  textTransform: 'none',
+  fontWeight: 600,
+  color: '#00695C',
+  borderColor: '#00BFA5',
+  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+} as const
+
+const dateText = (value?: string | null) => {
+  if (!value) return null
+  const date = new Date(value)
+  return isValid(date) ? format(date, 'dd/MM/yyyy') : null
+}
+
+/** Chip por significado: bueno/funciona en verde, malo/no funciona en rojo. */
+const resultChip = (value?: string | null) => {
+  if (!value) return '—'
+  const good = value === 'Bueno' || value === 'Funciona'
+  const bad = value === 'Malo' || value === 'No Funciona'
+  return (
+    <Chip
+      size='small'
+      variant='outlined'
+      color={good ? 'success' : bad ? 'error' : 'default'}
+      label={value}
+    />
+  )
+}
+
+const EquipmentInOutTable: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data: inOutReport } = useEquipmentInOutReport<{
+  const { data: inOutReport, isLoading } = useEquipmentInOutReport<{
     equipmentName: string
     internalCode: string
     equipmentInOutRecords: EquipmentInOutRecord[]
   }>(id)
-  const equipmentInfo = useMemo(
-    () =>
-      inOutReport
-        ? {
-            equipmentName: inOutReport.equipmentName,
-            internalCode: inOutReport.internalCode
-          }
-        : null,
-    [inOutReport]
-  )
   const inOutData = useMemo(
     () => inOutReport?.equipmentInOutRecords ?? [],
     [inOutReport]
   )
+  const openLoans = inOutData.filter((record) => !record.inDate).length
 
   const columns = useMemo<MRT_ColumnDef<EquipmentInOutRecord>[]>(
     () => [
       {
-        accessorFn: () => equipmentInfo?.equipmentName || '',
-        id: 'equipmentName',
-        header: 'Nombre del Equipo',
-        size: 150
-      },
-      {
-        accessorFn: () => equipmentInfo?.internalCode || '',
-        id: 'internalCode',
-        header: 'Código Interno',
-        size: 150
-      },
-      {
         accessorKey: 'outReason',
-        header: 'Motivo de Salida',
-        size: 150
+        header: 'Motivo de salida',
+        size: 190
       },
       {
         accessorKey: 'outDate',
-        header: 'Fecha de Salida',
-        size: 150,
-        Cell: ({ row }) => {
-          const date = new Date(row.getValue('outDate'))
-          return format(date, 'yyyy-MM-dd')
-        }
+        header: 'Salida',
+        size: 120,
+        Cell: ({ cell }: Cell) => dateText(cell.getValue<string>()) ?? '—'
       },
       {
         accessorKey: 'inDate',
-        header: 'Fecha de Entrada',
-        size: 150,
-        Cell: ({ row }) => {
-          const date = new Date(row.getValue('inDate'))
-          return format(date, 'yyyy-MM-dd')
+        header: 'Entrada',
+        size: 130,
+        Cell: ({ cell }: Cell) => {
+          const text = dateText(cell.getValue<string | null>())
+          return (
+            text ?? (
+              <Chip
+                size='small'
+                variant='outlined'
+                color='warning'
+                label='En préstamo'
+              />
+            )
+          )
         }
       },
       {
         accessorKey: 'visualOutInspection',
-        header: 'Inspección Visual Salida',
-        size: 150
+        header: 'Visual salida',
+        size: 130,
+        Cell: ({ cell }: Cell) => resultChip(cell.getValue<string>())
       },
       {
         accessorKey: 'visualInInspection',
-        header: 'Inspección Visual Entrada',
-        size: 150
+        header: 'Visual entrada',
+        size: 130,
+        Cell: ({ cell }: Cell) => resultChip(cell.getValue<string>())
       },
       {
         accessorKey: 'operationalOutTest',
-        header: 'Prueba Operacional Salida',
-        size: 150
+        header: 'Prueba salida',
+        size: 140,
+        Cell: ({ cell }: Cell) => resultChip(cell.getValue<string>())
       },
       {
         accessorKey: 'operationalInTest',
-        header: 'Prueba Operacional Entrada',
-        size: 150
-      },
-      {
-        accessorKey: 'observationsOut',
-        header: 'Observaciones Salida',
-        size: 150
-      },
-      {
-        accessorKey: 'observationsIn',
-        header: 'Observaciones Entrada',
-        size: 150
+        header: 'Prueba entrada',
+        size: 140,
+        Cell: ({ cell }: Cell) => resultChip(cell.getValue<string>())
       },
       {
         accessorKey: 'registeredBy',
-        header: 'Registrado Por',
-        size: 150
+        header: 'Registrado por',
+        size: 180
       }
     ],
-    [equipmentInfo]
+    []
   )
 
   return (
-    <>
-      <IconButton
-        onClick={() => navigate(`/datasheets/${id}/in-out`)}
-        sx={{ mb: 2 }}
-      >
-        <ArrowBack />
-      </IconButton>
-      <MaterialReactTable
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Historial de entradas y salidas'
+        subtitle={
+          inOutReport
+            ? `${inOutReport.equipmentName} · ${inOutReport.internalCode}`
+            : 'Movimientos del equipo'
+        }
+        icon={<History />}
+        actions={
+          <>
+            <Button
+              variant='outlined'
+              startIcon={<Download />}
+              onClick={() => navigate(`/datasheets/${id}/in-out-report`)}
+              sx={buttonSx}
+            >
+              Reporte PDF
+            </Button>
+            <Button
+              variant='outlined'
+              startIcon={<ArrowBack />}
+              onClick={() => navigate(`/datasheets/${id}/in-out`)}
+              sx={buttonSx}
+            >
+              Volver
+            </Button>
+          </>
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            variant='quiet'
+            label='Movimientos'
+            value={inOutData.length}
+            icon={<SyncAlt />}
+            tone='teal'
+          />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            variant='quiet'
+            label='En préstamo'
+            value={openLoans}
+            icon={<History />}
+            tone='orange'
+          />
+        </Grid>
+      </Grid>
+
+      <DataTable
         columns={columns}
         data={inOutData}
-        localization={MRT_Localization_ES}
-        enableColumnOrdering
-        initialState={{
-          columnVisibility: {
-            observationsOut: false,
-            observationsIn: false
-          }
-        }}
-        renderDetailPanel={({ row }) => {
-          const observationsOut = row.getValue<string>('observationsOut') || ''
-          const observationsIn = row.getValue<string>('observationsIn') || ''
-
-          return (
-            <Box>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  {observationsOut.length > 0 && (
-                    <>
-                      <Typography variant='h6'>
-                        Observaciones de Salida
-                      </Typography>
-                      <div>{observationsOut}</div>
-                    </>
-                  )}
-                  {observationsIn.length > 0 && (
-                    <>
-                      <Typography variant='h6'>
-                        Observaciones de Entrada
-                      </Typography>
-                      <div>{observationsIn}</div>
-                    </>
-                  )}
-                </Grid>
-              </Grid>
-            </Box>
-          )
-        }}
+        itemLabel={['movimiento', 'movimientos']}
+        searchPlaceholder='Buscar movimientos'
+        state={{ isLoading }}
+        initialState={{ density: 'compact' }}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            compact
+            icon={<History />}
+            title='Este equipo no tiene movimientos'
+            hint='Las salidas y entradas que se registren aparecerán aquí.'
+          />
+        )}
+        renderDetailPanel={({ row }) => (
+          <DetailSection title='Observaciones'>
+            <DetailCell>
+              <DetailField label='Al salir'>
+                {row.original.observationsOut || 'Sin observaciones'}
+              </DetailField>
+            </DetailCell>
+            <DetailCell>
+              <DetailField label='Al entrar'>
+                {row.original.observationsIn || 'Sin observaciones'}
+              </DetailField>
+            </DetailCell>
+          </DetailSection>
+        )}
       />
-    </>
+      <Typography
+        variant='caption'
+        color='text.secondary'
+        sx={{ mt: 1, display: 'block' }}
+      >
+        Abre una fila con la flecha para ver las observaciones de salida y
+        entrada.
+      </Typography>
+    </Container>
   )
 }
 
