@@ -8,6 +8,7 @@ import {
 import { Button, Container, Grid } from '@mui/material'
 import { MRT_ColumnFiltersState, type MRT_Row } from 'material-react-table'
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -103,6 +104,18 @@ const ListDataSheet: React.FC = () => {
   }
 
   const dueSoonCount = counts?.dueSoon ?? 0
+  const navigate = useNavigate()
+  const statusFilter = columnFilters.find((f) => f.id === 'status')?.value
+
+  // Las tarjetas filtran la tabla por estado; un segundo clic quita el filtro
+  const filterByStatus = (status?: string) => {
+    server.setColumnFilters((current) => {
+      const rest = current.filter((f) => f.id !== 'status')
+      return status && status !== statusFilter
+        ? [...rest, { id: 'status', value: status }]
+        : rest
+    })
+  }
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -136,6 +149,7 @@ const ListDataSheet: React.FC = () => {
             value={counts?.total ?? totalItems}
             icon={<InventoryKpi />}
             tone='teal'
+            onClick={() => filterByStatus()}
           />
         </Grid>
         <Grid item xs={6} md={3}>
@@ -145,6 +159,8 @@ const ListDataSheet: React.FC = () => {
             value={counts?.available ?? 0}
             icon={<CheckKpi />}
             tone='green'
+            active={statusFilter === 'available'}
+            onClick={() => filterByStatus('available')}
           />
         </Grid>
         <Grid item xs={6} md={3}>
@@ -154,6 +170,8 @@ const ListDataSheet: React.FC = () => {
             value={counts?.busy ?? 0}
             icon={<BuildKpi />}
             tone='blue'
+            active={statusFilter === 'busy'}
+            onClick={() => filterByStatus('busy')}
           />
         </Grid>
         <Grid item xs={6} md={3}>
@@ -163,6 +181,7 @@ const ListDataSheet: React.FC = () => {
             value={dueSoonCount}
             icon={<WarnKpi />}
             tone='red'
+            onClick={() => navigate('/datasheets/alerts')}
           />
         </Grid>
       </Grid>
