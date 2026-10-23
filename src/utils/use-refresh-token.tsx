@@ -7,6 +7,18 @@ export interface RefreshSessionResponse {
   expiresIn?: number
 }
 
+/** Guarda cuándo vence la sesión (lo usa el aviso de vencimiento). */
+export const storeSessionExpiry = (expiresIn?: number) => {
+  if (!expiresIn) return
+  Cookies.set('expiresIn', expiresIn.toString(), {
+    expires: new Date(expiresIn),
+    secure: window.location.protocol === 'https:',
+    sameSite: 'strict',
+    path: '/'
+  })
+  localStorage.setItem('sessionExpiresAt', expiresIn.toString())
+}
+
 const useRefreshToken = () => {
   const refresh = useCallback(async (): Promise<RefreshSessionResponse> => {
     /**
@@ -20,17 +32,7 @@ const useRefreshToken = () => {
 
     const refreshData: RefreshSessionResponse = response.data
 
-    if (refreshData.expiresIn) {
-      const expirationDate = new Date(refreshData.expiresIn)
-
-      Cookies.set('expiresIn', refreshData.expiresIn.toString(), {
-        expires: expirationDate,
-        secure: window.location.protocol === 'https:',
-        sameSite: 'strict',
-        path: '/'
-      })
-      localStorage.setItem('sessionExpiresAt', refreshData.expiresIn.toString())
-    }
+    storeSessionExpiry(refreshData.expiresIn)
 
     return refreshData
   }, [])

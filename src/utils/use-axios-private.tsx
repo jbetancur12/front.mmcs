@@ -6,12 +6,14 @@ import type {
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { axiosPrivate } from './api'
-import useRefreshToken from './use-refresh-token'
+import { axiosPrivate, axiosPublic } from './api'
+import useRefreshToken, { storeSessionExpiry } from './use-refresh-token'
+import { promptDialog } from './confirm'
 import { notify } from './notify'
 import {
   clearLocalSession,
   getSessionRevokedReason,
+  isReauthRequired,
   rememberSessionEnded
 } from './sessionEnd'
 
@@ -38,6 +40,41 @@ const onRequestError = (error: AxiosError): Promise<never> =>
   Promise.reject(error)
 
 let lastRevokedLogoutAt = 0
+
+const MAX_REAUTH_TRIES = 3
+
+/**
+ * La sesión cumplió su tope de días: se pide la contraseña sin salir de la pantalla.
+ * Devuelve el access token nuevo, o null si cancela, falla tres veces o está bloqueado.
+ */
+const askPasswordToContinue = async (): Promise<string | null> => {
+  for (let attempt = 0; attempt < MAX_REAUTH_TRIES; attempt += 1) {
+    const answer = await promptDialog({
+      title: 'Confirma tu contraseña',
+      label: 'Contraseña',
+      type: 'password',
+      helperText:
+        'Por seguridad la sesión la pide cada cierto tiempo. No pierdes lo que estás haciendo.',
+      confirmLabel: 'Continuar'
+    })
+    if (!answer.isConfirmed || !answer.value) return null
+
+    try {
+      const response = await axiosPublic.post(
+        '/auth/reauthenticate',
+        { contraseña: answer.value },
+        { withCredentials: true }
+      )
+      storeSessionExpiry(response.data.expiresIn)
+      return (response.data.accessToken as string) || null
+    } catch (error) {
+      const status = (error as AxiosError)?.response?.status
+      if (status !== 401) return null
+      notify.error('Contraseña incorrecta')
+    }
+  }
+  return null
+}
 
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken()
@@ -143,6 +180,16 @@ const useAxiosPrivate = () => {
             originalConfig.headers.Authorization = `Bearer ${newToken}`
             return axiosPrivate(originalConfig)
           } catch (refreshError) {
+            if (isReauthRequired(refreshError)) {
+              const newToken = await askPasswordToContinue()
+              if (newToken) {
+                localStorage.setItem('accessToken', newToken)
+                processQueue(null, newToken)
+                originalConfig.headers = originalConfig.headers || {}
+                originalConfig.headers.Authorization = `Bearer ${newToken}`
+                return axiosPrivate(originalConfig)
+              }
+            }
             processQueue(refreshError, null)
             await handleLogout(getSessionRevokedReason(refreshError))
             return Promise.reject(refreshError)

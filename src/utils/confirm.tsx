@@ -98,7 +98,9 @@ export interface PromptOptions {
   title: string
   label?: string
   placeholder?: string
-  type?: 'text' | 'number'
+  type?: 'text' | 'number' | 'password'
+  /** Texto de apoyo bajo el campo. */
+  helperText?: string
   /** Valor mínimo cuando `type` es number. */
   min?: number
   confirmLabel?: string
@@ -270,7 +272,7 @@ export const DialogHost: React.FC = () => {
             onKeyDown={(event) => {
               if (event.key === 'Enter' && promptValue.trim()) closePrompt(true)
             }}
-            helperText={prompt?.requiredMessage}
+            helperText={prompt?.helperText ?? prompt?.requiredMessage}
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
