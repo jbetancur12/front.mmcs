@@ -5,10 +5,6 @@ import {
   Container,
   Grid,
   Paper,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Stack,
   TextField,
@@ -22,10 +18,11 @@ import {
   type MRT_Row,
   type MaterialReactTableProps
 } from 'material-react-table'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from 'react-query'
 import toast, { Toaster } from 'react-hot-toast'
 
+import FormDialog from 'src/Components/Common/FormDialog'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
@@ -318,71 +315,57 @@ interface CreateModalProps {
   open: boolean
 }
 
-//example of creating a mui dialog modal for creating new rows
+/** Crea un tipo de certificado nuevo. */
 export const CreateNewAccountModal = ({
   open,
   columns,
   onClose,
   onSubmit
 }: CreateModalProps) => {
-  const [values, setValues] = useState<any>(() =>
-    columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = ''
-      return acc
-    }, {} as any)
+  const [values, setValues] = useState<any>({})
+
+  // Cada vez que se abre, el formulario empieza vacío
+  useEffect(() => {
+    if (open) setValues({})
+  }, [open])
+
+  const fields = columns.filter((column) => column.accessorKey !== 'id')
+  const isIncomplete = fields.some(
+    (column) => !String(values[column.accessorKey ?? ''] ?? '').trim()
   )
 
   const handleSubmit = () => {
-    //put your validation logic here
+    if (isIncomplete) return
     onSubmit(values)
     onClose()
   }
 
   return (
-    <Dialog open={open}>
-      <DialogTitle textAlign='center'>
-        Crear Nuevo Tipo de Certificado
-      </DialogTitle>
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-              gap: '1.5rem'
-            }}
-          >
-            {columns.map(
-              (column) =>
-                column.accessorKey !== 'id' && (
-                  <TextField
-                    key={column.accessorKey}
-                    label={column.header}
-                    name={column.accessorKey}
-                    onChange={(e) =>
-                      setValues({ ...values, [e.target.name]: e.target.value })
-                    }
-                  />
-                )
-            )}
-          </Stack>
-        </form>
-      </DialogContent>
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <button
-          className='bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10'
-          onClick={onClose}
-        >
-          Cancelar
-        </button>
-        <button
-          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-          onClick={handleSubmit}
-        >
-          Crear Tipo de Certificado
-        </button>
-      </DialogActions>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      title='Crear tipo de certificado'
+      subtitle='Clasifica los certificados que emite el laboratorio'
+      submitLabel='Crear tipo de certificado'
+      onSubmit={handleSubmit}
+      submitDisabled={isIncomplete}
+    >
+      <Stack spacing={2}>
+        {fields.map((column) => (
+          <TextField
+            key={column.accessorKey}
+            label={column.header}
+            name={column.accessorKey}
+            required
+            fullWidth
+            value={values[column.accessorKey ?? ''] ?? ''}
+            onChange={(e) =>
+              setValues({ ...values, [e.target.name]: e.target.value })
+            }
+          />
+        ))}
+      </Stack>
+    </FormDialog>
   )
 }
 

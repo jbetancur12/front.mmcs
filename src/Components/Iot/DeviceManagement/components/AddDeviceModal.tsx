@@ -1,30 +1,19 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Box,
-  CircularProgress
-} from '@mui/material'
-import { useCreateDevice, useUpdateDevice } from '../hooks/useDeviceMutations'
-import { AddDeviceModalProps } from '../types/deviceTypes'
-import { DeviceIot } from '../../types'
-import AsyncSelect from 'react-select/async'
-import { SelectOption } from 'src/types'
-import { CSSObjectWithLabel, GroupBase } from 'react-select'
-import { genericMapOptions, loadOptions } from '@utils/loadOptions'
-import {
-  limitArraySizeCustomer,
-  styles
-} from 'src/Components/ExcelManipulation/Utils'
+import { useEffect } from 'react'
+import { Stack, TextField } from '@mui/material'
 import { useStore } from '@nanostores/react'
-import { customerStore } from '@stores/customerStore'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import Swal from 'sweetalert2'
-import { useEffect } from 'react'
+import { customerStore } from '@stores/customerStore'
+import { axiosPrivate } from '@utils/api'
+import FormDialog from 'src/Components/Common/FormDialog'
+import AsyncSelectField, {
+  AsyncSelectOption
+} from 'src/Components/Common/AsyncSelectField'
+import { limitArraySizeCustomer } from 'src/Components/ExcelManipulation/Utils'
+import { useCreateDevice, useUpdateDevice } from '../hooks/useDeviceMutations'
+import { AddDeviceModalProps } from '../types/deviceTypes'
+import { DeviceIot } from '../../types'
 
 const validationSchema = Yup.object().shape({
   imei: Yup.string()
@@ -36,6 +25,17 @@ const validationSchema = Yup.object().shape({
   customerId: Yup.number().nullable()
 })
 
+const searchCustomers = async (input: string): Promise<AsyncSelectOption[]> => {
+  const response = await axiosPrivate.get('/customers', {
+    params: { q: input }
+  })
+  return response.data.map((item: { id: number; nombre: string }) => ({
+    value: item.id,
+    label: item.nombre
+  }))
+}
+
+/** Agrega o edita un dispositivo IoT y lo asigna a un cliente. */
 const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
   const isEdit = !!device
 
@@ -112,113 +112,70 @@ const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>
-      <DialogTitle>{isEdit ? 'Editar' : 'Agregar'} Dispositivo</DialogTitle>
-      <form onSubmit={formik.handleSubmit}>
-        <DialogContent>
-          <Box mb={3}>
-            <TextField
-              fullWidth
-              label='IMEI'
-              name='imei'
-              variant='outlined'
-              value={formik.values.imei}
-              onChange={formik.handleChange}
-              error={formik.touched.imei && Boolean(formik.errors.imei)}
-              helperText={formik.touched.imei && formik.errors.imei}
-            />
-          </Box>
-
-          <Box mb={3}>
-            <TextField
-              fullWidth
-              label='Nombre del Dispositivo'
-              name='name'
-              variant='outlined'
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors.name}
-            />
-          </Box>
-          <Box mb={3}>
-            <TextField
-              fullWidth
-              label='Ubicación del Dispositivo'
-              name='location'
-              variant='outlined'
-              value={formik.values.location}
-              onChange={formik.handleChange}
-              error={formik.touched.location && Boolean(formik.errors.location)}
-              helperText={formik.touched.location && formik.errors.location}
-            />
-          </Box>
-          <Box mb={3}>
-            <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
-              cacheOptions
-              placeholder='Buscar Cliente'
-              menuPortalTarget={document.body}
-              menuPosition='fixed'
-              styles={{
-                ...styles(true),
-                menuPortal: (base) =>
-                  ({ ...base, zIndex: 9999 }) as CSSObjectWithLabel
-              }}
-              loadOptions={(input) =>
-                loadOptions(input, 'customers', (item) =>
-                  genericMapOptions(item, 'id', 'nombre')
-                )
-              }
-              onChange={(option) => {
-                limitArraySizeCustomer($customerStore, option)
-                formik.setFieldValue(
-                  'customer',
-                  option
-                    ? { id: Number(option.value), nombre: option.label }
-                    : null
-                )
-              }}
-              value={
-                formik.values.customer
-                  ? {
-                      value: formik.values.customer.id.toString(),
-                      label: formik.values.customer.nombre
-                    }
-                  : null
-              }
-              defaultOptions={$customerStore}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={handleClose}
-            variant='outlined'
-            color='secondary'
-            disabled={createDevice.isLoading || updateDevice.isLoading}
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            type='submit'
-            variant='contained'
-            color='primary'
-            disabled={createDevice.isLoading || updateDevice.isLoading}
-          >
-            {
-              createDevice.isLoading || updateDevice.isLoading ? (
-                <CircularProgress size={24} color='inherit' />
-              ) : isEdit ? (
-                'Actualizar Dispositivo'
-              ) : (
-                'Agregar Dispositivo'
-              ) // Cambiar texto según modo
-            }
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onClose={handleClose}
+      title={isEdit ? 'Editar dispositivo' : 'Agregar dispositivo'}
+      subtitle={isEdit ? device?.name : undefined}
+      submitLabel={isEdit ? 'Actualizar dispositivo' : 'Agregar dispositivo'}
+      onSubmit={() => formik.handleSubmit()}
+      loading={createDevice.isLoading || updateDevice.isLoading}
+    >
+      <Stack spacing={2}>
+        <TextField
+          fullWidth
+          required
+          label='IMEI'
+          name='imei'
+          value={formik.values.imei}
+          onChange={formik.handleChange}
+          error={formik.touched.imei && Boolean(formik.errors.imei)}
+          helperText={
+            (formik.touched.imei && formik.errors.imei) ||
+            'Son 15 dígitos, los encuentras en la etiqueta del equipo'
+          }
+        />
+        <TextField
+          fullWidth
+          required
+          label='Nombre del dispositivo'
+          name='name'
+          value={formik.values.name}
+          onChange={formik.handleChange}
+          error={formik.touched.name && Boolean(formik.errors.name)}
+          helperText={formik.touched.name && formik.errors.name}
+        />
+        <TextField
+          fullWidth
+          label='Ubicación del dispositivo'
+          name='location'
+          value={formik.values.location}
+          onChange={formik.handleChange}
+          error={formik.touched.location && Boolean(formik.errors.location)}
+          helperText={formik.touched.location && formik.errors.location}
+        />
+        <AsyncSelectField
+          label='Cliente'
+          value={
+            formik.values.customer
+              ? {
+                  value: formik.values.customer.id.toString(),
+                  label: formik.values.customer.nombre
+                }
+              : null
+          }
+          onChange={(option) => {
+            if (option) limitArraySizeCustomer($customerStore, option)
+            formik.setFieldValue(
+              'customer',
+              option ? { id: Number(option.value), nombre: option.label } : null
+            )
+          }}
+          loadOptions={searchCustomers}
+          defaultOptions={$customerStore as AsyncSelectOption[]}
+        />
+      </Stack>
+    </FormDialog>
   )
 }
 

@@ -1,13 +1,10 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { Modal, Box, TextField, Button, Typography } from '@mui/material'
-import AsyncSelect from 'react-select/async'
-
-import { bigToast, styles } from './ExcelManipulation/Utils'
-
-import { loadOptions, mapOptions } from '../utils/loadOptions'
-
-import { CertificateTemplateData } from '../pages/AnalyzeExcelComponent'
+import { TextField } from '@mui/material'
+import { bigToast } from './ExcelManipulation/Utils'
 import { useCreateDevice } from '@hooks/devices/useDevices'
+import { axiosPrivate } from '../utils/api'
+import FormDialog from './Common/FormDialog'
+import AsyncSelectField, { AsyncSelectOption } from './Common/AsyncSelectField'
 
 interface ModalDeviceProps {
   open: boolean
@@ -19,6 +16,13 @@ interface ModalDeviceProps {
 
 const formFields = ['name', 'magnitude', 'certificateTemplate']
 
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Nombre',
+  magnitude: 'Magnitud',
+  certificateTemplate: 'Plantilla de certificado'
+}
+
+/** Crea un equipo nuevo desde el análisis de Excel. */
 const ModalDevice: React.FC<ModalDeviceProps> = ({
   open,
   onClose,
@@ -28,24 +32,13 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
 }) => {
   const createDeviceMutation = useCreateDevice()
   const [formValues, setFormValues] = useState<
-    Record<string, string | boolean>
+    Record<string, string | boolean | AsyncSelectOption | null>
   >(formFields.reduce((obj, field) => ({ ...obj, [field]: '' }), {}))
-  const [errors, setErrors] = useState<any>(
+  const [errors, setErrors] = useState<Record<string, boolean>>(
     formFields.reduce((obj, field) => ({ ...obj, [field]: false }), {})
   )
 
   const handleClose = () => onClose(false)
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({
-      ...formValues,
-      [event.target.name]: event.target.value
-    })
-    setErrors({
-      ...errors,
-      [event.target.name]: event.target.value === ''
-    })
-  }
 
   useEffect(() => {
     setFormValues((prev) => ({
@@ -54,11 +47,19 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
     }))
   }, [name])
 
+  const setField = (
+    field: string,
+    value: string | AsyncSelectOption | null
+  ) => {
+    setFormValues({ ...formValues, [field]: value })
+    setErrors({ ...errors, [field]: !value })
+  }
+
   const handleSubmit = async () => {
     const newErrors = formFields.reduce(
       (obj: Record<string, boolean>, field) => ({
         ...obj,
-        [field]: formValues[field] === ''
+        [field]: !formValues[field]
       }),
       {}
     )
@@ -73,108 +74,69 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
       const response = await createDeviceMutation.mutateAsync(formValues)
 
       if (response.status === 201) {
-        bigToast('Cliente Creado Exitosamente!', 'success')
+        bigToast('Equipo creado exitosamente', 'success')
         dataReturned(response.data)
         resetForm()
         onClose(false)
       } else {
-        console.error('Error al crear cliente')
+        console.error('Error al crear equipo')
       }
     } catch (error) {
       console.error('Error de red:', error)
     }
   }
 
-  const body = (
-    <Box
-      sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 400,
-        bgcolor: 'background.paper',
-        border: '2px solid #000',
-        boxShadow: 24,
-        p: 4
-      }}
-    >
-      <Typography variant='h5' component='div'>
-        Crear Equipo
-      </Typography>
-      {formFields.map((field) =>
-        // field === 'repository' ? (
-        //   <AsyncSelect
-        //     key={field}
-        //     cacheOptions
-        //     // defaultOptions
-
-        //     placeholder='Buscar Formato'
-        //     loadOptions={(inputValue) =>
-        //       loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
-        //         mapOptions(item, 'id', 'name')
-        //       )
-        //     }
-        //     onChange={(selectedOption: any) =>
-        //       setFormValues({
-        //         ...formValues,
-        //         repository: selectedOption
-        //       }) as any
-        //     }
-        //     styles={styles(false)}
-        //   />
-        // )
-        field === 'certificateTemplate' ? (
-          <AsyncSelect
-            key={field}
-            cacheOptions
-            // defaultOptions
-
-            placeholder='Buscar Plantilla de Certificado'
-            loadOptions={(inputValue) =>
-              loadOptions<CertificateTemplateData>(
-                inputValue,
-                'templates',
-                (item) => mapOptions(item, 'id', 'name')
-              )
-            }
-            onChange={(selectedOption: any) =>
-              setFormValues({
-                ...formValues,
-                certificateTemplate: selectedOption
-              }) as any
-            }
-            styles={styles(false)}
-          />
-        ) : (
-          <TextField
-            key={field}
-            name={field}
-            label={field.charAt(0).toUpperCase() + field.slice(1)}
-            value={formValues[field]}
-            onChange={handleChange}
-            fullWidth
-            margin='normal'
-            error={errors[field]}
-          />
-        )
-      )}
-      <Button onClick={handleClose}>Close</Button>
-      <Button onClick={handleSubmit}>Crear</Button>
-    </Box>
-  )
+  const searchTemplates = async (
+    input: string
+  ): Promise<AsyncSelectOption[]> => {
+    const response = await axiosPrivate.get('/templates', {
+      params: { q: input }
+    })
+    return response.data.map((item: { id: number; name: string }) => ({
+      value: item.id,
+      label: item.name
+    }))
+  }
 
   return (
-    <div>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby='modal-modal-title'
-        aria-describedby='modal-modal-description'
-      >
-        {body}
-      </Modal>
-    </div>
+    <FormDialog
+      open={open}
+      onClose={handleClose}
+      title='Crear equipo'
+      subtitle='Se agregará al catálogo de equipos'
+      submitLabel='Crear equipo'
+      onSubmit={() => void handleSubmit()}
+      loading={createDeviceMutation.isLoading}
+    >
+      <TextField
+        label={FIELD_LABELS.name}
+        required
+        fullWidth
+        value={formValues.name as string}
+        onChange={(event) => setField('name', event.target.value)}
+        error={errors.name}
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        label={FIELD_LABELS.magnitude}
+        required
+        fullWidth
+        value={formValues.magnitude as string}
+        onChange={(event) => setField('magnitude', event.target.value)}
+        error={errors.magnitude}
+        sx={{ mb: 2 }}
+      />
+      <AsyncSelectField
+        label={FIELD_LABELS.certificateTemplate}
+        required
+        value={(formValues.certificateTemplate as AsyncSelectOption) || null}
+        onChange={(option) => setField('certificateTemplate', option)}
+        loadOptions={searchTemplates}
+        helperText={
+          errors.certificateTemplate ? 'Elige una plantilla' : undefined
+        }
+      />
+    </FormDialog>
   )
 }
 
