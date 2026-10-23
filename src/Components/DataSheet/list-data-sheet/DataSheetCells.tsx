@@ -1,5 +1,6 @@
-import { Cancel, CheckCircle, Warning } from '@mui/icons-material'
+import { Warning } from '@mui/icons-material'
 import {
+  Chip,
   Divider,
   FormControlLabel,
   MenuItem as MuiMenuItem,
@@ -28,16 +29,14 @@ interface EditProps extends CellProps {
   table: MRT_TableInstance<DataSheetData>
 }
 
-export const InvoiceCell = ({ cell }: Pick<CellProps, 'cell'>) =>
-  cell.getValue() ? (
-    <div style={{ textAlign: 'center' }}>
-      <CheckCircle color='success' />
-    </div>
-  ) : (
-    <div style={{ textAlign: 'center' }}>
-      <Cancel color='error' />
-    </div>
-  )
+export const InvoiceCell = ({ cell }: Pick<CellProps, 'cell'>) => (
+  <Chip
+    size='small'
+    variant='outlined'
+    color={cell.getValue() ? 'success' : 'default'}
+    label={cell.getValue() ? 'Con factura' : 'Sin factura'}
+  />
+)
 
 export const StatusCell = ({ cell, row }: CellProps) => {
   const isDue =
@@ -52,25 +51,26 @@ export const StatusCell = ({ cell, row }: CellProps) => {
     isDueMessage = 'Mantenimiento vencido o pronto a vencer'
   }
   const status = cell.getValue<string>()
-  const color =
-    status === 'available' ? 'green' : status === 'busy' ? 'red' : 'gray'
+  const statusChip =
+    status === 'available'
+      ? { label: 'Disponible', color: 'success' as const }
+      : status === 'busy'
+        ? { label: 'Ocupado', color: 'info' as const }
+        : { label: status || 'Sin estado', color: 'default' as const }
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div
-        style={{
-          width: 12,
-          height: 12,
-          borderRadius: '50%',
-          backgroundColor: color,
-          marginRight: 8
-        }}
+      <Chip
+        size='small'
+        variant='outlined'
+        color={statusChip.color}
+        label={statusChip.label}
       />
       {isDue && (
         <>
           <Divider orientation='vertical' flexItem />
           <Tooltip title={isDueMessage}>
-            <Warning sx={{ color: 'red' }} />
+            <Warning color='error' />
           </Tooltip>
         </>
       )}

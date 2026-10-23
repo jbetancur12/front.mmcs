@@ -183,7 +183,7 @@ export const useDataSheetColumns = () => {
       {
         accessorKey: 'invoiceUrl',
         header: 'Factura',
-        size: 20,
+        size: 130,
         enableEditing: false,
         enableColumnDragging: false,
         enableGlobalFilter: false,
@@ -198,7 +198,7 @@ export const useDataSheetColumns = () => {
         enableColumnDragging: false,
         enableGlobalFilter: false,
         enableColumnActions: false,
-        size: 150,
+        size: 200,
         Edit: () => null,
         Cell: StatusCell
       },

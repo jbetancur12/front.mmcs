@@ -80,7 +80,7 @@ const DataSheetRowActions = ({
 
   return (
     <Box sx={{ position: 'relative' }}>
-      <IconButton onClick={handleMenuOpen}>
+      <IconButton aria-label='Más acciones' onClick={handleMenuOpen}>
         <MoreVert />
       </IconButton>
 
@@ -88,14 +88,8 @@ const DataSheetRowActions = ({
         anchorEl={localAnchorEl}
         open={Boolean(localAnchorEl)}
         onClose={handleMenuClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right'
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left'
-        }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         slotProps={{
           paper: {
             sx: {
@@ -105,7 +99,6 @@ const DataSheetRowActions = ({
             }
           }
         }}
-        disablePortal
       >
         {canViewDetail && (
           <MuiMenuItem
@@ -129,7 +122,7 @@ const DataSheetRowActions = ({
             <ListItemIcon>
               <Engineering fontSize='small' />
             </ListItemIcon>
-            Inspection/Maintenance
+            Inspección y mantenimiento
           </MuiMenuItem>
         )}
 
@@ -141,7 +134,7 @@ const DataSheetRowActions = ({
           <ListItemIcon>
             <ExitToApp fontSize='small' />
           </ListItemIcon>
-          In/Out
+          Entrada y salida
         </MuiMenuItem>
 
         {row.original.invoiceUrl && canViewDetail && (

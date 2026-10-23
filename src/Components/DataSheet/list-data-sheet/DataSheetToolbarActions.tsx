@@ -5,19 +5,22 @@ import {
   PrecisionManufacturing,
   SyncAlt
 } from '@mui/icons-material'
-import {
-  Box,
-  Divider,
-  IconButton,
-  Menu,
-  MenuItem as MuiMenuItem,
-  Tooltip
-} from '@mui/material'
+import { Box, Button, Menu, MenuItem as MuiMenuItem } from '@mui/material'
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { menuOptions } from './constants'
 import { DataSheetData, MenuOption } from './types'
+
+// Botón secundario outlined del sistema de diseño (verde azulado)
+const toolbarButtonSx = {
+  whiteSpace: 'nowrap',
+  textTransform: 'none',
+  fontWeight: 600,
+  color: '#00695C',
+  borderColor: '#00BFA5',
+  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+}
 
 interface ScheduleMenuProps {
   title: string
@@ -27,39 +30,42 @@ interface ScheduleMenuProps {
 }
 
 // Botón con menú: opción general + una por tipo de servicio
-const ScheduleMenu = ({ title, icon, general, tableData }: ScheduleMenuProps) => {
+const ScheduleMenu = ({
+  title,
+  icon,
+  general,
+  tableData
+}: ScheduleMenuProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const handleClose = () => setAnchorEl(null)
 
   return (
-    <Tooltip arrow placement='right' title={title}>
-      <div>
-        <IconButton
-          onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-            setAnchorEl(event.currentTarget)
-          }
-        >
-          {icon}
-        </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-        >
-          {[...[general], ...menuOptions].map((option) => (
-            <MuiMenuItem
-              key={option.value}
-              onClick={() => handleClose()}
-              component={Link}
-              to={`${general.route}/${option.route === general.route ? '' : option.route}`}
-              state={tableData}
-            >
-              {option.text}
-            </MuiMenuItem>
-          ))}
-        </Menu>
-      </div>
-    </Tooltip>
+    <div>
+      <Button
+        size='small'
+        variant='outlined'
+        startIcon={icon}
+        sx={toolbarButtonSx}
+        onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+          setAnchorEl(event.currentTarget)
+        }
+      >
+        {title}
+      </Button>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+        {[...[general], ...menuOptions].map((option) => (
+          <MuiMenuItem
+            key={option.value}
+            onClick={() => handleClose()}
+            component={Link}
+            to={`${general.route}/${option.route === general.route ? '' : option.route}`}
+            state={tableData}
+          >
+            {option.text}
+          </MuiMenuItem>
+        ))}
+      </Menu>
+    </div>
   )
 }
 
@@ -67,8 +73,10 @@ interface DataSheetToolbarActionsProps {
   tableData: DataSheetData[]
 }
 
-const DataSheetToolbarActions = ({ tableData }: DataSheetToolbarActionsProps) => (
-  <Box display='flex' alignItems='center' sx={{ gap: 2, position: 'relative' }}>
+const DataSheetToolbarActions = ({
+  tableData
+}: DataSheetToolbarActionsProps) => (
+  <Box display='flex' alignItems='center' flexWrap='wrap' sx={{ gap: 1 }}>
     <ScheduleMenu
       title='Inventario'
       icon={<Inventory />}
@@ -80,7 +88,7 @@ const DataSheetToolbarActions = ({ tableData }: DataSheetToolbarActionsProps) =>
       tableData={tableData}
     />
     <ScheduleMenu
-      title='Programa de Calibración'
+      title='Calibración'
       icon={<PrecisionManufacturing />}
       general={{
         value: 'Cronograma General',
@@ -90,7 +98,7 @@ const DataSheetToolbarActions = ({ tableData }: DataSheetToolbarActionsProps) =>
       tableData={tableData}
     />
     <ScheduleMenu
-      title='Cronograma de Mantenimiento'
+      title='Mantenimiento'
       icon={<Event />}
       general={{
         value: 'Cronograma General',
@@ -99,21 +107,26 @@ const DataSheetToolbarActions = ({ tableData }: DataSheetToolbarActionsProps) =>
       }}
       tableData={tableData}
     />
-    <Divider orientation='vertical' flexItem />
-    <Tooltip arrow placement='right' title='Inventario Prestamo'>
-      <Link to='inventory-leasing'>
-        <IconButton>
-          <SyncAlt />
-        </IconButton>
-      </Link>
-    </Tooltip>
-    <Tooltip arrow placement='right' title='Equipos en Prestamo'>
-      <Link to='devices-on-loan'>
-        <IconButton>
-          <CallMissedOutgoing />
-        </IconButton>
-      </Link>
-    </Tooltip>
+    <Button
+      size='small'
+      variant='outlined'
+      component={Link}
+      to='inventory-leasing'
+      startIcon={<SyncAlt />}
+      sx={toolbarButtonSx}
+    >
+      Préstamos
+    </Button>
+    <Button
+      size='small'
+      variant='outlined'
+      component={Link}
+      to='devices-on-loan'
+      startIcon={<CallMissedOutgoing />}
+      sx={toolbarButtonSx}
+    >
+      Equipos en préstamo
+    </Button>
   </Box>
 )
 

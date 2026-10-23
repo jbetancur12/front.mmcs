@@ -5,10 +5,9 @@ import {
   Inventory as InventoryKpi,
   WarningAmber as WarnKpi
 } from '@mui/icons-material'
-import { Button, Container, Grid, Paper } from '@mui/material'
+import { Button, Container, Grid } from '@mui/material'
 import {
   MRT_ColumnFiltersState,
-  MaterialReactTable,
   type MRT_Row,
   type MaterialReactTableProps
 } from 'material-react-table'
@@ -16,7 +15,7 @@ import React, { useEffect, useState } from 'react'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -42,10 +41,7 @@ import {
   useServerTableState
 } from 'src/hooks/useServerTable'
 
-export type {
-  CalibrationHistory,
-  DataSheetData
-} from './list-data-sheet/types'
+export type { CalibrationHistory, DataSheetData } from './list-data-sheet/types'
 export { CreateNewDataSheetModal } from './list-data-sheet/CreateNewDataSheetModal'
 
 const ListDataSheet: React.FC = () => {
@@ -79,7 +75,11 @@ const ListDataSheet: React.FC = () => {
   })
   const { dataSheets, totalItems, totalPages, isLoading, isFetching } =
     useDataSheetsPaginated(server.params)
-  useKeepPageInRange(totalPages, server.pagination.pageIndex, server.setPagination)
+  useKeepPageInRange(
+    totalPages,
+    server.pagination.pageIndex,
+    server.setPagination
+  )
   const { data: counts } = useDataSheetCounts()
   const actions = useDataSheetActions()
   const { columns, validationErrors, setValidationErrors } =
@@ -138,7 +138,16 @@ const ListDataSheet: React.FC = () => {
         icon={<InventoryKpi />}
         actions={
           canCreateDataSheet ? (
-            <Button variant='contained' startIcon={<AddKpi />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<AddKpi />}
+              onClick={() => setCreateModalOpen(true)}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00897B' }
+              }}
+            >
               Crear hoja de vida
             </Button>
           ) : undefined
@@ -147,10 +156,17 @@ const ListDataSheet: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet' label='Equipos' value={counts?.total ?? totalItems} icon={<InventoryKpi />} tone='teal' />
+          <LmsStatCard
+            variant='quiet'
+            label='Equipos'
+            value={counts?.total ?? totalItems}
+            icon={<InventoryKpi />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Disponibles'
             value={counts?.available ?? 0}
             icon={<CheckKpi />}
@@ -158,7 +174,8 @@ const ListDataSheet: React.FC = () => {
           />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Ocupados'
             value={counts?.busy ?? 0}
             icon={<BuildKpi />}
@@ -166,7 +183,8 @@ const ListDataSheet: React.FC = () => {
           />
         </Grid>
         <Grid item xs={6} md={3}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Por calibrar o inspeccionar'
             value={dueSoonCount}
             icon={<WarnKpi />}
@@ -175,9 +193,10 @@ const ListDataSheet: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <MaterialReactTable
-        {...purchaseTableStyle}
+      <DataTable
+        itemLabel={['equipo', 'equipos']}
+        searchPlaceholder='Buscar equipos'
+        enableRowActions
         {...server.tableProps}
         rowCount={totalItems}
         state={{
@@ -185,25 +204,13 @@ const ListDataSheet: React.FC = () => {
           isLoading,
           showProgressBars: isFetching && !isLoading
         }}
-        enablePinning
         initialState={{
           columnPinning: { right: ['mrt-row-actions'] },
           columnVisibility: initialColumnVisibility
         }}
-        displayColumnDefOptions={{
-          'mrt-row-actions': {
-            header: '',
-            muiTableHeadCellProps: {
-              align: 'center'
-            },
-
-            size: 10
-          }
-        }}
         columns={columns}
         data={dataSheets}
         editingMode='modal'
-        enableColumnOrdering
         enableEditing
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
@@ -222,7 +229,6 @@ const ListDataSheet: React.FC = () => {
           return <DataSheetToolbarActions tableData={dataSheets} />
         }}
       />
-      </Paper>
 
       <CreateNewDataSheetModal
         columns={columns}
