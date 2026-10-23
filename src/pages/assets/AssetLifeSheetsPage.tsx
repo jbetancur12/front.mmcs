@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   Add,
   Archive,
+  Build,
+  Cable,
   CalendarMonth,
   CheckCircle,
   Computer,
@@ -13,13 +15,12 @@ import {
   Visibility
 } from '@mui/icons-material'
 import {
-  Alert,
   Autocomplete,
+  Avatar,
   Box,
   Button,
   Chip,
   Container,
-  Divider,
   Drawer,
   FormControlLabel,
   Grid,
@@ -45,6 +46,13 @@ import FormDialog, { FormDialogSection } from 'src/Components/Common/FormDialog'
 import FormDateField from 'src/Components/Common/FormDateField'
 import FileDropZone from 'src/Components/Common/FileDropZone'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+import EmptyState from 'src/Components/Common/EmptyState'
+import {
+  DetailCell,
+  DetailField,
+  DetailSection
+} from 'src/Components/Common/DetailBlocks'
+import { formatDateOnly } from '@utils/dateOnly'
 import { useStore } from '@nanostores/react'
 import { bigToast } from 'src/Components/ExcelManipulation/Utils'
 import {
@@ -219,6 +227,33 @@ const AssetLifeSheetsPage: React.FC = () => {
     const refreshedAsset = assets.find((asset) => asset.id === selectedAsset.id)
     if (refreshedAsset) setSelectedAsset(refreshedAsset)
   }, [assets])
+
+  // La foto está protegida por permisos: se pide con el token y se muestra desde una URL temporal
+  const [assetImageUrl, setAssetImageUrl] = useState<string | null>(null)
+  const selectedAssetId = selectedAsset?.id
+  const selectedAssetImagePath = selectedAsset?.imagePath
+  useEffect(() => {
+    setAssetImageUrl(null)
+    if (!selectedAssetId || !selectedAssetImagePath) return undefined
+    let objectUrl: string | null = null
+    let cancelled = false
+    axiosPrivate
+      .get(`/asset-life-sheets/${selectedAssetId}/image`, {
+        responseType: 'blob'
+      })
+      .then((response) => {
+        if (cancelled) return
+        objectUrl = window.URL.createObjectURL(response.data)
+        setAssetImageUrl(objectUrl)
+      })
+      .catch(() => {
+        // Sin foto disponible: el encabezado queda sin miniatura
+      })
+    return () => {
+      cancelled = true
+      if (objectUrl) window.URL.revokeObjectURL(objectUrl)
+    }
+  }, [selectedAssetId, selectedAssetImagePath])
 
   const openCreate = () => {
     setEditingAssetId(null)
@@ -1115,353 +1150,371 @@ const AssetLifeSheetsPage: React.FC = () => {
         onClose={() => setSelectedAsset(null)}
         PaperProps={{
           sx: {
+            // Debajo de la barra superior de la aplicación
             top: { xs: 64, md: 72 },
-            height: {
-              xs: 'calc(100% - 64px)',
-              md: 'calc(100% - 72px)'
-            }
+            height: { xs: 'calc(100% - 64px)', md: 'calc(100% - 72px)' },
+            width: { xs: '100vw', sm: 480, md: 560 },
+            maxWidth: '100%',
+            borderTopLeftRadius: { sm: '16px' },
+            borderBottomLeftRadius: { sm: '16px' }
           }
         }}
       >
         <Box
           sx={{
-            width: { xs: '100vw', sm: 460, md: 560 },
-            maxWidth: '100%',
-            p: { xs: 2, md: 3 }
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            // Mismo foco turquesa que los demás formularios
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+              { borderColor: '#00897B' }
           }}
         >
-          <Stack
-            direction='row'
-            justifyContent='space-between'
-            alignItems='flex-start'
-            spacing={2}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: 1,
+              px: 3,
+              pt: 2.5,
+              pb: 2,
+              borderBottom: '1px solid #e5e7eb'
+            }}
           >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                variant='h5'
-                fontWeight={700}
-                sx={{ lineHeight: 1.15 }}
-              >
-                {selectedAsset?.name}
-              </Typography>
-              <Stack
-                direction='row'
-                spacing={1}
-                sx={{ mt: 1, flexWrap: 'wrap' }}
-              >
-                <Chip
-                  size='small'
-                  label={selectedAsset?.assetCode || 'Sin código'}
+            <Stack
+              direction='row'
+              spacing={1.5}
+              alignItems='center'
+              sx={{ minWidth: 0 }}
+            >
+              {assetImageUrl && (
+                <Avatar
+                  variant='rounded'
+                  src={assetImageUrl}
+                  alt={`Foto de ${selectedAsset?.name ?? 'activo'}`}
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    bgcolor: '#f3f4f6'
+                  }}
                 />
-                <Chip
-                  size='small'
-                  variant='outlined'
-                  label={selectedAsset?.assetType || 'Sin tipo'}
-                />
-                <Chip
-                  size='small'
-                  variant='outlined'
-                  color={
-                    selectedAsset?.status === 'active' ? 'success' : 'default'
-                  }
-                  label={getOptionLabel(
-                    ASSET_STATUS_OPTIONS,
-                    selectedAsset?.status
-                  )}
-                />
-                <Chip
-                  size='small'
-                  color='info'
-                  variant='outlined'
-                  label={`${selectedAsset?.documentCode || 'FOT-MMCS-05'} v${selectedAsset?.documentVersion || '02'}`}
-                />
-              </Stack>
-            </Box>
-            <IconButton onClick={() => setSelectedAsset(null)}>
+              )}
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant='h6'
+                  component='h2'
+                  fontWeight={700}
+                  sx={{ lineHeight: 1.2 }}
+                >
+                  {selectedAsset?.name}
+                </Typography>
+                <Stack
+                  direction='row'
+                  spacing={1}
+                  alignItems='center'
+                  sx={{ mt: 0.75, flexWrap: 'wrap', rowGap: 0.5 }}
+                >
+                  <Typography variant='body2' color='text.secondary'>
+                    {[selectedAsset?.assetCode, selectedAsset?.assetType]
+                      .filter(Boolean)
+                      .join(' · ') || 'Sin código'}
+                  </Typography>
+                  <Chip
+                    size='small'
+                    variant='outlined'
+                    color={
+                      selectedAsset?.status === 'active'
+                        ? 'success'
+                        : selectedAsset?.status === 'maintenance'
+                          ? 'warning'
+                          : 'default'
+                    }
+                    label={getOptionLabel(
+                      ASSET_STATUS_OPTIONS,
+                      selectedAsset?.status
+                    )}
+                  />
+                </Stack>
+              </Box>
+            </Stack>
+            <IconButton
+              aria-label='Cerrar'
+              edge='end'
+              onClick={() => setSelectedAsset(null)}
+            >
               <Close />
             </IconButton>
-          </Stack>
+          </Box>
 
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            sx={{ my: 2 }}
-          >
-            <Button
-              variant='outlined'
-              startIcon={<Download />}
-              sx={tealOutlineSx}
-              onClick={() => selectedAsset && downloadPdf(selectedAsset)}
+          <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              sx={{ mb: 3 }}
             >
-              PDF
-            </Button>
-            {canManage && (
               <Button
                 variant='outlined'
-                startIcon={<Edit />}
+                startIcon={<Download />}
                 sx={tealOutlineSx}
-                onClick={() => selectedAsset && openEdit(selectedAsset)}
+                onClick={() => selectedAsset && downloadPdf(selectedAsset)}
               >
-                Editar
+                PDF
               </Button>
-            )}
-            {canManage && (
-              <Button
-                variant='contained'
-                startIcon={<History />}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  bgcolor: '#00BFA5',
-                  '&:hover': { bgcolor: '#00897B' }
-                }}
-                onClick={() => setInterventionDialogOpen(true)}
-              >
-                Intervención
-              </Button>
-            )}
-          </Stack>
-
-          <Paper
-            variant='outlined'
-            sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}
-          >
-            <Stack spacing={1.25}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Ubicación
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.location || 'N/D'}
-                  </Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Responsable
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.custodian || 'N/D'}
-                  </Typography>
-                </Box>
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Serial
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.serialNumber || 'N/D'}
-                  </Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Frecuencia
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.maintenanceFrequency || 'N/D'}
-                  </Typography>
-                </Box>
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Recepción
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.receivedDate || 'N/D'}
-                  </Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Puesta en servicio
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.inServiceDate || 'N/D'}
-                  </Typography>
-                </Box>
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Formato documental
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.documentCode || 'FOT-MMCS-05'} v
-                    {selectedAsset?.documentVersion || '02'}
-                  </Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Fecha formato
-                  </Typography>
-                  <Typography fontWeight={600}>
-                    {selectedAsset?.documentDate || '2017-12-05'}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Stack>
-          </Paper>
-
-          <Box sx={{ mt: 2 }}>
-            <Typography
-              variant='subtitle2'
-              color='text.secondary'
-              sx={{ mb: 0.75 }}
-            >
-              Mantenimiento base
-            </Typography>
-            {selectedAsset?.maintenanceTasks?.length ? (
-              <Stack spacing={1.25}>
-                {selectedAsset.maintenanceTasks.map((task, index) => (
-                  <Paper
-                    key={`${task.taskName}-${index}`}
-                    variant='outlined'
-                    sx={{
-                      p: 1.75,
-                      borderRadius: 2,
-                      backgroundColor: '#f9fafb'
-                    }}
-                  >
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      justifyContent='space-between'
-                      spacing={1}
-                    >
-                      <Typography fontWeight={700}>{task.taskName}</Typography>
-                      <Chip
-                        size='small'
-                        color='success'
-                        variant='outlined'
-                        label={task.frequency || 'Sin periodicidad'}
-                      />
-                    </Stack>
-                    {task.notes && (
-                      <Typography
-                        variant='body2'
-                        color='text.secondary'
-                        sx={{ mt: 1 }}
-                      >
-                        {task.notes}
-                      </Typography>
-                    )}
-                  </Paper>
-                ))}
-              </Stack>
-            ) : (
-              <Alert severity='info'>Sin acciones base registradas.</Alert>
-            )}
-          </Box>
-
-          <Box sx={{ mt: 2 }}>
-            <Typography
-              variant='subtitle2'
-              color='text.secondary'
-              sx={{ mb: 0.75 }}
-            >
-              Comentarios
-            </Typography>
-            <Paper
-              variant='outlined'
-              sx={{ p: 2, borderRadius: 2, backgroundColor: '#f9fafb' }}
-            >
-              <Typography variant='body2'>
-                {selectedAsset?.generalComments ||
-                  'Sin comentarios registrados.'}
-              </Typography>
-            </Paper>
-          </Box>
-
-          <Divider sx={{ my: 2.5 }} />
-
-          <Box sx={{ mt: 3 }}>
-            <Typography variant='h6' sx={{ mb: 1.25 }}>
-              Accesorios
-            </Typography>
-            <Stack spacing={1.5} sx={{ mt: 1 }}>
-              {selectedAsset?.accessories?.length ? (
-                selectedAsset.accessories.map((item, index) => (
-                  <Paper
-                    key={`${item.accessoryType}-${index}`}
-                    variant='outlined'
-                    sx={{
-                      p: 1.75,
-                      borderRadius: '12px',
-                      borderColor: '#e5e7eb'
-                    }}
-                  >
-                    <Typography fontWeight={700}>
-                      {item.accessoryType}
-                    </Typography>
-                    <Typography
-                      variant='body2'
-                      color='text.secondary'
-                      sx={{ mt: 0.5 }}
-                    >
-                      {item.brand || 'Sin marca'} • {item.model || 'Sin modelo'}{' '}
-                      • {item.serialNumber || 'Sin serial'}
-                    </Typography>
-                    {item.notes && (
-                      <Typography variant='body2' sx={{ mt: 1 }}>
-                        {item.notes}
-                      </Typography>
-                    )}
-                  </Paper>
-                ))
-              ) : (
-                <Alert severity='info'>Sin accesorios registrados.</Alert>
+              {canManage && (
+                <Button
+                  variant='outlined'
+                  startIcon={<Edit />}
+                  sx={tealOutlineSx}
+                  onClick={() => selectedAsset && openEdit(selectedAsset)}
+                >
+                  Editar
+                </Button>
+              )}
+              {canManage && (
+                <Button
+                  variant='contained'
+                  startIcon={<History />}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    bgcolor: '#00BFA5',
+                    '&:hover': { bgcolor: '#00897B' }
+                  }}
+                  onClick={() => setInterventionDialogOpen(true)}
+                >
+                  Registrar intervención
+                </Button>
               )}
             </Stack>
-          </Box>
-          <Box sx={{ mt: 3 }}>
-            <Typography variant='h6' sx={{ mb: 1.25 }}>
-              Intervenciones
-            </Typography>
-            <Stack spacing={1.5} sx={{ mt: 1 }}>
-              {selectedAsset?.interventions?.length ? (
-                selectedAsset.interventions.map((item) => (
-                  <Paper
-                    key={item.id}
-                    variant='outlined'
-                    sx={{
-                      p: 1.75,
-                      borderRadius: '12px',
-                      borderColor: '#e5e7eb'
-                    }}
-                  >
-                    <Typography fontWeight={700}>{item.title}</Typography>
-                    <Stack
-                      direction='row'
-                      spacing={0.75}
-                      sx={{ mt: 0.75, mb: 0.75, flexWrap: 'wrap' }}
-                    >
-                      <Chip
-                        size='small'
-                        variant='outlined'
-                        label={item.interventionDate}
-                      />
-                      <Chip
-                        size='small'
-                        variant='outlined'
-                        label={item.performedByName}
-                      />
-                    </Stack>
-                    <Typography variant='body2'>{item.description}</Typography>
-                    {item.observations && (
-                      <Typography
-                        variant='body2'
-                        color='text.secondary'
-                        sx={{ mt: 1 }}
-                      >
-                        Obs: {item.observations}
-                      </Typography>
-                    )}
-                  </Paper>
-                ))
-              ) : (
-                <Alert severity='info'>Sin intervenciones registradas.</Alert>
+
+            <DetailSection title='Datos del activo'>
+              <DetailCell>
+                <DetailField label='Ubicación'>
+                  {selectedAsset?.location || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Responsable'>
+                  {selectedAsset?.custodian || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Serial'>
+                  {selectedAsset?.serialNumber || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Frecuencia de mantenimiento'>
+                  {selectedAsset?.maintenanceFrequency || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Recepción'>
+                  {formatDateOnly(selectedAsset?.receivedDate) ||
+                    'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Puesta en servicio'>
+                  {formatDateOnly(selectedAsset?.inServiceDate) ||
+                    'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              {selectedAsset?.documentCode && (
+                <DetailCell>
+                  <DetailField label='Formato documental'>
+                    {selectedAsset.documentCode}
+                    {selectedAsset.documentVersion
+                      ? ` v${selectedAsset.documentVersion}`
+                      : ''}
+                  </DetailField>
+                </DetailCell>
               )}
-            </Stack>
+              {selectedAsset?.documentDate && (
+                <DetailCell>
+                  <DetailField label='Fecha del formato'>
+                    {formatDateOnly(selectedAsset.documentDate) ||
+                      'Sin registrar'}
+                  </DetailField>
+                </DetailCell>
+              )}
+            </DetailSection>
+
+            <DetailSection title='Mantenimiento base'>
+              <DetailCell full>
+                {selectedAsset?.maintenanceTasks?.length ? (
+                  <Stack spacing={1}>
+                    {selectedAsset.maintenanceTasks.map((task, index) => (
+                      <Box
+                        key={`${task.taskName}-${index}`}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '12px',
+                          border: '1px solid #e5e7eb',
+                          bgcolor: '#f9fafb'
+                        }}
+                      >
+                        <Stack
+                          direction='row'
+                          justifyContent='space-between'
+                          alignItems='center'
+                          spacing={1}
+                        >
+                          <Typography fontWeight={600}>
+                            {task.taskName}
+                          </Typography>
+                          <Chip
+                            size='small'
+                            variant='outlined'
+                            color='success'
+                            label={task.frequency || 'Sin periodicidad'}
+                          />
+                        </Stack>
+                        {task.notes && (
+                          <Typography
+                            variant='body2'
+                            color='text.secondary'
+                            sx={{ mt: 0.5 }}
+                          >
+                            {task.notes}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <EmptyState
+                    compact
+                    icon={<Build />}
+                    title='Sin acciones base'
+                    hint='Agrégalas desde Editar para programar el mantenimiento.'
+                  />
+                )}
+              </DetailCell>
+            </DetailSection>
+
+            <DetailSection title='Comentarios'>
+              <DetailCell full>
+                <DetailField label='Comentarios generales'>
+                  {selectedAsset?.generalComments || 'Sin comentarios'}
+                </DetailField>
+              </DetailCell>
+            </DetailSection>
+
+            <DetailSection title='Accesorios'>
+              <DetailCell full>
+                {selectedAsset?.accessories?.length ? (
+                  <Stack spacing={1}>
+                    {selectedAsset.accessories.map((item, index) => (
+                      <Box
+                        key={`${item.accessoryType}-${index}`}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '12px',
+                          border: '1px solid #e5e7eb'
+                        }}
+                      >
+                        <Typography fontWeight={600}>
+                          {item.accessoryType}
+                        </Typography>
+                        <Typography variant='body2' color='text.secondary'>
+                          {[item.brand, item.model, item.serialNumber]
+                            .filter(Boolean)
+                            .join(' · ') || 'Sin detalle'}
+                        </Typography>
+                        {item.notes && (
+                          <Typography variant='body2' sx={{ mt: 0.5 }}>
+                            {item.notes}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <EmptyState compact icon={<Cable />} title='Sin accesorios' />
+                )}
+              </DetailCell>
+            </DetailSection>
+
+            <DetailSection title='Intervenciones'>
+              <DetailCell full>
+                {selectedAsset?.interventions?.length ? (
+                  <Stack spacing={1}>
+                    {[...selectedAsset.interventions]
+                      .sort((a, b) =>
+                        String(b.interventionDate).localeCompare(
+                          String(a.interventionDate)
+                        )
+                      )
+                      .map((item) => (
+                        <Box
+                          key={item.id}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: '12px',
+                            border: '1px solid #e5e7eb'
+                          }}
+                        >
+                          <Stack
+                            direction='row'
+                            justifyContent='space-between'
+                            alignItems='flex-start'
+                            spacing={1}
+                          >
+                            <Typography fontWeight={600}>
+                              {item.title}
+                            </Typography>
+                            <Chip
+                              size='small'
+                              variant='outlined'
+                              label={getOptionLabel(
+                                ASSET_INTERVENTION_TYPE_OPTIONS,
+                                item.interventionType
+                              )}
+                            />
+                          </Stack>
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            sx={{ display: 'block', mt: 0.25 }}
+                          >
+                            {formatDateOnly(item.interventionDate) ||
+                              'Sin fecha'}{' '}
+                            · {item.performedByName}
+                            {item.nextActionDate
+                              ? ` · Próxima acción: ${formatDateOnly(item.nextActionDate)}`
+                              : ''}
+                          </Typography>
+                          {item.description && (
+                            <Typography variant='body2' sx={{ mt: 0.75 }}>
+                              {item.description}
+                            </Typography>
+                          )}
+                          {item.observations && (
+                            <Typography
+                              variant='body2'
+                              color='text.secondary'
+                              sx={{ mt: 0.5 }}
+                            >
+                              Observaciones: {item.observations}
+                            </Typography>
+                          )}
+                        </Box>
+                      ))}
+                  </Stack>
+                ) : (
+                  <EmptyState
+                    compact
+                    icon={<History />}
+                    title='Sin intervenciones'
+                    hint='Registra la primera para empezar el historial.'
+                  />
+                )}
+              </DetailCell>
+            </DetailSection>
           </Box>
         </Box>
       </Drawer>
