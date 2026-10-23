@@ -143,17 +143,24 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   if (selectedSede) {
     return (
       <Box>
-        <Box display='flex' alignItems='center' mb={3}>
-          <IconButton
-            aria-label='Volver a las sedes'
-            onClick={() => setSelectedSede(null)}
-            sx={{ mr: 2, color: '#374151' }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
-            Detalles de {selectedSedeString}
-          </Typography>
+        <Box display='flex' alignItems='center' gap={1.5} mb={3}>
+          <Tooltip title='Volver a las sedes'>
+            <IconButton
+              aria-label='Volver a las sedes'
+              onClick={() => setSelectedSede(null)}
+              sx={{ border: '1px solid #e5e7eb', color: '#374151' }}
+            >
+              <ArrowBack />
+            </IconButton>
+          </Tooltip>
+          <Box>
+            <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+              {selectedSedeString}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Equipos de esta sede
+            </Typography>
+          </Box>
         </Box>
 
         <SelectedHq

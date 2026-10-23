@@ -1,20 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import EquipmentCard, { Certificate } from './EquipmentCard'
-import {
-  Typography,
-  Button,
-  Box,
-  CircularProgress,
-  Menu,
-  MenuItem,
-  Grid,
-  Card,
-  CardContent,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Chip
-} from '@mui/material'
+import { Certificate } from './EquipmentCard'
 import { useCustomerCertificatesByHeadquarter } from 'src/hooks/customers/useCustomerCertificates'
 import { useParams } from 'react-router-dom'
 
@@ -35,9 +20,14 @@ interface ApiResponse {
   }
 }
 import { axiosPrivate } from '@utils/api'
-import { Download, Search, Clear } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
+import { bigToast } from './ExcelManipulation/Utils'
+import EquipmentTable from './customer-profile/EquipmentTable'
+import {
+  Certificate as CertificateRow,
+  CertificatesApiResponse
+} from './customer-profile/types'
 
 interface SelectedHqProps {
   onDelete: (id: number) => void
@@ -51,7 +41,7 @@ const exportToExcel = async (
   selectedSede: string | null
 ) => {
   if (data.length === 0) {
-    alert('No hay datos para exportar')
+    bigToast('No hay datos para exportar', 'info')
     return
   }
 
@@ -124,7 +114,7 @@ const exportToExcel = async (
     XLSX.writeFile(workbook, fileName)
   } catch (error) {
     console.error('Error al generar archivo Excel:', error)
-    alert('Error al generar el archivo Excel')
+    bigToast('Error al generar el archivo Excel', 'error')
   }
 }
 
@@ -136,24 +126,17 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
   const { id } = useParams<{ id: string }>()
   const $userStore = useStore(userStore)
 
-  const [searchTerm, setSearchTerm] = useState(
-    sessionStorage.getItem('searchTerm') || ''
-  )
-  const [currentPage, setCurrentPage] = useState(
-    parseInt(sessionStorage.getItem('currentPage') || '1', 10)
-  )
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [isDownloading, setIsDownloading] = useState(false)
 
+  // Al cambiar de sede se empieza de cero
   useEffect(() => {
-    sessionStorage.setItem('searchTerm', searchTerm)
-  }, [searchTerm])
+    setSearchTerm('')
+    setCurrentPage(1)
+  }, [selectedSede])
 
-  useEffect(() => {
-    sessionStorage.setItem('currentPage', currentPage.toString())
-  }, [currentPage])
-
-  const { data: apiResponse, isLoading } =
+  const { data: apiResponse, refetch } =
     useCustomerCertificatesByHeadquarter<ApiResponse>(id, {
       search: searchTerm,
       headquarter: selectedSede,
@@ -182,37 +165,19 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
     [axiosPrivate, id, selectedSede]
   )
 
-  const certificatesData = apiResponse?.files || []
-
-  const handlePageChange = useCallback(
-    (direction: 'prev' | 'next') => {
-      if (direction === 'prev' && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1)
-      } else if (
-        direction === 'next' &&
-        apiResponse &&
-        currentPage < apiResponse.totalPages
-      ) {
-        setCurrentPage((prev) => prev + 1)
-      }
-    },
-    [currentPage, apiResponse]
-  )
-
   const handleDownloadExcel = useCallback(
     async (type: 'all' | 'nextOrExpired') => {
-      setAnchorEl(null)
       setIsDownloading(true)
       try {
         const allData = await fetchAllDataForDownload(type)
         if (allData.length === 0) {
-          alert('No hay datos para exportar')
+          bigToast('No hay datos para exportar', 'info')
         } else {
           await exportToExcel(allData, selectedSede)
         }
       } catch (error) {
         console.error('Error al descargar Excel:', error)
-        alert('Error al descargar el archivo Excel')
+        bigToast('Error al descargar el archivo Excel', 'error')
       } finally {
         setIsDownloading(false)
       }
@@ -220,241 +185,29 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
     [fetchAllDataForDownload, selectedSede]
   )
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchTerm(value)
-    setCurrentPage(1)
-  }, [])
-
-  const clearSearch = useCallback(() => {
-    setSearchTerm('')
-    setCurrentPage(1)
-  }, [])
-
   return (
-    <div>
-      {/* Advanced Search and Filters */}
-      <Card elevation={0} sx={{ mb: 3, border: '1px solid #e5e7eb', borderRadius: '16px' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={3} alignItems='center'>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                variant='outlined'
-                placeholder='Buscar por nombre, serie, activo fijo...'
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <Search sx={{ color: '#10b981' }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchTerm && (
-                    <InputAdornment position='end'>
-                      <IconButton onClick={clearSearch} edge='end' size='small'>
-                        <Clear />
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981'
-                    }
-                  }
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <Button
-                fullWidth
-                variant='contained'
-                startIcon={isDownloading ? <CircularProgress size={16} /> : <Download />}
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-                disabled={isDownloading}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  py: 1.5,
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-                  }
-                }}
-              >
-                {isDownloading ? 'Descargando...' : 'Exportar Excel'}
-              </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-                slotProps={{
-                  paper: {
-                    sx: { borderRadius: '12px', mt: 1 }
-                  }
-                }}
-              >
-                <MenuItem onClick={() => handleDownloadExcel('all')}>
-                  📊 Todos los equipos
-                </MenuItem>
-                <MenuItem onClick={() => handleDownloadExcel('nextOrExpired')}>
-                  ⚠️ Próximos a vencer / Vencidos
-                </MenuItem>
-              </Menu>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <Box display='flex' alignItems='center' gap={1}>
-                <Typography variant='body2' color='text.secondary'>
-                  Total:
-                </Typography>
-                <Chip
-                  label={`${apiResponse?.statistics?.total || 0} equipos`}
-                  size='small'
-                  sx={{
-                    backgroundColor: '#f0f9ff',
-                    color: '#0369a1',
-                    fontWeight: 600
-                  }}
-                />
-              </Box>
-              {selectedSede && (
-                <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5, display: 'block' }}>
-                  en {selectedSede}
-                </Typography>
-              )}
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {isLoading ? (
-        <Box display='flex' flexDirection='column' alignItems='center' py={8}>
-          <CircularProgress size={60} sx={{ color: '#10b981', mb: 2 }} />
-          <Typography variant='h6' color='text.secondary' gutterBottom>
-            Cargando equipos...
-          </Typography>
-          <Typography variant='body2' color='text.secondary'>
-            Obteniendo información de los equipos
-          </Typography>
-        </Box>
-      ) : (
-        <>
-          {certificatesData.length === 0 ? (
-            <Card elevation={0} sx={{ border: '2px dashed #d1d5db', borderRadius: '16px' }}>
-              <CardContent sx={{ textAlign: 'center', py: 8 }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '50%',
-                    backgroundColor: '#f3f4f6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mx: 'auto',
-                    mb: 3
-                  }}
-                >
-                  <Search sx={{ fontSize: 40, color: '#9ca3af' }} />
-                </Box>
-                <Typography variant='h6' color='text.secondary' gutterBottom>
-                  {searchTerm ? 'No se encontraron equipos' : 'No hay equipos en esta sede'}
-                </Typography>
-                <Typography variant='body2' color='text.secondary' paragraph>
-                  {searchTerm
-                    ? `No hay resultados para "${searchTerm}"`
-                    : 'Esta sede aún no tiene equipos registrados'}
-                </Typography>
-                {searchTerm && (
-                  <Button
-                    variant='outlined'
-                    onClick={clearSearch}
-                    sx={{ borderRadius: '8px', textTransform: 'none' }}
-                  >
-                    Limpiar búsqueda
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <Grid container spacing={3}>
-                {certificatesData.map((certificate: Certificate) => (
-                  <Grid item xs={12} sm={6} lg={4} key={certificate.id}>
-                    <EquipmentCard
-                      certificate={certificate}
-                      onDelete={onDelete}
-                      sedes={sedes}
-                      rol={$userStore.rol}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-              {/* Modern Pagination */}
-              <Box display='flex' justifyContent='center' alignItems='center' mt={6}>
-                <Card elevation={0} sx={{ border: '1px solid #e5e7eb', borderRadius: '12px' }}>
-                  <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
-                    <Button
-                      variant='outlined'
-                      onClick={() => handlePageChange('prev')}
-                      disabled={currentPage === 1}
-                      sx={{
-                        borderRadius: '8px',
-                        minWidth: '100px',
-                        '&:disabled': { opacity: 0.5 }
-                      }}
-                    >
-                      ← Anterior
-                    </Button>
-
-                    <Box display='flex' alignItems='center' gap={1} px={2}>
-                      <Typography variant='body2' color='text.secondary'>
-                        Página
-                      </Typography>
-                      <Chip
-                        label={currentPage}
-                        size='small'
-                        sx={{
-                          backgroundColor: '#10b981',
-                          color: 'white',
-                          fontWeight: 600,
-                          minWidth: '32px'
-                        }}
-                      />
-                      <Typography variant='body2' color='text.secondary'>
-                        de {apiResponse?.totalPages || 1}
-                      </Typography>
-                    </Box>
-
-                    <Button
-                      variant='outlined'
-                      onClick={() => handlePageChange('next')}
-                      disabled={currentPage === (apiResponse?.totalPages || 1)}
-                      sx={{
-                        borderRadius: '8px',
-                        minWidth: '100px',
-                        '&:disabled': { opacity: 0.5 }
-                      }}
-                    >
-                      Siguiente →
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Box>
-            </>
-          )}
-        </>
-      )}
-    </div>
+    <EquipmentTable
+      apiResponse={apiResponse as CertificatesApiResponse | undefined}
+      certificatesData={(apiResponse?.files || []) as CertificateRow[]}
+      searchTerm={searchTerm}
+      onSearchChange={(value) => {
+        setSearchTerm(value)
+        setCurrentPage(1)
+      }}
+      statusFilter={null}
+      onStatusFilter={() => undefined}
+      matchedFields={[]}
+      canCreateFile={false}
+      onOpenCreateModal={() => undefined}
+      isDownloading={isDownloading}
+      onDownload={handleDownloadExcel}
+      handleDelete={async (certificateId) => onDelete(certificateId)}
+      onChanged={() => void refetch()}
+      sedes={sedes}
+      rol={$userStore.rol}
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+    />
   )
 }
 
