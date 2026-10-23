@@ -18,6 +18,8 @@ import {
   saveStoredFilters
 } from './calibrationServicesListUtils'
 
+const PAGE_SIZE = 100
+
 /**
  * Filtros de la bandeja (persistidos en sessionStorage), modo de vista (localStorage)
  * y filtros que se envían a la API.
@@ -50,9 +52,12 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
   const [billingStatusFilter, setBillingStatusFilter] = useState<string | undefined>(undefined)
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string | undefined>(undefined)
 
+  // La bandeja carga de a PAGE_SIZE servicios; "Cargar más" amplía el límite
+  const [limit, setLimit] = useState(PAGE_SIZE)
+
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
-    limit: 100
+    limit
   }
 
   if (deferredSearch.trim()) {
@@ -84,6 +89,18 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
   if (paymentStatusFilter) {
     queryFilters.paymentStatus = paymentStatusFilter as 'pagado' | 'pendiente'
   }
+
+  // Al cambiar lo que se consulta al servidor, se vuelve a la primera página
+  useEffect(() => {
+    setLimit(PAGE_SIZE)
+  }, [
+    deferredSearch,
+    statusFilter,
+    approvalFilter,
+    hasAdjustmentsFilter,
+    billingStatusFilter,
+    paymentStatusFilter
+  ])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -179,6 +196,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     paymentStatusFilter,
     setPaymentStatusFilter,
     queryFilters,
+    limit,
+    loadMore: () => setLimit((current) => current + PAGE_SIZE),
     activeFiltersCount,
     clearFilters
   }

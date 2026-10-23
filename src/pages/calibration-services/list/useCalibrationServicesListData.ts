@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { CalibrationService } from '../../../types/calibrationService'
-import { FILTER_ALL, FILTER_UNASSIGNED } from './calibrationServicesListConstants'
+import { FILTER_ALL, FILTER_UNASSIGNED, SLA_FILTER_ALERT } from './calibrationServicesListConstants'
 import { CalibrationServicesMetrologistOption } from './calibrationServicesListTypes'
 import {
   getKanbanColumnKey,
@@ -70,10 +70,11 @@ const useCalibrationServicesListData = ({
       return false
     }
 
-    if (
-      slaFilter !== FILTER_ALL &&
-      (service.slaIndicator?.color || 'gray') !== slaFilter
-    ) {
+    const slaColor = service.slaIndicator?.color || 'gray'
+    // "alert" = en riesgo: semáforo amarillo o rojo
+    if ((slaFilter as string) === SLA_FILTER_ALERT) {
+      if (!['yellow', 'red'].includes(slaColor)) return false
+    } else if (slaFilter !== FILTER_ALL && slaColor !== slaFilter) {
       return false
     }
 

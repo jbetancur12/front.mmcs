@@ -43,7 +43,7 @@ const StageButton: React.FC<{
       gap: 0.75,
       px: 1,
       py: 1,
-      minWidth: compact ? 88 : 0,
+      minWidth: compact ? 72 : 0,
       width: compact ? 'auto' : '100%',
       borderRadius: '12px',
       bgcolor: active ? TEAL_SOFT : 'transparent',
@@ -136,7 +136,7 @@ const StagePipeline: React.FC<StagePipelineProps> = ({
       sx={{
         display: 'flex',
         flex: 1,
-        minWidth: stages.length * 104,
+        minWidth: stages.length * 70,
         listStyle: 'none',
         m: 0,
         p: 0

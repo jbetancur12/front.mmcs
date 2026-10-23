@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react'
-import { Alert, Box, Button, CircularProgress, Container } from '@mui/material'
+import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from '@mui/material'
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
 import { Toaster } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -8,7 +8,7 @@ import { userStore } from '../../store/userStore'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDialog'
 import CalibrationServicesHeaderActions from './list/CalibrationServicesHeaderActions'
-import CalibrationServicesSummary from './list/CalibrationServicesSummary'
+import CalibrationServicesPipeline from './list/CalibrationServicesPipeline'
 import CalibrationServicesFiltersCard from './list/CalibrationServicesFiltersCard'
 import CalibrationServicesGroupedList from './list/CalibrationServicesGroupedList'
 import CalibrationServicesTable from './list/CalibrationServicesTable'
@@ -18,6 +18,7 @@ import useCalibrationServicesListPermissions from './list/useCalibrationServices
 import useCalibrationServicesListFilters from './list/useCalibrationServicesListFilters'
 import useCalibrationServicesListActions from './list/useCalibrationServicesListActions'
 import useCalibrationServicesListData from './list/useCalibrationServicesListData'
+import { secondaryButtonSx } from './list/calibrationServicesListConstants'
 
 /** Bandeja de servicios de calibración: lista agrupada, tabla o kanban con filtros operativos. */
 const CalibrationServicesPage = () => {
@@ -56,11 +57,12 @@ const CalibrationServicesPage = () => {
     openServiceDetail
   } = actions
 
-  const { data, isLoading, isError, error } = useCalibrationServices(filters.queryFilters)
+  const { data, isLoading, isFetching, isError, error } = useCalibrationServices(
+    filters.queryFilters
+  )
   const {
     metrologistOptions,
     visibleServices,
-    counts,
     kanbanServices,
     groupedListServices,
     currentUserHasAssignedLoad,
@@ -71,6 +73,9 @@ const CalibrationServicesPage = () => {
     isTechnicalOnlyView,
     userEmail: $userStore.email
   })
+
+  const loadedCount = data?.services?.length ?? 0
+  const totalItems = data?.totalItems ?? 0
 
   if (isLoading) {
     return (
@@ -123,9 +128,10 @@ const CalibrationServicesPage = () => {
         }
       />
 
-      {canManageSequenceConfig && sequenceConfig ? (
+      {/* El consecutivo se ajusta desde "Más acciones"; aquí solo se avisa si falta */}
+      {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
         <Alert
-          severity={sequenceConfig.initialized ? 'info' : 'warning'}
+          severity='warning'
           sx={{ mb: 3 }}
           action={
             <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
@@ -133,28 +139,21 @@ const CalibrationServicesPage = () => {
             </Button>
           }
         >
-          {sequenceConfig.initialized
-            ? 'Puedes ajustar el metrólogo de laboratorio y los consecutivos desde la configuración.'
-            : 'Antes de crear la primera oferta o emitir la primera ODS, define los consecutivos iniciales del módulo.'}
+          Antes de crear la primera oferta o emitir la primera ODS, define los consecutivos
+          iniciales del módulo.
         </Alert>
       ) : null}
 
-      <CalibrationServicesSummary
-        counts={counts}
-        visibleCount={visibleServices.length}
-        totalItems={data?.totalItems ?? 0}
+      <CalibrationServicesPipeline
+        statusCounts={data?.statusCounts}
+        filters={filters}
         isTechnicalOnlyView={isTechnicalOnlyView}
-        clearFilters={filters.clearFilters}
-        setStatusFilter={filters.setStatusFilter}
-        setSlaFilter={filters.setSlaFilter}
-        setAreFiltersOpen={filters.setAreFiltersOpen}
       />
 
       <CalibrationServicesFiltersCard
         filters={filters}
         isTechnicalOnlyView={isTechnicalOnlyView}
         isAnalystOnlyView={isAnalystOnlyView}
-        visibleCount={visibleServices.length}
         myLoadCount={myLoadCount}
         currentUserHasAssignedLoad={currentUserHasAssignedLoad}
         metrologistOptions={metrologistOptions}
@@ -162,7 +161,7 @@ const CalibrationServicesPage = () => {
 
       {visibleServices.length === 0 ? (
         <Alert severity='info'>
-          No encontramos servicios con los filtros actuales.
+          No hay servicios con estos filtros. Prueba con otra etapa o usa «Limpiar filtros».
         </Alert>
       ) : filters.viewMode === 'list' ? (
         <CalibrationServicesGroupedList
@@ -185,6 +184,32 @@ const CalibrationServicesPage = () => {
           openServiceDetail={openServiceDetail}
         />
       )}
+      {loadedCount > 0 ? (
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1.5}
+          alignItems='center'
+          justifyContent='center'
+          sx={{ mt: 3 }}
+        >
+          <Typography variant='body2' sx={{ color: '#4b5563' }} aria-live='polite'>
+            {`Se cargaron ${loadedCount} de ${totalItems} servicios`}
+            {visibleServices.length !== loadedCount
+              ? `; ${visibleServices.length} coinciden con los filtros`
+              : ''}
+          </Typography>
+          {loadedCount < totalItems ? (
+            <Button
+              variant='outlined'
+              onClick={filters.loadMore}
+              disabled={isFetching}
+              sx={secondaryButtonSx}
+            >
+              {isFetching ? 'Cargando…' : `Cargar ${Math.min(100, totalItems - loadedCount)} más`}
+            </Button>
+          ) : null}
+        </Stack>
+      ) : null}
       {canManageSequenceConfig ? (
         <CalibrationServiceSequenceConfigDialog
           open={isSequenceDialogOpen}

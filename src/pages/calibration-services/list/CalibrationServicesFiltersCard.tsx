@@ -1,43 +1,36 @@
+import React from 'react'
 import {
+  Badge,
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Collapse,
   Grid,
+  InputAdornment,
   MenuItem,
   Stack,
   TextField,
   ToggleButton,
-  ToggleButtonGroup,
-  Typography
+  ToggleButtonGroup
 } from '@mui/material'
-import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
-import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
-import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined'
 import ViewKanbanOutlinedIcon from '@mui/icons-material/ViewKanbanOutlined'
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined'
 import TableViewIcon from '@mui/icons-material/TableView'
-import { CALIBRATION_SERVICE_STATUS_LABELS } from '../../../constants/calibrationServices'
 import {
   CalibrationServiceApprovalStatus,
   CalibrationServiceScopeType,
-  CalibrationServiceSlaIndicatorColor,
-  CalibrationServiceStatus
+  CalibrationServiceSlaIndicatorColor
 } from '../../../types/calibrationService'
 import {
   APPROVAL_OPTIONS,
   FILTER_ALL,
   FILTER_UNASSIGNED,
-  primaryButtonSx,
   SCOPE_OPTIONS,
   secondaryButtonSx,
-  SLA_OPTIONS,
-  softCardSx,
-  STATUS_OPTIONS,
-  TECHNICAL_STATUS_OPTIONS,
-  ui
+  SLA_FILTER_ALERT,
+  SLA_OPTIONS
 } from './calibrationServicesListConstants'
 import {
   CalibrationServicesMetrologistOption,
@@ -49,18 +42,49 @@ interface CalibrationServicesFiltersCardProps {
   filters: CalibrationServicesListFilters
   isTechnicalOnlyView: boolean
   isAnalystOnlyView: boolean
-  visibleCount: number
   myLoadCount: number
   currentUserHasAssignedLoad: boolean
   metrologistOptions: CalibrationServicesMetrologistOption[]
 }
 
-/** Tarjeta de filtros operativos: atajos, selector de vista, chips activos y filtros detallados. */
+const TEAL_INK = '#00695C'
+
+/** Atajo de filtro: se activa y desactiva con un clic. */
+const QuickFilter: React.FC<{
+  label: string
+  active: boolean
+  onClick: () => void
+  disabled?: boolean
+}> = ({ label, active, onClick, disabled }) => (
+  <Chip
+    label={label}
+    clickable
+    disabled={disabled}
+    onClick={onClick}
+    aria-pressed={active}
+    variant='outlined'
+    sx={{
+      height: 36,
+      borderRadius: '10px',
+      fontWeight: 600,
+      fontSize: 14,
+      borderColor: active ? TEAL_INK : '#e5e7eb',
+      bgcolor: active ? '#E0F7F4' : '#fff',
+      color: active ? TEAL_INK : '#374151',
+      '&&:hover': { bgcolor: active ? '#E0F7F4' : '#f3f4f6' }
+    }}
+  />
+)
+
+/**
+ * Barra de filtros de la bandeja: buscador siempre visible, atajos de un
+ * clic, "Más filtros" para lo avanzado y el selector de vista. El estado
+ * del servicio se elige en el embudo de etapas, no aquí.
+ */
 const CalibrationServicesFiltersCard = ({
   filters,
   isTechnicalOnlyView,
   isAnalystOnlyView,
-  visibleCount,
   myLoadCount,
   currentUserHasAssignedLoad,
   metrologistOptions
@@ -68,7 +92,6 @@ const CalibrationServicesFiltersCard = ({
   const {
     search,
     setSearch,
-    statusFilter,
     setStatusFilter,
     approvalFilter,
     setApprovalFilter,
@@ -98,196 +121,202 @@ const CalibrationServicesFiltersCard = ({
     clearFilters
   } = filters
 
+  const isAtRisk = (slaFilter as string) === SLA_FILTER_ALERT
+  // Filtros que viven dentro de "Más filtros"
+  const advancedCount = [
+    !isTechnicalOnlyView && approvalFilter !== FILTER_ALL,
+    metrologistFilter !== FILTER_ALL,
+    scopeFilter !== FILTER_ALL,
+    slaFilter !== FILTER_ALL && !isAtRisk,
+    hasAdjustmentsFilter !== FILTER_ALL,
+    Boolean(billingStatusFilter),
+    Boolean(paymentStatusFilter),
+    siteFilter.trim()
+  ].filter(Boolean).length
+
+  const toggleStatusShortcut = (value: 'ready_for_invoicing' | 'invoiced') =>
+    setStatusFilter((previous) =>
+      (previous as string) === value ? FILTER_ALL : (value as unknown as typeof previous)
+    )
+
   return (
-    <Card elevation={0} sx={{ ...softCardSx, mb: 3 }}>
-      <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+    <Box sx={{ mb: 2.5 }}>
+      <Stack
+        direction={{ xs: 'column', lg: 'row' }}
+        spacing={1.5}
+        alignItems={{ xs: 'stretch', lg: 'center' }}
+      >
+        <TextField
+          size='small'
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder='Buscar por código, cliente u ODS'
+          inputProps={{ 'aria-label': 'Buscar servicios' }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>
+                <SearchOutlinedIcon fontSize='small' />
+              </InputAdornment>
+            )
+          }}
+          sx={{
+            minWidth: { lg: 300 },
+            '& .MuiOutlinedInput-root': {
+              bgcolor: '#fff',
+              borderRadius: '10px'
+            },
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#00897B',
+              borderWidth: 2
+            }
+          }}
+        />
+
         <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          justifyContent='space-between'
-          alignItems={{ xs: 'stretch', md: 'center' }}
-          spacing={2}
+          direction='row'
+          spacing={1}
+          useFlexGap
+          flexWrap='wrap'
+          sx={{ flex: 1 }}
+          role='group'
+          aria-label='Atajos de filtro'
         >
-          <Box>
-            <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
-              <Typography variant='h6' fontWeight={700} sx={{ color: ui.text, lineHeight: 1.2 }}>
-                Filtros operativos
-              </Typography>
-              {activeFiltersCount > 0 ? (
-                <Chip
-                  size='small'
-                  color='primary'
-                  variant='outlined'
-                  label={`${activeFiltersCount} activo${activeFiltersCount === 1 ? '' : 's'}`}
-                />
-              ) : null}
-            </Stack>
-            <Typography variant='body2' sx={{ mt: 0.5, color: ui.muted, lineHeight: 1.5 }}>
-              Busca por código, cliente u ODS, o filtra por estado, semáforo, metrólogo y sede.
-            </Typography>
-          </Box>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <Button
-              variant={showOnlyMyLoad ? 'contained' : 'outlined'}
-              color={showOnlyMyLoad ? 'success' : 'inherit'}
-              onClick={() => setShowOnlyMyLoad((currentValue) => !currentValue)}
-              disabled={!currentUserHasAssignedLoad}
-              sx={
-                showOnlyMyLoad
-                  ? {
-                      borderRadius: '12px',
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      minHeight: 44
-                    }
-                  : secondaryButtonSx
+          {currentUserHasAssignedLoad ? (
+            <QuickFilter
+              label={`Mi carga (${myLoadCount})`}
+              active={showOnlyMyLoad}
+              onClick={() => setShowOnlyMyLoad((value) => !value)}
+            />
+          ) : null}
+          <QuickFilter
+            label='En riesgo'
+            active={isAtRisk}
+            onClick={() =>
+              setSlaFilter(
+                isAtRisk ? FILTER_ALL : (SLA_FILTER_ALERT as CalibrationServiceSlaIndicatorColor)
+              )
+            }
+          />
+          {!isTechnicalOnlyView ? (
+            <>
+              <QuickFilter
+                label='Por facturar'
+                active={hasCutsReadyForInvoicing}
+                onClick={() => toggleStatusShortcut('ready_for_invoicing')}
+              />
+              <QuickFilter
+                label='Facturados'
+                active={hasCutsInvoiced}
+                onClick={() => toggleStatusShortcut('invoiced')}
+              />
+            </>
+          ) : null}
+          <Badge
+            badgeContent={advancedCount}
+            invisible={advancedCount === 0}
+            sx={{
+              '& .MuiBadge-badge': {
+                bgcolor: TEAL_INK,
+                color: '#fff',
+                fontWeight: 700
               }
-            >
-              {showOnlyMyLoad ? `Mi carga (${visibleCount})` : `Mi carga${myLoadCount > 0 ? ` (${myLoadCount})` : ''}`}
-            </Button>
-            <Button
-              variant={hasCutsReadyForInvoicing ? 'contained' : 'outlined'}
-              color={hasCutsReadyForInvoicing ? 'info' : 'inherit'}
-              onClick={() => setStatusFilter((prev) => ((prev as string) === 'ready_for_invoicing' ? FILTER_ALL : ('ready_for_invoicing' as any)))}
-              sx={hasCutsReadyForInvoicing ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
-            >
-              {hasCutsReadyForInvoicing ? `Por facturar (${visibleCount})` : 'Por facturar'}
-            </Button>
-            <Button
-              variant={hasCutsInvoiced ? 'contained' : 'outlined'}
-              color={hasCutsInvoiced ? 'success' : 'inherit'}
-              onClick={() => setStatusFilter((prev) => ((prev as string) === 'invoiced' ? FILTER_ALL : ('invoiced' as any)))}
-              sx={hasCutsInvoiced ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
-            >
-              {hasCutsInvoiced ? `Facturados (${visibleCount})` : 'Facturados'}
-            </Button>
-            <ToggleButtonGroup
-              size='small'
-              exclusive
-              value={viewMode}
-              onChange={(_event, nextViewMode: CalibrationServicesViewMode | null) => {
-                if (nextViewMode) {
-                  setViewMode(nextViewMode)
-                }
-              }}
-              sx={{
-                backgroundColor: 'rgba(255,255,255,0.9)',
-                borderRadius: '12px',
-                p: 0.4,
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                '& .MuiToggleButton-root': {
-                  border: 0,
-                  borderRadius: '10px',
-                  px: 1.5,
-                  py: 0.85,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  color: ui.textSecondary,
-                  gap: 0.75
-                },
-                '& .Mui-selected': {
-                  backgroundColor: '#E0F7F4',
-                  color: '#00695C'
-                }
-              }}
-            >
-              <ToggleButton value='list'>
-                <ViewListOutlinedIcon fontSize='small' />
-                Lista
-              </ToggleButton>
-              <ToggleButton value='table'>
-                <TableViewIcon fontSize='small' />
-                Tabla
-              </ToggleButton>
-              <ToggleButton value='kanban'>
-                <ViewKanbanOutlinedIcon fontSize='small' />
-                Kanban
-              </ToggleButton>
-            </ToggleButtonGroup>
+            }}
+          >
             <Button
               variant='outlined'
-              color='inherit'
+              startIcon={<TuneOutlinedIcon />}
+              onClick={() => setAreFiltersOpen((value) => !value)}
+              aria-expanded={areFiltersOpen}
+              aria-controls='calibration-services-advanced-filters'
+              sx={{ ...secondaryButtonSx, minHeight: 36 }}
+            >
+              {areFiltersOpen ? 'Menos filtros' : 'Más filtros'}
+            </Button>
+          </Badge>
+          {activeFiltersCount > 0 ? (
+            <Button
               onClick={clearFilters}
-              disabled={activeFiltersCount === 0}
-              sx={secondaryButtonSx}
+              sx={{
+                minHeight: 36,
+                color: TEAL_INK,
+                textTransform: 'none',
+                fontWeight: 600
+              }}
             >
               Limpiar filtros
             </Button>
-            <Button
-              variant='contained'
-              startIcon={<FilterListOutlinedIcon />}
-              endIcon={
-                areFiltersOpen ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />
-              }
-              onClick={() => setAreFiltersOpen((currentValue) => !currentValue)}
-              sx={primaryButtonSx}
-            >
-              {areFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
-            </Button>
-          </Stack>
+          ) : null}
         </Stack>
 
-        {activeFiltersCount > 0 ? (
-          <Stack direction='row' spacing={1} sx={{ mt: 2, mb: 0, flexWrap: 'wrap' }}>
-            {search.trim() ? (
-              <Chip size='small' label={`Buscar: "${search}"`} onDelete={() => setSearch('')} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-            ) : null}
-            {statusFilter !== FILTER_ALL ? (
-              <Chip size='small' label={`Estado: ${CALIBRATION_SERVICE_STATUS_LABELS[statusFilter] || STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label || statusFilter}`} onDelete={() => setStatusFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-            ) : null}
-            {showOnlyMyLoad ? (
-              <Chip size='small' label='Mi carga' onDelete={() => setShowOnlyMyLoad(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-            ) : null}
-            {hasAdjustmentsFilter !== FILTER_ALL ? (
-              <Chip size='small' label={`Novedades: ${hasAdjustmentsFilter === 'true' ? 'Con' : 'Sin'}`} onDelete={() => setHasAdjustmentsFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-            ) : null}
-          </Stack>
-        ) : null}
+        <ToggleButtonGroup
+          size='small'
+          exclusive
+          value={viewMode}
+          aria-label='Vista'
+          onChange={(_event, nextViewMode: CalibrationServicesViewMode | null) => {
+            if (nextViewMode) {
+              setViewMode(nextViewMode)
+            }
+          }}
+          sx={{
+            alignSelf: { xs: 'flex-start', lg: 'center' },
+            bgcolor: '#fff',
+            '& .MuiToggleButton-root': {
+              textTransform: 'none',
+              fontWeight: 600,
+              color: '#374151',
+              gap: 0.75,
+              px: 1.5,
+              borderColor: '#e5e7eb'
+            },
+            '& .Mui-selected, & .Mui-selected:hover': {
+              bgcolor: '#E0F7F4 !important',
+              color: `${TEAL_INK} !important`
+            }
+          }}
+        >
+          <ToggleButton value='list'>
+            <ViewListOutlinedIcon fontSize='small' />
+            Lista
+          </ToggleButton>
+          <ToggleButton value='table'>
+            <TableViewIcon fontSize='small' />
+            Tabla
+          </ToggleButton>
+          <ToggleButton value='kanban'>
+            <ViewKanbanOutlinedIcon fontSize='small' />
+            Kanban
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
 
-        <Collapse in={areFiltersOpen} timeout='auto' unmountOnExit>
-          <Grid container spacing={2.5} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Buscar servicio o cliente'
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder='Código, cliente, ODS, contacto...'
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label='Estado'
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(
-                    event.target.value as CalibrationServiceStatus | typeof FILTER_ALL
-                  )
-                }
-              >
-                {(isTechnicalOnlyView
-                  ? TECHNICAL_STATUS_OPTIONS
-                  : STATUS_OPTIONS
-                ).map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
+      <Collapse in={areFiltersOpen} timeout='auto' unmountOnExit>
+        <Box
+          id='calibration-services-advanced-filters'
+          sx={{
+            mt: 1.5,
+            p: 2,
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            bgcolor: '#fff',
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#00897B'
+            },
+            '& .MuiInputLabel-root.Mui-focused': { color: TEAL_INK }
+          }}
+        >
+          <Grid container spacing={2}>
             {!isTechnicalOnlyView ? (
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   select
                   fullWidth
-                  label='Respuesta cliente'
+                  size='small'
+                  label='Respuesta del cliente'
                   value={approvalFilter}
                   onChange={(event) =>
                     setApprovalFilter(
-                      event.target.value as
-                        | CalibrationServiceApprovalStatus
-                        | typeof FILTER_ALL
+                      event.target.value as CalibrationServiceApprovalStatus | typeof FILTER_ALL
                     )
                   }
                 >
@@ -300,10 +329,11 @@ const CalibrationServicesFiltersCard = ({
               </Grid>
             ) : null}
             {!isTechnicalOnlyView ? (
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   select
                   fullWidth
+                  size='small'
                   label='Metrólogo asignado'
                   value={metrologistFilter}
                   onChange={(event) => setMetrologistFilter(event.target.value)}
@@ -318,38 +348,16 @@ const CalibrationServicesFiltersCard = ({
                 </TextField>
               </Grid>
             ) : null}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
               <TextField
                 select
                 fullWidth
-                label='Alcance'
-                value={scopeFilter}
-                onChange={(event) =>
-                  setScopeFilter(
-                    event.target.value as
-                      | CalibrationServiceScopeType
-                      | typeof FILTER_ALL
-                  )
-                }
-              >
-                {SCOPE_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
+                size='small'
                 label='Semáforo'
                 value={slaFilter}
                 onChange={(event) =>
                   setSlaFilter(
-                    event.target.value as
-                      | CalibrationServiceSlaIndicatorColor
-                      | typeof FILTER_ALL
+                    event.target.value as CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL
                   )
                 }
               >
@@ -360,10 +368,31 @@ const CalibrationServicesFiltersCard = ({
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
               <TextField
                 select
                 fullWidth
+                size='small'
+                label='Alcance'
+                value={scopeFilter}
+                onChange={(event) =>
+                  setScopeFilter(
+                    event.target.value as CalibrationServiceScopeType | typeof FILTER_ALL
+                  )
+                }
+              >
+                {SCOPE_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                size='small'
                 label='Novedades'
                 value={hasAdjustmentsFilter}
                 onChange={(event) => setHasAdjustmentsFilter(event.target.value)}
@@ -374,17 +403,16 @@ const CalibrationServicesFiltersCard = ({
               </TextField>
             </Grid>
             {isAnalystOnlyView ? (
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   select
                   fullWidth
+                  size='small'
                   label='Facturación'
                   value={billingStatusFilter ?? FILTER_ALL}
                   onChange={(event) =>
                     setBillingStatusFilter(
-                      event.target.value === FILTER_ALL
-                        ? undefined
-                        : event.target.value
+                      event.target.value === FILTER_ALL ? undefined : event.target.value
                     )
                   }
                 >
@@ -395,17 +423,16 @@ const CalibrationServicesFiltersCard = ({
               </Grid>
             ) : null}
             {isAnalystOnlyView ? (
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   select
                   fullWidth
+                  size='small'
                   label='Pago'
                   value={paymentStatusFilter ?? FILTER_ALL}
                   onChange={(event) =>
                     setPaymentStatusFilter(
-                      event.target.value === FILTER_ALL
-                        ? undefined
-                        : event.target.value
+                      event.target.value === FILTER_ALL ? undefined : event.target.value
                     )
                   }
                 >
@@ -415,19 +442,20 @@ const CalibrationServicesFiltersCard = ({
                 </TextField>
               </Grid>
             ) : null}
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                size='small'
                 label='Sede o ubicación'
                 value={siteFilter}
                 onChange={(event) => setSiteFilter(event.target.value)}
-                placeholder='Filtra por sede, ciudad o departamento'
+                placeholder='Sede, ciudad o departamento'
               />
             </Grid>
           </Grid>
-        </Collapse>
-      </CardContent>
-    </Card>
+        </Box>
+      </Collapse>
+    </Box>
   )
 }
 
