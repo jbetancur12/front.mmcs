@@ -22,7 +22,10 @@ import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
 import ActiveSessionDialog from 'src/Components/Authentication/ActiveSessionDialog'
 import type { LoginSession, SessionPrompt } from 'src/hooks/useSessions'
-import { clearSessionEnded, peekSessionEndedMessage } from 'src/utils/sessionEnd'
+import {
+  clearSessionEnded,
+  peekSessionEndedMessage
+} from 'src/utils/sessionEnd'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
@@ -58,7 +61,6 @@ const Login: React.FC = () => {
   const [sessionEndedMessage, setSessionEndedMessage] = useState<string | null>(
     peekSessionEndedMessage
   )
-
 
   // Define el esquema de validación del formulario con Yup
   const validationSchema = Yup.object().shape({
@@ -153,9 +155,21 @@ const Login: React.FC = () => {
           break
 
         case 429:
-          setError(
-            'Hiciste demasiados intentos. Espera un minuto e inténtalo de nuevo.'
-          )
+          {
+            const seconds = Number(
+              (
+                error.response.data as {
+                  error?: { details?: { retryAfterSeconds?: number } }
+                }
+              )?.error?.details?.retryAfterSeconds
+            )
+            const minutes = seconds > 0 ? Math.ceil(seconds / 60) : 10
+            setError(
+              `Hiciste demasiados intentos. Espera ${minutes} ${
+                minutes === 1 ? 'minuto' : 'minutos'
+              } e inténtalo de nuevo.`
+            )
+          }
           break
         default:
           setError(
