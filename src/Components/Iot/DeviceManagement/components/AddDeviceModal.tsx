@@ -3,7 +3,6 @@ import { Stack, TextField } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import Swal from 'sweetalert2'
 import { customerStore } from '@stores/customerStore'
 import { axiosPrivate } from '@utils/api'
 import FormDialog from 'src/Components/Common/FormDialog'
@@ -14,6 +13,7 @@ import { limitArraySizeCustomer } from 'src/Components/ExcelManipulation/Utils'
 import { useCreateDevice, useUpdateDevice } from '../hooks/useDeviceMutations'
 import { AddDeviceModalProps } from '../types/deviceTypes'
 import { DeviceIot } from '../../types'
+import { notify } from 'src/utils/notify'
 
 const validationSchema = Yup.object().shape({
   imei: Yup.string()
@@ -61,10 +61,9 @@ const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
             location: values.location || '',
             customerId: values.customer?.id // Asegurar enviar solo el ID
           })
-          Swal.fire(
+          notify.success(
             '¡Actualizado!',
-            'Dispositivo actualizado correctamente',
-            'success'
+            'Dispositivo actualizado correctamente'
           )
           handleClose()
         } else {
@@ -74,22 +73,12 @@ const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
             location: values.location || '',
             customerId: values.customer?.id
           })
-          Swal.fire({
-            title: '¡Éxito!',
-            text: 'Dispositivo creado correctamente',
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-          })
+          notify.success('¡Éxito!', 'Dispositivo creado correctamente')
           handleClose()
         }
       } catch (error) {
         console.error('Error creating device:', error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudo crear el dispositivo',
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        })
+        notify.error('Error', 'No se pudo crear el dispositivo')
       }
     }
   })

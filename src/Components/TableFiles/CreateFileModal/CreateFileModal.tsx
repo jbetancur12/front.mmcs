@@ -11,7 +11,6 @@ import {
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers'
 import { useStore } from '@nanostores/react'
-import Swal from 'sweetalert2'
 import axios from 'axios'
 import FormDialog, { FormDialogSection } from 'src/Components/Common/FormDialog'
 import AsyncSelectField, {
@@ -29,6 +28,7 @@ import {
   limitArraySizeCustomer,
   limitArraySizeDevice
 } from '../utils/limitArraySizes'
+import { notify } from 'src/utils/notify'
 
 interface CreateFileModalProps {
   open: boolean
@@ -175,14 +175,7 @@ export const CreateFileModal = ({
         setLoading(false)
         resetForm()
         onClose()
-        Swal.fire({
-          icon: 'success',
-          title: '¡Éxito!',
-          text: 'Certificado creado exitosamente',
-          confirmButtonColor: TEAL,
-          timer: 3000,
-          showConfirmButton: true
-        })
+        notify.success('¡Éxito!', 'Certificado creado exitosamente')
       }
     } catch (error) {
       setLoading(false)
@@ -196,26 +189,18 @@ export const CreateFileModal = ({
 
         // Archivo duplicado (409)
         if (error.response && error.response.status === 409) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Archivo duplicado',
-            text:
-              error.response.data.error ||
-              'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.',
-            confirmButtonColor: TEAL
-          })
+          notify.error(
+            'Archivo duplicado',
+            error.response.data.error ||
+              'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.'
+          )
           return
         }
       } else if (error instanceof Error) {
         errorMessage = error.message
       }
 
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: errorMessage,
-        confirmButtonColor: TEAL
-      })
+      notify.error('Error', errorMessage)
       console.error('Error en creación de certificado:', error)
     }
   }
@@ -418,14 +403,7 @@ export const CreateFileModal = ({
             onFileSelected={setFile}
             inputKey={fileInputKey}
             disabled={loading}
-            onReject={(message) =>
-              Swal.fire({
-                icon: 'error',
-                title: 'Archivo no válido',
-                text: message,
-                confirmButtonColor: TEAL
-              })
-            }
+            onReject={(message) => notify.error('Archivo no válido', message)}
           />
         </Box>
       </FormDialogSection>

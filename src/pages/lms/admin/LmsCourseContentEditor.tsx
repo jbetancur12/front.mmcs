@@ -15,7 +15,6 @@ import {
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
-import Swal from 'sweetalert2'
 import LmsContentEditor, {
   ContentLessonDraft,
   ContentModuleDraft
@@ -26,6 +25,7 @@ import {
   type Course as BackendCourse,
   type CourseAudience
 } from '../../../services/lmsService'
+import { notify } from 'src/utils/notify'
 
 interface FrontendCourseDraft {
   id: number
@@ -309,11 +309,11 @@ const LmsCourseContentEditor: React.FC = () => {
       await queryClient.invalidateQueries(['lms-course', courseId])
       await queryClient.invalidateQueries(['lms-courses'])
       setHasUnsavedChanges(false)
-      Swal.fire({ icon: 'success', title: 'Cambios guardados', timer: 2000, showConfirmButton: false })
+      notify.success('Cambios guardados')
     },
     onError: (error: any) => {
       const msg = error?.response?.data?.error?.message || error?.message || 'Error al guardar los cambios'
-      Swal.fire({ icon: 'error', title: 'Error', text: msg })
+      notify.error('Error', msg)
     }
   })
 

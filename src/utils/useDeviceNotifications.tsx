@@ -1,7 +1,7 @@
 // src/utils/useDeviceNotifications.ts
 import { useEffect } from 'react'
 import useWebSocket, { WebSocketMessage } from './use-websockets'
-import Swal from 'sweetalert2'
+import { notify } from 'src/utils/notify'
 
 export const useDeviceNotifications = () => {
   const { subscribe } = useWebSocket()
@@ -12,32 +12,21 @@ export const useDeviceNotifications = () => {
       if (lastMessage.type === 'DEVICE_CONFIG_CONFIRMED') {
         // Asumiendo que tu WebSocket envía este evento
         const payload = lastMessage.data
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Dispositivo Actualizado',
-          text: `El dispositivo confirmó la nueva configuración para el patrón ${payload.patternId}.`,
-          showConfirmButton: false,
-          timer: 4000,
-          timerProgressBar: true
-        })
+        notify.success(
+          'Dispositivo Actualizado',
+          `El dispositivo confirmó la nueva configuración para el patrón ${payload.patternId}.`
+        )
       }
 
       // --- MANEJAR TIMEOUT ---
       if (lastMessage.type === 'DEVICE_CONFIG_TIMEOUT') {
         console.log('Timeout de configuración del dispositivo:', lastMessage)
         const payload = lastMessage.data
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'warning',
-          title: 'Sin Confirmación del Dispositivo',
-          text: `El dispositivo del patrón ${payload.patternId} no respondió.`,
-          showConfirmButton: false,
-          timer: 8000, // Un poco más de tiempo para leer
-          timerProgressBar: true
-        })
+        notify.warning(
+          'Sin Confirmación del Dispositivo',
+          `El dispositivo del patrón ${payload.patternId} no respondió.`,
+          { duration: 8000 }
+        )
       }
     }
 

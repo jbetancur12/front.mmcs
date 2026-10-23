@@ -15,6 +15,7 @@ import { WebSocketProvider } from '@utils/use-websockets.tsx'
 import { queryClient } from './config/queryClient'
 import NewVersionBanner from './Components/NewVersionBanner'
 import AppToaster from './Components/Common/AppToaster'
+import { DialogHost } from './utils/confirm'
 
 const options = {
   api_host: import.meta.env.VITE_POSTHOG_HOST
@@ -44,6 +45,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             </WebSocketProvider>
             <NewVersionBanner />
             <AppToaster />
+            <DialogHost />
           </ThemeProvider>
         </BrowserRouter>
         {/* React Query DevTools - only in development */}

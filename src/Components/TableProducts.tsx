@@ -37,8 +37,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { NumericFormatCustom } from './NumericFormatCustom'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useProductMutations, useProducts } from 'src/hooks/purchases/useProducts'
-import Swal from 'sweetalert2'
 import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 export interface ProductVariant {
   id: number
@@ -185,9 +185,7 @@ const TableProducts: React.FC = () => {
   }
 
   const handleDeleteProduct = async (product: ProductData) => {
-    const result = await Swal.fire({
-      title: '¿Eliminar producto?',
-      html: `
+    const result = await confirmDialog({ title: '¿Eliminar producto?', html: `
         <div style="text-align: left;">
           <p><strong>Producto:</strong> ${product.name}</p>
           <p style="color: #6b7280; font-size: 0.9rem; margin-top: 12px;">
@@ -197,16 +195,7 @@ const TableProducts: React.FC = () => {
           </p>
           <p style="color: #dc2626; font-size: 0.85rem;"><strong>Esta acción no se puede deshacer.</strong></p>
         </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#9ca3af',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusCancel: true
-    })
+      `, confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
     if (!result.isConfirmed) return
     try {
       await deleteProduct.mutateAsync(product.id)

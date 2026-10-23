@@ -6,7 +6,6 @@ import MaterialReactTable, {
   MRT_ColumnDef,
   MRT_Row
 } from 'material-react-table'
-import { MySwal } from '../ExcelManipulation/Utils'
 import {
   Box,
   Button,
@@ -39,6 +38,7 @@ import {
   useServerTableState
 } from 'src/hooks/useServerTable'
 import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 // Tipos e interfaces para los datos de Trip
 
@@ -123,12 +123,7 @@ const TripsTable = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<Trip>) => {
-      MySwal.fire({
-        title: `¿Está seguro que desea eliminar el viaje?`,
-        text: 'No podrá recuperar esta información una vez eliminada',
-        showCancelButton: true,
-        confirmButtonText: 'Sí'
-      }).then((result) => {
+      confirmDialog({ title: `¿Está seguro que desea eliminar el viaje?`, text: 'No podrá recuperar esta información una vez eliminada', confirmLabel: 'Sí' }).then((result) => {
         if (result.isConfirmed) {
           deleteTrip.mutate(row.getValue('id'))
         }

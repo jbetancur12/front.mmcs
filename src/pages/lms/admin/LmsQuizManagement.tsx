@@ -59,8 +59,8 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import quizService from '../../../services/quizService'
 import LmsQuizComponent from '../components/LmsQuizComponent'
-import Swal from 'sweetalert2'
 import { notify } from 'src/utils/notify'
+import { notify as appNotify } from 'src/utils/notify'
 
 interface QuizQuestion {
   id: number
@@ -325,7 +325,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: any) => {
         console.error('❌ Error loading question bank:', error)
-        Swal.fire('Error', 'Error al cargar el banco de preguntas', 'error')
+        appNotify.error('Error', 'Error al cargar el banco de preguntas')
       }
     }
   )
@@ -409,13 +409,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           }))
         }
 
-        Swal.fire(
-          'Éxito',
-          variables.addToQuiz
+        appNotify.success('Éxito', variables.addToQuiz
             ? 'Pregunta creada y agregada al quiz'
-            : 'Pregunta creada en el banco exitosamente',
-          'success'
-        )
+            : 'Pregunta creada en el banco exitosamente')
         queryClient.invalidateQueries(['questionBank'])
         // Close modal and reset form after successful creation
         setQuestionEditorMode('quiz')
@@ -425,7 +421,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: any) => {
         console.error('❌ Error creating question:', error)
-        Swal.fire('Error', error.response?.data?.error?.message || 'Error al crear la pregunta', 'error')
+        appNotify.error('Error', error.response?.data?.error?.message || 'Error al crear la pregunta')
       }
     }
   )
@@ -439,7 +435,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     {
       onSuccess: ({ response, updateQuiz }) => {
         console.log('✅ Question updated:', response)
-        Swal.fire('Éxito', 'Pregunta actualizada exitosamente', 'success')
+        appNotify.success('Éxito', 'Pregunta actualizada exitosamente')
         queryClient.invalidateQueries(['questionBank'])
 
         // Update quiz questions if this question is in the quiz
@@ -457,7 +453,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: any) => {
         console.error('❌ Error updating question:', error)
-        Swal.fire('Error', error.response?.data?.error?.message || 'Error al actualizar la pregunta', 'error')
+        appNotify.error('Error', error.response?.data?.error?.message || 'Error al actualizar la pregunta')
       }
     }
   )
@@ -471,12 +467,12 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     {
       onSuccess: () => {
         console.log('✅ Question deleted')
-        Swal.fire('Éxito', 'Pregunta eliminada exitosamente', 'success')
+        appNotify.success('Éxito', 'Pregunta eliminada exitosamente')
         queryClient.invalidateQueries(['questionBank'])
       },
       onError: (error: any) => {
         console.error('❌ Error deleting question:', error)
-        Swal.fire('Error', error.response?.data?.error?.message || 'Error al eliminar la pregunta', 'error')
+        appNotify.error('Error', error.response?.data?.error?.message || 'Error al eliminar la pregunta')
       }
     }
   )
@@ -533,7 +529,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         ...prev,
         questions: [...prev.questions, createLocalQuizQuestion(questionData)]
       }))
-      Swal.fire('Éxito', 'Pregunta agregada al quiz', 'success')
+      appNotify.success('Éxito', 'Pregunta agregada al quiz')
       resetQuestionForm()
       setOpenQuestionDialog(false)
       return
@@ -588,7 +584,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         ...prev,
         questions: prev.questions.map(q => q.id === editingQuestion.id ? updatedQuestion : q)
       }))
-      Swal.fire('Éxito', 'Pregunta del quiz actualizada', 'success')
+      appNotify.success('Éxito', 'Pregunta del quiz actualizada')
       setEditingQuestion(null)
       setQuestionEditorMode('quiz')
       setSaveQuestionToBank(false)
@@ -642,7 +638,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       ]
     }))
     setSelectedQuestions([])
-    Swal.fire('Éxito', 'Preguntas agregadas al quiz', 'success')
+    appNotify.success('Éxito', 'Preguntas agregadas al quiz')
   }
 
   const handleRemoveQuestionFromQuiz = (questionId: number) => {

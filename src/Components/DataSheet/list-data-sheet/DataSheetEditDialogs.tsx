@@ -13,9 +13,9 @@ import {
   ImageOutlined,
   PictureAsPdfOutlined
 } from '@mui/icons-material'
-import Swal from 'sweetalert2'
 import FormDialog from 'src/Components/Common/FormDialog'
 import FileDropZone from 'src/Components/Common/FileDropZone'
+import { notify } from 'src/utils/notify'
 
 export type EditStep = 'options' | 'image' | 'invoice' | null
 
@@ -112,12 +112,7 @@ const ImagePreview: React.FC<{ file: File }> = ({ file }) => {
 }
 
 const rejectFile = (message: string) =>
-  Swal.fire({
-    icon: 'error',
-    title: 'Archivo no válido',
-    text: message,
-    confirmButtonColor: '#00BFA5'
-  })
+  notify.error('Archivo no válido', message)
 
 /**
  * Flujo de edición de una hoja de vida: primero se elige qué editar (foto,

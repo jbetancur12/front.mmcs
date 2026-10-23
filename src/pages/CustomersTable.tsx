@@ -28,11 +28,13 @@ import {
   useDeleteCustomer,
   useUpdateCustomer
 } from 'src/hooks/customers/useCustomers'
-import Swal from 'sweetalert2'
 import CustomerFormDialog from '../Components/CustomerFormDialog'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
+import { busyDialog } from 'src/utils/confirm'
 export interface CustomerData {
   id?: number
   nombre: string
@@ -64,12 +66,7 @@ const CustomersTable: React.FC = () => {
       {
         onError: (error) => {
           console.error('Error fetching customer data:', error)
-          Swal.fire({
-            title: 'Error',
-            text: 'No se pudieron cargar los clientes',
-            icon: 'error',
-            confirmButtonText: 'Entendido'
-          })
+          notify.error('Error', 'No se pudieron cargar los clientes')
         }
       }
     )
@@ -85,23 +82,18 @@ const CustomersTable: React.FC = () => {
       const response = await createCustomer.mutateAsync(updatedValues)
 
       if (response.status >= 200 && response.status < 300) {
-        Swal.fire({
-          title: '¡Cliente Creado!',
-          text: 'El cliente ha sido creado exitosamente',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        notify.success(
+          '¡Cliente Creado!',
+          'El cliente ha sido creado exitosamente'
+        )
         setCreateModalOpen(false)
       }
     } catch (error) {
       console.error('Error al crear cliente:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo crear el cliente. Por favor intenta nuevamente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      notify.error(
+        'Error',
+        'No se pudo crear el cliente. Por favor intenta nuevamente.'
+      )
     }
   }
 
@@ -118,29 +110,24 @@ const CustomersTable: React.FC = () => {
       })
 
       if (response.status >= 200 && response.status < 300) {
-        Swal.fire({
-          title: '¡Cliente Actualizado!',
-          text: 'El cliente ha sido actualizado exitosamente',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        notify.success(
+          '¡Cliente Actualizado!',
+          'El cliente ha sido actualizado exitosamente'
+        )
         setEditModalOpen(false)
         setSelectedCustomer(null)
       }
     } catch (error) {
       console.error('Error al actualizar cliente:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo actualizar el cliente. Por favor intenta nuevamente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      notify.error(
+        'Error',
+        'No se pudo actualizar el cliente. Por favor intenta nuevamente.'
+      )
     }
   }
 
   const handleDeleteCustomer = async (customer: CustomerData) => {
-    const result = await Swal.fire({
+    const result = await confirmDialog({
       title: '¿Eliminar cliente?',
       html: `
         <div style="text-align: left; margin: 20px 0;">
@@ -151,50 +138,33 @@ const CustomersTable: React.FC = () => {
           </p>
         </div>
       `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d32f2f',
-      cancelButtonColor: '#grey',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusCancel: true
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
     })
 
     if (!result.isConfirmed) return
 
     try {
-      Swal.fire({
-        title: 'Eliminando...',
-        text: 'Por favor espera mientras se elimina el cliente',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading()
-        }
-      })
+      busyDialog.show('Eliminando...', 'Por favor espera mientras se elimina el cliente')
 
       const response = await deleteCustomer.mutateAsync(customer.id as number)
 
       if (response.status === 204) {
-        Swal.fire({
-          title: '¡Eliminado!',
-          text: 'El cliente ha sido eliminado correctamente',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        notify.success(
+          '¡Eliminado!',
+          'El cliente ha sido eliminado correctamente'
+        )
       }
     } catch (error) {
       console.error('Error al eliminar cliente:', error)
 
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo eliminar el cliente. Por favor intenta nuevamente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      notify.error(
+        'Error',
+        'No se pudo eliminar el cliente. Por favor intenta nuevamente.'
+      )
+    } finally {
+      busyDialog.hide()
     }
   }
 

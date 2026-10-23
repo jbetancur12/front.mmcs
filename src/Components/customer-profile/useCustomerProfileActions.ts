@@ -3,11 +3,12 @@ import React, { useCallback } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 
 import useAxiosPrivate from '@utils/use-axios-private'
-import { MySwal } from '@utils/sweetAlert'
 
 import { notify } from 'src/utils/notify'
 
 import { customerProfileKeys, DEFAULT_AVATAR } from './constants'
+import { notify as appNotify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 // Sin reintentos: el `retry: 1` global de mutaciones reenviaría POST/PUT/DELETE.
 const NO_RETRY = { retry: 0 }
@@ -70,15 +71,12 @@ export const useCustomerProfileActions = (
 
   const handleDelete = useCallback(
     async (certificateId: number) => {
-      const result = await MySwal.fire({
+      const result = await confirmDialog({
         title: '¿Estás seguro?',
         text: '¿Deseas eliminar este certificado? Esta acción no se puede deshacer.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6'
+        confirmLabel: 'Sí, eliminar',
+        cancelLabel: 'Cancelar',
+        tone: 'danger'
       })
 
       if (!result.isConfirmed) return
@@ -165,15 +163,12 @@ export const useCustomerProfileActions = (
     async (sede: string) => {
       if (!id) return
 
-      const result = await MySwal.fire({
+      const result = await confirmDialog({
         title: '¿Eliminar sede?',
         text: `¿Estás seguro de que deseas eliminar la sede "${sede}"? Esta acción solo se permitirá si no hay certificados asociados.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6'
+        confirmLabel: 'Sí, eliminar',
+        cancelLabel: 'Cancelar',
+        tone: 'danger'
       })
 
       if (!result.isConfirmed) return
@@ -188,12 +183,10 @@ export const useCustomerProfileActions = (
       } catch (error) {
         console.error('Error al eliminar sede:', error)
         if ((error as AxiosError)?.response?.status === 409) {
-          MySwal.fire({
-            title: 'No se puede eliminar',
-            text: 'No se puede eliminar la sede porque tiene certificados asociados. Por favor, remueve o transfiere los certificados primero.',
-            icon: 'error',
-            confirmButtonColor: '#3085d6'
-          })
+          appNotify.error(
+            'No se puede eliminar',
+            'No se puede eliminar la sede porque tiene certificados asociados. Por favor, remueve o transfiere los certificados primero.'
+          )
         } else {
           notify.error('Error al eliminar sede')
         }

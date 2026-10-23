@@ -4,13 +4,13 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Button, Chip, CircularProgress, Box, Grid, Paper, Typography } from '@mui/material'
 import { Add, Apps } from '@mui/icons-material'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import Swal from 'sweetalert2'
 
 import ModuleForm from './ModuleForm'
 import { IModule } from '../types/moduleTypes'
 import { ModuleAudience } from 'src/types/customerModules'
 import { useQueryClient } from 'react-query'
 import { modulesKeys, useModules } from 'src/hooks/modules/useModules'
+import { notify } from 'src/utils/notify'
 
 const AUDIENCE_LABELS: Record<ModuleAudience, { label: string; color: 'default' | 'primary' | 'success' }> = {
   internal: { label: 'Interno', color: 'default' },
@@ -45,12 +45,7 @@ const ModulesView = () => {
 
   const handleSuccess = () => {
     setOpenModal(false)
-    Swal.fire({
-      title: '¡Éxito!',
-      text: 'Módulo creado correctamente',
-      icon: 'success',
-      confirmButtonText: 'Aceptar'
-    })
+    notify.success('¡Éxito!', 'Módulo creado correctamente')
     queryClient.invalidateQueries(modulesKeys.list())
   }
 

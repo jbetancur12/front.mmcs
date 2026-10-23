@@ -18,13 +18,11 @@ import { useFormik } from 'formik'
 import * as yup from 'yup'
 import { notify } from 'src/utils/notify'
 import useAxiosPrivate from '@utils/use-axios-private'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
-const MySwal = withReactContent(Swal)
+import { confirmDialog } from 'src/utils/confirm'
 
 const validationSchema = yup.object().shape({
   name: yup.string().required('Nombre es obligatorio'),
@@ -90,14 +88,7 @@ const InterventionTypes = () => {
   )
 
   const handleDelete = async (id: number) => {
-    const result = await MySwal.fire({
-      title: '¿Eliminar Tipo de Intervención?',
-      text: 'Esta acción no se puede deshacer',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    })
+    const result = await confirmDialog({ title: '¿Eliminar Tipo de Intervención?', text: 'Esta acción no se puede deshacer', confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
 
     if (result.isConfirmed) {
       deleteInterventionType.mutate(id)

@@ -42,9 +42,9 @@ import { format, parseISO } from 'date-fns'
 import { VisuallyHiddenInput } from '../TableFiles'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { MySwal } from '../ExcelManipulation/Utils'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { confirmDialog } from 'src/utils/confirm'
 
 const Documents: React.FC = () => {
   const canUpload = useCan(PERMISSIONS.FLEET_VEHICLE_DOCUMENT_UPLOAD)
@@ -248,12 +248,7 @@ const Documents: React.FC = () => {
                     <IconButton
                       color='error'
                       onClick={() => {
-                        MySwal.fire({
-                          title: `¿ Esta seguro que desea eliminar el documento ?`,
-                          text: 'No podrá recuperar esta información una vez eliminada',
-                          showCancelButton: true,
-                          confirmButtonText: 'Si'
-                        }).then((result) => {
+                        confirmDialog({ title: `¿ Esta seguro que desea eliminar el documento ?`, text: 'No podrá recuperar esta información una vez eliminada', confirmLabel: 'Si' }).then((result) => {
                           /* Read more about isConfirmed, isDenied below */
                           if (result.isConfirmed) {
                             deleteDoc.mutate(doc.id!)

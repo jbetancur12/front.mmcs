@@ -25,7 +25,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { MySwal } from './ExcelManipulation/Utils'
 import {
   useCreateCustomer,
   useCustomers,
@@ -33,6 +32,7 @@ import {
   useUpdateCustomer
 } from 'src/hooks/customers/useCustomers'
 import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 // Define interfaces
 export interface CustomerData {
   id?: number
@@ -182,13 +182,12 @@ const Table: React.FC = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<CustomerData>) => {
-      MySwal.fire({
+      confirmDialog({
         title: `¿ Esta seguro que desea eliminar el cliente ${row.getValue(
           'nombre'
         )} ?`,
         text: 'No podrá recuperar esta información una vez eliminada',
-        showCancelButton: true,
-        confirmButtonText: 'Si'
+        confirmLabel: 'Si'
       }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         if (result.isConfirmed) {

@@ -9,7 +9,6 @@ import {
 } from '@mui/icons-material'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
-import Swal from 'sweetalert2'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '@stores/userStore'
@@ -33,6 +32,7 @@ import {
   DetailField,
   DetailSection
 } from 'src/Components/Common/DetailBlocks'
+import { notify } from 'src/utils/notify'
 
 interface EquipmentFormValues {
   outReason: string
@@ -180,19 +180,15 @@ const EquipmentForm: React.FC = () => {
       }
       setIsEquipmentOut(!isEquipmentOut)
       resetForm()
-      await Swal.fire({
-        icon: 'success',
-        title: method === 'post' ? 'Salida registrada' : 'Entrada registrada',
-        timer: 1800,
-        showConfirmButton: false
-      })
+      await notify.success(
+        method === 'post' ? 'Salida registrada' : 'Entrada registrada'
+      )
     } catch (error) {
       console.error('Error al enviar el formulario:', error)
-      await Swal.fire({
-        icon: 'error',
-        title: 'No se pudo registrar',
-        text: 'Ocurrió un error al guardar el movimiento. Inténtalo de nuevo.'
-      })
+      await notify.error(
+        'No se pudo registrar',
+        'Ocurrió un error al guardar el movimiento. Inténtalo de nuevo.'
+      )
     }
   }
 

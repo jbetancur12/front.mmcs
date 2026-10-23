@@ -9,9 +9,10 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import Swal from 'sweetalert2'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { EquipmentQuotationSequenceConfig } from '../../types/equipmentSales'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 interface EquipmentSalesSequenceConfigDialogProps {
   open: boolean
@@ -52,23 +53,14 @@ const EquipmentSalesSequenceConfigDialog = ({
     isAlreadyInitialized && Number(nextQuoteNumber) !== (config?.nextQuoteNumber ?? 0)
 
   const handleEnableEdit = async () => {
-    const result = await Swal.fire({
-      icon: 'warning',
-      title: 'Habilitar edición',
-      html: `
+    const result = await confirmDialog({ title: 'Habilitar edición', html: `
         <p style="text-align:left;margin-bottom:12px">Vas a habilitar la edición de los consecutivos. Esta operación tiene <strong>riesgos</strong>:</p>
         <ul style="text-align:left;margin-bottom:12px">
           <li>Modificar consecutivos puede generar saltos en la numeración</li>
           <li>Las cotizaciones ya emitidas mantienen su código actual</li>
         </ul>
         <p style="text-align:left;font-weight:600">¿Confirmas que deseas habilitar la edición?</p>
-      `,
-      confirmButtonText: 'Sí, habilitar edición',
-      cancelButtonText: 'Cancelar',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      reverseButtons: true
-    })
+      `, confirmLabel: 'Sí, habilitar edición', cancelLabel: 'Cancelar', tone: 'danger' })
     if (result.isConfirmed) {
       setEditMode(true)
     }
@@ -79,20 +71,13 @@ const EquipmentSalesSequenceConfigDialog = ({
 
     if (isAlreadyInitialized) {
       if (newQuote < (config?.nextQuoteNumber ?? 0)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Consecutivo inválido',
-          text: `El consecutivo no puede ser menor al actual (${config?.nextQuoteNumber}). Ya se emitieron cotizaciones hasta ese número.`
-        })
+        notify.error('Consecutivo inválido', `El consecutivo no puede ser menor al actual (${config?.nextQuoteNumber}). Ya se emitieron cotizaciones hasta ese número.`)
         return
       }
     }
 
     if (hasQuoteChanged) {
-      const result = await Swal.fire({
-        icon: 'warning',
-        title: '¿Cambiar consecutivo?',
-        html: `
+      const result = await confirmDialog({ title: '¿Cambiar consecutivo?', html: `
           <p style="text-align:left;margin-bottom:12px">Vas a modificar el consecutivo de cotizaciones. Esta operación tiene <strong>riesgos</strong>:</p>
           <ul style="text-align:left;margin-bottom:12px">
             <li>Las cotizaciones ya emitidas mantienen su código actual</li>
@@ -100,13 +85,7 @@ const EquipmentSalesSequenceConfigDialog = ({
             <li>Pueden generarse saltos en la numeración</li>
           </ul>
           <p style="text-align:left;font-weight:600">¿Confirmas que deseas continuar?</p>
-        `,
-        confirmButtonText: 'Sí, cambiar consecutivo',
-        cancelButtonText: 'Cancelar',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        reverseButtons: true
-      })
+        `, confirmLabel: 'Sí, cambiar consecutivo', cancelLabel: 'Cancelar', tone: 'danger' })
       if (!result.isConfirmed) return
     }
 

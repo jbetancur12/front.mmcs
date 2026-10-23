@@ -24,7 +24,6 @@ import {
 } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import DataTable from 'src/Components/Common/DataTable'
-import Swal from 'sweetalert2'
 import {
   useEquipmentProducts,
   useEquipmentSalesMutations
@@ -33,6 +32,8 @@ import {
   EquipmentProduct,
   EquipmentProductPayload
 } from '../../types/equipmentSales'
+import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 const emptyProduct: EquipmentProductPayload = {
   name: '',
@@ -79,7 +80,7 @@ const EquipmentProductsPage = () => {
 
   const handleSave = async () => {
     if (!form.name)
-      return Swal.fire('Validación', 'El nombre es obligatorio', 'warning')
+      return notify.warning('Validación', 'El nombre es obligatorio')
     try {
       if (editingId) {
         await mutations.updateProduct.mutateAsync({
@@ -90,23 +91,22 @@ const EquipmentProductsPage = () => {
         await mutations.createProduct.mutateAsync(form)
       }
       setDialogOpen(false)
-      Swal.fire(editingId ? 'Actualizado' : 'Creado', '', 'success')
+      notify.success(editingId ? 'Actualizado' : 'Creado')
     } catch {
-      Swal.fire('Error', 'No se pudo guardar', 'error')
+      notify.error('Error', 'No se pudo guardar')
     }
   }
 
   const handleDelete = async (id: number, name: string) => {
-    const result = await Swal.fire({
+    const result = await confirmDialog({
       title: 'Desactivar producto',
       text: `¿Desactivar "${name}"?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Desactivar'
+      confirmLabel: 'Desactivar',
+      tone: 'danger'
     })
     if (result.isConfirmed) {
       mutations.deleteProduct.mutate(id, {
-        onSuccess: () => Swal.fire('Desactivado', '', 'success')
+        onSuccess: () => notify.success('Desactivado')
       })
     }
   }

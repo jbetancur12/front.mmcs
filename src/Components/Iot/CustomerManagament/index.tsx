@@ -33,16 +33,14 @@ import { DeviceIot } from '../types'
 import { Link } from 'react-router-dom'
 import { CustomerData } from 'src/Components/TableCustomers'
 import ClientDeviceAssignment from './ClientDeviceAssignment'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
 import EmailNotificationSettings from '../emails/EmailNotificationSettings'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { notify } from 'src/utils/notify'
 
 const CustomersManagement: React.FC = () => {
   const queryClient = useQueryClient()
   const axiosPrivate = useAxiosPrivate()
-  const MySwal = withReactContent(Swal)
 
   // Estado para mostrar detalles del cliente
   const [selectedClient, setSelectedClient] = useState<CustomerData | null>(
@@ -116,21 +114,11 @@ const CustomersManagement: React.FC = () => {
           queryKey: ['/devicesIot/customer', selectedClient.id]
         })
       }
-      MySwal.fire({
-        title: <p>Dispositivo actualizado</p>,
-        html: <span>El dispositivo se ha asignado correctamente</span>,
-        icon: 'success',
-        confirmButtonText: 'Aceptar'
-      })
+      notify.success('Dispositivo actualizado', 'El dispositivo se ha asignado correctamente')
     },
     onError: (error) => {
       console.error('Error al actualizar el cliente del dispositivo:', error)
-      MySwal.fire({
-        title: <p>Error</p>,
-        html: <span>No se pudo asignar el dispositivo al cliente</span>,
-        icon: 'error',
-        confirmButtonText: 'Aceptar'
-      })
+      notify.error('No se pudo asignar el dispositivo al cliente')
     }
   })
 

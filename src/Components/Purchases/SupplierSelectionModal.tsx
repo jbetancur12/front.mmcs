@@ -26,16 +26,15 @@ import {
 } from '@mui/material'
 
 import { ChangeEvent, useEffect, useState } from 'react'
-import withReactContent from 'sweetalert2-react-content'
 import { useSaveSupplierSelection } from 'src/hooks/purchases/useSuppliers'
 import {
   FormState,
   Criterion,
   SelectionSupplier
 } from 'src/pages/Purchases/Types'
-import Swal from 'sweetalert2'
 import { isAxiosError } from 'axios'
 import { Close } from '@mui/icons-material'
+import { notify } from 'src/utils/notify'
 
 interface SupplierSelectionModalProps {
   open: boolean
@@ -80,7 +79,6 @@ const SupplierSelectionModal = ({
   categories,
   existingSelectionData
 }: SupplierSelectionModalProps) => {
-  const MySwal = withReactContent(Swal)
   const saveSelection = useSaveSupplierSelection()
   const isSubmitting = saveSelection.isLoading
   const [formState, setFormState] = useState<FormState>(initialFormState)
@@ -343,32 +341,17 @@ const SupplierSelectionModal = ({
         payload
       })
       if (isEdit) {
-        MySwal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Selección de proveedor actualizada',
-          showConfirmButton: false,
-          timer: 3000
-        })
+        notify.success('Selección de proveedor actualizada')
       } else {
         const finalDecision = payload.evaluationData.finalDecision
-        MySwal.fire({
-          toast: true,
-          position: 'top-end',
-          icon:
-            finalDecision === 'APPROVED' ||
-            finalDecision === 'APPROVED WITH RESERVE'
-              ? 'success'
-              : 'error',
-          title:
-            finalDecision === 'APPROVED' ||
-            finalDecision === 'APPROVED WITH RESERVE'
-              ? 'Proveedor aprobado'
-              : 'Proveedor no aprobado',
-          showConfirmButton: false,
-          timer: 3000
-        })
+        if (
+        finalDecision === 'APPROVED' ||
+        finalDecision === 'APPROVED WITH RESERVE'
+      ) {
+        notify.success('Proveedor aprobado')
+      } else {
+        notify.error('Proveedor no aprobado')
+      }
       }
       setFormState(initialFormState)
       onSuccess()

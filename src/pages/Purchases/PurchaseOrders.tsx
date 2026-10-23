@@ -21,12 +21,12 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseOrderData as IPurchaseOrder } from './Types'
 import { differenceInDays, format } from 'date-fns'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
-import Swal from 'sweetalert2'
 import { Link } from 'react-router-dom'
 import CreatePurchaseVerificationModal from 'src/Components/Purchases/PurchaseVerificationModal'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
+import { notify } from 'src/utils/notify'
 
 type QuickFilter = 'all' | 'unsent' | 'overdue' | 'unverified'
 
@@ -63,11 +63,7 @@ const PurchaseOrders: React.FC = () => {
     {
       onSuccess: () => queryClient.invalidateQueries('purchaseOrders'),
       onError: () => {
-        Swal.fire(
-          'Error',
-          'No se pudo actualizar el envío de la orden',
-          'error'
-        )
+        notify.error('Error', 'No se pudo actualizar el envío de la orden')
       }
     }
   )

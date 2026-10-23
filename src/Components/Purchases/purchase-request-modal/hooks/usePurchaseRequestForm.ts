@@ -11,7 +11,7 @@ import {
   CurrentPurchaseRequestItem
 } from '../types/PurchaseRequestTypes'
 import { isAxiosError } from 'axios'
-import Swal from 'sweetalert2'
+import { notify } from 'src/utils/notify'
 
 export const usePurchaseRequestForm = (
   open: boolean,
@@ -135,21 +135,15 @@ export const usePurchaseRequestForm = (
         payload
       })
       if (existingRequest?.id) {
-        Swal.fire({
-          icon: 'success',
-          title: '¡Actualizado!',
-          text: 'La Solicitud de Compra ha sido actualizada correctamente.',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        notify.success(
+          '¡Actualizado!',
+          'La Solicitud de Compra ha sido actualizada correctamente.'
+        )
       } else {
-        Swal.fire({
-          icon: 'success',
-          title: '¡Creado!',
-          text: 'La Solicitud de Compra ha sido creada correctamente.',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        notify.success(
+          '¡Creado!',
+          'La Solicitud de Compra ha sido creada correctamente.'
+        )
       }
       onSuccess?.(savedRequest)
       return true
@@ -166,7 +160,7 @@ export const usePurchaseRequestForm = (
       } else if (err instanceof Error) {
         message = err.message
       }
-      Swal.fire('Error', message, 'error')
+      notify.error('Error', message)
       return false
     }
   }

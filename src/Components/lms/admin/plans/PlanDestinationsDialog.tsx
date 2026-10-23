@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Swal from 'sweetalert2'
 import {
   Alert,
   Box,
@@ -51,6 +50,7 @@ import {
   planDialogPaperProps,
   primaryButtonSx
 } from './planUi'
+import { confirmDialog } from 'src/utils/confirm'
 
 interface PlanDestinationsDialogProps {
   open: boolean
@@ -117,14 +117,11 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
         return `<li><b>${escapeHtml(plazo)}</b>: ${group.merged_ids.length + 1} destinos → 1 con ${group.total_users} persona(s)</li>`
       })
       .join('')
-    const confirmation = await Swal.fire({
-      icon: 'question',
+    const confirmation = await confirmDialog({
       title: '¿Unificar destinos?',
       html: `<ul style="text-align:left">${detail}</ul>Cada persona conserva sus cursos, su fecha límite, su progreso y sus certificados.`,
-      showCancelButton: true,
-      confirmButtonText: 'Unificar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#00BFA5'
+      confirmLabel: 'Unificar',
+      cancelLabel: 'Cancelar'
     })
     if (!confirmation.isConfirmed) return
 
@@ -163,14 +160,12 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
 
   const handleUnassign = async (row: PlanAssignmentRow) => {
     const id = row.id
-    const confirmation = await Swal.fire({
-      icon: 'warning',
+    const confirmation = await confirmDialog({
       title: '¿Desasignar el plan?',
       html: `Se retirará <b>${escapeHtml(plan?.name ?? '')}</b> de <b>${describeForConfirm(row)}</b>.<br/>Se conservan las asignaciones directas, las de otros planes, el progreso y los certificados.`,
-      showCancelButton: true,
-      confirmButtonText: 'Desasignar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#d32f2f'
+      confirmLabel: 'Desasignar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
     })
     if (!confirmation.isConfirmed) return
 

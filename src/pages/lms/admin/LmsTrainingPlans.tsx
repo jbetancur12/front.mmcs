@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react'
-import Swal from 'sweetalert2'
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import {
@@ -36,6 +35,7 @@ import { useDeleteTrainingPlan, useTrainingPlans } from 'src/hooks/useLms'
 import type { TrainingPlanSummary } from 'src/services/lmsService'
 import { notify } from 'src/utils/notify'
 import { getApiErrorCode, getStructuredApiErrorMessage } from 'src/utils/apiError'
+import { confirmDialog } from 'src/utils/confirm'
 
 type PlanFilter = 'all' | 'assigned' | 'unassigned'
 
@@ -74,17 +74,9 @@ const LmsTrainingPlans: React.FC = () => {
     }
 
     const assigned = plan.assignment_count > 0
-    const confirmation = await Swal.fire({
-      icon: 'warning',
-      title: `¿Eliminar "${plan.name}"?`,
-      html: assigned
+    const confirmation = await confirmDialog({ title: `¿Eliminar "${plan.name}"?`, html: assigned
         ? `El plan está asignado a <b>${plan.assignment_count}</b> destino(s). Se desasignará en todos y luego se eliminará.<br/>Se conservan las asignaciones directas, el progreso y los certificados.`
-        : 'Esta acción no se puede deshacer.',
-      showCancelButton: true,
-      confirmButtonText: assigned ? 'Desasignar y eliminar' : 'Eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#d32f2f'
-    })
+        : 'Esta acción no se puede deshacer.', confirmLabel: assigned ? 'Desasignar y eliminar' : 'Eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
     if (!confirmation.isConfirmed) return
 
     try {

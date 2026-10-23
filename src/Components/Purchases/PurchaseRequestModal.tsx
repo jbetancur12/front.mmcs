@@ -28,12 +28,12 @@ import {
   proficiencyTestingServiceRequirements,
   internalAuditServiceRequirements
 } from 'src/utils/requirements'
-import Swal from 'sweetalert2'
 import { isAxiosError } from 'axios'
 import {
   usePurchaseRequesters,
   useSavePurchaseRequest
 } from 'src/hooks/purchases/usePurchaseRequests'
+import { notify } from 'src/utils/notify'
 
 interface CreatePurchaseRequestModalProps {
   // Renombrar a PurchaseRequestModalProps
@@ -264,22 +264,16 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
       })
       if (existingRequest?.id) {
         // Modo Edición
-        Swal.fire({
-          icon: 'success',
-          title: '¡Actualizado!',
-          text: 'La Solicitud de Compra ha sido actualizada correctamente.',
-          timer: 2000, // Cierra automáticamente después de 2 segundos
-          showConfirmButton: false // No mostrar botón de confirmación
-        })
+        notify.success(
+          '¡Actualizado!',
+          'La Solicitud de Compra ha sido actualizada correctamente.'
+        )
       } else {
         // Modo Creación
-        Swal.fire({
-          icon: 'success',
-          title: '¡Creado!',
-          text: 'La Solicitud de Compra ha sido creada correctamente.',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        notify.success(
+          '¡Creado!',
+          'La Solicitud de Compra ha sido creada correctamente.'
+        )
       }
       onSuccess(savedRequest)
       handleClose()
@@ -297,7 +291,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
       } else if (err instanceof Error) {
         message = err.message
       }
-      Swal.fire('Error', message, 'error')
+      notify.error('Error', message)
     }
   }
 

@@ -1,112 +1,49 @@
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
+import { notify } from './notify'
+import { busyDialog, confirmDialog } from './confirm'
 
-// Create MySwal instance with React content support
-export const MySwal = withReactContent(Swal)
+// Antes eran diálogos de SweetAlert; ahora usan confirmDialog / notify / busyDialog (ver utils/confirm.tsx
+// y utils/notify.tsx). Se conservan los nombres para no tocar a quienes los llaman.
 
-// SweetAlert configuration types
-export interface SweetAlertConfig {
-  title: string
-  text?: string
-  icon: 'warning' | 'success' | 'error' | 'info'
-  showCancelButton?: boolean
-  confirmButtonText?: string
-  cancelButtonText?: string
-  confirmButtonColor?: string
-  cancelButtonColor?: string
-}
-
-// Pre-configured alert configurations
-export const alertConfigs = {
-  deleteConfirm: (userName: string): SweetAlertConfig => ({
+export const showDeleteConfirmation = (userName: string) =>
+  confirmDialog({
     title: '¿Estás seguro?',
     text: `¿Deseas eliminar el usuario "${userName}"? Esta acción no se puede deshacer.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-  }),
-
-  success: (message: string): SweetAlertConfig => ({
-    title: '¡Éxito!',
-    text: message,
-    icon: 'success',
-    confirmButtonText: 'Entendido',
-    confirmButtonColor: '#3085d6',
-  }),
-
-  error: (message: string): SweetAlertConfig => ({
-    title: 'Error',
-    text: message,
-    icon: 'error',
-    confirmButtonText: 'Entendido',
-    confirmButtonColor: '#d33',
-  }),
-
-  loading: (message: string = 'Procesando...') => ({
-    title: message,
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    showConfirmButton: false,
-    didOpen: () => {
-      Swal.showLoading()
-    }
-  }),
-
-  networkError: (): SweetAlertConfig => ({
-    title: 'Error de Conexión',
-    text: 'No se pudo conectar con el servidor. Verifique su conexión a internet e intente nuevamente.',
-    icon: 'error',
-    confirmButtonText: 'Reintentar',
-    confirmButtonColor: '#3085d6',
-  }),
-
-  timeout: (): SweetAlertConfig => ({
-    title: 'Tiempo Agotado',
-    text: 'La operación tardó demasiado tiempo. Por favor, intente nuevamente.',
-    icon: 'warning',
-    confirmButtonText: 'Reintentar',
-    confirmButtonColor: '#3085d6',
-  }),
-
-  serverError: (): SweetAlertConfig => ({
-    title: 'Error del Servidor',
-    text: 'Ocurrió un error en el servidor. Por favor, intente nuevamente más tarde.',
-    icon: 'error',
-    confirmButtonText: 'Entendido',
-    confirmButtonColor: '#d33',
-  }),
-}
-
-// Helper functions for common alerts
-export const showDeleteConfirmation = async (userName: string) => {
-  return await MySwal.fire(alertConfigs.deleteConfirm(userName))
-}
+    confirmLabel: 'Sí, eliminar',
+    cancelLabel: 'Cancelar',
+    tone: 'danger'
+  })
 
 export const showSuccessAlert = async (message: string) => {
-  return await MySwal.fire(alertConfigs.success(message))
+  notify.success(message)
 }
 
 export const showErrorAlert = async (message: string) => {
-  return await MySwal.fire(alertConfigs.error(message))
+  notify.error(message)
 }
 
 export const showLoadingAlert = (message?: string) => {
-  return MySwal.fire(alertConfigs.loading(message))
+  busyDialog.show(message ?? 'Procesando...')
 }
 
 export const showNetworkErrorAlert = async () => {
-  return await MySwal.fire(alertConfigs.networkError())
+  notify.error(
+    'Error de conexión',
+    'No se pudo conectar con el servidor. Verifica tu conexión a internet e inténtalo de nuevo.'
+  )
 }
 
 export const showTimeoutAlert = async () => {
-  return await MySwal.fire(alertConfigs.timeout())
+  notify.warning(
+    'Tiempo agotado',
+    'La operación tardó demasiado. Inténtalo de nuevo.'
+  )
 }
 
 export const showServerErrorAlert = async () => {
-  return await MySwal.fire(alertConfigs.serverError())
+  notify.error(
+    'Error del servidor',
+    'Ocurrió un error en el servidor. Inténtalo de nuevo más tarde.'
+  )
 }
 
 // Enhanced error handler that determines the appropriate alert based on error type
@@ -164,7 +101,7 @@ export const handleErrorWithAlert = async (error: unknown): Promise<string> => {
 
 // Close any open loading alerts
 export const closeLoadingAlert = () => {
-  MySwal.close()
+  busyDialog.hide()
 }
 
 // El enlace de activación ya no es un SweetAlert: vive en su propio diálogo.
