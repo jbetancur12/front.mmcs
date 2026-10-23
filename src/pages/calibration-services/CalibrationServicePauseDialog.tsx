@@ -1,14 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { TextField } from '@mui/material'
+import FormDialog from '../../Components/Common/FormDialog'
 
 export interface CalibrationServicePauseDialogValues {
   notes: string
@@ -23,9 +15,12 @@ interface Props {
   initialValues: CalibrationServicePauseDialogValues
   isLoading?: boolean
   onClose: () => void
-  onSubmit: (values: CalibrationServicePauseDialogValues) => void | Promise<void>
+  onSubmit: (
+    values: CalibrationServicePauseDialogValues
+  ) => void | Promise<void>
 }
 
+/** Pausar o reanudar un servicio, con una nota que explica el motivo. */
 const CalibrationServicePauseDialog = ({
   open,
   title,
@@ -50,32 +45,24 @@ const CalibrationServicePauseDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={2}>
-          <Typography variant='body2' color='text.secondary'>
-            {subtitle}
-          </Typography>
-          <TextField
-            fullWidth
-            multiline
-            minRows={4}
-            label={fieldLabel}
-            value={values.notes}
-            onChange={handleChange}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button variant='contained' onClick={() => void onSubmit(values)} disabled={isLoading}>
-          {actionLabel}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title={title}
+      subtitle={subtitle}
+      submitLabel={actionLabel}
+      onSubmit={() => void onSubmit(values)}
+      loading={isLoading}
+    >
+      <TextField
+        fullWidth
+        multiline
+        minRows={4}
+        label={fieldLabel}
+        value={values.notes}
+        onChange={handleChange}
+      />
+    </FormDialog>
   )
 }
 

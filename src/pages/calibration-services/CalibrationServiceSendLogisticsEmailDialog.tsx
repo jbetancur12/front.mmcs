@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
-  Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControlLabel,
   Stack,
   TextField,
   Typography
 } from '@mui/material'
+import FormDialog from '../../Components/Common/FormDialog'
 import {
   CalibrationService,
   CalibrationServiceSendPreviewResult
@@ -31,6 +27,7 @@ interface Props {
   }) => void | Promise<void>
 }
 
+/** Envía el formato logístico de ingreso y entrega por correo y, si se quiere, por WhatsApp. */
 const CalibrationServiceSendLogisticsEmailDialog = ({
   open,
   service,
@@ -83,84 +80,78 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>Enviar formato logístico</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={2.5} sx={{ mt: 0.5 }}>
-          <Typography variant='body2' color='text.secondary'>
-            Se generará una nueva versión del PDF de control de ingreso y entrega con
-            la información diligenciada actualmente y se enviará adjunta por correo. También
-            puedes enviarlo por WhatsApp al mismo tiempo.
-          </Typography>
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title='Enviar formato logístico'
+      subtitle={service.serviceCode}
+      submitLabel={sendWhatsApp ? 'Enviar correo y WhatsApp' : 'Enviar correo'}
+      onSubmit={() => void handleSubmit()}
+      loading={isLoading}
+      submitDisabled={
+        !recipientEmail.trim() || (sendWhatsApp && !whatsappPhone.trim())
+      }
+    >
+      <Stack spacing={2}>
+        <Typography variant='body2' color='text.secondary'>
+          Se genera una versión nueva del PDF de control de ingreso y entrega
+          con lo diligenciado hasta ahora y se envía adjunto por correo.
+        </Typography>
 
-          <Alert severity='info'>
-            Correo sugerido según la regla actual: <strong>{defaultSource}</strong>.
+        {sendPreview?.isDevOverride ? (
+          <Alert severity='warning'>
+            En desarrollo, el correo se redirigirá a{' '}
+            <strong>
+              {sendPreview.actualRecipient || 'sin correo override'}
+            </strong>
+            . Normalmente iría a{' '}
+            <strong>
+              {sendPreview.intendedRecipient || 'sin correo sugerido'}
+            </strong>
+            .
           </Alert>
+        ) : null}
 
-          {sendPreview?.isDevOverride ? (
-            <Alert severity='warning'>
-              En desarrollo, el correo se redirigirá a{' '}
-              <strong>{sendPreview.actualRecipient || 'sin correo override'}</strong>.
-              {' '}Normalmente iría a{' '}
-              <strong>{sendPreview.intendedRecipient || 'sin correo sugerido'}</strong>.
-            </Alert>
-          ) : null}
+        <TextField
+          fullWidth
+          label='Nombre del destinatario'
+          value={recipientName}
+          onChange={(event) => setRecipientName(event.target.value)}
+          helperText='Opcional. Se usa como saludo del correo.'
+        />
+        <TextField
+          fullWidth
+          required
+          type='email'
+          label='Correo destino'
+          value={recipientEmail}
+          onChange={(event) => setRecipientEmail(event.target.value)}
+          helperText={`Sugerido: ${defaultSource}. Puedes cambiarlo antes de enviar.`}
+        />
 
-          <TextField
-            fullWidth
-            label='Nombre del destinatario'
-            value={recipientName}
-            onChange={(event) => setRecipientName(event.target.value)}
-            helperText='Opcional. Se usará como saludo del correo.'
-          />
-
-          <TextField
-            fullWidth
-            type='email'
-            label='Correo destino'
-            value={recipientEmail}
-            onChange={(event) => setRecipientEmail(event.target.value)}
-            helperText='Puedes dejar el sugerido o cambiarlo antes de enviar.'
-          />
-
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={sendWhatsApp}
-                onChange={(event) => setSendWhatsApp(event.target.checked)}
-              />
-            }
-            label='Enviar también por WhatsApp'
-          />
-
-          {sendWhatsApp ? (
-            <TextField
-              fullWidth
-              label='Número de WhatsApp'
-              value={whatsappPhone}
-              onChange={(event) => setWhatsappPhone(event.target.value)}
-              helperText='Debe ser un celular con WhatsApp (los teléfonos fijos no reciben). Por defecto: el teléfono de contacto del servicio.'
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={sendWhatsApp}
+              onChange={(event) => setSendWhatsApp(event.target.checked)}
+              sx={{ '&.Mui-checked': { color: '#00BFA5' } }}
             />
-          ) : null}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => void handleSubmit()}
-          disabled={
-            isLoading ||
-            !recipientEmail.trim() ||
-            (sendWhatsApp && !whatsappPhone.trim())
           }
-        >
-          {sendWhatsApp ? 'Enviar correo y WhatsApp' : 'Enviar correo'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          label='Enviar también por WhatsApp'
+        />
+
+        {sendWhatsApp ? (
+          <TextField
+            fullWidth
+            required
+            label='Número de WhatsApp'
+            value={whatsappPhone}
+            onChange={(event) => setWhatsappPhone(event.target.value)}
+            helperText='Debe ser un celular con WhatsApp; los fijos no reciben. Por defecto, el teléfono de contacto del servicio.'
+          />
+        ) : null}
+      </Stack>
+    </FormDialog>
   )
 }
 

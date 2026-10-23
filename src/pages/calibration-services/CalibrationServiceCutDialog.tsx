@@ -1,19 +1,20 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import {
-  Button,
+  Box,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControlLabel,
-  Grid,
   MenuItem,
   Stack,
   TextField,
   Typography
 } from '@mui/material'
-import { CalibrationService, CalibrationServiceCutType } from '../../types/calibrationService'
+import FormDialog, {
+  FormDialogSection
+} from '../../Components/Common/FormDialog'
+import {
+  CalibrationService,
+  CalibrationServiceCutType
+} from '../../types/calibrationService'
 
 type CalibrationServiceCutDialogItem = NonNullable<
   CalibrationService['items']
@@ -58,32 +59,40 @@ const getEffectiveQuantity = (
   service: CalibrationService,
   item: CalibrationServiceCutDialogItem
 ) => {
-  const approvedDelta = (service.adjustments || []).reduce((accumulator, adjustment) => {
-    if (adjustment.serviceItemId !== item.id) {
-      return accumulator
-    }
+  const approvedDelta = (service.adjustments || []).reduce(
+    (accumulator, adjustment) => {
+      if (adjustment.serviceItemId !== item.id) {
+        return accumulator
+      }
 
-    if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
-      return accumulator
-    }
+      if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+        return accumulator
+      }
 
-    if (adjustment.changeType === 'extra_item') {
-      return accumulator
-    }
+      if (adjustment.changeType === 'extra_item') {
+        return accumulator
+      }
 
-    return accumulator + (adjustment.differenceQuantity || 0)
-  }, 0)
+      return accumulator + (adjustment.differenceQuantity || 0)
+    },
+    0
+  )
 
   return Math.max((item.quantity || 0) + approvedDelta, 0)
 }
 
 const buildDraftItems = (service: CalibrationService): DraftCutItem[] =>
   (service.items || [])
-    .filter((item) => ['completed', 'in_progress'].includes(getOperationalStatus(item)))
+    .filter((item) =>
+      ['completed', 'in_progress'].includes(getOperationalStatus(item))
+    )
     .map((item) => {
       const releasedQuantity = getReleasedQuantity(item)
       const effectiveQuantity = getEffectiveQuantity(service, item)
-      const quantityAvailable = Math.max(effectiveQuantity - releasedQuantity, 0)
+      const quantityAvailable = Math.max(
+        effectiveQuantity - releasedQuantity,
+        0
+      )
 
       return {
         serviceItemId: item.id,
@@ -132,7 +141,8 @@ const CalibrationServiceCutDialog = ({
   }, [open, service])
 
   const handleToggleItem =
-    (serviceItemId: number) => (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    (serviceItemId: number) =>
+    (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
       setDraftItems((currentItems) =>
         currentItems.map((item) =>
           item.serviceItemId === serviceItemId
@@ -190,104 +200,123 @@ const CalibrationServiceCutDialog = ({
   const hasInvalidQuantity = selectedItems.some((item) =>
     Boolean(getItemQuantityError(item))
   )
-  const canSubmit = selectedItems.length > 0 && !hasInvalidQuantity && !isLoading
+  const canSubmit =
+    selectedItems.length > 0 && !hasInvalidQuantity && !isLoading
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md'>
-      <DialogTitle>Crear corte</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={3}>
-          <Typography variant='body2' color='text.secondary'>
-            Selecciona los ítems con avance para liberar en este corte.
-          </Typography>
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title='Crear corte'
+      subtitle={service.serviceCode}
+      submitLabel='Crear corte'
+      onSubmit={() => void handleSubmit()}
+      loading={isLoading}
+      submitDisabled={!canSubmit}
+      maxWidth='md'
+    >
+      <FormDialogSection title='Datos del corte'>
+        <TextField
+          select
+          label='Tipo de corte'
+          value={cutType}
+          onChange={(event) =>
+            setCutType(event.target.value as CalibrationServiceCutType)
+          }
+        >
+          <MenuItem value='partial'>Parcial</MenuItem>
+          <MenuItem value='final'>Final</MenuItem>
+        </TextField>
+        <TextField
+          label='Notas del corte'
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+        />
+      </FormDialogSection>
 
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label='Tipo de corte'
-                value={cutType}
-                onChange={(event) =>
-                  setCutType(event.target.value as CalibrationServiceCutType)
-                }
-              >
-                <MenuItem value='partial'>Parcial</MenuItem>
-                <MenuItem value='final'>Final</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={8}>
-              <TextField
-                fullWidth
-                label='Notas del corte'
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-              />
-            </Grid>
-          </Grid>
-
-          <Stack spacing={1.5}>
-            {draftItems.length ? (
-              draftItems.map((item) => (
-                <Grid container spacing={2} alignItems='center' key={item.serviceItemId}>
-                  <Grid item xs={12} md={5}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={item.selected}
-                          onChange={handleToggleItem(item.serviceItemId)}
-                        />
-                      }
-                      label={`${item.itemName} · ${item.instrumentName}`}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={3}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Disponible: {item.quantityAvailable}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    {(() => {
-                      const quantityError = getItemQuantityError(item)
-
-                      return (
-                    <TextField
-                      fullWidth
-                      size='small'
-                      type='number'
-                      label='Cantidad a liberar'
-                      value={item.quantity}
-                      onChange={handleQuantityChange(item.serviceItemId)}
-                      disabled={!item.selected}
-                      error={Boolean(quantityError)}
-                      helperText={quantityError || ' '}
-                      inputProps={{
-                        min: 1,
-                        max: item.quantityAvailable
-                      }}
-                    />
-                      )
-                    })()}
-                  </Grid>
-                </Grid>
-              ))
-            ) : (
-              <Typography variant='body2' color='text.secondary'>
-                No hay ítems con avance y cantidad disponible para liberar a corte.
-              </Typography>
-            )}
+      <FormDialogSection
+        title='Ítems a liberar'
+        description='Marca los ítems con avance que entran en este corte.'
+      >
+        {draftItems.length ? (
+          <Stack spacing={1} sx={{ gridColumn: { sm: '1 / -1' } }}>
+            {draftItems.map((item) => {
+              const quantityError = getItemQuantityError(item)
+              return (
+                <Box
+                  key={item.serviceItemId}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: 'minmax(0, 1fr)',
+                      sm: 'minmax(0, 1fr) 110px 160px'
+                    },
+                    alignItems: 'start',
+                    gap: 1.5,
+                    p: 1.5,
+                    border: '1px solid',
+                    borderColor: item.selected ? '#00BFA5' : '#e5e7eb',
+                    bgcolor: item.selected ? '#E0F7F4' : '#fff',
+                    borderRadius: '12px'
+                  }}
+                >
+                  <FormControlLabel
+                    sx={{ m: 0, alignItems: 'flex-start' }}
+                    control={
+                      <Checkbox
+                        checked={item.selected}
+                        onChange={handleToggleItem(item.serviceItemId)}
+                        sx={{
+                          p: 0.5,
+                          mr: 0.5,
+                          '&.Mui-checked': { color: '#00BFA5' }
+                        }}
+                      />
+                    }
+                    label={
+                      <>
+                        <Typography variant='body2' fontWeight={600}>
+                          {item.itemName}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {item.instrumentName}
+                        </Typography>
+                      </>
+                    }
+                  />
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ pt: 0.75 }}
+                  >
+                    Disponible: <strong>{item.quantityAvailable}</strong>
+                  </Typography>
+                  <TextField
+                    size='small'
+                    type='number'
+                    label='Cantidad a liberar'
+                    value={item.quantity}
+                    onChange={handleQuantityChange(item.serviceItemId)}
+                    disabled={!item.selected}
+                    error={Boolean(quantityError)}
+                    helperText={quantityError || ' '}
+                    inputProps={{ min: 1, max: item.quantityAvailable }}
+                  />
+                </Box>
+              )
+            })}
           </Stack>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button variant='contained' onClick={() => void handleSubmit()} disabled={!canSubmit}>
-          Crear corte
-        </Button>
-      </DialogActions>
-    </Dialog>
+        ) : (
+          <Typography
+            variant='body2'
+            color='text.secondary'
+            sx={{ gridColumn: { sm: '1 / -1' } }}
+          >
+            No hay ítems con avance y cantidad disponible para liberar a corte.
+          </Typography>
+        )}
+      </FormDialogSection>
+    </FormDialog>
   )
 }
 

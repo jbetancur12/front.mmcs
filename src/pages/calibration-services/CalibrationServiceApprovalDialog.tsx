@@ -1,21 +1,12 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
-import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
+import { Box, MenuItem, TextField } from '@mui/material'
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import FormDialog, {
+  FormDialogSection
+} from '../../Components/Common/FormDialog'
+import FileDropZone from '../../Components/Common/FileDropZone'
+
+const FULL_ROW = { gridColumn: { sm: '1 / -1' } }
 
 const APPROVAL_CHANNEL_OPTIONS = [
   'En persona',
@@ -68,9 +59,8 @@ const CalibrationServiceApprovalDialog = ({
   onClose,
   onSubmit
 }: CalibrationServiceApprovalDialogProps) => {
-  const [values, setValues] = useState<CalibrationServiceDecisionValues>(
-    createInitialValues
-  )
+  const [values, setValues] =
+    useState<CalibrationServiceDecisionValues>(createInitialValues)
 
   useEffect(() => {
     if (!open) {
@@ -81,225 +71,182 @@ const CalibrationServiceApprovalDialog = ({
   const isRejectMode = mode === 'reject'
   const isRequestChangesMode = mode === 'request_changes'
 
+  const isDecisionApproval = !isRejectMode && !isRequestChangesMode
+  const isIncomplete =
+    !values.evidenceFile ||
+    (isDecisionApproval &&
+      (values.onSiteCalibration === null || values.hasEquipmentSale === null))
+
+  const yesNo = (value: boolean | null) =>
+    value === null ? '' : value ? 'si' : 'no'
+  const parseYesNo = (value: string) =>
+    value === 'si' ? true : value === 'no' ? false : null
+
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
-        <DialogTitle>
-        {isRejectMode
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title={
+        isRejectMode
           ? 'Registrar rechazo del cliente'
           : isRequestChangesMode
             ? 'Registrar solicitud de modificación'
-            : 'Registrar aprobación del cliente'}
-      </DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={2}>
-          <Alert severity={isRejectMode ? 'warning' : 'success'}>
-            {isRejectMode
-              ? `Esta acción registra formalmente la respuesta del cliente para ${serviceCode}.`
-              : isRequestChangesMode
-                ? `Esta acción deja trazada la solicitud de modificación del cliente para ${serviceCode}.`
-              : `Esta acción registra formalmente la aprobación del cliente para ${serviceCode}.`}
-          </Alert>
-
-          {!isRejectMode && !isRequestChangesMode && (
-            <FormControl fullWidth required error={values.onSiteCalibration === null}>
-              <InputLabel>
-                Calibración en sitio
-              </InputLabel>
-              <Select
-                value={values.onSiteCalibration === null ? '' : values.onSiteCalibration ? 'si' : 'no'}
-                label='Calibración en sitio'
-                disabled={isLoading}
-                onChange={(event) =>
-                  setValues((previous) => ({
-                    ...previous,
-                    onSiteCalibration: event.target.value === 'si' ? true : event.target.value === 'no' ? false : null
-                  }))
-                }
-              >
-                <MenuItem value='si'>Sí</MenuItem>
-                <MenuItem value='no'>No</MenuItem>
-              </Select>
-            </FormControl>
-          )}
-
-          {!isRejectMode && !isRequestChangesMode && (
-            <FormControl fullWidth required error={values.hasEquipmentSale === null}>
-              <InputLabel>Incluye venta de equipo</InputLabel>
-              <Select
-                value={values.hasEquipmentSale === null ? '' : values.hasEquipmentSale ? 'si' : 'no'}
-                label='Incluye venta de equipo'
-                disabled={isLoading}
-                onChange={(event) =>
-                  setValues((previous) => ({
-                    ...previous,
-                    hasEquipmentSale: event.target.value === 'si' ? true : event.target.value === 'no' ? false : null
-                  }))
-                }
-              >
-                <MenuItem value='si'>Sí</MenuItem>
-                <MenuItem value='no'>No</MenuItem>
-              </Select>
-            </FormControl>
-          )}
-
-          <FormControl fullWidth required>
-            <InputLabel>
-              Medio de respuesta del cliente
-            </InputLabel>
-            <Select
-              value={values.approvalChannel}
-              label='Medio de respuesta del cliente'
-              disabled={isLoading}
-              onChange={(event) =>
-                setValues((previous) => ({
-                  ...previous,
-                  approvalChannel: event.target.value
-                }))
-              }
-            >
-              {APPROVAL_CHANNEL_OPTIONS.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
+            : 'Registrar aprobación del cliente'
+      }
+      subtitle={serviceCode}
+      submitLabel={
+        isRejectMode
+          ? 'Registrar rechazo'
+          : isRequestChangesMode
+            ? 'Registrar solicitud'
+            : 'Registrar aprobación'
+      }
+      onSubmit={() => void onSubmit(values)}
+      loading={isLoading}
+      submitDisabled={isIncomplete}
+      maxWidth='md'
+    >
+      {isDecisionApproval ? (
+        <FormDialogSection title='Alcance del servicio'>
           <TextField
-            fullWidth
-            type='date'
-            label='Fecha'
-            value={values.decisionDate}
+            select
+            required
+            label='Calibración en sitio'
+            value={yesNo(values.onSiteCalibration)}
             disabled={isLoading}
             onChange={(event) =>
               setValues((previous) => ({
                 ...previous,
-                decisionDate: event.target.value
+                onSiteCalibration: parseYesNo(event.target.value)
               }))
             }
-            InputLabelProps={{ shrink: true }}
-          />
-
+          >
+            <MenuItem value='si'>Sí</MenuItem>
+            <MenuItem value='no'>No, en laboratorio</MenuItem>
+          </TextField>
           <TextField
-            fullWidth
-            required={!isRejectMode && !isRequestChangesMode}
-            label='Email o teléfono de referencia'
-            value={values.approvalReference}
+            select
+            required
+            label='Incluye venta de equipo'
+            value={yesNo(values.hasEquipmentSale)}
             disabled={isLoading}
             onChange={(event) =>
               setValues((previous) => ({
                 ...previous,
-                approvalReference: event.target.value
+                hasEquipmentSale: parseYesNo(event.target.value)
               }))
             }
-            helperText={
-              isRejectMode
-                ? 'Opcional si la respuesta no llegó por un contacto específico.'
-                : isRequestChangesMode
-                  ? 'Opcional si la solicitud no llegó por un contacto específico.'
-                : 'Campo obligatorio para dejar la referencia del contacto que aprobó.'
-            }
-          />
+          >
+            <MenuItem value='si'>Sí</MenuItem>
+            <MenuItem value='no'>No</MenuItem>
+          </TextField>
+        </FormDialogSection>
+      ) : null}
 
-          <TextField
-            fullWidth
-            required={isRejectMode || isRequestChangesMode}
-            multiline
-            minRows={4}
-            label={
-              isRejectMode
-                ? 'Motivo u observación'
-                : isRequestChangesMode
-                  ? 'Qué pidió modificar el cliente'
-                  : 'Observación'
-            }
-            value={values.notes}
-            disabled={isLoading}
-            onChange={(event) =>
-              setValues((previous) => ({
-                ...previous,
-                notes: event.target.value
-              }))
-            }
-            helperText={
-              isRejectMode
-                ? 'Describe brevemente por qué el cliente rechazó la cotización.'
-                : isRequestChangesMode
-                  ? 'Describe qué pidió cambiar el cliente para poder rehacer y reenviar la cotización.'
-                : 'Úsalo para dejar contexto adicional de la respuesta del cliente.'
-            }
-          />
-
-          <Box>
-            <Typography variant='caption' fontWeight={700} sx={{ color: '#dc2626', mb: 1, display: 'block' }}>
-              * Evidencia obligatoria
-            </Typography>
-            <Button
-              component='label'
-              variant='outlined'
-              startIcon={<UploadFileOutlinedIcon />}
-              disabled={isLoading}
-              color={values.evidenceFile ? 'success' : 'primary'}
-            >
-              {values.evidenceFile ? 'Cambiar archivo' : 'Adjuntar evidencia'}
-              <input
-                hidden
-                type='file'
-                accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
-                onChange={(event) =>
-                  setValues((previous) => ({
-                    ...previous,
-                    evidenceFile: event.target.files?.[0] || null
-                  }))
-                }
-              />
-            </Button>
-            <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-              {values.evidenceFile
-                ? values.evidenceFile.name
-                : 'Adjunta correo, captura, acta o soporte de la respuesta del cliente.'}
-            </Typography>
-          </Box>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button
-          variant='contained'
-          color={isRejectMode ? 'warning' : 'success'}
+      <FormDialogSection
+        title='Respuesta del cliente'
+        description='Deja trazado cómo y cuándo respondió el cliente.'
+      >
+        <TextField
+          select
+          required
+          label='Medio de respuesta'
+          value={values.approvalChannel}
           disabled={isLoading}
-          onClick={() => {
-            if (!values.evidenceFile) {
-              alert('Debes adjuntar la evidencia de la respuesta del cliente.')
-              return
-            }
-            if (!isRejectMode && !isRequestChangesMode && values.onSiteCalibration === null) {
-              alert('Selecciona si la calibración es en sitio o en laboratorio.')
-              return
-            }
-            if (!isRejectMode && !isRequestChangesMode && values.hasEquipmentSale === null) {
-              alert('Indica si el servicio incluye venta de equipo.')
-              return
-            }
-            void onSubmit(values)
-          }}
+          onChange={(event) =>
+            setValues((previous) => ({
+              ...previous,
+              approvalChannel: event.target.value
+            }))
+          }
         >
-          {isRejectMode
-            ? isLoading
-              ? 'Registrando rechazo...'
-              : 'Registrar rechazo cliente'
-            : isRequestChangesMode
-              ? isLoading
-                ? 'Registrando solicitud...'
-                : 'Registrar solicitud de modificación'
-            : isLoading
-              ? 'Registrando aprobación cliente...'
-              : 'Registrar aprobación cliente'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          {APPROVAL_CHANNEL_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          type='date'
+          label='Fecha'
+          value={values.decisionDate}
+          disabled={isLoading}
+          onChange={(event) =>
+            setValues((previous) => ({
+              ...previous,
+              decisionDate: event.target.value
+            }))
+          }
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          sx={FULL_ROW}
+          required={isDecisionApproval}
+          label='Email o teléfono de referencia'
+          value={values.approvalReference}
+          disabled={isLoading}
+          onChange={(event) =>
+            setValues((previous) => ({
+              ...previous,
+              approvalReference: event.target.value
+            }))
+          }
+          helperText={
+            isDecisionApproval
+              ? 'Obligatorio: el contacto que aprobó.'
+              : 'Opcional si la respuesta no llegó por un contacto específico.'
+          }
+        />
+        <TextField
+          sx={FULL_ROW}
+          required={!isDecisionApproval}
+          multiline
+          minRows={3}
+          label={
+            isRejectMode
+              ? 'Motivo u observación'
+              : isRequestChangesMode
+                ? 'Qué pidió modificar el cliente'
+                : 'Observación'
+          }
+          value={values.notes}
+          disabled={isLoading}
+          onChange={(event) =>
+            setValues((previous) => ({
+              ...previous,
+              notes: event.target.value
+            }))
+          }
+          helperText={
+            isRejectMode
+              ? 'Cuenta brevemente por qué el cliente rechazó la cotización.'
+              : isRequestChangesMode
+                ? 'Qué pidió cambiar, para rehacer y reenviar la cotización.'
+                : 'Contexto adicional de la respuesta del cliente.'
+          }
+        />
+      </FormDialogSection>
+
+      <FormDialogSection
+        title='Evidencia'
+        description='Obligatoria: correo, captura, acta o soporte de la respuesta.'
+      >
+        <Box sx={FULL_ROW}>
+          <FileDropZone
+            file={values.evidenceFile}
+            onFileSelected={(file) =>
+              setValues((previous) => ({ ...previous, evidenceFile: file }))
+            }
+            onReject={(message) => toast.error(message)}
+            accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
+            acceptLabel='soporte'
+            title='Arrastra la evidencia aquí o haz clic para elegirla'
+            hint='PDF, imagen, Word o Excel · máximo 10 MB'
+            disabled={isLoading}
+          />
+        </Box>
+      </FormDialogSection>
+    </FormDialog>
   )
 }
 

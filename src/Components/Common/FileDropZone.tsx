@@ -1,21 +1,44 @@
 import React, { useRef, useState } from 'react'
 import { Box, Button, Typography } from '@mui/material'
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
-import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
 
 interface FileDropZoneProps {
   file: File | null
   onFileSelected: (file: File) => void
   /** Se llama con el motivo cuando el archivo no es del tipo o tamaño permitido. */
   onReject?: (message: string) => void
-  /** Tipo MIME permitido, por ejemplo `application/pdf`. */
+  /**
+   * Tipos permitidos, como el atributo `accept` del input: MIME o extensiones
+   * separados por coma (`application/pdf`, `.pdf,.png`). Vacío acepta cualquiera.
+   */
   accept?: string
   /** Nombre del formato para los mensajes: "PDF". */
   acceptLabel?: string
+  /** Cambia la frase principal cuando no hay archivo. */
+  title?: string
+  /** Cambia la línea de formatos y peso. */
+  hint?: string
   maxSizeMb?: number
   /** Cambia con cada formulario nuevo para vaciar el input del navegador. */
   inputKey?: string | number
   disabled?: boolean
+}
+
+const isAccepted = (candidate: File, accept: string) => {
+  const rules = accept
+    .split(',')
+    .map((rule) => rule.trim().toLowerCase())
+    .filter(Boolean)
+  if (rules.length === 0) return true
+  const name = candidate.name.toLowerCase()
+  return rules.some((rule) =>
+    rule.startsWith('.')
+      ? name.endsWith(rule)
+      : rule.endsWith('/*')
+        ? candidate.type.startsWith(rule.slice(0, -1))
+        : candidate.type === rule
+  )
 }
 
 const formatSize = (bytes: number) =>
@@ -35,6 +58,8 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
   onReject,
   accept = 'application/pdf',
   acceptLabel = 'PDF',
+  title,
+  hint,
   maxSizeMb = 10,
   inputKey,
   disabled = false
@@ -44,7 +69,7 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
 
   const process = (candidate: File | undefined) => {
     if (!candidate) return
-    if (candidate.type !== accept) {
+    if (!isAccepted(candidate, accept)) {
       onReject?.(`Solo se permiten archivos ${acceptLabel}.`)
       return
     }
@@ -109,7 +134,7 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
         key={inputKey}
         ref={inputRef}
         type='file'
-        accept={accept}
+        accept={accept || undefined}
         hidden
         onChange={(event) => {
           process(event.target.files?.[0])
@@ -127,7 +152,7 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
             flexWrap: 'wrap'
           }}
         >
-          <PictureAsPdfOutlinedIcon sx={{ color: '#00695C' }} />
+          <InsertDriveFileOutlinedIcon sx={{ color: '#00695C' }} />
           <Box sx={{ minWidth: 0, textAlign: 'left' }}>
             <Typography
               variant='body2'
@@ -161,10 +186,11 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
           >
             {isDragOver
               ? 'Suelta el archivo aquí'
-              : `Arrastra el ${acceptLabel} aquí o haz clic para elegirlo`}
+              : title ??
+                `Arrastra el ${acceptLabel} aquí o haz clic para elegirlo`}
           </Typography>
           <Typography variant='caption' sx={{ color: '#6b7280' }}>
-            Solo {acceptLabel} · máximo {maxSizeMb} MB
+            {hint ?? `Solo ${acceptLabel} · máximo ${maxSizeMb} MB`}
           </Typography>
         </>
       )}

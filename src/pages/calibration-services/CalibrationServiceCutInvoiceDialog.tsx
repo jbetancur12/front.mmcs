@@ -1,19 +1,7 @@
 import { useEffect, useState } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { MenuItem, Stack, TextField, Typography } from '@mui/material'
+import FormDialog from '../../Components/Common/FormDialog'
+import FileDropZone from '../../Components/Common/FileDropZone'
 import { CalibrationServiceCut } from '../../types/calibrationService'
 
 interface CalibrationServiceCutInvoiceDialogProps {
@@ -32,6 +20,7 @@ interface CalibrationServiceCutInvoiceDialogProps {
 
 const buildTodayValue = () => new Date().toISOString().slice(0, 10)
 
+/** Registra la factura de un corte; si el cliente no tiene crédito, luego se pide el pago. */
 const CalibrationServiceCutInvoiceDialog = ({
   open,
   cut,
@@ -43,7 +32,10 @@ const CalibrationServiceCutInvoiceDialog = ({
   const [invoicedAt, setInvoicedAt] = useState(buildTodayValue())
   const [invoiceNotes, setInvoiceNotes] = useState('')
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
-  const [customerHasCredit, setCustomerHasCredit] = useState<boolean | null>(null)
+  const [customerHasCredit, setCustomerHasCredit] = useState<boolean | null>(
+    null
+  )
+  const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -59,16 +51,13 @@ const CalibrationServiceCutInvoiceDialog = ({
     setInvoiceNotes(cut.invoiceNotes || '')
     setInvoiceFile(null)
     setCustomerHasCredit(null)
+    setUploadError('')
   }, [cut.invoiceNotes, cut.invoiceReference, cut.invoicedAt, open])
 
   const trimmedReference = invoiceReference.trim()
 
   const handleSubmit = () => {
-    if (!trimmedReference) {
-      return
-    }
-
-    if (customerHasCredit === null) {
+    if (!trimmedReference || customerHasCredit === null) {
       return
     }
 
@@ -82,94 +71,89 @@ const CalibrationServiceCutInvoiceDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>Registrar facturación del corte</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2.5} sx={{ pt: 1 }}>
-          <Typography variant='body2' color='text.secondary'>
-            {cut.cutCode} · registra la referencia y fecha de factura para cerrar esta etapa
-            administrativa del corte.
-          </Typography>
-          <FormControl fullWidth required error={customerHasCredit === null}>
-            <InputLabel>Cliente con crédito</InputLabel>
-            <Select
-              value={customerHasCredit === null ? '' : customerHasCredit ? 'si' : 'no'}
-              label='Cliente con crédito'
-              disabled={isLoading}
-              onChange={(event) =>
-                setCustomerHasCredit(event.target.value === 'si' ? true : event.target.value === 'no' ? false : null)
-              }
-            >
-              <MenuItem value='si'>Sí</MenuItem>
-              <MenuItem value='no'>No</MenuItem>
-            </Select>
-            <FormHelperText>
-              Indica si el cliente tiene crédito. Si seleccionas No, se solicitará registrar el pago después de facturar.
-            </FormHelperText>
-          </FormControl>
-          <TextField
-            label='Referencia o número de factura'
-            value={invoiceReference}
-            onChange={(event) => setInvoiceReference(event.target.value)}
-            fullWidth
-            required
-            autoFocus
-          />
-          <TextField
-            label='Fecha de facturación'
-            type='date'
-            value={invoicedAt}
-            onChange={(event) => setInvoicedAt(event.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label='Notas de facturación'
-            value={invoiceNotes}
-            onChange={(event) => setInvoiceNotes(event.target.value)}
-            fullWidth
-            multiline
-            minRows={3}
-          />
-          <Stack spacing={1}>
-            <Typography variant='body2' color='text.secondary'>
-              Soporte de factura opcional. Si lo adjuntas aquí, el corte guarda el
-              número de factura junto con el archivo para auditoría.
-            </Typography>
-            <Button variant='outlined' component='label' disabled={isLoading}>
-              {invoiceFile ? 'Cambiar soporte de factura' : 'Adjuntar soporte de factura'}
-              <input
-                hidden
-                type='file'
-                accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
-                onChange={(event) =>
-                  setInvoiceFile(event.target.files?.[0] || null)
-                }
-              />
-            </Button>
-            {invoiceFile ? (
-              <Typography variant='body2'>{invoiceFile.name}</Typography>
-            ) : (
-              <Typography variant='body2' color='text.secondary'>
-                Sin archivo adjunto.
-              </Typography>
-            )}
-          </Stack>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button
-          variant='contained'
-          onClick={handleSubmit}
-          disabled={isLoading || !trimmedReference || customerHasCredit === null}
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title='Registrar facturación del corte'
+      subtitle={cut.cutCode}
+      submitLabel='Marcar facturado'
+      onSubmit={handleSubmit}
+      loading={isLoading}
+      submitDisabled={!trimmedReference || customerHasCredit === null}
+    >
+      <Stack spacing={2}>
+        <TextField
+          select
+          required
+          label='Cliente con crédito'
+          value={
+            customerHasCredit === null ? '' : customerHasCredit ? 'si' : 'no'
+          }
+          disabled={isLoading}
+          onChange={(event) =>
+            setCustomerHasCredit(
+              event.target.value === 'si'
+                ? true
+                : event.target.value === 'no'
+                  ? false
+                  : null
+            )
+          }
+          helperText='Si eliges No, después de facturar se pedirá registrar el pago.'
         >
-          Marcar facturado
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <MenuItem value='si'>Sí</MenuItem>
+          <MenuItem value='no'>No</MenuItem>
+        </TextField>
+        <TextField
+          label='Referencia o número de factura'
+          value={invoiceReference}
+          onChange={(event) => setInvoiceReference(event.target.value)}
+          required
+          autoFocus
+        />
+        <TextField
+          label='Fecha de facturación'
+          type='date'
+          value={invoicedAt}
+          onChange={(event) => setInvoicedAt(event.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label='Notas de facturación'
+          value={invoiceNotes}
+          onChange={(event) => setInvoiceNotes(event.target.value)}
+          multiline
+          minRows={3}
+        />
+        <div>
+          <Typography
+            variant='body2'
+            fontWeight={600}
+            sx={{ color: '#374151', mb: 0.5 }}
+          >
+            Soporte de factura (opcional)
+          </Typography>
+          <FileDropZone
+            file={invoiceFile}
+            onFileSelected={(file) => {
+              setUploadError('')
+              setInvoiceFile(file)
+            }}
+            onReject={setUploadError}
+            accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
+            acceptLabel='soporte'
+            title='Arrastra el soporte aquí o haz clic para elegirlo'
+            hint='PDF, imagen, Word o Excel · máximo 10 MB'
+            disabled={isLoading}
+          />
+          {uploadError ? (
+            <Typography variant='caption' color='error'>
+              {uploadError}
+            </Typography>
+          ) : null}
+        </div>
+      </Stack>
+    </FormDialog>
   )
 }
 

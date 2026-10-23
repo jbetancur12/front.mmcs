@@ -1,18 +1,8 @@
 import { useEffect, useState } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Button, MenuItem, TextField, Typography } from '@mui/material'
+import FormDialog, {
+  FormDialogSection
+} from '../../Components/Common/FormDialog'
 import Swal from 'sweetalert2'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { useCalibrationAssignableMetrologists } from '../../hooks/useCalibrationServices'
@@ -56,15 +46,22 @@ const CalibrationServiceSequenceConfigDialog = ({
     setNextQuoteNumber(String(config?.nextQuoteNumber ?? 1))
     setNextOdsNumber(String(config?.nextOdsNumber ?? 1))
     setLabMetrologistUserId(String(config?.labMetrologistUserId ?? ''))
-  }, [config?.nextOdsNumber, config?.nextQuoteNumber, config?.labMetrologistUserId, open])
+  }, [
+    config?.nextOdsNumber,
+    config?.nextQuoteNumber,
+    config?.labMetrologistUserId,
+    open
+  ])
 
   const quotePreview = `MMCS-${nextQuoteNumber || '...'}`
   const odsPreview = `${nextOdsNumber || '...'} -CAL-MMCS`
 
   const hasQuoteChanged =
-    isAlreadyInitialized && Number(nextQuoteNumber) !== (config?.nextQuoteNumber ?? 0)
+    isAlreadyInitialized &&
+    Number(nextQuoteNumber) !== (config?.nextQuoteNumber ?? 0)
   const hasOdsChanged =
-    isAlreadyInitialized && Number(nextOdsNumber) !== (config?.nextOdsNumber ?? 0)
+    isAlreadyInitialized &&
+    Number(nextOdsNumber) !== (config?.nextOdsNumber ?? 0)
 
   const handleEnableEdit = async () => {
     const result = await Swal.fire({
@@ -151,121 +148,97 @@ const CalibrationServiceSequenceConfigDialog = ({
   const fieldsDisabled = isLoading || !editMode
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} maxWidth='sm' fullWidth>
-      <DialogTitle>
-        {isAlreadyInitialized
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title={
+        isAlreadyInitialized
           ? 'Configuración de laboratorio'
-          : 'Configurar consecutivos iniciales'}
-      </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 1 }}>
-          {!isAlreadyInitialized ? (
-            <Typography variant='body2' color='text.secondary'>
-              Antes de usar el módulo por primera vez, define desde qué número debe
-              arrancar la oferta y desde cuál debe arrancar la ODS.
-            </Typography>
-          ) : (
-            <Typography variant='body2' color='text.secondary'>
-              {editMode
-                ? 'Los campos están habilitados para edición. Ten precaución al modificar los valores.'
-                : 'Configuración actual del módulo. Los campos están bloqueados para evitar cambios accidentales.'}
-            </Typography>
-          )}
-
-          {/* Botón habilitar edición (solo admin, solo cuando ya inicializado) */}
-          {isAlreadyInitialized && isAdmin && !editMode ? (
-            <Button
-              variant='outlined'
-              color='warning'
-              startIcon={<EditOutlinedIcon />}
-              onClick={() => void handleEnableEdit()}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              Habilitar edición
-            </Button>
-          ) : null}
-
-          <TextField
-            fullWidth
-            type='number'
-            label='Consecutivo inicial de oferta'
-            value={nextQuoteNumber}
-            onChange={(event) => setNextQuoteNumber(event.target.value)}
-            disabled={fieldsDisabled || isLoading}
-            inputProps={{ min: 1 }}
-          />
-          <Typography variant='caption' color='text.secondary'>
-            Vista previa: {quotePreview}
-          </Typography>
-          <TextField
-            fullWidth
-            type='number'
-            label='Consecutivo inicial de ODS'
-            value={nextOdsNumber}
-            onChange={(event) => setNextOdsNumber(event.target.value)}
-            disabled={fieldsDisabled || isLoading}
-            inputProps={{ min: 1 }}
-          />
-          <Typography variant='caption' color='text.secondary'>
-            Vista previa: {odsPreview}
-          </Typography>
-
-          <Typography variant='h6' fontWeight={700} sx={{ mt: 2 }}>
-            Configuración de laboratorio
-          </Typography>
-          <FormControl fullWidth>
-            <InputLabel>Metrólogo de laboratorio</InputLabel>
-            <Select
-              value={labMetrologistUserId}
-              label='Metrólogo de laboratorio'
-              disabled={fieldsDisabled || isLoading}
-              onChange={(event) =>
-                setLabMetrologistUserId(event.target.value)
-              }
-            >
-              <MenuItem value=''>
-                <em>Selecciona un metrólogo</em>
-              </MenuItem>
-              {metrologists.map((metrologist) => (
-                <MenuItem
-                  key={metrologist.id}
-                  value={String(metrologist.id)}
-                >
-                  {metrologist.nombre}
-                  {metrologist.email ? ` · ${metrologist.email}` : ''}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Typography variant='caption' color='text.secondary'>
-            Metrólogo que recibirá automáticamente los servicios de
-            calibración en laboratorio (cuando no sea en sitio).
-          </Typography>
-          {!isAdmin && isAlreadyInitialized ? (
-            <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
-              Solo un administrador puede modificar esta configuración.
-            </Typography>
-          ) : null}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
+          : 'Configurar consecutivos iniciales'
+      }
+      subtitle={
+        !isAlreadyInitialized
+          ? 'Define desde qué número arrancan la oferta y la ODS antes de usar el módulo.'
+          : editMode
+            ? 'Edición habilitada: ten precaución al cambiar los valores.'
+            : 'Configuración actual. Está bloqueada para evitar cambios accidentales.'
+      }
+      submitLabel='Guardar configuración'
+      onSubmit={() => void handleSubmit()}
+      loading={isLoading}
+      submitDisabled={
+        !editMode || Number(nextQuoteNumber) < 1 || Number(nextOdsNumber) < 1
+      }
+    >
+      {isAlreadyInitialized && isAdmin && !editMode ? (
         <Button
-          variant='contained'
-          onClick={() => void handleSubmit()}
-          disabled={
-            isLoading ||
-            !editMode ||
-            Number(nextQuoteNumber) < 1 ||
-            Number(nextOdsNumber) < 1
-          }
+          variant='outlined'
+          color='warning'
+          startIcon={<EditOutlinedIcon />}
+          onClick={() => void handleEnableEdit()}
+          sx={{ textTransform: 'none', fontWeight: 600, mb: 3 }}
         >
-          Guardar configuración
+          Habilitar edición
         </Button>
-      </DialogActions>
-    </Dialog>
+      ) : null}
+
+      <FormDialogSection title='Consecutivos'>
+        <TextField
+          type='number'
+          label='Consecutivo inicial de oferta'
+          value={nextQuoteNumber}
+          onChange={(event) => setNextQuoteNumber(event.target.value)}
+          disabled={fieldsDisabled || isLoading}
+          inputProps={{ min: 1 }}
+          helperText={`Vista previa: ${quotePreview}`}
+        />
+        <TextField
+          type='number'
+          label='Consecutivo inicial de ODS'
+          value={nextOdsNumber}
+          onChange={(event) => setNextOdsNumber(event.target.value)}
+          disabled={fieldsDisabled || isLoading}
+          inputProps={{ min: 1 }}
+          helperText={`Vista previa: ${odsPreview}`}
+        />
+      </FormDialogSection>
+
+      <FormDialogSection
+        title='Laboratorio'
+        description='El metrólogo que recibe automáticamente los servicios de calibración en laboratorio (cuando no es en sitio).'
+      >
+        <TextField
+          select
+          label='Metrólogo de laboratorio'
+          sx={{ gridColumn: { sm: '1 / -1' } }}
+          value={labMetrologistUserId}
+          disabled={fieldsDisabled || isLoading}
+          onChange={(event) => setLabMetrologistUserId(event.target.value)}
+          SelectProps={{ displayEmpty: true }}
+          InputLabelProps={{ shrink: true }}
+        >
+          <MenuItem value=''>
+            <em>Selecciona un metrólogo</em>
+          </MenuItem>
+          {metrologists.map((metrologist) => (
+            <MenuItem key={metrologist.id} value={String(metrologist.id)}>
+              {metrologist.nombre}
+              {metrologist.email ? ` · ${metrologist.email}` : ''}
+            </MenuItem>
+          ))}
+        </TextField>
+      </FormDialogSection>
+
+      {!isAdmin && isAlreadyInitialized ? (
+        <Typography
+          variant='caption'
+          color='text.secondary'
+          sx={{ display: 'block', mt: 2, fontStyle: 'italic' }}
+        >
+          Solo un administrador puede modificar esta configuración.
+        </Typography>
+      ) : null}
+    </FormDialog>
   )
 }
 

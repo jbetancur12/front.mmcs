@@ -1,16 +1,8 @@
 import { ChangeEvent, useEffect, useState } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { MenuItem, TextField } from '@mui/material'
+import FormDialog, {
+  FormDialogSection
+} from '../../Components/Common/FormDialog'
 
 export interface CalibrationServicePhysicalTraceabilityDialogValues {
   movementType: 'pickup' | 'delivery'
@@ -32,6 +24,9 @@ interface Props {
   ) => void | Promise<void>
 }
 
+const FULL_ROW = { gridColumn: { sm: '1 / -1' } }
+
+/** Registra una recogida o entrega física de equipos de un servicio. */
 const CalibrationServicePhysicalTraceabilityDialog = ({
   open,
   serviceCode,
@@ -58,82 +53,64 @@ const CalibrationServicePhysicalTraceabilityDialog = ({
     }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md'>
-      <DialogTitle>Registrar trazabilidad física</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={3}>
-          <Typography variant='body2' color='text.secondary'>
-            Registra una recogida o entrega física para <strong>{serviceCode}</strong>.
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                select
-                label='Movimiento'
-                value={values.movementType}
-                onChange={handleChange('movementType')}
-              >
-                <MenuItem value='pickup'>Recogida</MenuItem>
-                <MenuItem value='delivery'>Entrega</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type='datetime-local'
-                label='Fecha y hora'
-                value={values.occurredAt}
-                onChange={handleChange('occurredAt')}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label='Contacto'
-                value={values.contactName}
-                onChange={handleChange('contactName')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label='Cargo o rol'
-                value={values.contactRole}
-                onChange={handleChange('contactRole')}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label='Ubicación'
-                value={values.location}
-                onChange={handleChange('location')}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                label='Observaciones'
-                value={values.notes}
-                onChange={handleChange('notes')}
-              />
-            </Grid>
-          </Grid>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button variant='contained' onClick={() => void onSubmit(values)} disabled={isLoading}>
-          Guardar movimiento
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title='Registrar trazabilidad física'
+      subtitle={serviceCode}
+      submitLabel='Guardar movimiento'
+      onSubmit={() => void onSubmit(values)}
+      loading={isLoading}
+      maxWidth='md'
+    >
+      <FormDialogSection
+        title='Movimiento'
+        description='Una recogida o una entrega física de los equipos.'
+      >
+        <TextField
+          select
+          label='Movimiento'
+          value={values.movementType}
+          onChange={handleChange('movementType')}
+        >
+          <MenuItem value='pickup'>Recogida</MenuItem>
+          <MenuItem value='delivery'>Entrega</MenuItem>
+        </TextField>
+        <TextField
+          type='datetime-local'
+          label='Fecha y hora'
+          value={values.occurredAt}
+          onChange={handleChange('occurredAt')}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label='Ubicación'
+          sx={FULL_ROW}
+          value={values.location}
+          onChange={handleChange('location')}
+        />
+      </FormDialogSection>
+      <FormDialogSection title='Quién entrega o recibe'>
+        <TextField
+          label='Contacto'
+          value={values.contactName}
+          onChange={handleChange('contactName')}
+        />
+        <TextField
+          label='Cargo o rol'
+          value={values.contactRole}
+          onChange={handleChange('contactRole')}
+        />
+        <TextField
+          multiline
+          minRows={3}
+          label='Observaciones'
+          sx={FULL_ROW}
+          value={values.notes}
+          onChange={handleChange('notes')}
+        />
+      </FormDialogSection>
+    </FormDialog>
   )
 }
 

@@ -2,19 +2,14 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Button,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Stack,
   Tooltip,
   Typography
 } from '@mui/material'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
-import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import { toast } from 'react-hot-toast'
+import FormDialog from '../../../Components/Common/FormDialog'
 import { CalibrationServiceQuoteTerms } from '../../../types/calibrationService'
 import CalibrationServiceRichTextEditor from '../CalibrationServiceRichTextEditor'
 import {
@@ -40,14 +35,16 @@ const CalibrationServiceQuoteTermsTemplateDialog = ({
   onChangeTerm,
   onSave
 }: CalibrationServiceQuoteTermsTemplateDialogProps) => (
-      <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          Plantilla de términos y condiciones
-          <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 400 }}>
-            Se carga por defecto al crear una cotización nueva.
-          </Typography>
-        </DialogTitle>
-        <DialogContent dividers>
+      <FormDialog
+        open={open}
+        onClose={isSaving ? () => undefined : onClose}
+        title='Plantilla de términos y condiciones'
+        subtitle='Se carga por defecto al crear una cotización nueva.'
+        submitLabel='Guardar plantilla'
+        onSubmit={onSave}
+        loading={isSaving}
+        maxWidth='md'
+      >
           <Typography variant='body2' sx={{ mb: 1 }}>
             Variables que se reemplazan con los datos de cada cotización. Toca una para copiarla.
           </Typography>
@@ -108,20 +105,7 @@ const CalibrationServiceQuoteTermsTemplateDialog = ({
               )
             })}
           </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} sx={{ color: 'text.secondary' }}>Cancelar</Button>
-          <Button
-            variant='contained'
-            startIcon={<SaveOutlinedIcon />}
-            onClick={onSave}
-            disabled={isSaving}
-            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00ACC1' } }}
-          >
-            Guardar plantilla
-          </Button>
-        </DialogActions>
-      </Dialog>
+      </FormDialog>
 )
 
 export default CalibrationServiceQuoteTermsTemplateDialog

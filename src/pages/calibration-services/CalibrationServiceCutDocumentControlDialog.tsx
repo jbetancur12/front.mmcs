@@ -1,19 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Divider,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Box, Button, TextField, Typography } from '@mui/material'
+import FormDialog, {
+  FormDialogSection
+} from '../../Components/Common/FormDialog'
+import FileDropZone from '../../Components/Common/FileDropZone'
 import { CalibrationServiceCut } from '../../types/calibrationService'
-import {
-  CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS
-} from '../../constants/calibrationServices'
+import { CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS } from '../../constants/calibrationServices'
 
 interface CalibrationServiceCutDocumentControlDialogProps {
   open: boolean
@@ -33,9 +25,12 @@ interface CalibrationServiceCutDocumentControlDialogProps {
   }) => void | Promise<void>
 }
 
+const FULL_ROW = { gridColumn: { sm: '1 / -1' } }
+
 const clampValue = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max)
 
+/** Control documental de un corte: certificados cargados, revisados y enviados. */
 const CalibrationServiceCutDocumentControlDialog = ({
   open,
   cut,
@@ -82,18 +77,32 @@ const CalibrationServiceCutDocumentControlDialog = ({
     setNotes(current?.notes || '')
   }, [cut, open, suggestedCertificates])
 
-  const normalizedUploaded = clampValue(uploadedCertificates, 0, expectedCertificates)
-  const normalizedReviewed = clampValue(reviewedCertificates, 0, normalizedUploaded)
+  const normalizedUploaded = clampValue(
+    uploadedCertificates,
+    0,
+    expectedCertificates
+  )
+  const normalizedReviewed = clampValue(
+    reviewedCertificates,
+    0,
+    normalizedUploaded
+  )
   const normalizedSent = clampValue(sentCertificates, 0, normalizedReviewed)
 
   const nextStatus = useMemo(() => {
     if (expectedCertificates > 0 && normalizedSent === expectedCertificates) {
       return 'sent'
     }
-    if (expectedCertificates > 0 && normalizedReviewed === expectedCertificates) {
+    if (
+      expectedCertificates > 0 &&
+      normalizedReviewed === expectedCertificates
+    ) {
       return 'reviewed'
     }
-    if (expectedCertificates > 0 && normalizedUploaded === expectedCertificates) {
+    if (
+      expectedCertificates > 0 &&
+      normalizedUploaded === expectedCertificates
+    ) {
       return 'certificates_ready'
     }
     if (normalizedUploaded > 0) {
@@ -121,137 +130,127 @@ const CalibrationServiceCutDocumentControlDialog = ({
     })
   }
 
+  const numberField =
+    (setter: (value: number) => void) =>
+    (event: React.ChangeEvent<HTMLInputElement>) =>
+      setter(Math.max(0, Number(event.target.value) || 0))
+
+  const linkedEvidence =
+    cut.otherFields?.documentControl?.evidenceDocumentIds?.length
+
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>Actualizar control documental</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2.5} sx={{ pt: 1 }}>
-          <Typography variant='body2' color='text.secondary'>
-            {cut.cutCode} · controla cuántos certificados esperas, cuántos ya están
-            cargados, revisados y enviados para este corte.
-          </Typography>
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title='Actualizar control documental'
+      subtitle={cut.cutCode}
+      submitLabel='Guardar control'
+      onSubmit={handleSubmit}
+      loading={isLoading}
+      maxWidth='md'
+    >
+      <FormDialogSection
+        title='Certificados'
+        description={`Etapa resultante: ${CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS[nextStatus]}`}
+      >
+        <Box>
           <TextField
-            label='Certificados esperados'
+            fullWidth
+            label='Esperados'
             type='number'
             value={expectedCertificates}
-            onChange={(event) =>
-              setExpectedCertificates(Math.max(0, Number(event.target.value) || 0))
-            }
-            fullWidth
+            onChange={numberField(setExpectedCertificates)}
             helperText={
               suggestedCertificates > 0
-                ? `Sugerencia automática: ${suggestedCertificates} según la cantidad liberada en este corte. Puedes ajustarlo si no todos requieren certificado.`
-                : 'Define manualmente cuántos certificados esperas para este corte.'
+                ? `Sugerido: ${suggestedCertificates}, según lo liberado en el corte.`
+                : 'Cuántos certificados esperas para este corte.'
             }
           />
-          {suggestedCertificates > 0 ? (
+          {suggestedCertificates > 0 &&
+          expectedCertificates !== suggestedCertificates ? (
             <Button
-              variant='text'
+              size='small'
               onClick={() => setExpectedCertificates(suggestedCertificates)}
               disabled={isLoading}
-              sx={{ alignSelf: 'flex-start', mt: -1 }}
+              sx={{ textTransform: 'none', color: '#00695C', mt: 0.5 }}
             >
               Usar sugerencia ({suggestedCertificates})
             </Button>
           ) : null}
-          <TextField
-            label='Certificados cargados'
-            type='number'
-            value={uploadedCertificates}
-            onChange={(event) =>
-              setUploadedCertificates(Math.max(0, Number(event.target.value) || 0))
-            }
-            fullWidth
-            helperText='No puede superar los certificados esperados.'
+        </Box>
+        <TextField
+          label='Cargados'
+          type='number'
+          value={uploadedCertificates}
+          onChange={numberField(setUploadedCertificates)}
+          helperText='No pueden superar los esperados.'
+        />
+        <TextField
+          label='Revisados'
+          type='number'
+          value={reviewedCertificates}
+          onChange={numberField(setReviewedCertificates)}
+          helperText='No pueden superar los cargados.'
+        />
+        <TextField
+          label='Enviados'
+          type='number'
+          value={sentCertificates}
+          onChange={numberField(setSentCertificates)}
+          helperText='No pueden superar los revisados.'
+        />
+      </FormDialogSection>
+
+      <FormDialogSection title='Datos de envío'>
+        <TextField
+          label='Canal de envío'
+          value={sendChannel}
+          onChange={(event) => setSendChannel(event.target.value)}
+          placeholder='Email, WhatsApp, físico, plataforma…'
+          helperText='Obligatorio si ya hay certificados enviados.'
+        />
+        <TextField
+          label='Fecha de envío'
+          type='date'
+          value={sentAt}
+          onChange={(event) => setSentAt(event.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label='Destinatario'
+          sx={FULL_ROW}
+          value={sentTo}
+          onChange={(event) => setSentTo(event.target.value)}
+          placeholder='Nombre, correo o referencia de quien recibe'
+        />
+        <Box sx={FULL_ROW}>
+          <FileDropZone
+            file={evidenceFile}
+            onFileSelected={setEvidenceFile}
+            accept=''
+            title='Arrastra el soporte de envío aquí o haz clic para elegirlo'
+            hint='Cualquier archivo · máximo 10 MB'
+            disabled={isLoading}
           />
-          <TextField
-            label='Certificados revisados'
-            type='number'
-            value={reviewedCertificates}
-            onChange={(event) =>
-              setReviewedCertificates(Math.max(0, Number(event.target.value) || 0))
-            }
-            fullWidth
-            helperText='No puede superar los certificados cargados.'
-          />
-          <TextField
-            label='Certificados enviados'
-            type='number'
-            value={sentCertificates}
-            onChange={(event) =>
-              setSentCertificates(Math.max(0, Number(event.target.value) || 0))
-            }
-            fullWidth
-            helperText='No puede superar los certificados revisados.'
-          />
-          <Divider flexItem />
-          <Typography variant='subtitle2'>Datos de envío</Typography>
-          <TextField
-            label='Canal de envío'
-            value={sendChannel}
-            onChange={(event) => setSendChannel(event.target.value)}
-            fullWidth
-            placeholder='Email, WhatsApp, físico, plataforma...'
-            helperText='Obligatorio cuando ya registras certificados enviados.'
-          />
-          <TextField
-            label='Destinatario'
-            value={sentTo}
-            onChange={(event) => setSentTo(event.target.value)}
-            fullWidth
-            placeholder='Nombre, correo o referencia del receptor'
-            helperText='Indica a quién se enviaron o entregaron los certificados.'
-          />
-          <TextField
-            label='Fecha de envío'
-            type='date'
-            value={sentAt}
-            onChange={(event) => setSentAt(event.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-          <Stack spacing={0.75}>
-            <Button component='label' variant='outlined' disabled={isLoading}>
-              Adjuntar soporte de envío
-              <input
-                hidden
-                type='file'
-                onChange={(event) =>
-                  setEvidenceFile(event.target.files?.[0] || null)
-                }
-              />
-            </Button>
+          {!evidenceFile && linkedEvidence ? (
             <Typography variant='caption' color='text.secondary'>
-              {evidenceFile
-                ? `Nuevo soporte: ${evidenceFile.name}`
-                : cut.otherFields?.documentControl?.evidenceDocumentIds?.length
-                  ? `Soportes vinculados: ${cut.otherFields.documentControl.evidenceDocumentIds.length}`
-                  : 'Sin soporte cargado todavía.'}
+              Soportes vinculados: {linkedEvidence}
             </Typography>
-          </Stack>
-          <TextField
-            label='Notas documentales'
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            fullWidth
-            multiline
-            minRows={3}
-          />
-          <Typography variant='body2' color='text.secondary'>
-            Etapa resultante:{' '}
-            {CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS[nextStatus]}
-          </Typography>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button variant='contained' onClick={handleSubmit} disabled={isLoading}>
-          Guardar control
-        </Button>
-      </DialogActions>
-    </Dialog>
+          ) : null}
+        </Box>
+      </FormDialogSection>
+
+      <FormDialogSection title='Notas'>
+        <TextField
+          label='Notas documentales'
+          sx={FULL_ROW}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+          multiline
+          minRows={3}
+        />
+      </FormDialogSection>
+    </FormDialog>
   )
 }
 

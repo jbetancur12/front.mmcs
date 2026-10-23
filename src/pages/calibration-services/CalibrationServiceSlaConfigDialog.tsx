@@ -2,11 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   InputAdornment,
   Stack,
   Table,
@@ -17,6 +12,7 @@ import {
   TextField,
   Typography
 } from '@mui/material'
+import FormDialog from '../../Components/Common/FormDialog'
 import {
   CalibrationServiceSlaConfig,
   CalibrationServiceSlaConfigPayload
@@ -158,15 +154,18 @@ const CalibrationServiceSlaConfigDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} maxWidth='md' fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>
-        Configurar tiempos SLA
-        <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 400 }}>
-          Cuántos días hábiles puede tardar cada fase antes de pasar a amarillo y a rojo.
-        </Typography>
-      </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 1 }}>
+    <FormDialog
+      open={open}
+      onClose={isLoading ? () => undefined : onClose}
+      title='Configurar tiempos SLA'
+      subtitle='Cuántos días hábiles puede tardar cada fase antes de pasar a amarillo y a rojo.'
+      submitLabel='Guardar tiempos'
+      onSubmit={() => void handleSubmit()}
+      loading={isLoading}
+      submitDisabled={hasInvalidValues}
+      maxWidth='md'
+    >
+        <Stack spacing={2}>
           <Alert severity='info' sx={{ alignItems: 'center' }}>
             Los días se cuentan en días hábiles desde el inicio de cada fase. Solo admin y super admin
             pueden cambiarlos; los demás roles los consultan en la guía.
@@ -255,21 +254,7 @@ const CalibrationServiceSlaConfigDialog = ({
             </Alert>
           ) : null}
         </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading} sx={{ color: 'text.secondary' }}>
-          Cancelar
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => void handleSubmit()}
-          disabled={isLoading || hasInvalidValues}
-          sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00ACC1' } }}
-        >
-          Guardar tiempos
-        </Button>
-      </DialogActions>
-    </Dialog>
+    </FormDialog>
   )
 }
 

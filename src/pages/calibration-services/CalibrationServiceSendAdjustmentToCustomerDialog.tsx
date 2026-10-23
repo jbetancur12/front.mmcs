@@ -1,18 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   LinearProgress,
   Stack,
   TextField,
   Typography
 } from '@mui/material'
-import { CalibrationService, CalibrationServiceAdjustment } from '../../types/calibrationService'
-import { CalibrationServiceSendPreviewResult } from '../../types/calibrationService'
+import FormDialog from '../../Components/Common/FormDialog'
+import {
+  CalibrationService,
+  CalibrationServiceAdjustment,
+  CalibrationServiceSendPreviewResult
+} from '../../types/calibrationService'
 
 interface CalibrationServiceSendAdjustmentToCustomerDialogProps {
   open: boolean
@@ -27,6 +26,15 @@ interface CalibrationServiceSendAdjustmentToCustomerDialogProps {
   }) => Promise<void>
 }
 
+const CHANGE_TYPE_LABELS: Record<string, string> = {
+  quantity_less: 'Cant. menor',
+  quantity_more: 'Cant. mayor',
+  extra_item: 'Item adicional',
+  not_received: 'No recibido',
+  scope_change: 'Cambio alcance'
+}
+
+/** Envía por correo una o varias novedades al cliente para que las valide. */
 const CalibrationServiceSendAdjustmentToCustomerDialog = ({
   open,
   service,
@@ -76,106 +84,103 @@ const CalibrationServiceSendAdjustmentToCustomerDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isSending ? undefined : onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>
-        {adjustments.length > 1
+    <FormDialog
+      open={open}
+      onClose={isLoading || isSending ? () => undefined : onClose}
+      title={
+        adjustments.length > 1
           ? `Enviar ${adjustments.length} novedades al cliente`
-          : 'Enviar novedad al cliente'}
-      </DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={2.5} sx={{ mt: 0.5 }}>
-          {adjustments.length > 1 ? (
-            <Alert severity='info'>
-              Se enviará un <strong>solo correo</strong> con las{' '}
-              <strong>{adjustments.length} novedades</strong> consolidadas.
-              El cliente ve todo en un solo mensaje.
-            </Alert>
-          ) : (
+          : 'Enviar novedad al cliente'
+      }
+      subtitle={service.serviceCode}
+      submitLabel={
+        adjustments.length > 1
+          ? `Enviar consolidado (${adjustments.length})`
+          : 'Enviar correo'
+      }
+      onSubmit={() => void handleSubmit()}
+      loading={isLoading || isSending}
+      submitDisabled={!recipientEmail.trim()}
+    >
+      <Stack spacing={2}>
+        {adjustments.length > 1 ? (
+          <>
             <Typography variant='body2' color='text.secondary'>
-              Vamos a enviar la novedad{' '}
-              <strong>{adjustments[0]?.itemName || 'sin ítem'}</strong> al cliente para su
-              validación.
+              Se enviará <strong>un solo correo</strong> con las{' '}
+              <strong>{adjustments.length} novedades</strong> consolidadas.
             </Typography>
-          )}
-
-          {adjustments.length > 1 ? (
-            <Stack spacing={0.5}>
+            <Stack spacing={0.25}>
               <Typography variant='subtitle2' fontWeight={700}>
-                Novedades a enviar:
+                Novedades a enviar
               </Typography>
               {adjustments.map((a) => (
                 <Typography key={a.id} variant='body2' color='text.secondary'>
                   • {a.itemName} —{' '}
-                  {({
-                    quantity_less: 'Cant. menor',
-                    quantity_more: 'Cant. mayor',
-                    extra_item: 'Item adicional',
-                    not_received: 'No recibido',
-                    scope_change: 'Cambio alcance'
-                  }[a.changeType] || a.changeType)}
+                  {CHANGE_TYPE_LABELS[a.changeType] || a.changeType}
                 </Typography>
               ))}
             </Stack>
-          ) : null}
+          </>
+        ) : (
+          <Typography variant='body2' color='text.secondary'>
+            Se enviará la novedad{' '}
+            <strong>{adjustments[0]?.itemName || 'sin ítem'}</strong> al cliente
+            para su validación.
+          </Typography>
+        )}
 
-          <Alert severity='info'>
-            Correo sugerido según la regla actual: <strong>{defaultSource}</strong>.
+        {sendPreview?.isDevOverride ? (
+          <Alert severity='warning'>
+            En desarrollo, el correo se redirigirá a{' '}
+            <strong>
+              {sendPreview.actualRecipient || 'sin correo override'}
+            </strong>
+            . Normalmente iría a{' '}
+            <strong>
+              {sendPreview.intendedRecipient || 'sin correo sugerido'}
+            </strong>
+            .
           </Alert>
+        ) : null}
 
-          {sendPreview?.isDevOverride ? (
-            <Alert severity='warning'>
-              En desarrollo, el correo se redirigirá a{' '}
-              <strong>{sendPreview.actualRecipient || 'sin correo override'}</strong>.
-              {' '}Normalmente iría a{' '}
-              <strong>{sendPreview.intendedRecipient || 'sin correo sugerido'}</strong>.
-            </Alert>
-          ) : null}
+        <TextField
+          fullWidth
+          label='Nombre del destinatario'
+          value={recipientName}
+          onChange={(event) => setRecipientName(event.target.value)}
+          helperText='Opcional. Sirve para personalizar el correo.'
+        />
+        <TextField
+          fullWidth
+          required
+          type='email'
+          label='Correo destino'
+          value={recipientEmail}
+          onChange={(event) => setRecipientEmail(event.target.value)}
+          helperText={`Sugerido: ${defaultSource}. Puedes cambiarlo antes de enviar.`}
+        />
 
-          <TextField
-            fullWidth
-            label='Nombre del destinatario'
-            value={recipientName}
-            onChange={(event) => setRecipientName(event.target.value)}
-            helperText='Opcional. Sirve para personalizar el correo.'
-          />
-
-          <TextField
-            fullWidth
-            type='email'
-            label='Correo destino'
-            value={recipientEmail}
-            onChange={(event) => setRecipientEmail(event.target.value)}
-            helperText='Puedes dejar el sugerido o cambiarlo antes de enviar.'
-          />
-
-          {isSending ? (
-            <Stack spacing={1}>
-              <LinearProgress
-                variant='determinate'
-                value={(progress.current / progress.total) * 100}
-              />
-              <Typography variant='caption' color='text.secondary' textAlign='center'>
-                Enviando {progress.current} de {progress.total}...
-              </Typography>
-            </Stack>
-          ) : null}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading || isSending}>
-          Cancelar
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => void handleSubmit()}
-          disabled={isLoading || isSending || !recipientEmail.trim()}
-        >
-          {adjustments.length > 1
-            ? `Enviar consolidado (${adjustments.length})`
-            : 'Enviar correo'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        {isSending ? (
+          <Stack spacing={1}>
+            <LinearProgress
+              variant='determinate'
+              value={(progress.current / progress.total) * 100}
+              sx={{
+                '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' },
+                bgcolor: '#E0F7F4'
+              }}
+            />
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              textAlign='center'
+            >
+              Enviando {progress.current} de {progress.total}…
+            </Typography>
+          </Stack>
+        ) : null}
+      </Stack>
+    </FormDialog>
   )
 }
 
