@@ -26,6 +26,10 @@ interface FormDialogProps {
   loading?: boolean
   /** Bloquea el botón principal cuando el formulario no es válido. */
   submitDisabled?: boolean
+  /** Texto del botón de cerrar; por defecto "Cancelar". */
+  cancelLabel?: string
+  /** Acción secundaria a la izquierda de los botones (por ejemplo, "Enviar por WhatsApp"). */
+  extraActions?: React.ReactNode
   /** `xs` para uno o dos campos; `md` para formularios con secciones. */
   maxWidth?: 'xs' | 'sm' | 'md'
   children: React.ReactNode
@@ -45,6 +49,8 @@ const FormDialog: React.FC<FormDialogProps> = ({
   onSubmit,
   loading = false,
   submitDisabled = false,
+  cancelLabel = 'Cancelar',
+  extraActions,
   maxWidth = 'xs',
   children
 }) => (
@@ -90,8 +96,9 @@ const FormDialog: React.FC<FormDialogProps> = ({
       {children}
     </DialogContent>
     <DialogActions sx={{ p: '16px 24px' }}>
+      {extraActions ? <Box sx={{ mr: 'auto' }}>{extraActions}</Box> : null}
       <Button onClick={onClose} disabled={loading} sx={{ color: '#4b5563' }}>
-        Cancelar
+        {cancelLabel}
       </Button>
       <Button
         variant='contained'

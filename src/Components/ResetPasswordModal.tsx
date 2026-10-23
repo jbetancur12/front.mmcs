@@ -1,16 +1,29 @@
+import { AutoFixHigh, ContentCopy } from '@mui/icons-material'
 import {
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  IconButton,
+  InputAdornment,
   Stack,
   TextField,
-  Typography
+  Tooltip
 } from '@mui/material'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+import FormDialog from './Common/FormDialog'
+import { bigToast } from './ExcelManipulation/Utils'
 import { UserData } from './TableUsersCustomer'
 
+const CHARS =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
+
+/** 12 caracteres al azar con el generador seguro del navegador. */
+const randomPassword = () => {
+  const values = new Uint32Array(12)
+  crypto.getRandomValues(values)
+  return Array.from(values, (value) => CHARS[value % CHARS.length]).join('')
+}
+
+/** Restablece la contraseña de un usuario: la escribes o generas una segura. */
 const ResetPasswordModal = ({
   open,
   onClose,
@@ -23,56 +36,85 @@ const ResetPasswordModal = ({
   user: UserData | null
 }) => {
   const [newPassword, setNewPassword] = useState('')
-  const [generatedPassword, setGeneratedPassword] = useState('')
 
-  const generatePassword = () => {
-    const chars =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
-    let password = ''
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length))
+  // Cada vez que se abre, empieza vacío
+  useEffect(() => {
+    if (open) setNewPassword('')
+  }, [open])
+
+  const copyPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(newPassword)
+      bigToast('Contraseña copiada', 'success')
+    } catch {
+      bigToast('No se pudo copiar la contraseña', 'error')
     }
-    setNewPassword(password)
-    setGeneratedPassword(password)
   }
 
   const handleSubmit = () => {
-    if (user) {
+    if (user && newPassword) {
       onSubmit(user.id, newPassword)
       onClose()
     }
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Restablecer Contraseña</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          <TextField
-            label='Nueva Contraseña'
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            fullWidth
-          />
-          <Button onClick={generatePassword} variant='outlined'>
-            Generar Contraseña Segura
-          </Button>
-          {generatedPassword && (
-            <Typography variant='body2'>
-              Contraseña generada: {generatedPassword}
-            </Typography>
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color='inherit'>
-          Cancelar
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      title='Restablecer contraseña'
+      subtitle={user ? `${user.nombre} · ${user.email}` : undefined}
+      submitLabel='Restablecer contraseña'
+      onSubmit={handleSubmit}
+      submitDisabled={!newPassword}
+    >
+      <Stack spacing={2}>
+        <TextField
+          label='Nueva contraseña'
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          fullWidth
+          autoFocus
+          required
+          helperText='Cópiala y compártela con el usuario: después no se puede volver a ver.'
+          InputProps={{
+            endAdornment: newPassword ? (
+              <InputAdornment position='end'>
+                <Tooltip title='Copiar contraseña'>
+                  <IconButton
+                    aria-label='Copiar contraseña'
+                    edge='end'
+                    onClick={() => void copyPassword()}
+                  >
+                    <ContentCopy fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              </InputAdornment>
+            ) : undefined
+          }}
+        />
+        <Button
+          variant='outlined'
+          startIcon={<AutoFixHigh />}
+          onClick={() => setNewPassword(randomPassword())}
+          sx={{
+            alignSelf: 'flex-start',
+            borderRadius: '10px',
+            textTransform: 'none',
+            fontWeight: 600,
+            borderColor: '#e5e7eb',
+            color: '#374151',
+            '&:hover': {
+              borderColor: '#00897B',
+              color: '#00695C',
+              backgroundColor: '#E0F7F4'
+            }
+          }}
+        >
+          Generar contraseña segura
         </Button>
-        <Button onClick={handleSubmit} color='primary'>
-          Confirmar
-        </Button>
-      </DialogActions>
-    </Dialog>
+      </Stack>
+    </FormDialog>
   )
 }
 
