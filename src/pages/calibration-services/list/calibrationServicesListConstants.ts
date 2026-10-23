@@ -96,7 +96,7 @@ export const ui = {
   info: '#3b82f6',
   text: '#111827',
   textSecondary: '#4b5563',
-  muted: '#9ca3af',
+  muted: '#6b7280',
   border: '#e5e7eb',
   surface: '#f3f4f6',
   white: '#ffffff',

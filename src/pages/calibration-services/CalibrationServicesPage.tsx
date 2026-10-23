@@ -165,6 +165,7 @@ const CalibrationServicesPage = () => {
         </Alert>
       ) : filters.viewMode === 'list' ? (
         <CalibrationServicesGroupedList
+          services={visibleServices}
           groups={groupedListServices}
           permissions={permissions}
           actions={actions}
