@@ -10,6 +10,8 @@
     "check": "tsc --noEmit",
     "permission-screens": "node scripts/gen-permission-screens.mjs",
     "permission-screens:check": "node scripts/gen-permission-screens.mjs --check",
+    "password-policy": "node scripts/gen-password-policy.mjs",
+    "password-policy:check": "node scripts/gen-password-policy.mjs --check",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "prepare": "husky install",

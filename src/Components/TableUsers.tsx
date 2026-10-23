@@ -32,6 +32,8 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import PasswordRequirements from './Common/PasswordRequirements'
+import { isPasswordValid } from '../utils/passwordPolicy'
 import { showActivationLinkDialog } from '../utils/sweetAlert'
 
 // Define interfaces
@@ -364,7 +366,10 @@ export const CreateNewAccountModal = ({
   )
 
   const handleSubmit = () => {
-    //put your validation logic here
+    if (!isPasswordValid(values.contraseña ?? '')) {
+      toast.error('La contraseña no cumple los requisitos')
+      return
+    }
     onSubmit(values)
     onClose()
   }
@@ -402,6 +407,7 @@ export const CreateNewAccountModal = ({
                 setValues({ ...values, [e.target.name]: e.target.value })
               }
             />
+            <PasswordRequirements password={values.contraseña ?? ''} />
           </Stack>
         </form>
       </DialogContent>

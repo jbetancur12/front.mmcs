@@ -12,16 +12,11 @@ import { useEffect, useState } from 'react'
 import FormDialog from './Common/FormDialog'
 import { notify } from 'src/utils/notify'
 import { UserData } from './TableUsersCustomer'
-
-const CHARS =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
-
-/** 12 caracteres al azar con el generador seguro del navegador. */
-const randomPassword = () => {
-  const values = new Uint32Array(12)
-  crypto.getRandomValues(values)
-  return Array.from(values, (value) => CHARS[value % CHARS.length]).join('')
-}
+import PasswordRequirements from './Common/PasswordRequirements'
+import {
+  generateStrongPassword,
+  isPasswordValid
+} from 'src/utils/passwordPolicy'
 
 /** Restablece la contraseña de un usuario: la escribes o generas una segura. */
 const ResetPasswordModal = ({
@@ -52,7 +47,7 @@ const ResetPasswordModal = ({
   }
 
   const handleSubmit = () => {
-    if (user && newPassword) {
+    if (user && isPasswordValid(newPassword)) {
       onSubmit(user.id, newPassword)
       onClose()
     }
@@ -66,7 +61,7 @@ const ResetPasswordModal = ({
       subtitle={user ? `${user.nombre} · ${user.email}` : undefined}
       submitLabel='Restablecer contraseña'
       onSubmit={handleSubmit}
-      submitDisabled={!newPassword}
+      submitDisabled={!isPasswordValid(newPassword)}
     >
       <Stack spacing={2}>
         <TextField
@@ -93,10 +88,11 @@ const ResetPasswordModal = ({
             ) : undefined
           }}
         />
+        <PasswordRequirements password={newPassword} />
         <Button
           variant='outlined'
           startIcon={<AutoFixHigh />}
-          onClick={() => setNewPassword(randomPassword())}
+          onClick={() => setNewPassword(generateStrongPassword())}
           sx={{
             alignSelf: 'flex-start',
             borderRadius: '10px',

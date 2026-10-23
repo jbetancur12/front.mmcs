@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom'
 import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
+import PasswordRequirements from 'src/Components/Common/PasswordRequirements'
+import { isPasswordValid } from 'src/utils/passwordPolicy'
 // import * as Yup from 'yup'; // Importa Yup para la validación
 
 const PasswordGeneratorForm: React.FC = () => {
@@ -41,6 +43,11 @@ const PasswordGeneratorForm: React.FC = () => {
     e.preventDefault()
     setLinkError(null)
 
+    if (!isPasswordValid(formData.password)) {
+      toast.error('La contraseña no cumple los requisitos')
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error('Las contraseñas no coinciden')
       return
@@ -57,8 +64,12 @@ const PasswordGeneratorForm: React.FC = () => {
         window.location.href = '/login'
       }
     } catch (error) {
-      const data = (error as AxiosError<{ code?: string }>).response?.data
-      if (data?.code === 'CODE_EXPIRED') {
+      const data = (
+        error as AxiosError<{ code?: string; reasons?: string[] }>
+      ).response?.data
+      if (data?.code === 'WEAK_PASSWORD') {
+        toast.error(data.reasons?.join('. ') || 'La contraseña no es segura')
+      } else if (data?.code === 'CODE_EXPIRED') {
         setLinkError(
           'Este enlace venció. Solicita uno nuevo para crear tu contraseña.'
         )
@@ -102,6 +113,7 @@ const PasswordGeneratorForm: React.FC = () => {
             value={formData.password}
             onChange={handleInputChange}
           />
+          <PasswordRequirements password={formData.password} />
           <AuthField
             label='Confirmar contraseña'
             type='password'
