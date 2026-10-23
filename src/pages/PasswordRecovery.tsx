@@ -1,13 +1,14 @@
 import { axiosPublic } from '@utils/api'
 import { AxiosError, isAxiosError } from 'axios'
 import React, { useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { api } from 'src/config'
 import * as Yup from 'yup' // Importa Yup para la validación
 import { Link } from 'react-router-dom'
 import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
+import AppToaster from 'src/Components/Common/AppToaster'
 
 const apiUrl = api()
 
@@ -43,7 +44,7 @@ const PasswordRecovery: React.FC = () => {
       if (isAxiosError(error) && error.response) {
         handleNetworkError(error)
       } else {
-        // Manejar otros tipos de errores aquí
+        setError('No pudimos enviar el enlace. Inténtalo de nuevo más tarde.')
       }
     }
   }
@@ -51,46 +52,22 @@ const PasswordRecovery: React.FC = () => {
   function handleNetworkError(error: AxiosError) {
     console.error('An error occurred:', error)
 
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          setError(
-            'Credenciales incorrectas. Por favor, verifica tus credenciales.'
-          )
-          break
-        case 400:
-          const responseData = error.response.data
-
-          if (
-            responseData &&
-            typeof responseData === 'object' &&
-            'message' in responseData
-          ) {
-            const message = responseData.message
-            if (message === 'You are not verified') {
-              setError('La cuenta aún no ha sido activada')
-            } else {
-              setError(
-                'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
-              )
-            }
-          } else {
-            setError(
-              'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
-            )
-          }
-          break
-        default:
-          setError(
-            'Ocurrió un error durante el inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
-          )
-          break
-      }
-    } else {
+    if (!error.response) {
       setError(
-        'Ocurrió un error de red. Por favor, verifica tu conexión e inténtalo de nuevo.'
+        'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.'
       )
+      return
     }
+
+    // La API responde igual exista o no el correo: aquí solo llegan el límite de intentos y las fallas
+    if (error.response.status === 429) {
+      setError(
+        'Hiciste demasiados intentos. Espera una hora antes de pedir otro enlace.'
+      )
+      return
+    }
+
+    setError('No pudimos enviar el enlace. Inténtalo de nuevo más tarde.')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,10 +88,7 @@ const PasswordRecovery: React.FC = () => {
 
       if (response.status === 201) {
         // Handle successful login
-        toast.success('Si el correo está registrado, te enviamos un enlace. Revisa tu correo.', {
-          duration: 4000,
-          position: 'top-center'
-        })
+        toast.success('Si el correo está registrado, recibirás un enlace.')
 
         setTimeout(() => {
           window.location.href = '/login'
@@ -123,16 +97,8 @@ const PasswordRecovery: React.FC = () => {
 
         setError(null)
       } else {
-        // Handle login error
-        if (response.status === 401) {
-          setError(
-            'Credenciales incorrectas. Por favor, verifica tus credenciales.'
-          )
-        } else {
-          setError(
-            'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
-          )
-        }
+        setError('No pudimos enviar el enlace. Inténtalo de nuevo más tarde.')
+        setLoading(false)
       }
     } catch (error: any) {
       // Handle network error or other exceptions
@@ -156,7 +122,7 @@ const PasswordRecovery: React.FC = () => {
         </MuiLink>
       }
     >
-      <Toaster />
+      <AppToaster />
       <Box component='form' noValidate onSubmit={handleSubmit}>
         <Stack spacing={2.5}>
           <AuthField

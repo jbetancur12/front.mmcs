@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 
-import { Toast } from './ExcelManipulation/Utils'
+import toast from 'react-hot-toast'
 import { axiosPublic } from '@utils/api'
 import type { AxiosError } from 'axios'
 import { Link } from 'react-router-dom'
 import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
+import AppToaster from 'src/Components/Common/AppToaster'
 // import * as Yup from 'yup'; // Importa Yup para la validación
 
 const PasswordGeneratorForm: React.FC = () => {
@@ -42,7 +43,7 @@ const PasswordGeneratorForm: React.FC = () => {
     setLinkError(null)
 
     if (formData.password !== formData.confirmPassword) {
-      Toast.fire('Las contraseñas no coinciden', '', 'error')
+      toast.error('Las contraseñas no coinciden')
       return
     }
 
@@ -67,11 +68,7 @@ const PasswordGeneratorForm: React.FC = () => {
           'Este enlace no es válido o ya se usó. Solicita uno nuevo para crear tu contraseña.'
         )
       } else {
-        Toast.fire(
-          'No se pudo guardar la contraseña',
-          'Inténtalo de nuevo.',
-          'error'
-        )
+        toast.error('No se pudo guardar la contraseña. Inténtalo de nuevo.')
       }
     } finally {
       setSaving(false)
@@ -93,6 +90,7 @@ const PasswordGeneratorForm: React.FC = () => {
         </MuiLink>
       }
     >
+      <AppToaster />
       <Box component='form' onSubmit={handleSubmit}>
         <Stack spacing={2.5}>
           <AuthField
