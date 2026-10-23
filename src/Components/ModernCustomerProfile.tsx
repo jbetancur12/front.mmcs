@@ -376,12 +376,14 @@ const ModernCustomerProfile: React.FC = () => {
         handleStatusChange={handleStatusChange}
       />
 
-      {/* Statistics Cards */}
-      <CustomerStatsCards
-        stats={stats}
-        statusFilter={statusFilter}
-        handleStatusFilter={handleStatusFilter}
-      />
+      {/* Los indicadores de equipos filtran solo la tabla de Equipos */}
+      {activeTab === 'equipment' && (
+        <CustomerStatsCards
+          stats={stats}
+          statusFilter={statusFilter}
+          handleStatusFilter={handleStatusFilter}
+        />
+      )}
 
       {/* Navigation Tabs */}
       <CustomerProfileTabs

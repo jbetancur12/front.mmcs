@@ -241,9 +241,9 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             label='Equipos contratados'
             value={formatCount(goal.value)}
             icon={<FactCheck />}
-            color='#1976d2'
+            color='#1565c0'
             background='#e3f2fd'
-            valueColor='primary.main'
+            valueColor='#1565c0'
             help='Meta de equipos a calibrar en el año'
             footer={
               <Chip
@@ -268,8 +268,8 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             value={formatCount(indicators.calibrated)}
             icon={<AssignmentTurnedIn />}
             color='#2e7d32'
-            background='#e8f5e8'
-            valueColor='success.main'
+            background='#e8f5e9'
+            valueColor='#2e7d32'
             help='Equipos con certificado de calibración en el año; cada equipo cuenta una vez'
           />
         </Grid>
@@ -289,9 +289,9 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             label='Pendientes por calibrar'
             value={formatCount(indicators.pending)}
             icon={<HourglassTop />}
-            color='#f57c00'
+            color='#b45309'
             background='#fff3e0'
-            valueColor='warning.main'
+            valueColor='#b45309'
             help='Equipos de la meta que aún no tienen certificado'
           />
         </Grid>
@@ -302,6 +302,12 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
           Con una sede elegida, los calibrados y el avance son de esa sede. La
           meta sigue siendo la del cliente completo.
         </Alert>
+      )}
+
+      {canViewContracted && (
+        <Box sx={{ mb: 3 }}>
+          <IndicatorGoalCard customerId={customerId} year={year} goal={goal} />
+        </Box>
       )}
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -325,15 +331,12 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
       </Box>
 
       {canViewContracted && (
-        <Box sx={{ display: 'grid', gap: 3 }}>
-          <ContractedServicesPanel
-            data={contractedQuery.data}
-            isLoading={contractedQuery.isLoading}
-            isError={contractedQuery.isError}
-            onRetry={() => contractedQuery.refetch()}
-          />
-          <IndicatorGoalCard customerId={customerId} year={year} goal={goal} />
-        </Box>
+        <ContractedServicesPanel
+          data={contractedQuery.data}
+          isLoading={contractedQuery.isLoading}
+          isError={contractedQuery.isError}
+          onRetry={() => contractedQuery.refetch()}
+        />
       )}
 
       <TypeAliasDialog

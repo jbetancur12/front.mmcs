@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
-import { Box, Chip, Link, Paper, Typography } from '@mui/material'
+import { Box, Chip, Link, Typography } from '@mui/material'
 import {
-  MaterialReactTable,
   type MRT_Cell,
   type MRT_ColumnDef,
   type MRT_Row
 } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import DataTable from '../Common/DataTable'
 import {
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
@@ -210,10 +209,10 @@ const ContractedServicesPanel: React.FC<Props> = ({
   )
 
   return (
-    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    <Box>
       <Box
         sx={{
-          p: 2,
+          mb: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1,
@@ -233,44 +232,18 @@ const ContractedServicesPanel: React.FC<Props> = ({
           </Typography>
         )}
       </Box>
-      <MaterialReactTable
+      <DataTable
         columns={columns}
         data={data?.services ?? []}
-        localization={MRT_Localization_ES}
+        itemLabel={['ODS', 'ODS']}
+        searchPlaceholder='Buscar ODS o cotización'
         state={{ isLoading }}
-        enableColumnActions={false}
-        enableDensityToggle={false}
-        enableFullScreenToggle={false}
-        enableHiding={false}
-        enableStickyHeader
         initialState={{
           density: 'comfortable',
           pagination: { pageSize: 10, pageIndex: 0 }
         }}
-        muiSearchTextFieldProps={{
-          placeholder: 'Buscar ODS o cotización…',
-          sx: { minWidth: '300px' },
-          variant: 'outlined',
-          inputProps: { 'aria-label': 'Buscar en servicios contratados' }
-        }}
-        muiTableProps={{
-          sx: {
-            '& .MuiTableHead-root .MuiTableCell-root': {
-              backgroundColor: '#f5f5f5',
-              fontWeight: 600
-            },
-            '& .MuiTableFooter-root .MuiTableCell-root': {
-              backgroundColor: '#fafafa'
-            },
-            '& .MuiTableBody-root .MuiTableRow-root:hover': {
-              backgroundColor: 'rgba(0, 191, 165, 0.04)'
-            }
-          }
-        }}
-        muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
-        muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
       />
-    </Paper>
+    </Box>
   )
 }
 
