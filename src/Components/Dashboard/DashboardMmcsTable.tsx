@@ -1,342 +1,175 @@
 import { useMemo } from 'react'
 import {
-  Container,
-  Typography,
-  Box,
-  Grid,
-  IconButton,
-  Skeleton,
-  Chip,
-  Avatar,
-  Paper,
-  Tooltip
-} from '@mui/material'
-import {
-  Business as BusinessIcon,
-  CheckCircle as CheckCircleIcon,
-  Visibility as VisibilityIcon
+  EmailOutlined,
+  PhoneOutlined,
+  TaskAltOutlined,
+  VisibilityOutlined
 } from '@mui/icons-material'
-import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { useCertificatesNextToExpireGrouped } from 'src/hooks/dashboard/useCertificatesDue'
+import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material'
+import { type MRT_ColumnDef } from 'material-react-table'
 import { useNavigate } from 'react-router-dom'
-import Swal from 'sweetalert2'
 
-interface Device {
-  id: number
-  name: string
-  formatId: number | null
-  certificateTemplateId: number
-  magnitude: string
-  unit: string
-  createdAt: string // ISO string date
-  updatedAt: string // ISO string date
+import DataTable from '../Common/DataTable'
+import EmptyState from '../Common/EmptyState'
+import StatusPill from '../Common/StatusPill'
+import { CustomerSummary } from './dashboardCertificates'
+
+interface DashboardTableProps {
+  customers: CustomerSummary[]
 }
 
-interface Certificado {
-  id: number
-  city: string
-  location: string
-  activoFijo: string
-  serie: string
-  calibrationDate: string // ISO string date
-  nextCalibrationDate: string // ISO string date
-  device: Device
-}
-
-interface Customer {
-  id: number
-  nombre: string
-  identificacion: string
-  direccion: string
-  email: string
-  telefono: string
-  ciudad: string
-  departamento: string
-  certificados: Certificado[]
-}
-
-const DashboardTable: React.FC = () => {
+/** Clientes con certificados por vencer: los más urgentes arriba. */
+const DashboardTable: React.FC<DashboardTableProps> = ({ customers }) => {
   const navigate = useNavigate()
-
-  const { data: tableData = [], isLoading: loading } =
-    useCertificatesNextToExpireGrouped<Customer>({
-      onError: (error) => {
-        console.error('Error fetching file data:', error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron cargar los datos de certificados',
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        })
-      }
-    })
-
-
-
-  const handleRowClick = (row: Customer) => {
-    navigate(`/customers/certificates-due/${row.id}`)
-  }
-
-  const handleViewCustomer = (customerId: number) => {
+  const openCustomer = (customerId: number) =>
     navigate(`/customers/certificates-due/${customerId}`)
-  }
 
-  const columnsCustomer = useMemo<MRT_ColumnDef<Customer>[]>(
+  const columns = useMemo<MRT_ColumnDef<CustomerSummary>[]>(
     () => [
       {
         accessorKey: 'nombre',
         header: 'Cliente',
-        size: 250,
-        enableEditing: false,
+        size: 300,
         Cell: ({ row }) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
-              sx={{ 
-                bgcolor: '#ff5722', 
+              sx={{
                 width: 32,
-                height: 32
+                height: 32,
+                bgcolor: '#00BFA5',
+                fontSize: 14,
+                fontWeight: 700
               }}
             >
-              <BusinessIcon sx={{ fontSize: 18 }} />
+              {row.original.nombre.charAt(0).toUpperCase()}
             </Avatar>
-            <Box>
-              <Typography variant="body2" fontWeight="600">
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='body2' fontWeight={600}>
                 {row.original.nombre}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                ID: {row.original.identificacion}
+              <Typography variant='caption' color='text.secondary'>
+                NIT {row.original.identificacion}
               </Typography>
             </Box>
           </Box>
-        ),
+        )
       },
       {
         accessorKey: 'email',
         header: 'Contacto',
-        size: 200,
-        enableEditing: false,
+        size: 260,
         Cell: ({ row }) => (
           <Box>
-            <Typography variant="body2">
-              {row.original.email}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {row.original.telefono}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <EmailOutlined sx={{ fontSize: 16, color: '#6b7280' }} />
+              <Typography variant='body2'>{row.original.email}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <PhoneOutlined sx={{ fontSize: 16, color: '#6b7280' }} />
+              <Typography variant='caption' color='text.secondary'>
+                {row.original.telefono}
+              </Typography>
+            </Box>
           </Box>
-        ),
+        )
       },
       {
         accessorKey: 'ciudad',
         header: 'Ubicación',
-        size: 180,
-        enableEditing: false,
+        size: 170,
         Cell: ({ row }) => (
           <Box>
-            <Typography variant="body2">
-              {row.original.ciudad}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant='body2'>{row.original.ciudad}</Typography>
+            <Typography variant='caption' color='text.secondary'>
               {row.original.departamento}
             </Typography>
           </Box>
-        ),
+        )
       },
       {
-        accessorKey: 'certificados',
-        header: 'Certificados',
-        size: 200,
-        enableEditing: false,
-        Cell: ({ row }) => {
-          const certificados = row.original.certificados || []
-          const now = new Date()
-          
-          let expiredCount = 0
-          let soonToExpireCount = 0
-          
-          certificados.forEach(cert => {
-            const nextDate = new Date(cert.nextCalibrationDate)
-            const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-            
-            if (nextDate < now) {
-              expiredCount++
-            } else if (nextDate <= thirtyDaysFromNow) {
-              soonToExpireCount++
-            }
-          })
-
-          return (
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip
-                label={`Total: ${certificados.length}`}
-                size="small"
-                sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}
-              />
-              {expiredCount > 0 && (
-                <Chip
-                  label={`Vencidos: ${expiredCount}`}
-                  size="small"
-                  sx={{ bgcolor: '#ffebee', color: '#d32f2f' }}
-                />
-              )}
-              {soonToExpireCount > 0 && (
-                <Chip
-                  label={`Próximos: ${soonToExpireCount}`}
-                  size="small"
-                  sx={{ bgcolor: '#fff3e0', color: '#f57c00' }}
-                />
-              )}
-            </Box>
+        accessorKey: 'expired',
+        header: 'Vencidos',
+        size: 120,
+        Cell: ({ cell }) =>
+          cell.getValue<number>() > 0 ? (
+            <StatusPill
+              size='small'
+              tone='error'
+              label={`${cell.getValue<number>().toLocaleString('es-CO')}`}
+            />
+          ) : (
+            <Typography variant='body2' color='text.secondary'>
+              —
+            </Typography>
           )
-        },
+      },
+      {
+        accessorKey: 'upcoming',
+        header: 'Próximos',
+        size: 120,
+        Cell: ({ cell }) =>
+          cell.getValue<number>() > 0 ? (
+            <StatusPill
+              size='small'
+              tone='warning'
+              label={`${cell.getValue<number>().toLocaleString('es-CO')}`}
+            />
+          ) : (
+            <Typography variant='body2' color='text.secondary'>
+              —
+            </Typography>
+          )
+      },
+      {
+        accessorKey: 'total',
+        header: 'Certificados',
+        size: 120,
+        Cell: ({ cell }) => cell.getValue<number>().toLocaleString('es-CO')
       }
     ],
     []
   )
 
-  if (loading) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
-          <Skeleton variant="text" width={400} height={40} />
-        </Box>
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {[...Array(4)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
-            </Grid>
-          ))}
-        </Grid>
-        <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
-      </Container>
-    )
-  }
-
-  if (tableData.length === 0) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 8, 
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)'
-          }}
-        >
-          <CheckCircleIcon sx={{ fontSize: 80, color: '#4caf50', mb: 3 }} />
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 2, color: '#2e7d32' }}>
-            ¡Excelente!
-          </Typography>
-          <Typography variant="h6" sx={{ mb: 2, color: '#388e3c' }}>
-            Certificados al Día
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Todos los certificados están vigentes. No hay certificados vencidos o próximos a vencer.
-          </Typography>
-          <img
-            src='/images/tick.png'
-            alt='Certificados al dia'
-            style={{ maxWidth: '200px', opacity: 0.8 }}
-          />
-        </Paper>
-      </Container>
-    )
-  }
-
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-
-
-
-
-      {/* Table Section */}
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable
-          columns={columnsCustomer}
-          data={tableData}
-          localization={MRT_Localization_ES}
-          state={{
-            isLoading: loading,
-          }}
-          enableRowActions
-          positionActionsColumn="last"
-          renderRowActions={({ row }) => (
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Tooltip title="Ver certificados">
-                <IconButton
-                  size="small"
-                  onClick={() => handleViewCustomer(row.original.id)}
-                  sx={{
-                    color: '#ff5722',
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 87, 34, 0.1)'
-                    }
-                  }}
-                >
-                  <VisibilityIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          )}
-          muiTableProps={{
-            sx: {
-              '& .MuiTableHead-root': {
-                '& .MuiTableCell-root': {
-                  backgroundColor: '#f5f5f5',
-                  fontWeight: 600,
-                }
-              },
-              '& .MuiTableBody-root': {
-                '& .MuiTableRow-root:hover': {
-                  backgroundColor: 'rgba(255, 87, 34, 0.04)',
-                  cursor: 'pointer'
-                }
-              }
-            }
-          }}
-          muiTableBodyRowProps={({ row }) => ({
-            onClick: () => handleRowClick(row.original),
-          })}
-          muiSearchTextFieldProps={{
-            placeholder: 'Buscar clientes...',
-            sx: { minWidth: '300px' },
-            variant: 'outlined',
-          }}
-          muiTopToolbarProps={{
-            sx: {
-              backgroundColor: '#fafafa',
-            }
-          }}
-          muiBottomToolbarProps={{
-            sx: {
-              backgroundColor: '#fafafa',
-            }
-          }}
-          initialState={{
-            density: 'comfortable',
-            pagination: {
-              pageSize: 10,
-              pageIndex: 0,
-            },
-            columnVisibility: {
-              id: false
-            }
-          }}
-          enableColumnFilterModes
-          enableColumnOrdering
-          enableFacetedValues
-          enableRowSelection={false}
-          enableStickyHeader
-          muiTableContainerProps={{
-            sx: {
-              maxHeight: '600px',
-            }
-          }}
+    <DataTable<CustomerSummary>
+      columns={columns}
+      data={customers}
+      itemLabel={['cliente', 'clientes']}
+      searchPlaceholder='Buscar por cliente, NIT, correo o ciudad'
+      enableRowActions
+      initialState={{
+        sorting: [{ id: 'expired', desc: true }],
+        pagination: { pageIndex: 0, pageSize: 25 }
+      }}
+      muiTablePaginationProps={{ rowsPerPageOptions: [10, 25, 50, 100] }}
+      muiTableContainerProps={{ sx: { maxHeight: 'none' } }}
+      muiTableBodyRowProps={({ row }) => ({
+        onClick: () => openCustomer(row.original.id),
+        sx: { cursor: 'pointer' }
+      })}
+      renderRowActions={({ row }) => (
+        <Tooltip title='Ver certificados'>
+          <IconButton
+            size='small'
+            aria-label={`Ver certificados de ${row.original.nombre}`}
+            sx={{ color: '#00695C' }}
+            onClick={(event) => {
+              event.stopPropagation()
+              openCustomer(row.original.id)
+            }}
+          >
+            <VisibilityOutlined fontSize='small' />
+          </IconButton>
+        </Tooltip>
+      )}
+      renderEmptyRowsFallback={() => (
+        <EmptyState
+          icon={<TaskAltOutlined />}
+          title='Ningún cliente coincide'
+          hint='Prueba con otra búsqueda o quita el filtro de los indicadores.'
         />
-      </Paper>
-    </Container>
+      )}
+    />
   )
 }
 

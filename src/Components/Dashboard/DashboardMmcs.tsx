@@ -6,8 +6,6 @@ import {
   Grid,
   IconButton,
   Skeleton,
-  Avatar,
-  Paper,
   Tooltip,
   ToggleButton,
   ToggleButtonGroup
@@ -16,145 +14,85 @@ import {
   Business as BusinessIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
-  CheckCircle as CheckCircleIcon,
   Assignment as AssignmentIcon,
   Refresh as RefreshIcon,
+  TaskAltOutlined,
   ViewModule as ViewModuleIcon,
   TableRows as TableRowsIcon
 } from '@mui/icons-material'
 import { useCertificatesNextToExpireGrouped } from 'src/hooks/dashboard/useCertificatesDue'
 import DashboardTable from './DashboardMmcsTable'
 import DashboardCards from './DashboardMmcsCards'
+import {
+  applyDueFilter,
+  byUrgency,
+  Customer,
+  DueFilter,
+  summarizeCustomers
+} from './dashboardCertificates'
+import EmptyState from '../Common/EmptyState'
+import { bigToast } from '../ExcelManipulation/Utils'
+import LmsPageHeader from '../lms/admin/LmsPageHeader'
 import LmsStatCard from '../lms/admin/LmsStatCard'
-import Swal from 'sweetalert2'
-
-interface Device {
-  id: number
-  name: string
-  formatId: number | null
-  certificateTemplateId: number
-  magnitude: string
-  unit: string
-  createdAt: string
-  updatedAt: string
-}
-
-interface Certificado {
-  id: number
-  city: string
-  location: string
-  activoFijo: string
-  serie: string
-  calibrationDate: string
-  nextCalibrationDate: string
-  device: Device
-}
-
-interface Customer {
-  id: number
-  nombre: string
-  identificacion: string
-  direccion: string
-  email: string
-  telefono: string
-  ciudad: string
-  departamento: string
-  certificados: Certificado[]
-}
 
 /**
- * Dashboard de Certificados por Vencer - Componente Principal con Alternador de Vistas
- *
- * Este componente permite alternar dinámicamente entre dos vistas:
- * - Vista de Tabla: Análisis detallado con MaterialReactTable
- * - Vista de Cards: Navegación visual con cards responsivos
- *
- * Ambas vistas comparten las mismas estadísticas y funcionalidades base.
+ * Inicio del personal interno: clientes con certificados vencidos o por
+ * vencer. Los indicadores de vencidos y próximos filtran la lista, que se
+ * puede ver como tabla o como tarjetas.
  */
 const Dashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
+  const [dueFilter, setDueFilter] = useState<DueFilter>(null)
   const [refreshing, setRefreshing] = useState(false)
 
   const {
-    data: tableData = [],
+    data: rawData = [],
     isLoading,
     refetch
   } = useCertificatesNextToExpireGrouped<Customer>({
     onError: (error) => {
       console.error('Error fetching file data:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los datos de certificados',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      bigToast('No se pudieron cargar los datos de certificados', 'error')
     }
   })
-  // Al refrescar manualmente se muestra el esqueleto, como antes
-  const loading = isLoading || refreshing
+
+  const customers = useMemo(
+    () => summarizeCustomers(rawData).sort(byUrgency),
+    [rawData]
+  )
+  const visibleCustomers = useMemo(
+    () => applyDueFilter(customers, dueFilter),
+    [customers, dueFilter]
+  )
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await refetch()
-    setRefreshing(false)
-    Swal.fire({
-      title: '¡Actualizado!',
-      text: 'Los datos han sido actualizados',
-      icon: 'success',
-      timer: 2000,
-      showConfirmButton: false
-    })
-  }
-
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const totalCustomers = tableData.length
-    const totalCertificates = tableData.reduce(
-      (acc, customer) => acc + customer.certificados.length,
-      0
-    )
-
-    let expiredCount = 0
-    let soonToExpireCount = 0
-
-    tableData.forEach((customer) => {
-      customer.certificados.forEach((cert) => {
-        const now = new Date()
-        const nextDate = new Date(cert.nextCalibrationDate)
-        const thirtyDaysFromNow = new Date(
-          now.getTime() + 30 * 24 * 60 * 60 * 1000
-        )
-
-        if (nextDate < now) {
-          expiredCount++
-        } else if (nextDate <= thirtyDaysFromNow) {
-          soonToExpireCount++
-        }
-      })
-    })
-
-    return {
-      totalCustomers,
-      totalCertificates,
-      expiredCount,
-      soonToExpireCount
-    }
-  }, [tableData])
-
-  const handleViewModeChange = (
-    _event: React.MouseEvent<HTMLElement>,
-    newViewMode: 'table' | 'cards'
-  ) => {
-    if (newViewMode !== null) {
-      setViewMode(newViewMode)
+    try {
+      await refetch()
+      bigToast('Datos actualizados', 'success')
+    } finally {
+      setRefreshing(false)
     }
   }
 
-  if (loading) {
+  const stats = useMemo(
+    () => ({
+      totalCustomers: customers.length,
+      totalCertificates: customers.reduce((sum, c) => sum + c.total, 0),
+      expiredCount: customers.reduce((sum, c) => sum + c.expired, 0),
+      soonToExpireCount: customers.reduce((sum, c) => sum + c.upcoming, 0)
+    }),
+    [customers]
+  )
+
+  const toggleFilter = (filter: Exclude<DueFilter, null>) =>
+    setDueFilter((current) => (current === filter ? null : filter))
+
+  if (isLoading) {
     return (
       <Container maxWidth='xl' sx={{ py: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Skeleton variant='circular' width={40} height={40} sx={{ mr: 2 }} />
+          <Skeleton variant='circular' width={48} height={48} sx={{ mr: 2 }} />
           <Skeleton variant='text' width={400} height={40} />
         </Box>
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -168,142 +106,93 @@ const Dashboard: React.FC = () => {
             </Grid>
           ))}
         </Grid>
-        <Skeleton variant='rectangular' height={400} sx={{ borderRadius: 2 }} />
+        <Skeleton
+          variant='rectangular'
+          height={400}
+          sx={{ borderRadius: '16px' }}
+        />
       </Container>
     )
   }
 
-  if (tableData.length === 0) {
+  if (customers.length === 0) {
     return (
       <Container maxWidth='xl' sx={{ py: 3 }}>
-        <Paper
-          elevation={2}
-          sx={{
-            p: 8,
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)'
-          }}
-        >
-          <CheckCircleIcon sx={{ fontSize: 80, color: '#4caf50', mb: 3 }} />
-          <Typography
-            variant='h4'
-            sx={{ fontWeight: 600, mb: 2, color: '#2e7d32' }}
-          >
-            ¡Excelente!
-          </Typography>
-          <Typography variant='h6' sx={{ mb: 2, color: '#388e3c' }}>
-            Certificados al Día
-          </Typography>
-          <Typography variant='body1' color='text.secondary' sx={{ mb: 4 }}>
-            Todos los certificados están vigentes. No hay certificados vencidos
-            o próximos a vencer.
-          </Typography>
-          <img
-            src='/images/tick.png'
-            alt='Certificados al dia'
-            style={{ maxWidth: '200px', opacity: 0.8 }}
-          />
-        </Paper>
+        <EmptyState
+          icon={<TaskAltOutlined />}
+          title='Certificados al día'
+          hint='Todos los certificados están vigentes: no hay vencidos ni próximos a vencer.'
+        />
       </Container>
     )
   }
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      {/* Header Section */}
-      <Box component='header' sx={{ mb: 4 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: 3
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar
-              sx={{
-                bgcolor: '#ff5722',
-                mr: 2,
-                width: 48,
-                height: 48
-              }}
-            >
-              <AssignmentIcon sx={{ fontSize: 28 }} />
-            </Avatar>
-            <Box>
-              <Typography variant='h4' component='h1' fontWeight='bold'>
-                Certificados por Vencer
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Clientes con certificados vencidos o próximos a vencer
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+      <LmsPageHeader
+        title='Certificados por vencer'
+        subtitle='Clientes con certificados vencidos o próximos a vencer, los más urgentes primero'
+        icon={<AssignmentIcon />}
+        actions={
+          <>
             <Tooltip title='Actualizar datos'>
-              <IconButton
-                onClick={handleRefresh}
-                disabled={refreshing}
-                sx={{
-                  bgcolor: '#f5f5f5',
-                  '&:hover': {
-                    bgcolor: '#e0e0e0'
-                  }
-                }}
-              >
-                <RefreshIcon
-                  sx={{
-                    animation: refreshing ? 'spin 1s linear infinite' : 'none',
-                    '@keyframes spin': {
-                      '0%': { transform: 'rotate(0deg)' },
-                      '100%': { transform: 'rotate(360deg)' }
-                    }
-                  }}
-                />
-              </IconButton>
+              <span>
+                <IconButton
+                  aria-label='Actualizar datos'
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  sx={{ border: '1px solid #e5e7eb', borderRadius: '10px' }}
+                >
+                  <RefreshIcon
+                    sx={{
+                      animation: refreshing
+                        ? 'spin 1s linear infinite'
+                        : 'none',
+                      '@keyframes spin': {
+                        '0%': { transform: 'rotate(0deg)' },
+                        '100%': { transform: 'rotate(360deg)' }
+                      },
+                      '@media (prefers-reduced-motion: reduce)': {
+                        animation: 'none'
+                      }
+                    }}
+                  />
+                </IconButton>
+              </span>
             </Tooltip>
-
             <ToggleButtonGroup
               value={viewMode}
               exclusive
-              onChange={handleViewModeChange}
-              aria-label='Vista del dashboard'
+              onChange={(_event, next) => next && setViewMode(next)}
+              aria-label='Vista de los clientes'
               size='small'
               sx={{
+                bgcolor: '#fff',
                 '& .MuiToggleButton-root': {
-                  border: '1px solid #e0e0e0',
-                  '&.Mui-selected': {
-                    bgcolor: '#ff5722',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: '#e64a19'
-                    }
-                  }
+                  borderColor: '#e5e7eb',
+                  color: '#374151'
+                },
+                '& .Mui-selected, & .Mui-selected:hover': {
+                  bgcolor: '#E0F7F4 !important',
+                  color: '#00695C !important'
                 }
               }}
             >
               <ToggleButton value='table' aria-label='Vista de tabla'>
-                <Tooltip title='Vista de tabla'>
-                  <TableRowsIcon />
-                </Tooltip>
+                <TableRowsIcon />
               </ToggleButton>
-              <ToggleButton value='cards' aria-label='Vista de cards'>
-                <Tooltip title='Vista de cards'>
-                  <ViewModuleIcon />
-                </Tooltip>
+              <ToggleButton value='cards' aria-label='Vista de tarjetas'>
+                <ViewModuleIcon />
               </ToggleButton>
             </ToggleButtonGroup>
-          </Box>
-        </Box>
-      </Box>
+          </>
+        }
+      />
 
-      {/* Indicadores: el color solo aparece cuando el valor pide atención */}
+      {/* Vencidos y próximos filtran la lista; el color aparece solo cuando hay algo */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <LmsStatCard
-            variant='quiet'
             label='Clientes'
             value={stats.totalCustomers}
             icon={<BusinessIcon />}
@@ -312,7 +201,6 @@ const Dashboard: React.FC = () => {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <LmsStatCard
-            variant='quiet'
             label='Certificados'
             value={stats.totalCertificates}
             icon={<AssignmentIcon />}
@@ -321,26 +209,47 @@ const Dashboard: React.FC = () => {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <LmsStatCard
-            variant='quiet'
             label='Próximos a vencer'
             value={stats.soonToExpireCount}
             icon={<WarningIcon />}
             tone='orange'
+            caption={
+              dueFilter === 'upcoming' ? 'Filtro activo' : 'Clic para filtrar'
+            }
+            active={dueFilter === 'upcoming'}
+            onClick={() => toggleFilter('upcoming')}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <LmsStatCard
-            variant='quiet'
             label='Vencidos'
             value={stats.expiredCount}
             icon={<ErrorIcon />}
             tone='red'
+            caption={
+              dueFilter === 'expired' ? 'Filtro activo' : 'Clic para filtrar'
+            }
+            active={dueFilter === 'expired'}
+            onClick={() => toggleFilter('expired')}
           />
         </Grid>
       </Grid>
 
-      {/* Dynamic Content Based on View Mode */}
-      {viewMode === 'table' ? <DashboardTable /> : <DashboardCards />}
+      {dueFilter ? (
+        <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+          Mostrando los clientes con certificados{' '}
+          <strong>
+            {dueFilter === 'expired' ? 'vencidos' : 'próximos a vencer'}
+          </strong>
+          .
+        </Typography>
+      ) : null}
+
+      {viewMode === 'table' ? (
+        <DashboardTable customers={visibleCustomers} />
+      ) : (
+        <DashboardCards customers={visibleCustomers} />
+      )}
     </Container>
   )
 }

@@ -1,339 +1,221 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
-  Container,
-  Typography,
+  EmailOutlined,
+  LocationOnOutlined,
+  PhoneOutlined,
+  SearchOff,
+  VisibilityOutlined
+} from '@mui/icons-material'
+import {
+  Avatar,
   Box,
-  Grid,
+  Button,
   Card,
   CardContent,
-  CardActions,
-  Button,
-  TextField,
+  Grid,
   InputAdornment,
-  IconButton,
-  Skeleton,
-  Fade,
-  Chip,
-  Avatar,
-  Paper
+  TextField,
+  Typography
 } from '@mui/material'
-import {
-  Search as SearchIcon,
-  Clear as ClearIcon,
-  Business as BusinessIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  CheckCircle as CheckCircleIcon,
-  Visibility as VisibilityIcon
-} from '@mui/icons-material'
-import { useCertificatesNextToExpireGrouped } from 'src/hooks/dashboard/useCertificatesDue'
+import { Search as SearchIcon } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import Swal from 'sweetalert2'
 
-interface Device {
-  id: number
-  name: string
-  formatId: number | null
-  certificateTemplateId: number
-  magnitude: string
-  unit: string
-  createdAt: string // ISO string date
-  updatedAt: string // ISO string date
+import EmptyState from '../Common/EmptyState'
+import StatusPill from '../Common/StatusPill'
+import { CustomerSummary } from './dashboardCertificates'
+
+interface DashboardCardsProps {
+  customers: CustomerSummary[]
 }
 
-interface Certificado {
-  id: number
-  city: string
-  location: string
-  activoFijo: string
-  serie: string
-  calibrationDate: string // ISO string date
-  nextCalibrationDate: string // ISO string date
-  device: Device
-}
-
-interface Customer {
-  id: number
-  nombre: string
-  identificacion: string
-  direccion: string
-  email: string
-  telefono: string
-  ciudad: string
-  departamento: string
-  certificados: Certificado[]
-}
-
-const DashboardCards: React.FC = () => {
+/** Los mismos clientes de la tabla, en tarjetas; los más urgentes primero. */
+const DashboardCards: React.FC<DashboardCardsProps> = ({ customers }) => {
   const navigate = useNavigate()
-
-  const { data: tableData = [], isLoading: loading } =
-    useCertificatesNextToExpireGrouped<Customer>({
-      onError: (error) => {
-        console.error('Error fetching file data:', error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron cargar los datos de certificados',
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        })
-      }
-    })
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Filter data based on search term
-  const filteredData = useMemo(() => {
-    if (!searchTerm) return tableData
-    return tableData.filter(customer =>
-      customer.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.identificacion.includes(searchTerm) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.ciudad.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    const list = [...customers].sort(
+      (a, b) => b.expired - a.expired || b.upcoming - a.upcoming
     )
-  }, [tableData, searchTerm])
-
-  const clearSearch = () => {
-    setSearchTerm('')
-  }
-
-  const handleViewCustomer = (customerId: number) => {
-    navigate(`/calibraciones/certificados/${customerId}`)
-  }
-
-  const getCustomerStatus = (customer: Customer) => {
-    const now = new Date()
-    let hasExpired = false
-    let hasSoonToExpire = false
-    
-    customer.certificados.forEach(cert => {
-      const nextDate = new Date(cert.nextCalibrationDate)
-      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-      
-      if (nextDate < now) {
-        hasExpired = true
-      } else if (nextDate <= thirtyDaysFromNow) {
-        hasSoonToExpire = true
-      }
-    })
-
-    if (hasExpired) {
-      return { status: 'expired', color: '#d32f2f', bgColor: '#ffebee', label: 'Certificados Vencidos', icon: ErrorIcon }
-    } else if (hasSoonToExpire) {
-      return { status: 'warning', color: '#f57c00', bgColor: '#fff3e0', label: 'Próximos a Vencer', icon: WarningIcon }
-    } else {
-      return { status: 'active', color: '#388e3c', bgColor: '#e8f5e8', label: 'Al Día', icon: CheckCircleIcon }
-    }
-  } 
- if (loading) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
-          <Skeleton variant="text" width={400} height={40} />
-        </Box>
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {[...Array(4)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
-            </Grid>
-          ))}
-        </Grid>
-        <Grid container spacing={3}>
-          {[...Array(6)].map((_, index) => (
-            <Grid item xs={12} md={6} lg={4} key={index}>
-              <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
+    if (!term) return list
+    return list.filter((customer) =>
+      [
+        customer.nombre,
+        customer.identificacion,
+        customer.email,
+        customer.ciudad
+      ].some((value) => value?.toLowerCase().includes(term))
     )
-  }
-
-  if (tableData.length === 0) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 8, 
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)'
-          }}
-        >
-          <CheckCircleIcon sx={{ fontSize: 80, color: '#4caf50', mb: 3 }} />
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 2, color: '#2e7d32' }}>
-            ¡Excelente!
-          </Typography>
-          <Typography variant="h6" sx={{ mb: 2, color: '#388e3c' }}>
-            Certificados al Día
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Todos los certificados están vigentes. No hay certificados vencidos o próximos a vencer.
-          </Typography>
-          <img
-            src='/images/tick.png'
-            alt='Certificados al dia'
-            style={{ maxWidth: '200px', opacity: 0.8 }}
-          />
-        </Paper>
-      </Container>
-    )
-  }
+  }, [customers, searchTerm])
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      {/* Search Bar */}
-      <Box sx={{ mb: 3 }}>
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          mb: 3,
+          flexWrap: 'wrap'
+        }}
+      >
         <TextField
-          label="Buscar clientes"
-          variant="outlined"
+          size='small'
+          placeholder='Buscar por cliente, NIT, correo o ciudad'
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ 
-            maxWidth: 400,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 3
-            }
-          }}
+          onChange={(event) => setSearchTerm(event.target.value)}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
+              <InputAdornment position='start'>
+                <SearchIcon sx={{ color: '#6b7280' }} />
               </InputAdornment>
-            ),
-            endAdornment: searchTerm && (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={clearSearch}
-                  edge="end"
-                >
-                  <ClearIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
+            )
+          }}
+          inputProps={{ 'aria-label': 'Buscar clientes' }}
+          sx={{
+            minWidth: { xs: 0, sm: 340 },
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+              { borderColor: '#00897B', borderWidth: 2 }
           }}
         />
+        <Typography variant='body2' color='text.secondary' aria-live='polite'>
+          {filtered.length.toLocaleString('es-CO')}{' '}
+          {filtered.length === 1 ? 'cliente' : 'clientes'}
+        </Typography>
       </Box>
 
-      {/* Cards Content */}
-      <Grid container spacing={3}>
-        {filteredData.map((customer) => {
-          const customerStatus = getCustomerStatus(customer)
-          return (
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={<SearchOff />}
+          title='Ningún cliente coincide'
+          hint='Prueba con otra búsqueda o quita el filtro de los indicadores.'
+        />
+      ) : (
+        <Grid container spacing={3}>
+          {filtered.map((customer) => (
             <Grid item xs={12} md={6} lg={4} key={customer.id}>
-              <Fade in timeout={300}>
-                <Card 
-                  elevation={2}
-                  sx={{ 
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      elevation: 6,
-                      transform: 'translateY(-4px)'
-                    }
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Avatar
-                        sx={{ 
-                          bgcolor: '#ff5722', 
-                          mr: 2,
-                          width: 40,
-                          height: 40
-                        }}
-                      >
-                        <BusinessIcon />
-                      </Avatar>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
-                          {customer.nombre}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" noWrap>
-                          ID: {customer.identificacion}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        <strong>Email:</strong> {customer.email}
+              <Card
+                elevation={0}
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderRadius: '16px',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: 'none'
+                }}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: '#00BFA5',
+                        mr: 1.5,
+                        width: 40,
+                        height: 40,
+                        fontWeight: 700
+                      }}
+                    >
+                      {customer.nombre.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant='subtitle1' noWrap fontWeight={700}>
+                        {customer.nombre}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        <strong>Teléfono:</strong> {customer.telefono}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        <strong>Ubicación:</strong> {customer.ciudad}, {customer.departamento}
+                      <Typography variant='caption' color='text.secondary'>
+                        NIT {customer.identificacion}
                       </Typography>
                     </Box>
+                  </Box>
 
-                    <Box 
-                      sx={{ 
-                        p: 2, 
-                        backgroundColor: customerStatus.bgColor,
-                        borderRadius: 2,
-                        border: `1px solid ${customerStatus.color}30`,
-                        mb: 2
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <customerStatus.icon 
-                          sx={{ 
-                            fontSize: 20, 
-                            color: customerStatus.color,
-                            mr: 1
-                          }} 
-                        />
-                        <Typography 
-                          variant="body2" 
-                          fontWeight="600" 
-                          sx={{ color: customerStatus.color }}
+                  <Box sx={{ display: 'grid', gap: 0.75, mb: 2 }}>
+                    {[
+                      { icon: <EmailOutlined />, text: customer.email },
+                      { icon: <PhoneOutlined />, text: customer.telefono },
+                      {
+                        icon: <LocationOnOutlined />,
+                        text: [customer.ciudad, customer.departamento]
+                          .filter(Boolean)
+                          .join(', ')
+                      }
+                    ].map(({ icon, text }, index) => (
+                      <Box
+                        key={index}
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        {React.cloneElement(icon, {
+                          sx: { fontSize: 16, color: '#6b7280' }
+                        })}
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          noWrap
                         >
-                          {customerStatus.label}
+                          {text || '—'}
                         </Typography>
                       </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {customer.certificados.length} certificado(s) total
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                  
-                  <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<VisibilityIcon />}
-                      onClick={() => handleViewCustomer(customer.id)}
-                      sx={{
-                        bgcolor: '#ff5722',
-                        '&:hover': {
-                          bgcolor: '#e64a19'
-                        }
-                      }}
-                    >
-                      Ver Certificados
-                    </Button>
-                    
-                    <Chip
-                      label={`${customer.certificados.length} cert.`}
-                      size="small"
-                      sx={{
-                        bgcolor: '#e3f2fd',
-                        color: '#1976d2',
-                        fontWeight: 600
-                      }}
-                    />
-                  </CardActions>
-                </Card>
-              </Fade>
+                    ))}
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 1,
+                      flexWrap: 'wrap',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {customer.expired > 0 ? (
+                      <StatusPill
+                        size='small'
+                        tone='error'
+                        label={`${customer.expired} vencidos`}
+                      />
+                    ) : null}
+                    {customer.upcoming > 0 ? (
+                      <StatusPill
+                        size='small'
+                        tone='warning'
+                        label={`${customer.upcoming} próximos`}
+                      />
+                    ) : null}
+                    <Typography variant='caption' color='text.secondary'>
+                      de {customer.total} certificados
+                    </Typography>
+                  </Box>
+                </CardContent>
+
+                <Box sx={{ px: 2, pb: 2 }}>
+                  <Button
+                    fullWidth
+                    variant='outlined'
+                    startIcon={<VisibilityOutlined />}
+                    onClick={() =>
+                      navigate(`/customers/certificates-due/${customer.id}`)
+                    }
+                    sx={{
+                      borderRadius: '10px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderColor: '#e5e7eb',
+                      color: '#374151',
+                      '&:hover': {
+                        borderColor: '#00897B',
+                        color: '#00695C',
+                        backgroundColor: '#E0F7F4'
+                      }
+                    }}
+                  >
+                    Ver certificados
+                  </Button>
+                </Box>
+              </Card>
             </Grid>
-          )
-        })}
-      </Grid>
-    </Container>
+          ))}
+        </Grid>
+      )}
+    </Box>
   )
 }
 
