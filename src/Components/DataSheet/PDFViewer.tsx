@@ -1,6 +1,13 @@
-import { useEffect, useState } from 'react'
-import { ArrowBack } from '@mui/icons-material'
-import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
+import React, { useEffect, useState } from 'react'
+import { ArrowBack, Download } from '@mui/icons-material'
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Typography
+} from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
@@ -13,11 +20,20 @@ interface PDFViewerProps {
   path: string
 }
 
-const PDFViewer = ({ path }: PDFViewerProps) => {
+const TEAL_BUTTON_SX = {
+  textTransform: 'none',
+  fontWeight: 600,
+  color: '#00695C',
+  borderColor: '#00BFA5',
+  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+} as const
+
+const PDFViewer: React.FC<PDFViewerProps> = ({ path }) => {
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const location = useLocation()
   const [pdfData, setPdfData] = useState<PDFData | null>(null)
+  const [failed, setFailed] = useState(false)
   const navigate = useNavigate()
   const searchParams = new URLSearchParams(location.search)
 
@@ -25,7 +41,11 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
   const headquarter = searchParams.get('headquarter') || ''
 
   useEffect(() => {
+    let blobUrl: string | null = null
+    let cancelled = false
+
     const fetchPDF = async () => {
+      setFailed(false)
       try {
         const response = await axiosPrivate.get(`/reports/${path}/${params}`, {
           params: { headquarter },
@@ -42,23 +62,47 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
           }
         }
 
-        // Convertir el arraybuffer a base64
-        // const base64PDF = Buffer.from(response.data, 'binary').toString(
-        //   'base64'
-        // )
         const blob = new Blob([response.data], { type: 'application/pdf' })
-        const blobUrl = URL.createObjectURL(blob)
-        setPdfData({
-          url: blobUrl,
-          fileName
-        })
+        blobUrl = URL.createObjectURL(blob)
+        if (!cancelled) setPdfData({ url: blobUrl, fileName })
       } catch (error) {
         console.error('Error al obtener el PDF:', error)
+        if (!cancelled) setFailed(true)
       }
     }
 
     fetchPDF()
+    return () => {
+      cancelled = true
+      if (blobUrl) URL.revokeObjectURL(blobUrl)
+    }
   }, [headquarter, params, path, axiosPrivate])
+
+  const backButton = (
+    <Button
+      variant='outlined'
+      startIcon={<ArrowBack />}
+      onClick={() => navigate(-1)}
+      sx={TEAL_BUTTON_SX}
+    >
+      Volver
+    </Button>
+  )
+
+  if (failed) {
+    return (
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <Box sx={{ mb: 2 }}>{backButton}</Box>
+        <Alert
+          severity='error'
+          variant='outlined'
+          sx={{ borderRadius: '12px' }}
+        >
+          No se pudo generar el PDF. Vuelve a intentarlo en unos minutos.
+        </Alert>
+      </Container>
+    )
+  }
 
   if (!pdfData) {
     return (
@@ -69,7 +113,7 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
         height='100vh'
         flexDirection='column'
       >
-        <CircularProgress />
+        <CircularProgress sx={{ color: '#00BFA5' }} />
         <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
           Generando PDF...
         </Typography>
@@ -78,16 +122,40 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
   }
 
   return (
-    <>
-      <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
-        <ArrowBack />
-      </IconButton>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1.5,
+          mb: 2
+        }}
+      >
+        {backButton}
+        <Button
+          component='a'
+          href={pdfData.url}
+          download={pdfData.fileName}
+          variant='contained'
+          startIcon={<Download />}
+          sx={{
+            textTransform: 'none',
+            fontWeight: 600,
+            bgcolor: '#00BFA5',
+            '&:hover': { bgcolor: '#00897B' }
+          }}
+        >
+          Descargar PDF
+        </Button>
+      </Box>
 
       <object
         data={pdfData.url}
         type='application/pdf'
         width='100%'
-        height='1000px'
+        style={{ height: 'calc(100vh - 170px)', minHeight: 500 }}
         title='PDF'
         name='PDF'
       >
@@ -104,7 +172,7 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
             href={pdfData.url}
             download={pdfData.fileName}
             style={{
-              color: '#1565c0',
+              color: '#00695C',
               textDecoration: 'underline',
               marginTop: 8
             }}
@@ -113,7 +181,7 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
           </a>
         </Box>
       </object>
-    </>
+    </Container>
   )
 }
 
