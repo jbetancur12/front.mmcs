@@ -8,6 +8,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
   TextField,
   Typography
 } from '@mui/material'
@@ -91,10 +94,6 @@ interface BusyState {
   text?: string
 }
 
-/**
- * Diálogo de espera para una operación larga ("Generando el PDF…"). No se
- * cierra solo: llama a `hide()` cuando termine, también si falla (`finally`).
- */
 export interface PromptOptions {
   title: string
   label?: string
@@ -127,6 +126,45 @@ export const promptDialog = (options: PromptOptions): Promise<PromptResult> =>
     setPrompt({ ...options, resolve })
   })
 
+export interface ChoiceOption {
+  value: string
+  label: string
+}
+
+export interface ChoiceOptions {
+  title: string
+  /** Contexto de la decisión (puede llevar una lista o datos del registro). */
+  text?: React.ReactNode
+  options: ChoiceOption[]
+  /** Opción marcada al abrir; sin ella el botón queda inactivo hasta escoger. */
+  defaultValue?: string
+  confirmLabel?: string
+  cancelLabel?: string
+}
+
+export interface ChoiceResult {
+  isConfirmed: boolean
+  isDismissed: boolean
+  value?: string
+}
+
+type PendingChoice = ChoiceOptions & { resolve: (result: ChoiceResult) => void }
+let setChoice: ((pending: PendingChoice | null) => void) | null = null
+
+/** Pide escoger una opción entre varias ("Actualizar" o "Crear"). Devuelve `value` si se confirma. */
+export const choiceDialog = (options: ChoiceOptions): Promise<ChoiceResult> =>
+  new Promise((resolve) => {
+    if (!setChoice) {
+      resolve({ isConfirmed: false, isDismissed: true })
+      return
+    }
+    setChoice({ ...options, resolve })
+  })
+
+/**
+ * Diálogo de espera para una operación larga ("Generando el PDF…"). No se
+ * cierra solo: llama a `hide()` cuando termine, también si falla (`finally`).
+ */
 export const busyDialog = {
   show: (title: string, text?: string) => setBusy?.({ title, text }),
   hide: () => setBusy?.(null)
@@ -137,8 +175,14 @@ export const DialogHost: React.FC = () => {
   const [busy, setBusyState] = useState<BusyState | null>(null)
   const [prompt, setPromptState] = useState<PendingPrompt | null>(null)
   const [promptValue, setPromptValue] = useState('')
+  const [choice, setChoiceState] = useState<PendingChoice | null>(null)
+  const [choiceValue, setChoiceValue] = useState('')
 
   useEffect(() => {
+    setChoice = (pending) => {
+      setChoiceValue(pending?.defaultValue ?? '')
+      setChoiceState(pending)
+    }
     enqueueConfirm = (pending) => setQueue((current) => [...current, pending])
     setBusy = setBusyState
     setPrompt = (pending) => {
@@ -149,8 +193,18 @@ export const DialogHost: React.FC = () => {
       enqueueConfirm = null
       setBusy = null
       setPrompt = null
+      setChoice = null
     }
   }, [])
+
+  const closeChoice = (isConfirmed: boolean) => {
+    choice?.resolve({
+      isConfirmed,
+      isDismissed: !isConfirmed,
+      value: isConfirmed ? choiceValue : undefined
+    })
+    setChoiceState(null)
+  }
 
   const current = queue[0]
   const settle = (isConfirmed: boolean) => {
@@ -238,6 +292,61 @@ export const DialogHost: React.FC = () => {
             }}
           >
             {prompt?.confirmLabel ?? 'Aceptar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(choice)}
+        onClose={() => closeChoice(false)}
+        maxWidth='xs'
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 4 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pt: 3 }}>{choice?.title}</DialogTitle>
+        <DialogContent>
+          {choice?.text && (
+            <Typography
+              component='div'
+              variant='body2'
+              color='text.secondary'
+              sx={{ mb: 1.5 }}
+            >
+              {choice.text}
+            </Typography>
+          )}
+          <RadioGroup
+            value={choiceValue}
+            onChange={(event) => setChoiceValue(event.target.value)}
+          >
+            {choice?.options.map((option) => (
+              <FormControlLabel
+                key={option.value}
+                value={option.value}
+                label={option.label}
+                control={<Radio sx={{ '&.Mui-checked': { color: '#00BFA5' } }} />}
+              />
+            ))}
+          </RadioGroup>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+          <Button
+            onClick={() => closeChoice(false)}
+            sx={{ textTransform: 'none' }}
+          >
+            {choice?.cancelLabel ?? 'Cancelar'}
+          </Button>
+          <Button
+            variant='contained'
+            disabled={!choiceValue}
+            onClick={() => closeChoice(true)}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              bgcolor: '#00BFA5',
+              '&:hover': { bgcolor: '#00ACC1' }
+            }}
+          >
+            {choice?.confirmLabel ?? 'Aceptar'}
           </Button>
         </DialogActions>
       </Dialog>

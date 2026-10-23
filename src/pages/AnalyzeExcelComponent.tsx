@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
 import {
   Box,
   Button,
@@ -26,6 +24,7 @@ import Select from 'react-select'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useUploadRawCertificate } from '@hooks/calibration/useUploadRawCertificate'
 import { notify } from 'src/utils/notify'
+import { choiceDialog } from 'src/utils/confirm'
 
 // Importa los componentes de MUI
 
@@ -499,32 +498,26 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       }
     } catch (error: any) {
       if (error.response.status === 409) {
-        const MySwal = withReactContent(Swal)
-        MySwal.fire({
-          title: (
+        // El diálogo espera al usuario: el cargando no debe taparlo
+        setLoading(false)
+        const obj = await choiceDialog({
+          title: error.response.data.message,
+          text: (
             <div>
-              <p>{error.response.data.message}</p>
               <ul>
                 <li>Serie: {error.response.data.serial}</li>
                 <li>Activo fijo: {error.response.data.activoFijo}</li>
               </ul>
+              <p>¿Qué deseas hacer con el archivo?</p>
             </div>
           ),
-          text: '¿Qué deseas hacer con el archivo?',
-          icon: 'warning',
-          input: 'radio',
-          showCancelButton: true,
-          inputValue: 'update',
-          inputValidator: (value) => {
-            if (!value) {
-              return 'Necesitas Escoger una opción!'
-            }
-          },
-          inputOptions: {
-            update: 'Actualizar',
-            create: 'Crear'
-          }
-        }).then(async (obj) => {
+          options: [
+            { value: 'update', label: 'Actualizar' },
+            { value: 'create', label: 'Crear' }
+          ],
+          defaultValue: 'update'
+        })
+        // Cancelar el diálogo descarta el archivo
           if (obj.isDismissed) {
             removeSelectedFile()
             resetForm()
@@ -556,7 +549,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
               obj.value === 'create' ? 'Archivo Creado' : 'Archivo Actualizado'
             )
           }
-        })
       }
       console.error('Error al enviar datos:', error)
     } finally {
