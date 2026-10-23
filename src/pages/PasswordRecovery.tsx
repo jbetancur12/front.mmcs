@@ -111,7 +111,7 @@ const PasswordRecovery: React.FC = () => {
 
       if (response.status === 201) {
         // Handle successful login
-        toast.success('Enlace enviado. Revisa tu correo.', {
+        toast.success('Si el correo está registrado, te enviamos un enlace. Revisa tu correo.', {
           duration: 4000,
           position: 'top-center'
         })

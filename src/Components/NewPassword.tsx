@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 
 import { Toast } from './ExcelManipulation/Utils'
 import { axiosPublic } from '@utils/api'
+import type { AxiosError } from 'axios'
 import { Link } from 'react-router-dom'
-import { Box, Button, Link as MuiLink, Stack } from '@mui/material'
+import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
 // import * as Yup from 'yup'; // Importa Yup para la validación
@@ -32,21 +33,48 @@ const PasswordGeneratorForm: React.FC = () => {
     })
   }
 
+  // Enlace vencido o ya usado: el usuario debe pedir otro
+  const [linkError, setLinkError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLinkError(null)
 
-    if (formData.password === formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
+      Toast.fire('Las contraseñas no coinciden', '', 'error')
+      return
+    }
+
+    setSaving(true)
+    try {
       const response = await axiosPublic.put(
-        `/auth/new-password/?code=${code}`,
-        {
-          password: formData.password
-        }
+        '/auth/new-password',
+        { password: formData.password },
+        { params: { code } }
       )
-      if (response.status == 200) {
+      if (response.status === 200) {
         window.location.href = '/login'
       }
-    } else {
-      Toast.fire('Las contraseñas no coinciden', '', 'error')
+    } catch (error) {
+      const data = (error as AxiosError<{ code?: string }>).response?.data
+      if (data?.code === 'CODE_EXPIRED') {
+        setLinkError(
+          'Este enlace venció. Solicita uno nuevo para crear tu contraseña.'
+        )
+      } else if (data?.code === 'INVALID_CODE') {
+        setLinkError(
+          'Este enlace no es válido o ya se usó. Solicita uno nuevo para crear tu contraseña.'
+        )
+      } else {
+        Toast.fire(
+          'No se pudo guardar la contraseña',
+          'Inténtalo de nuevo.',
+          'error'
+        )
+      }
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -88,9 +116,32 @@ const PasswordGeneratorForm: React.FC = () => {
             value={formData.confirmPassword}
             onChange={handleInputChange}
           />
+          {linkError && (
+            <Alert
+              severity='warning'
+              sx={{ borderRadius: '8px' }}
+              action={
+                <MuiLink
+                  component={Link}
+                  to='/password-recovery'
+                  underline='hover'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#00695c',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Pedir otro enlace
+                </MuiLink>
+              }
+            >
+              {linkError}
+            </Alert>
+          )}
           <Button
             type='submit'
             fullWidth
+            disabled={saving}
             sx={{
               height: 48,
               borderRadius: '12px',
