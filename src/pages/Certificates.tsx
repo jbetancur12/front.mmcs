@@ -4,40 +4,34 @@ import { useQueryClient } from 'react-query'
 import {
   Box,
   Button,
-  IconButton,
-  TextField,
-  Typography,
-  Card,
-  CardContent,
-  Grid,  
-  Avatar,
+  Container,
+  Grid,
+  Paper,
   Skeleton,
-  Tooltip,
-  Container
+  Typography
 } from '@mui/material'
+import {
+  ArrowBack,
+  CheckCircle,
+  Devices,
+  Edit,
+  Error as ErrorIcon,
+  Info,
+  SwapHoriz,
+  Update,
+  Warning
+} from '@mui/icons-material'
 import CertificatesList from '../Components/CertificatesList'
 import UpdateCertificateModal from '../Components/UpdateCertificateModal'
-import { userStore } from '../store/userStore'
-import { useStore } from '@nanostores/react'
-import { 
-  ArrowBack, 
-  Edit, 
-  Business,
-  LocationOn,
-  Devices,
-  CalendarToday,
-  Info,
-  Settings,
-  CheckCircle,
-  Warning,
-  Error as ErrorIcon,
-  Update,
-  SwapHoriz
-} from '@mui/icons-material'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
-import useAxiosPrivate from '@utils/use-axios-private'
-import { useFetchDevicesNow } from '@hooks/devices/useDevices'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import {
+  DetailCell,
+  DetailField,
+  DetailSection
+} from 'src/Components/Common/DetailBlocks'
+import CertificateEditDialog from '../Components/certificateDetail/CertificateEditDialog'
+import BulkReassignDialog from '../Components/certificateDetail/BulkReassignDialog'
+import { bigToast } from '../Components/ExcelManipulation/Utils'
 import {
   FILE_QUERY_KEYS,
   useBulkReassignFileDevice,
@@ -45,24 +39,9 @@ import {
   useUpdateFile
 } from '@hooks/files/useFiles'
 import { CERTIFICATE_HISTORY_QUERY_KEYS } from '@hooks/certificates/useCertificateHistory'
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { createRoot } from 'react-dom/client'
-import { addYears, format } from 'date-fns'
-
+import { formatDateOnly } from '@utils/dateOnly'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
-const fieldLabels: { [key: string]: string } = {
-  compania: 'Compañía',
-  equipo: 'Equipo',
-  city: 'Ciudad',
-  location: 'Ubicación',
-  sede: 'Sede',
-  activoFijo: 'Activo Fijo',
-  serie: 'Serie',
-  calibrationDate: 'Última Fecha de Calibración',
-  nextCalibrationDate: 'Próxima Fecha de Calibración'
-}
 
 interface DeviceDetailsProps {
   id: number
@@ -78,28 +57,69 @@ interface DeviceDetailsProps {
   filePath: string
   customerId: number
   deviceId: number
-  device: any
-  customer: any
+  device: { name?: string } | null
+  customer: { nombre?: string } | null
   certificateTypeId: number
   createdAt: string
   updatedAt: string
 }
 
-function Certificates() {
-  const axiosPrivate = useAxiosPrivate()
+type StatusTone = 'success' | 'warning' | 'error' | 'default'
+
+const OUTLINE_BUTTON_SX = {
+  textTransform: 'none',
+  fontWeight: 600,
+  color: '#00695C',
+  borderColor: '#00BFA5',
+  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+} as const
+
+const CARD_SX = {
+  p: { xs: 2, md: 3 },
+  borderRadius: '16px',
+  border: '1px solid #e5e7eb'
+} as const
+
+const STATUS_STYLE: Record<
+  StatusTone,
+  { ink: string; soft: string; border: string; Icon: typeof CheckCircle }
+> = {
+  success: {
+    ink: '#2e7d32',
+    soft: '#e8f5e9',
+    border: '#a5d6a7',
+    Icon: CheckCircle
+  },
+  warning: {
+    ink: '#b45309',
+    soft: '#fff3e0',
+    border: '#fdba74',
+    Icon: Warning
+  },
+  error: {
+    ink: '#b91c1c',
+    soft: '#fee2e2',
+    border: '#fca5a5',
+    Icon: ErrorIcon
+  },
+  default: { ink: '#4b5563', soft: '#f3f4f6', border: '#d1d5db', Icon: Info }
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+const Certificates: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const $userStore = useStore(userStore)
   const canBulkReassign = useCan(PERMISSIONS.CALIBRATION_FILE_BULK_REASSIGN)
   const canEditFile = useCan(PERMISSIONS.CALIBRATION_FILE_UPDATE)
-  const MySwal = withReactContent(Swal)
 
   const queryClient = useQueryClient()
-  const fetchDevicesNow = useFetchDevicesNow()
   const updateFileMutation = useUpdateFile()
   const bulkReassignMutation = useBulkReassignFileDevice()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
   const { data: certificateDataResponse, isLoading: loading } =
     useFile<DeviceDetailsProps>(id)
   const certificateData = certificateDataResponse ?? null
@@ -112,882 +132,320 @@ function Certificates() {
     queryClient.invalidateQueries(CERTIFICATE_HISTORY_QUERY_KEYS.byFile(id))
   }
 
-  // Calculate status based on calibration dates
-  const getCalibrationStatus = () => {
-    if (!certificateData?.nextCalibrationDate) return { status: 'unknown', color: '#6b7280', bgColor: '#f9fafb', label: 'Sin fecha', icon: Info }
-    
+  // Estado según la próxima calibración: vencido, por vencer (30 días) o activo
+  const getCalibrationStatus = (): {
+    label: string
+    detail: string
+    tone: StatusTone
+  } => {
+    if (!certificateData?.nextCalibrationDate) {
+      return {
+        label: 'Sin fecha',
+        detail: 'No hay próxima calibración registrada',
+        tone: 'default'
+      }
+    }
     const now = new Date()
     const nextDate = new Date(certificateData.nextCalibrationDate)
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-    
-    if (nextDate < now) {
-      return { status: 'expired', color: '#dc2626', bgColor: '#fef2f2', label: 'Vencido', icon: ErrorIcon }
-    } else if (nextDate <= thirtyDaysFromNow) {
-      return { status: 'warning', color: '#d97706', bgColor: '#fffbeb', label: 'Próximo a vencer', icon: Warning }
-    } else {
-      return { status: 'active', color: '#059669', bgColor: '#f0fdf4', label: 'Activo', icon: CheckCircle }
+    const days = Math.ceil((nextDate.getTime() - now.getTime()) / DAY_MS)
+    const plural = (n: number) => (n === 1 ? 'día' : 'días')
+    if (days < 0) {
+      const late = Math.abs(days)
+      return {
+        label: 'Vencido',
+        detail: `Venció hace ${late} ${plural(late)}`,
+        tone: 'error'
+      }
+    }
+    if (days <= 30) {
+      return {
+        label: 'Próximo a vencer',
+        detail: days === 0 ? 'Vence hoy' : `Vence en ${days} ${plural(days)}`,
+        tone: 'warning'
+      }
+    }
+    return {
+      label: 'Activo',
+      detail: `Vigente por ${days} ${plural(days)} más`,
+      tone: 'success'
     }
   }
 
   const calibrationStatus = getCalibrationStatus()
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true)
-  }
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-  }
-
   const handleUpdateSuccess = () => {
-    // Refrescar datos automáticamente
     refreshCertificate()
-
-    // Refrescar la lista de certificados
     refreshCertificateHistory()
-
-    // Mostrar feedback persistente con SweetAlert2
-    MySwal.fire({
-      icon: 'success',
-      title: 'Certificado Actualizado',
-      text: 'El certificado ha sido actualizado exitosamente',
-      timer: 2000,
-      showConfirmButton: false
-    })
+    bigToast('Certificado actualizado exitosamente', 'success')
   }
 
-  const handleEdit = async (field: string) => {
-    const fieldLabel = fieldLabels[field] || field
-
-    if (field === 'equipo') {
-      try {
-        const devices = await fetchDevicesNow()
-
-        if (!devices.length) {
-          MySwal.fire(
-            'Sin equipos',
-            'No se encontraron equipos disponibles en el catálogo.',
-            'info'
-          )
-          return
-        }
-
-        const sortedDevices = [...devices].sort((a, b) =>
-          String(a.name || '').localeCompare(String(b.name || ''), 'es', {
-            sensitivity: 'base'
-          })
-        )
-
-        const inputOptions = sortedDevices.reduce(
-          (acc, device) => {
-            acc[String(device.id)] = device.name
-            return acc
-          },
-          {} as Record<string, string>
-        )
-
-        const selectionResult = await MySwal.fire({
-          title: 'Seleccionar equipo',
-          text: 'Elige el equipo correcto para este certificado.',
-          input: 'select',
-          inputOptions,
-          inputValue: certificateData?.deviceId
-            ? String(certificateData.deviceId)
-            : '',
-          inputPlaceholder: 'Selecciona un equipo',
-          showCancelButton: true,
-          confirmButtonText: 'Continuar',
-          cancelButtonText: 'Cancelar',
-          inputValidator: (value) => {
-            if (!value) return 'Debes seleccionar un equipo'
-            return null
-          }
-        })
-
-        if (!selectionResult.isConfirmed) return
-
-        const selectedDeviceId = Number(selectionResult.value)
-        const selectedDevice = sortedDevices.find(
-          (device) => Number(device.id) === selectedDeviceId
-        )
-
-        if (!selectedDevice) {
-          MySwal.fire('Error', 'No se encontró el equipo seleccionado.', 'error')
-          return
-        }
-
-        if (selectedDeviceId === Number(certificateData?.deviceId)) {
-          return
-        }
-
-        const confirmResult = await MySwal.fire({
-          title: '¿Estás seguro?',
-          text: `Este certificado quedará asociado al equipo "${selectedDevice.name}".`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, cambiar equipo',
-          cancelButtonText: 'Cancelar'
-        })
-
-        if (!confirmResult.isConfirmed) return
-
-        const updateResponse = await updateFileMutation.mutateAsync({
-          id: id as string,
-          payload: {
-            deviceId: selectedDeviceId
-          }
-        })
-
-        if (updateResponse.status === 200) {
-          MySwal.fire(
-            'Actualizado',
-            'El equipo asociado al certificado fue actualizado exitosamente.',
-            'success'
-          )
-          refreshCertificate()
-        }
-      } catch (error) {
-        MySwal.fire(
-          'Error',
-          'No se pudo actualizar el equipo asociado al certificado.',
-          'error'
-        )
-      }
-
-      return
-    }
-
-    if (field === 'calibrationDate' || field === 'nextCalibrationDate') {
-      // Si el campo es una fecha, usamos DatePicker
-      let selectedDate: Date | null = null
-
-      const result = await MySwal.fire({
-        title: 'Actualizar Información',
-        html: `
-          <div id="datepicker-container"></div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Actualizar',
-        cancelButtonText: 'Cancelar',
-        didOpen: () => {
-          const container = document.getElementById('datepicker-container')
-          if (container) {
-            const PickerComponent = () => {
-              const [value, setValue] = useState<Date | null>(null)
-              return (
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    value={value}
-                    onChange={(newValue) => {
-                      setValue(newValue)
-                      selectedDate = newValue
-                    }}
-                    slots={{ textField: TextField }}
-                    slotProps={{
-                      textField: {
-                        variant: 'outlined',
-                        fullWidth: true
-                      },
-                      popper: {
-                        // Deshabilita el portal para que el popper se renderice
-                        // dentro del mismo árbol DOM del modal
-                        disablePortal: false,
-                        style: { zIndex: 100000 }
-                      }
-                    }}
-                  />
-                </LocalizationProvider>
-              )
-            }
-
-            const root = createRoot(container)
-            root.render(<PickerComponent />)
-          }
-        },
-        preConfirm: () => {
-          if (!selectedDate) {
-            Swal.showValidationMessage('Debes seleccionar una fecha')
-            return false
-          }
-          return selectedDate
-        }
-      })
-
-      if (result.isConfirmed) {
-        const newValue = result.value // Formatear fecha YYYY-MM-DD
-        if (newValue) {
-          const payload: any = { [field]: newValue }
-          if (field === 'calibrationDate') {
-            const nextCalibrationDate = format(
-              addYears(new Date(newValue), 1),
-              'yyyy-MM-dd'
-            )
-            payload.nextCalibrationDate = nextCalibrationDate
-          }
-          try {
-            const response = await updateFileMutation.mutateAsync({
-              id: id as string,
-              payload
-            })
-
-            if (response.status === 200) {
-              MySwal.fire(
-                'Actualizado',
-                `El campo ${fieldLabel} ha sido actualizado exitosamente`,
-                'success'
-              )
-              refreshCertificate()
-            }
-          } catch (error) {
-            MySwal.fire(
-              'Error',
-              `No se pudo actualizar el campo ${fieldLabel}`,
-              'error'
-            )
-          }
-        }
-      }
-    } else {
-      // Para otros campos, usar un input de texto normal
-      const result = await MySwal.fire({
-        title: 'Actualizar Información',
-        text: `Ingresa el nuevo valor para ${fieldLabel}`,
-        input: 'text',
-        inputPlaceholder: `Nuevo valor para ${fieldLabel}`,
-        showCancelButton: true,
-        confirmButtonText: 'Actualizar',
-        cancelButtonText: 'Cancelar'
-      })
-
-      if (result.isConfirmed) {
-        const newValue = result.value
-
-        try {
-          const response = await updateFileMutation.mutateAsync({
-            id: id as string,
-            payload: {
-              [field]: newValue
-            }
-          })
-
-          if (response.status === 200) {
-            MySwal.fire(
-              'Actualizado',
-              `El campo ${fieldLabel} ha sido actualizado exitosamente`,
-              'success'
-            )
-            refreshCertificate()
-          }
-        } catch (error) {
-          MySwal.fire(
-            'Error',
-            `No se pudo actualizar el campo ${fieldLabel}`,
-            'error'
-          )
-        }
-      }
-    }
-  }
-
-  const handleBulkDeviceReassignment = async () => {
+  const handleSaveEdit = async (payload: Record<string, unknown>) => {
     try {
-      const devices = await fetchDevicesNow()
-
-      if (!devices.length) {
-        MySwal.fire(
-          'Sin equipos',
-          'No se encontraron equipos disponibles en el catálogo.',
-          'info'
-        )
-        return
-      }
-
-      const sortedDevices = [...devices].sort((a, b) =>
-        String(a.name || '').localeCompare(String(b.name || ''), 'es', {
-          sensitivity: 'base'
-        })
-      )
-
-      const inputOptions = sortedDevices.reduce(
-        (acc, device) => {
-          acc[String(device.id)] = device.name
-          return acc
-        },
-        {} as Record<string, string>
-      )
-
-      const sourceResult = await MySwal.fire({
-        title: 'Equipo origen',
-        text: 'Selecciona el equipo que quieres reemplazar en lote.',
-        input: 'select',
-        inputOptions,
-        inputValue: certificateData?.deviceId
-          ? String(certificateData.deviceId)
-          : '',
-        inputPlaceholder: 'Selecciona un equipo',
-        showCancelButton: true,
-        confirmButtonText: 'Continuar',
-        cancelButtonText: 'Cancelar',
-        inputValidator: (value) =>
-          value ? null : 'Debes seleccionar el equipo origen'
+      const response = await updateFileMutation.mutateAsync({
+        id: id as string,
+        payload
       })
-
-      if (!sourceResult.isConfirmed) return
-
-      const sourceDeviceId = Number(sourceResult.value)
-      const sourceDevice = sortedDevices.find(
-        (device) => Number(device.id) === sourceDeviceId
-      )
-
-      const targetOptions = sortedDevices
-        .filter((device) => Number(device.id) !== sourceDeviceId)
-        .reduce(
-          (acc, device) => {
-            acc[String(device.id)] = device.name
-            return acc
-          },
-          {} as Record<string, string>
-        )
-
-      const targetResult = await MySwal.fire({
-        title: 'Equipo destino',
-        text: 'Selecciona el equipo correcto al que se reasignarán los certificados.',
-        input: 'select',
-        inputOptions: targetOptions,
-        inputPlaceholder: 'Selecciona un equipo',
-        showCancelButton: true,
-        confirmButtonText: 'Previsualizar',
-        cancelButtonText: 'Cancelar',
-        inputValidator: (value) =>
-          value ? null : 'Debes seleccionar el equipo destino'
-      })
-
-      if (!targetResult.isConfirmed) return
-
-      const targetDeviceId = Number(targetResult.value)
-      const previewResponse = await axiosPrivate.post(
-        '/files/bulk/device-reassignment/preview',
-        {
-          sourceDeviceId,
-          targetDeviceId,
-          customerId: certificateData?.customerId
-        }
-      )
-
-      const preview = previewResponse.data
-
-      if (!preview.totalAffected) {
-        MySwal.fire(
-          'Sin coincidencias',
-          `No hay certificados asociados a "${sourceDevice?.name || 'este equipo'}".`,
-          'info'
-        )
-        return
-      }
-
-      const sampleHtml = (preview.sampleCertificates || [])
-        .map(
-          (item: any) =>
-            `<li><strong>#${item.id}</strong> - ${item.customerName} - Serie: ${item.serie || 'N/A'}</li>`
-        )
-        .join('')
-
-      const confirmResult = await MySwal.fire({
-        title: 'Confirmar cambio masivo',
-        html: `
-          <p>Se reasignarán <strong>${preview.totalAffected}</strong> certificado(s) de <strong>${certificateData?.customer?.nombre || 'esta empresa'}</strong>.</p>
-          <p><strong>Origen:</strong> ${preview.sourceDevice.name}</p>
-          <p><strong>Destino:</strong> ${preview.targetDevice.name}</p>
-          ${
-            sampleHtml
-              ? `<div style="text-align:left;margin-top:12px;"><strong>Muestra:</strong><ul style="margin-top:8px;">${sampleHtml}</ul></div>`
-              : ''
-          }
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, aplicar cambio',
-        cancelButtonText: 'Cancelar'
-      })
-
-      if (!confirmResult.isConfirmed) return
-
-      const updateResponse = await bulkReassignMutation.mutateAsync({
-        sourceDeviceId,
-        targetDeviceId,
-        customerId: certificateData?.customerId
-      })
-
-      if (updateResponse.status === 200) {
-        MySwal.fire(
-          'Actualizado',
-          `Se reasignaron ${updateResponse.data.updatedCount} certificado(s) correctamente.`,
-          'success'
-        )
+      if (response.status === 200) {
+        bigToast('Datos del certificado actualizados', 'success')
         refreshCertificate()
-        refreshCertificateHistory()
       }
     } catch (error) {
-      MySwal.fire(
-        'Error',
-        'No se pudo completar el cambio masivo de equipo.',
-        'error'
-      )
+      bigToast('No se pudieron actualizar los datos del certificado', 'error')
+      throw error
     }
+  }
+
+  const handleBulkApply = async (
+    sourceDeviceId: number,
+    targetDeviceId: number
+  ) => {
+    const response = await bulkReassignMutation.mutateAsync({
+      sourceDeviceId,
+      targetDeviceId,
+      customerId: certificateData?.customerId
+    })
+    refreshCertificate()
+    refreshCertificateHistory()
+    return Number(response.data?.updatedCount ?? 0)
   }
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 2 }}>
-        <Box display="flex" alignItems="center" mb={2}>
-          <Skeleton variant="circular" width={32} height={32} sx={{ mr: 2 }} />
-          <Skeleton variant="text" width={200} height={24} />
-        </Box>
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <Skeleton variant='text' width={320} height={48} />
+        <Skeleton variant='text' width={200} height={28} sx={{ mb: 3 }} />
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
-            <Skeleton variant="rectangular" width="100%" height={300} sx={{ borderRadius: '12px' }} />
+            <Skeleton variant='rounded' height={320} />
           </Grid>
           <Grid item xs={12} md={4}>
-            <Skeleton variant="rectangular" width="100%" height={200} sx={{ borderRadius: '12px' }} />
+            <Skeleton variant='rounded' height={320} />
           </Grid>
         </Grid>
       </Container>
     )
   }
 
-  return (
-    <Container maxWidth="lg" sx={{ py: 2 }}>
-      {/* Compact Header */}
-      <Box 
-        display="flex" 
-        alignItems="center" 
-        justifyContent="space-between" 
-        mb={3}
-        sx={{
-          p: 2,
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          border: '1px solid #e5e7eb',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-        }}
-      >
-        <Box display="flex" alignItems="center">
-          <IconButton 
-            onClick={() => navigate(-1)}
-            sx={{ 
-              mr: 2,
-              color: '#374151',
-              '&:hover': { backgroundColor: '#f3f4f6' }
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
-          
-          <Avatar 
-            sx={{ 
-              backgroundColor: '#10b981',
-              mr: 2,
-              width: 32,
-              height: 32
-            }}
-          >
-            <Devices fontSize="small" />
-          </Avatar>
-          
-          <Box>
-            <Typography variant="h6" sx={{ color: '#1f2937', fontWeight: 600, fontSize: '1.1rem' }}>
-              {certificateData?.device?.name || 'Detalles del Equipo'}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
-              {certificateData?.customer?.nombre}
-            </Typography>
-          </Box>
-        </Box>
+  const missing = 'No especificado'
 
-        {canBulkReassign && (
-          <Box display="flex" gap={1}>
+  return (
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title={certificateData?.device?.name || 'Detalles del equipo'}
+        subtitle={certificateData?.customer?.nombre}
+        icon={<Devices />}
+        actions={
+          <>
             <Button
-              variant="outlined"
-              size="small"
-              startIcon={<SwapHoriz />}
-              onClick={handleBulkDeviceReassignment}
-              sx={{
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: '0.875rem'
-              }}
+              variant='outlined'
+              startIcon={<ArrowBack />}
+              onClick={() => navigate(-1)}
+              sx={OUTLINE_BUTTON_SX}
             >
-              Cambio masivo
+              Volver
             </Button>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Update />}
-              onClick={handleOpenModal}
-              sx={{
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                }
-              }}
-            >
-              Actualizar
-            </Button>
-          </Box>
-        )}
-      </Box>
+            {canBulkReassign && (
+              <>
+                <Button
+                  variant='outlined'
+                  startIcon={<SwapHoriz />}
+                  onClick={() => setBulkOpen(true)}
+                  sx={OUTLINE_BUTTON_SX}
+                >
+                  Cambio masivo
+                </Button>
+                <Button
+                  variant='contained'
+                  startIcon={<Update />}
+                  onClick={() => setIsModalOpen(true)}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    bgcolor: '#00BFA5',
+                    '&:hover': { bgcolor: '#00897B' }
+                  }}
+                >
+                  Actualizar
+                </Button>
+              </>
+            )}
+          </>
+        }
+      />
 
       <Grid container spacing={3}>
-        {/* Main Equipment Information - Left Column */}
         <Grid item xs={12} md={8}>
-          <Card 
-            elevation={0}
-            sx={{ 
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="600" gutterBottom sx={{ color: '#1f2937', fontSize: '1rem' }}>
-                Información del Equipo
+          <Paper elevation={0} sx={CARD_SX}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 1,
+                flexWrap: 'wrap',
+                mb: 2
+              }}
+            >
+              <Typography variant='subtitle1' fontWeight={700}>
+                Información del equipo
               </Typography>
-              
-              {/* Company Info - Compact */}
-              <Box 
-                sx={{ 
-                  p: 2, 
-                  backgroundColor: '#f8fafc', 
-                  borderRadius: '8px',
-                  border: '1px solid #e5e7eb',
-                  mb: 2
-                }}
-              >
-                <Box display="flex" alignItems="center">
-                  <Business sx={{ color: '#10b981', mr: 1, fontSize: 18 }} />
-                  <Typography variant="body2" color="text.secondary" fontWeight="600" sx={{ mr: 2, minWidth: '70px' }}>
-                    Empresa:
-                  </Typography>
-                  <Typography variant="body2" fontWeight="500" sx={{ color: '#1f2937' }}>
-                    {certificateData?.customer?.nombre}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Equipment Details in compact 2x3 grid */}
-              <Grid container spacing={1.5}>
-                <Grid item xs={12} sm={6}>
-                  <CompactDetailRow
-                    icon={<Devices />}
-                    label="Equipo"
-                    value={certificateData?.device?.name}
-                    editable={true}
-                    field="equipo"
-                    onEdit={handleEdit}
-                    userRoles={$userStore.rol}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <CompactDetailRow
-                    icon={<LocationOn />}
-                    label="Sede"
-                    value={certificateData?.headquarter?.toUpperCase()}
-                    editable={false}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <CompactDetailRow
-                    icon={<LocationOn />}
-                    label="Ciudad"
-                    value={certificateData?.city}
-                    editable={true}
-                    field="city"
-                    onEdit={handleEdit}
-                    userRoles={$userStore.rol}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <CompactDetailRow
-                    icon={<LocationOn />}
-                    label="Ubicación"
-                    value={certificateData?.location}
-                    editable={true}
-                    field="location"
-                    onEdit={handleEdit}
-                    userRoles={$userStore.rol}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <CompactDetailRow
-                    icon={<Info />}
-                    label="Dirección"
-                    value={certificateData?.sede}
-                    editable={true}
-                    field="sede"
-                    onEdit={handleEdit}
-                    userRoles={$userStore.rol}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <CompactDetailRow
-                    icon={<Settings />}
-                    label="Activo Fijo"
-                    value={certificateData?.activoFijo}
-                    editable={true}
-                    field="activoFijo"
-                    onEdit={handleEdit}
-                    userRoles={$userStore.rol}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <CompactDetailRow
-                    icon={<Info />}
-                    label="Serie"
-                    value={certificateData?.serie}
-                    editable={true}
-                    field="serie"
-                    onEdit={handleEdit}
-                    userRoles={$userStore.rol}
-                  />
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Calibration Status Sidebar - Right Column */}
-        <Grid item xs={12} md={4}>
-          <Card 
-            elevation={0}
-            sx={{ 
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="600" gutterBottom sx={{ color: '#1f2937', fontSize: '1rem' }}>
-                Estado de Calibración
-              </Typography>
-              
-              <Box 
-                sx={{ 
-                  p: 3, 
-                  backgroundColor: calibrationStatus.bgColor,
-                  borderRadius: '12px',
-                  border: `2px solid ${calibrationStatus.color}20`,
-                  textAlign: 'center',
-                  mb: 3
-                }}
-              >
-                <calibrationStatus.icon 
-                  sx={{ 
-                    fontSize: 40, 
-                    color: calibrationStatus.color,
-                    mb: 1
-                  }} 
-                />
-                <Typography 
-                  variant="h6" 
-                  fontWeight="bold" 
-                  sx={{ color: calibrationStatus.color, fontSize: '1rem' }}
+              {canEditFile && (
+                <Button
+                  variant='outlined'
+                  size='small'
+                  startIcon={<Edit />}
+                  onClick={() => setEditOpen(true)}
+                  sx={OUTLINE_BUTTON_SX}
                 >
-                  {calibrationStatus.label}
-                </Typography>
-              </Box>
-
-              <Box mb={2}>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                  <Box display="flex" alignItems="center">
-                    <CalendarToday sx={{ color: '#6b7280', mr: 1, fontSize: 18 }} />
-                    <Typography variant="body2" color="text.secondary" fontWeight="600" sx={{ fontSize: '0.875rem' }}>
-                      Última Calibración
-                    </Typography>
-                  </Box>
-                  {canEditFile && (
-                    <Tooltip title="Editar fecha">
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleEdit('calibrationDate')}
-                        sx={{ 
-                          color: '#6b7280',
-                          '&:hover': { 
-                            backgroundColor: '#f0fdf4',
-                            color: '#10b981'
-                          }
-                        }}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </Box>
-                <Typography variant="body2" fontWeight="500" sx={{ color: '#374151' }}>
-                  {certificateData?.calibrationDate 
-                    ? new Date(certificateData.calibrationDate).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })
-                    : 'No especificada'
-                  }
-                </Typography>
-              </Box>
-
-              <Box>
-                <Box display="flex" alignItems="center" mb={1}>
-                  <CalendarToday sx={{ color: '#6b7280', mr: 1, fontSize: 18 }} />
-                  <Typography variant="body2" color="text.secondary" fontWeight="600" sx={{ fontSize: '0.875rem' }}>
-                    Próxima Calibración
-                  </Typography>
-                </Box>
-                <Typography variant="body2" fontWeight="500" sx={{ color: calibrationStatus.color }}>
-                  {certificateData?.nextCalibrationDate 
-                    ? new Date(certificateData.nextCalibrationDate).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })
-                    : 'No especificada'
-                  }
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
+                  Editar datos
+                </Button>
+              )}
+            </Box>
+            <DetailSection title='Equipo y empresa'>
+              <DetailCell>
+                <DetailField label='Empresa'>
+                  {certificateData?.customer?.nombre || missing}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Equipo'>
+                  {certificateData?.device?.name || missing}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Serie'>
+                  {certificateData?.serie || missing}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Activo fijo'>
+                  {certificateData?.activoFijo || missing}
+                </DetailField>
+              </DetailCell>
+            </DetailSection>
+            <DetailSection title='Ubicación'>
+              <DetailCell>
+                <DetailField label='Sede'>
+                  {certificateData?.headquarter?.toUpperCase() || missing}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Ciudad'>
+                  {certificateData?.city || missing}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Ubicación'>
+                  {certificateData?.location || missing}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Dirección'>
+                  {certificateData?.sede || missing}
+                </DetailField>
+              </DetailCell>
+            </DetailSection>
+          </Paper>
         </Grid>
 
-        {/* Certificates List - Full Width */}
-        <Grid item xs={12}>
-          <Card 
-            elevation={0}
-            sx={{ 
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="600" gutterBottom sx={{ color: '#1f2937', fontSize: '1rem' }}>
-                Certificados y Documentos
+        <Grid item xs={12} md={4}>
+          <Paper elevation={0} sx={CARD_SX}>
+            <Typography variant='subtitle1' fontWeight={700} sx={{ mb: 2 }}>
+              Estado de calibración
+            </Typography>
+            <Box
+              role='status'
+              sx={{
+                p: 2.5,
+                mb: 3,
+                borderRadius: '12px',
+                textAlign: 'center',
+                bgcolor: STATUS_STYLE[calibrationStatus.tone].soft,
+                border: `1px solid ${STATUS_STYLE[calibrationStatus.tone].border}`,
+                color: STATUS_STYLE[calibrationStatus.tone].ink
+              }}
+            >
+              {React.createElement(STATUS_STYLE[calibrationStatus.tone].Icon, {
+                sx: { fontSize: 40, mb: 0.5 },
+                'aria-hidden': true
+              })}
+              <Typography variant='h6' component='p' fontWeight={700}>
+                {calibrationStatus.label}
               </Typography>
-              <CertificatesList />
-            </CardContent>
-          </Card>
+              <Typography variant='body2' sx={{ opacity: 0.9 }}>
+                {calibrationStatus.detail}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'grid', gap: 2 }}>
+              <DetailField label='Última calibración'>
+                {formatDateOnly(certificateData?.calibrationDate) ||
+                  'No especificada'}
+              </DetailField>
+              <Box>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block' }}
+                >
+                  Próxima calibración
+                </Typography>
+                <Typography
+                  variant='body2'
+                  component='div'
+                  sx={{
+                    fontWeight: 600,
+                    color: STATUS_STYLE[calibrationStatus.tone].ink
+                  }}
+                >
+                  {formatDateOnly(certificateData?.nextCalibrationDate) ||
+                    'No especificada'}
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Paper elevation={0} sx={CARD_SX}>
+            <Typography variant='subtitle1' fontWeight={700} sx={{ mb: 2 }}>
+              Certificados y documentos
+            </Typography>
+            <CertificatesList />
+          </Paper>
         </Grid>
       </Grid>
 
       <UpdateCertificateModal
         open={isModalOpen}
-        onClose={handleCloseModal}
+        onClose={() => setIsModalOpen(false)}
         onSuccess={handleUpdateSuccess}
         id={id}
       />
+
+      <CertificateEditDialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        initial={{
+          deviceId: certificateData?.deviceId ?? null,
+          city: certificateData?.city ?? '',
+          location: certificateData?.location ?? '',
+          sede: certificateData?.sede ?? '',
+          activoFijo: certificateData?.activoFijo ?? '',
+          serie: certificateData?.serie ?? '',
+          calibrationDate: (certificateData?.calibrationDate ?? '').slice(0, 10)
+        }}
+        onSave={handleSaveEdit}
+      />
+
+      <BulkReassignDialog
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        customerId={certificateData?.customerId}
+        customerName={certificateData?.customer?.nombre}
+        currentDeviceId={certificateData?.deviceId}
+        onApply={handleBulkApply}
+      />
     </Container>
-  )
-}
-
-// Compact Detail Row Component - More compact than cards
-interface CompactDetailRowProps {
-  icon: React.ReactNode
-  label: string
-  value?: string
-  editable?: boolean
-  field?: string
-  onEdit?: (field: string) => void
-  userRoles?: string[]
-}
-
-const CompactDetailRow: React.FC<CompactDetailRowProps> = ({
-  icon,
-  label,
-  value,
-  editable = false,
-  field,
-  onEdit,
-}) => {
-  const canEditFileField = useCan(PERMISSIONS.CALIBRATION_FILE_UPDATE)
-  const canEdit = editable && 
-    canEditFileField && 
-    onEdit && 
-    field
-
-  return (
-    <Box 
-      sx={{ 
-        p: 1.5, 
-        backgroundColor: '#ffffff', 
-        borderRadius: '6px',
-        border: '1px solid #e5e7eb',
-        transition: 'all 0.2s ease-in-out',
-        '&:hover': canEdit ? {
-          borderColor: '#10b981',
-          boxShadow: '0 1px 4px rgba(16, 185, 129, 0.1)'
-        } : {}
-      }}
-    >
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box display="flex" alignItems="center" flex={1}>
-          <Box 
-            sx={{ 
-              color: '#10b981', 
-              mr: 1,
-              display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-            {React.cloneElement(icon as React.ReactElement, { fontSize: 'small' })}
-          </Box>
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            fontWeight="600"
-            sx={{ fontSize: '0.75rem', minWidth: '70px', mr: 1 }}
-          >
-            {label}:
-          </Typography>
-          <Typography 
-            variant="body2" 
-            fontWeight="500" 
-            sx={{ 
-              color: value ? '#1f2937' : '#9ca3af',
-              wordBreak: 'break-word',
-              fontSize: '0.875rem',
-              flex: 1
-            }}
-          >
-            {value || 'No especificado'}
-          </Typography>
-        </Box>
-        
-        {canEdit && (
-          <Tooltip title={`Editar ${label.toLowerCase()}`}>
-            <IconButton 
-              size="small" 
-              onClick={() => onEdit(field)}
-              sx={{ 
-                color: '#6b7280',
-                p: 0.5,
-                ml: 1,
-                '&:hover': { 
-                  backgroundColor: '#f0fdf4',
-                  color: '#10b981'
-                }
-              }}
-            >
-              <Edit sx={{ fontSize: 14 }} />
-            </IconButton>
-          </Tooltip>
-        )}
-      </Box>
-    </Box>
   )
 }
 
