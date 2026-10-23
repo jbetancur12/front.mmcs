@@ -87,7 +87,11 @@ const ProfileStatCard: React.FC<ProfileStatCardProps> = ({
       <Typography
         variant='h4'
         fontWeight='bold'
-        sx={{ color: valueColor ?? color, fontVariantNumeric: 'tabular-nums' }}
+        sx={{
+          // En 0 no hay nada que atender: el número queda gris
+          color: value === 0 ? '#6b7280' : valueColor ?? color,
+          fontVariantNumeric: 'tabular-nums'
+        }}
       >
         {value}
       </Typography>
@@ -112,6 +116,19 @@ const ProfileStatCard: React.FC<ProfileStatCardProps> = ({
         )}
       </Box>
       {footer && <Box sx={{ mt: 1 }}>{footer}</Box>}
+      {onClick && (
+        <Typography
+          variant='caption'
+          sx={{
+            display: 'block',
+            mt: 0.5,
+            color: selected ? color : '#6b7280',
+            fontWeight: selected ? 700 : 400
+          }}
+        >
+          {selected ? 'Filtro activo · clic para quitar' : 'Clic para filtrar'}
+        </Typography>
+      )}
     </CardContent>
   </Card>
 )

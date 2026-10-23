@@ -24,6 +24,47 @@ interface CustomerProfileBannerProps {
   handleStatusChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
+/** Dato de contacto del banner: ícono en círculo, etiqueta y valor. */
+const ContactItem = ({
+  icon,
+  label,
+  children
+}: {
+  icon: React.ReactElement
+  label: string
+  children: React.ReactNode
+}) => (
+  <Box display='flex' alignItems='flex-start' gap={1.5} sx={{ minWidth: 0 }}>
+    <Box
+      aria-hidden
+      sx={{
+        width: 36,
+        height: 36,
+        borderRadius: '50%',
+        bgcolor: 'rgba(255,255,255,0.18)',
+        display: 'grid',
+        placeItems: 'center',
+        flexShrink: 0
+      }}
+    >
+      {React.cloneElement(icon, { sx: { fontSize: 20 } })}
+    </Box>
+    <Box sx={{ minWidth: 0 }}>
+      <Typography variant='body2' sx={{ fontWeight: 500 }}>
+        {label}
+      </Typography>
+      <Typography
+        component='div'
+        variant='body1'
+        fontWeight={600}
+        sx={{ overflowWrap: 'anywhere' }}
+      >
+        {children}
+      </Typography>
+    </Box>
+  </Box>
+)
+
 /** Banner esmeralda con avatar, estado y datos de contacto del cliente. */
 const CustomerProfileBanner = ({
   image,
@@ -86,6 +127,10 @@ const CustomerProfileBanner = ({
                   sx={{
                     width: 120,
                     height: 120,
+                    bgcolor: 'rgba(255,255,255,0.25)',
+                    color: 'white',
+                    fontSize: 48,
+                    fontWeight: 700,
                     border: '4px solid rgba(255,255,255,0.3)',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
                     '&:hover': {
@@ -107,12 +152,16 @@ const CustomerProfileBanner = ({
               {canChangeAvatar && (
                 <Tooltip title='Cambiar imagen'>
                   <IconButton
+                    component='label'
+                    htmlFor='imageInput'
+                    aria-label='Cambiar imagen del cliente'
                     sx={{
                       position: 'absolute',
                       bottom: 0,
                       right: 0,
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      '&:hover': { backgroundColor: 'white' }
+                      backgroundColor: 'white',
+                      color: '#00695C',
+                      '&:hover': { backgroundColor: '#E0F7F4' }
                     }}
                     size='small'
                   >
@@ -121,15 +170,21 @@ const CustomerProfileBanner = ({
                 </Tooltip>
               )}
             </Box>
-            <Typography variant='h4' fontWeight='bold' gutterBottom>
+            <Typography
+              variant='h4'
+              fontWeight='bold'
+              gutterBottom
+              sx={{ overflowWrap: 'anywhere' }}
+            >
               {customerData?.nombre}
             </Typography>
             {/* Status Switch */}
             <Box
               sx={{
-                position: 'absolute',
+                position: { xs: 'static', md: 'absolute' },
                 top: 20,
                 right: 20,
+                mt: { xs: 2, md: 0 },
                 zIndex: 2,
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 backdropFilter: 'blur(10px)',
@@ -161,71 +216,60 @@ const CustomerProfileBanner = ({
         </Grid>
 
         <Grid item xs={12} md={8}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <Box display='flex' alignItems='center' mb={2}>
-                <Email sx={{ mr: 2, opacity: 0.8 }} />
-                <Box>
-                  <Typography variant='body2' sx={{ opacity: 0.8 }}>
-                    Email
-                  </Typography>
-                  <Typography variant='body1' fontWeight='500'>
-                    {customerData?.email}
-                  </Typography>
+          {/* Panel oscuro suave: da contraste al texto blanco sobre el verde */}
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: '16px',
+              bgcolor: 'rgba(0,0,0,0.28)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              display: 'grid',
+              gap: 2.5,
+              gridTemplateColumns: {
+                xs: 'minmax(0, 1fr)',
+                sm: 'repeat(2, minmax(0, 1fr))'
+              }
+            }}
+          >
+            <ContactItem icon={<Email />} label='Email'>
+              {customerData?.email || '—'}
+            </ContactItem>
+            <ContactItem icon={<Phone />} label='Teléfono'>
+              {customerData?.telefono || '—'}
+            </ContactItem>
+            <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
+              <ContactItem
+                icon={<LocationOn />}
+                label={`Sedes (${customerData?.sede?.length || 0})`}
+              >
+                <Box display='flex' flexWrap='wrap' gap={1} sx={{ mt: 0.5 }}>
+                  {customerData?.sede?.slice(0, 3).map((sede, index) => (
+                    <Chip
+                      key={index}
+                      label={sede}
+                      size='small'
+                      sx={{
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        fontWeight: 600
+                      }}
+                    />
+                  ))}
+                  {(customerData?.sede?.length || 0) > 3 && (
+                    <Chip
+                      label={`+${(customerData?.sede?.length || 0) - 3} más`}
+                      size='small'
+                      sx={{
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        fontWeight: 600
+                      }}
+                    />
+                  )}
                 </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Box display='flex' alignItems='center' mb={2}>
-                <Phone sx={{ mr: 2, opacity: 0.8 }} />
-                <Box>
-                  <Typography variant='body2' sx={{ opacity: 0.8 }}>
-                    Teléfono
-                  </Typography>
-                  <Typography variant='body1' fontWeight='500'>
-                    {customerData?.telefono}
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box display='flex' alignItems='flex-start'>
-                <LocationOn sx={{ mr: 2, mt: 0.5, opacity: 0.8 }} />
-                <Box>
-                  <Typography variant='body2' sx={{ opacity: 0.8, mb: 1 }}>
-                    Sedes ({customerData?.sede?.length || 0})
-                  </Typography>
-                  <Box display='flex' flexWrap='wrap' gap={1}>
-                    {customerData?.sede?.slice(0, 3).map((sede, index) => (
-                      <Chip
-                        key={index}
-                        label={sede}
-                        size='small'
-                        sx={{
-                          backgroundColor: 'rgba(255,255,255,0.2)',
-                          color: 'white',
-                          fontSize: '0.75rem'
-                        }}
-                      />
-                    ))}
-                    {(customerData?.sede?.length || 0) > 3 && (
-                      <Chip
-                        label={`+${(customerData?.sede?.length || 0) - 3} más`}
-                        size='small'
-                        sx={{
-                          backgroundColor: 'rgba(255,255,255,0.2)',
-                          color: 'white',
-                          fontSize: '0.75rem'
-                        }}
-                      />
-                    )}
-                  </Box>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
+              </ContactItem>
+            </Box>
+          </Box>
         </Grid>
       </Grid>
     </CardContent>

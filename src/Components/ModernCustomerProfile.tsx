@@ -393,7 +393,6 @@ const ModernCustomerProfile: React.FC = () => {
         activeTab={activeTab}
         handleTabChange={handleTabChange}
         isMobile={isMobile}
-        totalEquipment={stats.total}
         sedeCount={customerData?.sede?.length || 0}
         showIndicatorsTab={showIndicatorsTab}
         showServicesTab={showServicesTab}
@@ -405,13 +404,22 @@ const ModernCustomerProfile: React.FC = () => {
       {/* Tab Content */}
       <Card
         elevation={0}
-        sx={{
-          borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          minHeight: '400px'
-        }}
+        sx={
+          activeTab === 'equipment'
+            ? { background: 'transparent' }
+            : {
+                borderRadius: '16px',
+                border: '1px solid #e5e7eb',
+                minHeight: '400px'
+              }
+        }
       >
-        <CardContent sx={{ p: activeTab === 'equipment' ? 2 : 4 }}>
+        <CardContent
+          sx={{
+            p: activeTab === 'equipment' ? 0 : 4,
+            '&:last-child': { pb: activeTab === 'equipment' ? 0 : 4 }
+          }}
+        >
           {activeTab === 'overview' && (
             <OverviewTab
               handleTabChange={handleTabChange}

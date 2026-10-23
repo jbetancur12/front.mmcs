@@ -9,7 +9,7 @@ import {
   Settings,
   TrendingUp
 } from '@mui/icons-material'
-import { Badge, Card, Tab, Tabs } from '@mui/material'
+import { Box, Card, Tab, Tabs } from '@mui/material'
 import React from 'react'
 
 import { TabValue } from './types'
@@ -18,7 +18,6 @@ interface CustomerProfileTabsProps {
   activeTab: TabValue
   handleTabChange: (tab: TabValue) => void
   isMobile: boolean
-  totalEquipment: number
   sedeCount: number
   showIndicatorsTab: boolean
   showServicesTab: boolean
@@ -27,12 +26,37 @@ interface CustomerProfileTabsProps {
   canManageLmsCourses: boolean
 }
 
+/** Etiqueta de pestaña con su conteo en una pastilla turquesa suave. */
+const CountLabel = ({ text, count }: { text: string; count: number }) => (
+  <Box
+    component='span'
+    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
+  >
+    {text}
+    <Box
+      component='span'
+      sx={{
+        px: 0.75,
+        minWidth: 20,
+        borderRadius: '999px',
+        bgcolor: '#E0F7F4',
+        color: '#00695C',
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        lineHeight: '20px',
+        textAlign: 'center'
+      }}
+    >
+      {count}
+    </Box>
+  </Box>
+)
+
 /** Pestañas de navegación de la ficha del cliente. */
 const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
   activeTab,
   handleTabChange,
   isMobile,
-  totalEquipment,
   sedeCount,
   showIndicatorsTab,
   showServicesTab,
@@ -46,12 +70,7 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
   >
     <Tabs
       value={activeTab}
-      onChange={(event, newValue) => {
-        console.log('Tabs onChange triggered:', {
-          event,
-          newValue,
-          currentActiveTab: activeTab
-        })
+      onChange={(_event, newValue) => {
         handleTabChange(newValue)
       }}
       variant={isMobile ? 'scrollable' : 'fullWidth'}
@@ -61,7 +80,10 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
           textTransform: 'none',
           fontWeight: 600,
           fontSize: '0.875rem',
-          minHeight: 64,
+          minHeight: 72,
+          minWidth: 0,
+          px: 1,
+          gap: 0.25,
           '&.Mui-selected': {
             color: '#10b981'
           }
@@ -77,24 +99,20 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
         value='overview'
         label='Resumen'
         icon={<TrendingUp />}
-        iconPosition='start'
+        iconPosition='top'
       />
       <Tab
         value='equipment'
         label='Equipos'
-        icon={
-          <Badge badgeContent={totalEquipment} color='primary'>
-            <Devices />
-          </Badge>
-        }
-        iconPosition='start'
+        icon={<Devices />}
+        iconPosition='top'
       />
       {showIndicatorsTab && (
         <Tab
           value='indicators'
           label='Indicadores'
           icon={<Insights />}
-          iconPosition='start'
+          iconPosition='top'
         />
       )}
       {showServicesTab && (
@@ -102,33 +120,28 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
           value='services'
           label='Servicios'
           icon={<Assignment />}
-          iconPosition='start'
+          iconPosition='top'
         />
       )}
       <Tab
         value='headquarters'
-        label='Sedes'
-        icon={
-          <Badge badgeContent={sedeCount} color='primary'>
-            <Business />
-          </Badge>
-        }
-        iconPosition='start'
+        label={<CountLabel text='Sedes' count={sedeCount} />}
+        icon={<Business />}
+        iconPosition='top'
       />
       <Tab
         value='schedule'
         label='Programación'
         icon={<CalendarToday />}
-        iconPosition='start'
+        iconPosition='top'
       />
       {canListCustomerUsers && (
         <Tab
           value='users'
           label='Usuarios'
           icon={<People />}
-          iconPosition='start'
+          iconPosition='top'
           onClick={() => {
-            console.log('Users tab clicked directly')
             handleTabChange('users')
           }}
         />
@@ -138,9 +151,8 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
           value='modules'
           label='Módulos'
           icon={<Settings />}
-          iconPosition='start'
+          iconPosition='top'
           onClick={() => {
-            console.log('Modules tab clicked directly')
             handleTabChange('modules')
           }}
         />
@@ -150,7 +162,7 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
           value='lmsCourses'
           label='Academia'
           icon={<School />}
-          iconPosition='start'
+          iconPosition='top'
           onClick={() => {
             handleTabChange('lmsCourses')
           }}
