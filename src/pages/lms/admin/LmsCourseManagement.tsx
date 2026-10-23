@@ -23,7 +23,6 @@ import {
   ListItemText,
   OutlinedInput,
   Alert,
-  Snackbar,
   Tooltip,
   CircularProgress
 } from '@mui/material'
@@ -48,6 +47,7 @@ import { useCertificateTemplates } from '../../../hooks/useLms'
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { notify } from 'src/utils/notify'
 
 interface Course {
   id: number
@@ -235,7 +235,6 @@ const LmsCourseManagement: React.FC = () => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 400)
     return () => clearTimeout(timer)
   }, [searchInput])
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
   const [formErrors, setFormErrors] = useState<CourseFormErrors>({})
   const [courseActionDialog, setCourseActionDialog] = useState<CourseActionDialogState>({
     open: false,
@@ -289,11 +288,7 @@ const LmsCourseManagement: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al cargar los cursos: ' + (error.response?.data?.message || error.message),
-          severity: 'error'
-        })
+        notify.error('Error al cargar los cursos: ' + (error.response?.data?.message || error.message))
       }
     }
   )
@@ -335,18 +330,10 @@ const LmsCourseManagement: React.FC = () => {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-courses'])
         handleCloseDialog()
-        setSnackbar({
-          open: true,
-          message: editingCourse ? 'Curso actualizado exitosamente' : 'Curso creado exitosamente',
-          severity: 'success'
-        })
+        notify.success(editingCourse ? 'Curso actualizado exitosamente' : 'Curso creado exitosamente')
       },
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al guardar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
-          severity: 'error'
-        })
+        notify.error('Error al guardar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
       }
     }
   )
@@ -359,18 +346,10 @@ const LmsCourseManagement: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-courses'])
-        setSnackbar({
-          open: true,
-          message: 'Curso eliminado exitosamente',
-          severity: 'success'
-        })
+        notify.success('Curso eliminado exitosamente')
       },
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al eliminar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
-          severity: 'error'
-        })
+        notify.error('Error al eliminar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
       }
     }
   )
@@ -383,18 +362,10 @@ const LmsCourseManagement: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-courses'])
-        setSnackbar({
-          open: true,
-          message: 'Curso publicado exitosamente',
-          severity: 'success'
-        })
+        notify.success('Curso publicado exitosamente')
       },
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al publicar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
-          severity: 'error'
-        })
+        notify.error('Error al publicar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
       }
     }
   )
@@ -407,18 +378,10 @@ const LmsCourseManagement: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-courses'])
-        setSnackbar({
-          open: true,
-          message: 'Curso archivado exitosamente',
-          severity: 'success'
-        })
+        notify.success('Curso archivado exitosamente')
       },
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al archivar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
-          severity: 'error'
-        })
+        notify.error('Error al archivar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
       }
     }
   )
@@ -526,11 +489,7 @@ const LmsCourseManagement: React.FC = () => {
 
     if (Object.keys(nextErrors).length > 0) {
       setFormErrors(nextErrors)
-      setSnackbar({
-        open: true,
-        message: 'Revisa los campos obligatorios antes de guardar.',
-        severity: 'error'
-      })
+      notify.error('Revisa los campos obligatorios antes de guardar.')
       return
     }
 
@@ -1389,20 +1348,6 @@ const LmsCourseManagement: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   )
 }

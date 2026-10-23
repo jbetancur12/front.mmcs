@@ -23,7 +23,6 @@ import {
   Switch,
   FormControlLabel,
   Alert,
-  Snackbar,
   List,
   ListItem,
   ListItemText,
@@ -44,6 +43,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { notify } from 'src/utils/notify'
 
 interface Course {
   id: number
@@ -83,11 +83,6 @@ const LmsCourseAssignments: React.FC = () => {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [assignToAll, setAssignToAll] = useState(false)
   const [deadline, setDeadline] = useState<Date | null>(null)
-  const [snackbar, setSnackbar] = useState({ 
-    open: false, 
-    message: '', 
-    severity: 'success' as 'success' | 'error' 
-  })
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -133,18 +128,10 @@ const LmsCourseAssignments: React.FC = () => {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-course-assignments', courseId])
         handleCloseDialog()
-        setSnackbar({
-          open: true,
-          message: 'Asignación creada exitosamente',
-          severity: 'success'
-        })
+        notify.success('Asignación creada exitosamente')
       },
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al crear asignación: ' + (error.response?.data?.message || error.message),
-          severity: 'error'
-        })
+        notify.error('Error al crear asignación: ' + (error.response?.data?.message || error.message))
       }
     }
   )
@@ -157,18 +144,10 @@ const LmsCourseAssignments: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-course-assignments', courseId])
-        setSnackbar({
-          open: true,
-          message: 'Asignación eliminada exitosamente',
-          severity: 'success'
-        })
+        notify.success('Asignación eliminada exitosamente')
       },
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al eliminar asignación: ' + (error.response?.data?.message || error.message),
-          severity: 'error'
-        })
+        notify.error('Error al eliminar asignación: ' + (error.response?.data?.message || error.message))
       }
     }
   )
@@ -526,20 +505,6 @@ const LmsCourseAssignments: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   )
 }

@@ -60,6 +60,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import quizService from '../../../services/quizService'
 import LmsQuizComponent from '../components/LmsQuizComponent'
 import Swal from 'sweetalert2'
+import { notify } from 'src/utils/notify'
 
 interface QuizQuestion {
   id: number
@@ -762,12 +763,12 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
   const handleSaveQuiz = () => {
     if (quizValidationErrors.length > 0) {
-      alert('Errores de validación:\n' + quizValidationErrors.join('\n'))
+      notify.error('Errores de validación', quizValidationErrors.join('. '))
       return
     }
 
     if (quizConfig.questions.length === 0) {
-      alert('Debes agregar al menos una pregunta al quiz antes de guardar')
+      notify.error('Debes agregar al menos una pregunta al quiz antes de guardar')
       return
     }
 
@@ -1420,7 +1421,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 }))}
                 isPreview={true}
                 onComplete={(score, totalPoints) => {
-                  alert(`Vista previa completada: ${score}/${totalPoints} puntos (${Math.round((score/totalPoints)*100)}%)`)
+                  notify.info(`Vista previa completada: ${score}/${totalPoints} puntos (${Math.round((score/totalPoints)*100)}%)`)
                   setPreviewMode(false)
                 }}
               />

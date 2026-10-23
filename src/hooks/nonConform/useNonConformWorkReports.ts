@@ -10,6 +10,7 @@ import {
   NonConformWorkReport,
   NonConformWorkReportAlert
 } from 'src/Components/NonConformWorkReport/NonConformWorkReport.types'
+import { notify } from 'src/utils/notify'
 
 export const NON_CONFORM_QUERY_KEYS = {
   all: ['nonConformWorkReports'] as const,
@@ -54,7 +55,7 @@ export const useNonConformWorkReportsPaginated = (
       // El formulario (fuera de esta caché) crea/edita reportes: refrescar al montar
       staleTime: 0,
       onError: () => {
-        alert('Error al obtener los reportes')
+        notify.error('Error al obtener los reportes')
       }
     }
   )
@@ -91,7 +92,7 @@ export const useNonConformWorkReports = () => {
       // El formulario (fuera de esta caché) crea/edita reportes: refrescar al montar
       staleTime: 0,
       onError: () => {
-        alert('Error al obtener los reportes')
+        notify.error('Error al obtener los reportes')
       }
     }
   )

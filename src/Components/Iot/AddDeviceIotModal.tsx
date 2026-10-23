@@ -10,6 +10,7 @@ import {
 } from '@mui/material'
 import { useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { notify } from 'src/utils/notify'
 
 interface Customer {
   id: number
@@ -53,7 +54,7 @@ const AddDeviceModal: React.FC<AddDeviceModalProps> = ({
     event.preventDefault()
 
     if (!imei || !name) {
-      alert('El IMEI y el nombre son obligatorios.')
+      notify.error('El IMEI y el nombre son obligatorios.')
       return
     }
 

@@ -21,7 +21,6 @@ import {
   Warning
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
-import { toast } from 'react-toastify'
 import useAxiosPrivate from '../../utils/use-axios-private'
 
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
@@ -30,6 +29,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { useCan } from '@utils/functions'
+import { notify } from 'src/utils/notify'
 interface MaintenanceTicketCost {
   id: string
   name: string
@@ -117,11 +117,11 @@ const MaintenanceBilling: React.FC = () => {
       return response.data
     },
     onSuccess: (data) => {
-      toast.success(data.message)
+      notify.success(data.message)
       queryClient.invalidateQueries({ queryKey: ['maintenance-billing'] })
     },
     onError: (error: any) => {
-      toast.error(
+      notify.error(
         error.response?.data?.error ||
           'Error al actualizar estado de facturación'
       )

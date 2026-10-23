@@ -40,6 +40,7 @@ import { NonConformWorkReport } from './NonConformWorkReport.types'
 import { format } from 'date-fns'
 import Swal from 'sweetalert2'
 import { NonConformWorkReportAlert } from './NonConformWorkReport.types'
+import { notify } from 'src/utils/notify'
 
 // Traducciones y mapeos
 const impactMap: Record<string, string> = {
@@ -186,7 +187,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         text: 'El reporte fue eliminado correctamente.'
       })
     } catch (err) {
-      alert('Error al eliminar el reporte')
+      notify.error('Error al eliminar el reporte')
     }
   }
 

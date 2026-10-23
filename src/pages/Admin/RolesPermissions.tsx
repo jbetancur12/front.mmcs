@@ -6,7 +6,6 @@ import {
   Container,
   Grid,
   Paper,
-  Snackbar,
   Tab,
   Tabs,
   Typography
@@ -43,6 +42,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { ROLES } from 'src/constants/roles'
 import { RbacRole } from '../../types/rbac'
 import { rbacErrorMessage } from '../../utils/rbacErrors'
+import { notify } from 'src/utils/notify'
 
 const TEAL = '#00BFA5'
 
@@ -63,10 +63,6 @@ const RolesPermissions: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false)
   const [editRole, setEditRole] = useState<RbacRole | null>(null)
   const [toggleRole, setToggleRole] = useState<RbacRole | null>(null)
-  const [notice, setNotice] = useState<{
-    message: string
-    severity: 'success' | 'error'
-  } | null>(null)
 
   const roleById = useMemo(
     () => new Map((matrix?.roles ?? []).map((r) => [r.id, r])),
@@ -212,20 +208,12 @@ const RolesPermissions: React.FC = () => {
 
     if (Object.keys(errors).length === 0) {
       setReviewOpen(false)
-      setNotice({
-        message:
-          'Cambios guardados. Rigen desde la siguiente petición de cada usuario.',
-        severity: 'success'
-      })
+      notify.success('Cambios guardados. Rigen desde la siguiente petición de cada usuario.')
     } else {
       setSaveErrors(errors)
-      setNotice({
-        message:
-          savedRoleIds.size > 0
+      notify.error(savedRoleIds.size > 0
             ? 'Algunos roles se guardaron y otros no. Revisa los avisos.'
-            : 'No se pudo guardar. Revisa los avisos.',
-        severity: 'error'
-      })
+            : 'No se pudo guardar. Revisa los avisos.')
     }
   }
 
@@ -434,36 +422,19 @@ const RolesPermissions: React.FC = () => {
       <CreateRoleDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onDone={(message) => setNotice({ message, severity: 'success' })}
+        onDone={(message) => notify.success(message)}
       />
       <EditRoleDialog
         role={editRole}
         onClose={() => setEditRole(null)}
-        onDone={(message) => setNotice({ message, severity: 'success' })}
+        onDone={(message) => notify.success(message)}
       />
       <ToggleRoleDialog
         role={toggleRole}
         onClose={() => setToggleRole(null)}
-        onDone={(message) => setNotice({ message, severity: 'success' })}
+        onDone={(message) => notify.success(message)}
       />
 
-      <Snackbar
-        open={Boolean(notice)}
-        autoHideDuration={6000}
-        onClose={() => setNotice(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        {notice ? (
-          <Alert
-            onClose={() => setNotice(null)}
-            severity={notice.severity}
-            variant='filled'
-            sx={{ width: '100%' }}
-          >
-            {notice.message}
-          </Alert>
-        ) : undefined}
-      </Snackbar>
     </Container>
   )
 }

@@ -16,7 +16,6 @@ import {
   IconButton,
   Alert,
   FormControlLabel,
-  Snackbar,
   Switch,
   Autocomplete,
   MenuItem,
@@ -53,6 +52,7 @@ import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { notify } from 'src/utils/notify'
 const validationSchema = Yup.object({
   name: Yup.string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -112,15 +112,6 @@ const MaintenanceTechnicians: React.FC = () => {
   const [statusConfirmDialogOpen, setStatusConfirmDialogOpen] = useState(false)
   const [technicianToToggle, setTechnicianToToggle] =
     useState<MaintenanceTechnician | null>(null)
-  const [feedback, setFeedback] = useState<{
-    open: boolean
-    severity: 'success' | 'error'
-    message: string
-  }>({
-    open: false,
-    severity: 'success',
-    message: ''
-  })
 
   // API hooks
   const { data: technicians, isLoading, refetch } = useMaintenanceTechnicians()
@@ -156,24 +147,15 @@ const MaintenanceTechnicians: React.FC = () => {
         resetForm()
         setDialogOpen(false)
         setEditingTechnician(null)
-        setFeedback({
-          open: true,
-          severity: 'success',
-          message: editingTechnician
+        notify.success(editingTechnician
             ? 'Técnico actualizado exitosamente.'
-            : 'Técnico creado exitosamente.'
-        })
+            : 'Técnico creado exitosamente.')
         refetch()
       } catch (error: any) {
         console.error('Error saving technician:', error)
-        setFeedback({
-          open: true,
-          severity: 'error',
-          message:
-            error?.response?.data?.error ||
+        notify.error(error?.response?.data?.error ||
             error?.response?.data?.message ||
-            'No se pudo guardar el técnico.'
-        })
+            'No se pudo guardar el técnico.')
       }
     }
   })
@@ -810,31 +792,6 @@ const MaintenanceTechnicians: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={feedback.open}
-        autoHideDuration={4000}
-        onClose={() =>
-          setFeedback((current) => ({
-            ...current,
-            open: false
-          }))
-        }
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() =>
-            setFeedback((current) => ({
-              ...current,
-              open: false
-            }))
-          }
-          severity={feedback.severity}
-          variant='filled'
-          sx={{ width: '100%' }}
-        >
-          {feedback.message}
-        </Alert>
-      </Snackbar>
     </Container>
   )
 }

@@ -18,7 +18,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Snackbar,
   Switch,
   Table,
   TableBody,
@@ -42,6 +41,7 @@ import { useLmsUserOptions } from 'src/hooks/lms/useLmsUserOptions'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { getRoleLabelEs, ROLES } from 'src/constants/roles'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { notify } from 'src/utils/notify'
 
 type LmsRoleOption = {
   id: number
@@ -140,11 +140,6 @@ const LmsUserManagement: React.FC = () => {
   const [form, setForm] = useState<LmsUserForm>(emptyForm)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error'
-  })
 
   const { data: optionsData } = useLmsUserOptions<LmsUserOptions>()
 
@@ -220,18 +215,10 @@ const LmsUserManagement: React.FC = () => {
         setDialogOpen(false)
         setEditingUser(null)
         setForm(emptyForm)
-        setSnackbar({
-          open: true,
-          message: editingUser ? 'Usuario LMS actualizado' : 'Usuario LMS creado',
-          severity: 'success'
-        })
+        notify.success(editingUser ? 'Usuario LMS actualizado' : 'Usuario LMS creado')
       },
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: error.response?.data?.error?.message || error.response?.data?.message || 'No se pudo guardar el usuario LMS',
-          severity: 'error'
-        })
+        notify.error(error.response?.data?.error?.message || error.response?.data?.message || 'No se pudo guardar el usuario LMS')
       }
     }
   )
@@ -242,18 +229,10 @@ const LmsUserManagement: React.FC = () => {
     {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries(['lms-users'])
-        setSnackbar({
-          open: true,
-          message: variables.active ? 'Usuario activado' : 'Usuario desactivado',
-          severity: 'success'
-        })
+        notify.success(variables.active ? 'Usuario activado' : 'Usuario desactivado')
       },
       onError: () => {
-        setSnackbar({
-          open: true,
-          message: 'No se pudo actualizar el estado del usuario',
-          severity: 'error'
-        })
+        notify.error('No se pudo actualizar el estado del usuario')
       }
     }
   )
@@ -747,19 +726,6 @@ const LmsUserManagement: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={5000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   )
 }

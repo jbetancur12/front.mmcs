@@ -25,7 +25,6 @@ import {
   Tooltip,
   Avatar,
   LinearProgress,
-  Snackbar
 } from '@mui/material'
 import {
   Download as DownloadIcon,
@@ -48,6 +47,7 @@ import { alpha } from '@mui/material/styles'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useUserCertificates, useCertificate, useDownloadCertificate } from '../../../hooks/useLms'
 import { lmsService, type Certificate as ApiCertificate } from '../../../services/lmsService'
+import { notify } from 'src/utils/notify'
 
 interface Certificate extends ApiCertificate {
   certificateNumber: string
@@ -140,18 +140,8 @@ const LmsCertificateView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode] = useState<'single' | 'gallery'>(certificateId ? 'single' : 'gallery')
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error'
-  })
-
   const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
-    setSnackbar({
-      open: true,
-      message,
-      severity
-    })
+    notify[severity](message)
   }
 
   // Fetch user certificates or single certificate
@@ -975,19 +965,6 @@ const LmsCertificateView: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   )
 }

@@ -13,7 +13,6 @@ import { QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import { WebSocketProvider } from '@utils/use-websockets.tsx'
 import { queryClient } from './config/queryClient'
-import { ToastProvider } from './Components/lms/Notifications/ToastNotifications'
 import NewVersionBanner from './Components/NewVersionBanner'
 import AppToaster from './Components/Common/AppToaster'
 
@@ -40,15 +39,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <ThemeProvider theme={theme}>
-            <ToastProvider
-              maxToasts={5}
-              defaultDuration={5000}
-              position={{ vertical: 'top', horizontal: 'right' }}
-            >
-              <WebSocketProvider>
-                <Router />
-              </WebSocketProvider>
-            </ToastProvider>
+            <WebSocketProvider>
+              <Router />
+            </WebSocketProvider>
             <NewVersionBanner />
             <AppToaster />
           </ThemeProvider>

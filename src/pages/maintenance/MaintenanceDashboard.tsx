@@ -22,7 +22,6 @@ import {
   Avatar,
   Alert,
   Pagination,
-  Snackbar,
   AlertTitle,
   LinearProgress,
   useMediaQuery,
@@ -84,6 +83,7 @@ import type { CompletionPhotoInput } from '../../Components/Maintenance/Completi
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { notify } from 'src/utils/notify'
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -109,15 +109,6 @@ const MaintenanceDashboard: React.FC = () => {
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
     useState(false)
-  const [toast, setToast] = useState<{
-    open: boolean
-    message: string
-    severity: 'success' | 'error' | 'warning' | 'info'
-  }>({
-    open: false,
-    message: '',
-    severity: 'info'
-  })
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [ticketToDelete, setTicketToDelete] =
@@ -135,11 +126,7 @@ const MaintenanceDashboard: React.FC = () => {
     message: string,
     severity: 'success' | 'error' | 'warning' | 'info'
   ) => {
-    setToast({ open: true, message, severity })
-  }
-
-  const handleCloseToast = () => {
-    setToast((prev) => ({ ...prev, open: false }))
+    notify[severity](message)
   }
 
   // Check user permissions
@@ -1578,22 +1565,6 @@ const MaintenanceDashboard: React.FC = () => {
         }
       />
 
-      {/* Toast Notifications */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={6000}
-        onClose={handleCloseToast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={handleCloseToast}
-          severity={toast.severity}
-          variant='filled'
-          sx={{ width: '100%' }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
 
       {/* Keyboard Shortcuts Help Modal */}
       <KeyboardShortcutsHelp
