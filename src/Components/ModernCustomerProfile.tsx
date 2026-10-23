@@ -314,7 +314,7 @@ const ModernCustomerProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth='lg' sx={{ py: 4 }}>
+      <Container maxWidth='xl' sx={{ py: 4 }}>
         <Box
           display='flex'
           justifyContent='center'
@@ -332,7 +332,7 @@ const ModernCustomerProfile: React.FC = () => {
 
   if (!hasPermission) {
     return (
-      <Container maxWidth='lg' sx={{ py: 4 }}>
+      <Container maxWidth='xl' sx={{ py: 4 }}>
         <Alert severity='error'>
           No tienes permisos suficientes para acceder a esta página.
         </Alert>
@@ -342,7 +342,7 @@ const ModernCustomerProfile: React.FC = () => {
 
   if (loadingCustomer) {
     return (
-      <Container maxWidth='lg' sx={{ py: 4 }}>
+      <Container maxWidth='xl' sx={{ py: 4 }}>
         <Box
           display='flex'
           justifyContent='center'
@@ -356,7 +356,7 @@ const ModernCustomerProfile: React.FC = () => {
   }
 
   return (
-    <Container maxWidth='lg' sx={{ py: 2 }}>
+    <Container maxWidth='xl' sx={{ py: 2 }}>
       {/* Header with Back Button */}
       <Box sx={{ mb: 3 }}>
         <IconButton
