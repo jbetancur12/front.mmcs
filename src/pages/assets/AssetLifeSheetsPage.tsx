@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Add,
   Archive,
@@ -9,7 +9,6 @@ import {
   Delete,
   Download,
   Edit,
-  FileUpload,
   History,
   Visibility
 } from '@mui/icons-material'
@@ -21,10 +20,6 @@ import {
   Chip,
   Container,
   Divider,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Drawer,
   FormControlLabel,
   Grid,
@@ -34,13 +29,22 @@ import {
   Stack,
   Switch,
   TextField,
-  InputLabel,
+  type TextFieldProps,
+  Tooltip,
   Typography
 } from '@mui/material'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import {
+  type MRT_Cell,
+  type MRT_ColumnDef,
+  type MRT_Row
+} from 'material-react-table'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
+import FormDialog, { FormDialogSection } from 'src/Components/Common/FormDialog'
+import FormDateField from 'src/Components/Common/FormDateField'
+import FileDropZone from 'src/Components/Common/FileDropZone'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import { useStore } from '@nanostores/react'
 import { bigToast } from 'src/Components/ExcelManipulation/Utils'
 import {
@@ -130,7 +134,31 @@ const formatDate = (value?: string | null) => {
 
 const EMPTY_ASSETS: AssetLifeSheet[] = []
 
-const AssetLifeSheetsPage = () => {
+const tealSwitchSx = {
+  '& .MuiSwitch-switchBase.Mui-checked': { color: '#00BFA5' },
+  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+    bgcolor: '#00BFA5'
+  }
+}
+const tealOutlineSx = {
+  textTransform: 'none',
+  fontWeight: 600,
+  color: '#00695C',
+  borderColor: '#00BFA5',
+  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+} as const
+const subCardSx = {
+  p: 2,
+  borderRadius: '12px',
+  border: '1px solid #e5e7eb'
+}
+const subCardGridSx = {
+  display: 'grid',
+  gap: 2,
+  gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' }
+}
+
+const AssetLifeSheetsPage: React.FC = () => {
   const canManage = useCan(PERMISSIONS.ASSETS_LIFE_SHEET_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
@@ -239,7 +267,10 @@ const AssetLifeSheetsPage = () => {
     setEditingAssetId(null)
   }
 
-  const updateField = (field: keyof AssetLifeSheetFormValues, value: any) => {
+  const updateField = <K extends keyof AssetLifeSheetFormValues>(
+    field: K,
+    value: AssetLifeSheetFormValues[K]
+  ) => {
     setAssetForm((current) => ({ ...current, [field]: value }))
   }
 
@@ -424,7 +455,7 @@ const AssetLifeSheetsPage = () => {
         header: 'Activo',
         size: 220,
         enableColumnFilter: false,
-        Cell: ({ row }) => (
+        Cell: ({ row }: { row: MRT_Row<AssetLifeSheet> }) => (
           <Box>
             <Typography fontWeight={700}>{row.original.name}</Typography>
             <Typography variant='caption' color='text.secondary'>
@@ -444,15 +475,23 @@ const AssetLifeSheetsPage = () => {
           text: option.label,
           value: option.value
         })),
-        Cell: ({ cell }) => (
-          <Chip
-            size='small'
-            label={getOptionLabel(
-              ASSET_STATUS_OPTIONS,
-              String(cell.getValue())
-            )}
-          />
-        )
+        Cell: ({ cell }: { cell: MRT_Cell<AssetLifeSheet> }) => {
+          const status = String(cell.getValue())
+          return (
+            <Chip
+              size='small'
+              variant='outlined'
+              color={
+                status === 'active'
+                  ? 'success'
+                  : status === 'maintenance'
+                    ? 'warning'
+                    : 'default'
+              }
+              label={getOptionLabel(ASSET_STATUS_OPTIONS, status)}
+            />
+          )
+        }
       },
       {
         accessorKey: 'assetCategory',
@@ -463,7 +502,7 @@ const AssetLifeSheetsPage = () => {
           text: option.label,
           value: option.value
         })),
-        Cell: ({ cell }) =>
+        Cell: ({ cell }: { cell: MRT_Cell<AssetLifeSheet> }) =>
           getOptionLabel(ASSET_CATEGORY_OPTIONS, String(cell.getValue()))
       },
       {
@@ -509,7 +548,8 @@ const AssetLifeSheetsPage = () => {
         size: 130,
         enableSorting: false,
         enableColumnFilter: false,
-        Cell: ({ cell }) => formatDate(cell.getValue<string | null>())
+        Cell: ({ cell }: { cell: MRT_Cell<AssetLifeSheet> }) =>
+          formatDate(cell.getValue<string | null>())
       }
     ],
     []
@@ -553,6 +593,59 @@ const AssetLifeSheetsPage = () => {
     ].sort((left, right) => left.localeCompare(right, 'es'))
   }
 
+  const assetField = (
+    key: keyof AssetLifeSheetFormValues,
+    label: string,
+    extra: TextFieldProps = {}
+  ) => (
+    <TextField
+      {...textFieldProps(`asset-${String(key)}`)}
+      label={label}
+      value={(assetForm[key] as string) ?? ''}
+      onChange={(event) => updateField(key, event.target.value)}
+      fullWidth
+      {...extra}
+    />
+  )
+
+  const suggestField = (
+    key: 'location' | 'area' | 'custodian' | 'supplier',
+    label: string
+  ) => (
+    <Autocomplete
+      freeSolo
+      options={getSuggestedValues(key)}
+      value={assetForm[key]}
+      onChange={(_, value) => updateField(key, value || '')}
+      onInputChange={(_, value) => updateField(key, value)}
+      fullWidth
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          {...textFieldProps(`asset-${key}`)}
+          label={label}
+        />
+      )}
+    />
+  )
+
+  const assetDate = (
+    key: 'receivedDate' | 'inServiceDate' | 'warrantyExpiresAt',
+    label: string
+  ) => (
+    <FormDateField
+      label={label}
+      name={key}
+      value={assetForm[key] || ''}
+      onChange={(value) => updateField(key, value)}
+    />
+  )
+
+  const setInterventionField = (
+    key: keyof AssetInterventionFormValues,
+    value: string
+  ) => setInterventionForm((current) => ({ ...current, [key]: value }))
+
   const totalCount = counts?.total ?? assetsPage?.totalItems ?? 0
   const activeCount = counts?.active ?? 0
 
@@ -564,14 +657,41 @@ const AssetLifeSheetsPage = () => {
         icon={<Computer />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<Download />} onClick={exportAssetsExcel} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<Download />}
+              onClick={exportAssetsExcel}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Excel
             </Button>
-            <Button variant='outlined' startIcon={<CalendarMonth />} onClick={downloadSchedulePdf} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<CalendarMonth />}
+              onClick={downloadSchedulePdf}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Cronograma PDF
             </Button>
             {canManage && (
-              <Button variant='contained' startIcon={<Add />} onClick={openCreate} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              <Button
+                variant='contained'
+                startIcon={<Add />}
+                onClick={openCreate}
+                sx={{
+                  bgcolor: '#00BFA5',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#00897B' }
+                }}
+              >
                 Nuevo activo
               </Button>
             )}
@@ -581,31 +701,40 @@ const AssetLifeSheetsPage = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Activos' value={totalCount} icon={<Computer />} tone='teal' />
+          <LmsStatCard
+            variant='quiet'
+            label='Activos'
+            value={totalCount}
+            icon={<Computer />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='En uso' value={activeCount} icon={<CheckCircle />} tone='green' />
+          <LmsStatCard
+            variant='quiet'
+            label='En uso'
+            value={activeCount}
+            icon={<CheckCircle />}
+            tone='green'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Retirados o inactivos' value={Math.max(totalCount - activeCount, 0)} icon={<Archive />} tone='orange' />
+          <LmsStatCard
+            variant='quiet'
+            label='Retirados o inactivos'
+            value={Math.max(totalCount - activeCount, 0)}
+            icon={<Archive />}
+            tone='orange'
+          />
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <MaterialReactTable
-        {...purchaseTableStyle}
+      <DataTable
         columns={columns}
         data={assets}
-        enableColumnFilters
-        enableColumnOrdering
-        enableColumnResizing
-        enableDensityToggle
-        enableGlobalFilter
-        enableHiding
-        enablePagination
+        itemLabel={['activo', 'activos']}
+        searchPlaceholder='Buscar activos'
         enableRowActions
-        enableSorting
-        enablePinning
         {...server.tableProps}
         rowCount={assetsPage?.totalItems ?? 0}
         state={{
@@ -613,453 +742,340 @@ const AssetLifeSheetsPage = () => {
           isLoading,
           showProgressBars: loading && !isLoading
         }}
-        initialState={{
-          columnPinning: { right: ['mrt-row-actions'] },
-          density: 'compact'
+        initialState={{ density: 'compact' }}
+        displayColumnDefOptions={{
+          'mrt-row-actions': { header: 'Acciones', size: 170 }
         }}
         renderRowActions={({ row }) => (
-          <Stack direction='row' spacing={0.5}>
-            <IconButton sx={{ color: '#00BFA5' }} onClick={() => setSelectedAsset(row.original)}>
-              <Visibility />
-            </IconButton>
-{canManage && (
-            <IconButton color='primary' onClick={() => openEdit(row.original)}>
-              <Edit />
-            </IconButton>
-)}
-            <IconButton onClick={() => downloadPdf(row.original)}>
-              <Download />
-            </IconButton>
-{canManage && (
-            <IconButton color='error' onClick={() => setAssetPendingDelete(row.original)}>
-              <Delete />
-            </IconButton>
-)}
-          </Stack>
+          <Box sx={{ display: 'flex' }}>
+            <Tooltip title='Ver'>
+              <IconButton
+                size='small'
+                aria-label={`Ver ${row.original.assetCode}`}
+                sx={{ color: '#00695C' }}
+                onClick={() => setSelectedAsset(row.original)}
+              >
+                <Visibility fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {canManage && (
+              <Tooltip title='Editar'>
+                <IconButton
+                  size='small'
+                  aria-label={`Editar ${row.original.assetCode}`}
+                  sx={{ color: '#2563eb' }}
+                  onClick={() => openEdit(row.original)}
+                >
+                  <Edit fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
+            <Tooltip title='Descargar PDF'>
+              <IconButton
+                size='small'
+                aria-label={`Descargar PDF de ${row.original.assetCode}`}
+                sx={{ color: '#4b5563' }}
+                onClick={() => downloadPdf(row.original)}
+              >
+                <Download fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {canManage && (
+              <Tooltip title='Eliminar'>
+                <IconButton
+                  size='small'
+                  aria-label={`Eliminar ${row.original.assetCode}`}
+                  color='error'
+                  onClick={() => setAssetPendingDelete(row.original)}
+                >
+                  <Delete fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         )}
       />
-      </Paper>
 
-      <Dialog
+      <FormDialog
         open={assetDialogOpen}
         onClose={closeAssetDialog}
+        title={editingAssetId ? 'Editar activo' : 'Crear activo'}
+        subtitle={editingAssetId ? assetForm.name : undefined}
+        submitLabel='Guardar'
+        onSubmit={saveAsset}
+        loading={saveAssetMutation.isLoading}
         maxWidth='md'
-        fullWidth
       >
-        <DialogTitle>
-          {editingAssetId ? 'Editar activo' : 'Crear activo'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                {...textFieldProps('assetCode')}
-                label='Código'
-                value={assetForm.assetCode}
-                onChange={(event) =>
-                  updateField('assetCode', event.target.value)
-                }
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetName')}
-                label='Nombre'
-                value={assetForm.name}
-                onChange={(event) => updateField('name', event.target.value)}
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetType')}
-                select
-                label='Tipo'
-                value={assetForm.assetType}
-                onChange={(event) =>
-                  updateField('assetType', event.target.value)
-                }
-                fullWidth
-              >
-                {ASSET_TYPE_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Stack>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                {...textFieldProps('assetCategory')}
-                select
-                label='Categoría'
-                value={assetForm.assetCategory}
-                onChange={(event) =>
-                  updateField('assetCategory', event.target.value)
-                }
-                fullWidth
-              >
-                {ASSET_CATEGORY_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                {...textFieldProps('assetStatus')}
-                select
-                label='Estado'
-                value={assetForm.status}
-                onChange={(event) => updateField('status', event.target.value)}
-                fullWidth
-              >
-                {ASSET_STATUS_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <Autocomplete
-                freeSolo
-                options={getSuggestedValues('custodian')}
-                value={assetForm.custodian}
-                onChange={(_, value) => updateField('custodian', value || '')}
-                onInputChange={(_, value) => updateField('custodian', value)}
-                fullWidth
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    {...textFieldProps('assetCustodian')}
-                    label='Responsable'
-                  />
-                )}
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                {...textFieldProps('assetBrand')}
-                label='Marca'
-                value={assetForm.brand}
-                onChange={(event) => updateField('brand', event.target.value)}
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetModel')}
-                label='Modelo'
-                value={assetForm.model}
-                onChange={(event) => updateField('model', event.target.value)}
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetSerial')}
-                label='Serial'
-                value={assetForm.serialNumber}
-                onChange={(event) =>
-                  updateField('serialNumber', event.target.value)
-                }
-                fullWidth
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <Autocomplete
-                freeSolo
-                options={getSuggestedValues('location')}
-                value={assetForm.location}
-                onChange={(_, value) => updateField('location', value || '')}
-                onInputChange={(_, value) => updateField('location', value)}
-                fullWidth
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    {...textFieldProps('assetLocation')}
-                    label='Ubicación'
-                  />
-                )}
-              />
-              <Autocomplete
-                freeSolo
-                options={getSuggestedValues('area')}
-                value={assetForm.area}
-                onChange={(_, value) => updateField('area', value || '')}
-                onInputChange={(_, value) => updateField('area', value)}
-                fullWidth
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    {...textFieldProps('assetArea')}
-                    label='Área'
-                  />
-                )}
-              />
-              <Autocomplete
-                freeSolo
-                options={getSuggestedValues('supplier')}
-                value={assetForm.supplier}
-                onChange={(_, value) => updateField('supplier', value || '')}
-                onInputChange={(_, value) => updateField('supplier', value)}
-                fullWidth
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    {...textFieldProps('assetSupplier')}
-                    label='Proveedor'
-                  />
-                )}
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                {...textFieldProps('assetProcessor')}
-                label='Procesador'
-                value={assetForm.processor}
-                onChange={(event) =>
-                  updateField('processor', event.target.value)
-                }
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetRam')}
-                label='RAM'
-                value={assetForm.ram}
-                onChange={(event) => updateField('ram', event.target.value)}
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetStorage')}
-                label='Almacenamiento'
-                value={assetForm.storage}
-                onChange={(event) => updateField('storage', event.target.value)}
-                fullWidth
-              />
-            </Stack>
-            <TextField
-              {...textFieldProps('assetOperatingSystem')}
-              label='Sistema operativo'
-              value={assetForm.operatingSystem}
-              onChange={(event) =>
-                updateField('operatingSystem', event.target.value)
+        <FormDialogSection title='Identificación'>
+          {assetField('assetCode', 'Código')}
+          {assetField('name', 'Nombre')}
+          {assetField('assetType', 'Tipo', {
+            select: true,
+            children: ASSET_TYPE_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))
+          })}
+          {assetField('assetCategory', 'Categoría', {
+            select: true,
+            children: ASSET_CATEGORY_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))
+          })}
+          {assetField('status', 'Estado', {
+            select: true,
+            children: ASSET_STATUS_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))
+          })}
+          {suggestField('custodian', 'Responsable')}
+        </FormDialogSection>
+
+        <FormDialogSection title='Equipo y ubicación'>
+          {assetField('brand', 'Marca')}
+          {assetField('model', 'Modelo')}
+          {assetField('serialNumber', 'Serial')}
+          {suggestField('supplier', 'Proveedor')}
+          {suggestField('location', 'Ubicación')}
+          {suggestField('area', 'Área')}
+        </FormDialogSection>
+
+        <FormDialogSection
+          title='Hardware'
+          description='Solo aplica a computadores y portátiles.'
+        >
+          {assetField('processor', 'Procesador')}
+          {assetField('ram', 'RAM')}
+          {assetField('storage', 'Almacenamiento')}
+          {assetField('operatingSystem', 'Sistema operativo')}
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            {assetField(
+              'technicalSpecifications',
+              'Especificaciones técnicas',
+              {
+                multiline: true,
+                minRows: 3
               }
-              fullWidth
-            />
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                {...textFieldProps('assetReceivedDate')}
-                type='date'
-                label='Fecha recepción'
-                value={assetForm.receivedDate}
-                onChange={(event) =>
-                  updateField('receivedDate', event.target.value)
-                }
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetInServiceDate')}
-                type='date'
-                label='Puesta en servicio'
-                value={assetForm.inServiceDate}
-                onChange={(event) =>
-                  updateField('inServiceDate', event.target.value)
-                }
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <TextField
-                {...textFieldProps('assetWarrantyExpiresAt')}
-                type='date'
-                label='Vence garantía'
-                value={assetForm.warrantyExpiresAt}
-                onChange={(event) =>
-                  updateField('warrantyExpiresAt', event.target.value)
-                }
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-            </Stack>
-            <TextField
-              {...textFieldProps('assetMaintenanceFrequency')}
-              label='Frecuencia de mantenimiento'
-              value={assetForm.maintenanceFrequency}
-              onChange={(event) =>
-                updateField('maintenanceFrequency', event.target.value)
-              }
-              fullWidth
-            />
-            <Stack spacing={1}>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                justifyContent='space-between'
-                spacing={1}
-              >
-                <Box>
-                  <Typography variant='subtitle1' fontWeight={700}>
-                    Base de mantenimiento
-                  </Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Acciones periódicas que deben quedar programadas para este
-                    equipo.
-                  </Typography>
-                </Box>
-                <Button
-                  onClick={() =>
-                    updateField('maintenanceTasks', [
-                      ...assetForm.maintenanceTasks,
-                      emptyMaintenanceTask()
-                    ])
+            )}
+          </Box>
+        </FormDialogSection>
+
+        <FormDialogSection title='Fechas y garantía'>
+          {assetDate('receivedDate', 'Fecha de recepción')}
+          {assetDate('inServiceDate', 'Puesta en servicio')}
+          {assetDate('warrantyExpiresAt', 'Vence la garantía')}
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={assetForm.hasManual}
+                  onChange={(event) =>
+                    updateField('hasManual', event.target.checked)
                   }
-                >
-                  Agregar acción
-                </Button>
-              </Stack>
-              {assetForm.maintenanceTasks.map((task, index) => (
-                <Paper
-                  key={`maintenance-task-${index}`}
-                  variant='outlined'
-                  sx={{ p: 2 }}
-                >
-                  <Stack spacing={2}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        {...textFieldProps(`maintenanceTaskName-${index}`)}
-                        label='Acción de mantenimiento'
-                        value={task.taskName || ''}
-                        onChange={(event) =>
-                          updateMaintenanceTask(
-                            index,
-                            'taskName',
-                            event.target.value
-                          )
-                        }
-                        fullWidth
-                      />
-                      <TextField
-                        {...textFieldProps(`maintenanceTaskFrequency-${index}`)}
-                        select
-                        label='Periodicidad'
-                        value={task.frequency || ''}
-                        onChange={(event) =>
-                          updateMaintenanceTask(
-                            index,
-                            'frequency',
-                            event.target.value
-                          )
-                        }
-                        sx={{ minWidth: { md: 220 } }}
-                        fullWidth
-                      >
-                        {ASSET_MAINTENANCE_FREQUENCY_OPTIONS.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        {...textFieldProps(`maintenanceTaskNotes-${index}`)}
-                        label='Notas'
-                        value={task.notes || ''}
-                        onChange={(event) =>
-                          updateMaintenanceTask(
-                            index,
-                            'notes',
-                            event.target.value
-                          )
-                        }
-                        fullWidth
-                      />
-                      <Button
-                        color='error'
-                        onClick={() =>
-                          updateField(
-                            'maintenanceTasks',
-                            assetForm.maintenanceTasks.filter(
-                              (_, currentIndex) => currentIndex !== index
-                            )
-                          )
-                        }
-                      >
-                        Quitar
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Paper>
-              ))}
-              {!assetForm.maintenanceTasks.length && (
-                <Alert severity='info'>
-                  Aun no hay acciones base configuradas.
-                </Alert>
-              )}
-            </Stack>
-            <Box>
-              <InputLabel htmlFor='assetImageUpload' sx={{ mb: 1 }}>
-                Imagen del activo
-              </InputLabel>
-              <Button
-                component='label'
-                variant='outlined'
-                startIcon={<FileUpload />}
-              >
-                Seleccionar imagen
-                <input
-                  id='assetImageUpload'
-                  name='assetImageUpload'
-                  type='file'
-                  accept='image/*'
-                  hidden
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    setSelectedImageFile(event.target.files?.[0] || null)
-                  }
+                  sx={tealSwitchSx}
                 />
-              </Button>
-              {selectedImageFile && (
-                <Typography variant='body2' sx={{ mt: 1 }}>
-                  {selectedImageFile.name}
-                </Typography>
-              )}
-            </Box>
-            <Stack direction='row' spacing={2}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={assetForm.hasManual}
-                    onChange={(event) =>
-                      updateField('hasManual', event.target.checked)
-                    }
-                  />
-                }
-                label='Tiene manual'
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={assetForm.hasWarranty}
-                    onChange={(event) =>
-                      updateField('hasWarranty', event.target.checked)
-                    }
-                  />
-                }
-                label='Tiene garantía'
-              />
-            </Stack>
-            <TextField
-              {...textFieldProps('assetTechnicalSpecifications')}
-              label='Especificaciones técnicas'
-              value={assetForm.technicalSpecifications}
-              onChange={(event) =>
-                updateField('technicalSpecifications', event.target.value)
               }
-              multiline
-              minRows={3}
+              label='Tiene manual'
             />
-            <TextField
-              {...textFieldProps('assetGeneralComments')}
-              label='Comentarios generales'
-              value={assetForm.generalComments}
-              onChange={(event) =>
-                updateField('generalComments', event.target.value)
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={assetForm.hasWarranty}
+                  onChange={(event) =>
+                    updateField('hasWarranty', event.target.checked)
+                  }
+                  sx={tealSwitchSx}
+                />
               }
-              multiline
-              minRows={3}
+              label='Tiene garantía'
             />
+          </Box>
+        </FormDialogSection>
+
+        <FormDialogSection
+          title='Base de mantenimiento'
+          description='Acciones periódicas que deben quedar programadas para este equipo.'
+        >
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            {assetField('maintenanceFrequency', 'Frecuencia de mantenimiento')}
+          </Box>
+          {assetForm.maintenanceTasks.map((task, index) => (
+            <Paper
+              key={`maintenance-task-${index}`}
+              elevation={0}
+              sx={{ ...subCardSx, gridColumn: '1 / -1' }}
+            >
+              <Box sx={subCardGridSx}>
+                <TextField
+                  {...textFieldProps(`maintenanceTaskName-${index}`)}
+                  label='Acción de mantenimiento'
+                  value={task.taskName || ''}
+                  onChange={(event) =>
+                    updateMaintenanceTask(index, 'taskName', event.target.value)
+                  }
+                  fullWidth
+                />
+                <TextField
+                  {...textFieldProps(`maintenanceTaskFrequency-${index}`)}
+                  select
+                  label='Periodicidad'
+                  value={task.frequency || ''}
+                  onChange={(event) =>
+                    updateMaintenanceTask(
+                      index,
+                      'frequency',
+                      event.target.value
+                    )
+                  }
+                  fullWidth
+                >
+                  {ASSET_MAINTENANCE_FREQUENCY_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  {...textFieldProps(`maintenanceTaskNotes-${index}`)}
+                  label='Notas'
+                  value={task.notes || ''}
+                  onChange={(event) =>
+                    updateMaintenanceTask(index, 'notes', event.target.value)
+                  }
+                  fullWidth
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    color='error'
+                    startIcon={<Delete />}
+                    sx={{ textTransform: 'none', fontWeight: 600 }}
+                    onClick={() =>
+                      updateField(
+                        'maintenanceTasks',
+                        assetForm.maintenanceTasks.filter(
+                          (_, currentIndex) => currentIndex !== index
+                        )
+                      )
+                    }
+                  >
+                    Quitar
+                  </Button>
+                </Box>
+              </Box>
+            </Paper>
+          ))}
+          {!assetForm.maintenanceTasks.length && (
+            <Typography
+              variant='body2'
+              color='text.secondary'
+              sx={{ gridColumn: '1 / -1' }}
+            >
+              Aún no hay acciones base configuradas.
+            </Typography>
+          )}
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Button
+              variant='outlined'
+              startIcon={<Add />}
+              sx={tealOutlineSx}
+              onClick={() =>
+                updateField('maintenanceTasks', [
+                  ...assetForm.maintenanceTasks,
+                  emptyMaintenanceTask()
+                ])
+              }
+            >
+              Agregar acción
+            </Button>
+          </Box>
+        </FormDialogSection>
+
+        <FormDialogSection
+          title='Accesorios'
+          description='Periféricos y complementos que acompañan al equipo.'
+        >
+          {assetForm.accessories.map((accessory, index) => (
+            <Paper
+              key={index}
+              elevation={0}
+              sx={{ ...subCardSx, gridColumn: '1 / -1' }}
+            >
+              <Box sx={subCardGridSx}>
+                <TextField
+                  {...textFieldProps(`accessoryType-${index}`)}
+                  label='Tipo de accesorio'
+                  value={accessory.accessoryType || ''}
+                  onChange={(event) =>
+                    updateAccessory(index, 'accessoryType', event.target.value)
+                  }
+                  fullWidth
+                />
+                <TextField
+                  {...textFieldProps(`accessoryBrand-${index}`)}
+                  label='Marca'
+                  value={accessory.brand || ''}
+                  onChange={(event) =>
+                    updateAccessory(index, 'brand', event.target.value)
+                  }
+                  fullWidth
+                />
+                <TextField
+                  {...textFieldProps(`accessoryModel-${index}`)}
+                  label='Modelo'
+                  value={accessory.model || ''}
+                  onChange={(event) =>
+                    updateAccessory(index, 'model', event.target.value)
+                  }
+                  fullWidth
+                />
+                <TextField
+                  {...textFieldProps(`accessorySerial-${index}`)}
+                  label='Serial'
+                  value={accessory.serialNumber || ''}
+                  onChange={(event) =>
+                    updateAccessory(index, 'serialNumber', event.target.value)
+                  }
+                  fullWidth
+                />
+                <TextField
+                  {...textFieldProps(`accessoryNotes-${index}`)}
+                  label='Notas'
+                  value={accessory.notes || ''}
+                  onChange={(event) =>
+                    updateAccessory(index, 'notes', event.target.value)
+                  }
+                  fullWidth
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    color='error'
+                    startIcon={<Delete />}
+                    sx={{ textTransform: 'none', fontWeight: 600 }}
+                    onClick={() =>
+                      updateField(
+                        'accessories',
+                        assetForm.accessories.filter(
+                          (_, currentIndex) => currentIndex !== index
+                        )
+                      )
+                    }
+                  >
+                    Quitar
+                  </Button>
+                </Box>
+              </Box>
+            </Paper>
+          ))}
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <Button
+              variant='outlined'
+              startIcon={<Add />}
+              sx={tealOutlineSx}
               onClick={() =>
                 updateField('accessories', [
                   ...assetForm.accessories,
@@ -1069,91 +1085,29 @@ const AssetLifeSheetsPage = () => {
             >
               Agregar accesorio
             </Button>
-            {assetForm.accessories.map((accessory, index) => (
-              <Paper key={index} variant='outlined' sx={{ p: 2 }}>
-                <Stack spacing={2}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                    <TextField
-                      {...textFieldProps(`accessoryType-${index}`)}
-                      label='Tipo accesorio'
-                      value={accessory.accessoryType || ''}
-                      onChange={(event) =>
-                        updateAccessory(
-                          index,
-                          'accessoryType',
-                          event.target.value
-                        )
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      {...textFieldProps(`accessoryBrand-${index}`)}
-                      label='Marca'
-                      value={accessory.brand || ''}
-                      onChange={(event) =>
-                        updateAccessory(index, 'brand', event.target.value)
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      {...textFieldProps(`accessoryModel-${index}`)}
-                      label='Modelo'
-                      value={accessory.model || ''}
-                      onChange={(event) =>
-                        updateAccessory(index, 'model', event.target.value)
-                      }
-                      fullWidth
-                    />
-                  </Stack>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                    <TextField
-                      {...textFieldProps(`accessorySerial-${index}`)}
-                      label='Serial'
-                      value={accessory.serialNumber || ''}
-                      onChange={(event) =>
-                        updateAccessory(
-                          index,
-                          'serialNumber',
-                          event.target.value
-                        )
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      {...textFieldProps(`accessoryNotes-${index}`)}
-                      label='Notas'
-                      value={accessory.notes || ''}
-                      onChange={(event) =>
-                        updateAccessory(index, 'notes', event.target.value)
-                      }
-                      fullWidth
-                    />
-                    <Button
-                      color='error'
-                      onClick={() =>
-                        updateField(
-                          'accessories',
-                          assetForm.accessories.filter(
-                            (_, currentIndex) => currentIndex !== index
-                          )
-                        )
-                      }
-                    >
-                      Quitar
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Paper>
-            ))}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeAssetDialog}>Cancelar</Button>
-          <Button variant='contained' onClick={saveAsset}>
-            Guardar
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </Box>
+        </FormDialogSection>
+
+        <FormDialogSection title='Imagen y comentarios'>
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <FileDropZone
+              file={selectedImageFile}
+              onFileSelected={setSelectedImageFile}
+              onReject={(message) => bigToast(message, 'error')}
+              accept='image/*'
+              acceptLabel='imagen'
+              title='Arrastra la imagen del activo o haz clic para elegirla'
+              hint='JPG, PNG o WEBP, hasta 10 MB'
+            />
+          </Box>
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            {assetField('generalComments', 'Comentarios generales', {
+              multiline: true,
+              minRows: 3
+            })}
+          </Box>
+        </FormDialogSection>
+      </FormDialog>
 
       <Drawer
         anchor='right'
@@ -1207,7 +1161,13 @@ const AssetLifeSheetsPage = () => {
                 <Chip
                   size='small'
                   variant='outlined'
-                  label={selectedAsset?.status || 'Sin estado'}
+                  color={
+                    selectedAsset?.status === 'active' ? 'success' : 'default'
+                  }
+                  label={getOptionLabel(
+                    ASSET_STATUS_OPTIONS,
+                    selectedAsset?.status
+                  )}
                 />
                 <Chip
                   size='small'
@@ -1230,31 +1190,42 @@ const AssetLifeSheetsPage = () => {
             <Button
               variant='outlined'
               startIcon={<Download />}
+              sx={tealOutlineSx}
               onClick={() => selectedAsset && downloadPdf(selectedAsset)}
             >
               PDF
             </Button>
-{canManage && (
-            <Button
-              variant='outlined'
-              startIcon={<Edit />}
-              onClick={() => selectedAsset && openEdit(selectedAsset)}
-            >
-              Editar
-            </Button>
-)}
-{canManage && (
-            <Button
-              variant='contained'
-              startIcon={<History />}
-              onClick={() => setInterventionDialogOpen(true)}
-            >
-              Intervención
-            </Button>
-)}
+            {canManage && (
+              <Button
+                variant='outlined'
+                startIcon={<Edit />}
+                sx={tealOutlineSx}
+                onClick={() => selectedAsset && openEdit(selectedAsset)}
+              >
+                Editar
+              </Button>
+            )}
+            {canManage && (
+              <Button
+                variant='contained'
+                startIcon={<History />}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  bgcolor: '#00BFA5',
+                  '&:hover': { bgcolor: '#00897B' }
+                }}
+                onClick={() => setInterventionDialogOpen(true)}
+              >
+                Intervención
+              </Button>
+            )}
           </Stack>
 
-          <Paper variant='outlined' sx={{ p: 2, borderRadius: 2 }}>
+          <Paper
+            variant='outlined'
+            sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}
+          >
             <Stack spacing={1.25}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <Box sx={{ flex: 1 }}>
@@ -1349,7 +1320,7 @@ const AssetLifeSheetsPage = () => {
                     sx={{
                       p: 1.75,
                       borderRadius: 2,
-                      backgroundColor: '#fafafa'
+                      backgroundColor: '#f9fafb'
                     }}
                   >
                     <Stack
@@ -1392,7 +1363,7 @@ const AssetLifeSheetsPage = () => {
             </Typography>
             <Paper
               variant='outlined'
-              sx={{ p: 2, borderRadius: 2, backgroundColor: '#fafafa' }}
+              sx={{ p: 2, borderRadius: 2, backgroundColor: '#f9fafb' }}
             >
               <Typography variant='body2'>
                 {selectedAsset?.generalComments ||
@@ -1413,7 +1384,11 @@ const AssetLifeSheetsPage = () => {
                   <Paper
                     key={`${item.accessoryType}-${index}`}
                     variant='outlined'
-                    sx={{ p: 1.75, borderRadius: 2 }}
+                    sx={{
+                      p: 1.75,
+                      borderRadius: '12px',
+                      borderColor: '#e5e7eb'
+                    }}
                   >
                     <Typography fontWeight={700}>
                       {item.accessoryType}
@@ -1448,7 +1423,11 @@ const AssetLifeSheetsPage = () => {
                   <Paper
                     key={item.id}
                     variant='outlined'
-                    sx={{ p: 1.75, borderRadius: 2 }}
+                    sx={{
+                      p: 1.75,
+                      borderRadius: '12px',
+                      borderColor: '#e5e7eb'
+                    }}
                   >
                     <Typography fontWeight={700}>{item.title}</Typography>
                     <Stack
@@ -1487,148 +1466,117 @@ const AssetLifeSheetsPage = () => {
         </Box>
       </Drawer>
 
-      <Dialog
+      <FormDialog
         open={interventionDialogOpen}
         onClose={() => setInterventionDialogOpen(false)}
+        title='Registrar intervención'
+        subtitle={selectedAsset?.name}
+        submitLabel='Guardar'
+        onSubmit={saveIntervention}
+        loading={createIntervention.isLoading}
         maxWidth='sm'
-        fullWidth
       >
-        <DialogTitle>Registrar intervención</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              {...textFieldProps('interventionDate')}
-              type='date'
-              label='Fecha'
-              value={interventionForm.interventionDate}
-              onChange={(event) =>
-                setInterventionForm((current) => ({
-                  ...current,
-                  interventionDate: event.target.value
-                }))
-              }
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              {...textFieldProps('interventionType')}
-              select
-              label='Tipo'
-              value={interventionForm.interventionType}
-              onChange={(event) =>
-                setInterventionForm((current) => ({
-                  ...current,
-                  interventionType: event.target.value
-                }))
-              }
-            >
-              {ASSET_INTERVENTION_TYPE_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+        <FormDialogSection title='Intervención'>
+          <FormDateField
+            label='Fecha'
+            name='interventionDate'
+            value={interventionForm.interventionDate}
+            onChange={(value) =>
+              setInterventionField('interventionDate', value)
+            }
+          />
+          <TextField
+            {...textFieldProps('interventionType')}
+            select
+            label='Tipo'
+            value={interventionForm.interventionType}
+            onChange={(event) =>
+              setInterventionField('interventionType', event.target.value)
+            }
+            fullWidth
+          >
+            {ASSET_INTERVENTION_TYPE_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <TextField
               {...textFieldProps('interventionTitle')}
               label='Título'
               value={interventionForm.title}
               onChange={(event) =>
-                setInterventionForm((current) => ({
-                  ...current,
-                  title: event.target.value
-                }))
+                setInterventionField('title', event.target.value)
               }
+              fullWidth
             />
+          </Box>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <TextField
               {...textFieldProps('interventionDescription')}
               label='Descripción'
               value={interventionForm.description}
               onChange={(event) =>
-                setInterventionForm((current) => ({
-                  ...current,
-                  description: event.target.value
-                }))
+                setInterventionField('description', event.target.value)
               }
               multiline
               minRows={3}
+              fullWidth
             />
+          </Box>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <TextField
               {...textFieldProps('interventionObservations')}
               label='Observaciones'
               value={interventionForm.observations}
               onChange={(event) =>
-                setInterventionForm((current) => ({
-                  ...current,
-                  observations: event.target.value
-                }))
+                setInterventionField('observations', event.target.value)
               }
               multiline
               minRows={2}
+              fullWidth
             />
-            <TextField
-              {...textFieldProps('interventionPerformedBy')}
-              label='Realizado por'
-              value={interventionForm.performedByName}
-              onChange={(event) =>
-                setInterventionForm((current) => ({
-                  ...current,
-                  performedByName: event.target.value
-                }))
-              }
-            />
-            <TextField
-              {...textFieldProps('interventionNextActionDate')}
-              type='date'
-              label='Próxima acción'
-              value={interventionForm.nextActionDate}
-              onChange={(event) =>
-                setInterventionForm((current) => ({
-                  ...current,
-                  nextActionDate: event.target.value
-                }))
-              }
-              InputLabelProps={{ shrink: true }}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setInterventionDialogOpen(false)}>
-            Cancelar
-          </Button>
-          <Button variant='contained' onClick={saveIntervention}>
-            Guardar
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
+          </Box>
+          <TextField
+            {...textFieldProps('interventionPerformedBy')}
+            label='Realizado por'
+            value={interventionForm.performedByName}
+            onChange={(event) =>
+              setInterventionField('performedByName', event.target.value)
+            }
+            fullWidth
+          />
+          <FormDateField
+            label='Próxima acción'
+            name='interventionNextActionDate'
+            value={interventionForm.nextActionDate}
+            onChange={(value) => setInterventionField('nextActionDate', value)}
+          />
+        </FormDialogSection>
+      </FormDialog>
+
+      <ConfirmDialog
         open={Boolean(assetPendingDelete)}
-        onClose={() => setAssetPendingDelete(null)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle>Eliminar activo</DialogTitle>
-        <DialogContent dividers>
-          <Typography>
+        tone='danger'
+        title='Eliminar activo'
+        message={
+          <>
             Vas a eliminar{' '}
             <strong>{assetPendingDelete?.name || 'este activo'}</strong>
             {assetPendingDelete?.assetCode
               ? ` (${assetPendingDelete.assetCode})`
               : ''}
             . Esta acción no se puede deshacer.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAssetPendingDelete(null)}>Cancelar</Button>
-          <Button
-            color='error'
-            variant='contained'
-            onClick={() =>
-              assetPendingDelete && deleteAsset(assetPendingDelete.id)
-            }
-          >
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+        confirmLabel='Eliminar'
+        loading={deleteAssetMutation.isLoading}
+        onConfirm={() =>
+          assetPendingDelete && deleteAsset(assetPendingDelete.id)
+        }
+        onClose={() => setAssetPendingDelete(null)}
+      />
     </Container>
   )
 }
