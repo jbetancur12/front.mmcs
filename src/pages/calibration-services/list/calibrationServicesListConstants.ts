@@ -7,8 +7,12 @@ import {
 
 export const FILTER_ALL = 'all'
 export const FILTER_UNASSIGNED = 'unassigned'
-export const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
-export const CALIBRATION_SERVICES_FILTERS_STORAGE_KEY = 'calibrationServicesFilters'
+/** Filtro de semáforo "en riesgo": amarillo o rojo. */
+export const SLA_FILTER_ALERT = 'alert'
+export const CALIBRATION_SERVICES_VIEW_STORAGE_KEY =
+  'calibrationServicesViewMode'
+export const CALIBRATION_SERVICES_FILTERS_STORAGE_KEY =
+  'calibrationServicesFilters'
 
 export const STATUS_OPTIONS: Array<{
   value: CalibrationServiceStatus | typeof FILTER_ALL
@@ -65,6 +69,10 @@ export const SLA_OPTIONS: Array<{
   label: string
 }> = [
   { value: FILTER_ALL, label: 'Todo el semáforo' },
+  {
+    value: SLA_FILTER_ALERT as CalibrationServiceSlaIndicatorColor,
+    label: 'En riesgo (amarillo o rojo)'
+  },
   { value: 'green', label: 'En tiempo' },
   { value: 'yellow', label: 'En alerta' },
   { value: 'red', label: 'Vencido' },

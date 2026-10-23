@@ -755,7 +755,10 @@ export const useCalibrationServices = (filters?: CalibrationServiceFilters) => {
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, filters],
     queryFn: () => calibrationServiceApi.getServices(filters),
     staleTime: 60 * 1000,
-    retry: 1
+    retry: 1,
+    // Mientras llega la consulta nueva (otra etapa, otra búsqueda, "Cargar
+    // más") se sigue mostrando la lista anterior en vez de vaciar la pantalla
+    keepPreviousData: true
   })
 }
 

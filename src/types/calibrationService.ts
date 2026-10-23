@@ -517,6 +517,8 @@ export interface CalibrationServiceListResponse {
   totalPages: number
   currentPage: number
   services: CalibrationService[]
+  /** Servicios por estado con los mismos filtros, menos el de estado (embudo). */
+  statusCounts?: Partial<Record<string, number>>
 }
 
 export interface CalibrationServiceAnalyticsFilters {

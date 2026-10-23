@@ -132,7 +132,9 @@ function DataTable<TData extends Record<string, any>>({
             flexWrap: 'wrap'
           }}
         >
-          <MRT_GlobalFilterTextField table={table} />
+          {props.enableGlobalFilter !== false ? (
+            <MRT_GlobalFilterTextField table={table} />
+          ) : null}
           {renderCount(table)}
           {renderTopToolbarCustomActions?.({ table })}
         </Box>
