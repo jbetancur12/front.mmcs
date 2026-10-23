@@ -34,7 +34,7 @@ import PlanDestinationsDialog from 'src/Components/lms/admin/plans/PlanDestinati
 import { PLAN_TEAL, formatPlanDate, primaryButtonSx } from 'src/Components/lms/admin/plans/planUi'
 import { useDeleteTrainingPlan, useTrainingPlans } from 'src/hooks/useLms'
 import type { TrainingPlanSummary } from 'src/services/lmsService'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { getApiErrorCode, getStructuredApiErrorMessage } from 'src/utils/apiError'
 
 type PlanFilter = 'all' | 'assigned' | 'unassigned'
@@ -69,7 +69,7 @@ const LmsTrainingPlans: React.FC = () => {
 
   const handleDelete = async (plan: TrainingPlanSummary) => {
     if (plan.included_by_count > 0) {
-      Toast.fire({ icon: 'warning', title: 'Este plan está incluido en otros planes. Quítalo de ellos antes de eliminarlo.' })
+      notify.warning('Este plan está incluido en otros planes. Quítalo de ellos antes de eliminarlo.')
       return
     }
 
@@ -89,12 +89,12 @@ const LmsTrainingPlans: React.FC = () => {
 
     try {
       await deleteMutation.mutateAsync({ id: plan.id, cascade: assigned })
-      Toast.fire({ icon: 'success', title: 'Plan eliminado' })
+      notify.success('Plan eliminado')
     } catch (deleteError) {
       const message = getApiErrorCode(deleteError) === 'PLAN_IS_INCLUDED'
         ? 'Este plan está incluido en otros planes. Quítalo de ellos antes de eliminarlo.'
         : getStructuredApiErrorMessage(deleteError, 'No se pudo eliminar el plan.')
-      Toast.fire({ icon: 'error', title: message })
+      notify.error(message)
     }
   }
 

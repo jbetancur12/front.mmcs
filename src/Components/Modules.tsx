@@ -27,7 +27,7 @@ import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useStore } from '@nanostores/react'
 import { Module, userStore } from 'src/store/userStore'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { BASIC_MODULE } from 'src/constants/modules'
 import ConfirmDialog from './Common/ConfirmDialog'
 import EmptyState from './Common/EmptyState'
@@ -50,7 +50,7 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
     isError
   } = useCustomerModules<Module>(customerId, {
     onError: () => {
-      bigToast('Error al cargar los módulos', 'error')
+      notify.error('Error al cargar los módulos')
     }
   })
   // Sin customerId la vista se queda en estado de carga, como antes
@@ -69,12 +69,11 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
         updaterName: currentUser?.nombre
       })
 
-      bigToast(
-        `Módulo ${isActive ? 'activado' : 'desactivado'} exitosamente`,
-        'success'
+      notify.success(
+        `Módulo ${isActive ? 'activado' : 'desactivado'} exitosamente`
       )
     } catch (error) {
-      bigToast('Error al actualizar el módulo', 'error')
+      notify.error('Error al actualizar el módulo')
       console.error('Error updating module:', error)
     } finally {
       setUpdating(null)

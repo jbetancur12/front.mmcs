@@ -5,7 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { EquipmentInfo } from './InspectionMaintenanceForm'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { useFormik } from 'formik'
 import { Box, Button, Paper } from '@mui/material'
 import { Delete, Straighten } from '@mui/icons-material'
@@ -163,19 +163,18 @@ const CalibrationForm: React.FC = () => {
           payload: { ...values, name: 'Calibración' }
         })
         if (response.status >= 200 && response.status < 300) {
-          bigToast(
+          notify.success(
             isEdit
               ? 'Calibración actualizada correctamente'
-              : 'Calibración enviada correctamente',
-            'success'
+              : 'Calibración enviada correctamente'
           )
           resetForm()
           navigate(`/datasheets/${equipoId}/inspection-maintenance`)
         } else {
-          bigToast('Error al enviar la calibración', 'error')
+          notify.error('Error al enviar la calibración')
         }
       } catch (error) {
-        bigToast('Error al enviar la calibración', 'error')
+        notify.error('Error al enviar la calibración')
         console.error('Error al enviar la calibración:', error)
       }
     }
@@ -212,13 +211,13 @@ const CalibrationForm: React.FC = () => {
         `/calibration/${editId}`
       )
       if (response.status === 204 || response.status === 200) {
-        bigToast('Calibración eliminada correctamente', 'success')
+        notify.success('Calibración eliminada correctamente')
         navigate(-1)
       } else {
-        bigToast('Error al eliminar', 'error')
+        notify.error('Error al eliminar')
       }
     } catch (error) {
-      bigToast('Error al eliminar', 'error')
+      notify.error('Error al eliminar')
     }
     setConfirmDelete(false)
   }

@@ -22,7 +22,7 @@ interface ApiResponse {
 import { axiosPrivate } from '@utils/api'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import EquipmentTable from './customer-profile/EquipmentTable'
 import {
   Certificate as CertificateRow,
@@ -41,7 +41,7 @@ const exportToExcel = async (
   selectedSede: string | null
 ) => {
   if (data.length === 0) {
-    bigToast('No hay datos para exportar', 'info')
+    notify.info('No hay datos para exportar')
     return
   }
 
@@ -114,7 +114,7 @@ const exportToExcel = async (
     XLSX.writeFile(workbook, fileName)
   } catch (error) {
     console.error('Error al generar archivo Excel:', error)
-    bigToast('Error al generar el archivo Excel', 'error')
+    notify.error('Error al generar el archivo Excel')
   }
 }
 
@@ -171,13 +171,13 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
       try {
         const allData = await fetchAllDataForDownload(type)
         if (allData.length === 0) {
-          bigToast('No hay datos para exportar', 'info')
+          notify.info('No hay datos para exportar')
         } else {
           await exportToExcel(allData, selectedSede)
         }
       } catch (error) {
         console.error('Error al descargar Excel:', error)
-        bigToast('Error al descargar el archivo Excel', 'error')
+        notify.error('Error al descargar el archivo Excel')
       } finally {
         setIsDownloading(false)
       }

@@ -29,7 +29,7 @@ import DataTable from '../Common/DataTable'
 import EmptyState from '../Common/EmptyState'
 import StatusPill from '../Common/StatusPill'
 
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { userStore } from 'src/store/userStore'
 import { useStore } from '@nanostores/react'
 import {
@@ -82,15 +82,14 @@ const EquipmentAlertsPage: React.FC = () => {
   }, [loading, isError, equipments, $userStore.email])
 
   useEffect(() => {
-    if (isError)
-      bigToast('No se pudieron cargar las alertas de equipos', 'error')
+    if (isError) notify.error('No se pudieron cargar las alertas de equipos')
   }, [isError])
 
   const handleRefresh = async () => {
     setRefreshing(true)
     const result = await refetch()
     setRefreshing(false)
-    if (!result.isError) bigToast('Alertas actualizadas', 'success')
+    if (!result.isError) notify.success('Alertas actualizadas')
   }
 
   const rows = useMemo<AlertRow[]>(() => toAlertRows(equipments), [equipments])

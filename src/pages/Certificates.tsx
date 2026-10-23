@@ -31,7 +31,7 @@ import {
 } from 'src/Components/Common/DetailBlocks'
 import CertificateEditDialog from '../Components/certificateDetail/CertificateEditDialog'
 import BulkReassignDialog from '../Components/certificateDetail/BulkReassignDialog'
-import { bigToast } from '../Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   FILE_QUERY_KEYS,
   useBulkReassignFileDevice,
@@ -176,7 +176,7 @@ const Certificates: React.FC = () => {
   const handleUpdateSuccess = () => {
     refreshCertificate()
     refreshCertificateHistory()
-    bigToast('Certificado actualizado exitosamente', 'success')
+    notify.success('Certificado actualizado exitosamente')
   }
 
   const handleSaveEdit = async (payload: Record<string, unknown>) => {
@@ -186,11 +186,11 @@ const Certificates: React.FC = () => {
         payload
       })
       if (response.status === 200) {
-        bigToast('Datos del certificado actualizados', 'success')
+        notify.success('Datos del certificado actualizados')
         refreshCertificate()
       }
     } catch (error) {
-      bigToast('No se pudieron actualizar los datos del certificado', 'error')
+      notify.error('No se pudieron actualizar los datos del certificado')
       throw error
     }
   }

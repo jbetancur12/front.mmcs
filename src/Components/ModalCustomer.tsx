@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Modal, Box, TextField, Button, Typography } from '@mui/material'
 
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { useCreateCustomer } from 'src/hooks/customers/useCustomers'
 
 interface ModalCustomerProps {
@@ -74,7 +74,7 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
       const response = await createCustomer.mutateAsync(formValues)
 
       if (response.status === 201) {
-        bigToast('Cliente Creado Exitosamente!', 'success')
+        notify.success('Cliente Creado Exitosamente!')
         dataReturned(response.data)
         onClose(false)
       } else {

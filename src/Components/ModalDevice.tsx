@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { TextField } from '@mui/material'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { useCreateDevice } from '@hooks/devices/useDevices'
 import { axiosPrivate } from '../utils/api'
 import FormDialog from './Common/FormDialog'
@@ -74,7 +74,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
       const response = await createDeviceMutation.mutateAsync(formValues)
 
       if (response.status === 201) {
-        bigToast('Equipo creado exitosamente', 'success')
+        notify.success('Equipo creado exitosamente')
         dataReturned(response.data)
         resetForm()
         onClose(false)

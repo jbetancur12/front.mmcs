@@ -40,7 +40,7 @@ import {
 } from 'src/hooks/useLms'
 import type { PlanAssignmentRow } from 'src/services/lmsService'
 import PlanAssignmentUsersDialog from './PlanAssignmentUsersDialog'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 import {
   PLAN_TEAL,
@@ -130,15 +130,14 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
 
     try {
       await mergeMutation.mutateAsync(plan.id)
-      Toast.fire({ icon: 'success', title: 'Destinos unificados' })
+      notify.success('Destinos unificados')
     } catch (error) {
-      Toast.fire({
-        icon: 'error',
-        title: getStructuredApiErrorMessage(
+      notify.error(
+        getStructuredApiErrorMessage(
           error,
           'No se pudieron unificar los destinos.'
         )
-      })
+      )
     }
   }
   const [editing, setEditing] = useState<PlanAssignmentRow | null>(null)
@@ -177,15 +176,11 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
 
     try {
       await unassignMutation.mutateAsync(id)
-      Toast.fire({ icon: 'success', title: 'Plan desasignado' })
+      notify.success('Plan desasignado')
     } catch (error) {
-      Toast.fire({
-        icon: 'error',
-        title: getStructuredApiErrorMessage(
-          error,
-          'No se pudo desasignar el plan.'
-        )
-      })
+      notify.error(
+        getStructuredApiErrorMessage(error, 'No se pudo desasignar el plan.')
+      )
     }
   }
 

@@ -7,7 +7,7 @@ import {
   useFetchDevicesNow,
   type DeviceCatalogItem
 } from '@hooks/devices/useDevices'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 export interface CertificateEditValues {
   deviceId: number | null
@@ -62,9 +62,7 @@ const CertificateEditDialog: React.FC<CertificateEditDialogProps> = ({
           )
         )
       )
-      .catch(() =>
-        bigToast('No se pudo cargar el catálogo de equipos', 'error')
-      )
+      .catch(() => notify.error('No se pudo cargar el catálogo de equipos'))
       .finally(() => setLoadingDevices(false))
   }, [open])
 
@@ -85,7 +83,7 @@ const CertificateEditDialog: React.FC<CertificateEditDialogProps> = ({
     }
     if (values.calibrationDate !== initial.calibrationDate) {
       if (!values.calibrationDate) {
-        bigToast('Selecciona la fecha de calibración', 'error')
+        notify.error('Selecciona la fecha de calibración')
         return
       }
       payload.calibrationDate = values.calibrationDate

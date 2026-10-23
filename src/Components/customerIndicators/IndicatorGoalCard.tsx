@@ -7,7 +7,7 @@ import { MySwal } from '@utils/sweetAlert'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useSaveIndicatorGoal } from 'src/hooks/useCustomerIndicators'
 import { IndicatorGoal } from 'src/types/customerIndicators'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import GoalOverrideDialog from './GoalOverrideDialog'
 import {
   TEAL_TEXT,
@@ -41,12 +41,9 @@ const IndicatorGoalCard: React.FC<Props> = ({ customerId, year, goal }) => {
     if (!result.isConfirmed) return
     try {
       await mutateAsync({ customerId, year, mode: 'auto' })
-      bigToast('Meta automática restablecida', 'success')
+      notify.success('Meta automática restablecida')
     } catch (error) {
-      bigToast(
-        getApiErrorMessage(error, 'No se pudo cambiar la meta.'),
-        'error'
-      )
+      notify.error(getApiErrorMessage(error, 'No se pudo cambiar la meta.'))
     }
   }
 

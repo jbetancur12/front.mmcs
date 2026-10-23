@@ -12,7 +12,7 @@ import {
 import axios from 'axios'
 import { useMutation, useQuery } from 'react-query'
 import { api } from '../config'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { Delete, Visibility, VisibilityOff } from '@mui/icons-material'
 
 const apiUrl = api()
@@ -92,7 +92,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
     try {
       await createPasswords.mutateAsync(passwordValues)
 
-      bigToast('Contraseñas creadas con éxito', 'success')
+      notify.success('Contraseñas creadas con éxito')
       onCloseModal()
     } catch (error) {
       console.error('Error updating settings:', error)
@@ -130,7 +130,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
     try {
       await updatePasswords.mutateAsync(wbPasswords)
 
-      bigToast('Contraseñas actualizadas con éxito', 'success')
+      notify.success('Contraseñas actualizadas con éxito')
       setShowUpdateButton(false)
     } catch (error) {
       console.error('Error updating settings:', error)

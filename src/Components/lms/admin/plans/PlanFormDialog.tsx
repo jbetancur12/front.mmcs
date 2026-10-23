@@ -37,7 +37,7 @@ import { useCourses, useSaveTrainingPlan, useTrainingPlan, useTrainingPlans } fr
 import { lmsService } from 'src/services/lmsService'
 import type { Course, PlanImpact, SaveTrainingPlanRequest } from 'src/services/lmsService'
 import { queryKeys } from 'src/config/queryClient'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify as appNotify } from 'src/utils/notify'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 import {
   COURSE_STATUS_LABELS,
@@ -194,13 +194,13 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
   })
 
   const showError = (error: unknown, fallback: string) => {
-    Toast.fire({ icon: 'error', title: getStructuredApiErrorMessage(error, fallback) })
+    appNotify.error(getStructuredApiErrorMessage(error, fallback))
   }
 
   const save = async (withNotify: boolean) => {
     try {
       await saveMutation.mutateAsync({ id: planId ?? undefined, data: { ...buildPayload(), ...(isEdit ? { notify: withNotify } : {}) } })
-      Toast.fire({ icon: 'success', title: isEdit ? 'Plan actualizado' : 'Plan creado' })
+      appNotify.success(isEdit ? 'Plan actualizado' : 'Plan creado')
       onClose()
     } catch (error) {
       showError(error, 'No se pudo guardar el plan.')

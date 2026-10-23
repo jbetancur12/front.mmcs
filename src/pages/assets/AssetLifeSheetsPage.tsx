@@ -54,7 +54,7 @@ import {
 } from 'src/Components/Common/DetailBlocks'
 import { formatDateOnly } from '@utils/dateOnly'
 import { useStore } from '@nanostores/react'
-import { bigToast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   ASSET_CATEGORY_OPTIONS,
   ASSET_MAINTENANCE_FREQUENCY_OPTIONS,
@@ -349,10 +349,10 @@ const AssetLifeSheetsPage: React.FC = () => {
       await saveAssetMutation.mutateAsync({ id: editingAssetId, formData })
 
       closeAssetDialog()
-      bigToast('Activo guardado correctamente', 'success')
+      notify.success('Activo guardado correctamente')
     } catch (error) {
       console.error(error)
-      bigToast('No fue posible guardar el activo', 'error')
+      notify.error('No fue posible guardar el activo')
     }
   }
 
@@ -361,10 +361,10 @@ const AssetLifeSheetsPage: React.FC = () => {
       await deleteAssetMutation.mutateAsync(assetId)
       setSelectedAsset((current) => (current?.id === assetId ? null : current))
       setAssetPendingDelete(null)
-      bigToast('Activo eliminado', 'success')
+      notify.success('Activo eliminado')
     } catch (error) {
       console.error(error)
-      bigToast('No fue posible eliminar el activo', 'error')
+      notify.error('No fue posible eliminar el activo')
     }
   }
 
@@ -383,7 +383,7 @@ const AssetLifeSheetsPage: React.FC = () => {
       link.click()
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      bigToast('No fue posible exportar el PDF', 'error')
+      notify.error('No fue posible exportar el PDF')
     }
   }
 
@@ -403,7 +403,7 @@ const AssetLifeSheetsPage: React.FC = () => {
       link.click()
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      bigToast('No fue posible exportar el cronograma', 'error')
+      notify.error('No fue posible exportar el cronograma')
     }
   }
 
@@ -473,7 +473,7 @@ const AssetLifeSheetsPage: React.FC = () => {
         `hojas-de-vida-activos-${new Date().toISOString().slice(0, 10)}.xlsx`
       )
     } catch (error) {
-      bigToast('No fue posible exportar Excel', 'error')
+      notify.error('No fue posible exportar Excel')
     }
   }
 
@@ -605,9 +605,9 @@ const AssetLifeSheetsPage: React.FC = () => {
         observations: '',
         nextActionDate: ''
       }))
-      bigToast('Intervención registrada', 'success')
+      notify.success('Intervención registrada')
     } catch (error) {
-      bigToast('No fue posible registrar la intervención', 'error')
+      notify.error('No fue posible registrar la intervención')
     }
   }
 
@@ -1128,7 +1128,7 @@ const AssetLifeSheetsPage: React.FC = () => {
             <FileDropZone
               file={selectedImageFile}
               onFileSelected={setSelectedImageFile}
-              onReject={(message) => bigToast(message, 'error')}
+              onReject={(message) => notify.error(message)}
               accept='image/*'
               acceptLabel='imagen'
               title='Arrastra la imagen del activo o haz clic para elegirla'

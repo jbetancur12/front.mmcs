@@ -32,7 +32,7 @@ import ConfirmDialog from '../Common/ConfirmDialog'
 import DataTable from '../Common/DataTable'
 import EmptyState from '../Common/EmptyState'
 import StatusPill, { StatusPillTone } from '../Common/StatusPill'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 import { STATUS_LABELS } from './constants'
 import EquipmentSedeDialog from './EquipmentSedeDialog'
@@ -243,10 +243,10 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({
     setDeleting(true)
     try {
       await handleDelete(deleteTarget.id)
-      bigToast('Equipo eliminado exitosamente', 'success')
+      notify.success('Equipo eliminado exitosamente')
       setDeleteTarget(null)
     } catch (error) {
-      bigToast('Error al eliminar el equipo', 'error')
+      notify.error('Error al eliminar el equipo')
       console.error('Error deleting equipment:', error)
     } finally {
       setDeleting(false)

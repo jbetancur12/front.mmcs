@@ -1,4 +1,4 @@
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 import { Certificate, CustomerProfileData, CustomerStats } from './types'
 
@@ -8,7 +8,7 @@ export const exportToExcel = async (
   customerName: string = ''
 ) => {
   if (data.length === 0) {
-    bigToast('No hay datos para exportar', 'info')
+    notify.info('No hay datos para exportar')
     return
   }
 
@@ -48,10 +48,10 @@ export const exportToExcel = async (
 
   try {
     XLSX.writeFile(workbook, fileName)
-    bigToast('Archivo Excel descargado exitosamente', 'success')
+    notify.success('Archivo Excel descargado exitosamente')
   } catch (error) {
     console.error('Error al generar archivo Excel:', error)
-    bigToast('Error al generar el archivo Excel', 'error')
+    notify.error('Error al generar el archivo Excel')
   }
 }
 
@@ -62,7 +62,7 @@ export const exportOverviewReport = async (
   stats: CustomerStats
 ) => {
   if (!customerData) {
-    bigToast('No hay datos del cliente para exportar', 'error')
+    notify.error('No hay datos del cliente para exportar')
     return
   }
 
@@ -235,10 +235,10 @@ export const exportOverviewReport = async (
 
   try {
     XLSX.writeFile(workbook, fileName)
-    bigToast('Reporte completo descargado exitosamente', 'success')
+    notify.success('Reporte completo descargado exitosamente')
   } catch (error) {
     console.error('Error al generar reporte completo:', error)
-    bigToast('Error al generar el reporte completo', 'error')
+    notify.error('Error al generar el reporte completo')
   }
 }
 

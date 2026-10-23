@@ -4,7 +4,7 @@ import { Button, Container, Grid, Typography, Box } from '@mui/material'
 import { Add as AddIcon, Description } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   useCreateTemplate,
   useDeleteTemplate,
@@ -60,24 +60,18 @@ const TemplatesPage: React.FC = () => {
       const response = await createTemplateMutation.mutateAsync(templateData)
 
       if (response.status >= 200 && response.status < 300) {
-        bigToast('Plantilla creada exitosamente!', 'success')
+        notify.success('Plantilla creada exitosamente!')
         setCreateModalOpen(false)
       }
     } catch (error: any) {
       console.error('Error creating template:', error)
 
       if (error.response?.status === 409) {
-        bigToast(
-          error.response.data.message ||
-            'Ya existe una plantilla con ese nombre',
-          'error'
-        )
+        notify.error(error.response.data.message ||
+            'Ya existe una plantilla con ese nombre')
       } else {
-        bigToast(
-          error.response?.data?.error ||
-            'Error al crear la plantilla. Por favor, intenta de nuevo.',
-          'error'
-        )
+        notify.error(error.response?.data?.error ||
+            'Error al crear la plantilla. Por favor, intenta de nuevo.')
       }
     }
   }
@@ -88,7 +82,7 @@ const TemplatesPage: React.FC = () => {
       const response = await createTemplateMutation.mutateAsync(templateData)
 
       if (response.status >= 200 && response.status < 300) {
-        bigToast('Plantilla duplicada exitosamente!', 'success')
+        notify.success('Plantilla duplicada exitosamente!')
         setDuplicateModalOpen(false)
         setTemplateToDuplicate(null)
       }
@@ -96,17 +90,11 @@ const TemplatesPage: React.FC = () => {
       console.error('Error duplicating template:', error)
 
       if (error.response?.status === 409) {
-        bigToast(
-          error.response.data.message ||
-            'Ya existe una plantilla con ese nombre',
-          'error'
-        )
+        notify.error(error.response.data.message ||
+            'Ya existe una plantilla con ese nombre')
       } else {
-        bigToast(
-          error.response?.data?.error ||
-            'Error al duplicar la plantilla. Por favor, intenta de nuevo.',
-          'error'
-        )
+        notify.error(error.response?.data?.error ||
+            'Error al duplicar la plantilla. Por favor, intenta de nuevo.')
       }
     }
   }
@@ -123,17 +111,14 @@ const TemplatesPage: React.FC = () => {
       })
 
       if (response.status === 200 || response.status === 201) {
-        bigToast('Plantilla actualizada exitosamente!', 'success')
+        notify.success('Plantilla actualizada exitosamente!')
         return true
       }
       return false
     } catch (error: any) {
       console.error('Error updating template:', error)
-      bigToast(
-        error.response?.data?.error ||
-          'Error al actualizar la plantilla. Por favor, intenta de nuevo.',
-        'error'
-      )
+      notify.error(error.response?.data?.error ||
+          'Error al actualizar la plantilla. Por favor, intenta de nuevo.')
       return false
     }
   }
@@ -150,15 +135,12 @@ const TemplatesPage: React.FC = () => {
       const response = await deleteTemplateMutation.mutateAsync(id)
 
       if (response.status >= 200 && response.status < 300) {
-        bigToast('Plantilla eliminada exitosamente!', 'success')
+        notify.success('Plantilla eliminada exitosamente!')
       }
     } catch (error: any) {
       console.error('Error deleting template:', error)
-      bigToast(
-        error.response?.data?.error ||
-          'Error al eliminar la plantilla. Por favor, intenta de nuevo.',
-        'error'
-      )
+      notify.error(error.response?.data?.error ||
+          'Error al eliminar la plantilla. Por favor, intenta de nuevo.')
     }
   }
 

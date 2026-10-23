@@ -14,7 +14,7 @@ import { getApiErrorMessage } from '@utils/apiError'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useSaveIndicatorObservations } from 'src/hooks/useCustomerIndicators'
 import { IndicatorObservations } from 'src/types/customerIndicators'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { emeraldButtonSx, formatDate } from './indicatorFormat'
 
 export const OBSERVATIONS_MAX_LENGTH = 2000
@@ -47,11 +47,10 @@ const IndicatorObservationsCard: React.FC<Props> = ({
   const handleSave = async () => {
     try {
       await mutateAsync({ customerId, year, text })
-      bigToast('Observaciones guardadas', 'success')
+      notify.success('Observaciones guardadas')
     } catch (error) {
-      bigToast(
-        getApiErrorMessage(error, 'No se pudieron guardar las observaciones.'),
-        'error'
+      notify.error(
+        getApiErrorMessage(error, 'No se pudieron guardar las observaciones.')
       )
     }
   }

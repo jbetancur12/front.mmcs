@@ -6,7 +6,7 @@ import {
   type PaginatedResponse,
   type ServerListParams
 } from 'src/hooks/useServerTable'
-import { bigToast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import type {
   AssetInterventionFormValues,
   AssetLifeSheet
@@ -59,7 +59,7 @@ export const useAssetLifeSheets = (options: { enabled?: boolean } = {}) => {
       enabled: options.enabled ?? true,
       onError: (error) => {
         console.error(error)
-        bigToast('No se pudieron cargar los activos', 'error')
+        notify.error('No se pudieron cargar los activos')
       }
     }
   )
@@ -80,7 +80,7 @@ export const useAssetLifeSheetsPaginated = (params: ServerListParams) => {
       keepPreviousData: true,
       onError: (error) => {
         console.error(error)
-        bigToast('No se pudieron cargar los activos', 'error')
+        notify.error('No se pudieron cargar los activos')
       }
     }
   )

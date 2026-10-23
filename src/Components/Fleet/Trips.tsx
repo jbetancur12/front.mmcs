@@ -6,7 +6,7 @@ import MaterialReactTable, {
   MRT_ColumnDef,
   MRT_Row
 } from 'material-react-table'
-import { bigToast, MySwal } from '../ExcelManipulation/Utils'
+import { MySwal } from '../ExcelManipulation/Utils'
 import {
   Box,
   Button,
@@ -38,6 +38,7 @@ import {
   useKeepPageInRange,
   useServerTableState
 } from 'src/hooks/useServerTable'
+import { notify } from 'src/utils/notify'
 
 // Tipos e interfaces para los datos de Trip
 
@@ -80,7 +81,7 @@ const TripsTable = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('trips')
-        bigToast('Viaje Modificado Exitosamente!', 'success')
+        notify.success('Viaje Modificado Exitosamente!')
       }
     }
   )
@@ -95,7 +96,7 @@ const TripsTable = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('trips')
-        bigToast('Viaje Eliminado Exitosamente!', 'success')
+        notify.success('Viaje Eliminado Exitosamente!')
       }
     }
   )

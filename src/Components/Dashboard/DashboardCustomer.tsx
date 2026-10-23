@@ -31,7 +31,7 @@ import { saveAs } from 'file-saver'
 import DataTable from '../Common/DataTable'
 import EmptyState from '../Common/EmptyState'
 import StatusPill, { StatusPillTone } from '../Common/StatusPill'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import LmsPageHeader from '../lms/admin/LmsPageHeader'
 import LmsStatCard from '../lms/admin/LmsStatCard'
 
@@ -100,7 +100,7 @@ const Dashboard: React.FC = () => {
     useCertificatesNextToExpire<FileData>(customerId, {
       onError: (error) => {
         console.error('Error fetching file data:', error)
-        bigToast('No se pudieron cargar los certificados del cliente', 'error')
+        notify.error('No se pudieron cargar los certificados del cliente')
       }
     })
   // Información del cliente tomada del primer registro
@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
 
   const handleExportExcel = async () => {
     if (filteredData.length === 0) {
-      bigToast('No hay certificados para exportar', 'info')
+      notify.info('No hay certificados para exportar')
       return
     }
 
@@ -172,7 +172,7 @@ const Dashboard: React.FC = () => {
 
     const fileName = `${customerInfo?.nombre || 'Cliente'}-certificados${FILTER_FILE_SUFFIX[filterType]}-${format(new Date(), 'yyyy-MM-dd')}.xlsx`
     saveAs(data, fileName)
-    bigToast('Excel descargado', 'success')
+    notify.success('Excel descargado')
   }
 
   const columns = useMemo<MRT_ColumnDef<FileData>[]>(

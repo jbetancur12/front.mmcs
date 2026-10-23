@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { MenuItem, TextField } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import FormDialog from '../Common/FormDialog'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { Certificate } from './types'
 
 interface EquipmentSedeDialogProps {
@@ -40,12 +40,12 @@ const EquipmentSedeDialog = ({
         { headquarter: sede }
       )
       if (response.status === 200) {
-        bigToast(`Sede cambiada a "${sede}"`, 'success')
+        notify.success(`Sede cambiada a "${sede}"`)
         onChanged()
         onClose()
       }
     } catch (error) {
-      bigToast('Error al actualizar la sede', 'error')
+      notify.error('Error al actualizar la sede')
       console.error('Error updating headquarter:', error)
     } finally {
       setSaving(false)

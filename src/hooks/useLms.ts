@@ -28,7 +28,7 @@ import type {
   SaveTrainingPlanRequest,
   TrainingPlanDetail
 } from 'src/services/lmsService'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 // ===========================
 // Course Hooks
@@ -157,19 +157,12 @@ export const useCreateCourse = (
         // Invalidate courses list to refetch
         queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Curso creado exitosamente'
-        })
+        notify.success('Curso creado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al crear curso',
-          text: error.message
-        })
+        notify.error('Error al crear curso', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -195,19 +188,12 @@ export const useUpdateCourse = (
         queryClient.invalidateQueries(queryKeys.courses.detail(variables.id))
         queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Curso actualizado exitosamente'
-        })
+        notify.success('Curso actualizado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al actualizar curso',
-          text: error.message
-        })
+        notify.error('Error al actualizar curso', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -231,19 +217,12 @@ export const useDeleteCourse = (
         // Invalidate courses list
         queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Curso eliminado exitosamente'
-        })
+        notify.success('Curso eliminado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al eliminar curso',
-          text: error.message
-        })
+        notify.error('Error al eliminar curso', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -268,19 +247,12 @@ export const usePublishCourse = (
         queryClient.invalidateQueries(queryKeys.courses.detail(variables))
         queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Curso publicado exitosamente'
-        })
+        notify.success('Curso publicado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al publicar curso',
-          text: error.message
-        })
+        notify.error('Error al publicar curso', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -305,19 +277,12 @@ export const useArchiveCourse = (
         queryClient.invalidateQueries(queryKeys.courses.detail(variables))
         queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Curso archivado exitosamente'
-        })
+        notify.success('Curso archivado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al archivar curso',
-          text: error.message
-        })
+        notify.error('Error al archivar curso', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -342,19 +307,12 @@ export const useDuplicateCourse = (
         // Invalidate courses list
         queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Curso duplicado exitosamente'
-        })
+        notify.success('Curso duplicado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al duplicar curso',
-          text: error.message
-        })
+        notify.error('Error al duplicar curso', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -420,21 +378,13 @@ export const useUpdateProgress = (
 
         // Optionally show success message
         if (variables.action === 'complete') {
-          Toast.fire({
-            icon: 'success',
-            title: 'Progreso actualizado',
-            timer: 2000
-          })
+          notify.success('Progreso actualizado')
         }
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al actualizar progreso',
-          text: error.message
-        })
+        notify.error('Error al actualizar progreso', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -459,20 +409,12 @@ export const useCompleteLesson = (
         // Invalidate progress queries
         queryClient.invalidateQueries(queryKeys.progress.all)
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Lección completada',
-          timer: 2000
-        })
+        notify.success('Lección completada')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al completar lección',
-          text: error.message
-        })
+        notify.error('Error al completar lección', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -513,19 +455,12 @@ export const useCreateQuiz = (
     {
       ...options,
       onSuccess: (data, variables, context) => {
-        Toast.fire({
-          icon: 'success',
-          title: 'Quiz creado exitosamente'
-        })
+        notify.success('Quiz creado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al crear quiz',
-          text: error.message
-        })
+        notify.error('Error al crear quiz', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -549,19 +484,12 @@ export const useUpdateQuiz = (
       onSuccess: (data, variables, context) => {
         queryClient.invalidateQueries(queryKeys.quizzes.detail(variables.id))
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Quiz actualizado exitosamente'
-        })
+        notify.success('Quiz actualizado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al actualizar quiz',
-          text: error.message
-        })
+        notify.error('Error al actualizar quiz', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -580,19 +508,12 @@ export const useDeleteQuiz = (
     {
       ...options,
       onSuccess: (data, variables, context) => {
-        Toast.fire({
-          icon: 'success',
-          title: 'Quiz eliminado exitosamente'
-        })
+        notify.success('Quiz eliminado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al eliminar quiz',
-          text: error.message
-        })
+        notify.error('Error al eliminar quiz', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -619,20 +540,16 @@ export const useSubmitQuiz = (
         queryClient.invalidateQueries(queryKeys.progress.all)
 
         const passed = data.results.passed
-        Toast.fire({
-          icon: passed ? 'success' : 'warning',
-          title: passed ? '¡Quiz aprobado!' : 'Quiz no aprobado',
-          text: `Puntuación: ${data.results.percentage}%`
-        })
+        if (passed) {
+          notify.success('¡Quiz aprobado!', `Puntuación: ${data.results.percentage}%`)
+        } else {
+          notify.warning('Quiz no aprobado', `Puntuación: ${data.results.percentage}%`)
+        }
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al enviar quiz',
-          text: error.message
-        })
+        notify.error('Error al enviar quiz', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -715,19 +632,12 @@ export const useGenerateCertificate = (
         // Invalidate certificates
         queryClient.invalidateQueries(queryKeys.certificates.user(variables.userId))
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Certificado generado exitosamente'
-        })
+        notify.success('Certificado generado exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al generar certificado',
-          text: error.message
-        })
+        notify.error('Error al generar certificado', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -756,20 +666,12 @@ export const useDownloadCertificate = (
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Certificado descargado',
-          timer: 2000
-        })
+        notify.success('Certificado descargado')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al descargar certificado',
-          text: error.message
-        })
+        notify.error('Error al descargar certificado', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -799,18 +701,11 @@ export const useCreateCertificateTemplate = (
       ...options,
       onSuccess: (data, variables, context) => {
         queryClient.invalidateQueries(queryKeys.certificates.templates())
-        Toast.fire({
-          icon: 'success',
-          title: 'Plantilla creada exitosamente'
-        })
+        notify.success('Plantilla creada exitosamente')
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al crear plantilla',
-          text: error.message
-        })
+        notify.error('Error al crear plantilla', error.message)
         options?.onError?.(error, variables, context)
       }
     }
@@ -834,18 +729,11 @@ export const useUpdateCertificateTemplate = (
       onSuccess: (data, variables, context) => {
         queryClient.invalidateQueries(queryKeys.certificates.templates())
         queryClient.invalidateQueries(queryKeys.certificates.templatePreview(variables.id))
-        Toast.fire({
-          icon: 'success',
-          title: 'Plantilla actualizada exitosamente'
-        })
+        notify.success('Plantilla actualizada exitosamente')
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al actualizar plantilla',
-          text: error.message
-        })
+        notify.error('Error al actualizar plantilla', error.message)
         options?.onError?.(error, variables, context)
       }
     }
@@ -863,18 +751,11 @@ export const useDeleteCertificateTemplate = (
       ...options,
       onSuccess: (data, variables, context) => {
         queryClient.invalidateQueries(queryKeys.certificates.templates())
-        Toast.fire({
-          icon: 'success',
-          title: 'Plantilla eliminada exitosamente'
-        })
+        notify.success('Plantilla eliminada exitosamente')
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al eliminar plantilla',
-          text: error.message
-        })
+        notify.error('Error al eliminar plantilla', error.message)
         options?.onError?.(error, variables, context)
       }
     }
@@ -952,19 +833,12 @@ export const useCreateAssignment = (
         queryClient.invalidateQueries(queryKeys.assignments.course(variables.course_id))
         queryClient.invalidateQueries(queryKeys.assignments.all)
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Asignación creada exitosamente'
-        })
+        notify.success('Asignación creada exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al crear asignación',
-          text: error.message
-        })
+        notify.error('Error al crear asignación', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -989,19 +863,12 @@ export const useUpdateAssignment = (
         // Invalidate all assignments
         queryClient.invalidateQueries(queryKeys.assignments.all)
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Asignación actualizada exitosamente'
-        })
+        notify.success('Asignación actualizada exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al actualizar asignación',
-          text: error.message
-        })
+        notify.error('Error al actualizar asignación', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -1025,19 +892,12 @@ export const useDeleteAssignment = (
         // Invalidate all assignments
         queryClient.invalidateQueries(queryKeys.assignments.all)
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Asignación eliminada exitosamente'
-        })
+        notify.success('Asignación eliminada exitosamente')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al eliminar asignación',
-          text: error.message
-        })
+        notify.error('Error al eliminar asignación', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -1157,20 +1017,12 @@ export const useTriggerManualReminders = (
         queryClient.invalidateQueries(['analytics', 'mandatory-training'])
         queryClient.invalidateQueries(queryKeys.assignments.all)
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Recordatorios enviados exitosamente',
-          text: `${data.totalNotifications} notificaciones enviadas`
-        })
+        notify.success('Recordatorios enviados exitosamente', `${data.totalNotifications} notificaciones enviadas`)
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al enviar recordatorios',
-          text: error.message
-        })
+        notify.error('Error al enviar recordatorios', error.message)
 
         options?.onError?.(error, variables, context)
       }
@@ -1426,20 +1278,12 @@ export const useMarkAllNotificationsAsRead = (
         // Invalidate notifications
         queryClient.invalidateQueries(queryKeys.notifications.list())
 
-        Toast.fire({
-          icon: 'success',
-          title: 'Todas las notificaciones marcadas como leídas',
-          timer: 2000
-        })
+        notify.success('Todas las notificaciones marcadas como leídas')
 
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        Toast.fire({
-          icon: 'error',
-          title: 'Error al marcar notificaciones',
-          text: error.message
-        })
+        notify.error('Error al marcar notificaciones', error.message)
 
         options?.onError?.(error, variables, context)
       }

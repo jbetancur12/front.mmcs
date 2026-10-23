@@ -35,7 +35,7 @@ import { useAssignTrainingPlan, useInternalUsers } from 'src/hooks/useLms'
 import { lmsService } from 'src/services/lmsService'
 import type { PlanAssignmentInput, PlanAssignmentPreview, PlanCourseAction, PlanTargetType } from 'src/services/lmsService'
 import { getRoleLabelEs } from 'src/constants/roles'
-import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import { notify as appNotify } from 'src/utils/notify'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 import {
   PLAN_ROLE_OPTIONS,
@@ -109,7 +109,7 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
     try {
       setPreview(await lmsService.previewPlanAssignment(plan.id, buildInput()))
     } catch (error) {
-      Toast.fire({ icon: 'error', title: getStructuredApiErrorMessage(error, 'No se pudo calcular la vista previa.') })
+      appNotify.error(getStructuredApiErrorMessage(error, 'No se pudo calcular la vista previa.'))
     } finally {
       setPreviewLoading(false)
     }
@@ -119,16 +119,12 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
     if (!plan || !preview) return
     try {
       const result = await assignMutation.mutateAsync({ id: plan.id, data: { ...buildInput(), send_notification: notify } })
-      Toast.fire({
-        icon: 'success',
-        title: result.merged ? 'Usuarios agregados al destino existente' : 'Plan asignado',
-        text: result.merged
+      appNotify.success(result.merged ? 'Usuarios agregados al destino existente' : 'Plan asignado', result.merged
           ? `${result.affected_users_count} usuario(s) agregado(s); no se creó un destino nuevo`
-          : `${result.summary.created} asignaciones nuevas, ${result.summary.reused} reutilizadas · ${result.affected_users_count} usuario(s)`
-      })
+          : `${result.summary.created} asignaciones nuevas, ${result.summary.reused} reutilizadas · ${result.affected_users_count} usuario(s)`)
       onClose()
     } catch (error) {
-      Toast.fire({ icon: 'error', title: getStructuredApiErrorMessage(error, 'No se pudo asignar el plan.') })
+      appNotify.error(getStructuredApiErrorMessage(error, 'No se pudo asignar el plan.'))
     }
   }
 

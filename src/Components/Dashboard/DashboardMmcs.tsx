@@ -31,7 +31,7 @@ import {
   summarizeCustomers
 } from './dashboardCertificates'
 import EmptyState from '../Common/EmptyState'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import LmsPageHeader from '../lms/admin/LmsPageHeader'
 import LmsStatCard from '../lms/admin/LmsStatCard'
 
@@ -52,7 +52,7 @@ const Dashboard: React.FC = () => {
   } = useCertificatesNextToExpireGrouped<Customer>({
     onError: (error) => {
       console.error('Error fetching file data:', error)
-      bigToast('No se pudieron cargar los datos de certificados', 'error')
+      notify.error('No se pudieron cargar los datos de certificados')
     }
   })
 
@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
     setRefreshing(true)
     try {
       await refetch()
-      bigToast('Datos actualizados', 'success')
+      notify.success('Datos actualizados')
     } finally {
       setRefreshing(false)
     }

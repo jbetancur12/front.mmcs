@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from 'react'
 
 import FormDialog from './Common/FormDialog'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { UserData } from './TableUsersCustomer'
 
 const CHARS =
@@ -45,9 +45,9 @@ const ResetPasswordModal = ({
   const copyPassword = async () => {
     try {
       await navigator.clipboard.writeText(newPassword)
-      bigToast('Contraseña copiada', 'success')
+      notify.success('Contraseña copiada')
     } catch {
-      bigToast('No se pudo copiar la contraseña', 'error')
+      notify.error('No se pudo copiar la contraseña')
     }
   }
 

@@ -14,7 +14,7 @@ import {
   CustomerServiceDocument,
   CustomerServiceDocumentType
 } from 'src/types/customerIndicators'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import {
   formatShortDate,
   TEAL_TEXT
@@ -87,9 +87,8 @@ const ServiceDocumentButtons: React.FC<Props> = ({
         `${odsCode}-${doc.title}.pdf`
       )
     } catch (error) {
-      bigToast(
-        getApiErrorMessage(error, 'No se pudo descargar el documento.'),
-        'error'
+      notify.error(
+        getApiErrorMessage(error, 'No se pudo descargar el documento.')
       )
     } finally {
       setBusyId(null)

@@ -43,7 +43,7 @@ import ConfirmDialog from './Common/ConfirmDialog'
 import DataTable from './Common/DataTable'
 import EmptyState from './Common/EmptyState'
 import FormDialog from './Common/FormDialog'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import ResetPasswordModal from './ResetPasswordModal'
 
 // Define interfaces
@@ -112,14 +112,14 @@ const Table: React.FC = () => {
             emailError: response.data.emailError
           })
         } else {
-          bigToast('Usuario creado exitosamente!', 'success')
+          notify.success('Usuario creado exitosamente!')
         }
       } else {
-        bigToast('Error al crear usuario', 'error')
+        notify.error('Error al crear usuario')
       }
     } catch (error) {
       console.error('Error de red:', error)
-      bigToast('Error al crear usuario', 'error')
+      notify.error('Error al crear usuario')
     }
   }
 
@@ -130,7 +130,7 @@ const Table: React.FC = () => {
       await showActivationLinkDialog(info)
     } catch (error) {
       console.error('Error obteniendo enlace de activación:', error)
-      bigToast('No se pudo generar el enlace de activación', 'error')
+      notify.error('No se pudo generar el enlace de activación')
     }
   }
 
@@ -140,7 +140,7 @@ const Table: React.FC = () => {
       await showActivationLinkDialog(info)
     } catch (error) {
       console.error('Error reenviando activación:', error)
-      bigToast('No se pudo reenviar la activación', 'error')
+      notify.error('No se pudo reenviar la activación')
     }
   }
 
@@ -152,13 +152,13 @@ const Table: React.FC = () => {
       })
 
       if (response.status === 200) {
-        bigToast('Contraseña actualizada exitosamente!', 'success')
+        notify.success('Contraseña actualizada exitosamente!')
       } else {
-        bigToast('Error al actualizar la contraseña', 'error')
+        notify.error('Error al actualizar la contraseña')
       }
     } catch (error) {
       console.error('Error de red:', error)
-      bigToast('Error al actualizar la contraseña', 'error')
+      notify.error('Error al actualizar la contraseña')
     }
   }
 
@@ -182,14 +182,14 @@ const Table: React.FC = () => {
       })
 
       if (response.status === 200) {
-        bigToast('Usuario modificado exitosamente!', 'success')
+        notify.success('Usuario modificado exitosamente!')
         setEditingUser(null)
       } else {
-        bigToast('Error al modificar usuario', 'error')
+        notify.error('Error al modificar usuario')
       }
     } catch (error) {
       console.error('Error de red:', error)
-      bigToast('Error al modificar usuario', 'error')
+      notify.error('Error al modificar usuario')
     }
   }
 
@@ -198,13 +198,13 @@ const Table: React.FC = () => {
       const response = await deleteUserById.mutateAsync(userId)
 
       if (response.status === 204) {
-        bigToast('Usuario eliminado exitosamente!', 'success')
+        notify.success('Usuario eliminado exitosamente!')
       } else {
-        bigToast('Error al eliminar usuario', 'error')
+        notify.error('Error al eliminar usuario')
       }
     } catch (error) {
       console.error('Error de red:', error)
-      bigToast('Error al eliminar usuario', 'error')
+      notify.error('Error al eliminar usuario')
     } finally {
       setDeleteTarget(null)
     }
@@ -216,13 +216,12 @@ const Table: React.FC = () => {
         id: user.id,
         values: { active: !user.active }
       })
-      bigToast(
-        `Usuario ${!user.active ? 'activado' : 'desactivado'} con éxito`,
-        'success'
+      notify.success(
+        `Usuario ${!user.active ? 'activado' : 'desactivado'} con éxito`
       )
     } catch (error) {
       console.error('Error al cambiar estado del usuario:', error)
-      bigToast('Error al actualizar el estado del usuario', 'error')
+      notify.error('Error al actualizar el estado del usuario')
     }
   }
 

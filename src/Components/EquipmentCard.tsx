@@ -25,7 +25,7 @@ import {
 } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQueryClient } from 'react-query'
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 export interface Certificate {
@@ -104,9 +104,9 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ certificate, onDelete, se
   const handleDelete = async () => {
     try {
       await onDelete(certificate.id)
-      bigToast('Equipo eliminado exitosamente', 'success')
+      notify.success('Equipo eliminado exitosamente')
     } catch (error) {
-      bigToast('Error al eliminar el equipo', 'error')
+      notify.error('Error al eliminar el equipo')
       console.error('Error deleting equipment:', error)
     }
     handleMenuClose()
@@ -128,7 +128,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ certificate, onDelete, se
         headquarter: newSede
       })
       if (response.status === 200) {
-        bigToast(`Sede cambiada a "${newSede}" exitosamente`, 'success')
+        notify.success(`Sede cambiada a "${newSede}" exitosamente`)
         setSedeModalOpen(false)
 
         // Invalidate and refetch the certificates data using React Query
@@ -140,7 +140,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ certificate, onDelete, se
         }, 500)
       }
     } catch (error) {
-      bigToast('Error al actualizar la sede', 'error')
+      notify.error('Error al actualizar la sede')
       console.error('Error updating headquarter:', error)
     }
   }

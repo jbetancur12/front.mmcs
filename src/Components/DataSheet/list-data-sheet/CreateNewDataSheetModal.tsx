@@ -14,7 +14,7 @@ import { type MRT_ColumnDef } from 'material-react-table'
 import React from 'react'
 
 import FormDialog, { FormDialogSection } from '../../Common/FormDialog'
-import { bigToast } from '../../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 import {
   createServiceTypeOptions,
@@ -62,15 +62,15 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
         const response = await createDataSheet.mutateAsync(formData)
 
         if (response.status >= 200 && response.status < 300) {
-          bigToast('Hoja de Datos Creada Correctamente', 'success')
+          notify.success('Hoja de Datos Creada Correctamente')
           resetForm()
           onSubmit?.()
           onClose()
         } else {
-          bigToast('Error al crear la Hoja de Datos', 'error')
+          notify.error('Error al crear la Hoja de Datos')
         }
       } catch (error) {
-        bigToast('Error al crear la Hoja de Datos', 'error')
+        notify.error('Error al crear la Hoja de Datos')
         console.error('Error al crear la Hoja de Datos:', error)
       }
     }

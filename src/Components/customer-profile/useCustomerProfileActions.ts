@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { MySwal } from '@utils/sweetAlert'
 
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 import { customerProfileKeys, DEFAULT_AVATAR } from './constants'
 
@@ -86,14 +86,14 @@ export const useCustomerProfileActions = (
       try {
         const response = await deleteCertificate.mutateAsync(certificateId)
         if (response.status >= 200 && response.status < 300) {
-          bigToast('Certificado eliminado con éxito', 'success')
+          notify.success('Certificado eliminado con éxito')
           await queryClient.invalidateQueries(
             customerProfileKeys.certificatesAll(id)
           )
         }
       } catch (error) {
         console.error('Error al eliminar el certificado:', error)
-        bigToast('Error al eliminar el certificado', 'error')
+        notify.error('Error al eliminar el certificado')
         throw error
       }
     },
@@ -131,12 +131,12 @@ export const useCustomerProfileActions = (
         const response = await addSede.mutateAsync(newSede)
 
         if (response.status === 200) {
-          bigToast('Sede agregada con éxito', 'success')
+          notify.success('Sede agregada con éxito')
           invalidateCustomer()
         }
       } catch (error) {
         console.error('Error al agregar sede:', error)
-        bigToast('Error al agregar sede', 'error')
+        notify.error('Error al agregar sede')
       }
     },
     [addSede, id, invalidateCustomer]
@@ -150,12 +150,12 @@ export const useCustomerProfileActions = (
         const response = await editSede.mutateAsync({ oldSede, newSede })
 
         if (response.status === 200) {
-          bigToast('Sede actualizada con éxito', 'success')
+          notify.success('Sede actualizada con éxito')
           invalidateCustomer()
         }
       } catch (error) {
         console.error('Error al actualizar sede:', error)
-        bigToast('Error al actualizar sede', 'error')
+        notify.error('Error al actualizar sede')
       }
     },
     [editSede, id, invalidateCustomer]
@@ -182,7 +182,7 @@ export const useCustomerProfileActions = (
         const response = await deleteSede.mutateAsync(sede)
 
         if (response.status === 200) {
-          bigToast('Sede eliminada con éxito', 'success')
+          notify.success('Sede eliminada con éxito')
           invalidateCustomer()
         }
       } catch (error) {
@@ -195,7 +195,7 @@ export const useCustomerProfileActions = (
             confirmButtonColor: '#3085d6'
           })
         } else {
-          bigToast('Error al eliminar sede', 'error')
+          notify.error('Error al eliminar sede')
         }
       }
     },
@@ -205,13 +205,12 @@ export const useCustomerProfileActions = (
   const changeStatus = async (newStatus: boolean) => {
     try {
       await updateStatus.mutateAsync(newStatus)
-      bigToast(
-        `Cliente ${newStatus ? 'activado' : 'desactivado'} con éxito`,
-        'success'
+      notify.success(
+        `Cliente ${newStatus ? 'activado' : 'desactivado'} con éxito`
       )
     } catch (error) {
       console.error('Error updating customer status:', error)
-      bigToast('Error al actualizar el estado del cliente', 'error')
+      notify.error('Error al actualizar el estado del cliente')
     }
   }
 
@@ -219,11 +218,11 @@ export const useCustomerProfileActions = (
   const assignCourse = async (courseId: string): Promise<boolean> => {
     try {
       await assignLmsCourse.mutateAsync(courseId)
-      bigToast('Curso LMS asignado con éxito', 'success')
+      notify.success('Curso LMS asignado con éxito')
       return true
     } catch (error) {
       console.error('Error al asignar curso LMS:', error)
-      bigToast('Error al asignar el curso LMS', 'error')
+      notify.error('Error al asignar el curso LMS')
       return false
     }
   }
@@ -234,10 +233,10 @@ export const useCustomerProfileActions = (
 
       try {
         await removeLmsCourse.mutateAsync(courseId)
-        bigToast('Curso LMS removido con éxito', 'success')
+        notify.success('Curso LMS removido con éxito')
       } catch (error) {
         console.error('Error al quitar curso LMS:', error)
-        bigToast('Error al quitar el curso LMS', 'error')
+        notify.error('Error al quitar el curso LMS')
       }
     },
     [removeLmsCourse, id]

@@ -17,7 +17,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 
 import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 
-import { bigToast } from './ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -191,13 +191,13 @@ const ModernCustomerProfile: React.FC = () => {
     try {
       const allData = await fetchAllDataForDownload(type)
       if (allData.length === 0) {
-        bigToast('No hay datos para exportar', 'info')
+        notify.info('No hay datos para exportar')
       } else {
         await exportToExcel(allData, customerData?.nombre)
       }
     } catch (error) {
       console.error('Error al descargar Excel:', error)
-      bigToast('Error al descargar el archivo Excel', 'error')
+      notify.error('Error al descargar el archivo Excel')
     } finally {
       setIsDownloading(false)
     }
@@ -205,7 +205,7 @@ const ModernCustomerProfile: React.FC = () => {
 
   const handleDownloadOverviewReport = async () => {
     if (!customerData) {
-      bigToast('No hay datos del cliente disponibles', 'error')
+      notify.error('No hay datos del cliente disponibles')
       return
     }
 
@@ -215,7 +215,7 @@ const ModernCustomerProfile: React.FC = () => {
       await exportOverviewReport(customerData, allData, stats)
     } catch (error) {
       console.error('Error al descargar reporte completo:', error)
-      bigToast('Error al descargar el reporte completo', 'error')
+      notify.error('Error al descargar el reporte completo')
     } finally {
       setIsDownloading(false)
     }

@@ -16,7 +16,7 @@ import { InterventionType } from './types'
 import GenericFormModal, { FieldConfig } from './GenericFormModal'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
@@ -61,19 +61,13 @@ const InterventionTypes = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('interventionType')
-        bigToast(
-          currentType
+        notify.success(currentType
             ? 'Tipo de Intervención Actualizado Exitosamente!'
-            : 'Tipo de Intervención Creado Exitosamente!',
-          'success'
-        )
+            : 'Tipo de Intervención Creado Exitosamente!')
         setModalOpen(false)
       },
       onError: (error: any) => {
-        bigToast(
-          `Error: ${error.response?.data?.message || error.message}`,
-          'error'
-        )
+        notify.error(`Error: ${error.response?.data?.message || error.message}`)
       }
     }
   )
@@ -87,13 +81,10 @@ const InterventionTypes = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('interventionType')
-        bigToast('Tipo de Intervención Eliminado Exitosamente!', 'success')
+        notify.success('Tipo de Intervención Eliminado Exitosamente!')
       },
       onError: (error: any) => {
-        bigToast(
-          `Error: ${error.response?.data?.message || error.message}`,
-          'error'
-        )
+        notify.error(`Error: ${error.response?.data?.message || error.message}`)
       }
     }
   )

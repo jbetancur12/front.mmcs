@@ -19,7 +19,7 @@ import {
   type DeviceCatalogItem
 } from '@hooks/devices/useDevices'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { bigToast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 
 interface PreviewData {
   totalAffected: number
@@ -128,10 +128,7 @@ const BulkReassignDialog: React.FC<BulkReassignDialogProps> = ({
     setBusy(true)
     try {
       const updated = await onApply(Number(source.id), Number(target.id))
-      bigToast(
-        `Se reasignaron ${updated} certificado(s) correctamente`,
-        'success'
-      )
+      notify.success(`Se reasignaron ${updated} certificado(s) correctamente`)
       onClose()
     } catch (applyError) {
       console.error('Error en el cambio masivo:', applyError)
