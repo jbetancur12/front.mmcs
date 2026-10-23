@@ -15,34 +15,30 @@ import {
   Menu,
   MenuItem as MuiMenuItem
 } from '@mui/material'
-import { type MRT_Row, type MRT_TableInstance } from 'material-react-table'
+import { type MRT_Row } from 'material-react-table'
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
-import {
-  chooseEditOption,
-  isCancelDismiss,
-  openEditImageDialog,
-  openUploadInvoiceDialog
-} from './dataSheetDialogs'
+import DataSheetEditDialogs, { type EditStep } from './DataSheetEditDialogs'
 import { DataSheetData } from './types'
 import { DataSheetActions } from './useDataSheetActions'
 
 interface DataSheetRowActionsProps {
   row: MRT_Row<DataSheetData>
-  table: MRT_TableInstance<DataSheetData>
   actions: DataSheetActions
   onDelete: (row: MRT_Row<DataSheetData>) => void
+  /** Abre la edición de los datos de la hoja de vida. */
+  onEditData: (row: DataSheetData) => void
 }
 
 const DataSheetRowActions = ({
   row,
-  table,
   actions,
-  onDelete
+  onDelete,
+  onEditData
 }: DataSheetRowActionsProps) => {
   const canViewDetail = useCan(PERMISSIONS.CALIBRATION_DATASHEET_DETAIL)
   const canViewMaintenance = useCan(
@@ -51,6 +47,7 @@ const DataSheetRowActions = ({
   const canUpdateDataSheet = useCan(PERMISSIONS.CALIBRATION_DATASHEET_UPDATE)
   const canDeleteDataSheet = useCan(PERMISSIONS.CALIBRATION_DATASHEET_DELETE)
   const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
+  const [editStep, setEditStep] = useState<EditStep>(null)
 
   const id = row.original.id as number
 
@@ -65,17 +62,7 @@ const DataSheetRowActions = ({
 
   const handleEdit = () => {
     handleMenuClose()
-    chooseEditOption().then((result) => {
-      if (result.isConfirmed) {
-        openEditImageDialog((image) => actions.handleUpload({ id, image }))
-      } else if (isCancelDismiss(result.dismiss)) {
-        table.setEditingRow(row)
-      } else if (result.isDenied) {
-        openUploadInvoiceDialog((pdfFile) =>
-          actions.handleUploadPdf(id, pdfFile)
-        )
-      }
-    })
+    setEditStep('options')
   }
 
   return (
@@ -176,6 +163,16 @@ const DataSheetRowActions = ({
           </MuiMenuItem>
         )}
       </Menu>
+
+      <DataSheetEditDialogs
+        step={editStep}
+        onClose={() => setEditStep(null)}
+        onStepChange={setEditStep}
+        equipmentName={row.original.equipmentName as string | undefined}
+        onUploadImage={(image) => actions.handleUpload({ id, image })}
+        onUploadInvoice={(pdfFile) => actions.handleUploadPdf(id, pdfFile)}
+        onEditOther={() => onEditData(row.original)}
+      />
     </Box>
   )
 }

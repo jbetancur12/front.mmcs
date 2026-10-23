@@ -6,11 +6,7 @@ import {
   WarningAmber as WarnKpi
 } from '@mui/icons-material'
 import { Button, Container, Grid } from '@mui/material'
-import {
-  MRT_ColumnFiltersState,
-  type MRT_Row,
-  type MaterialReactTableProps
-} from 'material-react-table'
+import { MRT_ColumnFiltersState, type MRT_Row } from 'material-react-table'
 import React, { useEffect, useState } from 'react'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -26,6 +22,7 @@ import {
 import { CreateNewDataSheetModal } from './list-data-sheet/CreateNewDataSheetModal'
 import { confirmDeleteDataSheet } from './list-data-sheet/dataSheetDialogs'
 import DataSheetRowActions from './list-data-sheet/DataSheetRowActions'
+import DataSheetEditFormDialog from './list-data-sheet/DataSheetEditFormDialog'
 import DataSheetToolbarActions from './list-data-sheet/DataSheetToolbarActions'
 import { DataSheetData } from './list-data-sheet/types'
 import { useDataSheetActions } from './list-data-sheet/useDataSheetActions'
@@ -82,8 +79,8 @@ const ListDataSheet: React.FC = () => {
   )
   const { data: counts } = useDataSheetCounts()
   const actions = useDataSheetActions()
-  const { columns, validationErrors, setValidationErrors } =
-    useDataSheetColumns()
+  const { columns } = useDataSheetColumns()
+  const [editingRow, setEditingRow] = useState<DataSheetData | null>(null)
 
   useEffect(() => {
     // Guardar los filtros en el localStorage cada vez que cambien
@@ -96,29 +93,6 @@ const ListDataSheet: React.FC = () => {
       // Sin almacenamiento disponible: los filtros no se recuerdan.
     }
   }, [columnFilters])
-
-  const handleSaveRowEdits: MaterialReactTableProps<DataSheetData>['onEditingRowSave'] =
-    async ({ exitEditingMode, values }) => {
-      if (!Object.keys(validationErrors).length) {
-        const updatedValues = { ...values }
-
-        if (updatedValues.insuredValue) {
-          updatedValues.insuredValue = parseInt(
-            updatedValues.insuredValue.replace(/[\s$.]/g, ''), // Eliminar espacios, puntos y $
-            10
-          )
-        }
-
-        delete updatedValues.id
-        await actions.saveDataSheet(values.id, updatedValues)
-
-        exitEditingMode() //required to exit editing mode and close modal
-      }
-    }
-
-  const handleCancelRowEdits = () => {
-    setValidationErrors({})
-  }
 
   const handleDeleteRow = (row: MRT_Row<DataSheetData>) => {
     confirmDeleteDataSheet(row.getValue('equipmentName')).then((result) => {
@@ -210,16 +184,12 @@ const ListDataSheet: React.FC = () => {
         }}
         columns={columns}
         data={dataSheets}
-        editingMode='modal'
-        enableEditing
-        onEditingRowSave={handleSaveRowEdits}
-        onEditingRowCancel={handleCancelRowEdits}
-        renderRowActions={({ row, table }) => (
+        renderRowActions={({ row }) => (
           <DataSheetRowActions
             row={row}
-            table={table}
             actions={actions}
             onDelete={handleDeleteRow}
+            onEditData={setEditingRow}
           />
         )}
         renderTopToolbarCustomActions={() => {
@@ -228,6 +198,12 @@ const ListDataSheet: React.FC = () => {
           }
           return <DataSheetToolbarActions tableData={dataSheets} />
         }}
+      />
+
+      <DataSheetEditFormDialog
+        row={editingRow}
+        onClose={() => setEditingRow(null)}
+        onSave={actions.saveDataSheet}
       />
 
       <CreateNewDataSheetModal
