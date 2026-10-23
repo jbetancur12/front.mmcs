@@ -80,9 +80,18 @@ const DataSheetRowActions = ({
         slotProps={{
           paper: {
             sx: {
-              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(0, 0, 0, 0.12)',
-              minWidth: '200px'
+              mt: 0.5,
+              minWidth: 230,
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 8px 24px rgba(17, 24, 39, 0.10)',
+              '& .MuiMenuItem-root': {
+                fontSize: 14,
+                fontWeight: 500,
+                py: 1,
+                gap: 0.5,
+                '&:hover': { bgcolor: '#f6fcfb' }
+              }
             }
           }
         }}
@@ -94,9 +103,9 @@ const DataSheetRowActions = ({
             onClick={handleMenuClose}
           >
             <ListItemIcon>
-              <Visibility fontSize='small' />
+              <Visibility fontSize='small' sx={{ color: '#00695C' }} />
             </ListItemIcon>
-            Ver
+            Ver hoja de vida
           </MuiMenuItem>
         )}
 
@@ -107,7 +116,7 @@ const DataSheetRowActions = ({
             onClick={handleMenuClose}
           >
             <ListItemIcon>
-              <Engineering fontSize='small' />
+              <Engineering fontSize='small' sx={{ color: '#00695C' }} />
             </ListItemIcon>
             Inspección y mantenimiento
           </MuiMenuItem>
@@ -119,7 +128,7 @@ const DataSheetRowActions = ({
           onClick={handleMenuClose}
         >
           <ListItemIcon>
-            <ExitToApp fontSize='small' />
+            <ExitToApp fontSize='small' sx={{ color: '#00695C' }} />
           </ListItemIcon>
           Entrada y salida
         </MuiMenuItem>
@@ -132,18 +141,18 @@ const DataSheetRowActions = ({
             }}
           >
             <ListItemIcon>
-              <Download fontSize='small' />
+              <Download fontSize='small' sx={{ color: '#00695C' }} />
             </ListItemIcon>
-            Descargar Factura
+            Descargar factura
           </MuiMenuItem>
         )}
 
-        <Divider />
+        <Divider sx={{ my: 0.5 }} />
 
         {canUpdateDataSheet && (
           <MuiMenuItem onClick={handleEdit}>
             <ListItemIcon>
-              <Edit fontSize='small' />
+              <Edit fontSize='small' sx={{ color: '#2563eb' }} />
             </ListItemIcon>
             Editar
           </MuiMenuItem>
@@ -155,9 +164,10 @@ const DataSheetRowActions = ({
               onDelete(row)
               handleMenuClose()
             }}
+            sx={{ color: '#dc2626', '&:hover': { bgcolor: '#fef2f2' } }}
           >
             <ListItemIcon>
-              <Delete fontSize='small' />
+              <Delete fontSize='small' sx={{ color: '#dc2626' }} />
             </ListItemIcon>
             Eliminar
           </MuiMenuItem>
