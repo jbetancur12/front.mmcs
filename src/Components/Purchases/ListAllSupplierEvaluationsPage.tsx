@@ -3,20 +3,29 @@ import React, { useMemo, useState } from 'react'
 import {
   Container,
   Grid,
-  Paper,
   Box,
+  Typography,
   Chip,
   IconButton,
   Tooltip,
   Button
 } from '@mui/material'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import { useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
-import { Edit, Add, Refresh, Close, PictureAsPdf, FactCheck, EmojiEvents, Star } from '@mui/icons-material' // Importar iconos
+import DataTable from 'src/Components/Common/DataTable'
+import {
+  Edit,
+  Add,
+  Refresh,
+  Close,
+  PictureAsPdf,
+  FactCheck,
+  EmojiEvents,
+  Star
+} from '@mui/icons-material' // Importar iconos
 import { useNavigate } from 'react-router-dom'
 
 // Asume que ISupplier y SupplierEvaluationData están en un archivo de tipos compartido
@@ -36,6 +45,12 @@ interface EvaluationWithSupplier extends SupplierEvaluationData {
   // Añade createdAt y updatedAt si vienen del backend y quieres mostrarlos
   createdAt?: string
   updatedAt?: string
+}
+
+// Puntajes: cifras cortas, centradas bajo su encabezado
+const SCORE_CELL = {
+  muiTableBodyCellProps: { align: 'center' as const },
+  muiTableHeadCellProps: { align: 'center' as const }
 }
 
 const ListAllSupplierEvaluationsPage: React.FC = () => {
@@ -176,37 +191,46 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
 
   const columns = useMemo<MRT_ColumnDef<EvaluationWithSupplier>[]>(
     () => [
-      { accessorKey: 'id', header: 'ID Eval.', size: 80 },
+      { accessorKey: 'id', header: 'ID', size: 60 },
       {
         accessorFn: (row) => row.supplier?.name || 'N/A',
         header: 'Proveedor',
         id: 'supplierName',
-        size: 200
+        size: 240,
+        Cell: ({ cell }: { cell: MRT_Cell<EvaluationWithSupplier> }) => (
+          <Typography variant='body2' fontWeight={600}>
+            {cell.getValue<string>()}
+          </Typography>
+        )
       },
       {
         accessorFn: (row) => row.supplier?.taxId || 'N/A',
-        header: 'NIT/CC Prov.',
+        header: 'NIT/CC',
         id: 'supplierTaxId',
-        size: 120
+        size: 130
       },
       {
         accessorKey: 'evaluationDate',
-        header: 'Fecha Eval.',
-        size: 110,
-        Cell: ({ cell }) =>
-          new Date(cell.getValue<string>() + 'T00:00:00').toLocaleDateString() // Asegurar que se interprete como local
-      },
-      {
-        accessorKey: 'totalScore',
-        header: 'Total',
-        size: 70,
-        muiTableBodyCellProps: { align: 'center' }
+        header: 'Fecha de evaluación',
+        size: 150,
+        Cell: ({ cell }: { cell: MRT_Cell<EvaluationWithSupplier> }) => (
+          <span style={{ whiteSpace: 'nowrap' }}>
+            {new Date(cell.getValue<string>() + 'T00:00:00').toLocaleDateString(
+              'es-CO',
+              {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              }
+            )}
+          </span>
+        )
       },
       {
         accessorKey: 'finalCondition',
         header: 'Condición',
-        size: 180,
-        Cell: ({ cell }) => {
+        size: 200,
+        Cell: ({ cell }: { cell: MRT_Cell<EvaluationWithSupplier> }) => {
           const condition = cell.getValue<string>()
           let color: 'success' | 'info' | 'warning' | 'error' | 'default' =
             'default'
@@ -214,72 +238,65 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
           else if (condition === 'BUENO') color = 'info'
           else if (condition === 'APROBADO CON RESERVA') color = 'warning'
           else if (condition === 'NO APROBADO') color = 'error'
+          const label = condition
+            ? condition.charAt(0) + condition.slice(1).toLowerCase()
+            : 'Sin condición'
           return (
-            <Chip
-              label={condition}
-              color={color}
-              size='small'
-              sx={{
-                textTransform: 'capitalize',
-                minWidth: 130,
-                textAlign: 'center'
-              }}
-            />
+            <Chip size='small' variant='outlined' color={color} label={label} />
           )
         }
       },
+      { accessorKey: 'totalScore', header: 'Total', size: 80, ...SCORE_CELL },
       {
         accessorKey: 'qualityScore',
         header: 'Calidad',
-        size: 70,
-        muiTableBodyCellProps: { align: 'center' }
+        size: 90,
+        ...SCORE_CELL
       },
       {
         accessorKey: 'deliveryScore',
         header: 'Entrega',
-        size: 70,
-        muiTableBodyCellProps: { align: 'center' }
+        size: 90,
+        ...SCORE_CELL
       },
       {
         accessorKey: 'supportScore',
         header: 'Soporte',
-        size: 70,
-        muiTableBodyCellProps: { align: 'center' }
+        size: 90,
+        ...SCORE_CELL
       },
       {
         accessorKey: 'warrantyScore',
         header: 'Garantía',
-        size: 70,
-        muiTableBodyCellProps: { align: 'center' }
+        size: 90,
+        ...SCORE_CELL
       },
       {
         accessorKey: 'nonConformityScore',
-        header: 'No Conf.',
-        size: 70,
-        muiTableBodyCellProps: { align: 'center' }
+        header: 'No conf.',
+        size: 90,
+        ...SCORE_CELL
       },
       {
         accessorKey: 'invoiceScore',
         header: 'Facturas',
-        size: 70,
-        muiTableBodyCellProps: { align: 'center' }
+        size: 90,
+        ...SCORE_CELL
       },
-      {
-        accessorKey: 'comments',
-        header: 'Comentarios',
-        size: 250,
-        muiTableBodyCellProps: { sx: { fontSize: '0.75rem' } }
-      },
+      { accessorKey: 'comments', header: 'Comentarios', size: 280 },
       {
         accessorKey: 'createdAt',
         header: 'Creada',
         size: 130,
-        Cell: ({ cell }) =>
-          new Date(cell.getValue<string>()).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          })
+        Cell: ({ cell }: { cell: MRT_Cell<EvaluationWithSupplier> }) => (
+          <span style={{ whiteSpace: 'nowrap' }}>
+            {new Date(cell.getValue<string>()).toLocaleDateString('es-CO', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </span>
+        )
       }
     ],
     []
@@ -293,10 +310,29 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
         icon={<FactCheck />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<Refresh />} onClick={() => refetch()} disabled={isLoading || isFetching} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<Refresh />}
+              onClick={() => refetch()}
+              disabled={isLoading || isFetching}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Refrescar
             </Button>
-            <Button variant='contained' startIcon={<Add />} onClick={handleOpenCreateModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={handleOpenCreateModal}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Nueva evaluación
             </Button>
           </>
@@ -305,22 +341,41 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Evaluaciones' value={evaluations.length} icon={<FactCheck />} tone='teal' />
+          <LmsStatCard
+            variant='quiet'
+            label='Evaluaciones'
+            value={evaluations.length}
+            icon={<FactCheck />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Condición excelente'
-            value={evaluations.filter((e) => String(e.finalCondition ?? '').toUpperCase().includes('EXCELENTE')).length}
+            value={
+              evaluations.filter((e) =>
+                String(e.finalCondition ?? '')
+                  .toUpperCase()
+                  .includes('EXCELENTE')
+              ).length
+            }
             icon={<EmojiEvents />}
             tone='green'
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Puntaje promedio'
             value={
               evaluations.length
-                ? (evaluations.reduce((acc, e) => acc + (Number(e.totalScore) || 0), 0) / evaluations.length).toFixed(1)
+                ? (
+                    evaluations.reduce(
+                      (acc, e) => acc + (Number(e.totalScore) || 0),
+                      0
+                    ) / evaluations.length
+                  ).toFixed(1)
                 : '0.0'
             }
             icon={<Star />}
@@ -329,43 +384,34 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <MaterialReactTable
-        {...purchaseTableStyle}
+      <DataTable
         columns={columns}
         data={evaluations}
-        enableRowActions // Habilitar acciones por fila
+        itemLabel={['evaluación', 'evaluaciones']}
+        searchPlaceholder='Buscar evaluaciones'
+        enableRowActions
         renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-            <Tooltip title='Ver Reporte PDF'>
+            <Tooltip title='Ver reporte PDF'>
               <IconButton
-                onClick={() =>
-                  handleViewReport(
-                    row.original.id
-                    // row.original.supplier?.name || 'Proveedor',
-                    // row.original.evaluationDate
-                  )
-                }
-                sx={{ color: '#00BFA5' }}
+                onClick={() => handleViewReport(row.original.id)}
+                aria-label={`Ver reporte PDF de la evaluación ${row.original.id}`}
+                sx={{ color: '#00695C' }}
                 size='small'
               >
                 <PictureAsPdf />
               </IconButton>
             </Tooltip>
-            <Tooltip title='Editar Evaluación'>
+            <Tooltip title='Editar evaluación'>
               <IconButton
                 onClick={() => handleOpenEditModal(row.original)}
-                color='primary'
+                aria-label={`Editar la evaluación ${row.original.id}`}
+                sx={{ color: '#2563eb' }}
                 size='small'
               >
                 <Edit />
               </IconButton>
             </Tooltip>
-            {/* <Tooltip title="Eliminar Evaluación"> // La eliminación es una acción destructiva, manejar con cuidado
-              <IconButton onClick={() => { console.log("Eliminar", row.original.id) }} color="error" size="small">
-                <Delete />
-              </IconButton>
-            </Tooltip> */}
           </Box>
         )}
         muiToolbarAlertBannerProps={
@@ -373,11 +419,10 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
         }
         initialState={{
           density: 'compact',
-          columnPinning: { right: ['mrt-row-actions'] },
           pagination: { pageSize: 10, pageIndex: 0 },
-          sorting: [{ id: 'evaluationDate', desc: true }], // Ordenar por fecha descendente por defecto
+          sorting: [{ id: 'evaluationDate', desc: true }],
           columnVisibility: {
-            // Ocultar algunas columnas por defecto para no saturar
+            // Ocultas por defecto para no saturar; se activan en "Columnas"
             qualityScore: false,
             deliveryScore: false,
             supportScore: false,
@@ -388,12 +433,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
           }
         }}
         state={{ isLoading, showProgressBars: isFetching }}
-        enableColumnResizing
-        enableColumnOrdering
-        enableGrouping
-        enablePinning
       />
-      </Paper>
 
       {isFormModalOpen &&
         supplierForNewEvaluation && ( // Asegurar que supplierForNewEvaluation exista

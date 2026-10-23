@@ -5,13 +5,17 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  Paper,
-  Chip
+  Chip,
+  Link
 } from '@mui/material'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import {
+  type MRT_Cell,
+  type MRT_ColumnDef,
+  type MRT_Row
+} from 'material-react-table'
 import { useQuery } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import DataTable from 'src/Components/Common/DataTable'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircleOutline, HighlightOff } from '@mui/icons-material' // Icono para ver detalle de orden
 
@@ -126,68 +130,73 @@ const SupplierPurchaseHistoryTable: React.FC<
     () => [
       {
         accessorKey: 'code',
-        header: 'Núm. Orden',
-        size: 150,
-        Cell: (
-          { cell, row } // Celda personalizada para enlazar al detalle de la orden
-        ) => (
-          <Typography
-            component='a'
+        header: 'Orden',
+        size: 160,
+        Cell: ({
+          cell,
+          row
+        }: {
+          cell: MRT_Cell<PurchaseHistoryEntry>
+          row: MRT_Row<PurchaseHistoryEntry>
+        }) => (
+          <Link
+            component='button'
+            type='button'
+            variant='body2'
+            underline='hover'
+            aria-label={`Abrir el PDF de la orden ${row.original.code}`}
             onClick={() =>
               handleViewOrderReportPDF(row.original.id, row.original.code)
-            } // Llamar al nuevo handler
-            sx={{
-              color: 'primary.main',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-              '&:hover': { color: 'secondary.main' }
-            }}
+            }
+            sx={{ color: '#00695C', fontWeight: 600, textAlign: 'left' }}
           >
             {cell.getValue<string>()}
-          </Typography>
+          </Link>
         )
       },
       {
         accessorKey: 'requestDate', // Asegúrate que este sea el nombre del campo
-        header: 'Fecha Orden', // O "Fecha Solicitud" si es más apropiado
-        size: 120,
-        Cell: ({ cell }) => {
+        header: 'Fecha de la orden',
+        size: 150,
+        Cell: ({ cell }: { cell: MRT_Cell<PurchaseHistoryEntry> }) => {
           const dateValue = cell.getValue<string>()
-          if (!dateValue) return '' // Manejar si la fecha es nula o indefinida
-          const date = new Date(dateValue) // Parsea la cadena ISO 8601 completa
-          return date.toLocaleDateString('es-CO', {
-            // es-CO para formato colombiano
-            year: 'numeric',
-            month: 'short', // 'long' para "mayo", 'short' para "may.", 'numeric' para "5"
-            day: 'numeric',
-            timeZone: 'UTC' // Interpreta la fecha como si fuera UTC para mostrar el día correcto
-          })
+          if (!dateValue) return <span />
+          return (
+            <span style={{ whiteSpace: 'nowrap' }}>
+              {new Date(dateValue).toLocaleDateString('es-CO', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                // Interpreta la fecha como UTC para mostrar el día correcto
+                timeZone: 'UTC'
+              })}
+            </span>
+          )
         }
       },
       {
         accessorKey: 'total', // O el nombre de campo de total que uses
-        header: 'Monto Total',
+        header: 'Total',
         size: 150,
-        Cell: ({ cell }) =>
-          new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-          }).format(cell.getValue<number>()),
+        Cell: ({ cell }: { cell: MRT_Cell<PurchaseHistoryEntry> }) => (
+          <span>
+            {new Intl.NumberFormat('es-CO', {
+              style: 'currency',
+              currency: 'COP',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(cell.getValue<number>())}
+          </span>
+        ),
         muiTableBodyCellProps: { align: 'right' },
-        muiTableHeadCellProps: {
-          style: { justifyContent: 'flex-end', textAlign: 'right' }
-        } // Para alinear el header
+        muiTableHeadCellProps: { align: 'right' }
       },
       {
         // --- COLUMNA MODIFICADA ---
         accessorKey: 'verified', // Cambiado de 'status'
         header: 'Verificado', // Nuevo encabezado
         size: 100,
-        muiTableBodyCellProps: { align: 'center' },
-        muiTableHeadCellProps: { sx: { textAlign: 'center' } }, // Centrar también el header
-        Cell: ({ cell }) => {
+        Cell: ({ cell }: { cell: MRT_Cell<PurchaseHistoryEntry> }) => {
           const isVerified = cell.getValue<boolean>()
           return isVerified ? (
             <Chip
@@ -242,34 +251,24 @@ const SupplierPurchaseHistoryTable: React.FC<
   }
 
   return (
-    <Paper elevation={2} sx={{ mt: 3 }}>
-      {' '}
-      {/* Quitado p:0 para que MRT maneje sus paddings internos */}
-      <Typography variant='h5' sx={{ p: 2, pb: 1 }} gutterBottom>
-        Historial de Compras
+    <Box sx={{ mt: 3 }}>
+      <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
+        Historial de compras
       </Typography>
       {!isLoading && purchaseHistory.length === 0 && !isError && (
-        <Typography sx={{ p: 2, pt: 0, color: 'text.secondary' }}>
+        <Typography sx={{ color: 'text.secondary' }}>
           No se encontraron compras para este proveedor.
         </Typography>
       )}
       {purchaseHistory.length > 0 && (
-        <MaterialReactTable
+        <DataTable
           columns={columns}
           data={purchaseHistory}
-          enableRowActions={false} // Puedes habilitar acciones por fila si necesitas (ej. ver detalle de PO)
-          // renderRowActions={({ row }) => (
-          //   <Tooltip title="Ver Detalle de Orden">
-          //     <IconButton onClick={() => navigate(`/purchases/orders/details/${row.original.id}`)} size="small">
-          //       <ViewOrderIcon />
-          //     </IconButton>
-          //   </Tooltip>
-          // )}
+          itemLabel={['compra', 'compras']}
+          searchPlaceholder='Buscar compras'
           enableColumnFilters
           enablePagination
           enableSorting
-          enableDensityToggle={false}
-          enableFullScreenToggle={false}
           enableHiding={false}
           muiTableContainerProps={{ sx: { maxHeight: '400px' } }} // Ajusta la altura máxima
           muiToolbarAlertBannerProps={
@@ -290,10 +289,9 @@ const SupplierPurchaseHistoryTable: React.FC<
           state={{
             showProgressBars: isFetching // Barra de progreso para recargas
           }}
-          localization={MRT_Localization_ES}
         />
       )}
-    </Paper>
+    </Box>
   )
 }
 

@@ -5,15 +5,24 @@ import {
   Button,
   Box,
   Grid,
+  Chip,
   IconButton,
-  Paper,
-  Tooltip
+  Tooltip,
+  Typography
 } from '@mui/material'
-import { Edit, Delete, Add, ArrowBack, Badge, CheckCircle, PersonOff } from '@mui/icons-material'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import {
+  Edit,
+  Delete,
+  Add,
+  ArrowBack,
+  Badge,
+  CheckCircle,
+  PersonOff
+} from '@mui/icons-material'
+import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
 import Swal from 'sweetalert2'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -34,6 +43,9 @@ const PersonnelManagementPage: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
+  const [activeFilter, setActiveFilter] = useState<
+    'active' | 'inactive' | null
+  >(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPersonnel, setEditingPersonnel] = useState<Personnel | null>(
     null
@@ -97,6 +109,12 @@ const PersonnelManagementPage: React.FC = () => {
     }
   )
 
+  const toggleFilter = (value: 'active' | 'inactive') =>
+    setActiveFilter((current) => (current === value ? null : value))
+  const visiblePersonnel = activeFilter
+    ? personnelList.filter((p) => p.isActive === (activeFilter === 'active'))
+    : personnelList
+
   const handleOpenModal = (person?: Personnel | null) => {
     setEditingPersonnel(person || null)
     setIsModalOpen(true)
@@ -128,13 +146,32 @@ const PersonnelManagementPage: React.FC = () => {
 
   const columns = useMemo<MRT_ColumnDef<Personnel>[]>(
     () => [
-      { accessorKey: 'name', header: 'Nombre Completo', size: 250 },
-      { accessorKey: 'position', header: 'Cargo', size: 250 },
+      {
+        accessorKey: 'name',
+        header: 'Nombre',
+        size: 260,
+        Cell: ({ cell }: { cell: MRT_Cell<Personnel> }) => (
+          <Typography variant='body2' fontWeight={600}>
+            {cell.getValue<string>()}
+          </Typography>
+        )
+      },
+      { accessorKey: 'position', header: 'Cargo', size: 260 },
       {
         accessorKey: 'isActive',
-        header: 'Activo',
-        size: 100,
-        Cell: ({ cell }) => (cell.getValue<boolean>() ? 'Sí' : 'No')
+        header: 'Estado',
+        size: 120,
+        Cell: ({ cell }: { cell: MRT_Cell<Personnel> }) =>
+          cell.getValue<boolean>() ? (
+            <Chip
+              label='Activo'
+              color='success'
+              size='small'
+              variant='outlined'
+            />
+          ) : (
+            <Chip label='Inactivo' size='small' variant='outlined' />
+          )
       }
     ],
     []
@@ -145,7 +182,12 @@ const PersonnelManagementPage: React.FC = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/purchases/requests')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver
       </Button>
@@ -155,52 +197,82 @@ const PersonnelManagementPage: React.FC = () => {
         subtitle='Personas que firman y aprueban los documentos de compras'
         icon={<Badge />}
         actions={
-          <Button variant='contained' startIcon={<Add />} onClick={() => handleOpenModal()} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+          <Button
+            variant='contained'
+            startIcon={<Add />}
+            onClick={() => handleOpenModal()}
+            sx={{
+              bgcolor: '#00BFA5',
+              whiteSpace: 'nowrap',
+              '&:hover': { bgcolor: '#00ACC1' }
+            }}
+          >
             Agregar persona
           </Button>
         }
       />
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Personal' value={personnelList.length} icon={<Badge />} tone='teal' />
+        <Grid item xs={12} sm={6}>
+          <LmsStatCard
+            variant='quiet'
+            label='Activos'
+            value={personnelList.filter((p) => p.isActive).length}
+            icon={<CheckCircle />}
+            tone='green'
+            active={activeFilter === 'active'}
+            onClick={() => toggleFilter('active')}
+          />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Activos' value={personnelList.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Inactivos' value={personnelList.filter((p) => !p.isActive).length} icon={<PersonOff />} tone='orange' />
+        <Grid item xs={12} sm={6}>
+          <LmsStatCard
+            variant='quiet'
+            label='Inactivos'
+            value={personnelList.filter((p) => !p.isActive).length}
+            icon={<PersonOff />}
+            tone='orange'
+            active={activeFilter === 'inactive'}
+            onClick={() => toggleFilter('inactive')}
+          />
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable
-          {...purchaseTableStyle}
-          columns={columns}
-          data={personnelList}
-          enableRowActions
-          enablePinning
-          renderRowActions={({ row }) => (
-            <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-              <Tooltip title='Editar'>
-                <IconButton onClick={() => handleOpenModal(row.original)} color='primary' size='small'>
-                  <Edit />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title='Eliminar'>
-                <IconButton onClick={() => handleDelete(row.original.id)} color='error' size='small'>
-                  <Delete />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          )}
-          initialState={{ density: 'compact', columnPinning: { right: ['mrt-row-actions'] } }}
-          state={{ isLoading, showAlertBanner: isError }}
-          muiToolbarAlertBannerProps={
-            isError ? { color: 'error', children: error?.message } : undefined
-          }
-        />
-      </Paper>
+      <DataTable
+        columns={columns}
+        data={visiblePersonnel}
+        itemLabel={['persona', 'personas']}
+        searchPlaceholder='Buscar personal'
+        enableRowActions
+        initialState={{ density: 'compact' }}
+        state={{ isLoading, showAlertBanner: isError }}
+        muiToolbarAlertBannerProps={
+          isError ? { color: 'error', children: error?.message } : undefined
+        }
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+            <Tooltip title='Editar'>
+              <IconButton
+                onClick={() => handleOpenModal(row.original)}
+                aria-label={`Editar a ${row.original.name}`}
+                sx={{ color: '#2563eb' }}
+                size='small'
+              >
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Eliminar'>
+              <IconButton
+                onClick={() => handleDelete(row.original.id)}
+                aria-label={`Eliminar a ${row.original.name}`}
+                color='error'
+                size='small'
+              >
+                <Delete />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+      />
 
       {isModalOpen && (
         <PersonnelFormModal

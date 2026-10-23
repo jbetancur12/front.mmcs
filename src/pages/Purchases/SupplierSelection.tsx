@@ -1,6 +1,14 @@
 import React, { useState } from 'react'
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { Box, Button, Grid, IconButton, Tooltip } from '@mui/material'
+import { MRT_Cell, MRT_ColumnDef, MRT_Row } from 'material-react-table'
+import {
+  Box,
+  Button,
+  Chip,
+  Grid,
+  IconButton,
+  Tooltip,
+  Typography
+} from '@mui/material'
 import { SelectionSupplier } from './Types'
 import {
   useSupplierSelectionCriteria,
@@ -9,13 +17,30 @@ import {
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Link } from 'react-router-dom'
-import { Add, CheckCircle, Edit, HowToReg, Visibility, WarningAmber } from '@mui/icons-material'
+import {
+  Add,
+  CheckCircle,
+  Edit,
+  HowToReg,
+  Visibility,
+  WarningAmber
+} from '@mui/icons-material'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
 import SupplierSelectionModal from 'src/Components/Purchases/SupplierSelectionModal'
 
 // Definir el tipo para los proveedores
+
+const DECISIONS: Record<
+  string,
+  { label: string; color: 'success' | 'warning' | 'error' | 'default' }
+> = {
+  APPROVED: { label: 'Aprobado', color: 'success' },
+  'APPROVED WITH RESERVE': { label: 'Aprobado con reserva', color: 'warning' },
+  'NOT APPROVED': { label: 'No aprobado', color: 'error' },
+  UNKNOWN: { label: 'Desconocido', color: 'default' }
+}
 
 const SuppliersSelection: React.FC = () => {
   const { data: suppliers = [], isLoading: loading } = useSupplierSelections()
@@ -41,64 +66,43 @@ const SuppliersSelection: React.FC = () => {
     // La mutación del modal invalida la lista de selecciones
   }
 
-  // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<SelectionSupplier>[] = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'supplier.name', header: 'Nombre' },
-    { accessorKey: 'product', header: 'Producto o Servicio' },
-
+    { accessorKey: 'id', header: 'ID', size: 60 },
+    {
+      accessorKey: 'supplier.name',
+      header: 'Proveedor',
+      size: 240,
+      Cell: ({ cell }: { cell: MRT_Cell<SelectionSupplier> }) => (
+        <Typography variant='body2' fontWeight={600}>
+          {cell.getValue<string>()}
+        </Typography>
+      )
+    },
+    { accessorKey: 'product', header: 'Producto o servicio', size: 380 },
     {
       accessorKey: 'selectionSupplierDate',
-      header: 'Fecha de Selección',
-      Cell: ({ row }) => {
+      header: 'Fecha de selección',
+      size: 150,
+      Cell: ({ row }: { row: MRT_Row<SelectionSupplier> }) => {
         const rawDate = row.original.selectionSupplierDate
-
-        const formattedDate = rawDate
-          ? format(new Date(rawDate), "dd 'de' MMMM 'de' yyyy", { locale: es })
-          : 'Fecha no disponible'
-
-        return <span>{formattedDate}</span>
+        return (
+          <span style={{ whiteSpace: 'nowrap' }}>
+            {rawDate
+              ? format(new Date(rawDate), 'dd MMM yyyy', { locale: es })
+              : 'Sin fecha'}
+          </span>
+        )
       }
     },
-
     {
       accessorKey: 'finalDecision',
-      header: 'Decisión Final',
-      Cell: ({ row }) => {
-        const decision = row.original.finalDecision
-
-        const getColor = (decision: string) => {
-          switch (decision) {
-            case 'APPROVED':
-              return 'bg-green-200 text-green-700' // Verde para aprobado
-            case 'APPROVED WITH RESERVE':
-              return 'bg-orange-200 text-orange-700' // Naranja para aprobado con reserva
-            case 'NOT APPROVED':
-              return 'bg-red-200 text-red-700' // Rojo para no aprobado
-            default:
-              return 'bg-gray-200 text-gray-700' // Gris por defecto
-          }
-        }
-
-        const getLabel = (decision: string) => {
-          switch (decision) {
-            case 'APPROVED':
-              return 'Aprobado'
-            case 'APPROVED WITH RESERVE':
-              return 'Aprobado con Reserva'
-            case 'NOT APPROVED':
-              return 'No Aprobado'
-            default:
-              return 'Desconocido'
-          }
-        }
-
+      header: 'Decisión final',
+      size: 190,
+      Cell: ({ row }: { row: MRT_Row<SelectionSupplier> }) => {
+        const { label, color } =
+          DECISIONS[row.original.finalDecision] ?? DECISIONS.UNKNOWN
         return (
-          <span
-            className={`px-2 py-1 rounded-md font-semibold ${getColor(decision)}`}
-          >
-            {getLabel(decision)}
-          </span>
+          <Chip size='small' variant='outlined' color={color} label={label} />
         )
       }
     }
@@ -111,46 +115,85 @@ const SuppliersSelection: React.FC = () => {
         subtitle='Proveedores evaluados y aprobados para compras'
         icon={<HowToReg />}
         actions={
-          <Button variant='contained' startIcon={<Add />} onClick={() => setModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+          <Button
+            variant='contained'
+            startIcon={<Add />}
+            onClick={() => setModalOpen(true)}
+            sx={{
+              bgcolor: '#00BFA5',
+              whiteSpace: 'nowrap',
+              '&:hover': { bgcolor: '#00ACC1' }
+            }}
+          >
             Nuevo proveedor
           </Button>
         }
         stats={
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={6} sm={4}>
-              <LmsStatCard variant='quiet' label='Seleccionados' value={suppliers.length} icon={<HowToReg />} tone='teal' />
+              <LmsStatCard
+                variant='quiet'
+                label='Seleccionados'
+                value={suppliers.length}
+                icon={<HowToReg />}
+                tone='teal'
+              />
             </Grid>
             <Grid item xs={6} sm={4}>
-              <LmsStatCard variant='quiet' label='Aprobados' value={suppliers.filter((x) => x.finalDecision === 'APPROVED').length} icon={<CheckCircle />} tone='green' />
+              <LmsStatCard
+                variant='quiet'
+                label='Aprobados'
+                value={
+                  suppliers.filter((x) => x.finalDecision === 'APPROVED').length
+                }
+                icon={<CheckCircle />}
+                tone='green'
+              />
             </Grid>
             <Grid item xs={6} sm={4}>
-              <LmsStatCard variant='quiet' label='Con reserva' value={suppliers.filter((x) => x.finalDecision === 'APPROVED WITH RESERVE').length} icon={<WarningAmber />} tone='orange' />
+              <LmsStatCard
+                variant='quiet'
+                label='Con reserva'
+                value={
+                  suppliers.filter(
+                    (x) => x.finalDecision === 'APPROVED WITH RESERVE'
+                  ).length
+                }
+                icon={<WarningAmber />}
+                tone='orange'
+              />
             </Grid>
           </Grid>
         }
       >
-        <MaterialReactTable
-          {...purchaseTableStyle}
+        <DataTable
           columns={columns}
           data={suppliers}
+          itemLabel={['proveedor', 'proveedores']}
+          searchPlaceholder='Buscar proveedores'
           state={{ isLoading: loading }}
-          enableRowActions={true}
-          enablePinning
-          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          enableRowActions
+          // PurchasesPage ya pone el marco de la tabla
+          muiTablePaperProps={{ elevation: 0 }}
           renderRowActions={({ row }) => (
             <Box sx={{ display: 'flex', gap: 0.5 }}>
               <Tooltip title='Ver'>
-                <Link to={`${row.original.id}`}>
-                  <IconButton size='small' sx={{ color: '#00BFA5' }}>
-                    <Visibility />
-                  </IconButton>
-                </Link>
+                <IconButton
+                  component={Link}
+                  to={`${row.original.id}`}
+                  size='small'
+                  aria-label={`Ver ${row.original.supplier?.name}`}
+                  sx={{ color: '#00695C' }}
+                >
+                  <Visibility />
+                </IconButton>
               </Tooltip>
               <Tooltip title='Editar evaluación'>
                 <IconButton
                   onClick={() => handleOpenEditModal(row.original)}
                   size='small'
-                  color='primary'
+                  aria-label={`Editar evaluación de ${row.original.supplier?.name}`}
+                  sx={{ color: '#2563eb' }}
                 >
                   <Edit />
                 </IconButton>

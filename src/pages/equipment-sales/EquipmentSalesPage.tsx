@@ -39,8 +39,9 @@ import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import ViewKanbanOutlinedIcon from '@mui/icons-material/ViewKanbanOutlined'
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined'
 import ViewStreamOutlinedIcon from '@mui/icons-material/ViewStreamOutlined'
-import MaterialReactTable from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
+import DataTable from 'src/Components/Common/DataTable'
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import ListItemCard from 'src/Components/Common/ListItemCard'
@@ -252,6 +253,76 @@ const EquipmentSalesPage = () => {
         </>
       ) : null}
     </Stack>
+  )
+
+  const tableColumns = useMemo<MRT_ColumnDef<EquipmentQuotation>[]>(
+    () => [
+      {
+        accessorKey: 'quoteCode',
+        header: 'Código',
+        size: 150,
+        Cell: ({ cell }: { cell: MRT_Cell<EquipmentQuotation> }) => (
+          <Typography variant='body2' fontWeight={600}>
+            {cell.getValue<string>()}
+          </Typography>
+        )
+      },
+      {
+        accessorFn: (q) => q.customer?.nombre || '',
+        id: 'customer',
+        header: 'Cliente',
+        size: 240
+      },
+      {
+        accessorFn: (q) => q.createdBy?.nombre || 'Sin registro',
+        id: 'createdBy',
+        header: 'Creada por',
+        size: 190
+      },
+      {
+        accessorKey: 'status',
+        header: 'Estado',
+        size: 170,
+        filterVariant: 'select',
+        filterSelectOptions: STATUS_ORDER.map((status) => ({
+          text: QUOTATION_STATUS_LABELS[status],
+          value: status
+        })),
+        Cell: ({ cell }: { cell: MRT_Cell<EquipmentQuotation> }) =>
+          renderStatusChip(cell.getValue<string>())
+      },
+      {
+        accessorFn: (q) => q.items?.length ?? 0,
+        id: 'items',
+        header: 'Productos',
+        size: 100,
+        muiTableBodyCellProps: { align: 'right' },
+        muiTableHeadCellProps: { align: 'right' }
+      },
+      {
+        accessorFn: (q) => Number(q.grandTotal),
+        id: 'grandTotal',
+        header: 'Valor',
+        size: 150,
+        muiTableBodyCellProps: { align: 'right' },
+        muiTableHeadCellProps: { align: 'right' },
+        Cell: ({ cell }: { cell: MRT_Cell<EquipmentQuotation> }) => (
+          <span>{currencyFormatter.format(cell.getValue<number>())}</span>
+        )
+      },
+      {
+        accessorFn: (q) => new Date(q.updatedAt),
+        id: 'updatedAt',
+        header: 'Actualizada',
+        size: 130,
+        Cell: ({ cell }: { cell: MRT_Cell<EquipmentQuotation> }) => (
+          <span style={{ whiteSpace: 'nowrap' }}>
+            {cell.getValue<Date>().toLocaleDateString('es-CO')}
+          </span>
+        )
+      }
+    ],
+    []
   )
 
   return (
@@ -519,135 +590,33 @@ const EquipmentSalesPage = () => {
           />
         </>
       ) : viewMode === 'table' ? (
-        <MaterialReactTable
-          columns={[
-            {
-              accessorKey: 'quoteCode',
-              header: 'Código',
-              size: 140,
-              Cell: ({ row }) => (
-                <Typography
-                  variant='body2'
-                  fontWeight={700}
-                  sx={{ color: '#111827', lineHeight: 1.2 }}
-                >
-                  {row.original.quoteCode}
-                </Typography>
-              )
-            },
-            {
-              accessorFn: (q) => q.customer?.nombre || '',
-              header: 'Cliente',
-              size: 220,
-              Cell: ({ cell }) => (
-                <Typography
-                  variant='body2'
-                  sx={{ color: '#6b7280', fontWeight: 600 }}
-                >
-                  {cell.getValue<string>()}
-                </Typography>
-              )
-            },
-            {
-              accessorFn: (q) => q.createdBy?.nombre || 'Sin registro',
-              id: 'createdBy',
-              header: 'Creada por',
-              size: 180,
-              Cell: ({ cell }) => (
-                <Typography variant='body2' sx={{ color: '#6b7280' }}>
-                  {cell.getValue<string>()}
-                </Typography>
-              )
-            },
-            {
-              accessorKey: 'status',
-              header: 'Estado',
-              size: 150,
-              filterVariant: 'select',
-              filterSelectOptions: STATUS_ORDER.map((status) => ({
-                text: QUOTATION_STATUS_LABELS[status],
-                value: status
-              })),
-              Cell: ({ cell }) => renderStatusChip(cell.getValue<string>())
-            },
-            {
-              accessorFn: (q) => q.items?.length ?? 0,
-              header: 'Productos',
-              size: 90,
-              Cell: ({ cell }) => (
-                <Typography variant='body2'>
-                  {cell.getValue<number>()}
-                </Typography>
-              )
-            },
-            {
-              accessorFn: (q) => Number(q.grandTotal),
-              header: 'Valor',
-              size: 110,
-              Cell: ({ cell }) => (
-                <Typography
-                  variant='body2'
-                  fontWeight={700}
-                  sx={{ color: '#059669' }}
-                >
-                  {currencyFormatter.format(cell.getValue<number>())}
-                </Typography>
-              )
-            },
-            {
-              accessorFn: (q) => new Date(q.updatedAt),
-              header: 'Actualizado',
-              size: 90,
-              Cell: ({ cell }) => (
-                <Typography variant='body2' sx={{ color: '#9ca3af' }}>
-                  {cell.getValue<Date>().toLocaleDateString('es-CO')}
-                </Typography>
-              )
-            },
-            {
-              id: 'actions',
-              header: '',
-              size: 80,
-              Cell: ({ row }) => (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigate(`/equipment-sales/${row.original.id}`)
-                  }}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    borderRadius: '8px'
-                  }}
-                >
-                  Ver
-                </Button>
-              )
-            }
-          ]}
+        <DataTable
+          columns={tableColumns}
           data={filteredQuotations}
-          enableColumnActions={false}
-          enableColumnFilters
-          enableGlobalFilter
+          itemLabel={['cotización', 'cotizaciones']}
+          searchPlaceholder='Buscar cotizaciones'
+          enableRowActions
           enableSorting
-          enablePagination={false}
-          enableBottomToolbar={false}
-          enableTopToolbar
-          localization={MRT_Localization_ES}
-          muiTableBodyRowProps={{
+          initialState={{ density: 'compact' }}
+          muiTableBodyRowProps={({ row }) => ({
+            onClick: () => navigate(`/equipment-sales/${row.original.id}`),
             sx: { cursor: 'pointer' }
-          }}
-          muiTablePaperProps={{
-            elevation: 0,
-            sx: {
-              border: '1px solid rgba(0,0,0,0.06)',
-              borderRadius: '14px',
-              overflow: 'hidden'
-            }
-          }}
-          muiTableHeadCellProps={{ sx: { fontWeight: 700, color: '#6b7280' } }}
+          })}
+          renderRowActions={({ row }) => (
+            <Tooltip title='Ver cotización'>
+              <IconButton
+                size='small'
+                aria-label={`Ver cotización ${row.original.quoteCode}`}
+                sx={{ color: '#00695C' }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate(`/equipment-sales/${row.original.id}`)
+                }}
+              >
+                <VisibilityOutlined />
+              </IconButton>
+            </Tooltip>
+          )}
         />
       ) : (
         <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>

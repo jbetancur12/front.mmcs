@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import React, { useMemo, useState } from 'react'
+import { type MRT_Cell, type MRT_ColumnDef, type MRT_Row } from 'material-react-table'
 import {
   Box,
   Button,
@@ -7,7 +7,8 @@ import {
   Tooltip,
   Chip,
   CircularProgress,
-  Grid
+  Grid,
+  Typography
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -21,10 +22,10 @@ import {
 import { useSuppliers } from 'src/hooks/purchases/useSuppliers'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import DataTable from 'src/Components/Common/DataTable'
 import {
   PURCHASE_TEAL,
-  PURCHASE_TEAL_HOVER,
-  purchaseTableStyle
+  PURCHASE_TEAL_HOVER
 } from 'src/Components/Purchases/purchaseTableStyle'
 
 // Interfaz para un proveedor, incluyendo los nuevos campos para el estado de evaluación
@@ -166,6 +167,15 @@ const getEvaluationStatusInfo = (
   }
 }
 
+type EvaluationFilter = 'required' | 'upToDate' | 'unevaluated'
+
+const evaluationGroup = (supplier: Supplier): EvaluationFilter | null => {
+  const info = getEvaluationStatusInfo(supplier)
+  if (!info) return null
+  if (info.needsAction) return 'required'
+  return info.color === 'success' ? 'upToDate' : 'unevaluated'
+}
+
 const SuppliersTable: React.FC = () => {
   const navigate = useNavigate()
 
@@ -180,48 +190,72 @@ const SuppliersTable: React.FC = () => {
   } = useSuppliers<SuppliersAPIResponse>()
 
   // Extraer la lista de proveedores del objeto de respuesta
-  const suppliersForTable = apiResponse?.suppliers || []
-  const needsActionCount = suppliersForTable.filter((sp) => getEvaluationStatusInfo(sp)?.needsAction).length
-  const upToDateCount = suppliersForTable.filter((sp) => getEvaluationStatusInfo(sp)?.color === 'success').length
+  const allSuppliers = useMemo(
+    () => apiResponse?.suppliers || [],
+    [apiResponse]
+  )
+  const [quickFilter, setQuickFilter] = useState<EvaluationFilter | null>(null)
+  const toggleQuick = (value: EvaluationFilter) =>
+    setQuickFilter((current) => (current === value ? null : value))
+
+  const suppliersForTable = useMemo(
+    () =>
+      quickFilter
+        ? allSuppliers.filter((sp) => evaluationGroup(sp) === quickFilter)
+        : allSuppliers,
+    [allSuppliers, quickFilter]
+  )
+  const countOf = (group: EvaluationFilter) =>
+    allSuppliers.filter((sp) => evaluationGroup(sp) === group).length
 
   const columns = useMemo<MRT_ColumnDef<Supplier>[]>(
     () => [
       {
         id: 'evaluationStatus',
-        header: 'Estado Evaluación',
-        size: 200,
-        muiTableBodyCellProps: { align: 'center' },
-        muiTableHeadCellProps: { sx: { textAlign: 'center' } },
-        Cell: ({ row }) => {
+        header: 'Estado de evaluación',
+        size: 300,
+        accessorFn: (row) => getEvaluationStatusInfo(row)?.text ?? '',
+        Cell: ({ row }: { row: MRT_Row<Supplier> }) => {
           const statusInfo = getEvaluationStatusInfo(row.original)
           if (!statusInfo) return null
           return (
-            <Chip
-              label={statusInfo.text}
-              color={statusInfo.color}
-              size='small'
-              variant={statusInfo.needsAction ? 'filled' : 'outlined'}
-              sx={{ minWidth: 160, textTransform: 'capitalize' }}
-            />
+            <Tooltip title={statusInfo.text}>
+              <Chip
+                label={statusInfo.text}
+                color={statusInfo.color}
+                size='small'
+                variant='outlined'
+                sx={{ maxWidth: '100%' }}
+              />
+            </Tooltip>
           )
         }
       },
-      { accessorKey: 'name', header: 'Nombre', size: 200 },
-      { accessorKey: 'taxId', header: 'NIT/CC', size: 120 },
+      {
+        accessorKey: 'name',
+        header: 'Proveedor',
+        size: 240,
+        Cell: ({ cell }: { cell: MRT_Cell<Supplier> }) => (
+          <Typography variant='body2' fontWeight={600}>
+            {cell.getValue<string>()}
+          </Typography>
+        )
+      },
+      { accessorKey: 'taxId', header: 'NIT/CC', size: 130 },
       {
         accessorKey: 'typePerson',
-        header: 'Tipo Persona',
-        size: 120,
-        accessorFn: (row) => (row.typePerson === 1 ? 'Natural' : 'Jurídico') // Corregido 0 para Jurídico
+        header: 'Tipo de persona',
+        size: 130,
+        accessorFn: (row) => (row.typePerson === 1 ? 'Natural' : 'Jurídico')
       },
       {
         accessorKey: 'contactName',
         header: 'Contacto',
         size: 200,
-        accessorFn: (row) => (row.typePerson === 1 ? row.name : row.contactName) // Corregido
+        accessorFn: (row) => (row.typePerson === 1 ? row.name : row.contactName)
       },
-      { accessorKey: 'phone', header: 'Teléfono', size: 120 },
-      { accessorKey: 'email', header: 'Correo', size: 200 }
+      { accessorKey: 'phone', header: 'Teléfono', size: 130 },
+      { accessorKey: 'email', header: 'Correo', size: 230 }
     ],
     []
   )
@@ -234,18 +268,37 @@ const SuppliersTable: React.FC = () => {
       stats={
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard variant='quiet' label='Proveedores' value={apiResponse?.totalItems ?? suppliersForTable.length} icon={<LocalShipping />} tone='teal' />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <LmsStatCard variant='quiet'
+            <LmsStatCard
+              variant='quiet'
               label='Evaluación requerida'
-              value={needsActionCount}
+              value={countOf('required')}
               icon={<WarningAmber />}
-              tone={needsActionCount > 0 ? 'red' : 'green'}
+              tone='red'
+              active={quickFilter === 'required'}
+              onClick={() => toggleQuick('required')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard variant='quiet' label='Evaluación al día' value={upToDateCount} icon={<CheckCircle />} tone='green' />
+            <LmsStatCard
+              variant='quiet'
+              label='Evaluación al día'
+              value={countOf('upToDate')}
+              icon={<CheckCircle />}
+              tone='green'
+              active={quickFilter === 'upToDate'}
+              onClick={() => toggleQuick('upToDate')}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard
+              variant='quiet'
+              label='Sin evaluar'
+              value={countOf('unevaluated')}
+              icon={<Article />}
+              tone='blue'
+              active={quickFilter === 'unevaluated'}
+              onClick={() => toggleQuick('unevaluated')}
+            />
           </Grid>
         </Grid>
       }
@@ -280,18 +333,19 @@ const SuppliersTable: React.FC = () => {
         </>
       }
     >
-      <MaterialReactTable
-        {...purchaseTableStyle}
+      <DataTable
         columns={columns}
-        data={suppliersForTable} // Usar la lista extraída
+        data={suppliersForTable}
+        itemLabel={['proveedor', 'proveedores']}
+        searchPlaceholder='Buscar proveedores'
         enableRowActions
-        enablePinning
         renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-            <Tooltip title='Ver Detalles, Documentos y Evaluar'>
+            <Tooltip title='Ver detalles, documentos y evaluar'>
               <IconButton
                 size='small'
-                sx={{ color: '#00BFA5' }}
+                aria-label={`Ver detalles de ${row.original.name}`}
+                sx={{ color: '#00695C' }}
                 onClick={() =>
                   navigate(`/purchases/suppliers/details/${row.original.id}`)
                 }
@@ -301,12 +355,9 @@ const SuppliersTable: React.FC = () => {
             </Tooltip>
           </Box>
         )}
-        muiSearchTextFieldProps={{
-          ...purchaseTableStyle.muiSearchTextFieldProps,
-          placeholder: 'Buscar proveedores...'
-        }}
+        // PurchasesPage ya pone el marco de la tabla
+        muiTablePaperProps={{ elevation: 0 }}
         initialState={{
-          columnPinning: { right: ['mrt-row-actions'] },
           density: 'compact',
           pagination: { pageSize: 10, pageIndex: 0 }, // Paginación del lado del cliente por defecto
           sorting: [{ id: 'name', desc: false }]

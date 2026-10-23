@@ -1,11 +1,10 @@
 // src/pages/Admin/FiscalParametersManagementPage.tsx (o la ubicación que prefieras)
 
 import React, { useMemo, useState, ChangeEvent } from 'react'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import { type MRT_ColumnDef } from 'material-react-table'
 import {
   Container,
   Button,
-  Paper,
   IconButton,
   Dialog,
   DialogTitle,
@@ -45,7 +44,7 @@ import { SelectChangeEvent } from '@mui/material/Select'
 import { NumericFormat, NumberFormatValues } from 'react-number-format'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
 
 // Interfaz para los parámetros fiscales
 interface FiscalParameter {
@@ -74,6 +73,13 @@ const initialFormValues: CreateFiscalParameterVariables = {
   valueType: 'TEXT', // Default a TEXT
   description: '',
   isActive: true
+}
+
+const VALUE_TYPE_LABELS: Record<FiscalParameter['valueType'], string> = {
+  PERCENTAGE: 'Porcentaje',
+  AMOUNT: 'Monto',
+  RATE_DECIMAL: 'Tasa decimal',
+  TEXT: 'Texto'
 }
 
 const valueTypeOptions: FiscalParameter['valueType'][] = [
@@ -125,6 +131,9 @@ const FiscalParametersManagementPage: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
+  const [activeFilter, setActiveFilter] = useState<
+    'active' | 'inactive' | null
+  >(null)
   const [openDialog, setOpenDialog] = useState(false)
   const [editingParam, setEditingParam] = useState<FiscalParameter | null>(null)
   const [formValues, setFormValues] =
@@ -149,6 +158,12 @@ const FiscalParametersManagementPage: React.FC = () => {
       // staleTime: 1000 * 60 * 5, // Cache por 5 minutos
     }
   )
+
+  const toggleFilter = (value: 'active' | 'inactive') =>
+    setActiveFilter((current) => (current === value ? null : value))
+  const visibleParams = activeFilter
+    ? fiscalParams.filter((p) => p.isActive === (activeFilter === 'active'))
+    : fiscalParams
 
   const handleGenericMutationSuccess = () => {
     queryClient.invalidateQueries('fiscalParametersListManageable')
@@ -348,19 +363,34 @@ const FiscalParametersManagementPage: React.FC = () => {
         accessorKey: 'keyName',
         header: 'Clave',
         size: 240,
-        Cell: ({ row }) => <Box sx={{ fontWeight: 600 }}>{row.original.keyName}</Box>
+        Cell: ({ row }) => (
+          <Box sx={{ fontWeight: 600 }}>{row.original.keyName}</Box>
+        )
       },
       {
         accessorKey: 'value',
         header: 'Valor',
         size: 130,
-        Cell: ({ row }) => <>{formatDisplayValueInTable(row.original.value, row.original.valueType)}</>
+        Cell: ({ row }) => (
+          <>
+            {formatDisplayValueInTable(
+              row.original.value,
+              row.original.valueType
+            )}
+          </>
+        )
       },
       {
         accessorKey: 'valueType',
         header: 'Tipo de valor',
         size: 140,
-        Cell: ({ row }) => <Chip label={row.original.valueType} size='small' variant='outlined' />
+        Cell: ({ row }) => (
+          <Chip
+            label={VALUE_TYPE_LABELS[row.original.valueType]}
+            size='small'
+            variant='outlined'
+          />
+        )
       },
       { accessorKey: 'description', header: 'Descripción', size: 260 },
       {
@@ -402,13 +432,28 @@ const FiscalParametersManagementPage: React.FC = () => {
             <Button
               variant='outlined'
               onClick={() => refetch()}
-              startIcon={isFetching ? <CircularProgress size={18} /> : <RefreshIcon />}
+              startIcon={
+                isFetching ? <CircularProgress size={18} /> : <RefreshIcon />
+              }
               disabled={isFetching}
-              sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               Refrescar
             </Button>
-            <Button variant='contained' startIcon={<Add />} onClick={() => handleOpenDialog()} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={() => handleOpenDialog()}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Nuevo parámetro
             </Button>
           </>
@@ -416,48 +461,71 @@ const FiscalParametersManagementPage: React.FC = () => {
       />
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Parámetros' value={fiscalParams.length} icon={<AccountBalance />} tone='teal' />
+        <Grid item xs={12} sm={6}>
+          <LmsStatCard
+            variant='quiet'
+            label='Activos'
+            value={fiscalParams.filter((p) => p.isActive).length}
+            icon={<CheckCircle />}
+            tone='green'
+            active={activeFilter === 'active'}
+            onClick={() => toggleFilter('active')}
+          />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Activos' value={fiscalParams.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Inactivos' value={fiscalParams.filter((p) => !p.isActive).length} icon={<Block />} tone='orange' />
+        <Grid item xs={12} sm={6}>
+          <LmsStatCard
+            variant='quiet'
+            label='Inactivos'
+            value={fiscalParams.filter((p) => !p.isActive).length}
+            icon={<Block />}
+            tone='orange'
+            active={activeFilter === 'inactive'}
+            onClick={() => toggleFilter('inactive')}
+          />
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable
-          {...purchaseTableStyle}
-          columns={columns}
-          data={fiscalParams}
-          enableRowActions
-          enablePinning
-          enableColumnActions={false}
-          initialState={{ density: 'compact', columnPinning: { right: ['mrt-row-actions'] } }}
-          state={{ isLoading: isLoading && fiscalParams.length === 0, showProgressBars: isFetching }}
-          renderRowActions={({ row }) => (
-            <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-              <Tooltip title='Editar'>
-                <IconButton onClick={() => handleOpenDialog(row.original)} color='primary' size='small'>
-                  <Edit fontSize='small' />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title='Eliminar'>
-                <IconButton onClick={() => handleDelete(row.original.id)} color='error' size='small'>
-                  <Delete fontSize='small' />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          )}
-          renderEmptyRowsFallback={() => (
-            <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
-              No hay parámetros fiscales definidos.
-            </Box>
-          )}
-        />
-      </Paper>
+      <DataTable
+        columns={columns}
+        data={visibleParams}
+        itemLabel={['parámetro', 'parámetros']}
+        searchPlaceholder='Buscar parámetros'
+        enableRowActions
+        initialState={{ density: 'compact' }}
+        state={{
+          isLoading: isLoading && fiscalParams.length === 0,
+          showProgressBars: isFetching
+        }}
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+            <Tooltip title='Editar'>
+              <IconButton
+                onClick={() => handleOpenDialog(row.original)}
+                aria-label={`Editar ${row.original.keyName}`}
+                sx={{ color: '#2563eb' }}
+                size='small'
+              >
+                <Edit fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Eliminar'>
+              <IconButton
+                onClick={() => handleDelete(row.original.id)}
+                aria-label={`Eliminar ${row.original.keyName}`}
+                color='error'
+                size='small'
+              >
+                <Delete fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+        renderEmptyRowsFallback={() => (
+          <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
+            No hay parámetros fiscales definidos.
+          </Box>
+        )}
+      />
 
       <Dialog
         open={openDialog}

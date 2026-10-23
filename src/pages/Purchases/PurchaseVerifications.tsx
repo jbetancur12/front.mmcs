@@ -1,8 +1,5 @@
 import React from 'react'
-import MaterialReactTable, {
-  MRT_ColumnDef,
-  MRT_Row
-} from 'material-react-table'
+import { MRT_ColumnDef, MRT_Row } from 'material-react-table'
 import {
   Avatar,
   Box,
@@ -27,10 +24,8 @@ import {
 } from '@mui/icons-material'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
-import {
-  PURCHASE_TEAL,
-  purchaseTableStyle
-} from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
+import { PURCHASE_TEAL } from 'src/Components/Purchases/purchaseTableStyle'
 import { PurchaseVerification } from './Types'
 
 /* Interfaces de Tipos */
@@ -54,7 +49,13 @@ const PurchaseVerificationsTable: React.FC = () => {
   )
 
   const columns: MRT_ColumnDef<PurchaseVerification>[] = [
-    { accessorKey: 'id', header: 'Id', enableEditing: false, Edit: () => null },
+    {
+      accessorKey: 'id',
+      header: 'Id',
+      size: 60,
+      enableEditing: false,
+      Edit: () => null
+    },
     {
       accessorKey: 'receivedDate',
       header: 'Recibido el',
@@ -279,46 +280,48 @@ const PurchaseVerificationsTable: React.FC = () => {
         </Grid>
       }
     >
-      <MaterialReactTable
-        {...purchaseTableStyle}
+      <DataTable
         enableEditing
         columns={columns}
         data={data ?? []}
+        itemLabel={['verificación', 'verificaciones']}
+        searchPlaceholder='Buscar verificaciones'
         state={{ isLoading }}
         enablePagination
         enableSorting
         enableRowActions
-        enablePinning
         initialState={{
           density: 'compact',
-          columnPinning: { right: ['mrt-row-actions'] },
           columnVisibility: {
             id: false,
             items: false
           }
         }}
-        muiSearchTextFieldProps={{
-          ...purchaseTableStyle.muiSearchTextFieldProps,
-          placeholder: 'Buscar verificaciones...'
-        }}
+        // PurchasesPage ya pone el marco de la tabla
+        muiTablePaperProps={{ elevation: 0 }}
         renderRowActions={({ row, table }) => {
           return (
             <Stack direction='row' spacing={0}>
+              <Tooltip title='Ver'>
+                <IconButton
+                  component={Link}
+                  to={`${row?.original?.id ?? ''}`}
+                  size='small'
+                  aria-label={`Ver verificación de ${row.original.purchaseOrder.code}`}
+                  sx={{ color: '#00695C' }}
+                >
+                  <Visibility />
+                </IconButton>
+              </Tooltip>
               <Tooltip title='Editar'>
                 <IconButton
                   size='small'
-                  color='primary'
+                  aria-label={`Editar verificación de ${row.original.purchaseOrder.code}`}
+                  sx={{ color: '#2563eb' }}
                   onClick={() => table.setEditingRow(row)}
                 >
                   <Edit />
                 </IconButton>
-              </Tooltip>
-              <Tooltip title='Ver'>
-                <Link to={`${row?.original?.id ?? ''}`}>
-                  <IconButton size='small' sx={{ color: PURCHASE_TEAL }}>
-                    <Visibility />
-                  </IconButton>
-                </Link>
               </Tooltip>
             </Stack>
           )

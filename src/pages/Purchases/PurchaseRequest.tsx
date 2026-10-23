@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
+import { MRT_ColumnDef } from 'material-react-table'
 import {
   Avatar,
   Box,
@@ -55,10 +55,10 @@ import {
 import ActiveFiltersIndicator from '../../Components/Table/ActiveFiltersIndicator'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import DataTable from 'src/Components/Common/DataTable'
 import {
   PURCHASE_TEAL,
-  PURCHASE_TEAL_HOVER,
-  purchaseTableStyle
+  PURCHASE_TEAL_HOVER
 } from 'src/Components/Purchases/purchaseTableStyle'
 
 type QuickFilter = 'all' | 'pending' | 'toOrder' | 'late'
@@ -534,8 +534,7 @@ const PurchaseRequest: React.FC = () => {
           showDetails={true}
         />
 
-        <MaterialReactTable
-          {...purchaseTableStyle}
+        <DataTable
           columns={columns}
           data={purchaseRequests}
           {...(serverMode
@@ -552,16 +551,27 @@ const PurchaseRequest: React.FC = () => {
             isLoading,
             showProgressBars: serverMode && pageFetching && !pageLoading
           }}
-          enableRowActions={true}
-          enablePinning
-          initialState={{
-            density: 'compact',
-            columnPinning: { right: ['mrt-row-actions'] }
+          itemLabel={['solicitud', 'solicitudes']}
+          searchPlaceholder='Buscar solicitudes'
+          enableRowActions
+          initialState={{ density: 'compact' }}
+          // Ver, editar, la acción principal y el menú caben en una fila
+          displayColumnDefOptions={{
+            'mrt-row-actions': {
+              header: 'Acciones',
+              size: 270,
+              muiTableHeadCellProps: {
+                align: 'left',
+                sx: { backgroundColor: '#f3f4f6', opacity: 1 }
+              },
+              muiTableBodyCellProps: {
+                align: 'left',
+                sx: { backgroundColor: '#fff', boxShadow: '-1px 0 0 #e5e7eb' }
+              }
+            }
           }}
-          muiSearchTextFieldProps={{
-            ...purchaseTableStyle.muiSearchTextFieldProps,
-            placeholder: 'Buscar solicitudes...'
-          }}
+          // PurchasesPage ya pone el marco de la tabla
+          muiTablePaperProps={{ elevation: 0 }}
           renderRowActions={({ row }) => (
             <RenderRowActions
               row={row}

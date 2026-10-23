@@ -187,11 +187,15 @@ const RenderRowActions = ({
   return (
     <Stack direction='row' spacing={0.5} alignItems='center'>
       <Tooltip title='Ver'>
-        <Link to={`${row.original.id}`}>
-          <IconButton size='small' sx={{ color: '#00BFA5' }}>
-            <Visibility />
-          </IconButton>
-        </Link>
+        <IconButton
+          component={Link}
+          to={`${row.original.id}`}
+          size='small'
+          aria-label={`Ver solicitud ${row.original.purchaseCode}`}
+          sx={{ color: '#00695C' }}
+        >
+          <Visibility />
+        </IconButton>
       </Tooltip>
       <Tooltip
         title={
@@ -203,7 +207,8 @@ const RenderRowActions = ({
         <span>
           <IconButton
             size='small'
-            color='primary'
+            aria-label={`Editar solicitud ${row.original.purchaseCode}`}
+            sx={{ color: '#2563eb' }}
             onClick={onEdit}
             disabled={
               row.original.status === 'aprobado' && row.original.hasOrder
