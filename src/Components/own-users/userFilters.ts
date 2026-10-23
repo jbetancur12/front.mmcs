@@ -1,6 +1,7 @@
 import { UserData } from './types'
+import { getRoleChipLabel } from './userValidation'
 
-/** Filtra usuarios por nombre, email, teléfono o rol (nombre o descripción). */
+/** Filtra usuarios por nombre, email, teléfono o rol (el nombre que se ve en pantalla, el interno o la descripción). */
 export const filterUsers = (
   users: UserData[],
   globalFilter: string
@@ -15,7 +16,8 @@ export const filterUsers = (
       (user.phone || '').toLowerCase().includes(searchTerm) ||
       user.roles.some(
         (role) =>
-          role.description.toLowerCase().includes(searchTerm) ||
+          getRoleChipLabel(role).toLowerCase().includes(searchTerm) ||
+          (role.description || '').toLowerCase().includes(searchTerm) ||
           role.name.toLowerCase().includes(searchTerm)
       )
   )

@@ -53,11 +53,34 @@ const UserRowActions: React.FC<{
           <MoreVert fontSize='small' />
         </IconButton>
       </Tooltip>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={close}>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={close}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5,
+              minWidth: 230,
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 8px 24px rgba(17, 24, 39, 0.10)',
+              '& .MuiMenuItem-root': {
+                fontSize: 14,
+                fontWeight: 500,
+                py: 1,
+                '&:hover': { bgcolor: '#f6fcfb' }
+              }
+            }
+          }
+        }}
+      >
         {canUpdate && (
           <MenuItem onClick={run(onEdit)}>
             <ListItemIcon>
-              <Edit fontSize='small' sx={{ color: '#1976d2' }} />
+              <Edit fontSize='small' sx={{ color: '#2563eb' }} />
             </ListItemIcon>
             Editar usuario
           </MenuItem>
@@ -65,7 +88,7 @@ const UserRowActions: React.FC<{
         {canActivate && user.active !== true && (
           <MenuItem onClick={run(() => onActivationLink(false))}>
             <ListItemIcon>
-              <LinkIcon fontSize='small' />
+              <LinkIcon fontSize='small' sx={{ color: '#00695C' }} />
             </ListItemIcon>
             Enlace de activación
           </MenuItem>
@@ -73,15 +96,21 @@ const UserRowActions: React.FC<{
         {canActivate && user.active !== true && (
           <MenuItem onClick={run(() => onActivationLink(true))}>
             <ListItemIcon>
-              <ForwardToInbox fontSize='small' />
+              <ForwardToInbox fontSize='small' sx={{ color: '#00695C' }} />
             </ListItemIcon>
             Reenviar correo de activación
           </MenuItem>
         )}
         {canDelete && (
           <>
-            <Divider />
-            <MenuItem onClick={run(onDelete)} sx={{ color: 'error.main' }}>
+            <Divider sx={{ my: 0.5 }} />
+            <MenuItem
+              onClick={run(onDelete)}
+              sx={{
+                color: '#dc2626',
+                '&:hover': { bgcolor: '#fef2f2 !important' }
+              }}
+            >
               <ListItemIcon>
                 <Delete fontSize='small' color='error' />
               </ListItemIcon>

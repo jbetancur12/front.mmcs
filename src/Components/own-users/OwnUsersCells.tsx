@@ -12,30 +12,46 @@ import React from 'react'
 import { Role, UserData } from './types'
 import { getRoleChipLabel } from './userValidation'
 
+const MAX_VISIBLE_ROLES = 2
+
+// Chip outlined turquesa; los roles que sobran se agrupan en "+N" con su detalle al pasar el mouse
+const roleChipSx = {
+  color: '#00695C',
+  borderColor: '#00BFA5',
+  fontWeight: 500,
+  cursor: 'help'
+}
+
 export const RolesCell: React.FC<{ cell: MRT_Cell<UserData> }> = ({ cell }) => {
-  const roles = cell.getValue<Role[]>() // Obtén los roles desde la celda
+  const roles = cell.getValue<Role[]>() ?? []
+  const visible = roles.slice(0, MAX_VISIBLE_ROLES)
+  const hidden = roles.slice(MAX_VISIBLE_ROLES)
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-      {roles.map((role, index) => (
+      {visible.map((role, index) => (
         <Tooltip key={index} title={role.description} arrow placement='top'>
           <Chip
             label={getRoleChipLabel(role)}
             size='small'
-            sx={{
-              backgroundColor: '#d1fae5',
-              color: '#059669',
-              fontWeight: 500,
-              fontSize: '0.75rem',
-              cursor: 'help',
-              '&:hover': {
-                backgroundColor: '#a7f3d0',
-                transform: 'scale(1.05)',
-                transition: 'all 0.2s ease-in-out'
-              }
-            }}
+            variant='outlined'
+            sx={roleChipSx}
           />
         </Tooltip>
       ))}
+      {hidden.length > 0 && (
+        <Tooltip
+          arrow
+          placement='top'
+          title={hidden.map((role) => getRoleChipLabel(role)).join(', ')}
+        >
+          <Chip
+            label={`+${hidden.length}`}
+            size='small'
+            variant='outlined'
+            sx={{ ...roleChipSx, color: '#4b5563', borderColor: '#d1d5db' }}
+          />
+        </Tooltip>
+      )}
     </Box>
   )
 }

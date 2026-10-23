@@ -54,13 +54,15 @@ export const useOwnUsersColumns = (
       {
         accessorKey: 'nombre',
         header: 'Nombre',
+        size: 220,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell)
         })
       },
       {
         accessorKey: 'email',
-        header: 'Email',
+        header: 'Correo',
+        size: 280,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell)
         })
@@ -68,11 +70,14 @@ export const useOwnUsersColumns = (
       {
         accessorKey: 'phone',
         header: 'Teléfono',
-        Cell: ({ cell }) => cell.getValue<string>() || 'Sin teléfono'
+        size: 150,
+        Cell: ({ cell }: { cell: MRT_Cell<UserData> }) =>
+          cell.getValue<string>() || 'Sin teléfono'
       },
       {
         accessorKey: 'roles',
         header: 'Rol',
+        size: 300,
         Cell: RolesCell,
         Edit: ({ cell }: { cell: MRT_Cell<UserData> }) => (
           <RolesEditCell
