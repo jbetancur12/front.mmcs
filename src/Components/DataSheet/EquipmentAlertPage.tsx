@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
   Box,
@@ -21,31 +21,25 @@ import {
 } from '@mui/icons-material'
 import { type MRT_ColumnDef } from 'material-react-table'
 import { useNavigate } from 'react-router-dom'
-import useAxiosPrivate from '@utils/use-axios-private'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from '../Common/DataTable'
 import EmptyState from '../Common/EmptyState'
-import StatusPill, { StatusPillTone } from '../Common/StatusPill'
-import { bigToast } from '../ExcelManipulation/Utils'
+import StatusPill from '../Common/StatusPill'
 
-export type EquipmentData = {
-  id: number
-  internalCode: string
-  equipmentName: string
-  brand?: string
-  model?: string
-  location?: string
-  isCalibrationDueSoon: boolean
-  isInspectionDueSoon: boolean
-  calibrationDueDate?: string
-  inspectionDueDate?: string
-  calibrationDaysRemaining?: number | null
-  inspectionDaysRemaining?: number | null
-  priority?: 'high' | 'medium' | 'low'
-}
+import { bigToast } from '../ExcelManipulation/Utils'
+import { userStore } from 'src/store/userStore'
+import { useStore } from '@nanostores/react'
+import {
+  AlertRow,
+  daysText,
+  markAlertsSeen,
+  priorityOf,
+  toAlertRows,
+  useEquipmentAlerts
+} from './equipmentAlerts'
 
 type AlertFilter = 'all' | 'calibration' | 'inspection'
 
@@ -59,28 +53,6 @@ const registerButtonSx = {
   '&:hover': { backgroundColor: '#E0F7F4' }
 } as const
 
-/** Equipo con los días de su alerta más atrasada, para ordenar y priorizar. */
-type AlertRow = EquipmentData & { worstDays: number }
-
-/**
- * Prioridad por antigüedad: la que manda el servidor es "alta" para todos y
- * no ayuda a decidir qué atender primero.
- */
-const priorityOf = (days: number): { tone: StatusPillTone; label: string } => {
-  if (days >= 0) return { tone: 'warning', label: 'Por vencer' }
-  if (days < -365) return { tone: 'error', label: 'Más de 1 año vencido' }
-  if (days < -90) return { tone: 'warning', label: '3 a 12 meses vencido' }
-  return { tone: 'idle', label: 'Menos de 3 meses' }
-}
-
-const daysText = (days?: number | null) => {
-  if (days === null || days === undefined) return ''
-  if (days === 0) return 'vence hoy'
-  const abs = Math.abs(days).toLocaleString('es-CO')
-  const unit = Math.abs(days) === 1 ? 'día' : 'días'
-  return days < 0 ? `hace ${abs} ${unit}` : `en ${abs} ${unit}`
-}
-
 const formatDate = (value?: string) =>
   value ? new Date(`${value}T00:00:00`).toLocaleDateString('es-CO') : '—'
 
@@ -89,10 +61,14 @@ const formatDate = (value?: string) =>
  * o por vencer. La tabla arranca con lo más atrasado arriba.
  */
 const EquipmentAlertsPage: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
-  const [equipments, setEquipments] = useState<EquipmentData[]>([])
-  const [loading, setLoading] = useState(true)
+  const $userStore = useStore(userStore)
+  const {
+    data: equipments = [],
+    isLoading: loading,
+    isError,
+    refetch
+  } = useEquipmentAlerts()
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<AlertFilter>('all')
   const canRegisterCalibration = useCan(PERMISSIONS.CALIBRATION_RECORD_MANAGE)
@@ -100,52 +76,24 @@ const EquipmentAlertsPage: React.FC = () => {
     PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_MANAGE
   )
 
-  const fetchEquipmentData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate('/dataSheet/alerts')
-      setEquipments(response.data)
-      return true
-    } catch (error) {
-      console.error('Error fetching equipment data:', error)
-      bigToast('No se pudieron cargar las alertas de equipos', 'error')
-      return false
-    } finally {
-      setLoading(false)
-    }
-  }, [axiosPrivate])
+  // Al abrir la página las alertas quedan vistas: la campana se apaga hasta que aparezca algo nuevo
+  useEffect(() => {
+    if (!loading && !isError) markAlertsSeen($userStore.email, equipments)
+  }, [loading, isError, equipments, $userStore.email])
 
   useEffect(() => {
-    fetchEquipmentData()
-  }, [fetchEquipmentData])
+    if (isError)
+      bigToast('No se pudieron cargar las alertas de equipos', 'error')
+  }, [isError])
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    const success = await fetchEquipmentData()
+    const result = await refetch()
     setRefreshing(false)
-    if (success) bigToast('Alertas actualizadas', 'success')
+    if (!result.isError) bigToast('Alertas actualizadas', 'success')
   }
 
-  const rows = useMemo<AlertRow[]>(
-    () =>
-      equipments
-        .map((equipment) => {
-          const days = [
-            equipment.isCalibrationDueSoon
-              ? equipment.calibrationDaysRemaining
-              : null,
-            equipment.isInspectionDueSoon
-              ? equipment.inspectionDaysRemaining
-              : null
-          ].filter((value): value is number => typeof value === 'number')
-          return {
-            ...equipment,
-            worstDays: days.length > 0 ? Math.min(...days) : 0
-          }
-        })
-        .sort((a, b) => a.worstDays - b.worstDays),
-    [equipments]
-  )
+  const rows = useMemo<AlertRow[]>(() => toAlertRows(equipments), [equipments])
 
   const counts = useMemo(
     () => ({

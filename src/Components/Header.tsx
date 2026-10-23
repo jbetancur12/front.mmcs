@@ -1,26 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   AppBar,
   Toolbar,
   IconButton,
-  Badge,
   Box,
   Tooltip,
   useTheme,
   useMediaQuery
 } from '@mui/material'
-import {
-  Menu as MenuIcon,
-  Notifications as NotificationsIcon
-} from '@mui/icons-material'
+import { Menu as MenuIcon } from '@mui/icons-material'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import { useStore } from '@nanostores/react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import { useLogout } from './Authentication/Logout'
 import UserMenu from './Common/UserMenu'
 import useAxiosPrivate from '@utils/use-axios-private'
-import type { EquipmentData } from './DataSheet/EquipmentAlertPage'
+import AlertsBell from './DataSheet/AlertsBell'
 import { useImpersonation } from '../hooks/useImpersonation'
 import ImpersonationBar from './ImpersonationBar'
 import ImpersonationDialog from './ImpersonationDialog'
@@ -35,7 +31,6 @@ interface HeaderProps {
 function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
 
@@ -49,7 +44,6 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
       .catch(() => setApiVersion(null))
     // Solo al montar: la versión de la API no cambia durante la sesión.
   }, [])
-  const [hasAlert, setHasAlert] = useState<EquipmentData[]>([])
   const [impersonationDialogOpen, setImpersonationDialogOpen] = useState(false)
   const {
     isImpersonating,
@@ -64,49 +58,6 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
   } = useImpersonation()
 
   const canImpersonate = useCan(PERMISSIONS.USERS_IMPERSONATION_USE)
-
-  useEffect(() => {
-    // Only fetch alerts for admin users to avoid authentication issues
-    if (
-      hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) &&
-      $userStore.email
-    ) {
-      const fetchAlerts = async () => {
-        try {
-          const response = await axiosPrivate('/dataSheet/alerts')
-          setHasAlert(response.data || [])
-        } catch (error) {
-          console.error('Error fetching alerts:', error)
-        }
-      }
-
-      fetchAlerts()
-      const interval = setInterval(fetchAlerts, 5 * 60 * 1000)
-      return () => clearInterval(interval)
-    } else {
-      setHasAlert([])
-    }
-  }, [axiosPrivate, $userStore.rol, $userStore.email])
-
-  const totalAlerts = hasAlert.length
-  const hasAlerts = totalAlerts > 0
-
-  // La campana se mueve una sola vez cuando aparecen alertas nuevas;
-  // con alertas viejas se queda quieta y solo muestra el número.
-  const lastAlertCount = useRef<number | null>(null)
-  const [ringKey, setRingKey] = useState(0)
-  useEffect(() => {
-    const previous =
-      lastAlertCount.current ??
-      Number(sessionStorage.getItem('headerAlertCount') ?? totalAlerts)
-    if (totalAlerts > previous) setRingKey((key) => key + 1)
-    lastAlertCount.current = totalAlerts
-    sessionStorage.setItem('headerAlertCount', String(totalAlerts))
-  }, [totalAlerts])
-
-  const handleAlertsClick = () => {
-    navigate('/datasheets/alerts')
-  }
 
   const roleLabel = getRoleLabelEs($userStore.rol?.[0])
 
@@ -186,59 +137,8 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             {!$userStore.lmsOnly &&
-              hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
-                <Tooltip
-                  title={
-                    hasAlerts
-                      ? `${totalAlerts} equipos con alertas pendientes`
-                      : 'Sin alertas pendientes'
-                  }
-                >
-                  <IconButton
-                    onClick={handleAlertsClick}
-                    aria-label={
-                      hasAlerts
-                        ? `Ver ${totalAlerts} equipos con alertas`
-                        : 'Ver alertas de equipos'
-                    }
-                    sx={{
-                      color: hasAlerts ? '#b91c1c' : '#4b5563',
-                      '&:hover': {
-                        bgcolor: hasAlerts ? '#fef2f2' : '#f3f4f6'
-                      }
-                    }}
-                  >
-                    <Badge
-                      badgeContent={totalAlerts}
-                      max={99}
-                      sx={{
-                        '& .MuiBadge-badge': {
-                          bgcolor: '#dc2626',
-                          color: '#ffffff',
-                          fontWeight: 700,
-                          fontVariantNumeric: 'tabular-nums'
-                        }
-                      }}
-                    >
-                      <NotificationsIcon
-                        key={ringKey}
-                        sx={{
-                          animation:
-                            ringKey > 0 ? 'bellRing .9s ease-in-out 1' : 'none',
-                          '@keyframes bellRing': {
-                            '0%, 100%': { transform: 'rotate(0deg)' },
-                            '15%, 45%, 75%': { transform: 'rotate(-12deg)' },
-                            '30%, 60%': { transform: 'rotate(12deg)' }
-                          },
-                          '@media (prefers-reduced-motion: reduce)': {
-                            animation: 'none'
-                          }
-                        }}
-                      />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
-              )}
+              hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) &&
+              $userStore.email && <AlertsBell email={$userStore.email} />}
 
             {canImpersonate && !$userStore.lmsOnly && (
               <Tooltip title='Suplantar usuario'>
