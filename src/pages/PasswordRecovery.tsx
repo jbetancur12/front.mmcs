@@ -61,7 +61,7 @@ const PasswordRecovery: React.FC = () => {
     // La API responde igual exista o no el correo: aquí solo llegan el límite de intentos y las fallas
     if (error.response.status === 429) {
       setError(
-        'Hiciste demasiados intentos. Espera una hora antes de pedir otro enlace.'
+        'Hiciste demasiados intentos. Espera 10 minutos antes de pedir otro enlace.'
       )
       return
     }
