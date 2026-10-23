@@ -36,7 +36,6 @@ const ADJUSTMENT_TYPES: CustomerServiceDocumentType[] = [
 interface Group {
   key: string
   label: string
-  emptyLabel: string
   documents: CustomerServiceDocument[]
 }
 
@@ -64,13 +63,11 @@ const ServiceDocumentButtons: React.FC<Props> = ({
     {
       key: 'ods',
       label: 'ODS',
-      emptyLabel: 'ODS: aún no hay',
       documents: documents.filter((doc) => doc.type === 'ods_pdf')
     },
     {
       key: 'progress',
       label: 'Avances técnicos',
-      emptyLabel: 'Avances técnicos: aún no hay',
       documents: documents.filter(
         (doc) => doc.type === 'technical_progress_pdf'
       )
@@ -78,7 +75,6 @@ const ServiceDocumentButtons: React.FC<Props> = ({
     {
       key: 'adjustments',
       label: 'Novedades',
-      emptyLabel: 'Novedades: aún no hay',
       documents: documents.filter((doc) => ADJUSTMENT_TYPES.includes(doc.type))
     }
   ]
@@ -102,21 +98,15 @@ const ServiceDocumentButtons: React.FC<Props> = ({
 
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      {groups.every((group) => group.documents.length === 0) ? (
+        <Typography variant='body2' color='text.secondary'>
+          Aún no hay documentos
+        </Typography>
+      ) : null}
       {groups.map((group) => {
         const count = group.documents.length
-        if (count === 0) {
-          return (
-            <Button
-              key={group.key}
-              size='small'
-              variant='outlined'
-              disabled
-              sx={{ textTransform: 'none', borderStyle: 'dashed' }}
-            >
-              {group.emptyLabel}
-            </Button>
-          )
-        }
+        // Lo que no existe no se muestra: sin botones vacíos
+        if (count === 0) return null
         if (count === 1) {
           const doc = group.documents[0]
           return (

@@ -317,7 +317,9 @@ const ModernCustomerProfile: React.FC = () => {
     'overview',
     'headquarters',
     'users',
-    'modules'
+    'modules',
+    'schedule',
+    'services'
   ].includes(activeTab)
 
   if (loading) {

@@ -43,13 +43,6 @@ export const HeadquartersTab = ({
 
 export const ScheduleTab = ({ id }: { id?: string }) => (
   <Box>
-    <Typography variant='h5' fontWeight='bold' gutterBottom>
-      Programación de Calibraciones
-    </Typography>
-    <Typography variant='body1' color='text.secondary' paragraph>
-      Visualiza y gestiona el cronograma de calibraciones.
-    </Typography>
-
     {id && <CalibrationTimeline customerId={id} />}
   </Box>
 )
