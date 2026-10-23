@@ -40,7 +40,7 @@ Alias de imports: `src/...` (baseUrl `.`), `@utils/*`, `@stores/*`, `@hooks/*`, 
 
 ## Convenciones
 
-- Estilo: Prettier estándar (sin `;`, comillas simples, JSX con `'`). `noUnusedLocals/Parameters` están activos: el build falla con imports sobrantes.
+- Estilo: Prettier con `prettier-config-standard` (clave `"prettier"` de `package.json`, la única configuración: 80 columnas, sin `;`, comillas simples, JSX con `'`). El hook de lint-staged está desactivado y el repo está mezclado, así que formatea a mano solo los archivos nuevos o reescritos (`npx prettier --write <archivo>`); en archivos existentes con cambios pequeños respeta el formato que ya tienen para no meter diffs de solo formato. `noUnusedLocals/Parameters` están activos: el build falla con imports sobrantes.
 - Commits **Conventional Commits** (commitlint + husky); versionado en `VERSIONING.md` / `VERSION_MANAGEMENT.md`.
 - Páginas nuevas: `lazy()` en el `*Routes.tsx` del módulo, envuelta en `ProtectedRoute`/guard con los roles correspondientes. Roles del front deben coincidir con los del backend (`../api.mmcs/constants/roles.constants.js`); ver `src/constants/roles.ts`, `src/utils/roleUtils.ts`, `src/utils/lmsIdentity.ts` (`"Training Manager"` con espacio).
 - Llamadas a la API: usa `axiosPrivate` (con refresh de token) y react-query (`useQuery`/`useMutation` con query keys estables); no uses `fetch` suelto ni dupliques lógica en componentes — extráela a `hooks/` o `services/`.
