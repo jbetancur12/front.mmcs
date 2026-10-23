@@ -1,24 +1,26 @@
 import React, { useMemo } from 'react'
-import {
-  Box,
-  Button,
-  Grid,
-  MenuItem,
-  TextField,
-  Typography,
-  Checkbox,
-  FormControlLabel,
-  Divider,
-  Paper
-} from '@mui/material'
+import { Box } from '@mui/material'
+import { ReportProblemOutlined } from '@mui/icons-material'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { NonConformWorkReport } from './NonConformWorkReport.types'
-import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import esLocale from 'date-fns/locale/es'
+import {
+  useCheckNonConformCode,
+  useSaveNonConformWorkReport
+} from '@hooks/nonConform/useNonConformWorkReports'
+import FormPage from 'src/Components/Common/FormPage'
+import FormSection, {
+  FormGridItem,
+  FormSubsection
+} from 'src/Components/Common/FormSection'
+import FormikField, {
+  FormCheckboxField
+} from 'src/Components/Common/FormikField'
+import FormDateField from 'src/Components/Common/FormDateField'
+import FormErrorSummary from 'src/Components/Common/FormErrorSummary'
+import ScoreSelect, { ScoreSummary } from 'src/Components/Common/ScoreSelect'
+import RiskBadge from 'src/Components/Common/RiskBadge'
 
 const tncAcceptanceOptions = ['Aceptado', 'No aceptado']
 const statusOptions = ['Abierta', 'Cerrada']
@@ -42,7 +44,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
   onSuccess,
   onCancel
 }) => {
-  const axiosPrivate = useAxiosPrivate()
+  const saveReport = useSaveNonConformWorkReport()
+  const checkCodeExists = useCheckNonConformCode()
 
   // Mapeos de español a inglés para enums
   const tncAcceptanceMap: Record<string, string> = {
@@ -178,7 +181,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
 
   const validationSchema = Yup.object({
     tncCode: Yup.string()
-      .required('Required')
+      .required('Requerido')
       .test(
         'unique-tnc-code',
         'El código TNC ya existe',
@@ -191,22 +194,19 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
           }
 
           try {
-            const response = await axiosPrivate.get(
-              `/non-conform-work-report/check-code/${value}`
-            )
-            return !response.data.exists // Retorna true si NO existe
+            return !(await checkCodeExists(value)) // true si NO existe
           } catch (error) {
             console.error('Error checking TNC code:', error)
             return true // En caso de error, permitir continuar
           }
         }
       ),
-    tncAcceptance: Yup.string().required('Required'),
-    registerDate: Yup.string().required('Required'),
-    detectedBy: Yup.string().required('Required'),
-    affectedArea: Yup.string().required('Required'),
-    findingDescription: Yup.string().required('Required'),
-    status: Yup.string().required('Required'),
+    tncAcceptance: Yup.string().required('Requerido'),
+    registerDate: Yup.string().required('Requerido'),
+    detectedBy: Yup.string().required('Requerido'),
+    affectedArea: Yup.string().required('Requerido'),
+    findingDescription: Yup.string().required('Requerido'),
+    status: Yup.string().required('Requerido'),
     // Campos requeridos de Servicio afectado
     serviceNumbers: Yup.string().required('Requerido'),
     affectedClients: Yup.string().required('Requerido'),
@@ -218,13 +218,13 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     moreFindings: Yup.string().oneOf(['Sí', 'No']).required('Requerido'),
     // actionOnPreviousResults: Yup.string().required('Requerido'),
     // Análisis de causa
-    causeAnalysis: Yup.string().required('Required'),
-    affectedPeriod: Yup.string().required('Required'),
-    certificateReview: Yup.string().required('Required'),
-    procedureReview: Yup.string().required('Required'),
-    recordReview: Yup.string().required('Required'),
-    metrologyInventoryCheck: Yup.string().required('Required'),
-    personnelCompetenceEvaluation: Yup.string().required('Required'),
+    causeAnalysis: Yup.string().required('Requerido'),
+    affectedPeriod: Yup.string().required('Requerido'),
+    certificateReview: Yup.string().required('Requerido'),
+    procedureReview: Yup.string().required('Requerido'),
+    recordReview: Yup.string().required('Requerido'),
+    metrologyInventoryCheck: Yup.string().required('Requerido'),
+    personnelCompetenceEvaluation: Yup.string().required('Requerido'),
     // Importancia del trabajo no conforme
     resultValidity4_3: Yup.number().oneOf([1, 5]).required(),
     affectedServicesCount4_3: Yup.number().oneOf([1, 3, 5]).required(),
@@ -241,7 +241,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     nonConformityOccurrences: Yup.number().min(0).required(),
     previousNonConformWorks: Yup.string()
       .oneOf(['Sí', 'No'])
-      .required('Required'),
+      .required('Requerido'),
     reviewFrequency: Yup.string().when('status', {
       is: (val: string) => val === 'Abierta',
       then: (schema) => schema.required('Requerido'),
@@ -279,31 +279,23 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
           reviewFrequency: values.reviewFrequency,
           customReviewDays: values.customReviewDays
         }
-        console.log('Payload to send:', payload)
-        if (initialData && initialData.id) {
-          // EDITAR
-          await axiosPrivate.put(
-            `/non-conform-work-report/${initialData.id}`,
-            payload
-          )
-          await Swal.fire({
-            icon: 'success',
-            title: '¡Edición exitosa!',
-            text: 'El reporte fue actualizado correctamente.'
-          })
-        } else {
-          // CREAR
-          await axiosPrivate.post('/non-conform-work-report', payload)
-          await Swal.fire({
-            icon: 'success',
-            title: '¡Creación exitosa!',
-            text: 'El reporte fue creado correctamente.'
-          })
-        }
+        const isEdit = Boolean(initialData && initialData.id)
+        await saveReport.mutateAsync({ id: initialData.id, payload })
+        await Swal.fire({
+          icon: 'success',
+          title: isEdit ? '¡Edición exitosa!' : '¡Creación exitosa!',
+          text: isEdit
+            ? 'El reporte fue actualizado correctamente.'
+            : 'El reporte fue creado correctamente.'
+        })
         if (onSuccess) onSuccess()
         resetForm()
       } catch (error) {
-        alert('Error saving report')
+        await Swal.fire({
+          icon: 'error',
+          title: 'No se pudo guardar',
+          text: 'Ocurrió un error al guardar el reporte. Inténtalo de nuevo.'
+        })
       } finally {
         setSubmitting(false)
       }
@@ -365,1354 +357,446 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     return 'No evaluado'
   }, [impactWeight, probability])
 
-  // Función para asignar color según el nivel de riesgo
-  const riskLevelColor = (nivel: string) => {
-    switch (nivel) {
-      case 'Crítico':
-        return '#e53935'
-      case 'Alto':
-        return '#ff7043'
-      case 'Media':
-        return '#fff176'
-      case 'Baja':
-        return '#81c784'
-      case 'Muy Baja':
-        return '#388e3c'
-      default:
-        return '#bdbdbd'
-    }
-  }
+  const dateError = (name: keyof NonConformWorkReport) =>
+    formik.touched[name] && formik.errors[name]
+      ? String(formik.errors[name])
+      : false
 
-  // Función para asignar color a impacto y probabilidad
-  const impactProbColor = (valor: string) => {
-    switch (valor) {
-      case 'Alta':
-      case 'Alto':
-        return '#ff7043'
-      case 'Media':
-      case 'Medio':
-        return '#fff176'
-      case 'Baja':
-      case 'Muy Baja':
-      case 'Bajo':
-        return '#81c784'
-      default:
-        return '#bdbdbd'
-    }
-  }
+  const dateField = (name: keyof NonConformWorkReport, label: string) => (
+    <FormDateField
+      label={label}
+      name={name}
+      value={String(formik.values[name] ?? '')}
+      onChange={(value) => formik.setFieldValue(name, value)}
+      error={dateError(name)}
+    />
+  )
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={esLocale}>
-      <Box sx={{ background: '#f7fafd', minHeight: '100vh', py: 4 }}>
-        <form onSubmit={formik.handleSubmit}>
-          <Paper
-            elevation={3}
-            sx={{ maxWidth: 900, mx: 'auto', p: 4, borderRadius: 4 }}
-          >
-            <Typography variant='h5' mb={3} align='center' color='primary'>
-              Reporte de Trabajo No Conforme
-            </Typography>
-            <Grid container spacing={2}>
-              {/* Datos generales */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  1. Datos generales
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Código TNC'
-                  name='tncCode'
-                  value={formik.values.tncCode}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.tncCode && Boolean(formik.errors.tncCode)
-                  }
-                  helperText={formik.touched.tncCode && formik.errors.tncCode}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Aceptación TNC'
-                  name='tncAcceptance'
-                  value={formik.values.tncAcceptance}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.tncAcceptance &&
-                    Boolean(formik.errors.tncAcceptance)
-                  }
-                  helperText={
-                    formik.touched.tncAcceptance && formik.errors.tncAcceptance
-                  }
-                >
-                  {tncAcceptanceOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <DatePicker
-                  label='Fecha de registro'
-                  value={
-                    formik.values.registerDate
-                      ? new Date(formik.values.registerDate)
-                      : null
-                  }
-                  onChange={(value) => {
-                    if (value instanceof Date && !isNaN(value.getTime())) {
-                      formik.setFieldValue(
-                        'registerDate',
-                        value.toISOString().slice(0, 10)
-                      )
-                    } else {
-                      formik.setFieldValue('registerDate', '')
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      name: 'registerDate',
-                      error:
-                        formik.touched.registerDate &&
-                        Boolean(formik.errors.registerDate),
-                      helperText:
-                        formik.touched.registerDate &&
-                        formik.errors.registerDate,
-                      InputLabelProps: { shrink: true }
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Detectado por'
-                  name='detectedBy'
-                  value={formik.values.detectedBy}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.detectedBy &&
-                    Boolean(formik.errors.detectedBy)
-                  }
-                  helperText={
-                    formik.touched.detectedBy && formik.errors.detectedBy
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Área/proceso afectado'
-                  name='affectedArea'
-                  value={formik.values.affectedArea}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.affectedArea &&
-                    Boolean(formik.errors.affectedArea)
-                  }
-                  helperText={
-                    formik.touched.affectedArea && formik.errors.affectedArea
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Numeral de ISO/IEC 17025 relacionado'
-                  name='iso17025Clause'
-                  value={formik.values.iso17025Clause || ''}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.iso17025Clause &&
-                    Boolean(formik.errors.iso17025Clause)
-                  }
-                  helperText={
-                    formik.touched.iso17025Clause &&
-                    formik.errors.iso17025Clause
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Estatus'
-                  name='status'
-                  value={formik.values.status}
-                  onChange={formik.handleChange}
-                  error={formik.touched.status && Boolean(formik.errors.status)}
-                  helperText={formik.touched.status && formik.errors.status}
-                >
-                  {statusOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Periodicidad de revisión'
-                  name='reviewFrequency'
-                  value={formik.values.reviewFrequency}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.reviewFrequency &&
-                    Boolean(formik.errors.reviewFrequency)
-                  }
-                  helperText={
-                    formik.touched.reviewFrequency &&
-                    formik.errors.reviewFrequency
-                  }
-                  disabled={formik.values.status !== 'Abierta'}
-                >
-                  {reviewFrequencyOptions.map((opt) => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              {formik.values.reviewFrequency === 'custom' && (
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    type='number'
-                    label='Días para revisión personalizada'
-                    name='customReviewDays'
-                    value={formik.values.customReviewDays || ''}
-                    onChange={formik.handleChange}
-                    error={
-                      formik.touched.customReviewDays &&
-                      Boolean(formik.errors.customReviewDays)
-                    }
-                    helperText={
-                      formik.touched.customReviewDays &&
-                      formik.errors.customReviewDays
-                    }
-                    inputProps={{ min: 1 }}
-                  />
-                </Grid>
-              )}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label='Descripción del hallazgo'
-                  name='findingDescription'
-                  value={formik.values.findingDescription}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.findingDescription &&
-                    Boolean(formik.errors.findingDescription)
-                  }
-                  helperText={
-                    formik.touched.findingDescription &&
-                    formik.errors.findingDescription
-                  }
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Servicio afectado */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  2. Servicio afectado
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Números de servicio/certificados'
-                  name='serviceNumbers'
-                  value={formik.values.serviceNumbers}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.serviceNumbers &&
-                    Boolean(formik.errors.serviceNumbers)
-                  }
-                  helperText={
-                    formik.touched.serviceNumbers &&
-                    formik.errors.serviceNumbers
-                  }
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Clientes afectados'
-                  name='affectedClients'
-                  value={formik.values.affectedClients}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.affectedClients &&
-                    Boolean(formik.errors.affectedClients)
-                  }
-                  helperText={
-                    formik.touched.affectedClients &&
-                    formik.errors.affectedClients
-                  }
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Magnitud/procedimiento involucrado'
-                  name='involvedProcedure'
-                  value={formik.values.involvedProcedure}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.involvedProcedure &&
-                    Boolean(formik.errors.involvedProcedure)
-                  }
-                  helperText={
-                    formik.touched.involvedProcedure &&
-                    formik.errors.involvedProcedure
-                  }
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Resultados entregados'
-                  name='resultsDelivered'
-                  value={formik.values.resultsDelivered}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.resultsDelivered &&
-                    Boolean(formik.errors.resultsDelivered)
-                  }
-                  helperText={
-                    formik.touched.resultsDelivered &&
-                    formik.errors.resultsDelivered
-                  }
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Analisis de Causa */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  3. Analisis de Causa
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label='Analisis de causa'
-                  name='causeAnalysis'
-                  value={formik.values.causeAnalysis}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.causeAnalysis &&
-                    Boolean(formik.errors.causeAnalysis)
-                  }
-                  helperText={
-                    formik.touched.causeAnalysis && formik.errors.causeAnalysis
-                  }
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
+    <FormPage
+      title={initialData.id ? 'Editar reporte' : 'Nuevo reporte'}
+      subtitle='Reporte de trabajo no conforme'
+      icon={<ReportProblemOutlined />}
+      onSubmit={formik.handleSubmit}
+      onCancel={onCancel ?? (() => undefined)}
+      submitLabel={initialData.id ? 'Guardar cambios' : 'Guardar reporte'}
+      loading={formik.isSubmitting}
+      notices={
+        formik.submitCount > 0 ? (
+          <FormErrorSummary count={Object.keys(formik.errors).length} />
+        ) : null
+      }
+    >
+      <FormSection
+        title='1. Datos generales'
+        description='Identificación del hallazgo y su estado.'
+      >
+        <FormikField formik={formik} name='tncCode' label='Código TNC' />
+        <FormikField
+          formik={formik}
+          name='tncAcceptance'
+          label='Aceptación TNC'
+          options={tncAcceptanceOptions}
+        />
+        {dateField('registerDate', 'Fecha de registro')}
+        <FormikField formik={formik} name='detectedBy' label='Detectado por' />
+        <FormikField
+          formik={formik}
+          name='affectedArea'
+          label='Área/proceso afectado'
+        />
+        <FormikField
+          formik={formik}
+          name='iso17025Clause'
+          label='Numeral de ISO/IEC 17025 relacionado'
+        />
+        <FormikField
+          formik={formik}
+          name='status'
+          label='Estatus'
+          options={statusOptions}
+        />
+        <FormikField
+          formik={formik}
+          name='reviewFrequency'
+          label='Periodicidad de revisión'
+          options={reviewFrequencyOptions}
+          disabled={formik.values.status !== 'Abierta'}
+        />
+        {formik.values.reviewFrequency === 'custom' && (
+          <FormikField
+            formik={formik}
+            name='customReviewDays'
+            type='number'
+            label='Días para revisión personalizada'
+            inputProps={{ min: 1 }}
+          />
+        )}
+        <FormGridItem>
+          <FormikField
+            formik={formik}
+            name='findingDescription'
+            label='Descripción del hallazgo'
+            multiline
+          />
+        </FormGridItem>
+      </FormSection>
 
-              {/* 4. Evaluación de la importancia del trabajo no conforme y análisis de resultados previos */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 0,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  4. Evaluación de la importancia del trabajo no conforme y
-                  análisis de resultados previos
-                </Typography>
-              </Grid>
+      <FormSection
+        title='2. Servicio afectado'
+        description='Qué servicios y clientes alcanzó el trabajo no conforme.'
+      >
+        <FormikField
+          formik={formik}
+          name='serviceNumbers'
+          label='Números de servicio/certificados'
+          multiline
+        />
+        <FormikField
+          formik={formik}
+          name='affectedClients'
+          label='Clientes afectados'
+          multiline
+        />
+        <FormikField
+          formik={formik}
+          name='involvedProcedure'
+          label='Magnitud/procedimiento involucrado'
+          multiline
+        />
+        <FormikField
+          formik={formik}
+          name='resultsDelivered'
+          label='Resultados entregados'
+          multiline
+        />
+      </FormSection>
 
-              {/* 4.1 Alcance */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle2'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  4.1 Alcance
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label='Identificación del período afectado por el trabajo no conforme'
-                  name='affectedPeriod'
-                  value={formik.values.affectedPeriod}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              {/*  4.2 Verificación de registros */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle2'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  4.2 Verificación de registros
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label='Revisión de certificados emitidos durante el período afectado'
-                  name='certificateReview'
-                  value={formik.values.certificateReview}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
+      <FormSection title='3. Análisis de causa'>
+        <FormGridItem>
+          <FormikField
+            formik={formik}
+            name='causeAnalysis'
+            label='Análisis de causa'
+            multiline
+          />
+        </FormGridItem>
+      </FormSection>
 
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label='Revisión de procedimientos, políticas o formatos'
-                  name='procedureReview'
-                  value={formik.values.procedureReview}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
+      <FormSection
+        title='4. Evaluación de la importancia y análisis de resultados previos'
+        description='Alcance, verificación de registros e importancia del trabajo no conforme.'
+      >
+        <FormSubsection title='4.1 Alcance'>
+          <FormGridItem>
+            <FormikField
+              formik={formik}
+              name='affectedPeriod'
+              label='Identificación del período afectado por el trabajo no conforme'
+              multiline
+            />
+          </FormGridItem>
+        </FormSubsection>
 
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label='Revisión de registros del sistema de gestión (ambientales, hojas de trabajo, etc.)'
-                  name='recordReview'
-                  value={formik.values.recordReview}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
+        <FormSubsection title='4.2 Verificación de registros'>
+          <FormGridItem>
+            <FormikField
+              formik={formik}
+              name='certificateReview'
+              label='Revisión de certificados emitidos durante el período afectado'
+              multiline
+            />
+          </FormGridItem>
+          <FormGridItem>
+            <FormikField
+              formik={formik}
+              name='procedureReview'
+              label='Revisión de procedimientos, políticas o formatos'
+              multiline
+            />
+          </FormGridItem>
+          <FormGridItem>
+            <FormikField
+              formik={formik}
+              name='recordReview'
+              label='Revisión de registros del sistema de gestión (ambientales, hojas de trabajo, etc.)'
+              multiline
+            />
+          </FormGridItem>
+          <FormGridItem>
+            <FormikField
+              formik={formik}
+              name='metrologyInventoryCheck'
+              label='Verificación del inventario metrológico afectado'
+              multiline
+            />
+          </FormGridItem>
+          <FormGridItem>
+            <FormikField
+              formik={formik}
+              name='personnelCompetenceEvaluation'
+              label='Evaluación de la competencia del personal involucrado'
+              multiline
+            />
+          </FormGridItem>
+        </FormSubsection>
 
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label='Verificación del inventario metrológico afectado'
-                  name='metrologyInventoryCheck'
-                  value={formik.values.metrologyInventoryCheck}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
+        <FormSubsection title='4.3 Importancia del trabajo no conforme'>
+          <ScoreSelect
+            label='Afectación a la validez del resultado'
+            name='resultValidity4_3'
+            value={formik.values.resultValidity4_3}
+            options={[1, 5]}
+            helperText='Hay o no afectación en la validez de los resultados'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='Número de servicios afectados'
+            name='affectedServicesCount4_3'
+            value={formik.values.affectedServicesCount4_3}
+            options={[1, 3, 5]}
+            helperText='5 o menos (1), 10 o menos (3), más de 10 (5)'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='¿Resultados ya entregados?'
+            name='resultsDelivered4_3'
+            value={formik.values.resultsDelivered4_3}
+            options={[1, 5]}
+            helperText='Se entregaron los resultados'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='Impacto normativo o contractual'
+            name='regulatoryOrContractualImpact4_3'
+            value={formik.values.regulatoryOrContractualImpact4_3}
+            options={[1, 5]}
+            helperText='Hay impacto normativo o contractual'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='Riesgo a la reputación'
+            name='reputationRisk4_3'
+            value={formik.values.reputationRisk4_3}
+            options={[1, 5]}
+            helperText='Hay riesgo en la reputación'
+            onChange={formik.handleChange}
+          />
+          <ScoreSummary
+            items={[
+              { label: 'Total', value: tncImportanceScore },
+              {
+                label: 'Importancia del trabajo no conforme',
+                value: tncImportanceWeight
+              }
+            ]}
+          />
+        </FormSubsection>
+      </FormSection>
 
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label='Evaluación de la competencia del personal involucrado'
-                  name='personnelCompetenceEvaluation'
-                  value={formik.values.personnelCompetenceEvaluation}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
+      <FormSection
+        title='5. Nivel de riesgo del trabajo no conforme'
+        description='El nivel de riesgo se calcula automáticamente con el impacto y la probabilidad.'
+      >
+        <FormSubsection
+          title='5.1 Impacto'
+          description='Califique cada criterio según la descripción y la valoración sugerida.'
+        >
+          <ScoreSelect
+            label='Validez del resultado'
+            name='resultValidity'
+            value={formik.values.resultValidity}
+            options={impactOptions}
+            helperText='¿Se afecta la trazabilidad o confiabilidad de los resultados de servicios? (1: No, 5: Sí)'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='Cantidad de servicios/calibraciones afectadas'
+            name='affectedServicesCount'
+            value={formik.values.affectedServicesCount}
+            options={impactOptions}
+            helperText='¿Cuántos servicios están involucrados? (1: <5 servicios, 5: >=5 servicios)'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='Entrega de resultados al cliente'
+            name='clientResultsDelivery'
+            value={formik.values.clientResultsDelivery}
+            options={impactOptions}
+            helperText='¿Los resultados ya fueron entregados? (1: no entregados, 5: entregados y con impacto en decisión del cliente)'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='Impacto contractual / regulatorio'
+            name='contractualImpact'
+            value={formik.values.contractualImpact}
+            options={impactOptions}
+            helperText='¿Hay incumplimiento de requisitos normativos o legales? (1: interno, 5: legal/ISO/regulador)'
+            onChange={formik.handleChange}
+          />
+          <ScoreSelect
+            label='Riesgo a la reputación'
+            name='reputationRisk'
+            value={formik.values.reputationRisk}
+            options={impactOptions}
+            helperText='¿Afecta la imagen del laboratorio? (1: interno, 5: cliente clave o mercado externo)'
+            onChange={formik.handleChange}
+          />
+          <ScoreSummary
+            items={[
+              { label: 'Total de puntos', value: impactScore },
+              { label: 'Ponderación de impacto', value: impactWeight }
+            ]}
+          />
+        </FormSubsection>
 
-              {/*  4.3 Importancia del trabajo no conforme */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle2'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  4.3 Importancia del trabajo no conforme
-                </Typography>
-              </Grid>
+        <FormSubsection
+          title='5.2 Probabilidad'
+          description='Indique si se han presentado trabajos no conformes similares y cuántas veces se ha materializado el incumplimiento en los últimos dos años.'
+        >
+          <FormikField
+            formik={formik}
+            name='previousNonConformWorks'
+            label='¿Se han presentado anteriormente trabajos no conformes similares?'
+            options={['Sí', 'No']}
+            helperText='Seleccione Sí o No'
+          />
+          <FormikField
+            formik={formik}
+            name='nonConformityOccurrences'
+            type='number'
+            label='¿Cuántas veces se ha materializado el incumplimiento al requisito en los dos últimos años?'
+            helperText='Alta: >3 veces, Media: 1-3 veces, Baja: <1 vez'
+          />
+          <ScoreSummary
+            items={[{ label: 'Probabilidad calculada', value: probability }]}
+          />
+        </FormSubsection>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Afectación a la validez del resultado'
-                  name='resultValidity4_3'
-                  value={formik.values.resultValidity4_3}
-                  onChange={formik.handleChange}
-                  helperText='Hay o no afectación en la validez de los resultados'
-                >
-                  {[1, 5].map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Número de servicios afectados'
-                  name='affectedServicesCount4_3'
-                  value={formik.values.affectedServicesCount4_3}
-                  onChange={formik.handleChange}
-                  helperText='5 o menos (1), 10 o menos (3), más de 10 (5)'
-                >
-                  {[1, 3, 5].map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='¿Resultados ya entregados?'
-                  name='resultsDelivered4_3'
-                  value={formik.values.resultsDelivered4_3}
-                  onChange={formik.handleChange}
-                  helperText='Se entregaron los resultados'
-                >
-                  {[1, 5].map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Impacto normativo o contractual'
-                  name='regulatoryOrContractualImpact4_3'
-                  value={formik.values.regulatoryOrContractualImpact4_3}
-                  onChange={formik.handleChange}
-                  helperText='Hay impacto normativo o contractual'
-                >
-                  {[1, 5].map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Riesgo a la reputación'
-                  name='reputationRisk4_3'
-                  value={formik.values.reputationRisk4_3}
-                  onChange={formik.handleChange}
-                  helperText='Hay riesgo en la reputación'
-                >
-                  {[1, 5].map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Box mt={2} mb={2}>
-                  <Typography variant='body2' color='textSecondary'>
-                    Total: <b>{tncImportanceScore}</b> &nbsp; | &nbsp;
-                    Importancia del trabajo no conforme:{' '}
-                    <b>{tncImportanceWeight}</b>
-                  </Typography>
-                </Box>
-              </Grid>
-
-              {/* Impacto */}
-              <Grid item xs={12} mt={2}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  5. Nivel de riesgo del trabajo no conforme
-                </Typography>
-              </Grid>
-              <Grid item xs={12} mt={2}>
-                <Typography
-                  variant='subtitle2'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  5.1 Impacto
-                </Typography>
-                <Typography variant='body2' color='textSecondary' mb={2}>
-                  Califique cada criterio según la descripción y la valoración
-                  sugerida.
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Validez del resultado'
-                  name='resultValidity'
-                  value={formik.values.resultValidity}
-                  onChange={formik.handleChange}
-                  helperText='¿Se afecta la trazabilidad o confiabilidad de los resultados de servicios? (1: No, 5: Sí)'
-                >
-                  {impactOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Cantidad de servicios/calibraciones afectadas'
-                  name='affectedServicesCount'
-                  value={formik.values.affectedServicesCount}
-                  onChange={formik.handleChange}
-                  helperText='¿Cuántos servicios están involucrados? (1: <5 servicios, 5: >=5 servicios)'
-                >
-                  {impactOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Entrega de resultados al cliente'
-                  name='clientResultsDelivery'
-                  value={formik.values.clientResultsDelivery}
-                  onChange={formik.handleChange}
-                  helperText='¿Los resultados ya fueron entregados? (1: no entregados, 5: entregados y con impacto en decisión del cliente)'
-                >
-                  {impactOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Impacto contractual / regulatorio'
-                  name='contractualImpact'
-                  value={formik.values.contractualImpact}
-                  onChange={formik.handleChange}
-                  helperText='¿Hay incumplimiento de requisitos normativos o legales? (1: interno, 5: legal/ISO/regulador)'
-                >
-                  {impactOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Riesgo a la reputación'
-                  name='reputationRisk'
-                  value={formik.values.reputationRisk}
-                  onChange={formik.handleChange}
-                  helperText='¿Afecta la imagen del laboratorio? (1: interno, 5: cliente clave o mercado externo)'
-                >
-                  {impactOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12}>
-                <Box mt={2} mb={2}>
-                  <Typography variant='body2' color='textSecondary'>
-                    Total de puntos: <b>{impactScore}</b> &nbsp; | &nbsp;
-                    Ponderación de impacto: <b>{impactWeight}</b>
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Probabilidad */}
-              <Grid item xs={12} mt={2}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  5.2 Probabilidad
-                </Typography>
-                <Typography variant='body2' color='textSecondary' mb={2}>
-                  Indique si se han presentado trabajos no conformes similares y
-                  cuántas veces se ha materializado el incumplimiento en los
-                  últimos dos años.
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='¿Se han presentado anteriormente trabajos no conformes similares?'
-                  name='previousNonConformWorks'
-                  value={formik.values.previousNonConformWorks}
-                  onChange={formik.handleChange}
-                  helperText='Seleccione Sí o No'
-                >
-                  <MenuItem value='Sí'>Sí</MenuItem>
-                  <MenuItem value='No'>No</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  type='number'
-                  label='¿Cuántas veces se ha materializado el incumplimiento al requisito en los dos últimos años?'
-                  name='nonConformityOccurrences'
-                  value={formik.values.nonConformityOccurrences}
-                  onChange={formik.handleChange}
-                  helperText='Alta: >3 veces, Media: 1-3 veces, Baja: <1 vez'
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Box mt={2} mb={2}>
-                  <Typography variant='body2' color='textSecondary'>
-                    Probabilidad calculada: <b>{probability}</b>
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Matriz de riesgos */}
-              <Grid item xs={12} mt={2}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  5.3 Matriz de Riesgos
-                </Typography>
-                <Typography variant='body2' color='textSecondary' mb={2}>
-                  El nivel de riesgo se calcula automáticamente según la matriz
-                  de riesgos.
-                </Typography>
-                <Box mt={1} mb={2} display='flex' alignItems='center' gap={2}>
-                  <Box
-                    px={2}
-                    py={1}
-                    borderRadius={2}
-                    bgcolor={impactProbColor(impactWeight)}
-                    color={
-                      ['Media', 'Baja', 'Muy Baja', 'Medio', 'Bajo'].includes(
-                        impactWeight
-                      )
-                        ? '#333'
-                        : '#fff'
-                    }
-                    fontWeight='bold'
-                    minWidth={100}
-                    textAlign='center'
-                  >
-                    Impacto: {impactWeight}
-                  </Box>
-                  <Box
-                    px={2}
-                    py={1}
-                    borderRadius={2}
-                    bgcolor={impactProbColor(probability)}
-                    color={
-                      ['Media', 'Baja', 'Muy Baja', 'Medio', 'Bajo'].includes(
-                        probability
-                      )
-                        ? '#333'
-                        : '#fff'
-                    }
-                    fontWeight='bold'
-                    minWidth={120}
-                    textAlign='center'
-                  >
-                    Probabilidad: {probability}
-                  </Box>
-                  <Box
-                    px={2}
-                    py={1}
-                    borderRadius={2}
-                    bgcolor={riskLevelColor(riskLevel)}
-                    color={
-                      ['Media', 'Baja', 'Muy Baja'].includes(riskLevel)
-                        ? '#333'
-                        : '#fff'
-                    }
-                    fontWeight='bold'
-                    minWidth={140}
-                    textAlign='center'
-                  >
-                    Nivel de riesgo: {riskLevel}
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Acciones tomadas */}
-              <Grid item xs={12} mt={2}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  6. Acciones tomadas
-                </Typography>
-                <Typography variant='body2' color='textSecondary' mb={2}>
-                  Indique las acciones inmediatas y correctivas aplicadas,
-                  responsables y fechas de ejecución.
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Corrección inmediata'
-                  name='immediateCorrection'
-                  value={formik.values.immediateCorrection}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Responsable de la corrección'
-                  name='correctionBy'
-                  value={formik.values.correctionBy}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <DatePicker
-                  label='Fecha de corrección'
-                  value={
-                    formik.values.correctionDate
-                      ? new Date(formik.values.correctionDate)
-                      : null
-                  }
-                  onChange={(value) => {
-                    if (value instanceof Date && !isNaN(value.getTime())) {
-                      formik.setFieldValue(
-                        'correctionDate',
-                        value.toISOString().slice(0, 10)
-                      )
-                    } else {
-                      formik.setFieldValue('correctionDate', '')
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      name: 'correctionDate',
-                      error:
-                        formik.touched.correctionDate &&
-                        Boolean(formik.errors.correctionDate),
-                      helperText:
-                        formik.touched.correctionDate &&
-                        formik.errors.correctionDate,
-                      InputLabelProps: { shrink: true }
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.correctiveActionRequired}
-                      onChange={formik.handleChange}
-                      name='correctiveActionRequired'
-                    />
-                  }
-                  label='¿Requiere acción correctiva?'
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Acción correctiva'
-                  name='correctiveAction'
-                  value={formik.values.correctiveAction}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Responsable de la acción correctiva'
-                  name='correctiveActionBy'
-                  value={formik.values.correctiveActionBy}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <DatePicker
-                  label='Fecha de acción correctiva'
-                  value={
-                    formik.values.correctiveActionDate
-                      ? new Date(formik.values.correctiveActionDate)
-                      : null
-                  }
-                  onChange={(value) => {
-                    if (value instanceof Date && !isNaN(value.getTime())) {
-                      formik.setFieldValue(
-                        'correctiveActionDate',
-                        value.toISOString().slice(0, 10)
-                      )
-                    } else {
-                      formik.setFieldValue('correctiveActionDate', '')
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      name: 'correctiveActionDate',
-                      error:
-                        formik.touched.correctiveActionDate &&
-                        Boolean(formik.errors.correctiveActionDate),
-                      helperText:
-                        formik.touched.correctiveActionDate &&
-                        formik.errors.correctiveActionDate,
-                      InputLabelProps: { shrink: true }
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Notificación al cliente */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mt: 2,
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  7. Comunicación
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.clientNotified}
-                      onChange={formik.handleChange}
-                      name='clientNotified'
-                    />
-                  }
-                  label='¿Se notificó al cliente?'
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Método de notificación'
-                  name='notificationMethod'
-                  value={formik.values.notificationMethod}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <DatePicker
-                  label='Fecha de notificación'
-                  value={
-                    formik.values.notificationDate
-                      ? new Date(formik.values.notificationDate)
-                      : null
-                  }
-                  onChange={(value) => {
-                    if (value instanceof Date && !isNaN(value.getTime())) {
-                      formik.setFieldValue(
-                        'notificationDate',
-                        value.toISOString().slice(0, 10)
-                      )
-                    } else {
-                      formik.setFieldValue('notificationDate', '')
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      name: 'notificationDate',
-                      error:
-                        formik.touched.notificationDate &&
-                        Boolean(formik.errors.notificationDate),
-                      helperText:
-                        formik.touched.notificationDate &&
-                        formik.errors.notificationDate,
-                      InputLabelProps: { shrink: true }
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Resumen de comunicación'
-                  name='communicationSummary'
-                  value={formik.values.communicationSummary}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Suspensión y reanudación del trabajo */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mt: 2,
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  8. Reanudación del trabajo
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.workSuspended}
-                      onChange={formik.handleChange}
-                      name='workSuspended'
-                    />
-                  }
-                  label='Fue necesario suspender el trabajo'
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <DatePicker
-                  label='Fecha de autorización de reanudación'
-                  value={
-                    formik.values.resumptionAuthorizationDate
-                      ? new Date(formik.values.resumptionAuthorizationDate)
-                      : null
-                  }
-                  onChange={(value) => {
-                    if (value instanceof Date && !isNaN(value.getTime())) {
-                      formik.setFieldValue(
-                        'resumptionAuthorizationDate',
-                        value.toISOString().slice(0, 10)
-                      )
-                    } else {
-                      formik.setFieldValue('resumptionAuthorizationDate', '')
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      name: 'resumptionAuthorizationDate',
-                      error:
-                        formik.touched.resumptionAuthorizationDate &&
-                        Boolean(formik.errors.resumptionAuthorizationDate),
-                      helperText:
-                        formik.touched.resumptionAuthorizationDate &&
-                        formik.errors.resumptionAuthorizationDate,
-                      InputLabelProps: { shrink: true }
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Autorizado por'
-                  name='authorizedBy'
-                  value={formik.values.authorizedBy}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
-              </Grid>
-              {/* Cierre y efectividad */}
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mt: 2,
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  9. Cierre
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <DatePicker
-                  label='Fecha de cierre'
-                  value={
-                    formik.values.closingDate
-                      ? new Date(formik.values.closingDate)
-                      : null
-                  }
-                  onChange={(value) => {
-                    if (value instanceof Date && !isNaN(value.getTime())) {
-                      formik.setFieldValue(
-                        'closingDate',
-                        value.toISOString().slice(0, 10)
-                      )
-                    } else {
-                      formik.setFieldValue('closingDate', '')
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      name: 'closingDate',
-                      error:
-                        formik.touched.closingDate &&
-                        Boolean(formik.errors.closingDate),
-                      helperText:
-                        formik.touched.closingDate && formik.errors.closingDate,
-                      InputLabelProps: { shrink: true }
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Responsable de cierre'
-                  name='closingResponsible'
-                  value={formik.values.closingResponsible}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Comentarios adicionales'
-                  name='closingComments'
-                  value={formik.values.closingComments}
-                  onChange={formik.handleChange}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.closingDeadlineExtended}
-                      onChange={formik.handleChange}
-                      name='closingDeadlineExtended'
-                    />
-                  }
-                  label='¿Se amplió el plazo de cierre?'
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Justificación (Si aplica)'
-                  name='closingJustification'
-                  value={formik.values.closingJustification}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{
-                    mt: 2,
-                    mb: 1,
-                    textAlign: 'center',
-                    color: 'secondary.main',
-                    fontWeight: 600,
-                    fontSize: 18
-                  }}
-                >
-                  10. Seguimiento
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.recurrence}
-                      onChange={formik.handleChange}
-                      name='recurrence'
-                    />
-                  }
-                  label='¿Hubo reincidencia?'
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Evaluación de eficacia de acciones correctivas'
-                  name='correctiveActionsEffectiveness'
-                  value={formik.values.correctiveActionsEffectiveness}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-            </Grid>
-
-            {/* Mostrar errores generales */}
-            {formik.submitCount > 0 &&
-              Object.keys(formik.errors).length > 0 && (
-                <Box mt={2} p={2} bgcolor='error.light' borderRadius={1}>
-                  <Typography
-                    variant='body2'
-                    color='error.dark'
-                    fontWeight='bold'
-                  >
-                    ⚠️ Hay errores en el formulario. Por favor, revise los
-                    campos resaltados.
-                  </Typography>
-                  <Typography variant='body2' color='error.dark' mt={1}>
-                    Campos con errores: {Object.keys(formik.errors).length}
-                  </Typography>
-                </Box>
-              )}
-
-            <Box mt={3} display='flex' gap={2} justifyContent='center'>
-              <Button
-                type='submit'
-                variant='contained'
-                color='primary'
-                disabled={formik.isSubmitting}
-              >
-                Guardar
-              </Button>
-              <Button variant='outlined' color='secondary' onClick={onCancel}>
-                Cancelar
-              </Button>
+        <FormSubsection
+          title='5.3 Matriz de riesgos'
+          description='Resultado de cruzar impacto y probabilidad.'
+        >
+          <FormGridItem>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+              <RiskBadge label='Impacto' value={impactWeight} />
+              <RiskBadge label='Probabilidad' value={probability} />
+              <RiskBadge label='Nivel de riesgo' value={riskLevel} />
             </Box>
-          </Paper>
-        </form>
-      </Box>
-    </LocalizationProvider>
+          </FormGridItem>
+        </FormSubsection>
+      </FormSection>
+
+      <FormSection
+        title='6. Acciones tomadas'
+        description='Acciones inmediatas y correctivas aplicadas, responsables y fechas de ejecución.'
+      >
+        <FormikField
+          formik={formik}
+          name='immediateCorrection'
+          label='Corrección inmediata'
+          multiline
+        />
+        <FormikField
+          formik={formik}
+          name='correctionBy'
+          label='Responsable de la corrección'
+        />
+        {dateField('correctionDate', 'Fecha de corrección')}
+        <FormCheckboxField
+          formik={formik}
+          name='correctiveActionRequired'
+          label='¿Requiere acción correctiva?'
+        />
+        <FormikField
+          formik={formik}
+          name='correctiveAction'
+          label='Acción correctiva'
+          multiline
+        />
+        <FormikField
+          formik={formik}
+          name='correctiveActionBy'
+          label='Responsable de la acción correctiva'
+        />
+        {dateField('correctiveActionDate', 'Fecha de acción correctiva')}
+      </FormSection>
+
+      <FormSection title='7. Comunicación'>
+        <FormCheckboxField
+          formik={formik}
+          name='clientNotified'
+          label='¿Se notificó al cliente?'
+        />
+        <FormikField
+          formik={formik}
+          name='notificationMethod'
+          label='Método de notificación'
+        />
+        {dateField('notificationDate', 'Fecha de notificación')}
+        <FormikField
+          formik={formik}
+          name='communicationSummary'
+          label='Resumen de comunicación'
+          multiline
+        />
+      </FormSection>
+
+      <FormSection title='8. Reanudación del trabajo'>
+        <FormCheckboxField
+          formik={formik}
+          name='workSuspended'
+          label='Fue necesario suspender el trabajo'
+        />
+        {dateField(
+          'resumptionAuthorizationDate',
+          'Fecha de autorización de reanudación'
+        )}
+        <FormikField
+          formik={formik}
+          name='authorizedBy'
+          label='Autorizado por'
+        />
+      </FormSection>
+
+      <FormSection title='9. Cierre'>
+        {dateField('closingDate', 'Fecha de cierre')}
+        <FormikField
+          formik={formik}
+          name='closingResponsible'
+          label='Responsable de cierre'
+        />
+        <FormikField
+          formik={formik}
+          name='closingComments'
+          label='Comentarios adicionales'
+          multiline
+        />
+        <FormCheckboxField
+          formik={formik}
+          name='closingDeadlineExtended'
+          label='¿Se amplió el plazo de cierre?'
+        />
+        <FormikField
+          formik={formik}
+          name='closingJustification'
+          label='Justificación (si aplica)'
+        />
+      </FormSection>
+
+      <FormSection title='10. Seguimiento'>
+        <FormCheckboxField
+          formik={formik}
+          name='recurrence'
+          label='¿Hubo reincidencia?'
+        />
+        <FormikField
+          formik={formik}
+          name='correctiveActionsEffectiveness'
+          label='Evaluación de eficacia de acciones correctivas'
+        />
+      </FormSection>
+    </FormPage>
   )
 }
 

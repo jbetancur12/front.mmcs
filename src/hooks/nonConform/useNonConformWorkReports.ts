@@ -131,3 +131,35 @@ export const useDeleteNonConformWorkReport = () => {
     }
   )
 }
+
+/** Crea (sin `id`) o actualiza (con `id`) un reporte y refresca listados e indicadores */
+export const useSaveNonConformWorkReport = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation(
+    async ({ id, payload }: { id?: number; payload: unknown }) => {
+      if (id) {
+        await axiosPrivate.put(`/non-conform-work-report/${id}`, payload)
+      } else {
+        await axiosPrivate.post('/non-conform-work-report', payload)
+      }
+    },
+    {
+      retry: false,
+      onSuccess: () => {
+        queryClient.invalidateQueries(NON_CONFORM_QUERY_KEYS.all)
+      }
+    }
+  )
+}
+
+/** Devuelve una función que dice si ya existe un reporte con ese código TNC */
+export const useCheckNonConformCode = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return async (code: string): Promise<boolean> => {
+    const response = await axiosPrivate.get(
+      `/non-conform-work-report/check-code/${code}`
+    )
+    return Boolean(response.data.exists)
+  }
+}

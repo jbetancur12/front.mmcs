@@ -1,25 +1,26 @@
-import { useState } from 'react'
-import { Container, Paper } from '@mui/material'
+import React, { useState } from 'react'
+import { Container } from '@mui/material'
 import NonConformWorkReportTable from 'src/Components/NonConformWorkReport/NonConformWorkReportTable'
 import NonConformWorkReportForm from 'src/Components/NonConformWorkReport/NonConformWorkReportForm'
 import { useNavigate } from 'react-router-dom'
+import { NonConformWorkReport } from 'src/Components/NonConformWorkReport/NonConformWorkReport.types'
 
-const NonConformWorkReportPage = () => {
+const NonConformWorkReportPage: React.FC = () => {
   const navigate = useNavigate()
   const [mode, setMode] = useState<'table' | 'create' | 'edit'>('table')
-  const [editData, setEditData] = useState<any>(null)
+  const [editData, setEditData] = useState<NonConformWorkReport | null>(null)
 
   const handleCreate = () => {
     setEditData(null)
     setMode('create')
   }
 
-  const handleEdit = (row: any) => {
+  const handleEdit = (row: NonConformWorkReport) => {
     setEditData(row)
     setMode('edit')
   }
 
-  const handleView = (_row: any) => {
+  const handleView = (_row: NonConformWorkReport) => {
     // Aquí podrías mostrar un modal de detalle si lo deseas
     navigate(`/non-conform-work-reports/${_row.id}`)
   }
@@ -44,13 +45,11 @@ const NonConformWorkReportPage = () => {
         />
       )}
       {(mode === 'create' || mode === 'edit') && (
-        <Paper sx={{ p: 2 }}>
-          <NonConformWorkReportForm
-            initialData={editData || {}}
-            onSuccess={handleSuccess}
-            onCancel={handleCancel}
-          />
-        </Paper>
+        <NonConformWorkReportForm
+          initialData={editData || {}}
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
+        />
       )}
     </Container>
   )
