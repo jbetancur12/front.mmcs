@@ -740,7 +740,7 @@ const SideBar = ({
     <aside
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`fixed top-0 left-0 z-30 flex flex-col flex-shrink-0 h-full pt-16 bg-white border-r border-gray-200 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none ${
+      className={`fixed top-0 left-0 z-30 flex flex-col flex-shrink-0 h-full pt-[calc(4rem+var(--imp-h,0px))] bg-white border-r border-gray-200 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none ${
         mobileMenuOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'
       } lg:z-20 lg:translate-x-0 ${sidebarMinimized ? 'lg:w-20' : 'lg:w-64'} ${
         userMinimized && !sidebarMinimized ? 'lg:shadow-xl' : 'lg:shadow-none'

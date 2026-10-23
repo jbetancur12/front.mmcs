@@ -1,8 +1,12 @@
 import React from 'react'
-import { Container, Typography, Paper, Button } from '@mui/material'
+import { Box, Button, Container, Paper, Typography } from '@mui/material'
+import WavingHandRoundedIcon from '@mui/icons-material/WavingHandRounded'
+import MenuOpenRoundedIcon from '@mui/icons-material/MenuOpenRounded'
+import SchoolRoundedIcon from '@mui/icons-material/SchoolRounded'
 import { useNavigate } from 'react-router-dom'
 import { userStore } from 'src/store/userStore'
 import { useStore } from '@nanostores/react'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 const Welcome: React.FC = () => {
   const $userStore = useStore(userStore)
@@ -11,45 +15,102 @@ const Welcome: React.FC = () => {
     ['employee', 'user', 'client', 'lms_only', 'Training Manager', 'admin'].includes(role)
   )
   return (
-    <Container maxWidth='md' sx={{ mt: 8, minHeight: '80vh' }}>
-      <Paper
-        elevation={4}
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title={`¡Bienvenid@, ${$userStore.nombre}!`}
+        subtitle='Gracias por iniciar sesión. Aquí podrás gestionar tus actividades de forma fácil y rápida.'
+        icon={<WavingHandRoundedIcon />}
+      />
+      <Box
         sx={{
-          p: 4,
-          borderRadius: '16px',
-          textAlign: 'center',
-          background: 'linear-gradient(165deg, #fff 0%, #9CF08B 100%)',
-          maxWidth: '80%',
-          margin: '0 auto'
+          display: 'grid',
+          gap: 3,
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr)',
+            md: 'repeat(2, minmax(0, 1fr))'
+          }
         }}
       >
-        <Typography
-          variant='h4'
-          component='h1'
-          gutterBottom
-          sx={{ fontWeight: 'bold', color: '#006064' }}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            borderRadius: 4,
+            border: '1px solid #e5e7eb',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2
+          }}
         >
-          ¡Bienvenid@, {$userStore.nombre}!
-        </Typography>
-        <Typography variant='body1' gutterBottom sx={{ color: '#004D40' }}>
-          Gracias por iniciar sesión en nuestra aplicación. Aquí podrás
-          gestionar tus actividades de forma fácil y rápida.
-        </Typography>
-        <Typography variant='h6' component='p' sx={{ mt: 3, color: '#00796B' }}>
-          Para empezar, selecciona una de las opciones del menú de la izquierda.
-        </Typography>
-        {hasLearningAccess && (
-          <Button
-            variant='contained'
-            size='large'
-            sx={{ mt: 3 }}
-            onClick={() => navigate('/lms')}
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 3,
+              bgcolor: '#E0F7F4',
+              color: '#00BFA5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
           >
-            Ir a Mi Aprendizaje
-          </Button>
+            <MenuOpenRoundedIcon />
+          </Box>
+          <Box>
+            <Typography fontWeight={600}>Para empezar</Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Selecciona una de las opciones del menú de la izquierda.
+            </Typography>
+          </Box>
+        </Paper>
+        {hasLearningAccess && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 4,
+              border: '1px solid #e5e7eb',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2
+            }}
+          >
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: 3,
+                bgcolor: '#E0F7F4',
+                color: '#00BFA5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <SchoolRoundedIcon />
+            </Box>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography fontWeight={600}>Mi Aprendizaje</Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Revisa tus cursos y capacitaciones.
+              </Typography>
+            </Box>
+            <Button
+              variant='contained'
+              onClick={() => navigate('/lms')}
+              sx={{
+                bgcolor: '#00BFA5',
+                textTransform: 'none',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
+              Ir a Mi Aprendizaje
+            </Button>
+          </Paper>
         )}
-      </Paper>
-
+      </Box>
     </Container>
   )
 }

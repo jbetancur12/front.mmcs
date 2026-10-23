@@ -79,6 +79,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
         position='fixed'
         elevation={0}
         sx={{
+          top: 'var(--imp-h, 0px)',
           zIndex: (theme) => theme.zIndex.drawer + 1,
           backgroundColor: '#ffffff',
           color: '#111827',

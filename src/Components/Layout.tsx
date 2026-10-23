@@ -32,7 +32,7 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           onClick={toggleMobileMenu}
         />
       )}
-      <div className='flex pt-16 overflow-hidden bg-gray-50 dark:bg-gray-900'>
+      <div className='flex pt-[calc(4rem+var(--imp-h,0px))] overflow-hidden bg-gray-50 dark:bg-gray-900'>
         {!isCourseView && (
           <SideBar
             sidebarMinimized={sidebarMinimized}
