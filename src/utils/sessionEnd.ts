@@ -6,7 +6,8 @@ const SESSION_ENDED_KEY = 'sessionEndedReason'
 const MESSAGES: Record<string, string> = {
   replaced: 'Tu sesión se cerró porque ingresaste desde otro equipo.',
   manual: 'Cerraron esta sesión desde otro equipo.',
-  password_changed: 'Cambiaron tu contraseña. Ingresa de nuevo.'
+  password_changed: 'Cambiaron tu contraseña. Ingresa de nuevo.',
+  deactivated: 'Tu cuenta fue desactivada. Contacta al administrador.'
 }
 
 /** Motivo de cierre si el error es un SESSION_REVOKED del API; si no, null. */
