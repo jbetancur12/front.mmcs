@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
   Box,
+  Button,
   Container,
   Grid,
   IconButton,
@@ -21,6 +22,8 @@ import {
 import { type MRT_ColumnDef } from 'material-react-table'
 import { useNavigate } from 'react-router-dom'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useCan } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from '../Common/DataTable'
@@ -45,6 +48,16 @@ export type EquipmentData = {
 }
 
 type AlertFilter = 'all' | 'calibration' | 'inspection'
+
+const registerButtonSx = {
+  textTransform: 'none',
+  fontWeight: 700,
+  color: '#00695C',
+  minWidth: 0,
+  py: 0,
+  ml: 'auto',
+  '&:hover': { backgroundColor: '#E0F7F4' }
+} as const
 
 /** Equipo con los días de su alerta más atrasada, para ordenar y priorizar. */
 type AlertRow = EquipmentData & { worstDays: number }
@@ -82,6 +95,10 @@ const EquipmentAlertsPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<AlertFilter>('all')
+  const canRegisterCalibration = useCan(PERMISSIONS.CALIBRATION_RECORD_MANAGE)
+  const canRegisterInspection = useCan(
+    PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_MANAGE
+  )
 
   const fetchEquipmentData = useCallback(async () => {
     try {
@@ -200,7 +217,7 @@ const EquipmentAlertsPage: React.FC = () => {
       {
         id: 'alertas',
         header: 'Pendiente',
-        size: 300,
+        size: 360,
         enableSorting: false,
         accessorFn: (row) =>
           [
@@ -224,6 +241,19 @@ const EquipmentAlertsPage: React.FC = () => {
                 <Typography variant='caption' color='text.secondary'>
                   {daysText(row.original.calibrationDaysRemaining)}
                 </Typography>
+                {canRegisterCalibration ? (
+                  <Button
+                    size='small'
+                    aria-label={`Registrar calibración de ${row.original.equipmentName}`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      navigate(`/datasheets/${row.original.id}/new-calibration`)
+                    }}
+                    sx={registerButtonSx}
+                  >
+                    Registrar
+                  </Button>
+                ) : null}
               </Box>
             ) : null}
             {row.original.isInspectionDueSoon ? (
@@ -241,6 +271,19 @@ const EquipmentAlertsPage: React.FC = () => {
                 <Typography variant='caption' color='text.secondary'>
                   {daysText(row.original.inspectionDaysRemaining)}
                 </Typography>
+                {canRegisterInspection ? (
+                  <Button
+                    size='small'
+                    aria-label={`Registrar inspección de ${row.original.equipmentName}`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      navigate(`/datasheets/${row.original.id}/new-maintenance`)
+                    }}
+                    sx={registerButtonSx}
+                  >
+                    Registrar
+                  </Button>
+                ) : null}
               </Box>
             ) : null}
           </Box>
@@ -264,7 +307,7 @@ const EquipmentAlertsPage: React.FC = () => {
         }
       }
     ],
-    []
+    [navigate, canRegisterCalibration, canRegisterInspection]
   )
 
   if (loading && equipments.length === 0) {
