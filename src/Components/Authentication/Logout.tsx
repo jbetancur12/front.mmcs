@@ -1,7 +1,7 @@
 import { axiosPublic } from '@utils/api'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { bigToast, Toast } from '../ExcelManipulation/Utils'
+import { notify } from 'src/utils/notify'
 import { userStore } from '../../store/userStore'
 
 /** Cierra la sesión en el servidor, limpia el estado local y lleva al login. */
@@ -18,7 +18,7 @@ export const useLogout = () => {
     )
 
     if (response.status !== 200) {
-      bigToast('Error al cerrar sesión', 'error')
+      notify.error('Error al cerrar sesión')
       throw new Error('Error al cerrar sesión')
     }
     localStorage.removeItem('accessToken')
@@ -40,7 +40,7 @@ export const useLogout = () => {
         modules: []
       }
     })
-    Toast.fire('Sesión cerrada exitosamente', '', 'success')
+    notify.success('Sesión cerrada exitosamente')
 
     // Redirige al usuario a la página de inicio de sesión
     navigate('/login') // Cambia '/login' por la ruta de tu página de inicio de sesión

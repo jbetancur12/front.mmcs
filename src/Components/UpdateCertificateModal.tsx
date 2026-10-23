@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Typography } from '@mui/material'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -114,7 +114,6 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
 
   return (
     <>
-      <Toaster />
       <FormDialog
         open={open}
         onClose={loading ? () => undefined : onClose}

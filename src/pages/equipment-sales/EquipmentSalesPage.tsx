@@ -42,7 +42,7 @@ import ViewStreamOutlinedIcon from '@mui/icons-material/ViewStreamOutlined'
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import DataTable from 'src/Components/Common/DataTable'
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import ListItemCard from 'src/Components/Common/ListItemCard'
 import StagePipeline from 'src/Components/Common/StagePipeline'
@@ -327,7 +327,6 @@ const EquipmentSalesPage = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster position='top-center' />
 
       <LmsPageHeader
         title='Cotizaciones de venta de equipos'

@@ -34,7 +34,7 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useMemo, useState } from 'react'
 import { useQueryClient } from 'react-query'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { userStore } from '../store/userStore'
 import { certificateTypeStore } from '../store/certificateTypeStore'
 import { deviceStore } from '../store/deviceStore'
@@ -553,7 +553,6 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <Toaster />
       <Loader loading={loading} />
       {/* <Pdf/> */}
       <MaterialReactTable

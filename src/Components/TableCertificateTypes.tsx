@@ -20,7 +20,7 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from 'react-query'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 
 import FormDialog from 'src/Components/Common/FormDialog'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -243,7 +243,6 @@ const Table: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster />
       <LmsPageHeader
         title='Tipos de certificado'
         subtitle='Clasificación de los certificados que emite el laboratorio'

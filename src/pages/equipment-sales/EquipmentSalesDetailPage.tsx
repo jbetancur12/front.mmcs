@@ -20,7 +20,7 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { useCan, useHasRole } from '../../utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
@@ -430,7 +430,6 @@ const EquipmentSalesDetailPage = () => {
         backgroundColor: '#f8fafb'
       }}
     >
-      <Toaster position='top-center' />
 
       {/* ── Header banner ── */}
       <Box

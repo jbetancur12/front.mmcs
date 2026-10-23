@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom'
 import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
-import AppToaster from 'src/Components/Common/AppToaster'
 // import * as Yup from 'yup'; // Importa Yup para la validación
 
 const PasswordGeneratorForm: React.FC = () => {
@@ -90,7 +89,6 @@ const PasswordGeneratorForm: React.FC = () => {
         </MuiLink>
       }
     >
-      <AppToaster />
       <Box component='form' onSubmit={handleSubmit}>
         <Stack spacing={2.5}>
           <AuthField

@@ -24,7 +24,7 @@ import {
 import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import ModalProfile from '../Components/ModalProfile'
 import { useDeleteProfile, useProfiles } from 'src/hooks/profiles/useProfiles'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { buildMinioObjectUrl } from '@utils/minio'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -146,7 +146,6 @@ const Profiles: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster />
       <ModalProfile open={openModal} onClose={() => setOpenModal(false)} />
 
       <LmsPageHeader

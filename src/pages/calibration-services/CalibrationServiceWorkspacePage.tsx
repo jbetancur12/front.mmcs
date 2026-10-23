@@ -15,7 +15,6 @@ import {
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined'
 import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined'
-import { Toaster } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import {
@@ -132,7 +131,6 @@ const CalibrationServiceWorkspacePage = () => {
 
   return (
     <Container ref={containerRef} maxWidth='xl' sx={{ py: 3 }}>
-      <Toaster position='top-center' />
 
       <LmsPageHeader
         icon={<RequestQuoteOutlinedIcon />}
