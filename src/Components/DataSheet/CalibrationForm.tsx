@@ -1,7 +1,7 @@
 import * as yup from 'yup'
 
 import { InspectionHistoryData } from './InspectionMaintenance'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EquipmentInfo } from './InspectionMaintenanceForm'
@@ -72,11 +72,13 @@ const MySwal = withReactContent(Swal)
 const CalibrationForm = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { id } = location.state as CalibrationFormProps
+  // El equipo sale del estado de la navegación o, si se entra por enlace directo, de la ruta
+  const { id: routeId } = useParams()
+  const id = (location.state as CalibrationFormProps | null)?.id ?? routeId
 
   const isEdit = Boolean(location.state && location.state.edit)
   const [editId, setEditId] = useState<number | null>(null)
-  const equipoId = isEdit ? location.state.data.equipmentId : location.state?.id
+  const equipoId = isEdit ? location.state.data.equipmentId : id
 
   const calibrationHistoryId: number | undefined =
     isEdit && location.state && location.state.data
@@ -108,8 +110,8 @@ const CalibrationForm = () => {
   const equipmentQueryId =
     isEdit && calibrationData && calibrationData.equipmentId
       ? calibrationData.equipmentId
-      : !isEdit && location.state && location.state.id
-        ? location.state.id
+      : !isEdit && id
+        ? id
         : null
   const { data: equipmentData } = useDataSheet<EquipmentInfo>(
     equipmentQueryId,

@@ -17,7 +17,7 @@ import { useFormik } from 'formik'
 import * as yup from 'yup'
 
 import { bigToast } from '../ExcelManipulation/Utils'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import AsyncSelect from 'react-select/async'
 import Profile from '../../pages/Profile'
@@ -132,13 +132,16 @@ const validationSchema = yup.object().shape({
 
 const InspectionMaintenanceDataForm: React.FC = () => {
   const location = useLocation()
+  // El equipo sale del estado de la navegación o, si se entra por enlace directo, de la ruta
+  const { id: routeId } = useParams()
+  const createId = location.state?.id ?? routeId
 
   const navigate = useNavigate()
 
   const MySwal = withReactContent(Swal)
   const isEdit = Boolean(location.state && location.state.edit)
   const [editId, setEditId] = useState<number | null>(null)
-  const equipoId = isEdit ? location.state.data.equipmentId : location.state?.id
+  const equipoId = isEdit ? location.state.data.equipmentId : createId
 
   const equipmentQueryId =
     isEdit &&
@@ -146,8 +149,8 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     location.state.data &&
     location.state.data.equipmentId
       ? location.state.data.equipmentId
-      : !isEdit && location.state && location.state.id
-        ? location.state.id
+      : !isEdit && createId
+        ? createId
         : null
   const { data: equipmentData } = useDataSheet<EquipmentInfo>(
     equipmentQueryId,
