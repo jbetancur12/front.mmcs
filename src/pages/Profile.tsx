@@ -1,33 +1,38 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import { useParams, useNavigate } from 'react-router-dom'
 
-import { 
-  Typography, 
-  IconButton, 
-  TextField, 
-  Button, 
+import {
   Box,
-  Breadcrumbs,
-  Link,
+  Button,
   Container,
+  Grid,
   Paper,
-  Skeleton
+  Skeleton,
+  TextField,
+  Typography
 } from '@mui/material'
-import { 
-  Edit, 
-  Save, 
-  ArrowBack, 
-  Person, 
-  Home,
-  NavigateNext
+import {
+  ArrowBack,
+  Edit,
+  PhotoCamera,
+  Person,
+  UploadFile
 } from '@mui/icons-material'
+import toast, { Toaster } from 'react-hot-toast'
 
 import PDFViewer from '../Components/PDFViewer'
 import IMGViewer from '../Components/IMGViewer'
-import Swal from 'sweetalert2'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import FormDialog, { FormDialogSection } from 'src/Components/Common/FormDialog'
+import {
+  DetailField,
+  DetailSection,
+  DetailCell
+} from 'src/Components/Common/DetailBlocks'
+import EmptyState from 'src/Components/Common/EmptyState'
 import {
   useProfile,
   useUpdateProfile,
@@ -45,26 +50,40 @@ interface Profile {
   email: string
 }
 
+type EditableProfile = Pick<
+  Profile,
+  'name' | 'phone' | 'email' | 'description' | 'profession'
+>
+
+const OUTLINE_BUTTON_SX = {
+  textTransform: 'none',
+  fontWeight: 600,
+  color: '#00695C',
+  borderColor: '#00BFA5',
+  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+} as const
+
+const CARD_SX = {
+  p: { xs: 2, md: 3 },
+  borderRadius: '16px',
+  border: '1px solid #e5e7eb'
+} as const
+
 const Profile: React.FC = () => {
   const canManageProfiles = useCan(PERMISSIONS.USERS_PROFILE_MANAGE)
   const navigate = useNavigate()
   const { id: idProfile } = useParams()
-  const [isEditing, setIsEditing] = useState<boolean>(false)
-  const [editedProfile, setEditedProfile] = useState<Profile | null>(null)
-  const [image, setImage] = useState<string>('')
-  const [selectedCV, setSelectedCV] = useState<string>('')
+  const [editOpen, setEditOpen] = useState(false)
+  const [edited, setEdited] = useState<EditableProfile | null>(null)
+  const [image, setImage] = useState<string | null>(null)
+  const [selectedCV, setSelectedCV] = useState<string | null>(null)
 
   const { data: profileData, isLoading: loading } = useProfile<
     Profile & { createdAt?: string; updatedAt?: string }
   >(idProfile, {
     onError: (error) => {
       console.error('Error al cargar el perfil:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo cargar el perfil',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      toast.error('No se pudo cargar el perfil')
     }
   })
   const profile = profileData ?? null
@@ -72,89 +91,56 @@ const Profile: React.FC = () => {
   const uploadAvatar = useUploadProfileFile(idProfile, 'avatar')
   const uploadCV = useUploadProfileFile(idProfile, 'cv')
 
-  // Estado editable inicializado desde los datos del servidor (no mientras se edita)
-  useEffect(() => {
-    if (!profileData || isEditing) return
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { cvUrl, avatarUrl, createdAt, updatedAt, id, ...editable } =
-      profileData
+  const avatarPath = image ?? profile?.avatarUrl ?? ''
+  const cvPath = selectedCV ?? profile?.cvUrl ?? ''
 
-    setEditedProfile(editable as Profile)
-    setImage(profileData.avatarUrl)
-    setSelectedCV(profileData.cvUrl)
-  }, [profileData, isEditing])
-
-  const handleEditClick = () => {
-    setIsEditing(true)
+  const openEdit = () => {
+    if (!profile) return
+    setEdited({
+      name: profile.name || '',
+      phone: profile.phone || '',
+      email: profile.email || '',
+      description: profile.description || '',
+      profession: profile.profession || ''
+    })
+    setEditOpen(true)
   }
 
-  const handleSaveClick = async () => {
+  const setField =
+    (name: keyof EditableProfile) =>
+    (event: React.ChangeEvent<HTMLInputElement>) =>
+      setEdited((current) =>
+        current ? { ...current, [name]: event.target.value } : current
+      )
+
+  const handleSave = async () => {
+    if (!edited) return
+    if (!edited.name.trim()) {
+      toast.error('El nombre es requerido')
+      return
+    }
     try {
-      await updateProfile.mutateAsync(editedProfile!)
-      setIsEditing(false)
-      Swal.fire({
-        title: '¡Actualizado!',
-        text: 'El perfil ha sido actualizado correctamente',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      })
+      await updateProfile.mutateAsync(edited as Profile)
+      setEditOpen(false)
+      toast.success('Perfil actualizado correctamente')
     } catch (error) {
       console.error('Error al guardar el perfil:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo actualizar el perfil. Por favor intenta nuevamente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      toast.error('No se pudo actualizar el perfil. Inténtalo de nuevo.')
     }
-  }
-
-  const handleGoBack = () => {
-    navigate('/profiles')
-  }
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target
-    setEditedProfile((prevState: Profile | null) => ({
-      ...prevState!,
-      [name]: value
-    }))
   }
 
   const handleCVChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files && event.target.files[0]
-    // setSelectedCV(file);
+    if (!file) return
     const formData = new FormData()
     formData.append('cv', file as Blob)
     try {
-      // Enviar la imagen al backend Express
       const response = await uploadCV.mutateAsync(formData)
-
       setSelectedCV(response.data.profile.cvUrl)
-      Swal.fire({
-        title: '¡CV Actualizado!',
-        text: 'La hoja de vida ha sido actualizada correctamente',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      })
-
-      // Actualizar la imagen en el estado local
+      toast.success('Currículum actualizado correctamente')
     } catch (error) {
-      console.error('Error al enviar la imagen al backend:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo actualizar el CV. Por favor intenta nuevamente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
-    }
-  }
-
-  const handleClick = () => {
-    if (canManageProfiles) {
-      document.getElementById('avatarInput')?.click()
+      console.error('Error al enviar el CV al backend:', error)
+      toast.error('No se pudo actualizar el currículum. Inténtalo de nuevo.')
     }
   }
 
@@ -162,356 +148,250 @@ const Profile: React.FC = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files && event.target.files[0]
-    if (file) {
-      setImage(URL.createObjectURL(file))
-      const formData = new FormData()
-      formData.append('avatar', file as Blob)
-
-      try {
-        // Enviar la imagen al backend Express
-        const response = await uploadAvatar.mutateAsync(formData)
-
-        setImage(response.data.profile.avatarUrl)
-        Swal.fire({
-          title: '¡Imagen Actualizada!',
-          text: 'La foto de perfil ha sido actualizada correctamente',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
-
-        // Actualizar la imagen en el estado local
-      } catch (error) {
-        console.error('Error al enviar la imagen al backend:', error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudo actualizar la imagen. Por favor intenta nuevamente.',
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        })
-      }
+    if (!file) return
+    const formData = new FormData()
+    formData.append('avatar', file as Blob)
+    try {
+      const response = await uploadAvatar.mutateAsync(formData)
+      setImage(response.data.profile.avatarUrl)
+      toast.success('Foto de perfil actualizada correctamente')
+    } catch (error) {
+      console.error('Error al enviar la imagen al backend:', error)
+      toast.error('No se pudo actualizar la foto. Inténtalo de nuevo.')
     }
   }
 
-  const ProfileSkeleton = () => (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Box sx={{ mb: 3 }}>
-        <Skeleton variant="text" width={200} height={40} />
-        <Skeleton variant="text" width={300} height={32} />
-      </Box>
-      <Box sx={{ display: 'flex', gap: 4, mb: 4 }}>
-        <Skeleton variant="rectangular" width={300} height={400} />
-        <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width="100%" height={32} />
-          <Skeleton variant="text" width="80%" height={24} />
-          <Skeleton variant="text" width="90%" height={24} />
-          <Skeleton variant="rectangular" width="100%" height={200} sx={{ mt: 2 }} />
-        </Box>
-      </Box>
-    </Container>
-  )
-
   if (loading) {
-    return <ProfileSkeleton />
+    return (
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <Skeleton variant='text' width={280} height={48} />
+        <Skeleton variant='text' width={180} height={28} sx={{ mb: 3 }} />
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Skeleton variant='rounded' height={360} />
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Skeleton variant='rounded' height={360} />
+          </Grid>
+        </Grid>
+      </Container>
+    )
   }
 
   if (!profile) {
     return (
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Typography variant="h6" color="error">
-          Perfil no encontrado
-        </Typography>
-        <Button onClick={handleGoBack} sx={{ mt: 2 }}>
-          Volver a Perfiles
-        </Button>
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <EmptyState
+          icon={<Person />}
+          title='Perfil no encontrado'
+          hint='Puede que haya sido eliminado.'
+          action={
+            <Button
+              variant='outlined'
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/profiles')}
+              sx={OUTLINE_BUTTON_SX}
+            >
+              Volver a metrólogos
+            </Button>
+          }
+        />
       </Container>
     )
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      
-      {/* Breadcrumb y Botón Volver */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Breadcrumbs 
-            separator={<NavigateNext fontSize="small" />}
-            aria-label="breadcrumb"
-          >
-            <Link 
-              color="inherit" 
-              href="/" 
-              sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-            >
-              <Home sx={{ mr: 0.5, fontSize: 20 }} />
-              Inicio
-            </Link>
-            <Link 
-              color="inherit" 
-              onClick={handleGoBack}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                textDecoration: 'none',
-                cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' }
-              }}
-            >
-              <Person sx={{ mr: 0.5, fontSize: 20 }} />
-              Metrólogos
-            </Link>
-            <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
-              <Person sx={{ mr: 0.5, fontSize: 20 }} />
-              {profile.name}
-            </Typography>
-          </Breadcrumbs>
-          
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBack />}
-            onClick={handleGoBack}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none'
-            }}
-          >
-            Volver
-          </Button>
-        </Box>
-      </Box>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Toaster />
 
-      {/* Contenido Principal */}
-      <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-        {/* Header del Perfil */}
-        <Box sx={{ 
-          bgcolor: '#00BFA5', 
-          color: 'white', 
-          p: 3,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start'
-        }}>
-          <Box>
-            {isEditing ? (
-              <TextField
-                name='name'
-                label='Nombre'
-                value={editedProfile?.name || ''}
-                onChange={handleInputChange}
-                sx={{ 
-                  mb: 2, 
-                  width: '400px',
-                  '& .MuiInputLabel-root': { color: 'white' },
-                  '& .MuiOutlinedInput-root': { 
-                    color: 'white',
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                    '&:hover fieldset': { borderColor: 'white' },
-                    '&.Mui-focused fieldset': { borderColor: 'white' }
-                  }
-                }}
-              />
-            ) : (
-              <Typography variant='h4' gutterBottom sx={{ fontWeight: 600 }}>
-                {profile.name}
-              </Typography>
-            )}
-            
-            <Typography variant='h6' sx={{ opacity: 0.9, mb: 1 }}>
-              {isEditing ? (
-                <TextField
-                  name='phone'
-                  label='Teléfono'
-                  value={editedProfile?.phone || ''}
-                  onChange={handleInputChange}
-                  sx={{ 
-                    mb: 1, 
-                    width: '300px',
-                    '& .MuiInputLabel-root': { color: 'white' },
-                    '& .MuiOutlinedInput-root': { 
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                      '&:hover fieldset': { borderColor: 'white' },
-                      '&.Mui-focused fieldset': { borderColor: 'white' }
-                    }
-                  }}
-                />
-              ) : (
-                `📞 ${profile.phone}`
-              )}
-            </Typography>
-            
-            <Typography variant='h6' sx={{ opacity: 0.9 }}>
-              {isEditing ? (
-                <TextField
-                  name='email'
-                  label='Email'
-                  value={editedProfile?.email || ''}
-                  onChange={handleInputChange}
-                  sx={{ 
-                    width: '300px',
-                    '& .MuiInputLabel-root': { color: 'white' },
-                    '& .MuiOutlinedInput-root': { 
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                      '&:hover fieldset': { borderColor: 'white' },
-                      '&.Mui-focused fieldset': { borderColor: 'white' }
-                    }
-                  }}
-                />
-              ) : (
-                `✉️ ${profile.email}`
-              )}
-            </Typography>
-          </Box>
-          
-          {/* Botones de Acción */}
-          <Box>
-            {canManageProfiles && !isEditing && (
-              <IconButton
-                sx={{ 
-                  color: 'white',
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-                }}
-                onClick={handleEditClick}
-                aria-label="Editar perfil"
+      <LmsPageHeader
+        title={profile.name}
+        subtitle='Metrólogo del laboratorio'
+        icon={<Person />}
+        actions={
+          <>
+            {canManageProfiles && (
+              <Button
+                variant='outlined'
+                startIcon={<Edit />}
+                onClick={openEdit}
+                sx={OUTLINE_BUTTON_SX}
               >
-                <Edit />
-              </IconButton>
+                Editar perfil
+              </Button>
             )}
-            {isEditing && (
-              <IconButton
-                sx={{ 
-                  color: 'white',
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-                }}
-                onClick={handleSaveClick}
-                aria-label="Guardar cambios"
-              >
-                <Save />
-              </IconButton>
-            )}
-          </Box>
-        </Box>
-
-        {/* Contenido del Perfil */}
-        <Box sx={{ p: 4 }}>
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 4, 
-            flexDirection: { xs: 'column', md: 'row' },
-            alignItems: { xs: 'center', md: 'flex-start' },
-            mb: 4 
-          }}>
-            {/* Imagen del Perfil */}
-            <Box 
-              sx={{ 
-                cursor: canManageProfiles ? 'pointer' : 'default',
-                textAlign: 'center'
-              }}
-              onClick={handleClick}
+            <Button
+              variant='outlined'
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/profiles')}
+              sx={OUTLINE_BUTTON_SX}
             >
-              <IMGViewer bucket='images' path={image} />
-              <input
-                id='avatarInput'
-                type='file'
-                accept='image/*'
-                style={{ display: 'none' }}
-                onChange={handleImageChange}
-              />
-              {canManageProfiles && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  Haz clic para cambiar imagen
-                </Typography>
-              )}
-            </Box>
-            
-            {/* Descripción */}
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                Descripción Profesional
-              </Typography>
-              {isEditing ? (
-                <TextField
-                  name='description'
-                  label='Descripción'
-                  multiline
-                  rows={6}
-                  fullWidth
-                  value={editedProfile?.description || ''}
-                  onChange={handleInputChange}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      bgcolor: '#f8f9fa'
-                    }
-                  }}
-                />
-              ) : (
-                <Typography variant='body1' sx={{ 
-                  lineHeight: 1.6,
-                  color: 'text.secondary',
-                  bgcolor: '#f8f9fa',
-                  p: 2,
-                  borderRadius: 2,
-                  border: '1px solid #e0e0e0'
-                }}>
-                  {profile.description || 'Sin descripción disponible'}
-                </Typography>
-              )}
-            </Box>
-          </Box>
+              Volver
+            </Button>
+          </>
+        }
+      />
 
-          {/* Sección CV */}
-          <Box sx={{ mt: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Currículum Vitae
-              </Typography>
-              {canManageProfiles && !isEditing && (
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <Paper elevation={0} sx={CARD_SX}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <IMGViewer bucket='images' path={avatarPath} />
+            </Box>
+            {canManageProfiles && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                 <Button
-                  variant='contained'
-                  onClick={() => document.getElementById('cvInput')?.click()}
-                  sx={{
-                    bgcolor: '#FF9800',
-                    '&:hover': { bgcolor: '#F57C00' },
-                    borderRadius: 2
-                  }}
+                  variant='outlined'
+                  startIcon={<PhotoCamera />}
+                  onClick={() =>
+                    document.getElementById('avatarInput')?.click()
+                  }
+                  sx={OUTLINE_BUTTON_SX}
                 >
-                  Actualizar CV
+                  Cambiar foto
                 </Button>
-              )}
-            </Box>
-            
-            <input
-              id='cvInput'
-              type='file'
-              accept='application/pdf'
-              style={{ display: 'none' }}
-              onChange={handleCVChange}
-            />
-            
-            <Box sx={{ 
-              border: '1px solid #e0e0e0',
-              borderRadius: 2,
-              overflow: 'hidden',
-              bgcolor: 'white'
-            }}>
-              <PDFViewer
-                bucket='cvs'
-                path={selectedCV}
-                view='preview'
-                buttons={false}
-                allowDownload={false}
-                allowOpen={false}
-                downloadUrl={`/profiles/${idProfile}/cv/download`}
-                disableContextMenu
+                <input
+                  id='avatarInput'
+                  type='file'
+                  accept='image/*'
+                  style={{ display: 'none' }}
+                  onChange={handleImageChange}
+                />
+              </Box>
+            )}
+            <DetailSection title='Contacto'>
+              <DetailCell full>
+                <DetailField label='Teléfono'>
+                  {profile.phone || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+              <DetailCell full>
+                <DetailField label='Correo'>
+                  {profile.email || 'Sin registrar'}
+                </DetailField>
+              </DetailCell>
+            </DetailSection>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={8}>
+          <Box sx={{ display: 'grid', gap: 3 }}>
+            <Paper elevation={0} sx={CARD_SX}>
+              <DetailSection title='Descripción profesional'>
+                <DetailCell full>
+                  <Typography
+                    variant='body1'
+                    color={
+                      profile.description ? 'text.primary' : 'text.disabled'
+                    }
+                    sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}
+                  >
+                    {profile.description || 'Sin descripción disponible'}
+                  </Typography>
+                </DetailCell>
+              </DetailSection>
+            </Paper>
+
+            <Paper elevation={0} sx={CARD_SX}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  mb: 2
+                }}
+              >
+                <Typography variant='subtitle1' fontWeight={700}>
+                  Currículum vitae
+                </Typography>
+                {canManageProfiles && (
+                  <Button
+                    variant='outlined'
+                    startIcon={<UploadFile />}
+                    onClick={() => document.getElementById('cvInput')?.click()}
+                    sx={OUTLINE_BUTTON_SX}
+                  >
+                    Actualizar CV
+                  </Button>
+                )}
+              </Box>
+              <input
+                id='cvInput'
+                type='file'
+                accept='application/pdf'
+                style={{ display: 'none' }}
+                onChange={handleCVChange}
               />
-            </Box>
+              <Box
+                sx={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  bgcolor: '#fff'
+                }}
+              >
+                <PDFViewer
+                  bucket='cvs'
+                  path={cvPath}
+                  view='preview'
+                  buttons={false}
+                  allowDownload={false}
+                  allowOpen={false}
+                  downloadUrl={`/profiles/${idProfile}/cv/download`}
+                  disableContextMenu
+                />
+              </Box>
+            </Paper>
           </Box>
-        </Box>
-      </Paper>
+        </Grid>
+      </Grid>
+
+      <FormDialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title='Editar perfil'
+        subtitle={profile.name}
+        submitLabel='Guardar cambios'
+        onSubmit={handleSave}
+        loading={updateProfile.isLoading}
+        maxWidth='sm'
+      >
+        <FormDialogSection title='Información personal'>
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <TextField
+              fullWidth
+              label='Nombre completo'
+              value={edited?.name ?? ''}
+              onChange={setField('name')}
+            />
+          </Box>
+          <TextField
+            fullWidth
+            label='Teléfono'
+            value={edited?.phone ?? ''}
+            onChange={setField('phone')}
+          />
+          <TextField
+            fullWidth
+            label='Correo'
+            type='email'
+            value={edited?.email ?? ''}
+            onChange={setField('email')}
+          />
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <TextField
+              fullWidth
+              multiline
+              minRows={5}
+              label='Descripción profesional'
+              value={edited?.description ?? ''}
+              onChange={setField('description')}
+            />
+          </Box>
+        </FormDialogSection>
+      </FormDialog>
     </Container>
   )
 }

@@ -61,7 +61,9 @@ export const useDeleteProfile = () => {
 }
 
 /** PUT /profiles/:id — actualiza la caché del detalle con los valores enviados */
-export const useUpdateProfile = <T extends object>(id: number | string | undefined) => {
+export const useUpdateProfile = <T extends object>(
+  id: number | string | undefined
+) => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   return useMutation<AxiosResponse, unknown, T>(
@@ -69,8 +71,9 @@ export const useUpdateProfile = <T extends object>(id: number | string | undefin
     {
       retry: false,
       onSuccess: (_response, values) => {
-        queryClient.setQueryData<T | undefined>(profilesKeys.detail(id), (prev) =>
-          prev ? { ...prev, ...values } : prev
+        queryClient.setQueryData<T | undefined>(
+          profilesKeys.detail(id),
+          (prev) => (prev ? { ...prev, ...values } : prev)
         )
         queryClient.invalidateQueries(profilesKeys.list())
       }
@@ -106,6 +109,35 @@ export const useUploadProfileFile = (
         if (kind === 'avatar') {
           queryClient.invalidateQueries(profilesKeys.list())
         }
+      }
+    }
+  )
+}
+
+/** POST /profiles (multipart: datos, foto y CV) y refresca el listado */
+export const useCreateProfile = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation<
+    AxiosResponse,
+    unknown,
+    { formData: FormData; onProgress?: (progress: number) => void }
+  >(
+    ({ formData, onProgress }) =>
+      axiosPrivate.post('/profiles', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          onProgress?.(
+            Math.round(
+              (progressEvent.loaded * 100) / (progressEvent.total || 1)
+            )
+          )
+        }
+      }),
+    {
+      retry: false,
+      onSuccess: () => {
+        queryClient.invalidateQueries(profilesKeys.list())
       }
     }
   )

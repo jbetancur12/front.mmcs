@@ -1,43 +1,38 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useMemo, useState } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import {
-  Button,
-  IconButton,
-  Typography,
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
   Avatar,
   Box,
-  TextField,
-  InputAdornment,
-  Skeleton,
-  Fade,
-  Chip
+  Button,
+  Container,
+  Grid,
+  IconButton,
+  Tooltip,
+  Typography
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Delete, 
-  Search, 
-  Clear, 
-  Person, 
-  Phone, 
-  Email, 
+import {
   Add,
+  Delete,
+  Email,
+  Person,
+  Phone,
   Visibility
 } from '@mui/icons-material'
+import { type MRT_Cell, type MRT_ColumnDef } from 'material-react-table'
 import ModalProfile from '../Components/ModalProfile'
 import { useDeleteProfile, useProfiles } from 'src/hooks/profiles/useProfiles'
 import toast, { Toaster } from 'react-hot-toast'
-import Swal from 'sweetalert2'
 import { buildMinioObjectUrl } from '@utils/minio'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import DataTable from 'src/Components/Common/DataTable'
+import EmptyState from 'src/Components/Common/EmptyState'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+
 export interface Profile {
   id: number
   name: string
@@ -48,24 +43,26 @@ export interface Profile {
   imageProfile: string
 }
 
+interface RawProfile extends Omit<Profile, 'imageProfile'> {
+  avatarUrl?: string | null
+}
+
+const getDefaultAvatar = (name?: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Usuario')}&background=00BFA5&color=fff&size=200`
+
+const TEAL_BUTTON_SX = {
+  textTransform: 'none',
+  fontWeight: 600,
+  bgcolor: '#00BFA5',
+  whiteSpace: 'nowrap',
+  '&:hover': { bgcolor: '#00897B' }
+} as const
+
 const Profiles: React.FC = () => {
   const canManageProfiles = useCan(PERMISSIONS.USERS_PROFILE_MANAGE)
   const navigate = useNavigate()
   const [openModal, setOpenModal] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
-
-  const getDefaultAvatar = (name?: string) =>
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Usuario')}&background=00BFA5&color=fff&size=200`
-
-  const mapProfilesWithImageUrl = (data: any[]) =>
-    data.map((item: any) => ({
-      ...item,
-      imageProfile: item.avatarUrl
-        ? buildMinioObjectUrl('images', item.avatarUrl)
-        : getDefaultAvatar(item.name)
-    }))
+  const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null)
 
   const { data: rawProfiles, isLoading: loading } = useProfiles({
     onError: (error) => {
@@ -73,182 +70,82 @@ const Profiles: React.FC = () => {
       toast.error('Error al cargar los perfiles')
     }
   })
-  const profiles = useMemo(
-    () => mapProfilesWithImageUrl(rawProfiles || []) as Profile[],
+  const profiles = useMemo<Profile[]>(
+    () =>
+      ((rawProfiles || []) as unknown as RawProfile[]).map((item) => ({
+        ...item,
+        imageProfile: item.avatarUrl
+          ? buildMinioObjectUrl('images', item.avatarUrl)
+          : getDefaultAvatar(item.name)
+      })),
     [rawProfiles]
   )
   const deleteProfile = useDeleteProfile()
 
-  // Debounced search effect
-  useEffect(() => {
-    setIsSearching(true)
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-      setIsSearching(false)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
-
-  const filteredProfiles = useMemo(() => {
-    if (!debouncedSearchTerm) return profiles
-    
-    return profiles.filter((profile) =>
-      (profile.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      (profile.email || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      (profile.phone || '').includes(debouncedSearchTerm)
-    )
-  }, [profiles, debouncedSearchTerm])
-
-  const highlightText = useCallback((text: string | null | undefined, highlight: string) => {
-    if (!highlight || !text) return text || ''
-    
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'))
-    return parts.map((part, index) => 
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <Box component="span" key={index} sx={{ bgcolor: 'yellow', fontWeight: 'bold' }}>
-          {part}
-        </Box>
-      ) : part
-    )
-  }, [])
-
-  const clearSearch = () => {
-    setSearchTerm('')
-    setDebouncedSearchTerm('')
-  }
-
-  const handleEliminar = async (id: number, profileName: string) => {
-    const result = await Swal.fire({
-      title: '¿Eliminar perfil?',
-      html: `
-        <div style="text-align: left; margin: 20px 0;">
-          <p><strong>Perfil:</strong> ${profileName}</p>
-          <p style="color: #d32f2f; margin-top: 15px;">
-            <strong>⚠️ Esta acción no se puede deshacer</strong>
-          </p>
-        </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d32f2f',
-      cancelButtonColor: '#grey',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusCancel: true
-    })
-
-    if (!result.isConfirmed) return
-
+  const handleDelete = async () => {
+    if (!profileToDelete) return
     try {
-      Swal.fire({
-        title: 'Eliminando...',
-        text: 'Por favor espera mientras se elimina el perfil',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading()
-        }
-      })
-
-      const response = await deleteProfile.mutateAsync(id)
-
+      const response = await deleteProfile.mutateAsync(profileToDelete.id)
       if (response.status === 204) {
-        Swal.fire({
-          title: '¡Eliminado!',
-          text: 'El perfil ha sido eliminado correctamente',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
+        toast.success('Perfil eliminado correctamente')
       }
+      setProfileToDelete(null)
     } catch (error) {
       console.error('Error al eliminar el perfil:', error)
-      
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo eliminar el perfil. Por favor intenta nuevamente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
+      toast.error('No se pudo eliminar el perfil. Inténtalo de nuevo.')
     }
   }
 
-  const handleOpenModal = () => {
-    setOpenModal(true)
-  }
-
-  const handleOpenProfile = (id: any) => {
-    navigate(`/profiles/${id}`)
-  }
-
-  const SkeletonCard = () => (
-    <Card elevation={2} sx={{ height: '100%' }}>
-      <CardContent sx={{ textAlign: 'center', py: 3 }}>
-        <Skeleton variant="circular" width={80} height={80} sx={{ mx: 'auto', mb: 2 }} />
-        <Skeleton variant="text" width="60%" sx={{ mx: 'auto', mb: 1 }} />
-        <Skeleton variant="text" width="80%" sx={{ mx: 'auto', mb: 1 }} />
-        <Skeleton variant="text" width="70%" sx={{ mx: 'auto' }} />
-      </CardContent>
-      <CardActions sx={{ justifyContent: 'center', gap: 1 }}>
-        <Skeleton variant="rectangular" width={80} height={32} />
-        <Skeleton variant="rectangular" width={40} height={32} />
-      </CardActions>
-    </Card>
-  )
-
-  const EmptyState = () => (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        py: 8,
-        textAlign: 'center'
-      }}
-    >
-      <Person sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-      <Typography variant="h6" color="text.secondary" gutterBottom>
-        No hay perfiles de metrólogos
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        {debouncedSearchTerm 
-          ? `No se encontraron perfiles que coincidan con "${debouncedSearchTerm}"`
-          : 'Comienza creando el primer perfil de metrólogo'
-        }
-      </Typography>
-      {debouncedSearchTerm && (
-        <Button
-          variant="outlined"
-          onClick={clearSearch}
-          sx={{ mb: 2 }}
-        >
-          Limpiar búsqueda
-        </Button>
-      )}
-      {!debouncedSearchTerm && canManageProfiles && (
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleOpenModal}
-          sx={{
-            bgcolor: '#00BFA5',
-            '&:hover': {
-              bgcolor: '#00ACC1'
-            }
-          }}
-        >
-          Crear Primer Perfil
-        </Button>
-      )}
-    </Box>
+  const columns = useMemo<MRT_ColumnDef<Profile>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Metrólogo',
+        size: 280,
+        Cell: ({ row }: { row: { original: Profile } }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              src={row.original.imageProfile}
+              alt={row.original.name}
+              imgProps={{
+                onError: (event) => {
+                  event.currentTarget.src = getDefaultAvatar(row.original.name)
+                }
+              }}
+              sx={{ width: 36, height: 36, bgcolor: '#00BFA5' }}
+            />
+            <Typography fontWeight={600}>{row.original.name}</Typography>
+          </Box>
+        )
+      },
+      {
+        accessorKey: 'phone',
+        header: 'Teléfono',
+        size: 170,
+        Cell: ({ cell }: { cell: MRT_Cell<Profile> }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Phone sx={{ fontSize: 16, color: '#6b7280' }} />
+            {cell.getValue<string>() || '—'}
+          </Box>
+        )
+      },
+      {
+        accessorKey: 'email',
+        header: 'Correo',
+        size: 260,
+        Cell: ({ cell }: { cell: MRT_Cell<Profile> }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Email sx={{ fontSize: 16, color: '#6b7280' }} />
+            {cell.getValue<string>() || '—'}
+          </Box>
+        )
+      }
+    ],
+    []
   )
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <Toaster />
       <ModalProfile open={openModal} onClose={() => setOpenModal(false)} />
 
@@ -258,7 +155,12 @@ const Profiles: React.FC = () => {
         icon={<Person />}
         actions={
           canManageProfiles && (
-            <Button variant='contained' startIcon={<Add />} onClick={handleOpenModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={() => setOpenModal(true)}
+              sx={TEAL_BUTTON_SX}
+            >
               Crear perfil
             </Button>
           )
@@ -266,178 +168,91 @@ const Profiles: React.FC = () => {
       />
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={6} sm={4}>
-          <LmsStatCard variant='quiet' label='Metrólogos' value={profiles.length} icon={<Person />} tone='teal' />
-        </Grid>
-        <Grid item xs={6} sm={4}>
-          <LmsStatCard variant='quiet' label='Mostrando' value={filteredProfiles.length} icon={<Search />} tone='blue' />
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            variant='quiet'
+            label='Metrólogos'
+            value={profiles.length}
+            icon={<Person />}
+            tone='teal'
+          />
         </Grid>
       </Grid>
 
-      <Box component="header" sx={{ mb: 3 }}>
-        {/* Search and Create Section */}
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 2, 
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'stretch', sm: 'center' }
-        }}>
-          <TextField
-            label="Buscar metrólogos"
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ flex: 1 }}
-            aria-label="Campo de búsqueda de metrólogos"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search color={isSearching ? "primary" : "inherit"} />
-                </InputAdornment>
-              ),
-              endAdornment: searchTerm && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={clearSearch}
-                    edge="end"
-                    aria-label="Limpiar búsqueda"
-                  >
-                    <Clear />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            helperText={
-              isSearching ? "Buscando..." : 
-              searchTerm && !isSearching ? `${filteredProfiles.length} resultado(s) encontrado(s)` : 
-              ""
+      <DataTable
+        columns={columns}
+        data={profiles}
+        itemLabel={['metrólogo', 'metrólogos']}
+        searchPlaceholder='Buscar metrólogos'
+        enableRowActions
+        state={{ isLoading: loading }}
+        initialState={{ density: 'compact' }}
+        displayColumnDefOptions={{
+          'mrt-row-actions': { header: 'Acciones', size: 110 }
+        }}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            compact
+            icon={<Person />}
+            title='No hay perfiles de metrólogos'
+            hint='Crea el primer perfil o ajusta la búsqueda.'
+            action={
+              canManageProfiles ? (
+                <Button
+                  variant='contained'
+                  startIcon={<Add />}
+                  onClick={() => setOpenModal(true)}
+                  sx={TEAL_BUTTON_SX}
+                >
+                  Crear perfil
+                </Button>
+              ) : undefined
             }
           />
-        </Box>
-        
-        {/* Results Count */}
-        {!loading && profiles.length > 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {filteredProfiles.length} de {profiles.length} metrólogos
-          </Typography>
         )}
-      </Box>
-
-      {/* Content Area */}
-      <Box component="main" role="main" aria-label="Lista de metrólogos">
-
-        
-        {loading ? (
-          <Grid container spacing={3}>
-            {[...Array(6)].map((_, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-                <SkeletonCard />
-              </Grid>
-            ))}
-          </Grid>
-        ) : filteredProfiles.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <Grid container spacing={3}>
-            {filteredProfiles.map((profile) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={profile.id}>
-                <Fade in timeout={300}>
-                  <Card 
-                    elevation={2}
-                    role="article"
-                    aria-label={`Perfil de metrólogo: ${profile.name}`}
-                    sx={{ 
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        elevation: 4,
-                        transform: 'translateY(-2px)'
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ textAlign: 'center', py: 3, flexGrow: 1 }}>
-                      <Avatar
-                        src={profile.imageProfile}
-                        alt={profile.name}
-                        imgProps={{
-                          onError: (event) => {
-                            const target = event.currentTarget as HTMLImageElement
-                            target.src = getDefaultAvatar(profile.name)
-                          }
-                        }}
-                        sx={{ 
-                          width: 80, 
-                          height: 80, 
-                          mx: 'auto', 
-                          mb: 2,
-                          border: '3px solid #00BFA5'
-                        }}
-                      />
-                      
-                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                        {highlightText(profile.name, debouncedSearchTerm)}
-                      </Typography>
-                      
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                        <Phone sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {highlightText(profile.phone, debouncedSearchTerm)}
-                        </Typography>
-                      </Box>
-                      
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                        <Email sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                        <Typography variant="body2" color="text.secondary" noWrap>
-                          {highlightText(profile.email, debouncedSearchTerm)}
-                        </Typography>
-                      </Box>
-
-                      <Chip
-                        label="Metrólogo"
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    </CardContent>
-
-                    <CardActions sx={{ justifyContent: 'center', gap: 1, p: 2 }}>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<Visibility />}
-                        onClick={() => handleOpenProfile(profile.id)}
-                        sx={{
-                          bgcolor: '#00BFA5',
-                          '&:hover': {
-                            bgcolor: '#00ACC1'
-                          }
-                        }}
-                        aria-label={`Ver perfil de ${profile.name}`}
-                      >
-                        Ver Perfil
-                      </Button>
-                      
-                      {canManageProfiles && (
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleEliminar(profile.id, profile.name)}
-                          aria-label={`Eliminar perfil de ${profile.name}`}
-                        >
-                          <Delete />
-                        </IconButton>
-                      )}
-                    </CardActions>
-                  </Card>
-                </Fade>
-              </Grid>
-            ))}
-          </Grid>
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: 'flex' }}>
+            <Tooltip title='Ver perfil'>
+              <IconButton
+                size='small'
+                aria-label={`Ver perfil de ${row.original.name}`}
+                sx={{ color: '#00695C' }}
+                onClick={() => navigate(`/profiles/${row.original.id}`)}
+              >
+                <Visibility fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {canManageProfiles && (
+              <Tooltip title='Eliminar'>
+                <IconButton
+                  size='small'
+                  aria-label={`Eliminar perfil de ${row.original.name}`}
+                  color='error'
+                  onClick={() => setProfileToDelete(row.original)}
+                >
+                  <Delete fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         )}
-      </Box>
+      />
+
+      <ConfirmDialog
+        open={Boolean(profileToDelete)}
+        tone='danger'
+        title='Eliminar perfil'
+        message={
+          <>
+            Vas a eliminar el perfil de <strong>{profileToDelete?.name}</strong>
+            . Esta acción no se puede deshacer.
+          </>
+        }
+        confirmLabel='Eliminar'
+        loading={deleteProfile.isLoading}
+        onConfirm={handleDelete}
+        onClose={() => setProfileToDelete(null)}
+      />
     </Container>
   )
 }
