@@ -17,6 +17,11 @@ export const getSessionRevokedReason = (error: unknown): string | null => {
   return data?.code === 'SESSION_REVOKED' ? data.reason || 'revoked' : null
 }
 
+/** El API pide confirmar la contraseña porque la sesión cumplió su tope de días. */
+export const isReauthRequired = (error: unknown): boolean =>
+  (error as AxiosError<{ code?: string }>)?.response?.data?.code ===
+  'SESSION_REAUTH_REQUIRED'
+
 /**
  * Recuerda por qué se cerró la sesión para decírselo en el login. Va en
  * sessionStorage: sobrevive a la navegación y no a la pestaña. Un cierre
