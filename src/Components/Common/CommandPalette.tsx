@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material'
 
 export interface CommandEntry {
-  /** Identificador estable (la ruta); también es lo que se guarda en recientes. */
+  /** Identificador estable (la ruta). */
   id: string
   label: string
   path: string
@@ -21,40 +21,31 @@ export interface CommandEntry {
   icon?: React.ReactNode
 }
 
+/** De dónde salió la opción elegida; sirve para medir si las sugerencias ayudan. */
+export type CommandSource = 'search' | 'frequent' | 'recent'
+
 interface CommandPaletteProps {
   open: boolean
   onClose: () => void
   entries: CommandEntry[]
-  onSelect: (entry: CommandEntry) => void
+  /** Ids (rutas) de las más usadas y de las abiertas hace poco, para mostrar sin texto. */
+  frequentIds?: string[]
+  recentIds?: string[]
+  onSelect: (entry: CommandEntry, source: CommandSource) => void
 }
 
-const RECENTS_KEY = 'command-palette-recents'
-const MAX_RECENTS = 5
+interface Row {
+  entry: CommandEntry
+  source: CommandSource
+}
+
+const GROUP_TITLES: Record<CommandSource, string> = {
+  frequent: 'Más usadas',
+  recent: 'Recientes',
+  search: 'Ir a'
+}
+
 const MAX_RESULTS = 12
-
-const readRecents = (): string[] => {
-  try {
-    const raw = window.localStorage.getItem(RECENTS_KEY)
-    const parsed: unknown = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed)
-      ? parsed.filter((id): id is string => typeof id === 'string')
-      : []
-  } catch {
-    return []
-  }
-}
-
-const saveRecent = (id: string) => {
-  try {
-    const next = [id, ...readRecents().filter((r) => r !== id)]
-    window.localStorage.setItem(
-      RECENTS_KEY,
-      JSON.stringify(next.slice(0, MAX_RECENTS))
-    )
-  } catch {
-    // Sin almacenamiento, simplemente no hay recientes.
-  }
-}
 
 // Minúsculas y sin tildes, carácter por carácter para que los índices
 // del texto original sigan valiendo al resaltar.
@@ -150,36 +141,45 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
   open,
   onClose,
   entries,
+  frequentIds = [],
+  recentIds = [],
   onSelect
 }) => {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const [recents, setRecents] = useState<string[]>([])
   const listRef = useRef<HTMLUListElement>(null)
 
   useEffect(() => {
     if (open) {
       setQuery('')
       setActive(0)
-      setRecents(readRecents())
     }
   }, [open])
 
   const tokens = useMemo(() => tokensOf(query), [query])
 
-  const results = useMemo(() => {
+  const rows = useMemo<Row[]>(() => {
     if (tokens.length === 0) {
-      return recents
-        .map((id) => entries.find((entry) => entry.id === id))
-        .filter((entry): entry is CommandEntry => Boolean(entry))
+      const byId = (ids: string[], source: CommandSource): Row[] =>
+        ids
+          .map((id) => entries.find((entry) => entry.id === id))
+          .filter((entry): entry is CommandEntry => Boolean(entry))
+          .map((entry) => ({ entry, source }))
+      return [
+        ...byId(frequentIds, 'frequent'),
+        ...byId(
+          recentIds.filter((id) => !frequentIds.includes(id)),
+          'recent'
+        )
+      ]
     }
     return entries
       .map((entry) => ({ entry, points: score(entry, tokens) }))
       .filter((row) => row.points > 0)
       .sort((a, b) => b.points - a.points)
       .slice(0, MAX_RESULTS)
-      .map((row) => row.entry)
-  }, [entries, recents, tokens])
+      .map((row): Row => ({ entry: row.entry, source: 'search' }))
+  }, [entries, frequentIds, recentIds, tokens])
 
   useEffect(() => setActive(0), [query])
 
@@ -187,29 +187,28 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
     listRef.current
       ?.querySelector<HTMLElement>('[aria-selected="true"]')
       ?.scrollIntoView({ block: 'nearest' })
-  }, [active, results])
+  }, [active, rows])
 
-  const choose = (entry: CommandEntry | undefined) => {
-    if (!entry) return
-    saveRecent(entry.id)
+  const choose = (row: Row | undefined) => {
+    if (!row) return
     onClose()
-    onSelect(entry)
+    onSelect(row.entry, row.source)
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
-      setActive((index) => Math.min(index + 1, results.length - 1))
+      setActive((index) => Math.min(index + 1, rows.length - 1))
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
       setActive((index) => Math.max(index - 1, 0))
     } else if (event.key === 'Enter') {
       event.preventDefault()
-      choose(results[active])
+      choose(rows[active])
     }
   }
 
-  const showingRecents = tokens.length === 0
+  const showingSuggestions = tokens.length === 0
 
   return (
     <Dialog
@@ -260,31 +259,18 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
       </Box>
 
       <Box sx={{ maxHeight: 360, overflowY: 'auto', p: 1 }}>
-        {results.length === 0 ? (
+        {rows.length === 0 ? (
           <Typography
             variant='body2'
             color='text.secondary'
             sx={{ px: 1.5, py: 3, textAlign: 'center' }}
           >
-            {showingRecents
+            {showingSuggestions
               ? 'Escribe para buscar una pantalla del menú.'
               : `Sin resultados para "${query.trim()}".`}
           </Typography>
         ) : (
           <>
-            <Typography
-              variant='caption'
-              sx={{
-                display: 'block',
-                px: 1.5,
-                pt: 0.5,
-                pb: 0.75,
-                fontWeight: 600,
-                color: '#6b7280'
-              }}
-            >
-              {showingRecents ? 'Recientes' : 'Ir a'}
-            </Typography>
             <Box
               component='ul'
               id='command-palette-list'
@@ -292,76 +278,97 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
               ref={listRef}
               sx={{ listStyle: 'none', m: 0, p: 0 }}
             >
-              {results.map((entry, index) => {
+              {rows.map((row, index) => {
+                const { entry, source } = row
                 const selected = index === active
+                const startsGroup =
+                  index === 0 || rows[index - 1].source !== source
                 return (
-                  <Box
-                    component='li'
-                    key={entry.id}
-                    role='option'
-                    aria-selected={selected}
-                    onMouseMove={() => setActive(index)}
-                    onClick={() => choose(entry)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1.25,
-                      px: 1.5,
-                      py: 1,
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: 14,
-                      bgcolor: selected ? '#f3f4f6' : 'transparent'
-                    }}
-                  >
+                  <React.Fragment key={entry.id}>
+                    {startsGroup && (
+                      <Typography
+                        component='li'
+                        role='presentation'
+                        variant='caption'
+                        sx={{
+                          display: 'block',
+                          px: 1.5,
+                          pt: index === 0 ? 0.5 : 1.5,
+                          pb: 0.75,
+                          fontWeight: 600,
+                          color: '#6b7280'
+                        }}
+                      >
+                        {GROUP_TITLES[source]}
+                      </Typography>
+                    )}
                     <Box
-                      sx={{
-                        display: 'flex',
-                        color: '#6b7280',
-                        '& svg': { fontSize: 18 }
-                      }}
-                    >
-                      {showingRecents ? <History /> : entry.icon}
-                    </Box>
-                    <Box
+                      component='li'
+                      role='option'
+                      aria-selected={selected}
+                      onMouseMove={() => setActive(index)}
+                      onClick={() => choose(row)}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: 0.5,
-                        flex: 1,
-                        minWidth: 0
+                        gap: 1.25,
+                        px: 1.5,
+                        py: 1,
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: 14,
+                        bgcolor: selected ? '#f3f4f6' : 'transparent'
                       }}
                     >
-                      {entry.parents?.map((parent) => (
-                        <React.Fragment key={parent}>
-                          <Box component='span' sx={{ color: '#6b7280' }}>
-                            <Highlighted text={parent} tokens={tokens} />
-                          </Box>
-                          <ChevronRight
-                            sx={{ fontSize: 16, color: '#9ca3af' }}
-                          />
-                        </React.Fragment>
-                      ))}
-                      <Box component='span' sx={{ fontWeight: 500 }}>
-                        <Highlighted text={entry.label} tokens={tokens} />
-                      </Box>
-                    </Box>
-                    {entry.hint && !selected && (
-                      <Typography
-                        variant='caption'
+                      <Box
                         sx={{
-                          color: '#9ca3af',
-                          display: { xs: 'none', sm: 'block' }
+                          display: 'flex',
+                          color: '#6b7280',
+                          '& svg': { fontSize: 18 }
                         }}
                       >
-                        {entry.hint}
-                      </Typography>
-                    )}
-                    {selected && (
-                      <ArrowForward sx={{ fontSize: 18, color: '#9ca3af' }} />
-                    )}
-                  </Box>
+                        {source === 'recent' ? <History /> : entry.icon}
+                      </Box>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: 0.5,
+                          flex: 1,
+                          minWidth: 0
+                        }}
+                      >
+                        {entry.parents?.map((parent) => (
+                          <React.Fragment key={parent}>
+                            <Box component='span' sx={{ color: '#6b7280' }}>
+                              <Highlighted text={parent} tokens={tokens} />
+                            </Box>
+                            <ChevronRight
+                              sx={{ fontSize: 16, color: '#9ca3af' }}
+                            />
+                          </React.Fragment>
+                        ))}
+                        <Box component='span' sx={{ fontWeight: 500 }}>
+                          <Highlighted text={entry.label} tokens={tokens} />
+                        </Box>
+                      </Box>
+                      {entry.hint && !selected && (
+                        <Typography
+                          variant='caption'
+                          sx={{
+                            color: '#9ca3af',
+                            display: { xs: 'none', sm: 'block' }
+                          }}
+                        >
+                          {entry.hint}
+                        </Typography>
+                      )}
+                      {selected && (
+                        <ArrowForward sx={{ fontSize: 18, color: '#9ca3af' }} />
+                      )}
+                    </Box>
+                  </React.Fragment>
                 )
               })}
             </Box>

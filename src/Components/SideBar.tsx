@@ -25,7 +25,16 @@ import {
 
 import DropdownButton from './DropdownButton'
 import NavItem from './Common/NavItem'
-import CommandPalette, { CommandEntry } from './Common/CommandPalette'
+import CommandPalette, {
+  CommandEntry,
+  CommandSource
+} from './Common/CommandPalette'
+import { usePostHog } from 'posthog-js/react'
+import {
+  frequentPaths,
+  recentPaths,
+  recordVisit
+} from 'src/utils/quickSearchUsage'
 import { QUICK_SEARCH_PAGES } from 'src/constants/quickSearchPages'
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
@@ -75,6 +84,16 @@ interface SearchableMenuItem {
 }
 
 const toRoutePath = (path: string) => `/${path.replace(/^\//, '')}`
+
+/** La opción de la búsqueda a la que pertenece la pantalla abierta (detalles incluidos). */
+const entryForPath = (pathname: string, entries: CommandEntry[]) =>
+  entries
+    .filter(
+      (entry) =>
+        entry.path !== '/' &&
+        (pathname === entry.path || pathname.startsWith(`${entry.path}/`))
+    )
+    .sort((a, b) => b.path.length - a.path.length)[0]
 
 const getLinkToCustomer =(to: string, $userStore: UserData) => {
   if (!$userStore.customer) {
@@ -603,13 +622,21 @@ const SideBar = ({
   const $userStore = useStore(userStore)
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const posthog = usePostHog()
   const [searchOpen, setSearchOpen] = useState(false)
+  const userKey = $userStore.email || 'anonimo'
+  const openSearch = (source: 'shortcut' | 'button') => {
+    posthog?.capture('quick_search_opened', { source })
+    setSearchOpen(true)
+  }
+  const openSearchRef = useRef(openSearch)
+  openSearchRef.current = openSearch
   // Ctrl+K (Cmd+K en Mac) abre la búsqueda desde cualquier pantalla.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setSearchOpen(true)
+        openSearchRef.current('shortcut')
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -832,6 +859,31 @@ const SideBar = ({
     return null
   }
 
+  // Cada pantalla que se abre (por menú, buscador o enlace) cuenta como una visita.
+  const trackedPath = useRef('')
+  // Va antes que el efecto de abajo: al cambiar de ruta, la marca se reinicia
+  // (si no, volver a una pantalla después de pasar por Inicio no contaría).
+  useEffect(() => {
+    trackedPath.current = ''
+  }, [pathname])
+  useEffect(() => {
+    if (trackedPath.current === pathname) return
+    const entry = entryForPath(pathname, searchEntries())
+    if (!entry) return
+    trackedPath.current = pathname
+    recordVisit(userKey, entry.id)
+  }, [pathname, userKey, $userStore.permissions])
+
+  // Sugerencias para el buscador sin texto: solo se calculan con el diálogo abierto.
+  const searchEntriesNow = searchOpen ? searchEntries() : []
+  const currentId = entryForPath(pathname, searchEntriesNow)?.id
+  const frequentIds = searchOpen
+    ? frequentPaths(userKey, 4, currentId ? [currentId] : [])
+    : []
+  const recentIds = searchOpen
+    ? recentPaths(userKey, 5, currentId ? [currentId] : [])
+    : []
+
   return (
     <aside
       onMouseEnter={handleMouseEnter}
@@ -845,7 +897,7 @@ const SideBar = ({
       <div className='flex-shrink-0 px-3 pt-4'>
         <button
           type='button'
-          onClick={() => setSearchOpen(true)}
+          onClick={() => openSearch('button')}
           aria-label='Búsqueda rápida'
           aria-keyshortcuts='Control+K'
           title='Búsqueda rápida (Ctrl K)'
@@ -919,8 +971,14 @@ const SideBar = ({
       <CommandPalette
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
-        entries={searchOpen ? searchEntries() : []}
-        onSelect={(entry) => {
+        entries={searchEntriesNow}
+        frequentIds={frequentIds}
+        recentIds={recentIds}
+        onSelect={(entry, source: CommandSource) => {
+          posthog?.capture('quick_search_selected', {
+            path: entry.path,
+            source
+          })
           handleLinkClick()
           navigate(entry.path)
         }}
