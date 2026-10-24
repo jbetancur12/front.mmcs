@@ -26,7 +26,7 @@ import PuchasesRoutes from './routes/PurchasesRoutes'
 import IotRoutes from './routes/IotRoutes'
 import ModulesRoutes from './routes/ModulesRoutes'
 import LmsRoutes from './routes/LmsRoutes'
-import { Box, CircularProgress, Typography } from '@mui/material'
+import SignalLoader from './Components/Common/SignalLoader'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
@@ -51,25 +51,7 @@ function Router() {
             <RequireAuth>
               <LmsOnlyGuard>
                 <Layout>
-                  <Suspense
-                    fallback={
-                      <Box
-                        display='flex'
-                        justifyContent='center'
-                        alignItems='center'
-                        height='100vh'
-                        flexDirection='column'
-                      >
-                        <CircularProgress />
-                        <Typography
-                          variant='h6'
-                          sx={{ mt: 2, color: 'text.secondary' }}
-                        >
-                          Cargando...
-                        </Typography>
-                      </Box>
-                    }
-                  >
+                  <Suspense fallback={<SignalLoader size='large' fullPage />}>
                     <Outlet />
                   </Suspense>
                 </Layout>

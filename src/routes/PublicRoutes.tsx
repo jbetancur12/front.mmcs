@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Route } from 'react-router-dom'
-import { Box, CircularProgress, Typography } from '@mui/material'
+import SignalLoader from '../Components/Common/SignalLoader'
 
 const Login = lazy(() => import('../pages/Login'))
 const NewPassword = lazy(() => import('../Components/NewPassword'))
@@ -32,20 +32,7 @@ const CalibrationServiceRemoteSignaturePage = lazy(
     import('../pages/calibration-services/CalibrationServiceRemoteSignaturePage')
 )
 
-const LoadingFallback = () => (
-  <Box
-    display='flex'
-    justifyContent='center'
-    alignItems='center'
-    height='100vh'
-    flexDirection='column'
-  >
-    <CircularProgress />
-    <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-      Cargando...
-    </Typography>
-  </Box>
-)
+const LoadingFallback = () => <SignalLoader size='large' fullPage />
 
 const PublicRoutes = (
   <>

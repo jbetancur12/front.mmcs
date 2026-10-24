@@ -4,6 +4,7 @@ import { api } from '../../config'
 import useAxiosPrivate from '@utils/use-axios-private'
 import useRefreshToken from '@utils/use-refresh-token'
 import { useNavigate, useLocation } from 'react-router-dom'
+import SignalLoader from '../Common/SignalLoader'
 
 interface RequireAuthProps {
   children: React.ReactNode
@@ -100,15 +101,8 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className='fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white opacity-80'>
-        <div
-          className='inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]'
-          role='status'
-        >
-          <span className='!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]'>
-            Loading...
-          </span>
-        </div>
+      <div className='fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white z-50'>
+        <SignalLoader size='large' message='Validando sesión...' />
       </div>
     )
   }
