@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AccountTreeOutlined,
   AssignmentTurnedInOutlined,
@@ -14,6 +14,7 @@ import {
   MonitorHeartOutlined,
   PeopleAltOutlined,
   ScienceOutlined,
+  SearchOutlined,
   SchoolOutlined,
   SettingsOutlined,
   ShoppingCartOutlined,
@@ -24,6 +25,8 @@ import {
 
 import DropdownButton from './DropdownButton'
 import NavItem from './Common/NavItem'
+import CommandPalette, { CommandEntry } from './Common/CommandPalette'
+import { QUICK_SEARCH_PAGES } from 'src/constants/quickSearchPages'
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
 import {
@@ -64,7 +67,16 @@ const getItemPermission = (
         .permission
     : undefined
 
-const getLinkToCustomer = (to: string, $userStore: UserData) => {
+interface SearchableMenuItem {
+  label: string
+  url: string
+  roles?: string[]
+  permission?: PermissionKey | readonly PermissionKey[]
+}
+
+const toRoutePath = (path: string) => `/${path.replace(/^\//, '')}`
+
+const getLinkToCustomer =(to: string, $userStore: UserData) => {
   if (!$userStore.customer) {
     return '/' // Ruta predeterminada para usuarios sin cliente
   } else {
@@ -590,6 +602,19 @@ const SideBar = ({
 }: SideBarProps) => {
   const $userStore = useStore(userStore)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const [searchOpen, setSearchOpen] = useState(false)
+  // Ctrl+K (Cmd+K en Mac) abre la búsqueda desde cualquier pantalla.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
   const effectiveLmsMenuRoles = getEffectiveLmsMenuRoles($userStore)
   const [isLmsHintDismissed, setIsLmsHintDismissed] = useState(true)
   const isLmsRoute = pathname.startsWith('/lms')
@@ -673,32 +698,107 @@ const SideBar = ({
 
   type SidebarItem = ReturnType<typeof sidebarItems>[number]
 
-  // Devuelve la fila del ítem o null si el usuario no debe verlo.
-  const renderItem = (item: SidebarItem, key: string) => {
+  const rolesFor = (item: SidebarItem) =>
+    item.buttonText === 'Academia' || item.buttonText === 'LMS'
+      ? effectiveLmsMenuRoles
+      : $userStore.rol
+
+  // El usuario puede ver el ítem del menú (rol/capacidad, módulo y LMS).
+  const canSeeItem = (item: SidebarItem) => {
     if (
       isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
       !isLmsSidebarItem(item)
     ) {
-      return null
+      return false
     }
 
     const permission = getItemPermission(item)
-    const isAcademia =
-      item.buttonText === 'Academia' || item.buttonText === 'LMS'
-    const roles = isAcademia ? effectiveLmsMenuRoles : $userStore.rol
     const allowed = permission
       ? hasPermission(
           $userStore.permissions,
           permission as PermissionKey | readonly PermissionKey[]
         )
-      : canViewModule(item.roles, roles)
+      : canViewModule(item.roles, rolesFor(item))
 
-    if (
-      item.type === 'link' &&
-      item.to &&
-      allowed &&
-      hasModuleAccess(item.moduleName)
-    ) {
+    return allowed && hasModuleAccess(item.moduleName)
+  }
+
+  // Pantallas que el usuario puede abrir, para el buscador (Ctrl+K).
+  const searchEntries = (): CommandEntry[] => {
+    const items = sidebarItems($userStore)
+    const sectionOf = (item: SidebarItem) =>
+      SIDEBAR_SECTIONS.find((section) => section.items.includes(itemKey(item)))
+    const sectionTitle = (item: SidebarItem) => {
+      const section = sectionOf(item)
+      return section?.title && $userStore.customer && section.clientTitle
+        ? section.clientTitle
+        : section?.title
+    }
+
+    const fromMenu = items.filter(canSeeItem).flatMap((item): CommandEntry[] => {
+      if (item.type === 'link' && item.to) {
+        const path = toRoutePath(item.to)
+        return [
+          {
+            id: path,
+            label: item.label ?? '',
+            path,
+            hint: sectionTitle(item),
+            icon: item.icon
+          }
+        ]
+      }
+
+      const roles = rolesFor(item)
+      return (item.menuItems ?? [])
+        .filter((menuItem: SearchableMenuItem) =>
+          menuItem.permission
+            ? hasPermission($userStore.permissions, menuItem.permission)
+            : (menuItem.roles ?? []).some((role) => roles.includes(role))
+        )
+        .map((menuItem: SearchableMenuItem) => ({
+          id: toRoutePath(menuItem.url),
+          label: menuItem.label,
+          path: toRoutePath(menuItem.url),
+          parents: [item.buttonText ?? ''],
+          hint: sectionTitle(item),
+          icon: item.icon
+        }))
+    })
+
+    // Pantallas con ruta pero sin ítem de menú (ver quickSearchPages).
+    const known = new Set(fromMenu.map((entry) => entry.id))
+    const lmsOnly = isLmsOnlyUser($userStore.rol, $userStore.lmsOnly)
+    const extras = lmsOnly
+      ? []
+      : QUICK_SEARCH_PAGES.filter(
+          (page) =>
+            !known.has(page.path) &&
+            hasPermission($userStore.permissions, page.permission) &&
+            hasModuleAccess(page.moduleName ?? 'Basic')
+        ).map((page): CommandEntry => {
+          const owner = items.find((item) => itemKey(item) === page.parents[0])
+          return {
+            id: page.path,
+            label: page.label,
+            path: page.path,
+            parents: page.parents,
+            hint: owner ? sectionTitle(owner) : undefined,
+            keywords: page.keywords,
+            icon: owner?.icon
+          }
+        })
+
+    return [...fromMenu, ...extras]
+  }
+
+  // Devuelve la fila del ítem o null si el usuario no debe verlo.
+  const renderItem = (item: SidebarItem, key: string) => {
+    if (!canSeeItem(item)) return null
+
+    const roles = rolesFor(item)
+
+    if (item.type === 'link' && item.to) {
       return (
         <li key={key}>
           <NavItem
@@ -713,11 +813,7 @@ const SideBar = ({
       )
     }
 
-    if (
-      item.type === 'dropdown' &&
-      allowed &&
-      hasModuleAccess(item.moduleName)
-    ) {
+    if (item.type === 'dropdown') {
       return (
         <DropdownButton
           key={key}
@@ -746,6 +842,29 @@ const SideBar = ({
         userMinimized && !sidebarMinimized ? 'lg:shadow-xl' : 'lg:shadow-none'
       } w-64`}
     >
+      <div className='flex-shrink-0 px-3 pt-4'>
+        <button
+          type='button'
+          onClick={() => setSearchOpen(true)}
+          aria-label='Búsqueda rápida'
+          aria-keyshortcuts='Control+K'
+          title='Búsqueda rápida (Ctrl K)'
+          className={`flex w-full items-center rounded-xl border border-gray-200 bg-white text-sm text-gray-500 hover:border-[#00BFA5] hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00BFA5] ${
+            minimized ? 'justify-center py-2.5' : 'gap-2 px-3 py-2'
+          }`}
+        >
+          <SearchOutlined sx={{ fontSize: 20 }} />
+          {!minimized && (
+            <>
+              <span className='flex-1 text-left'>Búsqueda rápida</span>
+              <kbd className='hidden rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] text-gray-500 lg:block'>
+                Ctrl K
+              </kbd>
+            </>
+          )}
+        </button>
+      </div>
+
       <nav
         aria-label='Menú principal'
         className='flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 scrollbar-track-transparent'
@@ -797,6 +916,15 @@ const SideBar = ({
           }}
         />
       </div>
+      <CommandPalette
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        entries={searchOpen ? searchEntries() : []}
+        onSelect={(entry) => {
+          handleLinkClick()
+          navigate(entry.path)
+        }}
+      />
     </aside>
   )
 }
