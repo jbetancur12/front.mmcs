@@ -55,6 +55,14 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     keywords: ['programa', 'informe', 'pdf']
   },
   {
+    label: 'Gestión de cuestionarios',
+    path: '/lms/admin/quiz-management',
+    parents: ['Academia'],
+    permission: PERMISSIONS.LMS_COURSE_MANAGE,
+    moduleName: 'lms',
+    keywords: ['quiz', 'preguntas', 'examenes', 'evaluaciones', 'banco']
+  },
+  {
     label: 'Productos y servicios',
     path: '/productos-y-servicios',
     parents: ['Calibraciones'],
