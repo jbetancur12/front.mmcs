@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { RbacMatrix } from '../../types/rbac'
 import { roleDisplayName } from './PermissionMatrix'
+import { requirementName } from './requirements'
 
 export interface PendingChange {
   roleId: number
@@ -62,6 +63,43 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
   const touchesMe = groups.some(
     (g) => g.role && ownRoleNames.includes(g.role.name)
   )
+  // Tras aplicar los cambios, capacidades que quedarían sin otras que necesitan y que tienen que ver con lo que
+  // se está tocando (se otorga una sin sus requisitos, o se quita una que otra necesita)
+  const unmetAfterChanges = useMemo(() => {
+    const granted = new Set(
+      matrix.grants.map((g) => `${g.roleId}|${g.permissionKey}`)
+    )
+    for (const c of changes) {
+      const key = `${c.roleId}|${c.permissionKey}`
+      if (c.granted) granted.add(key)
+      else granted.delete(key)
+    }
+    const touched = new Set(
+      changes.map((c) => `${c.roleId}|${c.permissionKey}`)
+    )
+    const out: { role: string; permission: string; missing: string[] }[] = []
+    for (const roleId of new Set(changes.map((c) => c.roleId))) {
+      const role = matrix.roles.find((r) => r.id === roleId)
+      for (const p of matrix.permissions) {
+        if (!granted.has(`${roleId}|${p.key}`)) continue
+        const missing = (p.requires ?? []).filter(
+          (k) => !granted.has(`${roleId}|${k}`)
+        )
+        const related =
+          touched.has(`${roleId}|${p.key}`) ||
+          missing.some((k) => touched.has(`${roleId}|${k}`))
+        if (missing.length > 0 && related) {
+          out.push({
+            role: role ? roleDisplayName(role) : 'Rol desconocido',
+            permission: requirementName(p.key),
+            missing: missing.map(requirementName)
+          })
+        }
+      }
+    }
+    return out
+  }, [changes, matrix])
+
   const hasRevocations = changes.some((c) => !c.granted)
   const touchesMyRevocation = groups.some(
     (g) =>
@@ -82,6 +120,20 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
             : 'Ningún usuario activo tiene estos roles hoy. '}
           Rigen desde la siguiente petición de cada uno, sin que tengan que volver a iniciar sesión.
         </Alert>
+        {unmetAfterChanges.length > 0 && (
+          <Alert severity='warning' sx={{ mb: 2 }}>
+            Después de estos cambios, algunas capacidades quedan sin otras que
+            necesitan (no impide guardar):
+            <Box component='ul' sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
+              {unmetAfterChanges.map((item) => (
+                <li key={item.role + item.permission}>
+                  {item.role}: «{item.permission}» necesita{' '}
+                  {item.missing.join(', ')}
+                </li>
+              ))}
+            </Box>
+          </Alert>
+        )}
         {touchesMe && (
           <Alert severity='warning' sx={{ mb: 2 }}>
             Uno de estos roles es tuyo: el cambio también te afecta a ti.

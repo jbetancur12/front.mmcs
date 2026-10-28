@@ -22,6 +22,7 @@ import {
   roleDisplayName
 } from '../../Components/Rbac/PermissionMatrix'
 import { permissionPlainText } from '../../Components/Rbac/PermissionHelp'
+import { requirementName } from '../../Components/Rbac/requirements'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { useRbacMatrix } from '../../hooks/useRbac'
 import { RbacPermission } from '../../types/rbac'
@@ -334,6 +335,18 @@ const RolesHelp: React.FC = () => {
                       />
                     ))}
                   </Box>
+                )}
+                {(e.permission.requires ?? []).length > 0 && (
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mt: 0.5 }}
+                  >
+                    <strong>Necesita también:</strong>{' '}
+                    {(e.permission.requires ?? [])
+                      .map(requirementName)
+                      .join(', ')}
+                  </Typography>
                 )}
                 <Box sx={{ mt: 1.5 }}>
                   <Typography variant='caption' color='text.secondary'>

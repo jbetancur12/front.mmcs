@@ -15,6 +15,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import { getPermissionHelp } from 'src/constants/permissionHelp'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacPermission, RbacRole } from '../../types/rbac'
+import { requirementName } from './requirements'
 
 const TEAL = '#00BFA5'
 const TEAL_DARK = '#00897B'
@@ -157,6 +158,17 @@ export const PermissionHelpButton: React.FC<PermissionHelpButtonProps> = ({
               <Section title='Pantallas que la usan por detrás'>
                 <Typography variant='body2' color='text.secondary'>
                   {related.map((s) => s.label).join(' · ')}
+                </Typography>
+              </Section>
+            )}
+            {(permission.requires ?? []).length > 0 && (
+              <Section title='Necesita también'>
+                <Typography variant='body2'>
+                  {(permission.requires ?? []).map(requirementName).join(', ')}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Sin estas, la persona vería pantallas vacías o botones que no
+                  puede usar. El panel avisa, pero no lo impide.
                 </Typography>
               </Section>
             )}

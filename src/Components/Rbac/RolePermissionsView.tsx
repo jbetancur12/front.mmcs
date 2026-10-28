@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -17,6 +18,7 @@ import {
 } from '@mui/material'
 import LockIcon from '@mui/icons-material/Lock'
 import SearchIcon from '@mui/icons-material/Search'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacMatrix, RbacRole } from '../../types/rbac'
 import { PendingChange } from './ChangesDialog'
@@ -25,6 +27,7 @@ import {
   grantedRoleNames,
   permissionPlainText
 } from './PermissionHelp'
+import { missingRequirements, requirementName } from './requirements'
 import {
   ScreenInfo,
   cellKey,
@@ -185,6 +188,29 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
     for (const key of keys) {
       if (lockedReason(role.id, key)) continue
       if (has(key) !== granted) onToggle(role.id, key, granted)
+    }
+  }
+
+  // Capacidades que el rol tiene sin otras que necesitan (con los cambios pendientes ya aplicados)
+  const unmet = useMemo(
+    () =>
+      role
+        ? matrix.permissions
+            .filter((p) => effectiveGrants.has(cellKey(role.id, p.key)))
+            .map((p) => ({
+              permission: p,
+              missing: missingRequirements(p, (key) =>
+                effectiveGrants.has(cellKey(role.id, key))
+              )
+            }))
+            .filter((item) => item.missing.length > 0)
+        : [],
+    [matrix.permissions, effectiveGrants, role]
+  )
+  const giveMissing = (keys: string[]) => {
+    if (!role) return
+    for (const key of new Set(keys)) {
+      if (!lockedReason(role.id, key)) onToggle(role.id, key, true)
     }
   }
 
@@ -404,6 +430,34 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
             />
           </Box>
 
+          {unmet.length > 0 && (
+            <Alert
+              severity='warning'
+              icon={<WarningAmberIcon />}
+              sx={{ mt: 2 }}
+              action={
+                editable ? (
+                  <Button
+                    color='inherit'
+                    size='small'
+                    onClick={() =>
+                      giveMissing(unmet.flatMap((item) => item.missing))
+                    }
+                    sx={{ textTransform: 'none', fontWeight: 600 }}
+                  >
+                    Dar las que faltan
+                  </Button>
+                ) : undefined
+              }
+            >
+              {unmet.length === 1
+                ? '1 capacidad de este rol necesita otras que no tiene.'
+                : `${unmet.length} capacidades de este rol necesitan otras que no tiene.`}{' '}
+              Sin ellas la persona vería pantallas vacías o botones que no puede
+              usar.
+            </Alert>
+          )}
+
           {groups.length === 0 && (
             <Typography color='text.secondary' sx={{ py: 4, textAlign: 'center' }}>
               Ninguna capacidad coincide con el filtro. Cambia el módulo o
@@ -538,6 +592,49 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                           {p.key}
                         </Typography>
                         <ScreenInfo permissionKey={p.key} />
+                        {granted &&
+                          (() => {
+                            const missing = missingRequirements(p, has)
+                            if (missing.length === 0) return null
+                            const givable = missing.filter(
+                              (key) => !role || !lockedReason(role.id, key)
+                            )
+                            return (
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.75,
+                                  flexWrap: 'wrap',
+                                  mt: 0.75
+                                }}
+                              >
+                                <WarningAmberIcon
+                                  sx={{ fontSize: 16, color: '#d97706' }}
+                                />
+                                <Typography
+                                  variant='caption'
+                                  sx={{ color: '#92400e' }}
+                                >
+                                  Necesita también:{' '}
+                                  {missing.map(requirementName).join(', ')}
+                                </Typography>
+                                {editable && givable.length > 0 && (
+                                  <Button
+                                    size='small'
+                                    onClick={() => giveMissing(givable)}
+                                    sx={{
+                                      textTransform: 'none',
+                                      py: 0,
+                                      color: TEAL_DARK
+                                    }}
+                                  >
+                                    Dar las que faltan
+                                  </Button>
+                                )}
+                              </Box>
+                            )
+                          })()}
                       </Box>
                     </Box>
                   )

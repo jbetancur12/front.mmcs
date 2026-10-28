@@ -17,6 +17,11 @@ export interface RbacPermission {
   description: string | null
   /** Solo super_admin puede otorgarla o quitarla */
   isSensitive: boolean
+  /**
+   * Capacidades que necesita para servir de algo (api.mmcs: constants/permissionRequirements.js). Es una
+   * guía: el panel avisa si un rol la tiene sin ellas, pero no lo impide.
+   */
+  requires?: string[]
 }
 
 export interface RbacGrant {

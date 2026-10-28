@@ -30,6 +30,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import BlockIcon from '@mui/icons-material/Block'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SearchIcon from '@mui/icons-material/Search'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { ROLE_LABELS_ES } from 'src/constants/roles'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacMatrix, RbacRole } from '../../types/rbac'
@@ -38,6 +39,7 @@ import {
   grantedRoleNames,
   permissionPlainText
 } from './PermissionHelp'
+import { missingRequirements, requirementName } from './requirements'
 
 /** Nombre legible de cada módulo del catálogo; si falta, se muestra la clave. */
 export const RBAC_MODULE_LABELS: Record<string, string> = {
@@ -484,6 +486,11 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                       const reason = lockedReason?.(role.id, permission.key) ?? null
                       const disabled = !editable || Boolean(reason)
                       const changed = changedCells?.has(key) ?? false
+                      const missing = checked
+                        ? missingRequirements(permission, (k) =>
+                            grants.has(cellKey(role.id, k))
+                          )
+                        : []
                       return (
                         <TableCell
                           key={role.id}
@@ -495,7 +502,24 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                           }}
                         >
                           <Tooltip title={reason ?? ''} disableHoverListener={!reason}>
-                            <span>
+                            <span style={{ position: 'relative' }}>
+                              {missing.length > 0 && (
+                                <Tooltip
+                                  title={`Necesita también: ${missing.map(requirementName).join(', ')}`}
+                                >
+                                  <WarningAmberIcon
+                                    aria-label={`${permission.key} necesita otras capacidades que este rol no tiene`}
+                                    sx={{
+                                      position: 'absolute',
+                                      top: 0,
+                                      right: -2,
+                                      zIndex: 1,
+                                      fontSize: 15,
+                                      color: '#d97706'
+                                    }}
+                                  />
+                                </Tooltip>
+                              )}
                               <Checkbox
                                 checked={checked}
                                 disabled={disabled}
