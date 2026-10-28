@@ -1,5 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import {
+  Alert,
   Box,
   Checkbox,
   FormControlLabel,
@@ -219,7 +220,7 @@ const CalibrationServiceCutDialog = ({
       }))
 
     await onSubmit({
-      cutType,
+      cutType: cutType === 'final' && !releasesEverything ? 'partial' : cutType,
       notes,
       items,
       ...(editingCut ? { reason: reason.trim() } : {})
@@ -230,6 +231,13 @@ const CalibrationServiceCutDialog = ({
   const hasInvalidQuantity = selectedItems.some((item) =>
     Boolean(getItemQuantityError(item))
   )
+  // Un corte "final" que deja algo por liberar no es final: se guarda como parcial y se avisa antes
+  const releasesEverything = draftItems.every(
+    (item) =>
+      item.quantityAvailable === 0 ||
+      (item.selected && item.quantity === item.quantityAvailable)
+  )
+  const willBePartial = cutType === 'final' && !releasesEverything
   const canSubmit =
     selectedItems.length > 0 &&
     !hasInvalidQuantity &&
@@ -266,14 +274,32 @@ const CalibrationServiceCutDialog = ({
       submitDisabled={!canSubmit}
       maxWidth='md'
     >
+      {willBePartial ? (
+        <Alert severity='warning' sx={{ mb: 2 }}>
+          Este corte no libera todo lo pendiente, así que se guardará como{' '}
+          <strong>parcial</strong>. Marca todos los ítems con su cantidad
+          completa si quieres que sea final.
+        </Alert>
+      ) : null}
       <FormDialogSection title='Datos del corte'>
         <TextField
           select
           label='Tipo de corte'
           value={cutType}
-          onChange={(event) =>
-            setCutType(event.target.value as CalibrationServiceCutType)
-          }
+          onChange={(event) => {
+            const nextType = event.target.value as CalibrationServiceCutType
+            setCutType(nextType)
+            // Un corte final libera todo lo pendiente: se marca y se rellena solo, sin escribirlo a mano
+            if (nextType === 'final') {
+              setDraftItems((currentItems) =>
+                currentItems.map((item) => ({
+                  ...item,
+                  selected: item.quantityAvailable > 0,
+                  quantity: item.quantityAvailable
+                }))
+              )
+            }
+          }}
         >
           <MenuItem value='partial'>Parcial</MenuItem>
           <MenuItem value='final'>Final</MenuItem>
