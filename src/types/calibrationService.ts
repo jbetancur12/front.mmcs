@@ -528,6 +528,7 @@ export interface CalibrationServiceQuoteTermsTemplate {
 export type CalibrationServiceCutTask =
   | 'ready_to_invoice'
   | 'unpaid'
+  | 'receivable'
   | 'certificates_pending'
 
 export interface CalibrationServiceFilters {
@@ -553,6 +554,14 @@ export interface CalibrationServiceCertificateSendResult {
   sentAt: string
   status: 'success' | 'error'
   method: string
+}
+
+export interface CalibrationServiceCollectionBucket {
+  invoiced: number
+  collected: number
+  outstanding: number
+  cuts: number
+  outstandingCuts: number
 }
 
 export interface CalibrationServiceListResponse {
@@ -589,6 +598,11 @@ export interface CalibrationServiceAnalyticsSummary {
   approvedQuotedValue: number | null
   approvedAdjustmentValue: number | null
   invoicedValue: number | null
+  /** Cobro de los cortes facturados, partido en contado y crédito (null sin la capacidad de ver precios). */
+  collections?: {
+    cash: CalibrationServiceCollectionBucket
+    credit: CalibrationServiceCollectionBucket
+  } | null
 }
 
 export interface CalibrationServiceAnalyticsFunnelItem {

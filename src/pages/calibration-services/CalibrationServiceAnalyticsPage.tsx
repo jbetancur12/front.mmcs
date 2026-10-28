@@ -1,4 +1,5 @@
 import CalibrationServiceStageTimesCard from './CalibrationServiceStageTimesCard'
+import CalibrationServiceCollectionsCard from './CalibrationServiceCollectionsCard'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
@@ -945,6 +946,10 @@ const CalibrationServiceAnalyticsPage = () => {
               />
             </Grid>
           </Grid>
+
+          <CalibrationServiceCollectionsCard
+            collections={data?.summary.collections}
+          />
 
           <CalibrationServiceStageTimesCard />
 

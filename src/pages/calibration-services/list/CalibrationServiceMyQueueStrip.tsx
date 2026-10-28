@@ -9,6 +9,7 @@ import { useCalibrationServiceMyQueue } from '../../../hooks/useCalibrationServi
 // El color dice qué tan urgente es: rojo = bloquea dinero, naranja = espera una acción, azul = seguimiento.
 const SECTION_TONES: Record<string, LmsStatTone> = {
   unpaid: 'red',
+  receivable: 'blue',
   certificates: 'orange',
   without_cut: 'orange',
   to_schedule: 'orange',
@@ -31,6 +32,7 @@ const MIRRORED_BY_PIPELINE = new Set([
 const CUT_TASK_BY_SECTION: Record<string, CalibrationServiceCutTask> = {
   ready_to_invoice: 'ready_to_invoice',
   unpaid: 'unpaid',
+  receivable: 'receivable',
   certificates: 'certificates_pending'
 }
 

@@ -153,6 +153,21 @@ const CalibrationServiceCutsPanel = ({
                         ? `Soporte factura: ${invoiceEvidenceCount}`
                         : 'Sin soporte adjunto'}
                     </Typography>
+                    {cut.status === 'invoiced' ? (
+                      <Chip
+                        size='small'
+                        variant='outlined'
+                        color={cut.paymentRegisteredAt ? 'success' : cut.customerHasCredit ? 'info' : 'warning'}
+                        label={
+                          cut.paymentRegisteredAt
+                            ? `Pagado ${new Date(cut.paymentRegisteredAt).toLocaleDateString('es-CO')}`
+                            : cut.customerHasCredit
+                              ? 'Crédito: por cobrar'
+                              : 'Contado: sin pago'
+                        }
+                        sx={{ alignSelf: 'flex-start' }}
+                      />
+                    ) : null}
                   </Stack>
                 ) : (
                   'Pendiente'
@@ -257,13 +272,43 @@ const CalibrationServiceCutsPanel = ({
                     </Typography>
                   )
                 ) : canUpdateDocumentControl && cut.status === 'invoiced' ? (
+                  <Stack spacing={0.5}>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      onClick={() => onUpdateDocumentControl?.(cut)}
+                      disabled={isBusy}
+                    >
+                      Control documental
+                    </Button>
+                    {/* A crédito el pago pendiente no bloquea certificados, pero se registra igual */}
+                    {canRegisterPayment &&
+                    onRegisterPayment &&
+                    cut.customerHasCredit &&
+                    !cut.paymentRegisteredAt ? (
+                      <Button
+                        size='small'
+                        variant='text'
+                        onClick={() => onRegisterPayment(cut)}
+                        disabled={isBusy}
+                        sx={{ textTransform: 'none', color: '#00695C' }}
+                      >
+                        Registrar pago
+                      </Button>
+                    ) : null}
+                  </Stack>
+                ) : canRegisterPayment &&
+                  onRegisterPayment &&
+                  cut.status === 'invoiced' &&
+                  cut.customerHasCredit &&
+                  !cut.paymentRegisteredAt ? (
                   <Button
                     size='small'
                     variant='outlined'
-                    onClick={() => onUpdateDocumentControl?.(cut)}
+                    onClick={() => onRegisterPayment(cut)}
                     disabled={isBusy}
                   >
-                    Control documental
+                    Registrar pago
                   </Button>
                 ) : (
                   'Sin acción'

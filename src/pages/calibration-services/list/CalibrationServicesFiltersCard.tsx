@@ -222,6 +222,15 @@ const CalibrationServicesFiltersCard = ({
                 }
               />
               <QuickFilter
+                label='Por cobrar (crédito)'
+                active={cutTaskFilter === 'receivable'}
+                onClick={() =>
+                  setCutTaskFilter(
+                    cutTaskFilter === 'receivable' ? '' : 'receivable'
+                  )
+                }
+              />
+              <QuickFilter
                 label='Facturados'
                 active={hasCutsInvoiced}
                 onClick={() => toggleStatusShortcut('invoiced')}
