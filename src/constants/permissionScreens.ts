@@ -912,10 +912,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/purchases/verifications", label: "Compras › Verificaciones", kind: 'screen' }
   ],
   'rbac:manage': [
-    { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'action' }
+    { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'action' },
+    { path: "/settings/roles/ayuda", label: "Ajustes › Roles y permisos › ayuda", kind: 'related' }
   ],
   'rbac:view': [
-    { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'screen' }
+    { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'screen' },
+    { path: "/settings/roles/ayuda", label: "Ajustes › Roles y permisos › ayuda", kind: 'screen' }
   ],
   'repositories:repository:manage': [
     { path: "/", label: "Inicio", kind: 'action' },

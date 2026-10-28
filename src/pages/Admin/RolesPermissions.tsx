@@ -11,7 +11,9 @@ import {
   Typography
 } from '@mui/material'
 import { useStore } from '@nanostores/react'
+import { Link as RouterLink } from 'react-router-dom'
 import AddIcon from '@mui/icons-material/Add'
+import MenuBookIcon from '@mui/icons-material/MenuBook'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import GroupsIcon from '@mui/icons-material/Groups'
 import VpnKeyIcon from '@mui/icons-material/VpnKey'
@@ -236,20 +238,30 @@ const RolesPermissions: React.FC = () => {
         subtitle='Qué puede hacer cada rol en cada módulo y en qué pantallas se refleja'
         icon={<AdminPanelSettingsIcon />}
         actions={
-          canManage ? (
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Button
-              variant='contained'
-              startIcon={<AddIcon />}
-              onClick={() => setCreateOpen(true)}
-              sx={{
-                textTransform: 'none',
-                bgcolor: TEAL,
-                '&:hover': { bgcolor: '#00ACC1' }
-              }}
+              component={RouterLink}
+              to='/settings/roles/ayuda'
+              startIcon={<MenuBookIcon />}
+              sx={{ textTransform: 'none', color: '#00897B' }}
             >
-              Nuevo rol
+              Guía de capacidades
             </Button>
-          ) : undefined
+            {canManage && (
+              <Button
+                variant='contained'
+                startIcon={<AddIcon />}
+                onClick={() => setCreateOpen(true)}
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: TEAL,
+                  '&:hover': { bgcolor: '#00ACC1' }
+                }}
+              >
+                Nuevo rol
+              </Button>
+            )}
+          </Box>
         }
       />
 

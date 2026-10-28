@@ -20,6 +20,13 @@ export interface QuickSearchPage {
 
 export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
   {
+    label: 'Guía de capacidades',
+    path: '/settings/roles/ayuda',
+    parents: ['Ajustes', 'Roles y permisos'],
+    permission: PERMISSIONS.RBAC_VIEW,
+    keywords: ['ayuda', 'wiki', 'permisos', 'capacidades', 'explicacion', 'guia']
+  },
+  {
     label: 'Equipos en préstamo',
     path: '/datasheets/devices-on-loan',
     parents: ['Inventario'],
