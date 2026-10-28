@@ -124,6 +124,7 @@ export type CalibrationServiceEventType =
   | 'cut_invoiced'
   | 'payment_registered'
   | 'document_control_updated'
+  | 'ods_reissued'
   | 'closed'
   | 'cancelled'
   | 'paused'

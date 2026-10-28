@@ -35,6 +35,7 @@ import CalibrationServiceStatusChip from '../CalibrationServiceStatusChip'
 import CalibrationServiceStageDecisionHelp from '../CalibrationServiceStageDecisionHelp'
 import CalibrationNotificationBell from '../CalibrationNotificationBell'
 import CalibrationServiceQuoteLifecycleActions from './CalibrationServiceQuoteLifecycleActions'
+import CalibrationServiceOdsReissueAction from './CalibrationServiceOdsReissueAction'
 import { BlockedActionTooltip } from './CalibrationServiceDetailLayout'
 import {
   formatDateValue,
@@ -236,7 +237,10 @@ const CalibrationServiceDetailHeader = ({
           />
         ) : null}
         {isTechnicalOnlyView || isAnalystOnlyView ? null : (
-          <CalibrationServiceQuoteLifecycleActions service={service} />
+          <>
+            <CalibrationServiceQuoteLifecycleActions service={service} />
+            <CalibrationServiceOdsReissueAction service={service} />
+          </>
         )}
         {canRequestApproval ? (
           <Button

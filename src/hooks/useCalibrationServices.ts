@@ -296,6 +296,20 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  reissueOds: async ({
+    serviceId,
+    ...payload
+  }: {
+    serviceId: number | string
+    reason: string
+    [field: string]: unknown
+  }): Promise<CalibrationService & { pdfError?: string }> => {
+    const response = await axiosPrivate.post<
+      CalibrationService & { pdfError?: string }
+    >(`/calibration-services/${serviceId}/reissue-ods`, payload)
+    return response.data
+  },
+
   duplicateService: async (
     serviceId: number | string
   ): Promise<CalibrationService> => {
@@ -1039,6 +1053,7 @@ export const useCalibrationServiceMutations = () => {
   const approveService = useMutation(calibrationServiceApi.approveService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const rejectService = useMutation(calibrationServiceApi.rejectService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const reopenQuote = useMutation(calibrationServiceApi.reopenQuote, { onSuccess: (s: any) => { iA(); iD(s.id) } })
+  const reissueOds = useMutation(calibrationServiceApi.reissueOds, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const duplicateService = useMutation(calibrationServiceApi.duplicateService, { onSuccess: iA })
   const voidCut = useMutation(calibrationServiceApi.voidCut, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const revertCutToDraft = useMutation(calibrationServiceApi.revertCutToDraft, { onSuccess: (s: any) => { iA(); iD(s.id) } })
@@ -1085,5 +1100,5 @@ export const useCalibrationServiceMutations = () => {
   const updateExecutionCustomer = useMutation(calibrationServiceApi.updateExecutionCustomer, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const upsertQuoteTermsTemplate = useMutation(calibrationServiceApi.upsertQuoteTermsTemplate, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']) } })
 
-  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, reopenQuote, duplicateService, voidCut, revertCutToDraft, correctCutInvoice, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
+  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, reopenQuote, reissueOds, duplicateService, voidCut, revertCutToDraft, correctCutInvoice, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
 }
