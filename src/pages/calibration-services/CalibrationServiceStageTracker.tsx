@@ -13,7 +13,6 @@ const STAGES: StageTrackerStage[] = [
   { key: 'pending_approval', label: 'Cotización enviada' },
   { key: 'approved', label: 'Aprobada' },
   { key: 'ods_issued', label: 'ODS emitida' },
-  { key: 'pending_programming', label: 'Por programar' },
   { key: 'scheduled', label: 'Programada' },
   { key: 'in_execution', label: 'En ejecución' },
   { key: 'technically_completed', label: 'Finalizada' },
@@ -59,7 +58,8 @@ const CalibrationServiceStageTracker = ({
   return (
     <StageTracker
       stages={stages}
-      current={status}
+      // pending_programming no se alcanza en el flujo real: se muestra como ODS emitida (la ODS ya está lista para programar)
+      current={status === 'pending_programming' ? 'ods_issued' : status}
       ariaLabel='Etapas del servicio'
       stopped={
         isStopped

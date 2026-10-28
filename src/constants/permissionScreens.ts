@@ -673,6 +673,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
   ],
+  'maintenance:comment:moderate': [
+    { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'action' }
+  ],
+  'maintenance:comment:view_internal': [
+    { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'action' }
+  ],
   'maintenance:file:manage': [
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },

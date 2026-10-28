@@ -34,7 +34,7 @@ interface Props {
 }
 
 const STATUS_OPTIONS: CalibrationServiceStatus[] = [
-  'pending_programming',
+  'ods_issued',
   'scheduled',
   'in_execution',
   'technically_completed',
@@ -43,7 +43,7 @@ const STATUS_OPTIONS: CalibrationServiceStatus[] = [
 
 const STATUS_FILTER_LABELS: Partial<Record<CalibrationServiceStatus, string>> =
   {
-    pending_programming: 'Por programar',
+    ods_issued: 'Por programar',
     scheduled: 'Programado',
     in_execution: 'En ejecución',
     technically_completed: 'Terminado técnicamente',

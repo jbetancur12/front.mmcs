@@ -191,19 +191,21 @@ const CalibrationServiceCutsPanel = ({
                     Marcar facturado
                   </Button>
                 ) : (canUpdateDocumentControl || canRegisterPayment) && cut.status === 'invoiced' && cut.customerHasCredit === false && !cut.paymentRegisteredAt ? (
-                  <Stack spacing={0.5}>
-                    {onRegisterPayment ? (
-                      <Button
-                        size='small'
-                        variant='contained'
-                        color='warning'
-                        onClick={() => onRegisterPayment(cut)}
-                        disabled={isBusy}
-                      >
-                        ⚠ Registrar pago
-                      </Button>
-                    ) : null}
-                  </Stack>
+                  canRegisterPayment && onRegisterPayment ? (
+                    <Button
+                      size='small'
+                      variant='contained'
+                      color='warning'
+                      onClick={() => onRegisterPayment(cut)}
+                      disabled={isBusy}
+                    >
+                      ⚠ Registrar pago
+                    </Button>
+                  ) : (
+                    <Typography variant='body2' color='text.secondary'>
+                      Esperando pago de facturación
+                    </Typography>
+                  )
                 ) : canUpdateDocumentControl && cut.status === 'invoiced' ? (
                   <Button
                     size='small'
