@@ -114,6 +114,20 @@ export type CalibrationServiceEventType =
   | 'ods_issued'
   | 'document_uploaded'
   | 'certificate_sent'
+  | 'scheduled'
+  | 'rescheduled'
+  | 'reassigned'
+  | 'execution_started'
+  | 'technically_completed'
+  | 'cut_created'
+  | 'cut_ready'
+  | 'cut_invoiced'
+  | 'payment_registered'
+  | 'document_control_updated'
+  | 'closed'
+  | 'cancelled'
+  | 'paused'
+  | 'resumed'
 
 export interface CalibrationServiceCustomer {
   id: number

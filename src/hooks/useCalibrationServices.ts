@@ -842,6 +842,35 @@ export const useCalibrationServiceMyQueue = () =>
     retry: 1
   })
 
+export interface CalibrationStageTime {
+  key: string
+  label: string
+  count: number
+  avgHours: number | null
+  medianHours: number | null
+  byRole: Array<{
+    role: string
+    count: number
+    avgHours: number | null
+    medianHours: number | null
+  }>
+}
+
+/** Tiempo promedio y mediano entre hitos del flujo (H-19). */
+export const useCalibrationServiceStageTimes = () =>
+  useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'stage-times'],
+    queryFn: async () => {
+      const response = await axiosPrivate.get<{
+        transitions: CalibrationStageTime[]
+        servicesAnalyzed: number
+      }>('/calibration-services/analytics/stage-times')
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 1
+  })
+
 export const useCalibrationServiceAnalytics = (
   filters?: CalibrationServiceAnalyticsFilters,
   enabled = true

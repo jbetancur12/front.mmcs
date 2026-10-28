@@ -231,7 +231,21 @@ export const CALIBRATION_SERVICE_EVENT_LABELS: Record<
   adjustment_reviewed: 'Novedad revisada',
   ods_issued: 'ODS emitida',
   document_uploaded: 'Documento cargado',
-  certificate_sent: 'Certificado enviado'
+  certificate_sent: 'Certificado enviado',
+  scheduled: 'Servicio programado',
+  rescheduled: 'Servicio reprogramado',
+  reassigned: 'Metrólogo reasignado',
+  execution_started: 'Ejecución iniciada',
+  technically_completed: 'Finalizado técnicamente',
+  cut_created: 'Corte creado',
+  cut_ready: 'Corte listo para facturar',
+  cut_invoiced: 'Corte facturado',
+  payment_registered: 'Pago registrado',
+  document_control_updated: 'Control documental actualizado',
+  closed: 'Servicio cerrado',
+  cancelled: 'Servicio cancelado',
+  paused: 'Servicio pausado',
+  resumed: 'Servicio reanudado'
 }
 
 export const CALIBRATION_SERVICE_EVENT_COLORS: Record<
@@ -247,7 +261,21 @@ export const CALIBRATION_SERVICE_EVENT_COLORS: Record<
   adjustment_reviewed: 'info',
   ods_issued: 'info',
   document_uploaded: 'secondary',
-  certificate_sent: 'success'
+  certificate_sent: 'success',
+  scheduled: 'info',
+  rescheduled: 'warning',
+  reassigned: 'info',
+  execution_started: 'primary',
+  technically_completed: 'success',
+  cut_created: 'primary',
+  cut_ready: 'info',
+  cut_invoiced: 'success',
+  payment_registered: 'success',
+  document_control_updated: 'info',
+  closed: 'success',
+  cancelled: 'error',
+  paused: 'warning',
+  resumed: 'primary'
 }
 
 export const CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS: Record<

@@ -47,7 +47,21 @@ const EVENT_ICON_MAP: Record<CalibrationServiceEventType, JSX.Element> = {
   adjustment_reviewed: <DescriptionOutlined fontSize='small' />,
   ods_issued: <DescriptionOutlined fontSize='small' />,
   document_uploaded: <AttachFileOutlined fontSize='small' />,
-  certificate_sent: <SendOutlined fontSize='small' />
+  certificate_sent: <SendOutlined fontSize='small' />,
+  scheduled: <EditOutlined fontSize='small' />,
+  rescheduled: <EditOutlined fontSize='small' />,
+  reassigned: <EditOutlined fontSize='small' />,
+  execution_started: <EditOutlined fontSize='small' />,
+  technically_completed: <CheckCircleOutlineOutlined fontSize='small' />,
+  cut_created: <PostAddOutlined fontSize='small' />,
+  cut_ready: <DescriptionOutlined fontSize='small' />,
+  cut_invoiced: <DescriptionOutlined fontSize='small' />,
+  payment_registered: <CheckCircleOutlineOutlined fontSize='small' />,
+  document_control_updated: <AttachFileOutlined fontSize='small' />,
+  closed: <CheckCircleOutlineOutlined fontSize='small' />,
+  cancelled: <HighlightOffOutlined fontSize='small' />,
+  paused: <EditOutlined fontSize='small' />,
+  resumed: <EditOutlined fontSize='small' />
 }
 
 const getDotPalette = (
