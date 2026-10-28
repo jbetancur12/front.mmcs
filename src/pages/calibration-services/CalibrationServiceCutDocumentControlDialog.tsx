@@ -178,8 +178,35 @@ const CalibrationServiceCutDocumentControlDialog = ({
             </Button>
           ) : null}
         </Box>
+        <Box sx={{ ...FULL_ROW, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button
+            size='small'
+            variant='outlined'
+            disabled={isLoading || expectedCertificates <= 0}
+            onClick={() => {
+              setUploadedCertificates(expectedCertificates)
+              setReviewedCertificates(expectedCertificates)
+            }}
+            sx={{ textTransform: 'none', color: '#00695C', borderColor: '#00BFA5' }}
+          >
+            Todos emitidos y revisados ({expectedCertificates})
+          </Button>
+          <Button
+            size='small'
+            variant='outlined'
+            disabled={isLoading || expectedCertificates <= 0}
+            onClick={() => {
+              setUploadedCertificates(expectedCertificates)
+              setReviewedCertificates(expectedCertificates)
+              setSentCertificates(expectedCertificates)
+            }}
+            sx={{ textTransform: 'none', color: '#00695C', borderColor: '#00BFA5' }}
+          >
+            Todos enviados ({expectedCertificates})
+          </Button>
+        </Box>
         <TextField
-          label='Cargados'
+          label='Emitidos'
           type='number'
           value={uploadedCertificates}
           onChange={numberField(setUploadedCertificates)}
@@ -190,7 +217,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
           type='number'
           value={reviewedCertificates}
           onChange={numberField(setReviewedCertificates)}
-          helperText='No pueden superar los cargados.'
+          helperText='No pueden superar los emitidos.'
         />
         <TextField
           label='Enviados'
