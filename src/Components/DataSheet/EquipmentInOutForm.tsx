@@ -10,13 +10,12 @@ import {
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useStore } from '@nanostores/react'
-import { userStore } from '@stores/userStore'
+import { useCan } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 import {
   useDataSheetStatus,
   useSaveEquipmentInOut
 } from '@hooks/dataSheets/useDataSheets'
-import { ROLES } from 'src/constants/roles'
 import { formatDateOnly } from '@utils/dateOnly'
 import { loadOptions, mapOptions } from '@utils/loadOptions'
 import { Profile } from '../../pages/Profiles'
@@ -112,8 +111,9 @@ const buildSchema = (isEquipmentOut: boolean) =>
   )
 
 const EquipmentForm: React.FC = () => {
-  const $userStore = useStore(userStore)
-  const isAdmin = $userStore.rol.some((role) => role === ROLES.ADMIN)
+  // Cada botón lleva a una pantalla con su propia capacidad: se muestra a quien puede abrirla (no solo al admin)
+  const canViewHistory = useCan(PERMISSIONS.CALIBRATION_EQUIPMENT_INOUT_LIST)
+  const canViewReport = useCan(PERMISSIONS.CALIBRATION_REPORT_VIEW)
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)
@@ -212,25 +212,25 @@ const EquipmentForm: React.FC = () => {
         icon={!isEquipmentOut ? <Logout /> : <Login />}
         actions={
           <>
-            {isAdmin && (
-              <>
-                <Button
-                  variant='outlined'
-                  startIcon={<TableChart />}
-                  onClick={() => navigate(`/datasheets/${id}/in-out-table`)}
-                  sx={buttonSx}
-                >
-                  Historial
-                </Button>
-                <Button
-                  variant='outlined'
-                  startIcon={<Download />}
-                  onClick={() => navigate(`/datasheets/${id}/in-out-report`)}
-                  sx={buttonSx}
-                >
-                  Reporte PDF
-                </Button>
-              </>
+            {canViewHistory && (
+              <Button
+                variant='outlined'
+                startIcon={<TableChart />}
+                onClick={() => navigate(`/datasheets/${id}/in-out-table`)}
+                sx={buttonSx}
+              >
+                Historial
+              </Button>
+            )}
+            {canViewReport && (
+              <Button
+                variant='outlined'
+                startIcon={<Download />}
+                onClick={() => navigate(`/datasheets/${id}/in-out-report`)}
+                sx={buttonSx}
+              >
+                Reporte PDF
+              </Button>
             )}
             <Button
               variant='outlined'

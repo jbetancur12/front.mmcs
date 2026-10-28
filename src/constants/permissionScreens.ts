@@ -121,7 +121,8 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' }
   ],
   'calibration:equipment_inout:list': [
-    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'screen' }
+    { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'screen' },
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'action' }
   ],
   'calibration:equipment_inout:manage': [
     { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'screen' }
@@ -248,11 +249,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/inventory-leasing", label: "Hojas de datos › Inventario y alquiler", kind: 'screen' },
     { path: "/datasheets/inventory/:id?", label: "Hojas de datos › Inventario", kind: 'screen' },
     { path: "/datasheets/maintenance-schedule/:id?", label: "Hojas de datos › Cronograma de mantenimiento", kind: 'screen' },
+    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'action' },
     { path: "/customers/:id/schedule/pdf", label: "Clientes › Programación › PDF", kind: 'related' },
     { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'related' },
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'related' },
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'related' },
-    { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
     { path: "/datasheets/:id/in-out-table", label: "Hojas de datos › Entradas y salidas", kind: 'related' },
     { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
     { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
@@ -613,7 +614,8 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'lms:course:manage': [
     { path: "/lms/admin/courses", label: "Academia › Gestión de cursos", kind: 'screen' },
     { path: "/lms/admin/courses/:courseId/content", label: "Academia › Administración › Cursos › Contenido", kind: 'screen' },
-    { path: "/lms/admin/quiz-management", label: "Academia › Administración › Banco de preguntas", kind: 'screen' }
+    { path: "/lms/admin/quiz-management", label: "Academia › Administración › Banco de preguntas", kind: 'screen' },
+    { path: "/lms/course/:courseId/preview", label: "Academia › Curso › Vista previa", kind: 'action' }
   ],
   'lms:dashboard:view': [
     { path: "/lms/admin/analytics", label: "Academia › Analíticas", kind: 'screen' }

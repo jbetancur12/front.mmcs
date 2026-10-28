@@ -61,7 +61,8 @@ import PDFViewer from 'src/Components/PDFViewer'
 import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
 
 
-import { ROLES } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { busyDialog } from 'src/utils/confirm'
 interface CourseUnit {
@@ -314,6 +315,8 @@ const LmsCoursePreview: React.FC = () => {
   const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
 
   const storeUser = useStore(userStore)
+  // La vista previa es para quien gestiona cursos (capacidad de la administración del LMS), no solo para "admin"
+  const canPreviewCourse = useCan(PERMISSIONS.LMS_COURSE_MANAGE)
   const queryClient = useQueryClient()
   const parsedCourseId = parseInt(courseId || '0')
   const previewQuery = useCourse(parsedCourseId, {
@@ -348,12 +351,12 @@ const LmsCoursePreview: React.FC = () => {
       return
     }
 
-    // Verificar que el usuario es admin
-    if (!storeUser.rol.includes(ROLES.ADMIN)) {
+    // Verificar que el usuario puede gestionar cursos
+    if (!canPreviewCourse) {
       navigate('/lms')
       return
     }
-  }, [navigate, storeUser])
+  }, [navigate, storeUser, canPreviewCourse])
 
   const handleOpenResource = (resource: any) => {
     if (resource.external_url) {
