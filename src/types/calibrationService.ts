@@ -412,7 +412,24 @@ export interface CalibrationServiceSlaIndicator {
   targetBusinessDays: number
 }
 
+/** Acción disponible del servicio para el usuario actual; la calcula el API (H-07). */
+export interface CalibrationServiceAvailableAction {
+  key: string
+  /** El usuario tiene la capacidad y el estado del servicio admite la acción. */
+  visible: boolean
+  /** Además se cumplen las condiciones para hacerla ahora. */
+  enabled: boolean
+  /** Por qué no se puede, cuando está visible pero no habilitada. */
+  reason: string | null
+  /** Capacidad que resuelve el paso. */
+  pendingWith: string
+}
+
 export interface CalibrationService {
+  availableActions?: CalibrationServiceAvailableAction[]
+  /** Siguiente tarea del flujo para el usuario y capacidad que la resuelve. */
+  nextAction?: string | null
+  pendingWith?: string | null
   id: number
   serviceCode: string
   quoteCode?: string | null

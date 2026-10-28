@@ -39,72 +39,25 @@ const useCalibrationServiceDetailPermissions = (
   const canGenerateOdsPdf = useCan(PERMISSIONS.CALIBRATION_SERVICE_ODS)
   const canEditExecutionCustomerRole =
     useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTION_CUSTOMER)
-  const canIssueOds =
-    canIssueOdsRole &&
-    service?.status === 'approved' &&
-    service?.approvalStatus === 'approved' &&
-    !service?.odsCode &&
-    Boolean(sequenceConfig?.initialized)
-  const canScheduleService =
-    canScheduleServiceRole &&
-    !service?.isPaused &&
-    service?.status !== 'cancelled' &&
-    ['ods_issued', 'pending_programming'].includes(service?.status || '')
-  const canReprogramService =
-    canReprogramServiceRole &&
-    !service?.isPaused &&
-    service?.status === 'scheduled'
-  const canReassignService =
-    canReassignServiceRole &&
-    service?.status !== 'cancelled' &&
-    ['scheduled', 'in_execution', 'technically_completed'].includes(
-      service?.status || ''
-    )
-  const canPauseService =
-    canPauseServiceRole &&
-    !service?.isPaused &&
-    service?.status !== 'cancelled' &&
-    [
-      'ods_issued',
-      'pending_programming',
-      'scheduled',
-      'in_execution',
-      'technically_completed'
-    ].includes(service?.status || '')
-  const canResumeService =
-    canPauseServiceRole &&
-    Boolean(service?.isPaused) &&
-    service?.status !== 'cancelled' &&
-    [
-      'ods_issued',
-      'pending_programming',
-      'scheduled',
-      'in_execution',
-      'technically_completed'
-    ].includes(service?.status || '')
-  const canCancelService =
-    canCancelServiceRole &&
-    service?.status !== 'cancelled' &&
-    service?.status !== 'closed' &&
-    // El backend no cancela servicios que ya tienen cortes registrados
-    !(service?.cuts?.length) &&
-    [
-      'draft',
-      'pending_approval',
-      'approved',
-      'ods_issued',
-      'pending_programming',
-      'scheduled',
-      'in_execution',
-      'technically_completed'
-    ].includes(service?.status || '')
-  const canStartExecution =
-    canRunExecutionRole && !service?.isPaused && service?.status === 'scheduled'
+  // Las reglas de estado y de capacidad de cada acción las calcula el API (availableActions): aquí solo se leen.
+  // Cambiar una capacidad en el panel de roles cambia los botones sin tocar este archivo.
+  const actionByKey = new Map(
+    (service?.availableActions || []).map((action) => [action.key, action])
+  )
+  const isVisible = (key: string) => Boolean(actionByKey.get(key)?.visible)
+  const isEnabled = (key: string) => Boolean(actionByKey.get(key)?.enabled)
+  const reasonOf = (key: string) => actionByKey.get(key)?.reason ?? null
+
+  const canIssueOds = isVisible('issue_ods') && Boolean(sequenceConfig?.initialized)
+  const canScheduleService = isVisible('schedule')
+  const canReprogramService = isVisible('reschedule')
+  const canReassignService = isVisible('reassign')
+  const canPauseService = isVisible('pause')
+  const canResumeService = isVisible('resume')
+  const canCancelService = isEnabled('cancel')
+  const canStartExecution = isVisible('start_execution')
   const allItemsOperationallyCompleted = (service?.items || []).every(
-    (item) => {
-      const status = item.otherFields?.operationalStatus
-      return status === 'completed'
-    }
+    (item) => item.otherFields?.operationalStatus === 'completed'
   )
   const hasReleasableItems = (service?.items || []).some((item) => {
     const operationalStatus = item.otherFields?.operationalStatus
@@ -118,88 +71,31 @@ const useCalibrationServiceDetailPermissions = (
       Math.max(quantity - releasedQuantity, 0) > 0
     )
   })
-  const canCompleteExecution =
-    canRunExecutionRole &&
-    service?.status === 'in_execution' &&
-    allItemsOperationallyCompleted
-  const canCreateCut =
-    canRunExecutionRole &&
-    !service?.isPaused &&
-    ['in_execution', 'technically_completed'].includes(service?.status || '') &&
-    hasReleasableItems
-  const showCompleteExecution =
-    canRunExecutionRole && service?.status === 'in_execution'
+  const canCompleteExecution = isEnabled('complete_execution')
+  const canCreateCut = isEnabled('create_cut')
+  const showCompleteExecution = isVisible('complete_execution')
   const pendingExecutionItems = (service?.items || []).filter(
     (item) => item.otherFields?.operationalStatus !== 'completed'
   ).length
-  const completeExecutionBlockedReason = allItemsOperationallyCompleted
-    ? null
-    : `Faltan ${pendingExecutionItems} ítem(s) por marcar como Completado en la pestaña Operación.`
-  const showCreateCut =
-    canRunExecutionRole &&
-    !service?.isPaused &&
-    ['in_execution', 'technically_completed'].includes(service?.status || '')
-  const createCutBlockedReason = hasReleasableItems
-    ? null
-    : 'No hay ítems en progreso o completados con cantidad por liberar. Registra el avance en la pestaña Operación.'
+  const completeExecutionBlockedReason = reasonOf('complete_execution')
+  const showCreateCut = isVisible('create_cut')
+  const createCutBlockedReason = reasonOf('create_cut')
   const showTechnicalProgressPdf =
     canRunExecutionRole && Boolean(service?.items?.length)
-  const canMarkCutReady =
-    canRunExecutionRole &&
-    !service?.isPaused &&
-    ['in_execution', 'technically_completed'].includes(service?.status || '')
-  const canReportAdjustment =
-    canReportAdjustmentRole &&
-    !service?.isPaused &&
-    ['in_execution', 'technically_completed'].includes(service?.status || '')
+  const canMarkCutReady = isVisible('mark_cut_ready')
+  const canReportAdjustment = isVisible('report_adjustment')
   const canReviewAdjustment =
     canReviewAdjustmentTechnically || canReviewAdjustmentCommercially
-  const canUpdateOperationalProgress =
-    canRunExecutionRole &&
-    !service?.isPaused &&
-    ['scheduled', 'in_execution'].includes(service?.status || '')
-  const canInvoiceCuts =
-    canInvoiceCutRole && !service?.isPaused && service?.status !== 'cancelled'
-  const canRegisterPayment =
-    canInvoiceCutRole && !service?.isPaused && service?.status !== 'cancelled'
-  const canUpdateDocumentControl =
-    canUpdateDocumentControlRole &&
-    service?.status !== 'closed' &&
-    service?.status !== 'cancelled' &&
-    !service?.isPaused
-  const canRegisterPhysicalTraceability =
-    canRegisterPhysicalTraceabilityRole &&
-    service?.status !== 'cancelled' &&
-    service?.status !== 'closed' &&
-    [
-      'ods_issued',
-      'pending_programming',
-      'scheduled',
-      'in_execution',
-      'technically_completed'
-    ].includes(service?.status || '')
-  const canManageLogisticsControl =
-    canRegisterPhysicalTraceabilityRole &&
-    service?.status !== 'cancelled' &&
-    service?.status !== 'closed' &&
-    [
-      'ods_issued',
-      'pending_programming',
-      'scheduled',
-      'in_execution',
-      'technically_completed'
-    ].includes(service?.status || '')
+  const canUpdateOperationalProgress = isVisible('update_progress')
+  const canInvoiceCuts = isVisible('invoice_cut')
+  const canRegisterPayment = isVisible('register_payment')
+  const canUpdateDocumentControl = isVisible('document_control')
+  const canRegisterPhysicalTraceability = isVisible('register_traceability')
+  const canManageLogisticsControl = isVisible('register_traceability')
+  // El PDF y el correo de logística también están disponibles con el servicio cerrado
   const canGenerateLogisticsPdf =
     canRegisterPhysicalTraceabilityRole &&
-    service?.status !== 'cancelled' &&
-    [
-      'ods_issued',
-      'pending_programming',
-      'scheduled',
-      'in_execution',
-      'technically_completed',
-      'closed'
-    ].includes(service?.status || '')
+    (isVisible('register_traceability') || service?.status === 'closed')
   const canSendLogisticsEmail = canGenerateLogisticsPdf
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
@@ -213,26 +109,12 @@ const useCalibrationServiceDetailPermissions = (
     service?.status === 'technically_completed'
   const shouldShowCutsNextStepGuidance =
     service?.status === 'technically_completed' && !hasCuts
-  const canCloseService =
-    canCloseServiceRole &&
-    !service?.isPaused &&
-    service?.status === 'technically_completed' &&
-    allCutsSent &&
-    !hasReleasableItems
-  const showCloseService =
-    canCloseServiceRole &&
-    !service?.isPaused &&
-    service?.status === 'technically_completed' &&
-    hasCuts
-  const closeServiceBlockedReason = !allCutsSent
-    ? 'Faltan cortes con el certificado enviado (control documental).'
-    : hasReleasableItems
-      ? 'Aún hay cantidades por liberar: crea un nuevo corte para ellas.'
-      : null
-  const canEdit = canEditService && service.status === 'draft'
-  const canRequestApproval = canEditService && service.status === 'draft'
-  const canDecideApproval =
-    canTakeApprovalDecision && service.status === 'pending_approval'
+  const canCloseService = isEnabled('close_service')
+  const showCloseService = isVisible('close_service')
+  const closeServiceBlockedReason = reasonOf('close_service')
+  const canEdit = isVisible('edit')
+  const canRequestApproval = isVisible('request_approval')
+  const canDecideApproval = isVisible('decide')
   const canEditExecutionCustomer =
     canEditExecutionCustomerRole &&
     service.status !== 'cancelled' &&
