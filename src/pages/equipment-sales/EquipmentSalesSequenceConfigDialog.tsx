@@ -18,7 +18,7 @@ interface EquipmentSalesSequenceConfigDialogProps {
   open: boolean
   isLoading?: boolean
   config?: EquipmentQuotationSequenceConfig
-  isAdmin?: boolean
+  canResetSequence?: boolean
   onClose: () => void
   onSubmit: (values: { nextQuoteNumber: number }) => Promise<void> | void
 }
@@ -27,7 +27,7 @@ const EquipmentSalesSequenceConfigDialog = ({
   open,
   isLoading = false,
   config,
-  isAdmin = false,
+  canResetSequence = false,
   onClose,
   onSubmit
 }: EquipmentSalesSequenceConfigDialogProps) => {
@@ -118,7 +118,7 @@ const EquipmentSalesSequenceConfigDialog = ({
             </Typography>
           )}
 
-          {isAlreadyInitialized && isAdmin && !editMode ? (
+          {isAlreadyInitialized && canResetSequence && !editMode ? (
             <Button
               variant='outlined'
               color='warning'
@@ -143,7 +143,7 @@ const EquipmentSalesSequenceConfigDialog = ({
             Vista previa: {quotePreview}
           </Typography>
 
-          {!isAdmin && isAlreadyInitialized ? (
+          {!canResetSequence && isAlreadyInitialized ? (
             <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
               Solo un administrador puede modificar esta configuración.
             </Typography>

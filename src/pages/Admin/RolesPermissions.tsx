@@ -41,7 +41,6 @@ import {
 import { userStore } from '../../store/userStore'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
-import { ROLES } from 'src/constants/roles'
 import { RbacRole } from '../../types/rbac'
 import { rbacErrorMessage } from '../../utils/rbacErrors'
 import { notify } from 'src/utils/notify'
@@ -55,7 +54,7 @@ const RolesPermissions: React.FC = () => {
   const updatePermissions = useUpdateRolePermissions()
   const $userStore = useStore(userStore)
   const canManage = useCan(PERMISSIONS.RBAC_MANAGE)
-  const isSuperAdmin = $userStore.rol.includes(ROLES.SUPER_ADMIN)
+  const canManageSensitive = useCan(PERMISSIONS.RBAC_SENSITIVE_MANAGE)
 
   // Cambios sin guardar: "rolId|capacidad" -> estado deseado (true = otorgada)
   const [pending, setPending] = useState<Record<string, boolean>>({})
@@ -127,8 +126,8 @@ const RolesPermissions: React.FC = () => {
       const permission = permissionByKey.get(permissionKey)
       if (!role || !permission) return null
 
-      if (permission.isSensitive && !isSuperAdmin) {
-        return 'Capacidad sensible: solo un super administrador puede cambiarla'
+      if (permission.isSensitive && !canManageSensitive) {
+        return 'Capacidad sensible: solo quien gestiona capacidades sensibles puede cambiarla'
       }
 
       const granted = effectiveGrants.has(cellKey(roleId, permissionKey))
@@ -157,7 +156,7 @@ const RolesPermissions: React.FC = () => {
     [
       roleById,
       permissionByKey,
-      isSuperAdmin,
+      canManageSensitive,
       effectiveGrants,
       $userStore.rol,
       $userStore.permissions,

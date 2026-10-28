@@ -1,5 +1,3 @@
-import { useHasRole } from '../../../utils/functions'
-import { ROLE_GROUPS } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import useCalibrationVisibility from '../../../hooks/useCalibrationVisibility'
@@ -13,7 +11,7 @@ const useCalibrationServicesListPermissions = () => {
   const canRunExecution = useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTE)
   const canViewModule = useCan(PERMISSIONS.CALIBRATION_SERVICE_VIEW)
   const canViewAnalytics = useCan(PERMISSIONS.CALIBRATION_ANALYTICS_VIEW)
-  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
+  const canResetSequence = useCan(PERMISSIONS.CALIBRATION_CONFIG_SEQUENCE_RESET)
   const canManageSequenceConfig = canCreateServices
   const canManageSlaConfig = useCan(PERMISSIONS.CALIBRATION_CONFIG_SLA_MANAGE)
   // Qué ve de los servicios: sale de capacidades de visibilidad, no del nombre del rol
@@ -28,7 +26,7 @@ const useCalibrationServicesListPermissions = () => {
     canRunExecution,
     canViewModule,
     canViewAnalytics,
-    isAdmin,
+    canResetSequence,
     canManageSequenceConfig,
     canManageSlaConfig,
     hasCommercialVisibility: canViewCommercial,

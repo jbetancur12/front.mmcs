@@ -556,6 +556,56 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Generar y reenviar el enlace con el que un usuario activa su cuenta.',
     'Configuración › Usuarios.'
   ],
+  'users:role:assign_any': [
+    'Dar cualquier rol',
+    'Permite dar o quitar cualquier rol, incluso los que otorgan administración total, y modificar a quien los tiene. Sin ella solo se dan roles cuyas capacidades uno ya tiene.',
+    'Configuración › Usuarios (asignar roles).'
+  ],
+  'system:realtime:view': [
+    'Ver todo en tiempo real',
+    'Recibir al instante los datos de toda la plataforma (IoT, tickets de mantenimiento, pantalla de turnos). Sin ella solo llegan los de la propia empresa.',
+    'Laboratorio, mantenimiento y pantalla de turnos.'
+  ],
+  'maintenance:technician:be_assigned': [
+    'Ser técnico asignable',
+    'Al dar un rol con esta capacidad se crea la ficha de técnico y sus comentarios y archivos quedan firmados como técnico.',
+    'Mantenimiento › Técnicos y tickets.'
+  ],
+  'sales:config:sequence_reset': [
+    'Cambiar el consecutivo de venta ya iniciado',
+    'Modificar el consecutivo de las cotizaciones de venta cuando ya está en uso.',
+    'Venta de equipos › Configuración de consecutivo.'
+  ],
+  'calibration:config:sequence_reset': [
+    'Cambiar el consecutivo de calibración ya iniciado',
+    'Modificar el consecutivo de los servicios de calibración cuando ya está en uso.',
+    'Servicios de calibración › Configuración de consecutivo.'
+  ],
+  'calibration:service:be_assigned': [
+    'Ser metrólogo asignable',
+    'Aparecer en la lista de metrólogos que se asignan a un servicio; el teléfono es obligatorio.',
+    'Servicios de calibración › Asignar metrólogo.'
+  ],
+  'calibration:notice:cut_invoiced': [
+    'Aviso: corte facturado',
+    'Recibir el aviso y el WhatsApp cuando se factura un corte.',
+    'Notificaciones y WhatsApp.'
+  ],
+  'calibration:notice:ods_issued': [
+    'Aviso: ODS emitida',
+    'Recibir el WhatsApp cuando se emite la ODS de un servicio.',
+    'WhatsApp.'
+  ],
+  'calibration:notice:adjustment_approved': [
+    'Aviso: novedad aprobada técnicamente',
+    'Recibir el WhatsApp cuando una novedad queda aprobada y falta la revisión comercial.',
+    'WhatsApp.'
+  ],
+  'rbac:sensitive:manage': [
+    'Gestionar capacidades sensibles',
+    'Otorgar o quitar desde el panel las capacidades que pueden dar privilegios.',
+    'Configuración › Roles y permisos.'
+  ],
   'users:role:list': [
     'Ver la lista de roles',
     'Listar los roles para asignarlos a personas y a cursos.',

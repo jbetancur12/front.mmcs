@@ -60,7 +60,7 @@ import {
   EquipmentProduct,
   EquipmentQuotationPayload
 } from '../../types/equipmentSales'
-import { useCan, useHasRole } from '../../utils/functions'
+import { useCan } from '../../utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import EquipmentQuotationItemsEditor, {
   FormItem,
@@ -78,7 +78,6 @@ import {
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
 
-import { ROLE_GROUPS } from 'src/constants/roles'
 type FormState = Omit<
   EquipmentQuotationPayload,
   'items' | 'status' | 'quoteTerms'
@@ -238,7 +237,7 @@ const EquipmentSalesWorkspacePage = () => {
   const queryClient = useQueryClient()
   const { quotationId } = useParams<{ quotationId?: string }>()
   const isEditing = Boolean(quotationId)
-  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
+  const canResetSequence = useCan(PERMISSIONS.SALES_CONFIG_SEQUENCE_RESET)
   // Crear exige "crear" y editar exige "editar"; la ruta ya filtra, esto cubre el cambio en vivo
   const canCreateQuotation = useCan(PERMISSIONS.SALES_QUOTATION_CREATE)
   const canUpdateQuotation = useCan(PERMISSIONS.SALES_QUOTATION_UPDATE)
@@ -1792,7 +1791,7 @@ const EquipmentSalesWorkspacePage = () => {
       <EquipmentSalesSequenceConfigDialog
         open={isSequenceDialogOpen}
         config={sequenceConfig}
-        isAdmin={isAdmin}
+        canResetSequence={canResetSequence}
         isLoading={upsertSequenceConfig.isLoading}
         onClose={() => setIsSequenceDialogOpen(false)}
         onSubmit={handleSaveSequenceConfig}

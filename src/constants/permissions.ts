@@ -58,6 +58,8 @@ export const PERMISSIONS = {
   MAINTENANCE_TECHNICIAN_UPDATE: 'maintenance:technician:update',
   /** Eliminar técnicos */
   MAINTENANCE_TECHNICIAN_DELETE: 'maintenance:technician:delete',
+  /** Poder ser asignado como técnico a los tickets de mantenimiento */
+  MAINTENANCE_TECHNICIAN_BE_ASSIGNED: 'maintenance:technician:be_assigned',
   /** Recalcular la carga de trabajo de los técnicos */
   MAINTENANCE_TECHNICIAN_RECALCULATE_WORKLOAD: 'maintenance:technician:recalculate_workload',
   /** Ver estadísticas, tablero y analítica de mantenimiento */
@@ -146,6 +148,8 @@ export const PERMISSIONS = {
   SALES_PRODUCT_MANAGE: 'sales:product:manage',
   /** Ver y editar el consecutivo y la plantilla de términos de las cotizaciones (cambiar un consecutivo ya iniciado sigue siendo solo de admin y super_admin: regla del controlador) */
   SALES_CONFIG_MANAGE: 'sales:config:manage',
+  /** Cambiar el consecutivo de las cotizaciones de venta ya iniciado */
+  SALES_CONFIG_SEQUENCE_RESET: 'sales:config:sequence_reset',
   /** Consultar el catálogo de empresas y sus sedes (lo usan los selectores de cotizaciones, servicios y mapas) */
   CUSTOMERS_CUSTOMER_CATALOG: 'customers:customer:catalog',
   /** Ver la ficha de una empresa. OJO: el controlador NO limita al usuario de una empresa cliente a la suya (pendiente, ver docs/rbac/RUTAS_SOLO_SESION.md) */
@@ -222,6 +226,8 @@ export const PERMISSIONS = {
   USERS_USER_PASSWORD_RESET: 'users:user:password_reset',
   /** Generar y reenviar el enlace de activación de un usuario */
   USERS_USER_ACTIVATION: 'users:user:activation',
+  /** Dar cualquier rol (también los privilegiados) y modificar a quien tiene esta capacidad */
+  USERS_ROLE_ASSIGN_ANY: 'users:role:assign_any',
   /** Listar los roles (para asignarlos a personas y a cursos) */
   USERS_ROLE_LIST: 'users:role:list',
   /** Suplantar a otro usuario y ver la lista de candidatos */
@@ -230,6 +236,8 @@ export const PERMISSIONS = {
   USERS_PROFILE_MANAGE: 'users:profile:manage',
   /** Ver las contraseñas de libros Excel guardadas (Subir Excel) */
   SYSTEM_SETTINGS_VIEW: 'system:settings:view',
+  /** Recibir en tiempo real todos los datos de la plataforma (IoT, mantenimiento, turnos) */
+  SYSTEM_REALTIME_VIEW: 'system:realtime:view',
   /** Crear, editar y eliminar las contraseñas de libros Excel guardadas (Subir Excel) */
   SYSTEM_SETTINGS_MANAGE: 'system:settings:manage',
   /** Ver los servicios de calibración, su línea de tiempo, documentos, notificaciones, SLA y configuración de WhatsApp */
@@ -294,6 +302,16 @@ export const PERMISSIONS = {
   CALIBRATION_CONFIG_SLA_MANAGE: 'calibration:config:sla_manage',
   /** Crear, editar y eliminar la configuración de WhatsApp de los servicios */
   CALIBRATION_CONFIG_WHATSAPP_MANAGE: 'calibration:config:whatsapp_manage',
+  /** Cambiar el consecutivo de los servicios de calibración ya iniciado */
+  CALIBRATION_CONFIG_SEQUENCE_RESET: 'calibration:config:sequence_reset',
+  /** Poder ser asignado como metrólogo de un servicio de calibración */
+  CALIBRATION_SERVICE_BE_ASSIGNED: 'calibration:service:be_assigned',
+  /** Recibir el aviso cuando se factura un corte */
+  CALIBRATION_NOTICE_CUT_INVOICED: 'calibration:notice:cut_invoiced',
+  /** Recibir el WhatsApp cuando se emite la ODS */
+  CALIBRATION_NOTICE_ODS_ISSUED: 'calibration:notice:ods_issued',
+  /** Recibir el WhatsApp cuando una novedad queda aprobada técnicamente */
+  CALIBRATION_NOTICE_ADJUSTMENT_APPROVED: 'calibration:notice:adjustment_approved',
   /** Ver las analíticas de servicios de calibración */
   CALIBRATION_ANALYTICS_VIEW: 'calibration:analytics:view',
   /** Crear certificados y archivos de equipos de una empresa (incluida la carga directa del PDF) */
@@ -434,6 +452,8 @@ export const PERMISSIONS = {
   TOOLS_UTILITY_USE: 'tools:utility:use',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
+  /** Otorgar o quitar capacidades sensibles desde el panel de roles */
+  RBAC_SENSITIVE_MANAGE: 'rbac:sensitive:manage',
   /** Crear roles y activar o desactivar capacidades */
   RBAC_MANAGE: 'rbac:manage'
 } as const

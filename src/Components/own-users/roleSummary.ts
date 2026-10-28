@@ -30,8 +30,8 @@ export const unassignableText = (role: AssignableRole): string | null => {
   switch (role.reason) {
     case 'inactive':
       return 'Rol desactivado'
-    case 'super_admin_only':
-      return 'Solo un super administrador puede dar este rol'
+    case 'privileged_only':
+      return 'Solo quien puede dar cualquier rol puede dar este rol'
     case 'missing_permissions': {
       const modules = moduleCounts(role.missing ?? []).map((m) => m.label)
       return `No disponible: incluye capacidades que tú no tienes (${modules.slice(0, 3).join(', ')}${

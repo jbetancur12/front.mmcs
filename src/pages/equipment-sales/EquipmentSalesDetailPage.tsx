@@ -21,7 +21,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import { toast } from 'react-hot-toast'
-import { useCan, useHasRole } from '../../utils/functions'
+import { useCan } from '../../utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
 import {
@@ -42,7 +42,6 @@ import EquipmentQuotationApprovalDialog, {
 import EquipmentSalesDocumentsPanel from './EquipmentSalesDocumentsPanel'
 import { EQUIPMENT_QUOTE_TERM_LABELS } from './equipmentQuoteTerms'
 
-import { ROLE_GROUPS } from 'src/constants/roles'
 import StageTracker from 'src/Components/Common/StageTracker'
 import StatusPill from 'src/Components/Common/StatusPill'
 import {
@@ -119,7 +118,7 @@ const EquipmentSalesDetailPage = () => {
   const [activeTab, setActiveTab] = useState<DetailTab>(() =>
     getStoredDetailTab(quotationId)
   )
-  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
+  const canResetSequence = useCan(PERMISSIONS.SALES_CONFIG_SEQUENCE_RESET)
 
   useEffect(() => {
     setActiveTab(getStoredDetailTab(quotationId))
@@ -1079,7 +1078,7 @@ const EquipmentSalesDetailPage = () => {
       <EquipmentSalesSequenceConfigDialog
         open={isSequenceDialogOpen}
         config={sequenceConfig}
-        isAdmin={isAdmin}
+        canResetSequence={canResetSequence}
         isLoading={mutations.upsertSequenceConfig.isLoading}
         onClose={() => setIsSequenceDialogOpen(false)}
         onSubmit={async (values) => {

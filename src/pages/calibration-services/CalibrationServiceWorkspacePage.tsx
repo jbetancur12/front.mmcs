@@ -56,7 +56,7 @@ const CalibrationServiceWorkspacePage = () => {
   const {
     serviceId,
     isEditing,
-    isAdmin,
+    canResetSequence,
     canAccessWorkspace,
     sequenceConfig,
     service,
@@ -303,7 +303,7 @@ const CalibrationServiceWorkspacePage = () => {
           open={isSequenceDialogOpen}
           isLoading={upsertSequenceConfig.isLoading}
           config={sequenceConfig}
-          isAdmin={isAdmin}
+          canResetSequence={canResetSequence}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
         />

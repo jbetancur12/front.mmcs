@@ -13,7 +13,7 @@ interface CalibrationServiceSequenceConfigDialogProps {
   open: boolean
   isLoading?: boolean
   config?: CalibrationServiceSequenceConfig
-  isAdmin?: boolean
+  canResetSequence?: boolean
   onClose: () => void
   onSubmit: (values: {
     nextQuoteNumber: number
@@ -26,7 +26,7 @@ const CalibrationServiceSequenceConfigDialog = ({
   open,
   isLoading = false,
   config,
-  isAdmin = false,
+  canResetSequence = false,
   onClose,
   onSubmit
 }: CalibrationServiceSequenceConfigDialogProps) => {
@@ -163,7 +163,7 @@ const CalibrationServiceSequenceConfigDialog = ({
         !editMode || Number(nextQuoteNumber) < 1 || Number(nextOdsNumber) < 1
       }
     >
-      {isAlreadyInitialized && isAdmin && !editMode ? (
+      {isAlreadyInitialized && canResetSequence && !editMode ? (
         <Button
           variant='outlined'
           color='warning'
@@ -222,7 +222,7 @@ const CalibrationServiceSequenceConfigDialog = ({
         </TextField>
       </FormDialogSection>
 
-      {!isAdmin && isAlreadyInitialized ? (
+      {!canResetSequence && isAlreadyInitialized ? (
         <Typography
           variant='caption'
           color='text.secondary'

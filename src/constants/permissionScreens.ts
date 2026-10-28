@@ -58,6 +58,10 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
+  'calibration:config:sequence_reset': [
+    { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'action' },
+    { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'action' }
+  ],
   'calibration:config:sla_manage': [
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
@@ -917,6 +921,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'action' },
     { path: "/settings/roles/ayuda", label: "Ajustes › Roles y permisos › ayuda", kind: 'related' }
   ],
+  'rbac:sensitive:manage': [
+    { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'action' }
+  ],
   'rbac:view': [
     { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'screen' },
     { path: "/settings/roles/ayuda", label: "Ajustes › Roles y permisos › ayuda", kind: 'screen' },
@@ -944,6 +951,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/equipment-sales/:quotationId/edit", label: "Venta de equipos › Editar", kind: 'related' },
     { path: "/equipment-sales/new", label: "Venta de equipos › Nuevo", kind: 'related' },
     { path: "/equipment-sales/products", label: "Venta de equipos › Productos", kind: 'related' }
+  ],
+  'sales:config:sequence_reset': [
+    { path: "/equipment-sales", label: "Venta de equipos", kind: 'action' },
+    { path: "/equipment-sales/:quotationId", label: "Venta de equipos", kind: 'action' },
+    { path: "/equipment-sales/:quotationId/edit", label: "Venta de equipos › Editar", kind: 'action' },
+    { path: "/equipment-sales/new", label: "Venta de equipos › Nuevo", kind: 'action' }
   ],
   'sales:product:manage': [
     { path: "/equipment-sales", label: "Venta de equipos", kind: 'related' },

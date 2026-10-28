@@ -52,7 +52,7 @@ interface CalibrationServiceDetailDialogsHostProps {
   assignableMetrologists: CalibrationServiceUserSummary[]
   sequenceConfig: CalibrationServiceSequenceConfig | undefined
   canManageSequenceConfig: boolean
-  isAdmin: boolean
+  canResetSequence: boolean
 }
 
 /** Diálogos del detalle del servicio (aprobación, ODS, programación, cortes, novedades, etc.). */
@@ -65,7 +65,7 @@ const CalibrationServiceDetailDialogsHost = ({
   assignableMetrologists,
   sequenceConfig,
   canManageSequenceConfig,
-  isAdmin
+  canResetSequence
 }: CalibrationServiceDetailDialogsHostProps) => {
   const {
     odsDialogInitialValues,
@@ -421,7 +421,7 @@ const CalibrationServiceDetailDialogsHost = ({
           open={isSequenceDialogOpen}
           isLoading={isSavingSequenceConfig}
           config={sequenceConfig}
-          isAdmin={isAdmin}
+          canResetSequence={canResetSequence}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
         />

@@ -27,7 +27,7 @@ const CalibrationServicesPage = () => {
     canViewModule,
     canManageSequenceConfig,
     canManageSlaConfig,
-    isAdmin,
+    canResetSequence,
     isTechnicalOnlyView,
     isAnalystOnlyView
   } = permissions
@@ -214,7 +214,7 @@ const CalibrationServicesPage = () => {
           open={isSequenceDialogOpen}
           isLoading={upsertSequenceConfig.isLoading}
           config={sequenceConfig}
-          isAdmin={isAdmin}
+          canResetSequence={canResetSequence}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
         />

@@ -19,8 +19,8 @@ import {
   CalibrationServiceSequenceConfig,
   CalibrationServiceSlaConfig
 } from '../../../types/calibrationService'
-import { ROLE_GROUPS } from 'src/constants/roles'
-import { useHasRole } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import CalibrationServiceAdjustmentsPanel from '../CalibrationServiceAdjustmentsPanel'
 import CalibrationServiceDocumentsPanel from '../CalibrationServiceDocumentsPanel'
 import CalibrationServiceOperationsPanel from '../CalibrationServiceOperationsPanel'
@@ -77,7 +77,7 @@ const CalibrationServiceDetailsView = ({
   setActiveTab
 }: CalibrationServiceDetailsViewProps) => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
+  const canResetSequence = useCan(PERMISSIONS.CALIBRATION_CONFIG_SEQUENCE_RESET)
   const mutations = useCalibrationServiceMutations()
   const dialogs = useCalibrationServiceDetailDialogs()
   const permissions = useCalibrationServiceDetailPermissions(service, sequenceConfig)
@@ -604,7 +604,7 @@ const CalibrationServiceDetailsView = ({
         assignableMetrologists={assignableMetrologists}
         sequenceConfig={sequenceConfig}
         canManageSequenceConfig={canManageSequenceConfig}
-        isAdmin={isAdmin}
+        canResetSequence={canResetSequence}
       />
     </Container>
   )

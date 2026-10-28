@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PERMISSIONS } from 'src/constants/permissions'
-import { useCan, useHasRole } from '@utils/functions'
+import { useCan } from '@utils/functions'
 import {
   Accordion,
   AccordionDetails,
@@ -69,7 +69,6 @@ import {
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
-import { ROLE_GROUPS } from 'src/constants/roles'
 import { confirmDialog } from 'src/utils/confirm'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -121,7 +120,7 @@ const EquipmentSalesPage = () => {
   const { data: templateData } = useEquipmentQuoteTermsTemplate()
   const { data, isLoading } = useEquipmentQuotations({ limit: 500 })
   const mutations = useEquipmentSalesMutations()
-  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
+  const canResetSequence = useCan(PERMISSIONS.SALES_CONFIG_SEQUENCE_RESET)
   const { data: sequenceConfig } = useEquipmentSequenceConfig(canConfig)
   const [configAnchor, setConfigAnchor] = useState<null | HTMLElement>(null)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
@@ -717,7 +716,7 @@ const EquipmentSalesPage = () => {
       <EquipmentSalesSequenceConfigDialog
         open={isSequenceDialogOpen}
         config={sequenceConfig}
-        isAdmin={isAdmin}
+        canResetSequence={canResetSequence}
         isLoading={mutations.upsertSequenceConfig.isLoading}
         onClose={() => setIsSequenceDialogOpen(false)}
         onSubmit={async (values) => {

@@ -7,8 +7,6 @@ import {
   useCalibrationServiceSequenceConfig
 } from '../../../hooks/useCalibrationServices'
 import { CalibrationServiceProductSummary } from '../../../types/calibrationService'
-import { useHasRole } from '../../../utils/functions'
-import { ROLE_GROUPS } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { getQueryErrorMessage } from './calibrationServiceWorkspaceUtils'
@@ -20,7 +18,7 @@ import { getQueryErrorMessage } from './calibrationServiceWorkspaceUtils'
 const useCalibrationServiceWorkspaceData = () => {
   const { serviceId } = useParams<{ serviceId?: string }>()
   const isEditing = Boolean(serviceId)
-  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
+  const canResetSequence = useCan(PERMISSIONS.CALIBRATION_CONFIG_SEQUENCE_RESET)
   // Crear exige "crear" y editar exige "editar"; la ruta ya filtra, esto cubre el cambio en vivo
   const canCreateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
   const canUpdateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_UPDATE)
@@ -94,7 +92,7 @@ const useCalibrationServiceWorkspaceData = () => {
   return {
     serviceId,
     isEditing,
-    isAdmin,
+    canResetSequence,
     canAccessWorkspace,
     sequenceConfig,
     isLoadingSequenceConfig,
