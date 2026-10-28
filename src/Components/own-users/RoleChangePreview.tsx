@@ -1,10 +1,9 @@
-import { Alert, Box, Button, Chip, Paper, Typography } from '@mui/material'
+import { Box, Button, Chip, Paper, Typography } from '@mui/material'
 import React, { useMemo, useState } from 'react'
 
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { moduleLabel } from '../Rbac/PermissionMatrix'
 import { requirementName } from '../Rbac/requirements'
-import { combinationNotes } from './roleSummary'
 import { AssignableRole, Role } from './types'
 
 interface RoleChangePreviewProps {
@@ -123,9 +122,10 @@ const ChangeBlock: React.FC<ChangeBlockProps> = ({ title, keys, tone }) => {
 }
 
 /**
- * Qué cambia para la persona con los roles elegidos: pantallas y capacidades que gana o pierde, y avisos de
- * combinaciones cuyo efecto no se ve en la lista. Se calcula con las capacidades de cada rol
- * (`GET /roles/for-assignment`), así que coincide con lo que el API aplica al guardar.
+ * Qué cambia para la persona con los roles elegidos: pantallas y capacidades que gana o pierde. Se calcula con las
+ * capacidades de cada rol (`GET /roles/for-assignment`), así que coincide con lo que el API aplica al guardar. Los
+ * roles se suman: una combinación como Metrólogo + Coord. de calibración se ve aquí como lo que gana (por ejemplo,
+ * "ver servicios de otras personas"), sin una regla especial para ella.
  */
 const RoleChangePreview: React.FC<RoleChangePreviewProps> = ({
   before,
@@ -149,10 +149,6 @@ const RoleChangePreview: React.FC<RoleChangePreviewProps> = ({
         [...afterIds].some((id) => !beforeIds.has(id))
     }
   }, [before, after, byId])
-  const notes = useMemo(
-    () => combinationNotes(after.map((role) => role.name)),
-    [after]
-  )
 
   if (after.length === 0 && before.length === 0) return null
 
@@ -185,11 +181,6 @@ const RoleChangePreview: React.FC<RoleChangePreviewProps> = ({
         tone='gain'
       />
       <ChangeBlock title='Perderá acceso a' keys={lost} tone='loss' />
-      {notes.map((note) => (
-        <Alert key={note} severity='info' sx={{ mt: 1.5 }}>
-          {note}
-        </Alert>
-      ))}
       {changed && !creating && (
         <Typography
           variant='caption'

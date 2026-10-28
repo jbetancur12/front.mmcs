@@ -1,10 +1,6 @@
-import {
-  CALIBRATION_SERVICE_ANALYST_ROLES,
-  CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
-  CALIBRATION_SERVICE_TECHNICAL_ROLES
-} from '../../../constants/calibrationServices'
 import { PERMISSIONS } from 'src/constants/permissions'
-import { useCan, useHasRole } from '@utils/functions'
+import { useCan } from '@utils/functions'
+import useCalibrationVisibility from '../../../hooks/useCalibrationVisibility'
 import {
   CalibrationService,
   CalibrationServiceSequenceConfig
@@ -36,18 +32,13 @@ const useCalibrationServiceDetailPermissions = (
   const canCloseServiceRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_CLOSE)
   const canInvoiceCutRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_INVOICING)
   const canUploadDocuments = useCan(PERMISSIONS.CALIBRATION_SERVICE_DOCUMENT_UPLOAD)
-  const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
-  const hasCommercialVisibility = useHasRole([
-    ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
-  ])
+  // Qué ve de los servicios: sale de capacidades de visibilidad, no del nombre del rol
+  const { isTechnicalOnlyView, isAnalystOnlyView, hideFinancialInfo } =
+    useCalibrationVisibility()
   const canGenerateQuotePdf = useCan(PERMISSIONS.CALIBRATION_SERVICE_QUOTE_PDF)
   const canGenerateOdsPdf = useCan(PERMISSIONS.CALIBRATION_SERVICE_ODS)
   const canEditExecutionCustomerRole =
     useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTION_CUSTOMER)
-  const isTechnicalOnlyView = hasTechnicalRole && !hasCommercialVisibility
-  const isAnalystOnlyView =
-    useHasRole([...CALIBRATION_SERVICE_ANALYST_ROLES]) && !hasCommercialVisibility
-  const hideFinancialInfo = isTechnicalOnlyView || isAnalystOnlyView
   const canIssueOds =
     canIssueOdsRole &&
     service?.status === 'approved' &&
@@ -265,8 +256,6 @@ const useCalibrationServiceDetailPermissions = (
     canCloseServiceRole,
     canInvoiceCutRole,
     canUploadDocuments,
-    hasTechnicalRole,
-    hasCommercialVisibility,
     canGenerateQuotePdf,
     canGenerateOdsPdf,
     canEditExecutionCustomerRole,

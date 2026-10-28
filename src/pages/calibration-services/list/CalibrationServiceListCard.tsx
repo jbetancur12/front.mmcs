@@ -77,7 +77,6 @@ const CalibrationServiceListCard = ({
 }: CalibrationServiceListCardProps) => {
   const navigate = useNavigate()
   const {
-    hasTechnicalRole,
     canCreateServices,
     canTakeApprovalDecision,
     canIssueOds,
@@ -101,7 +100,7 @@ const CalibrationServiceListCard = ({
   const assignedMetrologistEmails = getMetrologistEmails(service)
   const assignedMetrologistEmail = assignedMetrologistEmails[0] || ''
   const isAssignedToCurrentMetrologist = Boolean(
-    hasTechnicalRole &&
+    canRunExecution &&
       currentUserEmail &&
       assignedMetrologistEmail &&
       assignedMetrologistEmail.toLowerCase() === currentUserEmail.toLowerCase()

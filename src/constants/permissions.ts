@@ -248,6 +248,12 @@ export const PERMISSIONS = {
   CALIBRATION_SERVICE_VIEW_PRICES: 'calibration:service:view_prices',
   /** Ver también los servicios de calibración cuya cotización el cliente aún no aprobó (borrador, pendiente de aprobación o rechazada). Sin esta capacidad solo se ven los servicios aprobados, en el listado, el detalle, la línea de tiempo y los documentos */
   CALIBRATION_SERVICE_VIEW_PRE_APPROVAL: 'calibration:service:view_pre_approval',
+  /** Ver los servicios de calibración que no tiene asignados. Sin esta capacidad solo se ven los servicios asignados a la propia persona (como hace el metrólogo), y solo se opera sobre ellos */
+  CALIBRATION_SERVICE_VIEW_UNASSIGNED: 'calibration:service:view_unassigned',
+  /** Ver los servicios de calibración que todavía no tienen ODS (borrador, pendientes de aprobación y aprobados sin ODS). Sin esta capacidad solo se ven desde que se emite la ODS en adelante */
+  CALIBRATION_SERVICE_VIEW_PRE_ODS: 'calibration:service:view_pre_ods',
+  /** Ver la parte comercial de los servicios de calibración: datos de la cotización, documentos comerciales (evidencias de aprobación, facturas) y su historial. Sin esta capacidad se ve solo lo técnico y operativo */
+  CALIBRATION_SERVICE_VIEW_COMMERCIAL: 'calibration:service:view_commercial',
   /** Registrar la aprobación, el rechazo o la solicitud de cambios del cliente sobre un servicio */
   CALIBRATION_SERVICE_DECIDE: 'calibration:service:decide',
   /** Emitir la orden de servicio (ODS) y generar su PDF */

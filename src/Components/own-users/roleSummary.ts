@@ -1,4 +1,3 @@
-import { ROLES } from 'src/constants/roles'
 import { moduleLabel } from '../Rbac/PermissionMatrix'
 import { AssignableRole } from './types'
 
@@ -42,31 +41,4 @@ export const unassignableText = (role: AssignableRole): string | null => {
     default:
       return null
   }
-}
-
-// Roles con vista comercial de los servicios de calibración. El API (constants/calibrationService.constants.js)
-// aún decide la vista limitada del metrólogo por el nombre del rol, no por una capacidad: mientras siga así, la
-// combinación se avisa aquí. Cuando esa regla pase a capacidades, este aviso sale de este archivo.
-const COMMERCIAL_VIEW_ROLES: string[] = [
-  ROLES.ADMIN,
-  ROLES.SUPER_ADMIN,
-  ROLES.COMP_ADMIN,
-  ROLES.COMP_REQUESTER,
-  ROLES.INVOICING,
-  ROLES.CALIBRATION_COORDINATOR
-]
-
-/** Avisos sobre combinaciones de roles cuyo efecto no se ve en la lista de capacidades. */
-export const combinationNotes = (roleNames: string[]): string[] => {
-  const notes: string[] = []
-  const hasMetrologist = roleNames.includes(ROLES.METROLOGIST)
-  const commercial = roleNames.filter((name) =>
-    COMMERCIAL_VIEW_ROLES.includes(name)
-  )
-  if (hasMetrologist && commercial.length > 0) {
-    notes.push(
-      'Con Metrólogo y un rol comercial o de coordinación a la vez, la persona deja de tener la vista limitada de servicios de calibración (solo los asignados a ella, desde la ODS) y ve todos.'
-    )
-  }
-  return notes
 }

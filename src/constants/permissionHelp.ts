@@ -620,6 +620,21 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Ver precios, descuentos y totales de los servicios, y ver y descargar el PDF de cotización. Sin ella el servicio se muestra sin valores económicos y sin la cotización.',
     'Servicios de calibración: columnas de valores, resumen económico y documentos.'
   ],
+  'calibration:service:view_unassigned': [
+    'Ver servicios de otras personas',
+    'Ver los servicios de calibración que no tiene asignados. Sin ella solo ve (y solo opera) los servicios asignados a ella, como hace el metrólogo.',
+    'Servicios de calibración: listado, detalle y acciones de cada servicio.'
+  ],
+  'calibration:service:view_pre_ods': [
+    'Ver servicios aún sin ODS',
+    'Ver los servicios que todavía no tienen orden de servicio: borrador, pendientes de aprobación y aprobados sin ODS. Sin ella solo se ven desde que se emite la ODS.',
+    'Servicios de calibración: listado, etapas del embudo y detalle.'
+  ],
+  'calibration:service:view_commercial': [
+    'Ver la parte comercial de los servicios',
+    'Ver los datos de la cotización, los documentos comerciales (evidencias de aprobación, facturas) y el historial comercial de un servicio. Sin ella se ve solo lo técnico y operativo, sin precios.',
+    'Servicios de calibración: resumen, documentos, línea de tiempo y analíticas.'
+  ],
   'calibration:service:view_pre_approval': [
     'Ver servicios aún sin aprobar',
     'Ver también los servicios cuya cotización el cliente todavía no aprobó: borrador, pendiente de aprobación o rechazada. Sin ella solo se ven los servicios aprobados, y los demás ni aparecen ni se pueden abrir.',

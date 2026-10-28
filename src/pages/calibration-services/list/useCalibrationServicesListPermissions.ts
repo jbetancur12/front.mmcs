@@ -1,14 +1,10 @@
-import {
-  CALIBRATION_SERVICE_ANALYST_ROLES,
-  CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
-  CALIBRATION_SERVICE_TECHNICAL_ROLES
-} from '../../../constants/calibrationServices'
 import { useHasRole } from '../../../utils/functions'
 import { ROLE_GROUPS } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import useCalibrationVisibility from '../../../hooks/useCalibrationVisibility'
 
-/** Permisos y vistas (técnica, analista) de la bandeja de servicios de calibración. */
+/** Permisos y vistas (técnica, sin precios) de la bandeja de servicios de calibración. */
 const useCalibrationServicesListPermissions = () => {
   const canCreateServices = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
   const canTakeApprovalDecision = useCan(PERMISSIONS.CALIBRATION_SERVICE_DECIDE)
@@ -20,13 +16,9 @@ const useCalibrationServicesListPermissions = () => {
   const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
   const canManageSequenceConfig = canCreateServices
   const canManageSlaConfig = useCan(PERMISSIONS.CALIBRATION_CONFIG_SLA_MANAGE)
-  const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
-  const hasCommercialVisibility = useHasRole([
-    ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
-  ])
-  const isTechnicalOnlyView = hasTechnicalRole && !hasCommercialVisibility
-  const hasAnalystRole = useHasRole([...CALIBRATION_SERVICE_ANALYST_ROLES])
-  const isAnalystOnlyView = hasAnalystRole && !hasCommercialVisibility
+  // Qué ve de los servicios: sale de capacidades de visibilidad, no del nombre del rol
+  const { isTechnicalOnlyView, isAnalystOnlyView, canViewCommercial } =
+    useCalibrationVisibility()
 
   return {
     canCreateServices,
@@ -39,10 +31,8 @@ const useCalibrationServicesListPermissions = () => {
     isAdmin,
     canManageSequenceConfig,
     canManageSlaConfig,
-    hasTechnicalRole,
-    hasCommercialVisibility,
+    hasCommercialVisibility: canViewCommercial,
     isTechnicalOnlyView,
-    hasAnalystRole,
     isAnalystOnlyView
   }
 }

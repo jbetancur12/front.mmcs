@@ -26,27 +26,10 @@ import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
 import BuildCircleOutlinedIcon from '@mui/icons-material/BuildCircleOutlined'
 import AltRouteOutlinedIcon from '@mui/icons-material/AltRouteOutlined'
-import {
-  CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
-  CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES,
-  CALIBRATION_SERVICE_APPROVAL_ROLES,
-  CALIBRATION_SERVICE_CLOSE_ROLES,
-  CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES,
-  CALIBRATION_SERVICE_EXECUTION_ROLES,
-  CALIBRATION_SERVICE_INVOICING_ROLES,
-  CALIBRATION_SERVICE_ODS_ROLES,
-  CALIBRATION_SERVICE_SCHEDULE_ROLES
-} from '../../constants/calibrationServices'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { getRoleLabelEs } from 'src/constants/roles'
+import { useCalibrationServiceStepRoles } from '../../hooks/useCalibrationServices'
 import { CalibrationServiceSlaConfig } from '../../types/calibrationService'
-
-const roleLabels: Record<string, string> = {
-  admin: 'Admin',
-  super_admin: 'Super admin',
-  comp_admin: 'Comp. admin',
-  comp_requester: 'Comp. requester',
-  metrologist: 'Metrologo',
-  invoicing: 'Facturacion'
-}
 
 type FlowBranchTone = 'success' | 'warning' | 'error' | 'info'
 
@@ -194,42 +177,47 @@ const branchToneStyles = {
   }
 } as const
 
+// Cada paso del flujo con la capacidad (o capacidades) que lo habilita. Los roles que hoy la tienen salen del panel
+// de roles (GET /calibration-services/step-roles), no de listas escritas aquí.
 const permissionRows = [
   {
     action: 'Registrar respuesta del cliente',
-    roles: CALIBRATION_SERVICE_APPROVAL_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_DECIDE]
   },
   {
     action: 'Emitir ODS',
-    roles: CALIBRATION_SERVICE_ODS_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_ODS]
   },
   {
     action: 'Programar servicio',
-    roles: CALIBRATION_SERVICE_SCHEDULE_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_SCHEDULE]
   },
   {
     action: 'Ejecutar / finalizar tecnico',
-    roles: CALIBRATION_SERVICE_EXECUTION_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_EXECUTE]
   },
   {
     action: 'Reportar novedades',
-    roles: CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_EXECUTE]
   },
   {
     action: 'Revisar novedades',
-    roles: CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES
+    permissions: [
+      PERMISSIONS.CALIBRATION_ADJUSTMENT_REVIEW_TECHNICAL,
+      PERMISSIONS.CALIBRATION_ADJUSTMENT_COMMERCIAL
+    ]
   },
   {
     action: 'Facturar corte',
-    roles: CALIBRATION_SERVICE_INVOICING_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_INVOICING]
   },
   {
     action: 'Control documental',
-    roles: CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_DOCUMENT_CONTROL]
   },
   {
     action: 'Cerrar servicio',
-    roles: CALIBRATION_SERVICE_CLOSE_ROLES
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_CLOSE]
   }
 ] as const
 
@@ -347,7 +335,7 @@ const buildSlaRows = (config?: CalibrationServiceSlaConfig) => [
 const renderRoleChips = (roles: readonly string[]) => (
   <Stack direction='row' spacing={0.75} useFlexGap flexWrap='wrap'>
     {roles.map((role) => (
-      <Chip key={role} size='small' variant='outlined' label={roleLabels[role] || role} />
+      <Chip key={role} size='small' variant='outlined' label={getRoleLabelEs(role)} />
     ))}
   </Stack>
 )
@@ -356,6 +344,8 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
   const [activeStageAnchor, setActiveStageAnchor] = useState<HTMLElement | null>(null)
   const [activeStage, setActiveStage] = useState<FlowStage | null>(null)
   const slaRows = buildSlaRows(slaConfig)
+  const { data: stepRoles, isLoading: loadingStepRoles } =
+    useCalibrationServiceStepRoles()
 
   const handleOpenStageBranches = (event: MouseEvent<HTMLElement>, stage: FlowStage) => {
     if (!stage.branches?.length) {
@@ -712,7 +702,17 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
                   <TableCell sx={{ width: '34%' }}>
                     <Typography fontWeight={600}>{row.action}</Typography>
                   </TableCell>
-                  <TableCell>{renderRoleChips(row.roles)}</TableCell>
+                  <TableCell>
+                    {loadingStepRoles
+                      ? 'Cargando…'
+                      : renderRoleChips([
+                          ...new Set(
+                            row.permissions.flatMap(
+                              (permission) => stepRoles?.[permission] ?? []
+                            )
+                          )
+                        ])}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

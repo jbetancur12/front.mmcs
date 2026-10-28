@@ -795,6 +795,24 @@ export const useCalibrationServiceSlaConfig = (enabled = true) => {
   })
 }
 
+/**
+ * Quién hace cada paso del flujo según el panel de roles: { capacidad: [nombres de rol] }. Lo usa la pestaña Guía
+ * del servicio, para no repetir listas de roles que se desfasan de lo que el API permite.
+ */
+export const useCalibrationServiceStepRoles = () => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'step-roles'],
+    queryFn: async (): Promise<Record<string, string[]>> => {
+      const { data } = await axiosPrivate.get(
+        '/calibration-services/step-roles'
+      )
+      return data.steps ?? {}
+    },
+    staleTime: 60 * 1000,
+    retry: 1
+  })
+}
+
 export const useCalibrationServiceQuoteTermsTemplate = (enabled = true) => {
   return useQuery({
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'],
