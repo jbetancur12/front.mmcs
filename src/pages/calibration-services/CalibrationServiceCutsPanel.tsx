@@ -7,12 +7,16 @@ import {
 } from '../../constants/calibrationServices'
 
 import { DetailField } from './CalibrationServiceDetailBlocks'
+import CalibrationServiceCutCorrectionMenu from './CalibrationServiceCutCorrectionMenu'
 interface CalibrationServiceCutsPanelProps {
   cuts: CalibrationServiceCut[]
   canMarkReady?: boolean
   canMarkInvoiced?: boolean
   canRegisterPayment?: boolean
   canUpdateDocumentControl?: boolean
+  /** Id del servicio y si admite correcciones de cortes (no cerrado, cancelado ni pausado). */
+  serviceId?: number | string
+  canCorrectCuts?: boolean
   isBusy?: boolean
   onMarkReady?: (cutId: number) => void | Promise<void>
   onMarkInvoiced?: (cut: CalibrationServiceCut) => void
@@ -31,6 +35,8 @@ const CalibrationServiceCutsPanel = ({
   canMarkInvoiced = false,
   canUpdateDocumentControl = false,
   canRegisterPayment = false,
+  serviceId,
+  canCorrectCuts = false,
   isBusy = false,
   onMarkReady,
   onMarkInvoiced,
@@ -218,6 +224,13 @@ const CalibrationServiceCutsPanel = ({
                 ) : (
                   'Sin acción'
                 )}
+                {serviceId !== undefined ? (
+                  <CalibrationServiceCutCorrectionMenu
+                    serviceId={serviceId}
+                    cut={cut}
+                    disabled={!canCorrectCuts || isBusy}
+                  />
+                ) : null}
                 </Box>
               </Grid>
             </Grid>

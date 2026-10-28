@@ -274,6 +274,68 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  reopenQuote: async ({
+    serviceId,
+    reason
+  }: {
+    serviceId: number | string
+    reason: string
+  }): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/reopen`,
+      { reason }
+    )
+    return response.data
+  },
+
+  duplicateService: async (
+    serviceId: number | string
+  ): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/duplicate`
+    )
+    return response.data
+  },
+
+  voidCut: async ({
+    serviceId,
+    cutId,
+    reason
+  }: CalibrationServiceCutCorrectionPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/cuts/${cutId}/void`,
+      { reason }
+    )
+    return response.data
+  },
+
+  revertCutToDraft: async ({
+    serviceId,
+    cutId,
+    reason
+  }: CalibrationServiceCutCorrectionPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/cuts/${cutId}/revert-to-draft`,
+      { reason }
+    )
+    return response.data
+  },
+
+  correctCutInvoice: async ({
+    serviceId,
+    cutId,
+    reason,
+    invoiceReference
+  }: CalibrationServiceCutCorrectionPayload & {
+    invoiceReference: string
+  }): Promise<CalibrationService> => {
+    const response = await axiosPrivate.patch<CalibrationService>(
+      `/calibration-services/${serviceId}/cuts/${cutId}/invoice-reference`,
+      { reason, invoiceReference }
+    )
+    return response.data
+  },
+
   requestChanges: async ({
     serviceId,
     ...payload
@@ -912,6 +974,12 @@ const invalidateDetail = (queryClient: ReturnType<typeof useQueryClient>, id: st
   queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail, String(id)])
 }
 
+export interface CalibrationServiceCutCorrectionPayload {
+  serviceId: number | string
+  cutId: number | string
+  reason: string
+}
+
 export const useCalibrationServiceMutations = () => {
   const queryClient = useQueryClient()
   const iA = () => invalidateAll(queryClient)
@@ -923,6 +991,11 @@ export const useCalibrationServiceMutations = () => {
   const requestApproval = useMutation(calibrationServiceApi.requestApproval, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const approveService = useMutation(calibrationServiceApi.approveService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const rejectService = useMutation(calibrationServiceApi.rejectService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
+  const reopenQuote = useMutation(calibrationServiceApi.reopenQuote, { onSuccess: (s: any) => { iA(); iD(s.id) } })
+  const duplicateService = useMutation(calibrationServiceApi.duplicateService, { onSuccess: iA })
+  const voidCut = useMutation(calibrationServiceApi.voidCut, { onSuccess: (s: any) => { iA(); iD(s.id) } })
+  const revertCutToDraft = useMutation(calibrationServiceApi.revertCutToDraft, { onSuccess: (s: any) => { iA(); iD(s.id) } })
+  const correctCutInvoice = useMutation(calibrationServiceApi.correctCutInvoice, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const requestChanges = useMutation(calibrationServiceApi.requestChanges, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const issueOds = useMutation(calibrationServiceApi.issueOds, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const scheduleService = useMutation(calibrationServiceApi.scheduleService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
@@ -965,5 +1038,5 @@ export const useCalibrationServiceMutations = () => {
   const updateExecutionCustomer = useMutation(calibrationServiceApi.updateExecutionCustomer, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const upsertQuoteTermsTemplate = useMutation(calibrationServiceApi.upsertQuoteTermsTemplate, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']) } })
 
-  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
+  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, reopenQuote, duplicateService, voidCut, revertCutToDraft, correctCutInvoice, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
 }

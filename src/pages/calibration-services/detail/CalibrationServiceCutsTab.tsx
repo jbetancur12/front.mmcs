@@ -182,6 +182,12 @@ const CalibrationServiceCutsTab = ({
         canMarkInvoiced={canInvoiceCuts}
         canRegisterPayment={canRegisterPayment}
         canUpdateDocumentControl={canUpdateDocumentControl}
+        serviceId={service.id}
+        canCorrectCuts={
+          !service.isPaused &&
+          service.status !== 'closed' &&
+          service.status !== 'cancelled'
+        }
         isBusy={isOperationalBusy}
         onMarkReady={handleMarkCutReady}
         onMarkInvoiced={(cut) => setSelectedCutForInvoice(cut)}

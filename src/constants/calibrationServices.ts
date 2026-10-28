@@ -22,6 +22,7 @@ export const CALIBRATION_SERVICE_STATUS_LABELS: Record<
 > = {
   draft: 'Borrador',
   pending_approval: 'Cotización enviada',
+  expired: 'Vencida',
   rejected: 'Rechazada',
   approved: 'Aprobada por cliente',
   ods_issued: 'ODS emitida',
@@ -48,6 +49,7 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
 > = {
   draft: 'default',
   pending_approval: 'warning',
+  expired: 'default',
   rejected: 'error',
   approved: 'success',
   ods_issued: 'info',
@@ -64,6 +66,7 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
 export const CALIBRATION_SERVICE_STATUS_TONES: Record<string, StatusPillTone> = {
   draft: 'idle',
   pending_approval: 'warning',
+  expired: 'idle',
   rejected: 'error',
   approved: 'success',
   ods_issued: 'live',
@@ -103,6 +106,7 @@ export const CALIBRATION_SERVICE_STATUS_VARIANTS: Record<
 > = {
   draft: 'outlined',
   pending_approval: 'filled',
+  expired: 'outlined',
   rejected: 'filled',
   approved: 'outlined',
   ods_issued: 'outlined',

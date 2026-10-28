@@ -34,6 +34,7 @@ import { CalibrationService } from '../../../types/calibrationService'
 import CalibrationServiceStatusChip from '../CalibrationServiceStatusChip'
 import CalibrationServiceStageDecisionHelp from '../CalibrationServiceStageDecisionHelp'
 import CalibrationNotificationBell from '../CalibrationNotificationBell'
+import CalibrationServiceQuoteLifecycleActions from './CalibrationServiceQuoteLifecycleActions'
 import { BlockedActionTooltip } from './CalibrationServiceDetailLayout'
 import {
   formatDateValue,
@@ -234,6 +235,9 @@ const CalibrationServiceDetailHeader = ({
             label='Cliente pidió modificación'
           />
         ) : null}
+        {isTechnicalOnlyView || isAnalystOnlyView ? null : (
+          <CalibrationServiceQuoteLifecycleActions service={service} />
+        )}
         {canRequestApproval ? (
           <Button
             variant='contained'

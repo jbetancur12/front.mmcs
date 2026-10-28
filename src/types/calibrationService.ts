@@ -1,6 +1,7 @@
 export type CalibrationServiceStatus =
   | 'draft'
   | 'pending_approval'
+  | 'expired'
   | 'rejected'
   | 'approved'
   | 'ods_issued'
