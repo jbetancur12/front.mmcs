@@ -81,7 +81,12 @@ const getEffectiveQuantity = (
   return Math.max((item.quantity || 0) + approvedDelta, 0)
 }
 
-const buildDraftItems = (service: CalibrationService): DraftCutItem[] =>
+// 3.2: con el servicio finalizado técnicamente el corte se propone ya armado: tipo final y todo lo pendiente por
+// liberar marcado, para confirmarlo con un clic.
+const buildDraftItems = (
+  service: CalibrationService,
+  preselectAll = false
+): DraftCutItem[] =>
   (service.items || [])
     .filter((item) =>
       ['completed', 'in_progress'].includes(getOperationalStatus(item))
@@ -99,8 +104,8 @@ const buildDraftItems = (service: CalibrationService): DraftCutItem[] =>
         itemName: item.itemName,
         instrumentName: item.instrumentName || 'Sin instrumento',
         quantityAvailable,
-        selected: false,
-        quantity: quantityAvailable > 0 ? 1 : 0
+        selected: preselectAll && quantityAvailable > 0,
+        quantity: preselectAll ? quantityAvailable : quantityAvailable > 0 ? 1 : 0
       }
     })
     .filter((item) => item.quantityAvailable > 0)
@@ -132,13 +137,15 @@ const CalibrationServiceCutDialog = ({
   const [notes, setNotes] = useState('')
   const [draftItems, setDraftItems] = useState<DraftCutItem[]>([])
 
+  const isFinalProposal = service.status === 'technically_completed'
+
   useEffect(() => {
     if (open) {
-      setCutType('partial')
+      setCutType(isFinalProposal ? 'final' : 'partial')
       setNotes('')
-      setDraftItems(buildDraftItems(service))
+      setDraftItems(buildDraftItems(service, isFinalProposal))
     }
-  }, [open, service])
+  }, [open, service, isFinalProposal])
 
   const handleToggleItem =
     (serviceItemId: number) =>
@@ -207,9 +214,13 @@ const CalibrationServiceCutDialog = ({
     <FormDialog
       open={open}
       onClose={isLoading ? () => undefined : onClose}
-      title='Crear corte'
-      subtitle={service.serviceCode}
-      submitLabel='Crear corte'
+      title={isFinalProposal ? 'Corte final propuesto' : 'Crear corte'}
+      subtitle={
+        isFinalProposal
+          ? `${service.serviceCode} · todo lo pendiente por liberar ya está marcado`
+          : service.serviceCode
+      }
+      submitLabel={isFinalProposal ? 'Confirmar corte final' : 'Crear corte'}
       onSubmit={() => void handleSubmit()}
       loading={isLoading}
       submitDisabled={!canSubmit}

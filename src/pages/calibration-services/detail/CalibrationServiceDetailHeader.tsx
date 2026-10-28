@@ -453,7 +453,7 @@ const CalibrationServiceDetailHeader = ({
               disabled={isOperationalBusy || !canCreateCut}
               sx={secondaryActionSx}
             >
-              Crear corte
+              {service.status === 'technically_completed' ? 'Crear corte final' : 'Crear corte'}
             </Button>
           </BlockedActionTooltip>
         ) : null}
