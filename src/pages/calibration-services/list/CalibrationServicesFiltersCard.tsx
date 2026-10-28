@@ -215,6 +215,13 @@ const CalibrationServicesFiltersCard = ({
                 }
               />
               <QuickFilter
+                label='Sin pago'
+                active={cutTaskFilter === 'unpaid'}
+                onClick={() =>
+                  setCutTaskFilter(cutTaskFilter === 'unpaid' ? '' : 'unpaid')
+                }
+              />
+              <QuickFilter
                 label='Facturados'
                 active={hasCutsInvoiced}
                 onClick={() => toggleStatusShortcut('invoiced')}
@@ -463,8 +470,8 @@ const CalibrationServicesFiltersCard = ({
                   }
                 >
                   <MenuItem value={FILTER_ALL}>Todos</MenuItem>
-                  <MenuItem value='pagado'>Pagado</MenuItem>
-                  <MenuItem value='pendiente'>Pendiente</MenuItem>
+                  <MenuItem value='pagado'>Sin pagos pendientes</MenuItem>
+                  <MenuItem value='pendiente'>Contado sin pago</MenuItem>
                 </TextField>
               </Grid>
             ) : null}
