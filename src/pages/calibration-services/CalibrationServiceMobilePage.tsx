@@ -1023,11 +1023,21 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
             <Stack spacing={2} sx={{ mt: 1 }}>
               <FormControl fullWidth size='small'>
                 <InputLabel>Tipo</InputLabel>
-                <Select value={cutType} label='Tipo' onChange={e => setCutType(e.target.value as any)}>
+                <Select value={cutType} label='Tipo' onChange={e => {
+                  const next = e.target.value as 'partial' | 'final'
+                  setCutType(next)
+                  // Un corte final libera todo lo pendiente: se marca y se rellena solo
+                  if (next === 'final') {
+                    setCutSel(Object.fromEntries(cutCandidates.map(c => [c.item.id, { on: true, qty: c.available }])))
+                  }
+                }}>
                   <MenuItem value='partial'>Parcial</MenuItem>
                   <MenuItem value='final'>Final</MenuItem>
                 </Select>
               </FormControl>
+              {cutType === 'final' && cutCandidates.some(c => !cutSel[c.item.id]?.on || cutSel[c.item.id].qty < c.available) && (
+                <Alert severity='warning'>Este corte no libera todo lo pendiente, así que se guardará como parcial.</Alert>
+              )}
               <Typography variant='body2' fontWeight={700} sx={{ color: G.dark }}>Ítems que entran al corte</Typography>
               {cutCandidates.length === 0 ? (
                 <Typography variant='body2' sx={{ color: G.gray600 }}>
