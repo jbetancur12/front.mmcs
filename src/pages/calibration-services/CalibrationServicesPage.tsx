@@ -143,7 +143,10 @@ const CalibrationServicesPage = () => {
         </Alert>
       ) : null}
 
-      <CalibrationServiceMyQueueStrip />
+      <CalibrationServiceMyQueueStrip
+        activeCutTask={filters.cutTaskFilter}
+        onSelectCutTask={filters.setCutTaskFilter}
+      />
 
       <CalibrationServicesPipeline
         statusCounts={data?.statusCounts}

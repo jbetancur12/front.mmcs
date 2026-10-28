@@ -1,3 +1,4 @@
+import { CalibrationServiceCutTask } from '../../../types/calibrationService'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Button, Paper, Stack, Typography } from '@mui/material'
@@ -25,11 +26,27 @@ const MIRRORED_BY_PIPELINE = new Set([
   'to_schedule'
 ])
 
+// Tareas de cortes: la tarjeta aplica el mismo filtro de la bandeja (una sola forma de ver "lo que falta"). Las que no
+// tienen filtro equivalente, como "Mis servicios en curso", abren su propia lista corta.
+const CUT_TASK_BY_SECTION: Record<string, CalibrationServiceCutTask> = {
+  ready_to_invoice: 'ready_to_invoice',
+  unpaid: 'unpaid',
+  certificates: 'certificates_pending'
+}
+
+interface CalibrationServiceMyQueueStripProps {
+  activeCutTask: CalibrationServiceCutTask | ''
+  onSelectCutTask: (task: CalibrationServiceCutTask | '') => void
+}
+
 /**
  * "Mis pendientes": una tarjeta por tarea que le toca al usuario según sus capacidades. Al elegir una se listan sus
  * servicios con la acción a un clic. Si no hay nada pendiente, no ocupa espacio.
  */
-const CalibrationServiceMyQueueStrip = () => {
+const CalibrationServiceMyQueueStrip = ({
+  activeCutTask,
+  onSelectCutTask
+}: CalibrationServiceMyQueueStripProps) => {
   const navigate = useNavigate()
   const { data } = useCalibrationServiceMyQueue()
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
@@ -70,10 +87,21 @@ const CalibrationServiceMyQueueStrip = () => {
             icon={<AssignmentTurnedInOutlinedIcon />}
             tone={SECTION_TONES[section.key] || 'teal'}
             variant='quiet'
-            active={selectedKey === section.key}
-            onClick={() =>
-              setSelectedKey(selectedKey === section.key ? null : section.key)
+            active={
+              CUT_TASK_BY_SECTION[section.key]
+                ? activeCutTask === CUT_TASK_BY_SECTION[section.key]
+                : selectedKey === section.key
             }
+            onClick={() => {
+              const task = CUT_TASK_BY_SECTION[section.key]
+              if (task) {
+                setSelectedKey(null)
+                onSelectCutTask(activeCutTask === task ? '' : task)
+                return
+              }
+              onSelectCutTask('')
+              setSelectedKey(selectedKey === section.key ? null : section.key)
+            }}
           />
         ))}
       </Box>

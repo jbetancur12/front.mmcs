@@ -1,3 +1,4 @@
+import { CalibrationServiceCutTask } from '../../../types/calibrationService'
 import { useDeferredValue, useEffect, useState } from 'react'
 import {
   CalibrationServiceApprovalStatus,
@@ -49,6 +50,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(storedFilters.showOnlyMyLoad ?? false)
   const hasCutsReadyForInvoicing = (statusFilter as string) === 'ready_for_invoicing'
   const hasCutsInvoiced = (statusFilter as string) === 'invoiced'
+  // Tareas de cortes de "Mis pendientes": una tarjeta activa filtra la bandeja y se apaga con el mismo clic
+  const [cutTaskFilter, setCutTaskFilter] = useState<CalibrationServiceCutTask | ''>('')
   const [billingStatusFilter, setBillingStatusFilter] = useState<string | undefined>(undefined)
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string | undefined>(undefined)
 
@@ -82,6 +85,10 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     queryFilters.hasAdjustments = hasAdjustmentsFilter
   }
 
+  if (cutTaskFilter) {
+    queryFilters.cutTask = cutTaskFilter
+  }
+
   if (billingStatusFilter) {
     queryFilters.billingStatus = billingStatusFilter as 'enviado' | 'no_enviado'
   }
@@ -99,7 +106,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     approvalFilter,
     hasAdjustmentsFilter,
     billingStatusFilter,
-    paymentStatusFilter
+    paymentStatusFilter,
+    cutTaskFilter
   ])
 
   useEffect(() => {
@@ -148,7 +156,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     siteFilter.trim(),
     metrologistFilter !== FILTER_ALL,
     hasAdjustmentsFilter !== FILTER_ALL,
-    showOnlyMyLoad
+    showOnlyMyLoad,
+    cutTaskFilter
   ].filter(Boolean).length
 
   const clearFilters = () => {
@@ -161,6 +170,7 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     setMetrologistFilter(FILTER_ALL)
     setHasAdjustmentsFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
+    setCutTaskFilter('')
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
     }
@@ -191,6 +201,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     setShowOnlyMyLoad,
     hasCutsReadyForInvoicing,
     hasCutsInvoiced,
+    cutTaskFilter,
+    setCutTaskFilter,
     billingStatusFilter,
     setBillingStatusFilter,
     paymentStatusFilter,

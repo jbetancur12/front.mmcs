@@ -111,7 +111,8 @@ const CalibrationServicesFiltersCard = ({
     setViewMode,
     showOnlyMyLoad,
     setShowOnlyMyLoad,
-    hasCutsReadyForInvoicing,
+    cutTaskFilter,
+    setCutTaskFilter,
     hasCutsInvoiced,
     billingStatusFilter,
     setBillingStatusFilter,
@@ -134,7 +135,7 @@ const CalibrationServicesFiltersCard = ({
     siteFilter.trim()
   ].filter(Boolean).length
 
-  const toggleStatusShortcut = (value: 'ready_for_invoicing' | 'invoiced') =>
+  const toggleStatusShortcut = (value: 'invoiced') =>
     setStatusFilter((previous) =>
       (previous as string) === value
         ? FILTER_ALL
@@ -206,8 +207,12 @@ const CalibrationServicesFiltersCard = ({
             <>
               <QuickFilter
                 label='Por facturar'
-                active={hasCutsReadyForInvoicing}
-                onClick={() => toggleStatusShortcut('ready_for_invoicing')}
+                active={cutTaskFilter === 'ready_to_invoice'}
+                onClick={() =>
+                  setCutTaskFilter(
+                    cutTaskFilter === 'ready_to_invoice' ? '' : 'ready_to_invoice'
+                  )
+                }
               />
               <QuickFilter
                 label='Facturados'

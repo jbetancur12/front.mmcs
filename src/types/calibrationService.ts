@@ -525,6 +525,11 @@ export interface CalibrationServiceQuoteTermsTemplate {
   updatedByName?: string | null
 }
 
+export type CalibrationServiceCutTask =
+  | 'ready_to_invoice'
+  | 'unpaid'
+  | 'certificates_pending'
+
 export interface CalibrationServiceFilters {
   search?: string
   status?: CalibrationServiceStatus
@@ -533,6 +538,8 @@ export interface CalibrationServiceFilters {
   hasAdjustments?: string
   hasCutsReadyForInvoicing?: string
   hasCutsInvoiced?: string
+  /** Tarea de cortes de Mis pendientes: servicios con algún corte en ese caso. */
+  cutTask?: CalibrationServiceCutTask
   billingStatus?: 'enviado' | 'no_enviado'
   paymentStatus?: 'pagado' | 'pendiente'
   limit?: number
