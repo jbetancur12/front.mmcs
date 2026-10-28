@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
-import { CalibrationServiceCut } from '../../types/calibrationService'
+import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material'
+import { CalibrationServiceAdjustment, CalibrationServiceCut } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS,
   CALIBRATION_SERVICE_CUT_STATUS_LABELS
@@ -17,11 +17,41 @@ interface CalibrationServiceCutsPanelProps {
   /** Id del servicio y si admite correcciones de cortes (no cerrado, cancelado ni pausado). */
   serviceId?: number | string
   canCorrectCuts?: boolean
+  /** Novedades del servicio: sirven para avisar antes del clic que un corte no puede quedar listo para facturar. */
+  adjustments?: CalibrationServiceAdjustment[]
   isBusy?: boolean
   onMarkReady?: (cutId: number) => void | Promise<void>
   onMarkInvoiced?: (cut: CalibrationServiceCut) => void
   onRegisterPayment?: (cut: CalibrationServiceCut) => void
   onUpdateDocumentControl?: (cut: CalibrationServiceCut) => void
+}
+
+// H-08: solo bloquean la factura las novedades abiertas de los ítems del corte (las que no están ligadas a un ítem
+// afectan a todos). Misma regla que el API en billing.controller.js (hasBlockingAdjustmentsForInvoicing).
+const OPEN_ADJUSTMENT_STATUSES = [
+  'reported',
+  'pending_customer_approval',
+  'customer_changes_requested'
+]
+
+const getBlockingAdjustments = (
+  cut: CalibrationServiceCut,
+  adjustments: CalibrationServiceAdjustment[]
+) => {
+  const cutItemIds = (cut.items || []).map((item) => item.serviceItemId)
+
+  return adjustments.filter((adjustment) => {
+    if (adjustment.serviceItemId && !cutItemIds.includes(adjustment.serviceItemId)) {
+      return false
+    }
+    if (OPEN_ADJUSTMENT_STATUSES.includes(adjustment.status)) {
+      return true
+    }
+    return (
+      adjustment.status === 'customer_rejected' &&
+      adjustment.otherFields?.contractModificationRequired !== false
+    )
+  })
 }
 
 const cutTypeLabels = {
@@ -37,6 +67,7 @@ const CalibrationServiceCutsPanel = ({
   canRegisterPayment = false,
   serviceId,
   canCorrectCuts = false,
+  adjustments = [],
   isBusy = false,
   onMarkReady,
   onMarkInvoiced,
@@ -179,14 +210,27 @@ const CalibrationServiceCutsPanel = ({
               <Grid item xs={12} md={3}>
                 <Box sx={{ display: 'flex', justifyContent: { md: 'flex-end' }, alignItems: 'flex-end', height: '100%' }}>
                   {canMarkReady && cut.status === 'draft' ? (
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    onClick={() => void onMarkReady?.(cut.id)}
-                    disabled={isBusy}
+                  <Tooltip
+                    title={
+                      getBlockingAdjustments(cut, adjustments).length
+                        ? `Hay ${getBlockingAdjustments(cut, adjustments).length} novedad(es) abierta(s) en los ítems de este corte: resuélvelas antes de facturar.`
+                        : ''
+                    }
                   >
-                    Listo para facturar
-                  </Button>
+                    <span>
+                      <Button
+                        size='small'
+                        variant='outlined'
+                        onClick={() => void onMarkReady?.(cut.id)}
+                        disabled={
+                          isBusy ||
+                          getBlockingAdjustments(cut, adjustments).length > 0
+                        }
+                      >
+                        Listo para facturar
+                      </Button>
+                    </span>
+                  </Tooltip>
                 ) : canMarkInvoiced && cut.status === 'ready_for_invoicing' ? (
                   <Button
                     size='small'
