@@ -917,7 +917,10 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'rbac:view': [
     { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'screen' },
-    { path: "/settings/roles/ayuda", label: "Ajustes › Roles y permisos › ayuda", kind: 'screen' }
+    { path: "/settings/roles/ayuda", label: "Ajustes › Roles y permisos › ayuda", kind: 'screen' },
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' },
+    { path: "/users", label: "Usuarios", kind: 'action' }
   ],
   'repositories:repository:manage': [
     { path: "/", label: "Inicio", kind: 'action' },
