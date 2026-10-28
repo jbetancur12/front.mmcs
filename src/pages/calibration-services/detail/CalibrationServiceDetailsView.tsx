@@ -287,6 +287,7 @@ const CalibrationServiceDetailsView = ({
     canGenerateQuotePdf,
     canGenerateOdsPdf,
     isTechnicalOnlyView,
+    hideFinancialInfo,
     allItemsOperationallyCompleted,
     canReportAdjustment,
     canReviewAdjustment,
@@ -495,7 +496,7 @@ const CalibrationServiceDetailsView = ({
                   canCommercialReview={canReviewAdjustmentCommercially}
                   canGenerateDocument={canReviewAdjustment}
                   canGenerateSummaryDocument={canReviewAdjustment}
-                  isTechnicalOnlyView={isTechnicalOnlyView}
+                  hideFinancialInfo={hideFinancialInfo}
                   isBusy={isOperationalBusy}
                   onCreate={() => setIsAdjustmentDialogOpen(true)}
                   onReview={(adjustments, reviewStage) => {

@@ -150,7 +150,7 @@ const flowStages: readonly FlowStage[] = [
   },
   {
     title: 'Cierre final',
-    detail: 'Servicio cerrado y sin acciones pendientes'
+    detail: 'El servicio se cierra solo cuando todo está facturado, pagado y enviado'
   }
 ] as const
 
@@ -208,15 +208,19 @@ const permissionRows = [
     ]
   },
   {
-    action: 'Facturar corte',
+    action: 'Facturar corte y registrar el pago',
     permissions: [PERMISSIONS.CALIBRATION_SERVICE_INVOICING]
   },
   {
-    action: 'Control documental',
+    action: 'Control documental (corte de contado: solo con el pago registrado)',
     permissions: [PERMISSIONS.CALIBRATION_SERVICE_DOCUMENT_CONTROL]
   },
   {
-    action: 'Cerrar servicio',
+    action: 'Enviar certificado al cliente',
+    permissions: [PERMISSIONS.CALIBRATION_SERVICE_CERTIFICATE_SEND]
+  },
+  {
+    action: 'Cerrar servicio a mano (normalmente cierra solo)',
     permissions: [PERMISSIONS.CALIBRATION_SERVICE_CLOSE]
   }
 ] as const
@@ -230,7 +234,12 @@ const commercialBranchRows = [
   {
     title: 'Cliente rechaza',
     detail:
-      'El servicio queda rechazado y conserva la trazabilidad comercial, sin pasar a ODS.'
+      'El servicio queda rechazado y conserva la trazabilidad comercial, sin pasar a ODS. Se puede reabrir o duplicar.'
+  },
+  {
+    title: 'Cliente no responde',
+    detail:
+      'La cotización vence a los días de validez indicados (30 si no tiene), comercial recibe un aviso 3 días antes y se puede reabrir.'
   },
   {
     title: 'Cliente solicita modificación',
@@ -246,9 +255,9 @@ const noveltyBranchRows = [
       'Metrología reporta la novedad y comercial/facturación decide si usa el mismo precio o uno diferente.'
   },
   {
-    title: 'Cantidad menor a la cotizada',
+    title: 'Cantidad menor o ítem no recibido',
     detail:
-      'Se registra la diferencia y luego se define si genera descuento o si el valor comercial se mantiene.'
+      'No tienen valor que aprobar: quedan aplicadas con la revisión técnica y comercial recibe un aviso.'
   },
   {
     title: 'Ítem adicional no cotizado',
@@ -319,14 +328,14 @@ const buildSlaRows = (config?: CalibrationServiceSlaConfig) => [
   {
     phase: 'Facturación a control documental',
     startsAt: 'Corte facturado',
-    expectedAction: 'Cargar, revisar y enviar certificados/evidencias documentales.',
+    expectedAction: 'Cargar, revisar y enviar certificados/evidencias documentales (en contado, después del pago).',
     alertAt: formatBusinessDays(getSlaValue(config, 'documentControlWarningBusinessDays')),
     overdueAfter: formatBusinessDays(getSlaValue(config, 'documentControlTargetBusinessDays'))
   },
   {
     phase: 'Control documental a cierre final',
     startsAt: 'Certificados enviados',
-    expectedAction: 'Cerrar definitivamente el servicio si no quedan pendientes.',
+    expectedAction: 'El servicio se cierra solo cuando todo está facturado, pagado y enviado; si falta algo, se puede cerrar a mano.',
     alertAt: formatBusinessDays(getSlaValue(config, 'finalCloseWarningBusinessDays')),
     overdueAfter: formatBusinessDays(getSlaValue(config, 'finalCloseTargetBusinessDays'))
   }

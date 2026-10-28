@@ -32,7 +32,8 @@ interface CalibrationServiceAdjustmentsPanelProps {
   canCommercialReview: boolean
   canGenerateDocument?: boolean
   canGenerateSummaryDocument?: boolean
-  isTechnicalOnlyView?: boolean
+  /** Sin precios (capacidad view_prices) o sin lo comercial: oculta el impacto económico de la novedad. */
+  hideFinancialInfo?: boolean
   isBusy?: boolean
   onCreate: () => void
   onReview: (
@@ -135,7 +136,7 @@ const CalibrationServiceAdjustmentsPanel = ({
   canCommercialReview,
   canGenerateDocument = false,
   canGenerateSummaryDocument = false,
-  isTechnicalOnlyView = false,
+  hideFinancialInfo = false,
   isBusy = false,
   onCreate,
   onReview,
@@ -318,7 +319,7 @@ const CalibrationServiceAdjustmentsPanel = ({
                   <Grid item xs={6} md={3}>
                     <DetailField label='Ajuste comercial'>{adjustment.requiresCommercialAdjustment ? 'Sí' : 'No'}</DetailField>
                   </Grid>
-                  {!isTechnicalOnlyView ? (
+                  {!hideFinancialInfo ? (
                     <Grid item xs={6} md={3}>
                       <DetailField label='Impacto aprobado'>{adjustment.approvedTotal !== null &&
                         adjustment.approvedTotal !== undefined
