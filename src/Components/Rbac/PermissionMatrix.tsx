@@ -33,6 +33,11 @@ import SearchIcon from '@mui/icons-material/Search'
 import { ROLE_LABELS_ES } from 'src/constants/roles'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacMatrix, RbacRole } from '../../types/rbac'
+import {
+  PermissionHelpButton,
+  grantedRoleNames,
+  permissionPlainText
+} from './PermissionHelp'
 
 /** Nombre legible de cada módulo del catálogo; si falta, se muestra la clave. */
 export const RBAC_MODULE_LABELS: Record<string, string> = {
@@ -209,6 +214,8 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
       return (
         p.key.toLowerCase().includes(term) ||
         (p.description ?? '').toLowerCase().includes(term) ||
+        permissionPlainText(p).name.toLowerCase().includes(term) ||
+        permissionPlainText(p).what.toLowerCase().includes(term) ||
         (PERMISSION_SCREENS[p.key] ?? []).some(
           (s) =>
             s.label.toLowerCase().includes(term) ||
@@ -429,12 +436,19 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography
-                          variant='body2'
-                          sx={{ fontFamily: 'monospace', fontWeight: 600 }}
-                        >
-                          {permission.key}
+                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                          {permissionPlainText(permission).name}
                         </Typography>
+                        <PermissionHelpButton
+                          permission={permission}
+                          getGrantedRoles={() =>
+                            grantedRoleNames(
+                              matrix.roles,
+                              (id) => grants.has(cellKey(id, permission.key)),
+                              roleDisplayName
+                            )
+                          }
+                        />
                         {permission.isSensitive && (
                           <Tooltip title='Capacidad sensible: solo un super administrador puede otorgarla o quitarla'>
                             <Chip
@@ -447,8 +461,20 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                           </Tooltip>
                         )}
                       </Box>
-                      <Typography variant='caption' color='text.secondary'>
-                        {permission.description}
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        component='div'
+                      >
+                        {permissionPlainText(permission).what}
+                      </Typography>
+                      <Typography
+                        variant='caption'
+                        color='text.disabled'
+                        component='div'
+                        sx={{ fontFamily: 'monospace', fontSize: 10.5 }}
+                      >
+                        {permission.key}
                       </Typography>
                       <ScreenInfo permissionKey={permission.key} />
                     </TableCell>

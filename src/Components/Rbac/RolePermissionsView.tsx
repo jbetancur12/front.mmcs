@@ -21,6 +21,11 @@ import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacMatrix, RbacRole } from '../../types/rbac'
 import { PendingChange } from './ChangesDialog'
 import {
+  PermissionHelpButton,
+  grantedRoleNames,
+  permissionPlainText
+} from './PermissionHelp'
+import {
   ScreenInfo,
   cellKey,
   moduleLabel,
@@ -158,6 +163,8 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
       return (
         p.key.toLowerCase().includes(term) ||
         (p.description ?? '').toLowerCase().includes(term) ||
+        permissionPlainText(p).name.toLowerCase().includes(term) ||
+        permissionPlainText(p).what.toLowerCase().includes(term) ||
         (PERMISSION_SCREENS[p.key] ?? []).some(
           (s) =>
             s.label.toLowerCase().includes(term) ||
@@ -490,12 +497,19 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                       </Tooltip>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                          <Typography
-                            variant='body2'
-                            sx={{ fontFamily: 'monospace', fontWeight: 600 }}
-                          >
-                            {p.key}
+                          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                            {permissionPlainText(p).name}
                           </Typography>
+                          <PermissionHelpButton
+                            permission={p}
+                            getGrantedRoles={() =>
+                              grantedRoleNames(
+                                matrix.roles,
+                                (id) => effectiveGrants.has(cellKey(id, p.key)),
+                                roleDisplayName
+                              )
+                            }
+                          />
                           {p.isSensitive && (
                             <Tooltip title='Capacidad sensible: solo un super administrador puede otorgarla o quitarla'>
                               <Chip
@@ -508,8 +522,20 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                             </Tooltip>
                           )}
                         </Box>
-                        <Typography variant='caption' color='text.secondary'>
-                          {p.description}
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          component='div'
+                        >
+                          {permissionPlainText(p).what}
+                        </Typography>
+                        <Typography
+                          variant='caption'
+                          color='text.disabled'
+                          component='div'
+                          sx={{ fontFamily: 'monospace', fontSize: 10.5 }}
+                        >
+                          {p.key}
                         </Typography>
                         <ScreenInfo permissionKey={p.key} />
                       </Box>
