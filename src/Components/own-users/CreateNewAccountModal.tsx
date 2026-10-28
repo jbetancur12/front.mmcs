@@ -1,12 +1,13 @@
-import { Stack } from '@mui/material'
+import { Stack, Typography } from '@mui/material'
 import React, { useMemo, useState } from 'react'
 
 import { ROLES } from 'src/constants/roles'
 import FormDialog, { FormDialogSection } from '../Common/FormDialog'
 
+import RoleChangePreview from './RoleChangePreview'
 import RoleHelpDialog from './RoleHelpDialog'
 import { FormFieldSkeleton } from './Skeletons'
-import { Role, UserData, UserFormValues } from './types'
+import { AssignableRole, Role, UserData, UserFormValues } from './types'
 import { FormErrorsAlert, RolesField, UserTextField } from './UserFormFields'
 import { useUserForm } from './useUserForm'
 
@@ -14,7 +15,7 @@ interface CreateModalProps {
   onClose: () => void
   onSubmit: (values: UserData) => Promise<void>
   open: boolean
-  rolesList?: Role[]
+  rolesList?: AssignableRole[]
   loadingRoles: boolean
   isCreating?: boolean
 }
@@ -63,6 +64,15 @@ const CreateNewAccountModal: React.FC<CreateModalProps> = ({
   const { values, errors, touched, hasUnsavedChanges, isFormValid } = form
   const [roleHelpOpen, setRoleHelpOpen] = useState(false)
 
+  // Toda cuenta interna recibe además el rol Empleado (acceso a la Academia y a los módulos de la empresa): se
+  // agrega al guardar si existe y no se eligió ya, y se cuenta en la vista previa para que lo que se muestra
+  // sea lo que queda
+  const employeeRole = rolesList?.find((role) => role.name === ROLES.EMPLOYEE)
+  const rolesWithEmployee: Role[] =
+    employeeRole && !values.roles.some((role) => role.id === employeeRole.id)
+      ? [...values.roles, employeeRole]
+      : values.roles
+
   const handleSubmit = async () => {
     if (!isFormValid) {
       form.touchAll()
@@ -72,10 +82,12 @@ const CreateNewAccountModal: React.FC<CreateModalProps> = ({
     try {
       await onSubmit({
         ...values,
-        roles: [
-          ...values.roles,
-          rolesList?.find((r) => r.name === ROLES.EMPLOYEE)
-        ]
+        // Solo id, nombre y descripción: es lo que el API usa, y la lista trae además las capacidades de cada rol
+        roles: rolesWithEmployee.map(({ id, name, description }) => ({
+          id,
+          name,
+          description
+        }))
       } as UserData)
       form.setValues(initialValues)
       form.resetState()
@@ -152,6 +164,20 @@ const CreateNewAccountModal: React.FC<CreateModalProps> = ({
                 helperText={touched.roles && errors.roles}
                 onChange={(roles) => form.handleFieldChange('roles', roles)}
                 onShowHelp={() => setRoleHelpOpen(true)}
+              />
+              {employeeRole && (
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ mt: 0.5 }}
+                >
+                  La cuenta recibe también el rol Empleado.
+                </Typography>
+              )}
+              <RoleChangePreview
+                before={[]}
+                after={rolesWithEmployee}
+                rolesList={rolesList}
               />
             </Stack>
           </FormDialogSection>

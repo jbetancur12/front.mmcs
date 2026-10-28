@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { axiosPrivate } from '@utils/api'
 import { UserData } from '../Components/TableOwnUsers'
+import type { AssignableRole } from '../Components/own-users/types'
 import { AxiosError } from 'axios'
 
 // Query Keys
 export const QUERY_KEYS = {
   USERS: 'users',
-  ROLES: 'roles'
+  ROLES: 'roles',
+  ASSIGNABLE_ROLES: 'roles-for-assignment'
 } as const
 
 // Types for mutations
@@ -49,6 +51,11 @@ const updateUser = async (userData: UpdateUserData): Promise<UserData> => {
 const fetchRoles = async () => {
   const { data } = await axiosPrivate.get('/roles')
   return data
+}
+
+const fetchRolesForAssignment = async (): Promise<AssignableRole[]> => {
+  const { data } = await axiosPrivate.get('/roles/for-assignment')
+  return data.roles
 }
 
 const deleteUser = async (userId: number): Promise<void> => {
@@ -97,6 +104,14 @@ export const useUsers = () => {
 
 // Roles disponibles (`GET /roles`)
 export const useRoles = () => useQuery(QUERY_KEYS.ROLES, fetchRoles)
+
+// Roles para asignar desde el formulario de usuarios: con sus capacidades y si quien pregunta puede darlos
+// (`GET /roles/for-assignment`)
+export const useAssignableRoles = () =>
+  // Las capacidades de un rol pueden cambiar desde el panel de roles: se relee seguido
+  useQuery(QUERY_KEYS.ASSIGNABLE_ROLES, fetchRolesForAssignment, {
+    staleTime: 30 * 1000
+  })
 
 // Custom hook for user mutations
 export const useUserMutations = () => {

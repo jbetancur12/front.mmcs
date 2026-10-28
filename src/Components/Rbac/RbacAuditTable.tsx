@@ -15,7 +15,8 @@ const ACTION_META: Record<
   role_create: { label: 'Rol creado', color: 'info' },
   role_update: { label: 'Rol editado', color: 'default' },
   role_activate: { label: 'Rol activado', color: 'success' },
-  role_deactivate: { label: 'Rol desactivado', color: 'warning' }
+  role_deactivate: { label: 'Rol desactivado', color: 'warning' },
+  user_roles_change: { label: 'Roles de una persona', color: 'info' }
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -30,6 +31,13 @@ export const describeAuditChange = (item: RbacAuditItem): string => {
   const before = item.before ?? {}
   const after = item.after ?? {}
   if (item.action === 'role_create') return String(after.name ?? '')
+  if (item.action === 'user_roles_change') {
+    const names = (value: unknown) =>
+      Array.isArray(value) && value.length > 0
+        ? value.map((name) => getRoleLabelEs(String(name))).join(', ')
+        : 'sin roles'
+    return `${String(after.email ?? before.email ?? 'Persona')}: ${names(before.roles)} → ${names(after.roles)}`
+  }
   const fields = Object.keys({ ...before, ...after }).filter(
     (field) => before[field] !== after[field]
   )

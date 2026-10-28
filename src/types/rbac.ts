@@ -42,6 +42,8 @@ export type RbacAuditAction =
   | 'role_update'
   | 'role_activate'
   | 'role_deactivate'
+  /** Se le dieron o quitaron roles a una persona: before/after = { userId, email, roles } */
+  | 'user_roles_change'
 
 export interface RbacAuditItem {
   id: number

@@ -2,7 +2,7 @@ import { Add, ManageAccounts as ManageAccountsIcon } from '@mui/icons-material'
 import { Button, CircularProgress, Container } from '@mui/material'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { useRoles, useUsers } from '../hooks/useUsers'
+import { useAssignableRoles, useUsers } from '../hooks/useUsers'
 import { handleErrorWithAlert } from '../utils/sweetAlert'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import DataTable from 'src/Components/Common/DataTable'
@@ -23,7 +23,8 @@ export type { Role, UserData } from './own-users/types'
 const TableOwnUsers: React.FC = () => {
   const canCreateUser = useCan(PERMISSIONS.USERS_USER_CREATE)
 
-  const { data: roles, isLoading: loadingRoles } = useRoles()
+  // Roles con sus capacidades y si quien asigna puede darlos (para el selector y la vista previa)
+  const { data: roles, isLoading: loadingRoles } = useAssignableRoles()
 
   const {
     data: users = [],

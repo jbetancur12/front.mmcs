@@ -8,11 +8,13 @@ import {
   CircularProgress,
   Fade,
   TextField,
-  TextFieldProps
+  TextFieldProps,
+  Typography
 } from '@mui/material'
 import React from 'react'
 
-import { Role } from './types'
+import { roleModulesText, unassignableText } from './roleSummary'
+import { AssignableRole, Role } from './types'
 import { getRoleChipLabel } from './userValidation'
 
 /** TextField de los diálogos de usuario (reenvía la ref para usarlo dentro de Fade). */
@@ -23,7 +25,7 @@ export const UserTextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
 )
 
 interface RolesFieldProps {
-  rolesList?: Role[]
+  rolesList?: AssignableRole[]
   loadingRoles: boolean
   value: Role[]
   error?: boolean
@@ -49,6 +51,29 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
     },
     ref
   ) {
+    const selectedIds = new Set(value.map((role) => role.id))
+    // Los roles elegidos se completan con los datos de la lista (capacidades, si se pueden dar...)
+    const selected = value.map(
+      (role) =>
+        rolesList?.find((candidate) => candidate.id === role.id) ??
+        ({
+          ...role,
+          isActive: true,
+          isSystem: false,
+          permissions: [],
+          assignable: true,
+          reason: null,
+          missing: []
+        } as AssignableRole)
+    )
+    // Los roles desactivados no se ofrecen (salvo que la persona ya lo tenga)
+    const options = (rolesList ?? []).filter(
+      (role) => role.isActive || selectedIds.has(role.id)
+    )
+    const someBlocked = options.some(
+      (role) => !role.assignable && !selectedIds.has(role.id)
+    )
+
     return (
       <Box ref={ref} style={style}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
@@ -64,24 +89,42 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
         </Box>
         <Autocomplete
           multiple
-          options={rolesList ?? []}
+          options={options}
           autoComplete={false}
-          value={value}
-          getOptionLabel={(option) => {
-            if (typeof option === 'string') {
-              return option
-            }
-            return option.description
+          value={selected}
+          isOptionEqualToValue={(option, current) => option.id === current.id}
+          // Un rol que quien asigna no puede dar se ve gris y dice por qué; si la persona ya lo tiene se deja
+          // (quitarlo siempre se puede)
+          getOptionDisabled={(option) =>
+            !option.assignable && !selectedIds.has(option.id)
+          }
+          getOptionLabel={(option) => getRoleChipLabel(option)}
+          renderOption={(props, option) => {
+            const blocked = unassignableText(option)
+            const disabled = !option.assignable && !selectedIds.has(option.id)
+            return (
+              <li {...props} key={option.id}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant='body2' fontWeight={600}>
+                    {getRoleChipLabel(option)}
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    {roleModulesText(option)}
+                  </Typography>
+                  {disabled && blocked && (
+                    <Typography
+                      variant='caption'
+                      component='div'
+                      sx={{ color: '#b45309' }}
+                    >
+                      {blocked}
+                    </Typography>
+                  )}
+                </Box>
+              </li>
+            )
           }}
-          onChange={(_, newValues) => {
-            const roles = newValues.map((v) => {
-              if (typeof v === 'string') {
-                return { id: 0, name: v, description: v }
-              }
-              return v
-            })
-            onChange(roles)
-          }}
+          onChange={(_, newValues) => onChange(newValues)}
           renderTags={(tagValue, getTagProps) =>
             tagValue.map((option, index) => (
               <Chip
@@ -107,7 +150,12 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
               required
               variant='outlined'
               error={error}
-              helperText={helperText}
+              helperText={
+                helperText ||
+                (someBlocked
+                  ? 'Los roles en gris no los puedes dar: incluyen capacidades que tú no tienes.'
+                  : undefined)
+              }
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
@@ -121,11 +169,12 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
               }}
             />
           )}
-          filterOptions={(options, state) => {
-            return options.filter((option) =>
-              option.description
-                .toLowerCase()
-                .includes(state.inputValue.toLowerCase())
+          filterOptions={(candidates, state) => {
+            const term = state.inputValue.toLowerCase()
+            return candidates.filter(
+              (option) =>
+                getRoleChipLabel(option).toLowerCase().includes(term) ||
+                (option.description ?? '').toLowerCase().includes(term)
             )
           }}
           noOptionsText='No se encontraron roles'

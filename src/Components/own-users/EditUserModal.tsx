@@ -3,9 +3,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 
 import FormDialog, { FormDialogSection } from '../Common/FormDialog'
 
+import RoleChangePreview from './RoleChangePreview'
 import RoleHelpDialog from './RoleHelpDialog'
 import { FormFieldSkeleton } from './Skeletons'
-import { Role, UserData } from './types'
+import { AssignableRole, UserData } from './types'
 import { FormErrorsAlert, RolesField, UserTextField } from './UserFormFields'
 import { useUserForm } from './useUserForm'
 
@@ -14,7 +15,7 @@ interface EditModalProps {
   onClose: () => void
   onSubmit: (values: UserData) => Promise<void>
   userData: UserData | null
-  rolesList?: Role[]
+  rolesList?: AssignableRole[]
   loadingRoles: boolean
   isUpdating?: boolean
 }
@@ -71,7 +72,15 @@ const EditUserModal: React.FC<EditModalProps> = ({
     }
 
     try {
-      await onSubmit(values)
+      await onSubmit({
+        ...values,
+        // Solo id, nombre y descripción: es lo que el API usa, y la lista trae además las capacidades de cada rol
+        roles: (values.roles || []).map(({ id, name, description }) => ({
+          id,
+          name,
+          description
+        }))
+      })
       form.resetState()
     } catch (error) {
       console.error('Error in edit modal submit:', error)
@@ -167,6 +176,11 @@ const EditUserModal: React.FC<EditModalProps> = ({
                 helperText={touched.roles && errors.roles}
                 onChange={(roles) => form.handleFieldChange('roles', roles)}
                 onShowHelp={() => setRoleHelpOpen(true)}
+              />
+              <RoleChangePreview
+                before={userData.roles || []}
+                after={values.roles || []}
+                rolesList={rolesList}
               />
             </Stack>
           </FormDialogSection>
