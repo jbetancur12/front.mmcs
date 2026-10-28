@@ -620,6 +620,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Ver precios, descuentos y totales de los servicios, y ver y descargar el PDF de cotización. Sin ella el servicio se muestra sin valores económicos y sin la cotización.',
     'Servicios de calibración: columnas de valores, resumen económico y documentos.'
   ],
+  'calibration:service:view_pre_approval': [
+    'Ver servicios aún sin aprobar',
+    'Ver también los servicios cuya cotización el cliente todavía no aprobó: borrador, pendiente de aprobación o rechazada. Sin ella solo se ven los servicios aprobados, y los demás ni aparecen ni se pueden abrir.',
+    'Servicios de calibración: listado, detalle, línea de tiempo y documentos.'
+  ],
   'calibration:service:decide': [
     'Registrar la respuesta del cliente',
     'Anotar si el cliente aprobó, rechazó o pidió cambios en la cotización.',

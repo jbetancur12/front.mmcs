@@ -246,6 +246,8 @@ export const PERMISSIONS = {
   CALIBRATION_SERVICE_QUOTE_TERMS: 'calibration:service:quote_terms',
   /** Ver los precios, descuentos y totales de los servicios de calibración, y ver y descargar el PDF de cotización. Sin esta capacidad el servicio se muestra sin valores económicos ni cotización */
   CALIBRATION_SERVICE_VIEW_PRICES: 'calibration:service:view_prices',
+  /** Ver también los servicios de calibración cuya cotización el cliente aún no aprobó (borrador, pendiente de aprobación o rechazada). Sin esta capacidad solo se ven los servicios aprobados, en el listado, el detalle, la línea de tiempo y los documentos */
+  CALIBRATION_SERVICE_VIEW_PRE_APPROVAL: 'calibration:service:view_pre_approval',
   /** Registrar la aprobación, el rechazo o la solicitud de cambios del cliente sobre un servicio */
   CALIBRATION_SERVICE_DECIDE: 'calibration:service:decide',
   /** Emitir la orden de servicio (ODS) y generar su PDF */
