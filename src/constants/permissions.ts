@@ -244,6 +244,8 @@ export const PERMISSIONS = {
   CALIBRATION_SERVICE_QUOTE_PDF: 'calibration:service:quote_pdf',
   /** Ver y editar la plantilla de términos de las cotizaciones de servicios */
   CALIBRATION_SERVICE_QUOTE_TERMS: 'calibration:service:quote_terms',
+  /** Ver los precios, descuentos y totales de los servicios de calibración, y ver y descargar el PDF de cotización. Sin esta capacidad el servicio se muestra sin valores económicos ni cotización */
+  CALIBRATION_SERVICE_VIEW_PRICES: 'calibration:service:view_prices',
   /** Registrar la aprobación, el rechazo o la solicitud de cambios del cliente sobre un servicio */
   CALIBRATION_SERVICE_DECIDE: 'calibration:service:decide',
   /** Emitir la orden de servicio (ODS) y generar su PDF */
