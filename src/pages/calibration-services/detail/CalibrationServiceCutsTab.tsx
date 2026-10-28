@@ -183,6 +183,7 @@ const CalibrationServiceCutsTab = ({
         canRegisterPayment={canRegisterPayment}
         canUpdateDocumentControl={canUpdateDocumentControl}
         serviceId={service.id}
+        service={service}
         adjustments={service.adjustments || []}
         canCorrectCuts={
           !service.isPaused &&

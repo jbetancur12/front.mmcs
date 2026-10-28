@@ -13,6 +13,7 @@ import FormDialog, {
 } from '../../Components/Common/FormDialog'
 import {
   CalibrationService,
+  CalibrationServiceCut,
   CalibrationServiceCutType
 } from '../../types/calibrationService'
 
@@ -32,12 +33,15 @@ interface DraftCutItem {
 interface CalibrationServiceCutDialogProps {
   open: boolean
   service: CalibrationService
+  /** Si viene, el diálogo edita ese corte en borrador en vez de crear uno nuevo. */
+  editingCut?: CalibrationServiceCut | null
   isLoading?: boolean
   onClose: () => void
   onSubmit: (values: {
     cutType: CalibrationServiceCutType
     notes: string
     items: Array<{ serviceItemId: number; quantity: number }>
+    reason?: string
   }) => void | Promise<void>
 }
 
@@ -85,7 +89,8 @@ const getEffectiveQuantity = (
 // liberar marcado, para confirmarlo con un clic.
 const buildDraftItems = (
   service: CalibrationService,
-  preselectAll = false
+  preselectAll = false,
+  editingCut: CalibrationServiceCut | null = null
 ): DraftCutItem[] =>
   (service.items || [])
     .filter((item) =>
@@ -94,8 +99,12 @@ const buildDraftItems = (
     .map((item) => {
       const releasedQuantity = getReleasedQuantity(item)
       const effectiveQuantity = getEffectiveQuantity(service, item)
+      // Al editar, lo que este corte ya tenía liberado vuelve a contar como disponible
+      const inCut = editingCut?.items?.find(
+        (cutItem) => cutItem.serviceItemId === item.id
+      )
       const quantityAvailable = Math.max(
-        effectiveQuantity - releasedQuantity,
+        effectiveQuantity - releasedQuantity + (Number(inCut?.quantity) || 0),
         0
       )
 
@@ -104,8 +113,14 @@ const buildDraftItems = (
         itemName: item.itemName,
         instrumentName: item.instrumentName || 'Sin instrumento',
         quantityAvailable,
-        selected: preselectAll && quantityAvailable > 0,
-        quantity: preselectAll ? quantityAvailable : quantityAvailable > 0 ? 1 : 0
+        selected: inCut ? true : preselectAll && quantityAvailable > 0,
+        quantity: inCut
+          ? Number(inCut.quantity) || 1
+          : preselectAll
+            ? quantityAvailable
+            : quantityAvailable > 0
+              ? 1
+              : 0
       }
     })
     .filter((item) => item.quantityAvailable > 0)
@@ -129,6 +144,7 @@ const getItemQuantityError = (item: DraftCutItem) => {
 const CalibrationServiceCutDialog = ({
   open,
   service,
+  editingCut = null,
   isLoading = false,
   onClose,
   onSubmit
@@ -136,16 +152,22 @@ const CalibrationServiceCutDialog = ({
   const [cutType, setCutType] = useState<CalibrationServiceCutType>('partial')
   const [notes, setNotes] = useState('')
   const [draftItems, setDraftItems] = useState<DraftCutItem[]>([])
+  const [reason, setReason] = useState('')
 
   const isFinalProposal = service.status === 'technically_completed'
 
   useEffect(() => {
     if (open) {
-      setCutType(isFinalProposal ? 'final' : 'partial')
-      setNotes('')
-      setDraftItems(buildDraftItems(service, isFinalProposal))
+      setCutType(
+        editingCut ? editingCut.cutType : isFinalProposal ? 'final' : 'partial'
+      )
+      setNotes(editingCut?.notes || '')
+      setReason('')
+      setDraftItems(
+        buildDraftItems(service, !editingCut && isFinalProposal, editingCut)
+      )
     }
-  }, [open, service, isFinalProposal])
+  }, [open, service, isFinalProposal, editingCut])
 
   const handleToggleItem =
     (serviceItemId: number) =>
@@ -199,7 +221,8 @@ const CalibrationServiceCutDialog = ({
     await onSubmit({
       cutType,
       notes,
-      items
+      items,
+      ...(editingCut ? { reason: reason.trim() } : {})
     })
   }
 
@@ -208,19 +231,36 @@ const CalibrationServiceCutDialog = ({
     Boolean(getItemQuantityError(item))
   )
   const canSubmit =
-    selectedItems.length > 0 && !hasInvalidQuantity && !isLoading
+    selectedItems.length > 0 &&
+    !hasInvalidQuantity &&
+    !isLoading &&
+    (!editingCut || reason.trim().length >= 5)
 
   return (
     <FormDialog
       open={open}
       onClose={isLoading ? () => undefined : onClose}
-      title={isFinalProposal ? 'Corte final propuesto' : 'Crear corte'}
-      subtitle={
-        isFinalProposal
-          ? `${service.serviceCode} · todo lo pendiente por liberar ya está marcado`
-          : service.serviceCode
+      title={
+        editingCut
+          ? 'Editar corte'
+          : isFinalProposal
+            ? 'Corte final propuesto'
+            : 'Crear corte'
       }
-      submitLabel={isFinalProposal ? 'Confirmar corte final' : 'Crear corte'}
+      subtitle={
+        editingCut
+          ? `${editingCut.cutCode} · cambia ítems o cantidades sin anular el corte`
+          : isFinalProposal
+            ? `${service.serviceCode} · todo lo pendiente por liberar ya está marcado`
+            : service.serviceCode
+      }
+      submitLabel={
+        editingCut
+          ? 'Guardar cambios'
+          : isFinalProposal
+            ? 'Confirmar corte final'
+            : 'Crear corte'
+      }
       onSubmit={() => void handleSubmit()}
       loading={isLoading}
       submitDisabled={!canSubmit}
@@ -243,6 +283,16 @@ const CalibrationServiceCutDialog = ({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
         />
+        {editingCut ? (
+          <TextField
+            required
+            label='Motivo del cambio'
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            helperText='Queda en el historial del servicio.'
+            sx={{ gridColumn: { sm: '1 / -1' } }}
+          />
+        ) : null}
       </FormDialogSection>
 
       <FormDialogSection

@@ -319,6 +319,25 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  updateDraftCut: async ({
+    serviceId,
+    cutId,
+    ...payload
+  }: {
+    serviceId: number | string
+    cutId: number | string
+    reason: string
+    cutType: string
+    notes: string
+    items: Array<{ serviceItemId: number; quantity: number }>
+  }): Promise<CalibrationService> => {
+    const response = await axiosPrivate.put<CalibrationService>(
+      `/calibration-services/${serviceId}/cuts/${cutId}`,
+      payload
+    )
+    return response.data
+  },
+
   voidCut: async ({
     serviceId,
     cutId,
@@ -1055,6 +1074,7 @@ export const useCalibrationServiceMutations = () => {
   const reopenQuote = useMutation(calibrationServiceApi.reopenQuote, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const reissueOds = useMutation(calibrationServiceApi.reissueOds, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const duplicateService = useMutation(calibrationServiceApi.duplicateService, { onSuccess: iA })
+  const updateDraftCut = useMutation(calibrationServiceApi.updateDraftCut, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const voidCut = useMutation(calibrationServiceApi.voidCut, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const revertCutToDraft = useMutation(calibrationServiceApi.revertCutToDraft, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const correctCutInvoice = useMutation(calibrationServiceApi.correctCutInvoice, { onSuccess: (s: any) => { iA(); iD(s.id) } })
@@ -1100,5 +1120,5 @@ export const useCalibrationServiceMutations = () => {
   const updateExecutionCustomer = useMutation(calibrationServiceApi.updateExecutionCustomer, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const upsertQuoteTermsTemplate = useMutation(calibrationServiceApi.upsertQuoteTermsTemplate, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']) } })
 
-  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, reopenQuote, reissueOds, duplicateService, voidCut, revertCutToDraft, correctCutInvoice, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
+  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, reopenQuote, updateDraftCut, reissueOds, duplicateService, voidCut, revertCutToDraft, correctCutInvoice, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
 }

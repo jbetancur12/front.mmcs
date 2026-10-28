@@ -7,12 +7,18 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import FormDialog from 'src/Components/Common/FormDialog'
 import { useCalibrationServiceMutations } from '../../hooks/useCalibrationServices'
 import { getApiErrorMessage } from '../../utils/apiError'
-import { CalibrationServiceCut } from '../../types/calibrationService'
+import {
+  CalibrationService,
+  CalibrationServiceCut
+} from '../../types/calibrationService'
+import CalibrationServiceCutDialog from './CalibrationServiceCutDialog'
 
 type CorrectionKind = 'void' | 'revert' | 'invoice'
 
 interface Props {
   serviceId: number | string
+  /** Servicio completo: hace falta para editar las cantidades de un corte en borrador. */
+  service?: CalibrationService
   cut: CalibrationServiceCut
   /** El servicio cerrado, cancelado o pausado no admite correcciones. */
   disabled?: boolean
@@ -48,17 +54,21 @@ const DIALOG_COPY: Record<
  */
 const CalibrationServiceCutCorrectionMenu = ({
   serviceId,
+  service,
   cut,
   disabled = false
 }: Props) => {
   const canExecute = useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTE)
   const canInvoice = useCan(PERMISSIONS.CALIBRATION_SERVICE_INVOICING)
-  const { voidCut, revertCutToDraft, correctCutInvoice } =
+  const { voidCut, revertCutToDraft, correctCutInvoice, updateDraftCut } =
     useCalibrationServiceMutations()
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const [kind, setKind] = useState<CorrectionKind | null>(null)
   const [reason, setReason] = useState('')
   const [invoiceReference, setInvoiceReference] = useState('')
+
+  const canEdit = canExecute && cut.status === 'draft' && Boolean(service)
 
   const options: { kind: CorrectionKind; label: string }[] = [
     ...(canExecute && cut.status === 'draft'
@@ -72,7 +82,7 @@ const CalibrationServiceCutCorrectionMenu = ({
       : [])
   ]
 
-  if (!options.length) {
+  if (!options.length && !canEdit) {
     return null
   }
 
@@ -132,12 +142,49 @@ const CalibrationServiceCutCorrectionMenu = ({
         open={Boolean(anchor)}
         onClose={() => setAnchor(null)}
       >
+        {canEdit ? (
+          <MenuItem
+            onClick={() => {
+              setAnchor(null)
+              setIsEditOpen(true)
+            }}
+          >
+            Editar corte
+          </MenuItem>
+        ) : null}
         {options.map((option) => (
           <MenuItem key={option.kind} onClick={() => open(option.kind)}>
             {option.label}
           </MenuItem>
         ))}
       </Menu>
+      {service ? (
+        <CalibrationServiceCutDialog
+          open={isEditOpen}
+          service={service}
+          editingCut={cut}
+          isLoading={updateDraftCut.isLoading}
+          onClose={() => setIsEditOpen(false)}
+          onSubmit={async (values) => {
+            try {
+              await updateDraftCut.mutateAsync({
+                serviceId,
+                cutId: cut.id,
+                reason: values.reason || '',
+                cutType: values.cutType,
+                notes: values.notes,
+                items: values.items
+              })
+              setIsEditOpen(false)
+              notify.success('Corte actualizado.')
+            } catch (error) {
+              notify.error(
+                getApiErrorMessage(error, 'No fue posible editar el corte')
+              )
+            }
+          }}
+        />
+      ) : null}
       <FormDialog
         open={Boolean(kind)}
         onClose={isLoading ? () => undefined : () => setKind(null)}

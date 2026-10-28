@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material'
-import { CalibrationServiceAdjustment, CalibrationServiceCut } from '../../types/calibrationService'
+import { CalibrationService, CalibrationServiceAdjustment, CalibrationServiceCut } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS,
   CALIBRATION_SERVICE_CUT_STATUS_LABELS
@@ -16,6 +16,7 @@ interface CalibrationServiceCutsPanelProps {
   canUpdateDocumentControl?: boolean
   /** Id del servicio y si admite correcciones de cortes (no cerrado, cancelado ni pausado). */
   serviceId?: number | string
+  service?: CalibrationService
   canCorrectCuts?: boolean
   /** Novedades del servicio: sirven para avisar antes del clic que un corte no puede quedar listo para facturar. */
   adjustments?: CalibrationServiceAdjustment[]
@@ -66,6 +67,7 @@ const CalibrationServiceCutsPanel = ({
   canUpdateDocumentControl = false,
   canRegisterPayment = false,
   serviceId,
+  service,
   canCorrectCuts = false,
   adjustments = [],
   isBusy = false,
@@ -316,6 +318,7 @@ const CalibrationServiceCutsPanel = ({
                 {serviceId !== undefined ? (
                   <CalibrationServiceCutCorrectionMenu
                     serviceId={serviceId}
+                    service={service}
                     cut={cut}
                     disabled={!canCorrectCuts || isBusy}
                   />
