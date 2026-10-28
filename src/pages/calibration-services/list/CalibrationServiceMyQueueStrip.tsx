@@ -17,6 +17,14 @@ const SECTION_TONES: Record<string, LmsStatTone> = {
   my_execution: 'teal'
 }
 
+// Secciones que repiten un paso del embudo de etapas que está justo debajo (mismo número, mismo filtro): se omiten
+// para no mostrar el dato dos veces. Las demás son tareas de cortes o personales, que el embudo no cuenta.
+const MIRRORED_BY_PIPELINE = new Set([
+  'quotes_waiting',
+  'approved_without_ods',
+  'to_schedule'
+])
+
 /**
  * "Mis pendientes": una tarjeta por tarea que le toca al usuario según sus capacidades. Al elegir una se listan sus
  * servicios con la acción a un clic. Si no hay nada pendiente, no ocupa espacio.
@@ -26,17 +34,22 @@ const CalibrationServiceMyQueueStrip = () => {
   const { data } = useCalibrationServiceMyQueue()
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
 
-  if (!data?.sections.length) {
+  const sections = (data?.sections || []).filter(
+    (section) => !MIRRORED_BY_PIPELINE.has(section.key)
+  )
+  const total = sections.reduce((sum, section) => sum + section.count, 0)
+
+  if (!sections.length) {
     return null
   }
 
   const selected =
-    data.sections.find((section) => section.key === selectedKey) || null
+    sections.find((section) => section.key === selectedKey) || null
 
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant='subtitle2' color='text.secondary' sx={{ mb: 1 }}>
-        Mis pendientes · {data.total}
+        Mis pendientes · {total}
       </Typography>
       <Box
         sx={{
@@ -49,7 +62,7 @@ const CalibrationServiceMyQueueStrip = () => {
           }
         }}
       >
-        {data.sections.map((section) => (
+        {sections.map((section) => (
           <LmsStatCard
             key={section.key}
             label={section.label}
