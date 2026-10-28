@@ -3,17 +3,13 @@ import { userStore } from '../../store/userStore'
 import { api } from '../../config'
 import useAxiosPrivate from '@utils/use-axios-private'
 import useRefreshToken from '@utils/use-refresh-token'
+import { formatSessionUser } from '@utils/syncUserAccess'
 import { useNavigate, useLocation } from 'react-router-dom'
 import SignalLoader from '../Common/SignalLoader'
 
 interface RequireAuthProps {
   children: React.ReactNode
 }
-interface Role {
-  name: string
-  // agrega otros campos si es necesario
-}
-
 const apiUrl = api()
 
 const clearInvalidSession = () => {
@@ -69,22 +65,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           throw new Error('Token no válido')
         }
 
-        const { ...user } = await response.data
-
-        const resolvedRoles = Array.isArray(user.rol)
-          ? user.rol
-          : Array.isArray(user.roles)
-            ? user.roles.map((role: Role | string) =>
-                typeof role === 'string' ? role : role.name
-              )
-            : []
-
-        const formattedUser = {
-          ...user,
-          rol: resolvedRoles,
-          lmsOnly: Boolean(user.lmsOnly)
-        }
-        userStore.set(formattedUser)
+        userStore.set(formatSessionUser(await response.data))
       } catch (error) {
         console.log('Error al validar el token:', error)
         const currentPath = location.pathname + location.search

@@ -17,6 +17,11 @@ export const getSessionRevokedReason = (error: unknown): string | null => {
   return data?.code === 'SESSION_REVOKED' ? data.reason || 'revoked' : null
 }
 
+/** El API avisa que los roles del usuario cambiaron: el token es viejo, se renueva y se repite la petición. */
+export const isRolesChangedError = (error: unknown): boolean =>
+  (error as AxiosError<{ code?: string }>)?.response?.data?.code ===
+  'ROLES_CHANGED'
+
 /** El API pide confirmar la contraseña porque la sesión cumplió su tope de días. */
 export const isReauthRequired = (error: unknown): boolean =>
   (error as AxiosError<{ code?: string }>)?.response?.data?.code ===

@@ -12,8 +12,10 @@ import { notify } from './notify'
 import {
   clearLocalSession,
   getSessionRevokedReason,
+  isRolesChangedError,
   rememberSessionEnded
 } from './sessionEnd'
+import { syncUserAccess } from './syncUserAccess'
 
 type QueuedRequest = {
   reject: (error?: unknown) => void
@@ -127,6 +129,8 @@ const useAxiosPrivate = () => {
 
           originalConfig._retry = true
           isRefreshing.current = true
+          // Cambiaron los roles del usuario: además de renovar el token hay que actualizar menús y permisos
+          const rolesChanged = isRolesChangedError(error)
 
           try {
             const refreshResult = await refresh()
@@ -138,6 +142,7 @@ const useAxiosPrivate = () => {
 
             localStorage.setItem('accessToken', newToken)
             processQueue(null, newToken)
+            if (rolesChanged) void syncUserAccess()
 
             originalConfig.headers = originalConfig.headers || {}
             originalConfig.headers.Authorization = `Bearer ${newToken}`
