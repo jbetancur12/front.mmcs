@@ -30,6 +30,9 @@ const CalibrationServiceSchedulePage = lazy(
 const CalibrationNotificationCenter = lazy(
   () => import('../pages/calibration-services/CalibrationNotificationCenter')
 )
+const CalibrationDeliveriesPage = lazy(
+  () => import('../pages/calibration-services/CalibrationDeliveriesPage')
+)
 const ProductosServicios = lazy(() => import('../pages/ProductosServicios'))
 
 const CalibrationServiceRoutes = (role: string[]) => {
@@ -37,6 +40,18 @@ const CalibrationServiceRoutes = (role: string[]) => {
 
   return (
     <>
+      <Route
+        path='calibration-services/entregas'
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            permission={PERMISSIONS.CALIBRATION_SERVICE_DELIVER}
+          />
+        }
+      >
+        <Route index element={<CalibrationDeliveriesPage />} />
+      </Route>
       <Route
         element={
           <ProtectedRoute

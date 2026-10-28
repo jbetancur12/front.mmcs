@@ -775,6 +775,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Mandar o reenviar el certificado de un servicio al cliente.',
     'Servicios de calibración: botón de enviar certificado.'
   ],
+  'calibration:service:deliver': [
+    'Entregar equipos a los clientes',
+    'Ver las entregas listas, tomar una con "Yo la llevo" y recoger la firma de recepción del cliente. No da acceso a cotizaciones, precios ni cortes.',
+    'Servicios de calibración › Entregas.'
+  ],
   'calibration:config:sequence': [
     'Configurar el consecutivo de servicios',
     'Ver y cambiar el número consecutivo de los servicios de calibración.',

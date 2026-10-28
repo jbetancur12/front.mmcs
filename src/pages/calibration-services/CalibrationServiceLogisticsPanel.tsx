@@ -1,3 +1,4 @@
+import { ReactNode } from 'react'
 import {
   Alert,
   Box,
@@ -36,6 +37,8 @@ interface Props {
   onRegisterMovement: () => void
   onGeneratePdf: () => void
   onSendEmail: () => void
+  /** Estado de la entrega y botón "Lista para entregar" (pantalla Entregas). */
+  deliveryAction?: ReactNode
 }
 
 const formatDateTime = (value?: string | null) =>
@@ -63,7 +66,8 @@ const CalibrationServiceLogisticsPanel = ({
   onEditControl,
   onRegisterMovement,
   onGeneratePdf,
-  onSendEmail
+  onSendEmail,
+  deliveryAction
 }: Props) => {
   const filledRows = (controlSheet.items || []).filter(
     (item) =>
@@ -90,7 +94,8 @@ const CalibrationServiceLogisticsPanel = ({
             entregar equipos.
           </Typography>
         </Box>
-        <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap'>
+        <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap' alignItems='center'>
+          {deliveryAction}
           {canGeneratePdf ? (
             <Button
               variant='outlined'

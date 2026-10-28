@@ -84,6 +84,13 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     keywords: ['analiticas', 'indicadores', 'graficas', 'estadisticas']
   },
   {
+    label: 'Entregas',
+    path: '/calibration-services/entregas',
+    parents: ['Servicios de calibración'],
+    permission: PERMISSIONS.CALIBRATION_SERVICE_DELIVER,
+    keywords: ['entregar', 'entrega', 'firma', 'recepcion', 'mensajero', 'equipos']
+  },
+  {
     label: 'Agenda',
     path: '/calibration-services/schedule',
     parents: ['Servicios de calibración'],

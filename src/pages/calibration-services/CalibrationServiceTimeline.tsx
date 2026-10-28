@@ -59,6 +59,7 @@ const EVENT_ICON_MAP: Record<CalibrationServiceEventType, JSX.Element> = {
   payment_registered: <CheckCircleOutlineOutlined fontSize='small' />,
   document_control_updated: <AttachFileOutlined fontSize='small' />,
   ods_reissued: <DescriptionOutlined fontSize='small' />,
+  delivery_updated: <SendOutlined fontSize='small' />,
   closed: <CheckCircleOutlineOutlined fontSize='small' />,
   cancelled: <HighlightOffOutlined fontSize='small' />,
   paused: <EditOutlined fontSize='small' />,

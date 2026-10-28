@@ -27,6 +27,7 @@ import CalibrationServiceOperationsPanel from '../CalibrationServiceOperationsPa
 import CalibrationServiceTimeline from '../CalibrationServiceTimeline'
 import CalibrationServiceGuidePanel from '../CalibrationServiceGuidePanel'
 import CalibrationServiceLogisticsPanel from '../CalibrationServiceLogisticsPanel'
+import CalibrationDeliveryReadyAction from './CalibrationDeliveryReadyAction'
 import CalibrationServiceStageTracker from '../CalibrationServiceStageTracker'
 import { DetailTabPanel } from './CalibrationServiceDetailLayout'
 import {
@@ -574,6 +575,12 @@ const CalibrationServiceDetailsView = ({
                   }
                   onGeneratePdf={handleGenerateLogisticsPdf}
                   onSendEmail={handleOpenSendLogisticsEmail}
+                  deliveryAction={
+                    <CalibrationDeliveryReadyAction
+                      service={service}
+                      canManage={canManageLogisticsControl}
+                    />
+                  }
                 />
               </DetailTabPanel>
 

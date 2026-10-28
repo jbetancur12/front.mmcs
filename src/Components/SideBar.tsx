@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AccountTreeOutlined,
   AssignmentTurnedInOutlined,
+  LocalShippingOutlined,
   BuildOutlined,
   BusinessOutlined,
   Close,
@@ -413,6 +414,15 @@ const sidebarItems = ($userStore: UserData) => [
   },
   {
     type: 'link',
+    label: 'Entregas',
+    to: '/calibration-services/entregas',
+    icon: <LocalShippingOutlined />,
+    roles: [] as string[],
+    permission: PERMISSIONS.CALIBRATION_SERVICE_DELIVER,
+    moduleName: 'Basic'
+  },
+  {
+    type: 'link',
     label: 'Venta de equipos',
     to: '/equipment-sales',
     icon: <StorefrontOutlined />,
@@ -513,6 +523,7 @@ const SIDEBAR_SECTIONS: {
       'Empresas',
       'Calibraciones',
       'Servicios de calibración',
+      'Entregas',
       'Laboratorio',
       'Inventario',
       'Trazabilidades',

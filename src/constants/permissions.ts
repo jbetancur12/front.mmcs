@@ -296,6 +296,7 @@ export const PERMISSIONS = {
   CALIBRATION_SERVICE_TRACEABILITY: 'calibration:service:traceability',
   /** Enviar al cliente el certificado de un servicio */
   CALIBRATION_SERVICE_CERTIFICATE_SEND: 'calibration:service:certificate_send',
+  CALIBRATION_SERVICE_DELIVER: 'calibration:service:deliver',
   /** Ver y editar el consecutivo de los servicios de calibración */
   CALIBRATION_CONFIG_SEQUENCE: 'calibration:config:sequence',
   /** Editar la configuración de SLA */
