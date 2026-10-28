@@ -8,6 +8,7 @@ import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequence
 import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDialog'
 import CalibrationServicesHeaderActions from './list/CalibrationServicesHeaderActions'
 import CalibrationServicesPipeline from './list/CalibrationServicesPipeline'
+import CalibrationServiceMyQueueStrip from './list/CalibrationServiceMyQueueStrip'
 import CalibrationServicesFiltersCard from './list/CalibrationServicesFiltersCard'
 import CalibrationServicesGroupedList from './list/CalibrationServicesGroupedList'
 import CalibrationServicesTable from './list/CalibrationServicesTable'
@@ -141,6 +142,8 @@ const CalibrationServicesPage = () => {
           iniciales del módulo.
         </Alert>
       ) : null}
+
+      <CalibrationServiceMyQueueStrip />
 
       <CalibrationServicesPipeline
         statusCounts={data?.statusCounts}

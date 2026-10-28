@@ -19,6 +19,7 @@ import {
   CalibrationServiceRegisterCutPaymentPayload,
   CalibrationServiceIssueOdsPayload,
   CalibrationServiceListResponse,
+  CalibrationServiceMyQueue,
   CalibrationServiceMarkCutReadyPayload,
   CalibrationServicePayload,
   CalibrationServicePausePayload,
@@ -270,6 +271,13 @@ const calibrationServiceApi = {
     const response = await axiosPrivate.post<CalibrationService>(
       `/calibration-services/${serviceId}/reject`,
       payload
+    )
+    return response.data
+  },
+
+  getMyQueue: async (): Promise<CalibrationServiceMyQueue> => {
+    const response = await axiosPrivate.get<CalibrationServiceMyQueue>(
+      '/calibration-services/my-queue'
     )
     return response.data
   },
@@ -823,6 +831,16 @@ export const useCalibrationServices = (filters?: CalibrationServiceFilters) => {
     keepPreviousData: true
   })
 }
+
+/** Pendientes del usuario según sus capacidades; se refresca solo cada minuto. */
+export const useCalibrationServiceMyQueue = () =>
+  useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'my-queue'],
+    queryFn: () => calibrationServiceApi.getMyQueue(),
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    retry: 1
+  })
 
 export const useCalibrationServiceAnalytics = (
   filters?: CalibrationServiceAnalyticsFilters,

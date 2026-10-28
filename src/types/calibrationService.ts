@@ -1108,3 +1108,26 @@ export type CalibrationServiceSlaConfigPayload = Omit<
   CalibrationServiceSlaConfig,
   'updatedAt' | 'updatedByName'
 >
+
+export interface CalibrationServiceMyQueueItem {
+  serviceId: number
+  serviceCode: string
+  quoteCode?: string | null
+  status: CalibrationServiceStatus
+  hint: string
+  actionUrl: string
+  cutId?: number
+  cutCode?: string
+}
+
+export interface CalibrationServiceMyQueueSection {
+  key: string
+  label: string
+  count: number
+  items: CalibrationServiceMyQueueItem[]
+}
+
+export interface CalibrationServiceMyQueue {
+  total: number
+  sections: CalibrationServiceMyQueueSection[]
+}
