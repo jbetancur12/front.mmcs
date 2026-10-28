@@ -8,8 +8,9 @@ const COMMERCIAL_STAGES: { key: CalibrationServiceStatus; label: string }[] = [
   { key: 'draft', label: 'Borrador' },
   { key: 'pending_approval', label: 'Cotización enviada' },
   { key: 'approved', label: 'Aprobada' },
-  { key: 'ods_issued', label: 'ODS emitida' },
-  { key: 'pending_programming', label: 'Por programar' },
+  // ODS emitida = esperando programación (los de laboratorio se programan solos): en la bandeja es la cola "Por programar".
+  // El estado pending_programming no se usa en el flujo real, por eso ya no tiene paso propio.
+  { key: 'ods_issued', label: 'Por programar' },
   { key: 'scheduled', label: 'Programada' },
   { key: 'in_execution', label: 'En ejecución' },
   { key: 'technically_completed', label: 'Finalizada' },
