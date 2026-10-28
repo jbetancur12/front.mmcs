@@ -295,6 +295,12 @@ const RolesPermissions: React.FC = () => {
         Marca o desmarca una capacidad para dar o quitar ese permiso a un rol. Bajo
         cada capacidad verás las pantallas de la plataforma donde interviene. Los
         cambios se aplican de inmediato y quedan en la auditoría.
+        <br />
+        Los roles se suman: si una persona necesita el portal de cliente
+        (equipos y certificados de su empresa), asígnale también el rol{' '}
+        <strong>user</strong>; para los cursos de empleado, el rol{' '}
+        <strong>employee</strong>. Esas pantallas dependen del tipo de cuenta,
+        no de las capacidades.
       </Alert>
       {!canManage && (
         <Alert severity='warning' sx={{ mb: 3 }}>
