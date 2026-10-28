@@ -1,3 +1,4 @@
+import { CALIBRATION_QUOTE_LOSS_REASON_LABELS } from '../../constants/calibrationServices'
 import { Box, MenuItem, TextField } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -25,6 +26,7 @@ export interface CalibrationServiceDecisionValues {
   approvalReference: string
   decisionDate: string
   notes: string
+  lossReason: string
   evidenceFile: File | null
   onSiteCalibration: boolean | null
   hasEquipmentSale: boolean | null
@@ -46,6 +48,7 @@ const createInitialValues = (): CalibrationServiceDecisionValues => ({
   approvalReference: '',
   decisionDate: buildTodayValue(),
   notes: '',
+  lossReason: '',
   evidenceFile: null,
   onSiteCalibration: null,
   hasEquipmentSale: null
@@ -197,6 +200,31 @@ const CalibrationServiceApprovalDialog = ({
               : 'Opcional si la respuesta no llegó por un contacto específico.'
           }
         />
+        {isRejectMode ? (
+          <TextField
+            sx={FULL_ROW}
+            select
+            required
+            label='Motivo de pérdida'
+            value={values.lossReason}
+            disabled={isLoading}
+            onChange={(event) =>
+              setValues((previous) => ({
+                ...previous,
+                lossReason: event.target.value
+              }))
+            }
+            helperText='Sirve para medir por qué se pierden las cotizaciones.'
+          >
+            {Object.entries(CALIBRATION_QUOTE_LOSS_REASON_LABELS)
+              .filter(([key]) => key !== 'no_response')
+              .map(([key, label]) => (
+                <MenuItem key={key} value={key}>
+                  {label}
+                </MenuItem>
+              ))}
+          </TextField>
+        ) : null}
         <TextField
           sx={FULL_ROW}
           required={!isDecisionApproval}

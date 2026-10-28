@@ -1,3 +1,7 @@
+import {
+  CALIBRATION_ADJUSTMENT_STAGE_COLORS,
+  CALIBRATION_ADJUSTMENT_STAGE_LABELS
+} from '../../constants/calibrationServices'
 import { useState } from 'react'
 import {
   Accordion,
@@ -291,6 +295,21 @@ const CalibrationServiceAdjustmentsPanel = ({
                   <Grid item xs={12} md={6}>
                     <DetailField label='Desviación'>
                       <Stack spacing={0.5} alignItems='flex-start'>
+                        {adjustment.stage ? (
+                          <Chip
+                            size='small'
+                            color={
+                              CALIBRATION_ADJUSTMENT_STAGE_COLORS[
+                                adjustment.stage
+                              ] || 'default'
+                            }
+                            label={
+                              CALIBRATION_ADJUSTMENT_STAGE_LABELS[
+                                adjustment.stage
+                              ] || adjustment.stage
+                            }
+                          />
+                        ) : null}
                         <Chip
                           size='small'
                           variant='outlined'

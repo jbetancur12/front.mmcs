@@ -148,6 +148,11 @@ const useCalibrationServiceWorkflowActions = ({
           return
         }
 
+        if (!values.lossReason) {
+          toast.error('Selecciona el motivo de pérdida.')
+          return
+        }
+
         if (!values.notes.trim() || values.notes.trim().length < 5) {
           toast.error('Describe brevemente el motivo del rechazo.')
           return
@@ -215,6 +220,7 @@ const useCalibrationServiceWorkflowActions = ({
           approvalChannel: values.approvalChannel.trim(),
           approvalReference: values.approvalReference.trim() || null,
           rejectionReason: values.notes.trim(),
+          lossReason: values.lossReason,
           rejectedAt: decisionIsoDate,
           evidenceDocumentId
         })

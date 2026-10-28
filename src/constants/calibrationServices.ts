@@ -306,3 +306,36 @@ export const CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS: Record<
   reviewed: 'Certificados revisados',
   sent: 'Certificados enviados'
 }
+
+// D-04: motivo de pérdida al rechazar una cotización (`no_response` lo pone el vencimiento automático).
+export const CALIBRATION_QUOTE_LOSS_REASON_LABELS: Record<string, string> = {
+  price: 'Precio',
+  time: 'Tiempo de entrega',
+  competition: 'Competencia',
+  no_response: 'Sin respuesta',
+  other: 'Otro'
+}
+
+// Etapa del circuito de una novedad (la calcula el API) y color del chip según urgencia.
+export const CALIBRATION_ADJUSTMENT_STAGE_LABELS: Record<string, string> = {
+  technical_review: 'Por revisión técnica',
+  commercial_review: 'Por revisión comercial',
+  customer_response: 'Esperando al cliente',
+  customer_rejected: 'Rechazada por el cliente',
+  technically_approved: 'Aprobada técnicamente',
+  approved: 'Aprobada',
+  rejected: 'Rechazada'
+}
+
+export const CALIBRATION_ADJUSTMENT_STAGE_COLORS: Record<
+  string,
+  ChipProps['color']
+> = {
+  technical_review: 'warning',
+  commercial_review: 'warning',
+  customer_response: 'info',
+  customer_rejected: 'error',
+  technically_approved: 'success',
+  approved: 'success',
+  rejected: 'error'
+}

@@ -351,6 +351,9 @@ export interface CalibrationServiceCut {
 }
 
 export interface CalibrationServiceAdjustment {
+  /** Etapa del circuito de la novedad y capacidad que la resuelve; las calcula el API. */
+  stage?: string | null
+  pendingWith?: string | null
   id: number
   serviceId: number
   serviceItemId?: number | null
@@ -760,6 +763,7 @@ export interface CalibrationServiceRejectPayload {
   approvalChannel: string
   approvalReference?: string | null
   rejectionReason: string
+  lossReason: string
   rejectedAt?: string
   evidenceDocumentId?: number | null
 }
