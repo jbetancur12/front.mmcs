@@ -341,6 +341,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
       <TypeAliasDialog
         source={aliasSource}
         rows={indicators.byType}
+        availableTypes={indicators.availableCertificateTypes}
         onClose={() => setAliasSource(null)}
       />
     </Box>
