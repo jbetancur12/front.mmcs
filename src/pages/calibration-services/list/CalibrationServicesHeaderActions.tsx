@@ -6,6 +6,7 @@ import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { useNavigate } from 'react-router-dom'
@@ -55,6 +56,11 @@ const CalibrationServicesHeaderActions = ({
       {canCreateServices ? (
         <Button variant='outlined' startIcon={<AddBusinessOutlinedIcon />} onClick={() => navigate('/calibration-services/customers')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
           Clientes
+        </Button>
+      ) : null}
+      {canViewModule ? (
+        <Button variant='outlined' startIcon={<MenuBookOutlinedIcon />} onClick={() => navigate('/calibration-services/guia')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+          Guía del flujo
         </Button>
       ) : null}
       <CalibrationBillingGuide />

@@ -33,6 +33,9 @@ const CalibrationNotificationCenter = lazy(
 const CalibrationDeliveriesPage = lazy(
   () => import('../pages/calibration-services/CalibrationDeliveriesPage')
 )
+const CalibrationFlowGuidePage = lazy(
+  () => import('../pages/calibration-services/guide/CalibrationFlowGuidePage')
+)
 const ProductosServicios = lazy(() => import('../pages/ProductosServicios'))
 
 const CalibrationServiceRoutes = (role: string[]) => {
@@ -88,6 +91,10 @@ const CalibrationServiceRoutes = (role: string[]) => {
         <Route
           path='calibration-services/customers'
           element={<CalibrationServiceCustomersPage />}
+        />
+        <Route
+          path='calibration-services/guia'
+          element={<CalibrationFlowGuidePage />}
         />
         <Route
           path='calibration-services/notifications'

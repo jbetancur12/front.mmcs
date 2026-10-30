@@ -15,6 +15,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/asset-life-sheets", label: "Inventario › Hoja de vida TI", kind: 'screen' }
   ],
   'calibration:adjustment:commercial': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -22,6 +23,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:adjustment:review_technical': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -30,6 +32,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'calibration:analytics:view': [
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'screen' },
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
@@ -264,6 +267,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' }
   ],
   'calibration:service:cancel': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -271,6 +275,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:certificate_send': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -278,6 +283,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:close': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -288,11 +294,13 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'screen' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'screen' },
     { path: "/calibration-services/customers", label: "Servicios de calibración › Clientes", kind: 'action' },
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
     { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' }
   ],
   'calibration:service:decide': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -301,6 +309,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'calibration:service:deliver': [
     { path: "/calibration-services/entregas", label: "Entregas", kind: 'screen' },
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -308,6 +317,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:document_control': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -315,6 +325,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:document_upload': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -322,6 +333,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:execute': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -336,6 +348,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:invoicing': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -343,6 +356,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:ods': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -350,6 +364,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:pause': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -357,6 +372,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:quote_pdf': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -371,6 +387,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:reassign': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -378,6 +395,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:request_approval': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -385,6 +403,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:reschedule': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -392,6 +411,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:schedule': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -399,6 +419,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:traceability': [
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
@@ -418,6 +439,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'screen' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'screen' },
     { path: "/calibration-services/customers", label: "Servicios de calibración › Clientes", kind: 'screen' },
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'screen' },
     { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'screen' },
     { path: "/calibration-services/notifications", label: "Servicios de calibración › Notificaciones", kind: 'screen' },
     { path: "/calibration-services/productos-y-servicios", label: "Servicios de calibración › Productos y servicios", kind: 'screen' },
@@ -942,6 +964,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'rbac:view': [
     { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'screen' },
     { path: "/settings/roles/ayuda", label: "Ajustes › Roles y permisos › ayuda", kind: 'screen' },
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
     { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' },
     { path: "/users", label: "Usuarios", kind: 'action' }

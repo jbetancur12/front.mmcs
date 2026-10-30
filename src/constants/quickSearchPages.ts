@@ -91,6 +91,13 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     keywords: ['entregar', 'entrega', 'firma', 'recepcion', 'mensajero', 'equipos']
   },
   {
+    label: 'Guía del flujo de servicios',
+    path: '/calibration-services/guia',
+    parents: ['Servicios de calibración'],
+    permission: PERMISSIONS.CALIBRATION_SERVICE_VIEW,
+    keywords: ['ayuda', 'guia', 'manual', 'tutorial', 'como', 'flujo', 'pasos']
+  },
+  {
     label: 'Agenda',
     path: '/calibration-services/schedule',
     parents: ['Servicios de calibración'],
