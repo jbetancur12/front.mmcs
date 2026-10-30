@@ -7,11 +7,13 @@ import {
   SaveGoalPayload,
   SaveGoalResponse,
   SaveObservationsPayload,
-  SaveObservationsResponse
+  SaveObservationsResponse,
+  TypeAliasEntry
 } from 'src/types/customerIndicators'
 
 export const customerIndicatorsKey = 'customerIndicators'
 export const contractedServicesKey = 'customerContractedServices'
+export const typeAliasesKey = 'calibrationIndicatorTypeAliases'
 
 export const useCustomerIndicators = (
   customerId: number | string | undefined,
@@ -99,7 +101,44 @@ export const useCreateTypeAlias = () => {
       return data
     },
     {
-      onSuccess: () => queryClient.invalidateQueries(customerIndicatorsKey)
+      onSuccess: () => {
+        queryClient.invalidateQueries(customerIndicatorsKey)
+        queryClient.invalidateQueries(contractedServicesKey)
+        queryClient.invalidateQueries(typeAliasesKey)
+      }
+    }
+  )
+}
+
+/** Asociaciones y exclusiones guardadas (solo personal interno que gestiona la meta). */
+export const useTypeAliases = (enabled: boolean) =>
+  useQuery<TypeAliasEntry[]>(
+    typeAliasesKey,
+    async () => {
+      const { data } = await axiosPrivate.get(
+        '/calibration-indicators/type-aliases'
+      )
+      return data.aliases
+    },
+    { enabled, refetchOnWindowFocus: false }
+  )
+
+/** Deshace una asociación o exclusión: el nombre vuelve a la lista por revisar. */
+export const useDeleteTypeAlias = () => {
+  const queryClient = useQueryClient()
+  return useMutation<unknown, unknown, number>(
+    async (id) => {
+      const { data } = await axiosPrivate.delete(
+        `/calibration-indicators/type-aliases/${id}`
+      )
+      return data
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(customerIndicatorsKey)
+        queryClient.invalidateQueries(contractedServicesKey)
+        queryClient.invalidateQueries(typeAliasesKey)
+      }
     }
   )
 }

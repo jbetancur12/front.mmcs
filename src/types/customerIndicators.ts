@@ -162,3 +162,14 @@ export interface CustomerServicesResponse {
   status: CalibrationServiceStatus | null
   services: CustomerServiceSummary[]
 }
+
+/** Asociación o exclusión guardada: un nombre de la ODS (normalizado) y a qué equivale. */
+export interface TypeAliasEntry {
+  id: number
+  sourceName: string
+  /** Tipo de los certificados (normalizado); `null` si se marcó como no metrológico. */
+  targetName: string | null
+  notMetrological: boolean
+  createdBy: { id: number; name: string | null } | null
+  createdAt: string | null
+}
