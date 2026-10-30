@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 // import { sentryVitePlugin } from '@sentry/vite-plugin'
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
@@ -15,6 +16,13 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0'
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    css: false
   },
   plugins: [
     react(),
