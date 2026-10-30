@@ -16,6 +16,8 @@ import { queryClient } from './config/queryClient'
 import NewVersionBanner from './Components/NewVersionBanner'
 import AppToaster from './Components/Common/AppToaster'
 import { DialogHost } from './utils/confirm'
+// Reporta al backend los errores no capturados del navegador (ver services/errorReportingService.ts)
+import './services/errorReportingService'
 
 const options = {
   api_host: import.meta.env.VITE_POSTHOG_HOST

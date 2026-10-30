@@ -1,3 +1,6 @@
+import { axiosPrivate } from '../utils/api'
+import { getRequestId, shouldReportClientError } from '../utils/clientErrors'
+
 interface ErrorReport {
   message: string
   stack?: string
@@ -8,6 +11,8 @@ interface ErrorReport {
   url: string
   userId?: string
   sessionId?: string
+  /** X-Request-ID de la respuesta fallida: permite buscar el error en el log del backend */
+  requestId?: string
   buildVersion?: string
   severity: 'low' | 'medium' | 'high' | 'critical'
   tags?: Record<string, string>
@@ -28,6 +33,8 @@ class ErrorReportingService {
   private reportQueue: ErrorReport[] = []
   private flushTimer: NodeJS.Timeout | null = null
   private reportCount = 0
+  // Mismo error en los últimos 60 s: se cuenta una sola vez (un bucle de render generaría cientos)
+  private recentErrors = new Map<string, number>()
 
   constructor(config: ErrorReportingConfig = {}) {
     this.config = {
@@ -93,7 +100,19 @@ class ErrorReportingService {
       return
     }
 
+    if (!shouldReportClientError(error)) {
+      return
+    }
+
     const errorObj = typeof error === 'string' ? new Error(error) : error
+
+    const dedupeKey = `${errorObj.message}|${errorObj.stack?.split('\n')[1] ?? ''}`
+    const now = Date.now()
+    const lastSeen = this.recentErrors.get(dedupeKey)
+    if (lastSeen && now - lastSeen < 60000) {
+      return
+    }
+    this.recentErrors.set(dedupeKey, now)
     
     const report: ErrorReport = {
       message: errorObj.message,
@@ -105,6 +124,7 @@ class ErrorReportingService {
       url: window.location.href,
       userId: this.getCurrentUserId(),
       sessionId: this.getSessionId(),
+      requestId: getRequestId(error) ?? undefined,
       buildVersion: this.getBuildVersion(),
       severity: options.severity || 'medium',
       tags: options.tags,
@@ -144,13 +164,23 @@ class ErrorReportingService {
       return
     }
 
+    // El endpoint exige sesión: sin token los reportes esperan en la cola
+    if (!this.getAuthToken()) {
+      return
+    }
+
     const reportsToSend = this.reportQueue.splice(0, this.config.batchSize)
 
     try {
       await this.sendReports(reportsToSend)
     } catch (error) {
+      // Un 4xx (salvo sesión o límite de peticiones) no se arregla reintentando: se descartan
+      const status = (error as { response?: { status?: number } })?.response?.status
+      const retryable =
+        status === undefined || status >= 500 || [401, 408, 429].includes(status)
+
       // If sending fails, put reports back in queue (up to a limit)
-      if (this.reportQueue.length < this.config.maxReports) {
+      if (retryable && this.reportQueue.length < this.config.maxReports) {
         this.reportQueue.unshift(...reportsToSend)
       }
       
@@ -159,18 +189,7 @@ class ErrorReportingService {
   }
 
   private async sendReports(reports: ErrorReport[]) {
-    const response = await fetch(this.config.apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`
-      },
-      body: JSON.stringify({ reports })
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to send reports: ${response.status} ${response.statusText}`)
-    }
+    await axiosPrivate.post(this.config.apiEndpoint, { reports })
   }
 
   private getCurrentUserId(): string | undefined {
@@ -196,11 +215,11 @@ class ErrorReportingService {
   }
 
   private getBuildVersion(): string {
-    return process.env.REACT_APP_VERSION || 'unknown'
+    return import.meta.env.VITE_APP_VERSION || 'unknown'
   }
 
   private getAuthToken(): string {
-    return localStorage.getItem('authToken') || ''
+    return localStorage.getItem('accessToken') || ''
   }
 
   private storeInLocalStorage(report: ErrorReport) {
