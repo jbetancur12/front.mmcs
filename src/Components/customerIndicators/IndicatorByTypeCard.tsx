@@ -30,7 +30,7 @@ interface Props {
 // Tipos que se muestran antes de "Ver todos"
 const VISIBLE_ROWS = 6
 
-/** Indicador 2: calibrados frente a contratados de cada tipo de equipo. */
+/** Indicador 2: equipos con servicio metrológico frente a contratados de cada tipo de equipo. */
 const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
   const sorted = useMemo(
     () =>
@@ -76,7 +76,7 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
           }}
         >
           <Typography variant='h6' fontWeight='bold'>
-            Calibrados por tipo de equipo
+            Con servicio metrológico por tipo de equipo
           </Typography>
           {unmatchedRows.length > 0 && (
             <>
@@ -136,7 +136,7 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
             <Box
               component='ul'
               tabIndex={0}
-              aria-label='Calibrados por tipo de equipo'
+              aria-label='Con servicio metrológico por tipo de equipo'
               sx={{
                 listStyle: 'none',
                 p: 0,

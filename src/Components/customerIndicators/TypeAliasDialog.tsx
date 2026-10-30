@@ -163,7 +163,7 @@ const TypeAliasDialog: React.FC<Props> = ({
               {target.certificateTypes?.map((type) => type.name).join(', ')}).
               La asociación unifica el nombre, pero el porcentaje seguirá en 0
               hasta que exista un certificado de calibración, verificación,
-              seguridad eléctrica, validación, calificación o caracterización.
+              informe de validación, calificación o caracterización.
             </Alert>
           )}
         </Box>

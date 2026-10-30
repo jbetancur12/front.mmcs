@@ -230,7 +230,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
       {noServices && (
         <Alert severity='warning' sx={{ mb: 3 }}>
           Este año no hay órdenes de servicio emitidas. Se muestran los equipos
-          calibrados, pero no se puede calcular el avance frente a una meta.
+          con servicio metrológico, pero no se puede calcular el avance frente a una meta.
         </Alert>
       )}
 
@@ -263,7 +263,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
         </Grid>
         <Grid item xs={6} md={3}>
           <ProfileStatCard
-            label='Equipos calibrados'
+            label='Equipos con servicio metrológico'
             value={formatCount(indicators.calibrated)}
             icon={<AssignmentTurnedIn />}
             color='#2e7d32'
@@ -280,7 +280,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             color='#00BFA5'
             background='#E0F7F4'
             valueColor={TEAL_TEXT}
-            help='Calibrados frente a la meta'
+            help='Con servicio metrológico frente a la meta'
           />
         </Grid>
         <Grid item xs={6} md={3}>
@@ -298,7 +298,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
 
       {headquarter && (
         <Alert severity='info' sx={{ mb: 3 }}>
-          Con una sede elegida, los calibrados y el avance son de esa sede. La
+          Con una sede elegida, los equipos con servicio metrológico y el avance son de esa sede. La
           meta sigue siendo la del cliente completo.
         </Alert>
       )}
