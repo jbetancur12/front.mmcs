@@ -4,6 +4,7 @@ import { Modal, Box, TextField, Button, Typography } from '@mui/material'
 import { notify } from 'src/utils/notify'
 import { useCreateCustomer } from 'src/hooks/customers/useCustomers'
 
+import { logger } from 'src/utils/logger'
 interface ModalCustomerProps {
   open: boolean
   onClose: Dispatch<SetStateAction<boolean>>
@@ -78,10 +79,10 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
         dataReturned(response.data)
         onClose(false)
       } else {
-        console.error('Error al crear cliente')
+        logger.error('Error al crear cliente')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

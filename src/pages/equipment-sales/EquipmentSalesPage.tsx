@@ -71,6 +71,7 @@ import {
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
 import { confirmDialog } from 'src/utils/confirm'
 
+import { logger } from 'src/utils/logger'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -174,7 +175,7 @@ const EquipmentSalesPage = () => {
       toast.success('Plantilla de términos actualizada.')
       setTemplateOpen(false)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No se pudo guardar la plantilla.')
     }
   }
@@ -190,7 +191,7 @@ const EquipmentSalesPage = () => {
       await mutations.requestApproval.mutateAsync(quotation.id)
       toast.success('Cotización enviada al cliente.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos enviar la cotización.')
     }
   }
@@ -725,7 +726,7 @@ const EquipmentSalesPage = () => {
             toast.success('El consecutivo de cotizaciones quedó configurado.')
             setIsSequenceDialogOpen(false)
           } catch (error) {
-            console.error(error)
+            logger.error(error)
             toast.error('No se pudo guardar el consecutivo.')
           }
         }}

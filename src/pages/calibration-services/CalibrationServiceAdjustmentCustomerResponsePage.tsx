@@ -14,6 +14,7 @@ import {
 import { useSearchParams } from 'react-router-dom'
 import { axiosPublic } from '@utils/api'
 
+import { logger } from 'src/utils/logger'
 interface PublicAdjustmentResponseData {
   token: string
   serviceCode?: string | null
@@ -84,7 +85,7 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
         setCustomerName(response.data.customerName || '')
         setError(null)
       } catch (requestError) {
-        console.error(requestError)
+        logger.error(requestError)
         setError('No pudimos cargar la novedad para responder.')
       } finally {
         setIsLoading(false)
@@ -125,7 +126,7 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
           : current
       )
     } catch (submitError) {
-      console.error(submitError)
+      logger.error(submitError)
       setError('No pudimos guardar tu respuesta. Intenta nuevamente.')
     } finally {
       setIsSubmitting(false)

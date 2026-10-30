@@ -3,6 +3,7 @@ import { notify } from 'src/utils/notify'
 import { useDataSheetMutations, useDownloadInvoice } from './useDataSheets'
 import { downloadBlob } from './utils'
 
+import { logger } from 'src/utils/logger'
 /**
  * Acciones de la lista de hojas de vida con los mismos toasts/logs que antes
  * del paso a react-query.
@@ -26,10 +27,10 @@ export const useDataSheetActions = () => {
       if (response.status === 200) {
         notify.success('Hoja de Datos Modificada Exitosamente!')
       } else {
-        console.error('Error al modificar la hoja de datos')
+        logger.error('Error al modificar la hoja de datos')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 
@@ -40,11 +41,11 @@ export const useDataSheetActions = () => {
       if (response.status === 204) {
         notify.success('Hoja de Datos Eliminada Exitosamente!')
       } else {
-        console.error('Error al eliminar la hoja de datos')
+        logger.error('Error al eliminar la hoja de datos')
         notify.error('Error al eliminar la hoja de datos')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
       notify.error('Error al eliminar la hoja de datos')
     }
   }
@@ -68,7 +69,7 @@ export const useDataSheetActions = () => {
         notify.error('Error al subir la foto')
       }
     } catch (error) {
-      console.error('Error al subir la foto:', error)
+      logger.error('Error al subir la foto:', error)
       notify.error('Error al subir la foto')
     }
   }

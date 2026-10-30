@@ -29,6 +29,7 @@ import {
   CertificatesApiResponse
 } from './customer-profile/types'
 
+import { logger } from 'src/utils/logger'
 interface SelectedHqProps {
   onDelete: (id: number) => void
   sedes: string[]
@@ -113,7 +114,7 @@ const exportToExcel = async (
   try {
     XLSX.writeFile(workbook, fileName)
   } catch (error) {
-    console.error('Error al generar archivo Excel:', error)
+    logger.error('Error al generar archivo Excel:', error)
     notify.error('Error al generar el archivo Excel')
   }
 }
@@ -158,7 +159,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
         })
         return response.data.files || []
       } catch (error) {
-        console.error('Error al obtener todos los datos:', error)
+        logger.error('Error al obtener todos los datos:', error)
         throw error
       }
     },
@@ -176,7 +177,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
           await exportToExcel(allData, selectedSede)
         }
       } catch (error) {
-        console.error('Error al descargar Excel:', error)
+        logger.error('Error al descargar Excel:', error)
         notify.error('Error al descargar el archivo Excel')
       } finally {
         setIsDownloading(false)

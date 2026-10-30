@@ -17,6 +17,7 @@ import { notify } from 'src/utils/notify'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { ArrowBack } from '@mui/icons-material'
 
+import { logger } from 'src/utils/logger'
 const NewTrip = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -67,7 +68,7 @@ const NewTrip = () => {
 
         navigate(-1)
       } catch (error: any) {
-        console.log(error)
+        logger.log(error)
         notify.error(error.error)
       }
     }

@@ -40,6 +40,7 @@ import {
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
+import { logger } from 'src/utils/logger'
 // Tipos e interfaces para los datos de Trip
 
 const TripsTable = () => {
@@ -115,7 +116,7 @@ const TripsTable = () => {
         await saveRowEdits.mutateAsync(values)
         exitEditingMode()
       } catch (error) {
-        console.error('Error al guardar la edición:', error)
+        logger.error('Error al guardar la edición:', error)
       }
     },
     [saveRowEdits]

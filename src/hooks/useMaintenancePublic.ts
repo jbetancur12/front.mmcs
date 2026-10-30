@@ -3,6 +3,7 @@ import { axiosPublic } from '../utils/api'
 import { MaintenanceTicket } from '../types/maintenance'
 import { useEffect, useRef, useCallback, useState } from 'react'
 
+import { logger } from 'src/utils/logger'
 // Interface for TV display data - matches actual API response
 interface TVDisplayData {
   lastUpdated: string
@@ -91,7 +92,7 @@ export const useTVDisplayDataWithWebSocket = () => {
       wsRef.current = new WebSocket(wsWithChannel)
 
       wsRef.current.onopen = () => {
-        console.log('TV Display WebSocket connected')
+        logger.log('TV Display WebSocket connected')
         reconnectAttempts.current = 0
         setRetryCount(0)
         setIsWebSocketConnected(true)
@@ -112,12 +113,12 @@ export const useTVDisplayDataWithWebSocket = () => {
           const message = JSON.parse(event.data)
           handleWebSocketMessage(message)
         } catch (error) {
-          console.error('Error parsing TV Display WebSocket message:', error)
+          logger.error('Error parsing TV Display WebSocket message:', error)
         }
       }
 
       wsRef.current.onclose = (event) => {
-        console.log(
+        logger.log(
           'TV Display WebSocket connection closed:',
           event.code,
           event.reason
@@ -136,7 +137,7 @@ export const useTVDisplayDataWithWebSocket = () => {
           )
           reconnectAttempts.current++
 
-          console.log(
+          logger.log(
             `Reconnecting TV Display WebSocket in ${delay}ms (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`
           )
           setRetryCount(reconnectAttempts.current)
@@ -149,11 +150,11 @@ export const useTVDisplayDataWithWebSocket = () => {
       }
 
       wsRef.current.onerror = (error) => {
-        console.error('TV Display WebSocket error:', error)
+        logger.error('TV Display WebSocket error:', error)
         setIsWebSocketConnected(false)
       }
     } catch (error) {
-      console.error('Error creating TV Display WebSocket connection:', error)
+      logger.error('Error creating TV Display WebSocket connection:', error)
       setIsWebSocketConnected(false)
       setIsSocketConnecting(false)
     }
@@ -174,7 +175,7 @@ export const useTVDisplayDataWithWebSocket = () => {
           queryClient.invalidateQueries({ queryKey: ['tv-display-data'] })
           break
         default:
-          console.log(
+          logger.log(
             'Unknown TV Display WebSocket message type:',
             message.type
           )

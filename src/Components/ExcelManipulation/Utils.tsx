@@ -5,6 +5,7 @@ import { deviceStore } from '../../store/deviceStore'
 import { customerStore } from '../../store/customerStore'
 import type { AxiosInstance } from 'axios'
 
+import { logger } from 'src/utils/logger'
 export const limitArraySize = (arra: any, newItem: any) => {
   // Verificar si el nuevo item ya existe en el array
   const isDuplicate = arra.some(
@@ -114,7 +115,7 @@ export const loadOptions = async (
 
         resolve(options) // Aplica la función de mapeo
       } catch (error) {
-        console.error('Error al cargar opciones:', error)
+        logger.error('Error al cargar opciones:', error)
         reject(error)
       }
     }

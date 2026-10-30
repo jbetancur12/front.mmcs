@@ -54,6 +54,7 @@ import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { notify } from 'src/utils/notify'
+import { logger } from 'src/utils/logger'
 const validationSchema = Yup.object({
   name: Yup.string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -153,7 +154,7 @@ const MaintenanceTechnicians: React.FC = () => {
             : 'Técnico creado exitosamente.')
         refetch()
       } catch (error: any) {
-        console.error('Error saving technician:', error)
+        logger.error('Error saving technician:', error)
         notify.error(getApiErrorReason(error) ||
             'No se pudo guardar el técnico.')
       }
@@ -201,7 +202,7 @@ const MaintenanceTechnicians: React.FC = () => {
       setTechnicianToToggle(null)
       refetch()
     } catch (error) {
-      console.error('Error toggling technician status:', error)
+      logger.error('Error toggling technician status:', error)
     }
   }
 
@@ -215,7 +216,7 @@ const MaintenanceTechnicians: React.FC = () => {
       setTechnicianToDelete(null)
       refetch()
     } catch (error: any) {
-      console.error('Error deleting technician:', error)
+      logger.error('Error deleting technician:', error)
       const message =
         getApiErrorReason(error) || 'Error al eliminar el técnico'
       setDeleteError(message)

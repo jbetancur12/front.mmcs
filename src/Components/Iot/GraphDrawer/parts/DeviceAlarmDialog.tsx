@@ -21,6 +21,7 @@ import { useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 // Tipos y constantes
 export type DeviceAlarm = {
   id: number
@@ -132,7 +133,7 @@ const DeviceAlarmDialog: React.FC<DeviceAlarmDialogProps> = ({
           await handleCreate(payload)
         }
       } catch (error) {
-        console.error('Error en el formulario:', error)
+        logger.error('Error en el formulario:', error)
       }
     },
     enableReinitialize: true

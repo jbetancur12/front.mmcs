@@ -19,6 +19,7 @@ import {
 import { mergeCalibrationQuoteTerms } from '../calibrationQuoteTerms'
 import { CalibrationServicesListPermissions } from './useCalibrationServicesListPermissions'
 
+import { logger } from 'src/utils/logger'
 interface CalibrationServicesListActionsParams {
   permissions: CalibrationServicesListPermissions
   queryFilters: CalibrationServiceFilters
@@ -64,7 +65,7 @@ const useCalibrationServicesListActions = ({
       await requestApproval.mutateAsync({ serviceId: String(service.id) })
       toast.success(`${service.serviceCode} quedó marcado como cotización enviada al cliente.`)
     } catch (requestError) {
-      console.error(requestError)
+      logger.error(requestError)
       toast.error('No pudimos marcar la cotización como enviada al cliente.')
     }
   }
@@ -74,7 +75,7 @@ const useCalibrationServicesListActions = ({
       await sendCertificate.mutateAsync({ serviceId: String(service.id) })
       toast.success(`Certificado de ${service.serviceCode} registrado como enviado.`)
     } catch (sendError) {
-      console.error(sendError)
+      logger.error(sendError)
       toast.error('No pudimos registrar el envío del certificado.')
     }
   }
@@ -100,7 +101,7 @@ const useCalibrationServicesListActions = ({
       toast.success('Los consecutivos iniciales quedaron configurados.')
       setIsSequenceDialogOpen(false)
     } catch (configError) {
-      console.error(configError)
+      logger.error(configError)
       toast.error('No pudimos guardar la configuración inicial del módulo.')
     }
   }
@@ -115,7 +116,7 @@ const useCalibrationServicesListActions = ({
         exact: true
       })
     } catch (configError) {
-      console.error(configError)
+      logger.error(configError)
       toast.error('No pudimos guardar los tiempos SLA.')
     }
   }

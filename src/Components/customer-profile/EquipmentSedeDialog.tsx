@@ -5,6 +5,7 @@ import FormDialog from '../Common/FormDialog'
 import { notify } from 'src/utils/notify'
 import { Certificate } from './types'
 
+import { logger } from 'src/utils/logger'
 interface EquipmentSedeDialogProps {
   certificate: Certificate | null
   sedes: string[]
@@ -46,7 +47,7 @@ const EquipmentSedeDialog = ({
       }
     } catch (error) {
       notify.error('Error al actualizar la sede')
-      console.error('Error updating headquarter:', error)
+      logger.error('Error updating headquarter:', error)
     } finally {
       setSaving(false)
     }

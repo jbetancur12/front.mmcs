@@ -11,6 +11,7 @@ import { AssignableRole, Role, UserData, UserFormValues } from './types'
 import { FormErrorsAlert, RolesField, UserTextField } from './UserFormFields'
 import { useUserForm } from './useUserForm'
 
+import { logger } from 'src/utils/logger'
 interface CreateModalProps {
   onClose: () => void
   onSubmit: (values: UserData) => Promise<void>
@@ -92,7 +93,7 @@ const CreateNewAccountModal: React.FC<CreateModalProps> = ({
       form.setValues(initialValues)
       form.resetState()
     } catch (error) {
-      console.error('Error in modal submit:', error)
+      logger.error('Error in modal submit:', error)
     }
   }
 

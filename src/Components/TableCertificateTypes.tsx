@@ -36,6 +36,7 @@ import {
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
+import { logger } from 'src/utils/logger'
 // Define interfaces
 export interface CertificateTypeData {
   id: number
@@ -80,10 +81,10 @@ const Table: React.FC = () => {
           position: 'top-center'
         })
       } else {
-        console.error('Error al crear tipo de certificado')
+        logger.error('Error al crear tipo de certificado')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 
@@ -137,10 +138,10 @@ const Table: React.FC = () => {
                 prev.map((item, index) => (index === row.index ? values : item))
             )
           } else {
-            console.error('Error al crear tipo de certificado')
+            logger.error('Error al crear tipo de certificado')
           }
         } catch (error) {
-          console.error('Error de red:', error)
+          logger.error('Error de red:', error)
         }
 
         exitEditingMode() //required to exit editing mode and close modal
@@ -169,10 +170,10 @@ const Table: React.FC = () => {
         })
         removeRowFromCache(id)
       } else {
-        console.error('Error al crear tipo de certificado')
+        logger.error('Error al crear tipo de certificado')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

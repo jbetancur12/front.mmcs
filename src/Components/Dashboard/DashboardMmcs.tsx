@@ -34,6 +34,7 @@ import { notify } from 'src/utils/notify'
 import LmsPageHeader from '../lms/admin/LmsPageHeader'
 import LmsStatCard from '../lms/admin/LmsStatCard'
 
+import { logger } from 'src/utils/logger'
 /**
  * Inicio del personal interno: clientes con certificados vencidos o por
  * vencer. Los indicadores de vencidos y próximos filtran la lista, que se
@@ -50,7 +51,7 @@ const Dashboard: React.FC = () => {
     refetch
   } = useCertificatesNextToExpireGrouped<Customer>({
     onError: (error) => {
-      console.error('Error fetching file data:', error)
+      logger.error('Error fetching file data:', error)
       notify.error('No se pudieron cargar los datos de certificados')
     }
   })

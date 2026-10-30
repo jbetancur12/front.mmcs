@@ -33,6 +33,7 @@ import {
 } from 'src/hooks/customers/useCustomers'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import { logger } from 'src/utils/logger'
 // Define interfaces
 export interface CustomerData {
   id?: number
@@ -57,7 +58,7 @@ const Table: React.FC = () => {
     undefined,
     {
       onError: (error) => {
-        console.error('Error fetching customer data:', error)
+        logger.error('Error fetching customer data:', error)
       }
     }
   )
@@ -88,10 +89,10 @@ const Table: React.FC = () => {
       if (response.status >= 200 && response.status < 300) {
         notify.success('Cliente Creado Exitosamente!')
       } else {
-        console.error('Error al crear cliente')
+        logger.error('Error al crear cliente')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 
@@ -152,10 +153,10 @@ const Table: React.FC = () => {
           if (response.status === 201) {
             notify.success('Cliente Modificado Exitosamente!')
           } else {
-            console.error('Error al crear cliente')
+            logger.error('Error al crear cliente')
           }
         } catch (error) {
-          console.error('Error de red:', error)
+          logger.error('Error de red:', error)
         }
 
         exitEditingMode() //required to exit editing mode and close modal
@@ -173,10 +174,10 @@ const Table: React.FC = () => {
       if (response.status === 204) {
         notify.success('Cliente Eliminado Exitosamente!')
       } else {
-        console.error('Error al eliminar cliente')
+        logger.error('Error al eliminar cliente')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

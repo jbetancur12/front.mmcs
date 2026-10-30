@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 // Asegúrate de que esta importación sea correcta en tu entorno:
 import { formatCurrency } from 'src/pages/maintenance/ticket-details/maintenanceTicketDetailUtils'; 
+import { logger } from 'src/utils/logger';
 
 // --- Interfaces ---
 
@@ -83,7 +84,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
             // Opcional: podrías cerrar el diálogo aquí, o dejarlo abierto.
             // onClose(); 
         } catch (error) {
-            console.error("Error al facturar el ticket:", error);
+            logger.error("Error al facturar el ticket:", error);
             // El componente padre debe manejar el error y mostrar una notificación al usuario
         }
     };

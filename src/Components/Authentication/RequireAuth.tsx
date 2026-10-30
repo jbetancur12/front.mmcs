@@ -7,6 +7,7 @@ import { formatSessionUser } from '@utils/syncUserAccess'
 import { useNavigate, useLocation } from 'react-router-dom'
 import SignalLoader from '../Common/SignalLoader'
 
+import { logger } from 'src/utils/logger'
 interface RequireAuthProps {
   children: React.ReactNode
 }
@@ -67,7 +68,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
         userStore.set(formatSessionUser(await response.data))
       } catch (error) {
-        console.log('Error al validar el token:', error)
+        logger.log('Error al validar el token:', error)
         const currentPath = location.pathname + location.search
         clearInvalidSession()
         sessionStorage.setItem('lastLocation', currentPath)

@@ -31,6 +31,7 @@ import {
 } from '../utils/limitArraySizes'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface CreateFileModalProps {
   open: boolean
   onClose: () => void
@@ -201,7 +202,7 @@ export const CreateFileModal = ({
       }
 
       notify.error('Error', errorMessage)
-      console.error('Error en creación de certificado:', error)
+      logger.error('Error en creación de certificado:', error)
     }
   }
 

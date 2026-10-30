@@ -11,6 +11,7 @@ import {
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
+import { logger } from 'src/utils/logger'
 interface PDFData {
   url: string
   fileName: string
@@ -66,7 +67,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ path }) => {
         blobUrl = URL.createObjectURL(blob)
         if (!cancelled) setPdfData({ url: blobUrl, fileName })
       } catch (error) {
-        console.error('Error al obtener el PDF:', error)
+        logger.error('Error al obtener el PDF:', error)
         if (!cancelled) setFailed(true)
       }
     }

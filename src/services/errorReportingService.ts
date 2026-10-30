@@ -1,5 +1,6 @@
 import { axiosPrivate } from '../utils/api'
 import { getRequestId, shouldReportClientError } from '../utils/clientErrors'
+import { logger } from '../utils/logger'
 
 interface ErrorReport {
   message: string
@@ -136,7 +137,7 @@ class ErrorReportingService {
 
     // Log to console if enabled
     if (this.config.enableConsoleLogging) {
-      console.error('Error Report:', report)
+      logger.error('Error Report:', report)
     }
 
     // Store in localStorage if enabled
@@ -184,7 +185,7 @@ class ErrorReportingService {
         this.reportQueue.unshift(...reportsToSend)
       }
       
-      console.error('Failed to send error reports:', error)
+      logger.error('Failed to send error reports:', error)
     }
   }
 

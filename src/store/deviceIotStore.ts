@@ -2,6 +2,7 @@ import { atom, action } from 'nanostores'
 import { DataPayload, SData, type DeviceIot } from '../Components/Iot/types'
 import { DeviceAlarm } from 'src/Components/Iot/DeviceIotMap/types'
 
+import { logger } from 'src/utils/logger'
 // Atoms para el estado
 export const $devicesIot = atom<DeviceIot[]>([])
 export const $realTimeData = atom<Record<string, DataPayload[]>>({})
@@ -56,7 +57,7 @@ export const updateDeviceIotStatus = action(
         const now = new Date()
         const formattedTime = now.toLocaleTimeString() // HH:MM:SS
 
-        console.debug(
+        logger.debug(
           `[DEBUG] Estado actualizado para ${deviceIotId} a las ${formattedTime}`,
           {
             oldStatus: deviceIot.status,
@@ -156,7 +157,7 @@ export const updateDeviceIotLocation = action(
       const now = new Date()
       const formattedTime = now.toLocaleTimeString() // HH:MM:SS
 
-      console.debug(
+      logger.debug(
         `[DEBUG] Ubicación actualizada para ${deviceIotId} a las ${formattedTime}`,
         {
           oldLocation: deviceIot.lastLocation,

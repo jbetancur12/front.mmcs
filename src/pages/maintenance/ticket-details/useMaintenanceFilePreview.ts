@@ -3,6 +3,7 @@ import useAxiosPrivate from '../../../utils/use-axios-private'
 import { MaintenanceFile } from '../../../types/maintenance'
 import { getFileDisplayName } from './maintenanceTicketDetailUtils'
 
+import { logger } from 'src/utils/logger'
 type ShowToast = (
   message: string,
   severity: 'success' | 'error' | 'warning' | 'info'
@@ -60,7 +61,7 @@ const useMaintenanceFilePreview = (showToast: ShowToast) => {
       const url = await getFilePreviewUrl(file)
       setPreviewUrl(url)
     } catch (error) {
-      console.error('Error loading file preview:', error)
+      logger.error('Error loading file preview:', error)
       setPreviewError('No se pudo cargar la vista previa del archivo')
       showToast('Error al cargar la vista previa del archivo', 'error')
     } finally {
@@ -88,7 +89,7 @@ const useMaintenanceFilePreview = (showToast: ShowToast) => {
       link.click()
       document.body.removeChild(link)
     } catch (error) {
-      console.error('Error downloading file:', error)
+      logger.error('Error downloading file:', error)
       showToast('Error al descargar el archivo', 'error')
     }
   }

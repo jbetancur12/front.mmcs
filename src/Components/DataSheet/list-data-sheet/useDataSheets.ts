@@ -11,6 +11,7 @@ import {
 
 import { DataSheetData } from './types'
 
+import { logger } from 'src/utils/logger'
 export const dataSheetKeys = {
   all: ['dataSheets'] as const,
   paginated: (params: ServerListParams) =>
@@ -48,7 +49,7 @@ export const useDataSheetsPaginated = (params: ServerListParams) => {
     {
       keepPreviousData: true,
       onError: (error) => {
-        console.error('Error fetching dataSheet data:', error)
+        logger.error('Error fetching dataSheet data:', error)
       }
     }
   )
@@ -90,7 +91,7 @@ export const useDataSheetCounts = () => {
     },
     {
       onError: (error) => {
-        console.error('Error fetching dataSheet counts:', error)
+        logger.error('Error fetching dataSheet counts:', error)
       }
     }
   )

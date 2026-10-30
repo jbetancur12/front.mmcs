@@ -49,6 +49,7 @@ import { useUserCertificates, useCertificate, useDownloadCertificate } from '../
 import { lmsService, type Certificate as ApiCertificate } from '../../../services/lmsService'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface Certificate extends ApiCertificate {
   certificateNumber: string
   courseTitle: string
@@ -170,7 +171,7 @@ const LmsCertificateView: React.FC = () => {
     try {
       await downloadCertificateMutation.mutateAsync(certificateId)
     } catch (error) {
-      console.error('Error downloading certificate:', error)
+      logger.error('Error downloading certificate:', error)
       showSnackbar('No se pudo descargar el certificado.', 'error')
     }
   }
@@ -194,7 +195,7 @@ const LmsCertificateView: React.FC = () => {
         certificate: result.certificate ? normalizeCertificate(result.certificate) : undefined
       })
     } catch (error) {
-      console.error('Error verifying certificate:', error)
+      logger.error('Error verifying certificate:', error)
       setVerificationResult({
         isValid: false,
         error: 'Error al verificar el certificado'

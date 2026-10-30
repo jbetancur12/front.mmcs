@@ -1,3 +1,5 @@
+import { logger } from 'src/utils/logger'
+
 interface AppConfig {
   VERSION: string
   BUILD_DATE: string
@@ -38,8 +40,8 @@ export const APP_CONFIG: AppConfig = {
 
 // Helper para logging
 export const logVersionUpdate = (from: string | null, to: string): void => {
-  console.log(`🔄 App version updated: ${from || 'unknown'} → ${to}`)
+  logger.log(`🔄 App version updated: ${from || 'unknown'} → ${to}`)
   if (APP_CONFIG.CHANGELOG[to]) {
-    console.log(`📝 Changes: ${APP_CONFIG.CHANGELOG[to]}`)
+    logger.log(`📝 Changes: ${APP_CONFIG.CHANGELOG[to]}`)
   }
 }

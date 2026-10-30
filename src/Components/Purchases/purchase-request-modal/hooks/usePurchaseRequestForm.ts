@@ -14,6 +14,7 @@ import {
 import { isAxiosError } from 'axios'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 export const usePurchaseRequestForm = (
   open: boolean,
   existingRequest?: IPurchaseRequest | null,
@@ -150,7 +151,7 @@ export const usePurchaseRequestForm = (
       return true
     } catch (err) {
       setError('Error al crear/actualizar la solicitud')
-      console.error('Error creating/updating purchase request:', err)
+      logger.error('Error creating/updating purchase request:', err)
 
       let message = `Error al ${existingRequest ? 'actualizar' : 'crear'} la solicitud.`
       if (isAxiosError(err) && getApiErrorReason(err)) {

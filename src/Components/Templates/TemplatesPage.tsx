@@ -25,6 +25,7 @@ import { useAccessibility } from './hooks/useAccessibility'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
+import { logger } from 'src/utils/logger'
 const TemplatesPage: React.FC = () => {
   const canManageTemplates = useCan(PERMISSIONS.CALIBRATION_TEMPLATE_MANAGE)
   const { announce } = useAccessibility({ announceChanges: true })
@@ -65,7 +66,7 @@ const TemplatesPage: React.FC = () => {
         setCreateModalOpen(false)
       }
     } catch (error: any) {
-      console.error('Error creating template:', error)
+      logger.error('Error creating template:', error)
 
       if (error.response?.status === 409) {
         notify.error(getApiErrorReason(error) ||
@@ -88,7 +89,7 @@ const TemplatesPage: React.FC = () => {
         setTemplateToDuplicate(null)
       }
     } catch (error: any) {
-      console.error('Error duplicating template:', error)
+      logger.error('Error duplicating template:', error)
 
       if (error.response?.status === 409) {
         notify.error(getApiErrorReason(error) ||
@@ -117,7 +118,7 @@ const TemplatesPage: React.FC = () => {
       }
       return false
     } catch (error: any) {
-      console.error('Error updating template:', error)
+      logger.error('Error updating template:', error)
       notify.error(getApiErrorReason(error) ||
           'Error al actualizar la plantilla. Por favor, intenta de nuevo.')
       return false
@@ -139,7 +140,7 @@ const TemplatesPage: React.FC = () => {
         notify.success('Plantilla eliminada exitosamente!')
       }
     } catch (error: any) {
-      console.error('Error deleting template:', error)
+      logger.error('Error deleting template:', error)
       notify.error(getApiErrorReason(error) ||
           'Error al eliminar la plantilla. Por favor, intenta de nuevo.')
     }

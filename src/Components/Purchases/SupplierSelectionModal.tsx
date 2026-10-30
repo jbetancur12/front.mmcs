@@ -37,6 +37,7 @@ import { isAxiosError } from 'axios'
 import { Close } from '@mui/icons-material'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface SupplierSelectionModalProps {
   open: boolean
   onClose: () => void
@@ -358,7 +359,7 @@ const SupplierSelectionModal = ({
       onSuccess()
       onClose()
     } catch (error) {
-      console.log(error)
+      logger.log(error)
       let message = 'Error guardando la información.'
       if (isAxiosError(error) && getApiErrorReason(error)) {
         message = getApiErrorReason(error) ?? message

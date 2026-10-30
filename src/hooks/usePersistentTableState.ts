@@ -7,6 +7,7 @@ import {
   MRT_DensityState
 } from 'material-react-table'
 
+import { logger } from 'src/utils/logger'
 // Complete table state interface
 export interface TableState {
   columnFilters: MRT_ColumnFiltersState
@@ -79,13 +80,13 @@ const loadStateFromStorage = (
 
     const parsedState = JSON.parse(savedState)
     if (!validateState(parsedState)) {
-      console.warn(`Invalid table state for ${tableId}, using default`)
+      logger.warn(`Invalid table state for ${tableId}, using default`)
       return defaultState
     }
 
     return { ...defaultState, ...parsedState }
   } catch (error) {
-    console.error(`Error loading table state for ${tableId}:`, error)
+    logger.error(`Error loading table state for ${tableId}:`, error)
     return defaultState
   }
 }
@@ -106,7 +107,7 @@ const saveStateToStorage = (
 
     localStorage.setItem(`table-state-${tableId}`, JSON.stringify(stateToSave))
   } catch (error) {
-    console.error(`Error saving table state for ${tableId}:`, error)
+    logger.error(`Error saving table state for ${tableId}:`, error)
   }
 }
 
@@ -145,7 +146,7 @@ export const usePersistentTableState = (
     // TODO: Add backend API call here if useBackendApi is true
     if (useBackendApi) {
       // Future implementation for backend persistence
-      console.log(`Would save to backend API for table ${tableId}:`, state)
+      logger.log(`Would save to backend API for table ${tableId}:`, state)
     }
   }, debounceMs)
 

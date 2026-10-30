@@ -1,5 +1,6 @@
 import { axiosPrivate } from '@utils/api'
 
+import { logger } from 'src/utils/logger'
 const API_BASE = '/lms/quizzes'
 
 // ============================================================================
@@ -194,7 +195,7 @@ class QuizService {
       const response = await axiosPrivate.post(`${API_BASE}/lessons/${lessonId}/quiz`, quizData)
       return response.data.data
     } catch (error: any) {
-      console.error('Error creating quiz:', error)
+      logger.error('Error creating quiz:', error)
       throw this.handleError(error)
     }
   }
@@ -208,7 +209,7 @@ class QuizService {
       const response = await axiosPrivate.get(`${API_BASE}/${quizId}/manage`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error fetching quiz:', error)
+      logger.error('Error fetching quiz:', error)
       throw this.handleError(error)
     }
   }
@@ -222,7 +223,7 @@ class QuizService {
       const response = await axiosPrivate.put(`${API_BASE}/${quizId}`, quizData)
       return response.data.data
     } catch (error: any) {
-      console.error('Error updating quiz:', error)
+      logger.error('Error updating quiz:', error)
       throw this.handleError(error)
     }
   }
@@ -235,7 +236,7 @@ class QuizService {
     try {
       await axiosPrivate.delete(`${API_BASE}/${quizId}`)
     } catch (error: any) {
-      console.error('Error deleting quiz:', error)
+      logger.error('Error deleting quiz:', error)
       throw this.handleError(error)
     }
   }
@@ -249,7 +250,7 @@ class QuizService {
       const response = await axiosPrivate.get(`${API_BASE}/${quizId}/preview`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error previewing quiz:', error)
+      logger.error('Error previewing quiz:', error)
       throw this.handleError(error)
     }
   }
@@ -267,7 +268,7 @@ class QuizService {
       const response = await axiosPrivate.get(`${API_BASE}/${quizId}`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error fetching quiz for taking:', error)
+      logger.error('Error fetching quiz for taking:', error)
       throw this.handleError(error)
     }
   }
@@ -281,7 +282,7 @@ class QuizService {
       const response = await axiosPrivate.post(`${API_BASE}/${quizId}/start`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error starting quiz session:', error)
+      logger.error('Error starting quiz session:', error)
       throw this.handleError(error)
     }
   }
@@ -302,7 +303,7 @@ class QuizService {
       })
       return response.data.data
     } catch (error: any) {
-      console.error('Error submitting quiz attempt:', error)
+      logger.error('Error submitting quiz attempt:', error)
       throw this.handleError(error)
     }
   }
@@ -316,7 +317,7 @@ class QuizService {
       const response = await axiosPrivate.get(`${API_BASE}/${quizId}/attempts`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error fetching user quiz attempts:', error)
+      logger.error('Error fetching user quiz attempts:', error)
       throw this.handleError(error)
     }
   }
@@ -330,7 +331,7 @@ class QuizService {
       const response = await axiosPrivate.get(`${API_BASE}/${quizId}/attempts/${attemptId}`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error fetching quiz attempt details:', error)
+      logger.error('Error fetching quiz attempt details:', error)
       throw this.handleError(error)
     }
   }
@@ -348,7 +349,7 @@ class QuizService {
       const response = await axiosPrivate.get(`${API_BASE}/${quizId}/statistics`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error fetching quiz statistics:', error)
+      logger.error('Error fetching quiz statistics:', error)
       throw this.handleError(error)
     }
   }
@@ -362,7 +363,7 @@ class QuizService {
       const response = await axiosPrivate.get(`${API_BASE}/${quizId}/analytics`)
       return response.data.data
     } catch (error: any) {
-      console.error('Error fetching quiz analytics:', error)
+      logger.error('Error fetching quiz analytics:', error)
       throw this.handleError(error)
     }
   }
@@ -383,7 +384,7 @@ class QuizService {
         message: 'La configuración cumple el contrato técnico del backend.'
       }
     } catch (error: any) {
-      console.error('Quiz validation failed:', error)
+      logger.error('Quiz validation failed:', error)
       if (error.response?.data?.error) {
         return {
           valid: false,

@@ -2,6 +2,7 @@ import { notify } from 'src/utils/notify'
 
 import { Certificate, CustomerProfileData, CustomerStats } from './types'
 
+import { logger } from 'src/utils/logger'
 // Función para exportar a Excel
 export const exportToExcel = async (
   data: Certificate[],
@@ -50,7 +51,7 @@ export const exportToExcel = async (
     XLSX.writeFile(workbook, fileName)
     notify.success('Archivo Excel descargado exitosamente')
   } catch (error) {
-    console.error('Error al generar archivo Excel:', error)
+    logger.error('Error al generar archivo Excel:', error)
     notify.error('Error al generar el archivo Excel')
   }
 }
@@ -237,7 +238,7 @@ export const exportOverviewReport = async (
     XLSX.writeFile(workbook, fileName)
     notify.success('Reporte completo descargado exitosamente')
   } catch (error) {
-    console.error('Error al generar reporte completo:', error)
+    logger.error('Error al generar reporte completo:', error)
     notify.error('Error al generar el reporte completo')
   }
 }

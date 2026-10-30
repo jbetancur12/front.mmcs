@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import toast from 'react-hot-toast'
 
+import { logger } from 'src/utils/logger'
 export interface TraceabilityDocument {
   id: number
   name: string
@@ -41,7 +42,7 @@ export const useTraceabilities = () => {
     },
     {
       onError: (error) => {
-        console.error('Error al cargar las trazabilidades:', error)
+        logger.error('Error al cargar las trazabilidades:', error)
         toast.error('Error al cargar las trazabilidades')
       }
     }

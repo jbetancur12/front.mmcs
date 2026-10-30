@@ -28,6 +28,7 @@ import { useQueryClient } from 'react-query'
 import { notify } from 'src/utils/notify'
 
 import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { logger } from 'src/utils/logger'
 export interface Certificate {
   id: number
   name: string
@@ -107,7 +108,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ certificate, onDelete, se
       notify.success('Equipo eliminado exitosamente')
     } catch (error) {
       notify.error('Error al eliminar el equipo')
-      console.error('Error deleting equipment:', error)
+      logger.error('Error deleting equipment:', error)
     }
     handleMenuClose()
   }
@@ -141,7 +142,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ certificate, onDelete, se
       }
     } catch (error) {
       notify.error('Error al actualizar la sede')
-      console.error('Error updating headquarter:', error)
+      logger.error('Error updating headquarter:', error)
     }
   }
 

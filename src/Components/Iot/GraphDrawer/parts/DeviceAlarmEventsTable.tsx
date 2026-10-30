@@ -18,6 +18,7 @@ import { Alert, AlertTitle } from '@mui/material'
 import { useQuery } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 
+import { logger } from 'src/utils/logger'
 interface AlarmEvent {
   id: number
   alarmId: number
@@ -62,13 +63,13 @@ const DeviceAlarmEventsTable: React.FC<DeviceAlarmEventsTableProps> = ({
           const data = await response.data
           return data as AlarmEvent[]
         } catch (parseError) {
-          console.error('Error al parsear JSON:', parseError)
+          logger.error('Error al parsear JSON:', parseError)
           throw new Error(
             `Problema al parsear la respuesta como JSON: ${parseError}`
           )
         }
       } catch (error) {
-        console.error('Error completo al obtener eventos de alarmas:', error)
+        logger.error('Error completo al obtener eventos de alarmas:', error)
         throw error
       }
     },
@@ -80,7 +81,7 @@ const DeviceAlarmEventsTable: React.FC<DeviceAlarmEventsTableProps> = ({
   }
 
   if (error) {
-    console.error('Error detallado:', error)
+    logger.error('Error detallado:', error)
     return (
       <Alert severity='error' sx={{ m: 2 }}>
         <AlertTitle>Error</AlertTitle>

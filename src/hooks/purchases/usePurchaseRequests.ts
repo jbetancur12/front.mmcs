@@ -11,6 +11,7 @@ import {
 } from 'src/hooks/useServerTable'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 
+import { logger } from 'src/utils/logger'
 export interface PurchaseRequestsResponse {
   count: number
   purchaseRequests: IPurchaseRequest[]
@@ -126,7 +127,7 @@ export const usePurchaseRequesters = (enabled = true) => {
           await axiosPrivate.get<PurchaseRequester[]>('/personnel')
         return response.data || []
       } catch (err) {
-        console.error('Error cargando solicitantes:', err)
+        logger.error('Error cargando solicitantes:', err)
         throw err
       }
     },

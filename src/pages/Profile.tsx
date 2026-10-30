@@ -39,6 +39,7 @@ import {
   useUploadProfileFile
 } from 'src/hooks/profiles/useProfiles'
 
+import { logger } from 'src/utils/logger'
 interface Profile {
   id: number
   name: string
@@ -82,7 +83,7 @@ const Profile: React.FC = () => {
     Profile & { createdAt?: string; updatedAt?: string }
   >(idProfile, {
     onError: (error) => {
-      console.error('Error al cargar el perfil:', error)
+      logger.error('Error al cargar el perfil:', error)
       toast.error('No se pudo cargar el perfil')
     }
   })
@@ -124,7 +125,7 @@ const Profile: React.FC = () => {
       setEditOpen(false)
       toast.success('Perfil actualizado correctamente')
     } catch (error) {
-      console.error('Error al guardar el perfil:', error)
+      logger.error('Error al guardar el perfil:', error)
       toast.error('No se pudo actualizar el perfil. Inténtalo de nuevo.')
     }
   }
@@ -139,7 +140,7 @@ const Profile: React.FC = () => {
       setSelectedCV(response.data.profile.cvUrl)
       toast.success('Currículum actualizado correctamente')
     } catch (error) {
-      console.error('Error al enviar el CV al backend:', error)
+      logger.error('Error al enviar el CV al backend:', error)
       toast.error('No se pudo actualizar el currículum. Inténtalo de nuevo.')
     }
   }
@@ -156,7 +157,7 @@ const Profile: React.FC = () => {
       setImage(response.data.profile.avatarUrl)
       toast.success('Foto de perfil actualizada correctamente')
     } catch (error) {
-      console.error('Error al enviar la imagen al backend:', error)
+      logger.error('Error al enviar la imagen al backend:', error)
       toast.error('No se pudo actualizar la foto. Inténtalo de nuevo.')
     }
   }

@@ -8,6 +8,7 @@ import {
 } from 'src/Components/LaboratoryMonitor/types'
 import useWebSocket, { WebSocketMessage } from './use-websockets'
 
+import { logger } from 'src/utils/logger'
 const chambersQueryKey: QueryKey = ['chambers']
 
 /**
@@ -20,7 +21,7 @@ export const applyCalibrationSensorUpdate = (
 ) => {
   queryClient.setQueryData<Chamber[]>(chambersQueryKey, (oldData) => {
     if (!oldData) {
-      console.warn('No existing chamber data in cache to update.')
+      logger.warn('No existing chamber data in cache to update.')
       return []
     }
     // Crear una nueva copia para asegurar la inmutabilidad y el re-render
@@ -105,7 +106,7 @@ export const useCalibrationRealtimeUpdates = () => {
       const updatePayload = message.data as CalibrationSensorUpdatePayload
 
       if (!updatePayload || !updatePayload.sensorId) {
-        console.warn(
+        logger.warn(
           'Received CALIBRATION_SENSOR_UPDATE without valid payload data.',
           updatePayload
         )

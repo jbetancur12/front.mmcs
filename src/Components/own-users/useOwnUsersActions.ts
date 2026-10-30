@@ -22,6 +22,7 @@ import {
 
 import { UserData } from './types'
 
+import { logger } from 'src/utils/logger'
 type SaveRowArgs = Parameters<
   NonNullable<MaterialReactTableProps<UserData>['onEditingRowSave']>
 >[0]
@@ -59,7 +60,7 @@ export const useOwnUsersActions = (validationErrors: {
           } catch (error) {
             closeLoadingAlert()
             await handleErrorWithAlert(error)
-            console.error('Error updating user:', error)
+            logger.error('Error updating user:', error)
           }
         }
       },
@@ -74,7 +75,7 @@ export const useOwnUsersActions = (validationErrors: {
           : await fetchActivationLink(target.id)
         await showActivationLinkDialog(info)
       } catch (error) {
-        console.error('Error con la activación del usuario:', error)
+        logger.error('Error con la activación del usuario:', error)
         await showErrorAlert('No se pudo generar el enlace de activación')
       }
     },
@@ -114,7 +115,7 @@ export const useOwnUsersActions = (validationErrors: {
       } catch (error) {
         closeLoadingAlert()
         await handleErrorWithAlert(error)
-        console.error('Error creating user:', error)
+        logger.error('Error creating user:', error)
         // Re-throw error to prevent modal from closing
         throw error
       }
@@ -143,7 +144,7 @@ export const useOwnUsersActions = (validationErrors: {
       } catch (error) {
         closeLoadingAlert()
         await handleErrorWithAlert(error)
-        console.error('Error updating user:', error)
+        logger.error('Error updating user:', error)
         // Re-throw error to prevent modal from closing
         throw error
       }
@@ -174,7 +175,7 @@ export const useOwnUsersActions = (validationErrors: {
       } catch (error) {
         closeLoadingAlert()
         await handleErrorWithAlert(error)
-        console.error('Error deleting user:', error)
+        logger.error('Error deleting user:', error)
       }
     },
     [deleteUser]

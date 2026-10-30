@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react'
 import LmsErrorBoundary from './LmsErrorBoundary'
 
+import { logger } from 'src/utils/logger'
 // Specific error boundaries for different dashboard sections
 
 interface SectionErrorBoundaryProps {
@@ -137,7 +138,7 @@ export const DashboardErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
     section="Dashboard LMS"
     onError={(error, errorInfo) => {
       // Log critical dashboard errors
-      console.error('Critical Dashboard Error:', error, errorInfo)
+      logger.error('Critical Dashboard Error:', error, errorInfo)
       
       // Report to error tracking service
       if (typeof window !== 'undefined' && (window as any).errorTracker) {

@@ -24,6 +24,7 @@ import {
 import { useDropzone } from 'react-dropzone'
 import { MaintenanceFile } from '../../types/maintenance'
 
+import { logger } from 'src/utils/logger'
 interface MaintenanceFileUploadProps {
   files: MaintenanceFile[]
   onFilesChange: (files: File[]) => void
@@ -147,7 +148,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           try {
             newPreviews[file.id] = await getFilePreviewUrl(file)
           } catch (previewError) {
-            console.error('Error generating image preview:', previewError)
+            logger.error('Error generating image preview:', previewError)
           }
         }
       }

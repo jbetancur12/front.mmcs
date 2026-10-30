@@ -28,6 +28,7 @@ import {
   DetailSection
 } from 'src/Components/Common/DetailBlocks'
 
+import { logger } from 'src/utils/logger'
 export interface CalibrationData {
   equipmentId: string | number
   date: string
@@ -175,7 +176,7 @@ const CalibrationForm: React.FC = () => {
         }
       } catch (error) {
         notify.error('Error al enviar la calibración')
-        console.error('Error al enviar la calibración:', error)
+        logger.error('Error al enviar la calibración:', error)
       }
     }
   })

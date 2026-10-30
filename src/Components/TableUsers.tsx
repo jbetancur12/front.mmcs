@@ -36,6 +36,7 @@ import PasswordRequirements from './Common/PasswordRequirements'
 import { isPasswordValid } from '../utils/passwordPolicy'
 import { showActivationLinkDialog } from '../utils/sweetAlert'
 
+import { logger } from 'src/utils/logger'
 // Define interfaces
 export interface UserData {
   id: number
@@ -60,7 +61,7 @@ const Table: React.FC = () => {
     isFetching
   } = useUsersPaginated<UserData>(server.params, {
     onError: (error) => {
-      console.error('Error fetching user data:', error)
+      logger.error('Error fetching user data:', error)
     }
   })
   useKeepPageInRange(
@@ -99,10 +100,10 @@ const Table: React.FC = () => {
           })
         }
       } else {
-        console.error('Error al crear usuario')
+        logger.error('Error al crear usuario')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 
@@ -151,10 +152,10 @@ const Table: React.FC = () => {
               position: 'top-center'
             })
           } else {
-            console.error('Error al crear usuario')
+            logger.error('Error al crear usuario')
           }
         } catch (error) {
-          console.error('Error de red:', error)
+          logger.error('Error de red:', error)
         }
 
         exitEditingMode() //required to exit editing mode and close modal
@@ -175,10 +176,10 @@ const Table: React.FC = () => {
           position: 'top-center'
         })
       } else {
-        console.error('Error al crear usuario')
+        logger.error('Error al crear usuario')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

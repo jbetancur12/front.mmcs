@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 
+import { logger } from 'src/utils/logger'
 interface Props {
   children: ReactNode
   fallback?: ReactNode
@@ -71,7 +72,7 @@ class LmsErrorBoundaryClass extends Component<Props, State> {
     }
 
     // Log error for debugging
-    console.error('LMS Error Boundary caught an error:', error, errorInfo)
+    logger.error('LMS Error Boundary caught an error:', error, errorInfo)
 
     // Report error to monitoring service (if available)
     this.reportError(error, errorInfo)
@@ -91,7 +92,7 @@ class LmsErrorBoundaryClass extends Component<Props, State> {
       }
 
       // You can integrate with your error reporting service here
-      console.log('Error Report:', errorReport)
+      logger.log('Error Report:', errorReport)
       
       // Example: Send to API endpoint
       // fetch('/api/errors/report', {
@@ -100,7 +101,7 @@ class LmsErrorBoundaryClass extends Component<Props, State> {
       //   body: JSON.stringify(errorReport)
       // }).catch(console.error)
     } catch (reportingError) {
-      console.error('Failed to report error:', reportingError)
+      logger.error('Failed to report error:', reportingError)
     }
   }
 

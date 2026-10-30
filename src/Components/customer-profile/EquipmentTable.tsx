@@ -43,6 +43,7 @@ import {
   StatusFilter
 } from './types'
 
+import { logger } from 'src/utils/logger'
 /** El servidor responde de a 9 equipos por página. */
 const PAGE_SIZE = 9
 
@@ -247,7 +248,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({
       setDeleteTarget(null)
     } catch (error) {
       notify.error('Error al eliminar el equipo')
-      console.error('Error deleting equipment:', error)
+      logger.error('Error deleting equipment:', error)
     } finally {
       setDeleting(false)
     }

@@ -1,6 +1,7 @@
 import { useQuery } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 
+import { logger } from 'src/utils/logger'
 export const customerCalibrationScheduleKey = (
   customerId: number | string | undefined
 ) => ['calibration', 'customerSchedule', customerId] as const
@@ -25,7 +26,7 @@ export const useCustomerCalibrationSchedule = <T>(
       staleTime: 0,
       keepPreviousData: false,
       onError: (error) => {
-        console.error('Error fetching data:', error)
+        logger.error('Error fetching data:', error)
       }
     }
   )

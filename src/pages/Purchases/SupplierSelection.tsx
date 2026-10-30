@@ -30,6 +30,7 @@ import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
 import SupplierSelectionModal from 'src/Components/Purchases/SupplierSelectionModal'
 
+import { logger } from 'src/utils/logger'
 // Definir el tipo para los proveedores
 
 const DECISIONS: Record<
@@ -45,7 +46,7 @@ const DECISIONS: Record<
 const SuppliersSelection: React.FC = () => {
   const { data: suppliers = [], isLoading: loading } = useSupplierSelections()
   const { criteria, categories } = useSupplierSelectionCriteria({
-    onError: (error) => console.error('Error cargando criterios', error)
+    onError: (error) => logger.error('Error cargando criterios', error)
   })
   const [modalOpen, setModalOpen] = useState(false)
 

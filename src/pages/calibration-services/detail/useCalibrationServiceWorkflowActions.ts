@@ -14,6 +14,7 @@ import { useCalibrationServiceMutations } from '../../../hooks/useCalibrationSer
 import { CalibrationServiceDetailDialogs } from './useCalibrationServiceDetailDialogs'
 import { DetailTab } from './calibrationServiceDetailUtils'
 
+import { logger } from 'src/utils/logger'
 type CalibrationServiceMutations = ReturnType<typeof useCalibrationServiceMutations>
 
 interface CalibrationServiceWorkflowActionsParams {
@@ -102,7 +103,7 @@ const useCalibrationServiceWorkflowActions = ({
       await requestApproval.mutateAsync({ serviceId: String(service.id) })
       toast.success('La cotización quedó enviada al cliente.')
     } catch (requestError) {
-      console.error(requestError)
+      logger.error(requestError)
       toast.error(getApiErrorMessage(requestError, 'No pudimos marcar la cotización como enviada al cliente.'))
     }
   }
@@ -112,7 +113,7 @@ const useCalibrationServiceWorkflowActions = ({
       await sendCertificate.mutateAsync({ serviceId: String(service.id) })
       toast.success('El certificado quedó registrado como enviado.')
     } catch (sendError) {
-      console.error(sendError)
+      logger.error(sendError)
       toast.error(getApiErrorMessage(sendError, 'No pudimos registrar el envío del certificado.'))
     }
   }
@@ -245,7 +246,7 @@ const useCalibrationServiceWorkflowActions = ({
 
       setDecisionMode(null)
     } catch (decisionError) {
-      console.error(decisionError)
+      logger.error(decisionError)
       toast.error(
         getApiErrorMessage(
           decisionError,
@@ -294,7 +295,7 @@ const useCalibrationServiceWorkflowActions = ({
               `ods-${updatedService.odsCode || service.serviceCode}.pdf`
           )
         } catch (pdfError) {
-          console.error(pdfError)
+          logger.error(pdfError)
           toast.success('La ODS quedó emitida y el semáforo ya está activo.')
           toast.error(
             'La ODS se emitió, pero no pudimos generar el PDF oficial.'
@@ -306,7 +307,7 @@ const useCalibrationServiceWorkflowActions = ({
 
       setIsOdsDialogOpen(false)
     } catch (odsError) {
-      console.error(odsError)
+      logger.error(odsError)
       toast.error(getApiErrorMessage(odsError, 'No pudimos emitir la ODS.'))
     }
   }
@@ -358,7 +359,7 @@ const useCalibrationServiceWorkflowActions = ({
       setIsScheduleDialogOpen(false)
       setActiveTab('operations')
     } catch (scheduleError) {
-      console.error(scheduleError)
+      logger.error(scheduleError)
       toast.error(getApiErrorMessage(scheduleError, 'No pudimos guardar la programación del servicio.'))
     }
   }
@@ -394,7 +395,7 @@ const useCalibrationServiceWorkflowActions = ({
       setIsRescheduleDialogOpen(false)
       setActiveTab('operations')
     } catch (rescheduleError) {
-      console.error(rescheduleError)
+      logger.error(rescheduleError)
       toast.error(getApiErrorMessage(rescheduleError, 'No pudimos registrar la reprogramación del servicio.'))
     }
   }
@@ -432,7 +433,7 @@ const useCalibrationServiceWorkflowActions = ({
       setIsReassignDialogOpen(false)
       setActiveTab('operations')
     } catch (reassignError) {
-      console.error(reassignError)
+      logger.error(reassignError)
       toast.error(getApiErrorMessage(reassignError, 'No pudimos reasignar el metrólogo.'))
     }
   }
@@ -455,7 +456,7 @@ const useCalibrationServiceWorkflowActions = ({
       toast.success('El servicio quedó pausado.')
       setIsPauseDialogOpen(false)
     } catch (pauseError) {
-      console.error(pauseError)
+      logger.error(pauseError)
       toast.error(getApiErrorMessage(pauseError, 'No pudimos pausar el servicio.'))
     }
   }
@@ -473,7 +474,7 @@ const useCalibrationServiceWorkflowActions = ({
       toast.success('El servicio quedó reanudado.')
       setIsResumeDialogOpen(false)
     } catch (resumeError) {
-      console.error(resumeError)
+      logger.error(resumeError)
       toast.error(getApiErrorMessage(resumeError, 'No pudimos reanudar el servicio.'))
     }
   }
@@ -497,7 +498,7 @@ const useCalibrationServiceWorkflowActions = ({
       setIsCancelDialogOpen(false)
       setActiveTab('summary')
     } catch (cancelError) {
-      console.error(cancelError)
+      logger.error(cancelError)
       toast.error(getApiErrorMessage(cancelError, 'No pudimos cancelar el servicio.'))
     }
   }
@@ -512,7 +513,7 @@ const useCalibrationServiceWorkflowActions = ({
       toast.success('La ejecución del servicio quedó iniciada.')
       setActiveTab('operations')
     } catch (executionError) {
-      console.error(executionError)
+      logger.error(executionError)
       toast.error(getApiErrorMessage(executionError, 'No pudimos iniciar la ejecución del servicio.'))
     }
   }
@@ -527,7 +528,7 @@ const useCalibrationServiceWorkflowActions = ({
       toast.success('La ejecución técnica quedó finalizada.')
       setActiveTab('operations')
     } catch (completeError) {
-      console.error(completeError)
+      logger.error(completeError)
       toast.error(getApiErrorMessage(completeError, 'No pudimos finalizar técnicamente el servicio.'))
     }
   }
@@ -547,7 +548,7 @@ const useCalibrationServiceWorkflowActions = ({
       setIsCloseDialogOpen(false)
       setActiveTab('summary')
     } catch (closeError) {
-      console.error(closeError)
+      logger.error(closeError)
       toast.error(getApiErrorMessage(closeError, 'No pudimos cerrar el servicio.'))
     }
   }
@@ -564,7 +565,7 @@ const useCalibrationServiceWorkflowActions = ({
       })
       toast.success('Recepción conforme guardada.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos guardar la recepción conforme.'))
     }
   }
@@ -581,7 +582,7 @@ const useCalibrationServiceWorkflowActions = ({
       toast.success('Cliente de ejecución actualizado.')
       setIsExecutionCustomerDialogOpen(false)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos actualizar el cliente de ejecución.'))
     }
   }
@@ -600,7 +601,7 @@ const useCalibrationServiceWorkflowActions = ({
       toast.success('El avance técnico por ítem quedó actualizado.')
       return true
     } catch (progressError) {
-      console.error(progressError)
+      logger.error(progressError)
       toast.error(getApiErrorMessage(progressError, 'No pudimos guardar el avance técnico por ítem.'))
       return false
     }
@@ -615,7 +616,7 @@ const useCalibrationServiceWorkflowActions = ({
       toast.success('Los consecutivos iniciales quedaron configurados.')
       setIsSequenceDialogOpen(false)
     } catch (configError) {
-      console.error(configError)
+      logger.error(configError)
       toast.error(getApiErrorMessage(configError, 'No pudimos guardar la configuración inicial del módulo.'))
     }
   }

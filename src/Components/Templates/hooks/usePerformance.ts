@@ -1,6 +1,7 @@
 // Custom hooks for performance optimization
 import { useMemo, useCallback, useRef, useEffect, useState } from 'react'
 
+import { logger } from 'src/utils/logger'
 // Hook for expensive computations with dependency tracking
 export const useExpensiveComputation = <T>(
   computeFn: () => T,
@@ -45,7 +46,7 @@ export const useStableCallback = <T extends (...args: any[]) => any>(
     if (process.env.NODE_ENV === 'development') {
       const timeSinceLastCall = now - lastCallTime.current
       if (timeSinceLastCall < 100 && callCount.current > 1) {
-        console.warn(
+        logger.warn(
           `Callback called ${callCount.current} times in ${timeSinceLastCall}ms`
         )
       }
@@ -133,13 +134,13 @@ export const usePerformanceMonitor = (componentName: string) => {
     if (process.env.NODE_ENV === 'development') {
       // Log slow renders
       if (renderTime > 16) {
-        console.warn(`${componentName} slow render: ${renderTime.toFixed(2)}ms`)
+        logger.warn(`${componentName} slow render: ${renderTime.toFixed(2)}ms`)
       }
 
       // Log excessive re-renders
       if (renderCount.current > 10) {
         const totalTime = now - mountTime.current
-        console.warn(
+        logger.warn(
           `${componentName} rendered ${renderCount.current} times in ${totalTime.toFixed(2)}ms`
         )
       }

@@ -29,6 +29,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import { PURCHASE_TEAL } from 'src/Components/Purchases/purchaseTableStyle'
 import { PurchaseVerification } from './Types'
 
+import { logger } from 'src/utils/logger'
 /* Interfaces de Tipos */
 
 /* Función para obtener las verificaciones */
@@ -38,7 +39,7 @@ const fetchPurchaseVerifications = async (
   const { data } = await axiosPrivate.get<PurchaseVerification[]>(
     '/purchaseVerifications'
   )
-  console.log('PurchaseVerificationsTable loaded', data)
+  logger.log('PurchaseVerificationsTable loaded', data)
   return data
 }
 
@@ -232,7 +233,7 @@ const PurchaseVerificationsTable: React.FC = () => {
       // // Aquí puedes invalidar la query para refrescar los datos
       queryClient.invalidateQueries('purchaseVerifications')
     } catch (error) {
-      console.error('Error al actualizar:', error)
+      logger.error('Error al actualizar:', error)
     }
   }
 

@@ -38,6 +38,7 @@ import {
 import { NumericFormat } from 'react-number-format'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface AssignedItem {
   purchaseRequestItemId: string
   description: string
@@ -155,7 +156,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
       onSuccess()
       onClose()
     } catch (error) {
-      console.error('Error generating purchase order:', error)
+      logger.error('Error generating purchase order:', error)
       notify.error('Error', 'No se pudo generar la orden de compra.')
     }
   }

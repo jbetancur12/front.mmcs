@@ -43,6 +43,7 @@ import useMaintenanceTicketFeedback from './useMaintenanceTicketFeedback'
 import useMaintenanceFilePreview from './useMaintenanceFilePreview'
 import useMaintenanceTicketEditing from './useMaintenanceTicketEditing'
 
+import { logger } from 'src/utils/logger'
 /**
  * Estado y acciones del detalle de un ticket de mantenimiento: datos del
  * ticket, permisos, edición, comentarios, archivos, firmas, PDFs y tiempo real.
@@ -155,7 +156,7 @@ const useMaintenanceTicketDetails = () => {
     enabled: realTimeUpdatesEnabled,
     onTicketUpdate: (updatedTicket) => {
       if (updatedTicket.id === ticketId) {
-        console.log('Ticket updated via WebSocket:', updatedTicket)
+        logger.log('Ticket updated via WebSocket:', updatedTicket)
         setLastUpdate(new Date())
         refetchTicket()
         refetchTimeline()
@@ -164,7 +165,7 @@ const useMaintenanceTicketDetails = () => {
     },
     onNotification: (notification) => {
       if (notification.ticketId === ticketId) {
-        console.log('New notification for this ticket:', notification)
+        logger.log('New notification for this ticket:', notification)
         setLastUpdate(new Date())
         refetchTicket()
         refetchTimeline()
@@ -250,7 +251,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTimeline()
       showToast('Ticket actualizado exitosamente', 'success')
     } catch (error: any) {
-      console.error('Error updating ticket:', error)
+      logger.error('Error updating ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al actualizar el ticket'
@@ -344,7 +345,7 @@ const useMaintenanceTicketDetails = () => {
         'success'
       )
     } catch (error: any) {
-      console.error('Error completing ticket:', error)
+      logger.error('Error completing ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al completar el ticket'
@@ -354,7 +355,7 @@ const useMaintenanceTicketDetails = () => {
   }
 
   const handleInvoice = async () => {
-    console.log(ticket)
+    logger.log(ticket)
     if (!ticket) return
 
     try {
@@ -369,7 +370,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTimeline()
       showToast('Ticket completado exitosamente', 'success')
     } catch (error: any) {
-      console.error('Error completing ticket:', error)
+      logger.error('Error completing ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al completar el ticket'
@@ -392,7 +393,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTimeline()
       showToast('Comentario agregado exitosamente', 'success')
     } catch (error) {
-      console.error('Error adding comment:', error)
+      logger.error('Error adding comment:', error)
       showToast('Error al agregar comentario', 'error')
       throw error
     }
@@ -439,7 +440,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTimeline()
       showToast('Firmas registradas exitosamente', 'success')
     } catch (error: any) {
-      console.error('Error saving signatures:', error)
+      logger.error('Error saving signatures:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al guardar las firmas'
@@ -468,7 +469,7 @@ const useMaintenanceTicketDetails = () => {
         'success'
       )
     } catch (error: any) {
-      console.error('Error revoking customer signature:', error)
+      logger.error('Error revoking customer signature:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al revocar la firma del cliente'
@@ -491,7 +492,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTimeline()
       showToast('Comentario actualizado exitosamente', 'success')
     } catch (error) {
-      console.error('Error updating comment:', error)
+      logger.error('Error updating comment:', error)
       showToast('Error al actualizar comentario', 'error')
       throw error
     }
@@ -504,7 +505,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTimeline()
       showToast('Comentario eliminado', 'success')
     } catch (error) {
-      console.error('Error deleting comment:', error)
+      logger.error('Error deleting comment:', error)
       showToast('Error al eliminar comentario', 'error')
       throw error
     }
@@ -523,7 +524,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTimeline()
       showToast(`${files.length} archivo(s) subido(s) exitosamente`, 'success')
     } catch (error) {
-      console.error('Error uploading files:', error)
+      logger.error('Error uploading files:', error)
       showToast('Error al subir archivos', 'error')
     }
   }
@@ -553,7 +554,7 @@ const useMaintenanceTicketDetails = () => {
           await refetchTimeline()
           showToast('Archivo eliminado exitosamente', 'success')
         } catch (error) {
-          console.error('Error deleting file:', error)
+          logger.error('Error deleting file:', error)
           showToast('Error al eliminar archivo', 'error')
         }
       },
@@ -568,7 +569,7 @@ const useMaintenanceTicketDetails = () => {
         setPdfMenuAnchor(null)
       },
       onError: (error) => {
-        console.error('Error generating service order:', error)
+        logger.error('Error generating service order:', error)
         showToast('Error al generar orden de servicio', 'error')
       }
     })
@@ -590,7 +591,7 @@ const useMaintenanceTicketDetails = () => {
         setPdfMenuAnchor(null)
       },
       onError: (error) => {
-        console.error('Error generating technical report:', error)
+        logger.error('Error generating technical report:', error)
         showToast('Error al generar reporte técnico', 'error')
       }
     })
@@ -610,7 +611,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTicket()
       showToast('Reporte técnico guardado exitosamente', 'success')
     } catch (error: any) {
-      console.error('Error saving technical report:', error)
+      logger.error('Error saving technical report:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al guardar el reporte técnico'

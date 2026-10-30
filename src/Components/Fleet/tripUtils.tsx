@@ -1,6 +1,7 @@
 import { Trip } from './types'
 import { isAxiosError, type AxiosInstance } from 'axios'
 
+import { logger } from 'src/utils/logger'
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   // Verifica si el valor es una fecha válida y no es una cadena vacía
@@ -51,13 +52,13 @@ export const addTripWithInspection = async (
   } catch (error) {
     // Maneja el error de manera adecuada
     if (isAxiosError(error)) {
-      console.error('Error response:', error.response?.data)
+      logger.error('Error response:', error.response?.data)
       return Promise.reject(error.response?.data || 'An error occurred')
     } else if (error instanceof Error) {
-      console.error('Unexpected error:', error.message)
+      logger.error('Unexpected error:', error.message)
       return Promise.reject(error.message || 'An unexpected error occurred')
     } else {
-      console.error('Unexpected non-error:', error)
+      logger.error('Unexpected non-error:', error)
       return Promise.reject('An unexpected error occurred')
     }
   }
@@ -100,13 +101,13 @@ export const updateTripWithInspection = async (
   } catch (error) {
     // Maneja el error de manera adecuada
     if (isAxiosError(error)) {
-      console.error('Error response:', error.response?.data)
+      logger.error('Error response:', error.response?.data)
       return Promise.reject(error.response?.data || 'An error occurred')
     } else if (error instanceof Error) {
-      console.error('Unexpected error:', error.message)
+      logger.error('Unexpected error:', error.message)
       return Promise.reject(error.message || 'An unexpected error occurred')
     } else {
-      console.error('Unexpected non-error:', error)
+      logger.error('Unexpected non-error:', error)
       return Promise.reject('An unexpected error occurred')
     }
   }

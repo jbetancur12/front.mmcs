@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createContext, useContext, ReactNode } from 'react'
 import { DeviceReadingPayload } from 'src/Components/Iot/DeviceIotMap/types'
 
+import { logger } from 'src/utils/logger'
 type MessageType =
   | 'REAL_TIME_DATA'
   | 'ALARM_UPDATE'
@@ -98,10 +99,10 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const connectWebSocket = useCallback(() => {
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      console.log('Connecting to WebSocket...', protocol)
+      logger.log('Connecting to WebSocket...', protocol)
 
       if (wsRef.current?.readyState === WebSocket.OPEN) {
-        console.log('WebSocket already connected')
+        logger.log('WebSocket already connected')
         return
       }
 
@@ -117,7 +118,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       wsRef.current = socket
 
       socket.onopen = () => {
-        console.log('WebSocket connected')
+        logger.log('WebSocket connected')
         setStatus('connected')
         reconnectDelayRef.current = 2000
         // Clear any reconnect timeout
@@ -127,21 +128,21 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       }
 
       socket.onclose = () => {
-        console.log('WebSocket closed')
+        logger.log('WebSocket closed')
         setStatus('closed')
         // Reintenta también tras un error de red, con espera creciente (2 s → 30 s)
         if (!unmountedRef.current) {
           const delay = reconnectDelayRef.current
           reconnectDelayRef.current = Math.min(delay * 2, 30000)
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Attempting to reconnect WebSocket...')
+            logger.log('Attempting to reconnect WebSocket...')
             connectWebSocket()
           }, delay)
         }
       }
 
       socket.onerror = (error) => {
-        console.error('WebSocket error:', error)
+        logger.error('WebSocket error:', error)
         setStatus('error')
         socket.close()
       }
@@ -154,7 +155,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
             try {
               listener(message)
             } catch (listenerError) {
-              console.error('Error in WebSocket listener:', listenerError)
+              logger.error('Error in WebSocket listener:', listenerError)
             }
           })
 
@@ -186,11 +187,11 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
               break
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error)
+          logger.error('Error parsing WebSocket message:', error)
         }
       }
     } catch (error) {
-      console.error('Failed to connect to WebSocket:', error)
+      logger.error('Failed to connect to WebSocket:', error)
       setStatus('error')
     }
   }, [])

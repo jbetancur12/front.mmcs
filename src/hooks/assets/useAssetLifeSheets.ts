@@ -12,6 +12,7 @@ import type {
   AssetLifeSheet
 } from 'src/types/assetLifeSheet'
 
+import { logger } from 'src/utils/logger'
 export const ASSET_LIFE_SHEETS_QUERY_KEYS = {
   all: ['assetLifeSheets'] as const,
   list: ['assetLifeSheets', 'list'] as const,
@@ -58,7 +59,7 @@ export const useAssetLifeSheets = (options: { enabled?: boolean } = {}) => {
     {
       enabled: options.enabled ?? true,
       onError: (error) => {
-        console.error(error)
+        logger.error(error)
         notify.error('No se pudieron cargar los activos')
       }
     }
@@ -79,7 +80,7 @@ export const useAssetLifeSheetsPaginated = (params: ServerListParams) => {
     {
       keepPreviousData: true,
       onError: (error) => {
-        console.error(error)
+        logger.error(error)
         notify.error('No se pudieron cargar los activos')
       }
     }

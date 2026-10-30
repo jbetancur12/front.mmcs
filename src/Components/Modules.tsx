@@ -33,6 +33,7 @@ import ConfirmDialog from './Common/ConfirmDialog'
 import EmptyState from './Common/EmptyState'
 import StatusPill from './Common/StatusPill'
 
+import { logger } from 'src/utils/logger'
 interface CustomerModulesProps {
   customerId?: string | number
 }
@@ -74,7 +75,7 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
       )
     } catch (error) {
       notify.error('Error al actualizar el módulo')
-      console.error('Error updating module:', error)
+      logger.error('Error updating module:', error)
     } finally {
       setUpdating(null)
       setPendingOff(null)

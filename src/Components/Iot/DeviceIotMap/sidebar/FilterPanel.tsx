@@ -25,6 +25,7 @@ import { userStore } from '@stores/userStore'
 import { useStore } from '@nanostores/react'
 
 import { ROLES, hasAnyRole } from 'src/constants/roles'
+import { logger } from 'src/utils/logger'
 // Componente Chip personalizado con icono y tooltip
 const FilterChip = ({
   value,
@@ -128,7 +129,7 @@ export const FilterPanel = ({
           label: item.nombre
         }))
       } catch (error) {
-        console.error('Error al cargar opciones:', error)
+        logger.error('Error al cargar opciones:', error)
         throw error
       }
     }, 1000),

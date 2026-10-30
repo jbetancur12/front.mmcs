@@ -17,6 +17,7 @@ import useAxiosPrivate from '@utils/use-axios-private' // Tu hook de Axios priva
 import { ApiDeviceData } from './LaboratoryMonitor'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface DeleteConfirmDialogProps {
   open: boolean
   onClose: () => void
@@ -47,7 +48,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
     {
       // onSuccess recibe el resultado de la mutación (void en este caso) y la variable que pasaste a mutate (el ID)
       onSuccess: (_, deletedId) => {
-        console.log(`Sensor with ID ${deletedId} deleted successfully.`)
+        logger.log(`Sensor with ID ${deletedId} deleted successfully.`)
         // 1. Llamar al callback para notificar al padre
         onSensorDeleted(deletedId)
         // 2. Cerrar el diálogo
@@ -66,7 +67,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
       },
       onError: (error: any) => {
         // El tipo 'any' es temporal
-        console.error(`Error deleting sensor with ID ${sensorId}:`, error)
+        logger.error(`Error deleting sensor with ID ${sensorId}:`, error)
         const apiErrorMessage =
           getApiErrorReason(error) ||
           error.message ||
@@ -88,7 +89,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
       // Comprobar si no es null
       deleteSensorMutation.mutate(sensorId) // Ejecutar la mutación con el ID (number)
     } else {
-      console.warn('Attempted to confirm delete with null sensorId.')
+      logger.warn('Attempted to confirm delete with null sensorId.')
       // Opcional: mostrar un error al usuario si el ID es null
     }
   }

@@ -1,5 +1,6 @@
 import { TableState } from '../hooks/usePersistentTableState'
 
+import { logger } from 'src/utils/logger'
 // Table configuration by module
 export interface ModuleTableConfig {
   defaultPageSize: number
@@ -130,7 +131,7 @@ export const getAllTableStates = (): Record<string, any> => {
           tableStates[key] = JSON.parse(state)
         }
       } catch (error) {
-        console.warn(`Invalid table state for key ${key}:`, error)
+        logger.warn(`Invalid table state for key ${key}:`, error)
       }
     }
   })

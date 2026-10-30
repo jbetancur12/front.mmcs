@@ -37,6 +37,7 @@ import {
 } from '../../types/calibrationService'
 import { getApiErrorMessage } from '../../utils/apiError'
 
+import { logger } from 'src/utils/logger'
 interface Props {
   serviceId: string
 }
@@ -92,7 +93,7 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
       toast.success(`Equipo ${selected.internalCode || ''} dejado en préstamo.`)
       resetOutForm()
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos registrar el equipo de préstamo.'))
     }
   }
@@ -118,7 +119,7 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
       toast.success(`Equipo ${returnTarget.internalCode || ''} devuelto.`)
       setReturnTarget(null)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos registrar el retorno del equipo.'))
     }
   }
@@ -133,7 +134,7 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
       await cancelLoan.mutateAsync({ serviceId, loanId: loan.id })
       toast.success('Préstamo anulado.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos anular el préstamo.'))
     }
   }

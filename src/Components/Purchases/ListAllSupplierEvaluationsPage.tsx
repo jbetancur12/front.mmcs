@@ -40,6 +40,7 @@ import SupplierEvaluationForm, {
 import { isAxiosError } from 'axios'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 // Interfaz para el objeto de evaluación como se espera de la API (con proveedor anidado)
 interface EvaluationWithSupplier extends SupplierEvaluationData {
   supplier?: Pick<Supplier, 'id' | 'name' | 'taxId'>
@@ -112,7 +113,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
       // No necesitas URL.revokeObjectURL(fileURL) inmediatamente si se abre en una nueva pestaña,
       // el navegador usualmente lo maneja al cerrar la pestaña.
     } catch (err) {
-      console.error('Error al generar o mostrar el reporte PDF:', err)
+      logger.error('Error al generar o mostrar el reporte PDF:', err)
       let message = 'No se pudo generar el reporte PDF.'
       if (isAxiosError(err) && getApiErrorReason(err)) {
         message = getApiErrorReason(err) ?? message

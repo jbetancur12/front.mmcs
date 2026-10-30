@@ -27,6 +27,7 @@ import { fetchMinioObjectBlob } from '@utils/minio'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
+import { logger } from 'src/utils/logger'
 export interface FileData {
   name: string
   title: string
@@ -114,7 +115,7 @@ const Repository = () => {
         })
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 
@@ -133,7 +134,7 @@ const Repository = () => {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Error downloading file from Minio:', error)
+      logger.error('Error downloading file from Minio:', error)
     }
   }
 
@@ -143,7 +144,7 @@ const Repository = () => {
 
       return URL.createObjectURL(blob)
     } catch (error) {
-      console.error('Error opening Excel file in viewer:', error)
+      logger.error('Error opening Excel file in viewer:', error)
       throw error
     }
   }
@@ -184,7 +185,7 @@ const Repository = () => {
         }
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

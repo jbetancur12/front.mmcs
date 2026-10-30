@@ -15,6 +15,7 @@ import {
   PurchaseVerificationItem
 } from 'src/pages/Purchases/Types'
 
+import { logger } from 'src/utils/logger'
 export interface PurchaseVerificationData {
   receivedDate: string
   invoiceNumber: string
@@ -92,7 +93,7 @@ const CreatePurchaseVerificationModal: React.FC<
       handleClose()
     } catch (err: any) {
       setError('Error creating verification.')
-      console.error(err)
+      logger.error(err)
     }
   }
 

@@ -29,6 +29,7 @@ import ScoreSelect, { ScoreSummary } from 'src/Components/Common/ScoreSelect'
 import RiskBadge from 'src/Components/Common/RiskBadge'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 type TabKey = 'hallazgo' | 'evaluacion' | 'riesgo' | 'acciones' | 'cierre'
 
 /** Pestañas del formulario y los campos validados que contiene cada una. */
@@ -280,7 +281,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
           try {
             return !(await checkCodeExists(value)) // true si NO existe
           } catch (error) {
-            console.error('Error checking TNC code:', error)
+            logger.error('Error checking TNC code:', error)
             return true // En caso de error, permitir continuar
           }
         }

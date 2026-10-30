@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import { axiosPublic } from '@utils/api'
 import useRefreshToken from '@utils/use-refresh-token'
 
+import { logger } from 'src/utils/logger'
 interface SessionExpiryBannerProps {
   finalWarningMsBefore?: number
   warningMsBefore?: number
@@ -59,7 +60,7 @@ const SessionExpiryBanner = ({
     try {
       await axiosPublic.post('/auth/logout', {})
     } catch (error) {
-      console.error('Error al cerrar sesión por expiración:', error)
+      logger.error('Error al cerrar sesión por expiración:', error)
     }
 
     Cookies.remove('expiresIn')
@@ -78,7 +79,7 @@ const SessionExpiryBanner = ({
       sessionStorage.removeItem('session-expiry-banner-dismissed')
       setDismissedKey(null)
     } catch (error) {
-      console.error('Error al renovar la sesión manualmente:', error)
+      logger.error('Error al renovar la sesión manualmente:', error)
       await handleSessionExpired()
     } finally {
       setIsRenewingSession(false)

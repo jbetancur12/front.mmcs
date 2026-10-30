@@ -5,6 +5,7 @@ import {
   MaintenanceRecord
 } from 'src/Components/Fleet/types'
 
+import { logger } from 'src/utils/logger'
 export const FLEET_QUERY_KEYS = {
   inspections: (vehicleId: number | string | undefined) =>
     ['fleet', 'inspections', vehicleId] as const,
@@ -32,7 +33,7 @@ export const useVehicleInspections = (vehicleId?: number | string) => {
       staleTime: 0,
       keepPreviousData: false,
       onError: (error) => {
-        console.error('Error fetching inspections:', error)
+        logger.error('Error fetching inspections:', error)
       }
     }
   )
@@ -56,7 +57,7 @@ export const useVehicleMaintenanceRecords = (vehicleId?: number | string) => {
       staleTime: 0,
       keepPreviousData: false,
       onError: (error) => {
-        console.error('Error fetching maintenance records:', error)
+        logger.error('Error fetching maintenance records:', error)
       }
     }
   )
@@ -111,7 +112,7 @@ export const useCalibrationTimelinePdf = (customerId?: string) => {
       refetchOnWindowFocus: false,
       retry: false,
       onError: (error) => {
-        console.error('Error al obtener el PDF:', error)
+        logger.error('Error al obtener el PDF:', error)
       }
     }
   )

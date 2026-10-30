@@ -5,6 +5,7 @@ import {
   MaintenanceNotification
 } from '../types/maintenance'
 
+import { logger } from 'src/utils/logger'
 interface MaintenanceWebSocketMessage {
   type: 'ticket_updated' | 'notification' | 'technician_status_changed'
   data: any
@@ -40,7 +41,7 @@ export const useMaintenanceWebSocket = ({
 
     const token = localStorage.getItem('token')
     if (!token) {
-      console.warn('No token found, skipping WebSocket connection')
+      logger.warn('No token found, skipping WebSocket connection')
       return
     }
 
@@ -51,7 +52,7 @@ export const useMaintenanceWebSocket = ({
       wsRef.current = new WebSocket(wsWithToken)
 
       wsRef.current.onopen = () => {
-        console.log('Maintenance WebSocket connected')
+        logger.log('Maintenance WebSocket connected')
         reconnectAttempts.current = 0
 
         // Send ping to confirm connection
@@ -68,12 +69,12 @@ export const useMaintenanceWebSocket = ({
           const message: MaintenanceWebSocketMessage = JSON.parse(event.data)
           handleWebSocketMessage(message)
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error)
+          logger.error('Error parsing WebSocket message:', error)
         }
       }
 
       wsRef.current.onclose = (event) => {
-        console.log(
+        logger.log(
           'Maintenance WebSocket connection closed:',
           event.code,
           event.reason
@@ -91,7 +92,7 @@ export const useMaintenanceWebSocket = ({
           )
           reconnectAttempts.current++
 
-          console.log(
+          logger.log(
             `Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`
           )
 
@@ -102,10 +103,10 @@ export const useMaintenanceWebSocket = ({
       }
 
       wsRef.current.onerror = (error) => {
-        console.error('Maintenance WebSocket error:', error)
+        logger.error('Maintenance WebSocket error:', error)
       }
     } catch (error) {
-      console.error('Error creating WebSocket connection:', error)
+      logger.error('Error creating WebSocket connection:', error)
     }
   }, [enabled])
 
@@ -125,7 +126,7 @@ export const useMaintenanceWebSocket = ({
           break
 
         default:
-          console.log('Unknown WebSocket message type:', message.type)
+          logger.log('Unknown WebSocket message type:', message.type)
       }
     },
     [onNotification, onTicketUpdate, queryClient]

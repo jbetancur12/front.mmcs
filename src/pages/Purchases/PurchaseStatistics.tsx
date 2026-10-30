@@ -24,6 +24,7 @@ import { usePurchaseStatistics } from 'src/hooks/purchases/usePurchaseStatistics
 import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+import { logger } from 'src/utils/logger'
 interface PurchaseStatistics {
   overview: {
     totalRequests: number
@@ -77,7 +78,7 @@ const PurchaseStatistics = () => {
     error: statisticsError,
     refetch: refetchStatistics
   } = usePurchaseStatistics<PurchaseStatistics>({
-    onError: (err) => console.error('Error fetching purchase statistics:', err)
+    onError: (err) => logger.error('Error fetching purchase statistics:', err)
   })
 
   const loading = statisticsLoading || rangeLoading
@@ -103,10 +104,10 @@ const PurchaseStatistics = () => {
       
       const response = await axiosPrivate.get('/purchase-statistics/date-range', { params })
       // Handle date range specific response here if needed
-      console.log('Date range statistics:', response.data)
+      logger.log('Date range statistics:', response.data)
       
     } catch (err: any) {
-      console.error('Error fetching date range statistics:', err)
+      logger.error('Error fetching date range statistics:', err)
       setRangeError(getApiErrorReason(err) || 'Error al cargar las estadísticas por fecha')
     } finally {
       setRangeLoading(false)

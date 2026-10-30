@@ -12,6 +12,7 @@ import CircularProgress from '@mui/material/CircularProgress' // Indicador de ca
 
 import { useMutation, useQueryClient } from 'react-query' // Importar useMutation y useQueryClient
 import useAxiosPrivate from '@utils/use-axios-private' // Tu hook de Axios privado
+import { logger } from 'src/utils/logger'
 
 // Definir la interfaz para los datos que enviamos al backend para crear
 interface CreateSensorData {
@@ -59,7 +60,7 @@ const AddSensorModal: React.FC<AddSensorModalProps> = ({
         .then((res) => res.data),
     {
       onSuccess: (newSensor) => {
-        console.log('Sensor created successfully:', newSensor)
+        logger.log('Sensor created successfully:', newSensor)
         // 1. Llamar al callback para notificar al componente padre
         onSensorAdded(newSensor)
         // 2. Limpiar el formulario
@@ -81,7 +82,7 @@ const AddSensorModal: React.FC<AddSensorModalProps> = ({
       },
       onError: (error: any) => {
         // El tipo 'any' es temporal, idealmente tipar el error de Axios
-        console.error('Error creating sensor:', error)
+        logger.error('Error creating sensor:', error)
         // Puedes intentar extraer un mensaje de error más amigable de la respuesta de Axios
         const apiErrorMessage =
           getApiErrorReason(error) ||

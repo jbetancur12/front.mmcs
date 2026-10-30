@@ -10,6 +10,7 @@ import { customerProfileKeys, DEFAULT_AVATAR } from './constants'
 import { notify as appNotify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
+import { logger } from 'src/utils/logger'
 // Sin reintentos: el `retry: 1` global de mutaciones reenviaría POST/PUT/DELETE.
 const NO_RETRY = { retry: 0 }
 
@@ -90,7 +91,7 @@ export const useCustomerProfileActions = (
           )
         }
       } catch (error) {
-        console.error('Error al eliminar el certificado:', error)
+        logger.error('Error al eliminar el certificado:', error)
         notify.error('Error al eliminar el certificado')
         throw error
       }
@@ -111,7 +112,7 @@ export const useCustomerProfileActions = (
         try {
           await uploadAvatar.mutateAsync(formData)
         } catch (error) {
-          console.error('Error al enviar la imagen al backend:', error)
+          logger.error('Error al enviar la imagen al backend:', error)
           setImage(DEFAULT_AVATAR)
         }
       } else {
@@ -133,7 +134,7 @@ export const useCustomerProfileActions = (
           invalidateCustomer()
         }
       } catch (error) {
-        console.error('Error al agregar sede:', error)
+        logger.error('Error al agregar sede:', error)
         notify.error('Error al agregar sede')
       }
     },
@@ -152,7 +153,7 @@ export const useCustomerProfileActions = (
           invalidateCustomer()
         }
       } catch (error) {
-        console.error('Error al actualizar sede:', error)
+        logger.error('Error al actualizar sede:', error)
         notify.error('Error al actualizar sede')
       }
     },
@@ -181,7 +182,7 @@ export const useCustomerProfileActions = (
           invalidateCustomer()
         }
       } catch (error) {
-        console.error('Error al eliminar sede:', error)
+        logger.error('Error al eliminar sede:', error)
         if ((error as AxiosError)?.response?.status === 409) {
           appNotify.error(
             'No se puede eliminar',
@@ -202,7 +203,7 @@ export const useCustomerProfileActions = (
         `Cliente ${newStatus ? 'activado' : 'desactivado'} con éxito`
       )
     } catch (error) {
-      console.error('Error updating customer status:', error)
+      logger.error('Error updating customer status:', error)
       notify.error('Error al actualizar el estado del cliente')
     }
   }
@@ -214,7 +215,7 @@ export const useCustomerProfileActions = (
       notify.success('Curso LMS asignado con éxito')
       return true
     } catch (error) {
-      console.error('Error al asignar curso LMS:', error)
+      logger.error('Error al asignar curso LMS:', error)
       notify.error('Error al asignar el curso LMS')
       return false
     }
@@ -228,7 +229,7 @@ export const useCustomerProfileActions = (
         await removeLmsCourse.mutateAsync(courseId)
         notify.success('Curso LMS removido con éxito')
       } catch (error) {
-        console.error('Error al quitar curso LMS:', error)
+        logger.error('Error al quitar curso LMS:', error)
         notify.error('Error al quitar el curso LMS')
       }
     },

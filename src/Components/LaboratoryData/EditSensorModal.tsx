@@ -16,6 +16,7 @@ import useAxiosPrivate from '@utils/use-axios-private' // Tu hook de Axios priva
 // Importar la interfaz ApiDeviceData desde LaboratoryMonitor
 import { ApiDeviceData } from './LaboratoryMonitor'
 
+import { logger } from 'src/utils/logger'
 // Interfaz para los datos que enviamos al backend para actualizar
 // name es obligatorio, location y color son opcionales al enviar
 interface UpdateSensorData {
@@ -97,7 +98,7 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
     },
     {
       onSuccess: (updatedSensor) => {
-        console.log('Sensor updated successfully:', updatedSensor)
+        logger.log('Sensor updated successfully:', updatedSensor)
         // 1. Llamar al callback para notificar al componente padre
         onSensorUpdated(updatedSensor)
         // 2. Cerrar el modal
@@ -118,7 +119,7 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
       },
       onError: (error: any) => {
         // El tipo 'any' es temporal, idealmente tipar el error de Axios
-        console.error('Error updating sensor:', error)
+        logger.error('Error updating sensor:', error)
         // Intentar extraer un mensaje de error más amigable de la respuesta de Axios
         const apiErrorMessage =
           getApiErrorReason(error) ||

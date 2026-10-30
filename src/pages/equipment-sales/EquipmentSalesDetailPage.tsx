@@ -50,6 +50,7 @@ import {
   DetailSection
 } from 'src/Components/Common/DetailBlocks'
 import { confirmDialog } from 'src/utils/confirm'
+import { logger } from 'src/utils/logger'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -171,13 +172,13 @@ const EquipmentSalesDetailPage = () => {
       try {
         await mutations.generateQuotePdf.mutateAsync(quotation.id)
       } catch (pdfError) {
-        console.error(pdfError)
+        logger.error(pdfError)
         toast.error('La cotización se envió, pero no se pudo regenerar el PDF.')
         return
       }
       toast.success('La cotización quedó marcada como enviada al cliente.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos enviar la cotización.')
     }
   }
@@ -253,7 +254,7 @@ const EquipmentSalesDetailPage = () => {
 
       setDecisionMode(null)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(
         decisionMode === 'approve'
           ? 'No pudimos registrar la aprobación del cliente.'
@@ -276,7 +277,7 @@ const EquipmentSalesDetailPage = () => {
         document.originalFileName || `cotizacion-${quotation.quoteCode}.pdf`
       )
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos generar la cotización PDF.')
     }
   }
@@ -297,7 +298,7 @@ const EquipmentSalesDetailPage = () => {
       anchor.click()
       window.URL.revokeObjectURL(objectUrl)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos descargar el documento.')
     }
   }
@@ -311,7 +312,7 @@ const EquipmentSalesDetailPage = () => {
       const objectUrl = window.URL.createObjectURL(blob as Blob)
       window.open(objectUrl, '_blank', 'noopener,noreferrer')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos abrir el documento.')
     }
   }
@@ -323,7 +324,7 @@ const EquipmentSalesDetailPage = () => {
       await mutations.readyForInvoice.mutateAsync(quotation.id)
       toast.success('La cotización quedó lista para facturar.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos marcar la cotización.')
     }
   }
@@ -335,7 +336,7 @@ const EquipmentSalesDetailPage = () => {
       await mutations.invoiceQuotation.mutateAsync(quotation.id)
       toast.success('La cotización quedó facturada.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos facturar la cotización.')
     }
   }
@@ -350,7 +351,7 @@ const EquipmentSalesDetailPage = () => {
       })
       toast.success('La cotización quedó cancelada.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error('No pudimos cancelar la cotización.')
     }
   }
@@ -1087,7 +1088,7 @@ const EquipmentSalesDetailPage = () => {
             toast.success('El consecutivo inicial quedó configurado.')
             setIsSequenceDialogOpen(false)
           } catch (error) {
-            console.error(error)
+            logger.error(error)
             toast.error('No pudimos guardar la configuración.')
           }
         }}

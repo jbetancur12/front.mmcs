@@ -3,6 +3,7 @@ import { axiosPrivate } from '@utils/api'
 import { UserData } from '../Components/TableOwnUsers'
 import type { AssignableRole } from '../Components/own-users/types'
 import { AxiosError } from 'axios'
+import { logger } from 'src/utils/logger'
 
 // Query Keys
 export const QUERY_KEYS = {
@@ -129,7 +130,7 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries([QUERY_KEYS.USERS])
     },
     onError: (error) => {
-      console.error('Error creating user:', error)
+      logger.error('Error creating user:', error)
       // Error handling will be done in the component
     },
     retry: (failureCount, error) => {
@@ -166,7 +167,7 @@ export const useUserMutations = () => {
       if (context?.previousUsers) {
         queryClient.setQueryData([QUERY_KEYS.USERS], context.previousUsers)
       }
-      console.error('Error updating user:', error)
+      logger.error('Error updating user:', error)
     },
     onSettled: () => {
       // Always refetch after error or success to ensure server state
@@ -202,7 +203,7 @@ export const useUserMutations = () => {
       if (context?.previousUsers) {
         queryClient.setQueryData([QUERY_KEYS.USERS], context.previousUsers)
       }
-      console.error('Error deleting user:', error)
+      logger.error('Error deleting user:', error)
     },
     onSettled: () => {
       // Always refetch after error or success to ensure server state

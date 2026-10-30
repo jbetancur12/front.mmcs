@@ -30,6 +30,7 @@ import { es } from 'date-fns/locale'
 
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
+import { logger } from 'src/utils/logger'
 interface MaintenanceCommentsListProps {
   comments: MaintenanceComment[]
   onAddComment: (comment: string, isInternal: boolean) => Promise<void>
@@ -91,7 +92,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       setNewComment('')
       setIsInternal(false)
     } catch (error) {
-      console.error('Error adding comment:', error)
+      logger.error('Error adding comment:', error)
     } finally {
       setSubmitting(false)
     }
@@ -192,7 +193,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       await onUpdateComment(comment.id, editingContent.trim(), comment.isInternal)
       handleCancelEdit()
     } catch (error) {
-      console.error('Error updating comment:', error)
+      logger.error('Error updating comment:', error)
     }
   }
 
@@ -200,7 +201,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
     try {
       await onDeleteComment(commentId)
     } catch (error) {
-      console.error('Error deleting comment:', error)
+      logger.error('Error deleting comment:', error)
     }
   }
 

@@ -46,6 +46,7 @@ import FormDialog from './Common/FormDialog'
 import { notify } from 'src/utils/notify'
 import ResetPasswordModal from './ResetPasswordModal'
 
+import { logger } from 'src/utils/logger'
 // Define interfaces
 export interface UserData {
   id: number
@@ -88,7 +89,7 @@ const Table: React.FC = () => {
   const { data: tableData = [], isLoading: loading } =
     useCustomerUsers<UserData>(id, {
       onError: (error) => {
-        console.error('Error fetching user data:', error)
+        logger.error('Error fetching user data:', error)
       }
     })
   const registerUser = useRegisterUser<UserData>()
@@ -118,7 +119,7 @@ const Table: React.FC = () => {
         notify.error('Error al crear usuario')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
       notify.error('Error al crear usuario')
     }
   }
@@ -129,7 +130,7 @@ const Table: React.FC = () => {
       const info = await fetchActivationLink(target.id)
       await showActivationLinkDialog(info)
     } catch (error) {
-      console.error('Error obteniendo enlace de activación:', error)
+      logger.error('Error obteniendo enlace de activación:', error)
       notify.error('No se pudo generar el enlace de activación')
     }
   }
@@ -139,7 +140,7 @@ const Table: React.FC = () => {
       const info = await resendActivationEmail(target.id)
       await showActivationLinkDialog(info)
     } catch (error) {
-      console.error('Error reenviando activación:', error)
+      logger.error('Error reenviando activación:', error)
       notify.error('No se pudo reenviar la activación')
     }
   }
@@ -157,7 +158,7 @@ const Table: React.FC = () => {
         notify.error('Error al actualizar la contraseña')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
       notify.error('Error al actualizar la contraseña')
     }
   }
@@ -188,7 +189,7 @@ const Table: React.FC = () => {
         notify.error('Error al modificar usuario')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
       notify.error('Error al modificar usuario')
     }
   }
@@ -203,7 +204,7 @@ const Table: React.FC = () => {
         notify.error('Error al eliminar usuario')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
       notify.error('Error al eliminar usuario')
     } finally {
       setDeleteTarget(null)
@@ -220,7 +221,7 @@ const Table: React.FC = () => {
         `Usuario ${!user.active ? 'activado' : 'desactivado'} con éxito`
       )
     } catch (error) {
-      console.error('Error al cambiar estado del usuario:', error)
+      logger.error('Error al cambiar estado del usuario:', error)
       notify.error('Error al actualizar el estado del usuario')
     }
   }

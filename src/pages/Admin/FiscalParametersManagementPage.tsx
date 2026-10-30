@@ -48,6 +48,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
+import { logger } from 'src/utils/logger'
 // Interfaz para los parámetros fiscales
 interface FiscalParameter {
   id: number
@@ -177,7 +178,7 @@ const FiscalParametersManagementPage: React.FC = () => {
     err: unknown,
     operationMessage: string
   ) => {
-    console.error(`Error en ${operationMessage}:`, err)
+    logger.error(`Error en ${operationMessage}:`, err)
     let errorMessage = `Error durante ${operationMessage}.`
     if (isAxiosError(err) && err.response?.data) {
       const data = err.response.data

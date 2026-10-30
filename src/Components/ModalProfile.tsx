@@ -12,6 +12,7 @@ import FormDialog, { FormDialogSection } from 'src/Components/Common/FormDialog'
 import FileDropZone from 'src/Components/Common/FileDropZone'
 import { useCreateProfile } from 'src/hooks/profiles/useProfiles'
 
+import { logger } from 'src/utils/logger'
 interface ModalProfileProps {
   open: boolean
   onClose: () => void
@@ -114,7 +115,7 @@ const ModalProfile: React.FC<ModalProfileProps> = ({ open, onClose }) => {
         toast.error('Error al crear el perfil')
       }
     } catch (error) {
-      console.error('Error al enviar la solicitud:', error)
+      logger.error('Error al enviar la solicitud:', error)
       toast.error('Error al crear el perfil')
     } finally {
       setLoading(false)

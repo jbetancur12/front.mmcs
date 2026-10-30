@@ -5,6 +5,7 @@ import { Download, OpenInNew, PictureAsPdf } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { buildMinioObjectUrl } from '@utils/minio'
 
+import { logger } from 'src/utils/logger'
 const PDFViewer = ({
   path,
   bucket = 'first-bucket',
@@ -73,7 +74,7 @@ const PDFViewer = ({
           setLoading(false)
         }
       } catch (loadError) {
-        console.error('Error loading PDF preview:', loadError)
+        logger.error('Error loading PDF preview:', loadError)
 
         if (isMounted) {
           setViewerUrl('')

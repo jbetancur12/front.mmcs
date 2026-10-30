@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { axiosPrivate } from '@utils/api'
 import toast from 'react-hot-toast'
 
+import { logger } from 'src/utils/logger'
 interface ImpersonationUser {
   id: number
   name: string
@@ -101,7 +102,7 @@ export const useImpersonation = () => {
       setTimeout(() => { window.location.href = '/' }, 500)
     } catch (error) {
       toast.error('No se pudo suplantar al usuario.', { id: 'impersonation' })
-      console.error('Error starting impersonation:', error)
+      logger.error('Error starting impersonation:', error)
       throw error
     }
   }, [])
@@ -133,7 +134,7 @@ export const useImpersonation = () => {
 
       setTimeout(() => { window.location.href = '/' }, 500)
     } catch (error) {
-      console.error('Error stopping impersonation:', error)
+      logger.error('Error stopping impersonation:', error)
       // Aunque falle, limpiar estado local para desbloquear la UI
       localStorage.removeItem(STORAGE_KEY_IMPERSONATOR)
       localStorage.removeItem(STORAGE_KEY_TARGET)

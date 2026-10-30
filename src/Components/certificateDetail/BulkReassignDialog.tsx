@@ -21,6 +21,7 @@ import {
 import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface PreviewData {
   totalAffected: number
   sourceDevice: { name: string }
@@ -116,7 +117,7 @@ const BulkReassignDialog: React.FC<BulkReassignDialogProps> = ({
       setPreview(data)
       setStep('preview')
     } catch (previewError) {
-      console.error('Error en la vista previa del cambio masivo:', previewError)
+      logger.error('Error en la vista previa del cambio masivo:', previewError)
       setError('No se pudo preparar la vista previa del cambio.')
     } finally {
       setBusy(false)
@@ -131,7 +132,7 @@ const BulkReassignDialog: React.FC<BulkReassignDialogProps> = ({
       notify.success(`Se reasignaron ${updated} certificado(s) correctamente`)
       onClose()
     } catch (applyError) {
-      console.error('Error en el cambio masivo:', applyError)
+      logger.error('Error en el cambio masivo:', applyError)
       setError('No se pudo completar el cambio masivo de equipo.')
     } finally {
       setBusy(false)

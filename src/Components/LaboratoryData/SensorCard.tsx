@@ -17,6 +17,7 @@ import { format, parseISO, isValid } from 'date-fns' // Import date-fns function
 // Importar interfaces necesarias
 // Asegúrate que la ruta de importación sea correcta
 import { ApiDeviceData } from './LaboratoryMonitor'
+import { logger } from 'src/utils/logger'
 // Ya no se necesita la interfaz SensorStatistics aquí
 
 interface SensorCardProps {
@@ -39,13 +40,13 @@ const formatLastSeen = (timestamp: string | null | undefined): string => {
     // Verifica si la fecha es válida después de parsear
     if (!isValid(date)) {
       // Usar isValid de date-fns
-      console.warn('Invalid date format received for lastSeen:', timestamp)
+      logger.warn('Invalid date format received for lastSeen:', timestamp)
       return 'Fecha inválida'
     }
     // Formato deseado (ej: YYYY-MM-DD HH:mm:ss)
     return format(date, 'yyyy-MM-dd HH:mm:ss')
   } catch (e) {
-    console.error('Error formatting date:', timestamp, e)
+    logger.error('Error formatting date:', timestamp, e)
     return 'Error fecha'
   }
 }

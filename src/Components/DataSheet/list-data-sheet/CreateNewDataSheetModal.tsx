@@ -25,6 +25,7 @@ import {
 import { DataSheetData } from './types'
 import { useDataSheetMutations } from './useDataSheets'
 
+import { logger } from 'src/utils/logger'
 interface CreateModalProps {
   columns: MRT_ColumnDef<DataSheetData>[]
   onClose: () => void
@@ -71,7 +72,7 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
         }
       } catch (error) {
         notify.error('Error al crear la Hoja de Datos')
-        console.error('Error al crear la Hoja de Datos:', error)
+        logger.error('Error al crear la Hoja de Datos:', error)
       }
     }
   })

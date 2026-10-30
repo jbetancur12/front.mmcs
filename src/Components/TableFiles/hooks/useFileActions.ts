@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 export const useFileActions = (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>,
   fetchFiles: (options?: { force?: boolean }) => Promise<void>
@@ -14,7 +15,7 @@ export const useFileActions = (
         await fetchFiles({ force: true })
       } catch (error) {
         notify.error('Error al eliminar archivo')
-        console.error('Delete error:', error)
+        logger.error('Delete error:', error)
       }
     },
     [axiosPrivate, fetchFiles]

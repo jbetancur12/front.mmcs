@@ -15,6 +15,7 @@ import { AddDeviceModalProps } from '../types/deviceTypes'
 import { DeviceIot } from '../../types'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 const validationSchema = Yup.object().shape({
   imei: Yup.string()
     .required('IMEI es requerido')
@@ -77,7 +78,7 @@ const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
           handleClose()
         }
       } catch (error) {
-        console.error('Error creating device:', error)
+        logger.error('Error creating device:', error)
         notify.error('Error', 'No se pudo crear el dispositivo')
       }
     }

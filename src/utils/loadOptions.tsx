@@ -1,5 +1,6 @@
 import { axiosPrivate } from './api'
 
+import { logger } from 'src/utils/logger'
 export const loadOptions = async <T,>(
   inputValue: string,
   resource: string,
@@ -17,7 +18,7 @@ export const loadOptions = async <T,>(
 
         resolve(options) // Aplicar la función de mapeo
       } catch (error) {
-        console.error('Error al cargar opciones:', error)
+        logger.error('Error al cargar opciones:', error)
         reject(error)
       }
     }

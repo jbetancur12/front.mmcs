@@ -30,6 +30,7 @@ import { useCreateMaintenanceTicket } from '../../hooks/useMaintenance'
 import MaintenanceFileUpload from '../../Components/Maintenance/MaintenanceFileUpload'
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 
+import { logger } from 'src/utils/logger'
 const validationSchema = Yup.object({
   customerName: Yup.string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -111,7 +112,7 @@ const MaintenanceReport: React.FC = () => {
         setFiles([])
         setActiveStep(0)
       } catch (error: any) {
-        console.error('Maintenance form submission error:', error)
+        logger.error('Maintenance form submission error:', error)
         let errorMessage = 'Error al enviar la solicitud. Intente nuevamente.'
 
         if (getApiErrorReason(error)) {

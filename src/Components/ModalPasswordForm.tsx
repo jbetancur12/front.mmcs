@@ -15,6 +15,7 @@ import { api } from '../config'
 import { notify } from 'src/utils/notify'
 import { Delete, Visibility, VisibilityOff } from '@mui/icons-material'
 
+import { logger } from 'src/utils/logger'
 const apiUrl = api()
 
 interface ModalPasswordFormProps {
@@ -60,7 +61,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
       staleTime: 0,
       refetchOnWindowFocus: false,
       onError: (error) => {
-        console.error('Error fetching settings:', error)
+        logger.error('Error fetching settings:', error)
       }
     }
   )
@@ -95,7 +96,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
       notify.success('Contraseñas creadas con éxito')
       onCloseModal()
     } catch (error) {
-      console.error('Error updating settings:', error)
+      logger.error('Error updating settings:', error)
     }
   }
 
@@ -133,7 +134,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
       notify.success('Contraseñas actualizadas con éxito')
       setShowUpdateButton(false)
     } catch (error) {
-      console.error('Error updating settings:', error)
+      logger.error('Error updating settings:', error)
     }
   }
 

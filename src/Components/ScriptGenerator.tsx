@@ -4,6 +4,7 @@ import { Button, Container, TextField } from '@mui/material'
 import { api } from '../config'
 import axios from 'axios'
 
+import { logger } from 'src/utils/logger'
 const apiUrl = api()
 
 const ScriptGenerator: React.FC = () => {
@@ -45,7 +46,7 @@ const ScriptGenerator: React.FC = () => {
           document.body.removeChild(link)
         })
     } catch (error) {
-      console.error(error)
+      logger.error(error)
     }
 
     // Aquí puedes enviar los datos al servidor para generar el script de PowerShell
@@ -75,7 +76,7 @@ const ScriptGenerator: React.FC = () => {
           document.body.removeChild(link)
         })
     } catch (error) {
-      console.error(error)
+      logger.error(error)
     }
 
     // Aquí puedes enviar los datos al servidor para generar el script de PowerShell

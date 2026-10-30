@@ -46,6 +46,7 @@ import SupplierEvaluationForm from 'src/Components/Purchases/SupplierEvaluationF
 import SupplierPurchaseHistoryTable from 'src/Components/Purchases/SupplierPurchaseHistoryTable'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
 export interface Supplier {
   id: number
@@ -217,7 +218,7 @@ const SupplierDetailsPage: React.FC = () => {
       setFilesToUpload(currentDocTypes.map((doc) => ({ ...doc, file: null })))
     },
     onError: (err) => {
-      console.error('Error fetching supplier details:', err)
+      logger.error('Error fetching supplier details:', err)
     }
   })
 
@@ -322,7 +323,7 @@ const SupplierDetailsPage: React.FC = () => {
         )
       },
       onError: (error, variables) => {
-        console.error('Error uploading document:', error)
+        logger.error('Error uploading document:', error)
         notify.error('Error', `Error al subir ${variables.documentTypeLabel}.`)
       }
     }
@@ -358,7 +359,7 @@ const SupplierDetailsPage: React.FC = () => {
         // El estado local 'applyRetention' se actualiza optimistamente o en el onSuccess de useQuery
       },
       onError: (error, newRetentionValue) => {
-        console.error('Error updating retention status:', error)
+        logger.error('Error updating retention status:', error)
         notify.error('Error', 'No se pudo actualizar el estado de retención.')
         setApplyRetention(!newRetentionValue) // Revertir cambio en UI
       }
@@ -399,7 +400,7 @@ const SupplierDetailsPage: React.FC = () => {
     fileMimeType?: string
   ) => {
     if (!documentId) {
-      console.error('handleViewDocument: No documentId provided')
+      logger.error('handleViewDocument: No documentId provided')
       notify.error('Error', 'No se pudo obtener el ID del documento.')
       return
     }
@@ -441,7 +442,7 @@ const SupplierDetailsPage: React.FC = () => {
       if (isAxiosError(error)) {
         // Verifica si es un error específico de Axios
         // errorToLog = error.toJSON ? error.toJSON() : error; // .toJSON() da una representación más limpia para logs
-        console.error(
+        logger.error(
           'Error de Axios al obtener el documento:',
           error.response?.data || error.message,
           error
@@ -473,7 +474,7 @@ const SupplierDetailsPage: React.FC = () => {
           }
         } else if (error.request) {
           // La petición se hizo pero no se recibió respuesta (ej. error de red)
-          console.error(
+          logger.error(
             'Error de red o sin respuesta del servidor:',
             error.request
           )
@@ -487,7 +488,7 @@ const SupplierDetailsPage: React.FC = () => {
         }
       } else if (error instanceof Error) {
         // Es un error de JavaScript estándar (no de Axios)
-        console.error(
+        logger.error(
           'Error general al obtener el documento:',
           error.message,
           error
@@ -495,7 +496,7 @@ const SupplierDetailsPage: React.FC = () => {
         errorMessage = error.message
       } else {
         // Se lanzó algo que no es un objeto Error (raro, pero posible)
-        console.error('Error desconocido al obtener el documento:', error)
+        logger.error('Error desconocido al obtener el documento:', error)
         errorMessage =
           'Ocurrió un error inesperado durante la solicitud del documento.'
       }

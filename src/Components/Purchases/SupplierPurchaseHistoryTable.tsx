@@ -26,6 +26,7 @@ import { isAxiosError } from 'axios'
 import { notify } from 'src/utils/notify'
 import { busyDialog } from 'src/utils/confirm'
 
+import { logger } from 'src/utils/logger'
 interface SupplierPurchaseHistoryTableProps {
   supplierId: string | number
 }
@@ -87,7 +88,7 @@ const SupplierPurchaseHistoryTable: React.FC<
           try {
             newWindow.document.title = `Orden ${orderCode} - FOGC-MMCS-13`
           } catch (e) {
-            console.warn('No se pudo cambiar el título de la pestaña.')
+            logger.warn('No se pudo cambiar el título de la pestaña.')
           }
         }, 500)
       } else {
@@ -98,7 +99,7 @@ const SupplierPurchaseHistoryTable: React.FC<
       }
     } catch (err) {
       busyDialog.hide()
-      console.error(
+      logger.error(
         `Error obteniendo el reporte PDF para la orden ID ${purchaseOrderId}:`,
         err
       )

@@ -26,6 +26,7 @@ import ResolutionAndExactitude from './Components/ResolutionAndExactitude'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { fetchMinioObjectBlob } from '@utils/minio'
 
+import { logger } from 'src/utils/logger'
 const ExcelManipulation: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const [formData, setFormData] = useState(initialFormData)
@@ -96,7 +97,7 @@ const ExcelManipulation: React.FC = () => {
           })
           toast.success('Certificado creado correctamente')
         } catch (error) {
-          console.error('Error al subir el archivo:', error)
+          logger.error('Error al subir el archivo:', error)
         }
 
         if (checked) {
@@ -111,7 +112,7 @@ const ExcelManipulation: React.FC = () => {
           document.body.removeChild(a)
         }
       } catch (error) {
-        console.error(error)
+        logger.error(error)
         toast.error('No se pudo descargar la plantilla seleccionada')
       } finally {
         setLoading(false)

@@ -1,6 +1,7 @@
 import { useQuery } from 'react-query'
 import { lmsService } from 'src/services/lmsService'
 
+import { logger } from 'src/utils/logger'
 export interface ManageableQuizOption {
   id: number
   title: string
@@ -25,7 +26,7 @@ const fetchManageableQuizzes = async (): Promise<ManageableQuizOption[]> => {
       try {
         return await lmsService.getCourse(course.id)
       } catch (error) {
-        console.warn(`No se pudo cargar el detalle del curso ${course.id}`, error)
+        logger.warn(`No se pudo cargar el detalle del curso ${course.id}`, error)
         return null
       }
     })

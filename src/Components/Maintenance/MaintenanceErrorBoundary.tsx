@@ -2,6 +2,7 @@ import React, { Component, ReactNode } from 'react'
 import { Box, Paper, Typography, Button, Alert } from '@mui/material'
 import { Error as ErrorIcon, Refresh } from '@mui/icons-material'
 
+import { logger } from 'src/utils/logger'
 interface Props {
   children: ReactNode
 }
@@ -26,7 +27,7 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error(
+    logger.error(
       'Maintenance Error Boundary caught an error:',
       error,
       errorInfo

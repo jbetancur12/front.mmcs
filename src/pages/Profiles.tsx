@@ -33,6 +33,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import EmptyState from 'src/Components/Common/EmptyState'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 
+import { logger } from 'src/utils/logger'
 export interface Profile {
   id: number
   name: string
@@ -66,7 +67,7 @@ const Profiles: React.FC = () => {
 
   const { data: rawProfiles, isLoading: loading } = useProfiles({
     onError: (error) => {
-      console.error('Error al cargar los perfiles:', error)
+      logger.error('Error al cargar los perfiles:', error)
       toast.error('Error al cargar los perfiles')
     }
   })
@@ -91,7 +92,7 @@ const Profiles: React.FC = () => {
       }
       setProfileToDelete(null)
     } catch (error) {
-      console.error('Error al eliminar el perfil:', error)
+      logger.error('Error al eliminar el perfil:', error)
       toast.error('No se pudo eliminar el perfil. Inténtalo de nuevo.')
     }
   }

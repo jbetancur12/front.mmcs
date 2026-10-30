@@ -25,6 +25,7 @@ import { isAxiosError } from 'axios'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
 interface Supplier {
   id: number
@@ -68,7 +69,7 @@ const SupplierEditPage: React.FC = () => {
         setFormData(data)
       },
       onError: (err) => {
-        console.error('Error fetching supplier details for edit:', err)
+        logger.error('Error fetching supplier details for edit:', err)
         // Opcional: Mostrar un error al usuario
         notify.error(
           'Error',
@@ -97,7 +98,7 @@ const SupplierEditPage: React.FC = () => {
         navigate(`/purchases/suppliers/details/${supplierId}`)
       },
       onError: (error) => {
-        console.error('Error updating supplier:', error)
+        logger.error('Error updating supplier:', error)
         let errorMessage = 'Error al actualizar el proveedor.'
         if (isAxiosError(error) && getApiErrorReason(error)) {
           errorMessage = getApiErrorReason(error) ?? errorMessage
@@ -145,7 +146,7 @@ const SupplierEditPage: React.FC = () => {
     if (supplierId && formData) {
       updateSupplierMutation.mutate(formData)
     } else {
-      console.error('Cannot submit: supplierId or formData missing', {
+      logger.error('Cannot submit: supplierId or formData missing', {
         supplierId,
         formData
       })

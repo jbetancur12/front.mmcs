@@ -35,6 +35,7 @@ import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 import { busyDialog } from 'src/utils/confirm'
+import { logger } from 'src/utils/logger'
 export interface CustomerData {
   id?: number
   nombre: string
@@ -65,7 +66,7 @@ const CustomersTable: React.FC = () => {
       { scope: 'all' },
       {
         onError: (error) => {
-          console.error('Error fetching customer data:', error)
+          logger.error('Error fetching customer data:', error)
           notify.error('Error', 'No se pudieron cargar los clientes')
         }
       }
@@ -89,7 +90,7 @@ const CustomersTable: React.FC = () => {
         setCreateModalOpen(false)
       }
     } catch (error) {
-      console.error('Error al crear cliente:', error)
+      logger.error('Error al crear cliente:', error)
       notify.error(
         'Error',
         'No se pudo crear el cliente. Por favor intenta nuevamente.'
@@ -118,7 +119,7 @@ const CustomersTable: React.FC = () => {
         setSelectedCustomer(null)
       }
     } catch (error) {
-      console.error('Error al actualizar cliente:', error)
+      logger.error('Error al actualizar cliente:', error)
       notify.error(
         'Error',
         'No se pudo actualizar el cliente. Por favor intenta nuevamente.'
@@ -157,7 +158,7 @@ const CustomersTable: React.FC = () => {
         )
       }
     } catch (error) {
-      console.error('Error al eliminar cliente:', error)
+      logger.error('Error al eliminar cliente:', error)
 
       notify.error(
         'Error',

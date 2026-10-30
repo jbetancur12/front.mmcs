@@ -30,6 +30,7 @@ import {
   DetailSection
 } from 'src/Components/Common/DetailBlocks'
 
+import { logger } from 'src/utils/logger'
 // Definir los tipos para los valores del formulario
 export interface InspectionMaintenanceData {
   equipmentId: string | number
@@ -262,7 +263,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
         }
       } catch (error) {
         notify.error('Error al enviar mantenimiento/inspección')
-        console.error('Error al enviar mantenimiento/inspección:', error)
+        logger.error('Error al enviar mantenimiento/inspección:', error)
       }
     }
   })

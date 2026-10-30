@@ -10,6 +10,7 @@ import { AssignableRole, UserData } from './types'
 import { FormErrorsAlert, RolesField, UserTextField } from './UserFormFields'
 import { useUserForm } from './useUserForm'
 
+import { logger } from 'src/utils/logger'
 interface EditModalProps {
   open: boolean
   onClose: () => void
@@ -83,7 +84,7 @@ const EditUserModal: React.FC<EditModalProps> = ({
       })
       form.resetState()
     } catch (error) {
-      console.error('Error in edit modal submit:', error)
+      logger.error('Error in edit modal submit:', error)
     }
   }
 

@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { api } from 'src/config'
 
+import { logger } from 'src/utils/logger'
 export const axiosPublic = axios.create({
   baseURL: api(),
   withCredentials: true,
@@ -14,7 +15,7 @@ export const axiosPublic = axios.create({
 axiosPublic.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error)
+    logger.error('API Error:', error)
     return Promise.reject(error)
   }
 )

@@ -59,6 +59,7 @@ import {
   useFetchAllCertificates
 } from './customer-profile/useCustomerProfileData'
 
+import { logger } from 'src/utils/logger'
 export type { Certificate } from './customer-profile/types'
 
 // Modern Customer Profile Component
@@ -195,7 +196,7 @@ const ModernCustomerProfile: React.FC = () => {
         await exportToExcel(allData, customerData?.nombre)
       }
     } catch (error) {
-      console.error('Error al descargar Excel:', error)
+      logger.error('Error al descargar Excel:', error)
       notify.error('Error al descargar el archivo Excel')
     } finally {
       setIsDownloading(false)
@@ -213,7 +214,7 @@ const ModernCustomerProfile: React.FC = () => {
       const allData = await fetchAllDataForDownload('all')
       await exportOverviewReport(customerData, allData, stats)
     } catch (error) {
-      console.error('Error al descargar reporte completo:', error)
+      logger.error('Error al descargar reporte completo:', error)
       notify.error('Error al descargar el reporte completo')
     } finally {
       setIsDownloading(false)
@@ -230,12 +231,12 @@ const ModernCustomerProfile: React.FC = () => {
 
   const handleTabChange = useCallback(
     (newTab: TabValue) => {
-      console.log('handleTabChange called:', { currentTab: activeTab, newTab })
+      logger.log('handleTabChange called:', { currentTab: activeTab, newTab })
       const newSearchParams = new URLSearchParams(searchParams)
       newSearchParams.set('tab', newTab)
       setSearchParams(newSearchParams)
       setActiveTab(newTab)
-      console.log('Tab changed to:', newTab)
+      logger.log('Tab changed to:', newTab)
     },
     [searchParams, setSearchParams, activeTab]
   )

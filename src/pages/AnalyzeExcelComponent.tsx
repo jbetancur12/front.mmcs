@@ -27,6 +27,7 @@ import { useUploadRawCertificate } from '@hooks/calibration/useUploadRawCertific
 import { notify } from 'src/utils/notify'
 import { choiceDialog } from 'src/utils/confirm'
 
+import { logger } from 'src/utils/logger'
 // Importa los componentes de MUI
 
 const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
@@ -119,7 +120,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
           resolve(options) // Aplica la función de mapeo
         } catch (error) {
-          console.error('Error al cargar opciones:', error)
+          logger.error('Error al cargar opciones:', error)
           reject(error)
         }
       }
@@ -138,15 +139,15 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
       workbook = await XlsxPopulate.fromDataAsync(file)
     } catch (initialError) {
-      console.log('Error: ', initialError)
-      console.log('Failed to open file without password, trying passwords...')
+      logger.log('Error: ', initialError)
+      logger.log('Failed to open file without password, trying passwords...')
 
       for (const password of passwords) {
         try {
           workbook = await XlsxPopulate.fromDataAsync(file, { password })
           break
         } catch (error) {
-          console.log(`Failed to open file with password: ${password}`)
+          logger.log(`Failed to open file with password: ${password}`)
         }
       }
     }
@@ -357,7 +358,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
       return customers
     } catch (error) {
-      console.error('Error while searching for device:', error)
+      logger.error('Error while searching for device:', error)
       return []
     }
   }
@@ -370,7 +371,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       const devices = response.data
       return devices
     } catch (error) {
-      console.error('Error while searching for device:', error)
+      logger.error('Error while searching for device:', error)
       return []
     }
   }
@@ -547,7 +548,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             )
           }
       }
-      console.error('Error al enviar datos:', error)
+      logger.error('Error al enviar datos:', error)
     } finally {
       setLoading(false)
     }

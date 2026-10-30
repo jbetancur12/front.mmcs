@@ -39,6 +39,7 @@ import PDFViewer from './PDFViewer'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { logger } from 'src/utils/logger'
 type Certificate = CertificateHistoryItem
 
 function CertificatesList() {
@@ -128,7 +129,7 @@ function CertificatesList() {
         notify.success('Certificado eliminado con éxito')
       }
     } catch (error) {
-      console.error('Error al eliminar el certificado:', error)
+      logger.error('Error al eliminar el certificado:', error)
     }
   }
 

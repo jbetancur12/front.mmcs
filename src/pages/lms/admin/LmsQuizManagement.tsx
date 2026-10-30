@@ -65,6 +65,7 @@ import LmsQuizComponent from '../components/LmsQuizComponent'
 import { notify } from 'src/utils/notify'
 import { notify as appNotify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface QuizQuestion {
   id: number
   question: string
@@ -198,7 +199,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       refetchOnMount: 'always',
       retry: 1,
       onSuccess: (quiz) => {
-        console.log('✅ Quiz loaded from backend:', quiz)
+        logger.log('✅ Quiz loaded from backend:', quiz)
 
         // Map backend quiz to frontend state
         setQuizConfig({
@@ -228,7 +229,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         })
       },
       onError: (error: any) => {
-        console.error('❌ Error loading quiz:', error)
+        logger.error('❌ Error loading quiz:', error)
       }
     }
   )
@@ -247,7 +248,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         (error as AxiosError | undefined)?.response?.status !== 429 && failureCount < 1,
       refetchInterval: 30000, // Refresh every 30 seconds when on analytics tab
       onError: (error: any) => {
-        console.error('❌ Error loading quiz stats:', error)
+        logger.error('❌ Error loading quiz stats:', error)
       }
     }
   )
@@ -287,7 +288,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     },
     {
       onSuccess: (quiz) => {
-        console.log('✅ Quiz saved successfully:', quiz)
+        logger.log('✅ Quiz saved successfully:', quiz)
 
         // Invalidate queries
         queryClient.invalidateQueries(['quiz', quiz.id])
@@ -299,7 +300,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         }
       },
       onError: (error: any) => {
-        console.error('❌ Error saving quiz:', error)
+        logger.error('❌ Error saving quiz:', error)
       }
     }
   )
@@ -324,11 +325,11 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       staleTime: 3 * 60 * 1000, // 3 minutes
       refetchOnMount: 'always', // <--- fuerza re-fetch cada vez que el componente monta
       onSuccess: (data) => {
-        console.log('✅ Question bank loaded from API:', data)
+        logger.log('✅ Question bank loaded from API:', data)
         setQuestionBank(data.data || [])
       },
       onError: (error: any) => {
-        console.error('❌ Error loading question bank:', error)
+        logger.error('❌ Error loading question bank:', error)
         appNotify.error('Error', 'Error al cargar el banco de preguntas')
       }
     }
@@ -337,7 +338,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   // Sync questionBankData with questionBank state
   useEffect(() => {
     if (questionBankData?.data) {
-      console.log('🔄 Syncing question bank data:', questionBankData.data)
+      logger.log('🔄 Syncing question bank data:', questionBankData.data)
       setQuestionBank(questionBankData.data)
     }
   }, [questionBankData])
@@ -346,7 +347,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     if (!loadedQuiz) return
 
     const quiz = loadedQuiz
-    console.log('✅ Quiz (effect) loaded:', quiz)
+    logger.log('✅ Quiz (effect) loaded:', quiz)
 
     setQuizConfig({
       id: quiz.id,
@@ -387,7 +388,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     },
     {
       onSuccess: (data, variables) => {
-        console.log('✅ Question created:', data)
+        logger.log('✅ Question created:', data)
         const createdQuestion = data.data
 
         if (variables.addToQuiz && createdQuestion) {
@@ -424,7 +425,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         setOpenQuestionDialog(false)
       },
       onError: (error: any) => {
-        console.error('❌ Error creating question:', error)
+        logger.error('❌ Error creating question:', error)
         appNotify.error('Error', getApiErrorReason(error) || 'Error al crear la pregunta')
       }
     }
@@ -438,7 +439,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     },
     {
       onSuccess: ({ response, updateQuiz }) => {
-        console.log('✅ Question updated:', response)
+        logger.log('✅ Question updated:', response)
         appNotify.success('Éxito', 'Pregunta actualizada exitosamente')
         queryClient.invalidateQueries(['questionBank'])
 
@@ -456,7 +457,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         setOpenQuestionDialog(false)
       },
       onError: (error: any) => {
-        console.error('❌ Error updating question:', error)
+        logger.error('❌ Error updating question:', error)
         appNotify.error('Error', getApiErrorReason(error) || 'Error al actualizar la pregunta')
       }
     }
@@ -470,12 +471,12 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     },
     {
       onSuccess: () => {
-        console.log('✅ Question deleted')
+        logger.log('✅ Question deleted')
         appNotify.success('Éxito', 'Pregunta eliminada exitosamente')
         queryClient.invalidateQueries(['questionBank'])
       },
       onError: (error: any) => {
-        console.error('❌ Error deleting question:', error)
+        logger.error('❌ Error deleting question:', error)
         appNotify.error('Error', getApiErrorReason(error) || 'Error al eliminar la pregunta')
       }
     }

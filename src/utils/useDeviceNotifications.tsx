@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import useWebSocket, { WebSocketMessage } from './use-websockets'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 export const useDeviceNotifications = () => {
   const { subscribe } = useWebSocket()
 
@@ -20,7 +21,7 @@ export const useDeviceNotifications = () => {
 
       // --- MANEJAR TIMEOUT ---
       if (lastMessage.type === 'DEVICE_CONFIG_TIMEOUT') {
-        console.log('Timeout de configuración del dispositivo:', lastMessage)
+        logger.log('Timeout de configuración del dispositivo:', lastMessage)
         const payload = lastMessage.data
         notify.warning(
           'Sin Confirmación del Dispositivo',

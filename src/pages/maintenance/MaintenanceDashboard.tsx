@@ -85,6 +85,7 @@ import type { CompletionPhotoInput } from '../../Components/Maintenance/Completi
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
+import { logger } from 'src/utils/logger'
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -139,7 +140,7 @@ const MaintenanceDashboard: React.FC = () => {
   // Get technician ID if user is a technician
   const currentTechnicianEmail = useMemo(() => {
     if (!isTechnician) return null
-    console.log('User email:', $userStore)
+    logger.log('User email:', $userStore)
     // Hardcode technician ID 4 for kat34433@laoia.com for testing
     return $userStore.email
   }, [isTechnician, $userStore.email])
@@ -249,12 +250,12 @@ const MaintenanceDashboard: React.FC = () => {
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
     onTicketUpdate: (ticket) => {
-      console.log('Ticket updated via WebSocket:', ticket)
+      logger.log('Ticket updated via WebSocket:', ticket)
       refetchTickets()
       refetchStats()
     },
     onNotification: (notification) => {
-      console.log('New notification:', notification)
+      logger.log('New notification:', notification)
       // You could integrate with a notification system here
     }
   })
@@ -356,7 +357,7 @@ const MaintenanceDashboard: React.FC = () => {
     }
 
     setSelectedTicket(ticket)
-    console.log('🚀 ~ handleEditTicket ~ ticket:', ticket)
+    logger.log('🚀 ~ handleEditTicket ~ ticket:', ticket)
     setEditData({
       status: ticket.status,
       assignedTechnician: ticket.assignedTechnicianId || '',
@@ -399,7 +400,7 @@ const MaintenanceDashboard: React.FC = () => {
       setEditData({})
       showToast('Ticket actualizado exitosamente', 'success')
     } catch (error: any) {
-      console.error('Error updating ticket:', error)
+      logger.error('Error updating ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al actualizar el ticket'
@@ -496,7 +497,7 @@ const MaintenanceDashboard: React.FC = () => {
         'success'
       )
     } catch (error: any) {
-      console.error('Error completing ticket:', error)
+      logger.error('Error completing ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al completar el ticket'
@@ -537,7 +538,7 @@ const MaintenanceDashboard: React.FC = () => {
       refetchStats()
       showToast('Reporte técnico guardado exitosamente', 'success')
     } catch (error: any) {
-      console.error('Error saving technical report:', error)
+      logger.error('Error saving technical report:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al guardar el reporte técnico'
@@ -554,7 +555,7 @@ const MaintenanceDashboard: React.FC = () => {
         showToast('Reporte técnico generado exitosamente', 'success')
       },
       onError: (error: any) => {
-        console.error('Error generating technical report:', error)
+        logger.error('Error generating technical report:', error)
         showToast('Error al generar reporte técnico', 'error')
       }
     })
@@ -576,7 +577,7 @@ const MaintenanceDashboard: React.FC = () => {
       refetchStats()
       showToast('Ticket eliminado exitosamente', 'success')
     } catch (error: any) {
-      console.error('Error deleting ticket:', error)
+      logger.error('Error deleting ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
         'Error al eliminar el ticket'

@@ -67,6 +67,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { busyDialog } from 'src/utils/confirm'
+import { logger } from 'src/utils/logger'
 interface CourseUnit {
   id: number
   title: string
@@ -417,7 +418,7 @@ const LmsCoursePreview: React.FC = () => {
   const handleUnitComplete = async (unitId: number) => {
     if (isPreview || previewMode === 'admin') {
       // En modo preview admin, solo simular
-      console.log('✅ Unidad completada (preview):', unitId);
+      logger.log('✅ Unidad completada (preview):', unitId);
       notify.info('Modo Preview', 'En modo administrador el progreso no se guarda');
       return;
     }
@@ -436,12 +437,12 @@ const LmsCoursePreview: React.FC = () => {
       await queryClient.invalidateQueries(queryKeys.progress.course(parsedCourseId, undefined))
       await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
 
-      console.log('✅ Lección completada exitosamente');
+      logger.log('✅ Lección completada exitosamente');
 
       // Mostrar éxito
       notify.success('¡Lección completada!', 'Tu progreso ha sido guardado. La siguiente lección está desbloqueada.');
     } catch (error: any) {
-      console.error('❌ Error al completar lección:', error);
+      logger.error('❌ Error al completar lección:', error);
 
       notify.error('Error al guardar progreso', getApiErrorReason(error) || 'No se pudo marcar la lección como completada');
     } finally {
@@ -455,14 +456,14 @@ const LmsCoursePreview: React.FC = () => {
 
       // Validar que nextUnit existe
       if (!nextUnit) {
-        console.error('❌ La siguiente unidad no existe');
+        logger.error('❌ La siguiente unidad no existe');
         return;
       }
 
       if (nextUnit.unlocked || isPreview || previewMode === 'admin') {
         setCurrentUnit(currentUnit + 1)
       } else {
-        console.log('⚠️ La siguiente unidad está bloqueada. Completa la unidad actual primero.');
+        logger.log('⚠️ La siguiente unidad está bloqueada. Completa la unidad actual primero.');
         notify.warning('Lección bloqueada', 'Completa la lección actual antes de continuar');
       }
     }
@@ -781,7 +782,7 @@ const LmsCoursePreview: React.FC = () => {
                         const percentage = Math.round((score / totalPoints) * 100);
 
                         if (isPreview || previewMode === 'admin') {
-                          console.log('✅ Quiz completado en preview:', { score, totalPoints, percentage });
+                          logger.log('✅ Quiz completado en preview:', { score, totalPoints, percentage });
                           notify.info('Quiz Completado (Preview)', `Puntuación: ${score}/${totalPoints} (${percentage}%). Modo administrador: el progreso no se guarda`)
                           return;
                         }
@@ -829,7 +830,7 @@ const LmsCoursePreview: React.FC = () => {
                           await queryClient.invalidateQueries(queryKeys.progress.course(parsedCourseId, undefined))
                           await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
 
-                          console.log('✅ Quiz completado exitosamente', {
+                          logger.log('✅ Quiz completado exitosamente', {
                             passed,
                             percentage: backendPercentage
                           });
@@ -840,7 +841,7 @@ const LmsCoursePreview: React.FC = () => {
                           )
                         } catch (error: any) {
                           busyDialog.hide()
-                          console.error('❌ Error al completar quiz:', error);
+                          logger.error('❌ Error al completar quiz:', error);
 
                           notify.error('Error al guardar resultados', getApiErrorReason(error) || 'No se pudo guardar el quiz');
                         }

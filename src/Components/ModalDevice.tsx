@@ -6,6 +6,7 @@ import { axiosPrivate } from '../utils/api'
 import FormDialog from './Common/FormDialog'
 import AsyncSelectField, { AsyncSelectOption } from './Common/AsyncSelectField'
 
+import { logger } from 'src/utils/logger'
 interface ModalDeviceProps {
   open: boolean
   onClose: Dispatch<SetStateAction<boolean>>
@@ -79,10 +80,10 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
         resetForm()
         onClose(false)
       } else {
-        console.error('Error al crear equipo')
+        logger.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

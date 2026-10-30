@@ -20,6 +20,7 @@ import {
   EmojiEvents as TrophyIcon
 } from '@mui/icons-material'
 
+import { logger } from 'src/utils/logger'
 interface QuizQuestion {
   id: number
   question: string
@@ -77,7 +78,7 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
         totalPossiblePoints += question.points
 
         const userAnswer = userAnswers[index]
-        console.log(`🔍 Q${index + 1}:`, {
+        logger.log(`🔍 Q${index + 1}:`, {
           type: question.type,
           userAnswer,
           correctAnswer: question.correctAnswer,
@@ -93,19 +94,19 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
               ? question.correctAnswer
               : [question.correctAnswer]
 
-            console.log(`   Arrays:`, { userArray, correctArray })
+            logger.log(`   Arrays:`, { userArray, correctArray })
 
             const isCorrect = userArray.length === correctArray.length &&
               userArray.every((answer) => correctArray.includes(answer))
 
-            console.log(`   ✓ Correct:`, isCorrect)
+            logger.log(`   ✓ Correct:`, isCorrect)
 
             if (isCorrect) {
               totalScore += question.points
             }
           } else {
             const isCorrect = userAnswer === question.correctAnswer
-            console.log(`   ✓ Correct:`, isCorrect)
+            logger.log(`   ✓ Correct:`, isCorrect)
 
             if (isCorrect) {
               totalScore += question.points

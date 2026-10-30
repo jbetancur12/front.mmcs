@@ -50,6 +50,7 @@ import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import { logger } from 'src/utils/logger'
 const validationSchema = yup.object().shape({
   pictureUrl: yup.mixed().required('Imagen es obligatoria'),
   vin: yup.string().required('Número de Identificación es obligatorio'),
@@ -193,7 +194,7 @@ const Fleet = () => {
         await saveRowEdits.mutateAsync({ ...values, customerId: customerId })
         exitEditingMode()
       } catch (error) {
-        console.error('Error al guardar la edición:', error)
+        logger.error('Error al guardar la edición:', error)
       }
     },
     [saveRowEdits]
@@ -334,14 +335,14 @@ const Fleet = () => {
               refetch()
             },
             onError: (error) => {
-              console.error('Error al crear el vehículo:', error)
+              logger.error('Error al crear el vehículo:', error)
               notify.error('Error al crear el vehículo')
             }
           }
         )
         resetForm()
       } catch (error) {
-        console.error('Error al crear el vehículo:', error)
+        logger.error('Error al crear el vehículo:', error)
       }
     }
   })

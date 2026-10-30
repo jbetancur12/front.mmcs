@@ -51,6 +51,7 @@ import debounce from 'lodash/debounce'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
+import { logger } from 'src/utils/logger'
 // Definir localmente si no está en Types.ts, pero idealmente debería estar allí
 interface Quotation {
   id: string | number
@@ -200,7 +201,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
       onSuccess() // Llama al onSuccess general (ej. para refrescar lista de PRs)
     },
     onErrorDisplay: (error: unknown, defaultMessage: string) => {
-      console.error(`Error: ${defaultMessage}`, error)
+      logger.error(`Error: ${defaultMessage}`, error)
       let userMessage = defaultMessage
       if (isAxiosError(error) && getApiErrorReason(error)) {
         userMessage = getApiErrorReason(error) ?? userMessage
@@ -225,7 +226,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
       formData.append('purchaseRequestCode', purchaseRequest.purchaseCode || '')
       formData.append('supplierName', supplierName || 'Desconocido')
       for (const [key, value] of formData.entries()) {
-  console.log(key, value);
+  logger.log(key, value);
 }
 
       return axiosPrivate.post('/purchaseQuotations', formData, {
@@ -313,7 +314,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
         [supplierId]: { ...prev[supplierId], pdfUrl: url, pdfLoading: false }
       }))
     } catch (error) {
-      console.error('Error fetching PDF:', error)
+      logger.error('Error fetching PDF:', error)
       setActionStates((prev) => ({
         ...prev,
         [supplierId]: {

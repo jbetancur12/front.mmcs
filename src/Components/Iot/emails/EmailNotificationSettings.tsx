@@ -23,6 +23,7 @@ import {
   useIotNotificationEmails
 } from '@hooks/iot/useIotNotificationEmails'
 import { notify } from 'src/utils/notify'
+import { logger } from 'src/utils/logger'
 // Utilidad para manejar peticiones API
 const apiRequest = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(url, options)
@@ -55,7 +56,7 @@ export const EmailNotificationSettings = ({
     useIotNotificationEmails(customerId, {
       onSuccess: () => setError(null),
       onError: (err) => {
-        console.error('Error fetching emails:', err)
+        logger.error('Error fetching emails:', err)
         setError(
           'No se pudieron cargar los correos electrónicos de notificación'
         )
@@ -88,7 +89,7 @@ export const EmailNotificationSettings = ({
       // Resetear el mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      console.error('Error adding email:', err)
+      logger.error('Error adding email:', err)
       setError('No se pudo añadir el correo electrónico')
     }
   }
@@ -108,7 +109,7 @@ export const EmailNotificationSettings = ({
       // Resetear el mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      console.error('Error removing email:', err)
+      logger.error('Error removing email:', err)
       setError('No se pudo eliminar el correo electrónico')
     }
   }
@@ -139,7 +140,7 @@ export const EmailNotificationSettings = ({
         notify.error('Error al enviar correo de prueba', response.message)
       }
     } catch (err) {
-      console.error('Error sending test email:', err)
+      logger.error('Error sending test email:', err)
       setError('No se pudo enviar el correo de prueba')
     } finally {
       setTestLoading(false)

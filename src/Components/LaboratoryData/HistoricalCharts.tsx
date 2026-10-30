@@ -18,6 +18,7 @@ import Typography from '@mui/material/Typography'
 import { format, parseISO, isValid } from 'date-fns'
 import { Alert } from '@mui/material'
 
+import { logger } from 'src/utils/logger'
 // --- Interfaces (sin cambios) ---
 interface ChartDataPoint {
   timestamp: string
@@ -108,7 +109,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
         newRange.startIndex !== undefined &&
         newRange.endIndex !== undefined
       ) {
-        console.log('Brush range changed:', newRange) // Para depuración
+        logger.log('Brush range changed:', newRange) // Para depuración
         setBrushRange({
           startIndex: newRange.startIndex,
           endIndex: newRange.endIndex

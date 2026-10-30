@@ -35,6 +35,7 @@ import { notify } from 'src/utils/notify'
 import LmsPageHeader from '../lms/admin/LmsPageHeader'
 import LmsStatCard from '../lms/admin/LmsStatCard'
 
+import { logger } from 'src/utils/logger'
 type FilterType = 'all' | 'warning' | 'expired'
 
 const FILTER_FILE_SUFFIX: Record<FilterType, string> = {
@@ -99,7 +100,7 @@ const Dashboard: React.FC = () => {
   const { data: tableData = [], isLoading: loading } =
     useCertificatesNextToExpire<FileData>(customerId, {
       onError: (error) => {
-        console.error('Error fetching file data:', error)
+        logger.error('Error fetching file data:', error)
         notify.error('No se pudieron cargar los certificados del cliente')
       }
     })

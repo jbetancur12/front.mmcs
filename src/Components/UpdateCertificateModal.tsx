@@ -8,6 +8,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import FormDialog, { FormDialogSection } from './Common/FormDialog'
 import FileDropZone from './Common/FileDropZone'
 
+import { logger } from 'src/utils/logger'
 interface UpdateCertificateModalProps {
   open: boolean
   onClose: () => void
@@ -87,7 +88,7 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
       }
     } catch (error: any) {
       setLoading(false)
-      console.error('Error al guardar los datos del certificado:', error)
+      logger.error('Error al guardar los datos del certificado:', error)
 
       // Archivo duplicado (409)
       if (error.response && error.response.status === 409) {

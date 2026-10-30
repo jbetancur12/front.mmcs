@@ -57,6 +57,7 @@ import {
   PERMISSIONS,
   PermissionKey
 } from 'src/constants/permissions'
+import { logger } from 'src/utils/logger'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -703,7 +704,7 @@ const SideBar = ({
     if (!getModuleAudience(moduleName)) {
       if (!warnedUnknownModules.has(moduleName)) {
         warnedUnknownModules.add(moduleName)
-        console.warn(
+        logger.warn(
           `[sidebar] moduleName "${moduleName}" no está en el catálogo de módulos — se trata como core. ¿Typo?`
         )
       }

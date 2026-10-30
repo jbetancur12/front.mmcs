@@ -8,6 +8,7 @@ import {
   updateDeviceIotStatus
 } from 'src/store/deviceIotStore'
 
+import { logger } from 'src/utils/logger'
 export const wss = () => {
   const currentHost = window.location.hostname
   const isPrivateNetworkHost =
@@ -42,7 +43,7 @@ const useWebSocket = () => {
     const socket = new WebSocket(wss())
 
     socket.onopen = () => {
-      console.log('Conexión establecida con el servidor WebSocket')
+      logger.log('Conexión establecida con el servidor WebSocket')
     }
 
     socket.onmessage = (event) => {
@@ -73,7 +74,7 @@ const useWebSocket = () => {
           updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
         }
         if (type === 'LABORATORY_DATA') {
-          console.log(message)
+          logger.log(message)
         }
         if (type === 'ALARM_STATUS_UPDATE') {
           const { deviceId, alarms } = message.data
@@ -116,16 +117,16 @@ const useWebSocket = () => {
           }
         }
       } catch (error) {
-        console.error('Error al procesar el mensaje:', error)
+        logger.error('Error al procesar el mensaje:', error)
       }
     }
 
     socket.onerror = (error) => {
-      console.error('Error en WebSocket:', error)
+      logger.error('Error en WebSocket:', error)
     }
 
     socket.onclose = () => {
-      console.log('Conexión WebSocket cerrada')
+      logger.log('Conexión WebSocket cerrada')
     }
 
     // Cleanup: cierra la conexión cuando se desmonta el componente

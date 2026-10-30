@@ -38,6 +38,7 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 const CustomersManagement: React.FC = () => {
   const queryClient = useQueryClient()
   const axiosPrivate = useAxiosPrivate()
@@ -117,7 +118,7 @@ const CustomersManagement: React.FC = () => {
       notify.success('Dispositivo actualizado', 'El dispositivo se ha asignado correctamente')
     },
     onError: (error) => {
-      console.error('Error al actualizar el cliente del dispositivo:', error)
+      logger.error('Error al actualizar el cliente del dispositivo:', error)
       notify.error('No se pudo asignar el dispositivo al cliente')
     }
   })
@@ -135,8 +136,8 @@ const CustomersManagement: React.FC = () => {
 
   // Función para asignar un dispositivo a un cliente
   const handleAssignDevice = (deviceId: number, clientId: number | null) => {
-    console.log('🚀 ~ handleAssignDevice ~ clientId:', clientId)
-    console.log('🚀 ~ handleAssignDevice ~ deviceId:', deviceId)
+    logger.log('🚀 ~ handleAssignDevice ~ clientId:', clientId)
+    logger.log('🚀 ~ handleAssignDevice ~ deviceId:', deviceId)
     updateDeviceClientMutation.mutate({ deviceId, clientId })
   }
 

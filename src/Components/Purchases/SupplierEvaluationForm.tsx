@@ -20,6 +20,7 @@ import { isAxiosError } from 'axios' // Importar AxiosResponse
 import { SelectChangeEvent } from '@mui/material/Select'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 // Asumiendo que estos tipos están en 'src/pages/Purchases/Types'
 // o en un archivo central de tipos.
 interface ISupplier {
@@ -268,7 +269,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
         onSuccess(responseData) // Pasar la data completa recibida del backend
       },
       onError: (err) => {
-        console.error('Error guardando evaluación:', err)
+        logger.error('Error guardando evaluación:', err)
         let message = `Error al ${existingEvaluation ? 'actualizar' : 'guardar'} la evaluación.`
         if (isAxiosError(err) && getApiErrorReason(err)) {
           message = getApiErrorReason(err) ?? message

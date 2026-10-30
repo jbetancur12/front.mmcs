@@ -41,6 +41,7 @@ import FormDialog, { FormDialogSection } from 'src/Components/Common/FormDialog'
 import FileDropZone from 'src/Components/Common/FileDropZone'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 
+import { logger } from 'src/utils/logger'
 const TEAL_BUTTON_SX = {
   textTransform: 'none',
   fontWeight: 600,
@@ -112,7 +113,7 @@ const Traceability: React.FC = () => {
       setIsUploading(false)
       closeCreate()
     } catch (error) {
-      console.error('Error al crear la trazabilidad:', error)
+      logger.error('Error al crear la trazabilidad:', error)
       toast.error('Error al crear el documento')
     } finally {
       setIsUploading(false)
@@ -140,7 +141,7 @@ const Traceability: React.FC = () => {
       setIsUploading(false)
       closeUpdate()
     } catch (error) {
-      console.error('Error al actualizar el PDF:', error)
+      logger.error('Error al actualizar el PDF:', error)
       toast.error('Error al actualizar el documento')
     } finally {
       setIsUploading(false)
@@ -156,7 +157,7 @@ const Traceability: React.FC = () => {
       }
       setDeleteTarget(null)
     } catch (error) {
-      console.error('Error al eliminar la trazabilidad:', error)
+      logger.error('Error al eliminar la trazabilidad:', error)
       toast.error('No se pudo eliminar el documento. Inténtalo de nuevo.')
     }
   }

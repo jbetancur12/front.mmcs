@@ -8,6 +8,7 @@ import { CalibrationServiceWorkspaceData } from './useCalibrationServiceWorkspac
 import { CalibrationServiceWorkspaceForm } from './useCalibrationServiceWorkspaceForm'
 import { CalibrationServiceWorkspaceNavigation } from './useCalibrationServiceWorkspaceNavigation'
 
+import { logger } from 'src/utils/logger'
 interface CalibrationServiceWorkspaceActionsParams {
   data: CalibrationServiceWorkspaceData
   form: CalibrationServiceWorkspaceForm
@@ -147,7 +148,7 @@ const useCalibrationServiceWorkspaceActions = ({
             title: requestEvidenceTitle || `Evidencia de solicitud ${savedService.serviceCode}`
           })
         } catch (uploadError) {
-          console.error(uploadError)
+          logger.error(uploadError)
           toast.error('El servicio se guardo, pero no fue posible subir la evidencia.')
           navigate(`/calibration-services/${savedService.id}`)
           return
@@ -171,7 +172,7 @@ const useCalibrationServiceWorkspaceActions = ({
           anchor.click()
           window.URL.revokeObjectURL(objectUrl)
         } catch (pdfError) {
-          console.error(pdfError)
+          logger.error(pdfError)
           toast.error('No se pudo generar la cotización PDF.')
         }
       }
@@ -183,7 +184,7 @@ const useCalibrationServiceWorkspaceActions = ({
       )
       navigate(`/calibration-services/${savedService.id}`)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(isEditing ? 'No pudimos actualizar el servicio.' : 'No pudimos crear el servicio.')
     }
   }
@@ -197,7 +198,7 @@ const useCalibrationServiceWorkspaceActions = ({
       toast.success('Los consecutivos iniciales del módulo quedaron configurados.')
       setIsSequenceDialogOpen(false)
     } catch (configError) {
-      console.error(configError)
+      logger.error(configError)
       toast.error('No pudimos guardar la configuración inicial.')
     }
   }

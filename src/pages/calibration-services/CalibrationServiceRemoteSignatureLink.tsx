@@ -9,6 +9,7 @@ import { getApiErrorMessage } from '../../utils/apiError'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 
+import { logger } from 'src/utils/logger'
 interface RemoteSignatureState {
   expiresAt?: string
   usedAt?: string | null
@@ -61,7 +62,7 @@ const CalibrationServiceRemoteSignatureLink = ({
       setGenerated(result)
       toast.success('Enlace de firma generado.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos generar el enlace de firma.'))
     }
   }
@@ -72,7 +73,7 @@ const CalibrationServiceRemoteSignatureLink = ({
       setGenerated(null)
       toast.success('Enlace revocado.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos revocar el enlace.'))
     }
   }

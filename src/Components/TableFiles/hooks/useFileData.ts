@@ -3,6 +3,7 @@ import { FileData } from '../types/fileTypes'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { MRT_SortingState } from 'material-react-table'
 
+import { logger } from 'src/utils/logger'
 interface FetchFilesOptions {
   pageIndex?: number
   pageSize?: number
@@ -94,10 +95,10 @@ export const useFileData = () => {
           timestamp: Date.now()
         }
       } else {
-        console.error('Unexpected response:', response)
+        logger.error('Unexpected response:', response)
       }
     } catch (error) {
-      console.error('Error fetching files:', error)
+      logger.error('Error fetching files:', error)
     } finally {
       if (requestId === requestIdRef.current) {
         sharedInFlightQueryKey = null

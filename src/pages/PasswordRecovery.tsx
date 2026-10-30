@@ -9,6 +9,7 @@ import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
 
+import { logger } from 'src/utils/logger'
 const apiUrl = api()
 
 const PasswordRecovery: React.FC = () => {
@@ -49,7 +50,7 @@ const PasswordRecovery: React.FC = () => {
   }
 
   function handleNetworkError(error: AxiosError) {
-    console.error('An error occurred:', error)
+    logger.error('An error occurred:', error)
 
     if (!error.response) {
       setError(

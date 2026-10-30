@@ -60,6 +60,7 @@ import {
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
+import { logger } from 'src/utils/logger'
 export function convertirCadena(cadena) {
   // Reemplazar espacios con guiones y convertir a minúsculas
   const cadenaFormateada = cadena.replace(/\s+/g, '-').toLowerCase()
@@ -154,7 +155,7 @@ const Table: React.FC = () => {
         const errorMessage =
           response.data?.error || 'Error desconocido al crear certificado'
         notify.error(errorMessage)
-        console.error('Error del servidor:', response.data)
+        logger.error('Error del servidor:', response.data)
       }
     } catch (error: any) {
       let errorMessage = 'Error de red: No se pudo conectar al servidor'
@@ -181,7 +182,7 @@ const Table: React.FC = () => {
       }
 
       notify.error(errorMessage)
-      console.error('Error detallado:', error)
+      logger.error('Error detallado:', error)
     }
   }
 
@@ -213,10 +214,10 @@ const Table: React.FC = () => {
                 prev.map((item, index) => (index === row.index ? values : item))
             )
           } else {
-            console.error('Error al crear equipo')
+            logger.error('Error al crear equipo')
           }
         } catch (error) {
-          console.error('Error de red:', error)
+          logger.error('Error de red:', error)
         }
 
         exitEditingMode() //required to exit editing mode and close modal
@@ -237,10 +238,10 @@ const Table: React.FC = () => {
           position: 'top-center'
         })
       } else {
-        console.error('Error al crear equipo')
+        logger.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 
@@ -747,7 +748,7 @@ export const CreateNewFileModal = ({
       onClose()
     } catch (error) {
       notify.error('Error al crear equipo')
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

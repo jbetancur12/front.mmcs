@@ -50,6 +50,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 // Define interfaces
 export interface DeviceData {
   id: number
@@ -116,10 +117,10 @@ const Table: React.FC = () => {
       if (response.status === 201) {
         notify.success('Equipo Creado Exitosamente!')
       } else {
-        console.error('Error al crear equipo')
+        logger.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 
@@ -146,10 +147,10 @@ const Table: React.FC = () => {
           if (response.status >= 200 && response.status < 300) {
             notify.success('Equipo Modificado Exitosamente!')
           } else {
-            console.error('Error al crear equipo')
+            logger.error('Error al crear equipo')
           }
         } catch (error) {
-          console.error('Error de red:', error)
+          logger.error('Error de red:', error)
         }
 
         exitEditingMode() //required to exit editing mode and close modal
@@ -167,10 +168,10 @@ const Table: React.FC = () => {
       if (response.status === 204) {
         notify.success('Equipo Eliminado Exitosamente!')
       } else {
-        console.error('Error al crear equipo')
+        logger.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      logger.error('Error de red:', error)
     }
   }
 

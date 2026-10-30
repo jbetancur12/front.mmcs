@@ -33,6 +33,7 @@ import {
 } from 'src/Components/Common/DetailBlocks'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 interface EquipmentFormValues {
   outReason: string
   /** Fechas como `yyyy-MM-dd`; se convierten a `Date` al enviar. */
@@ -184,7 +185,7 @@ const EquipmentForm: React.FC = () => {
         method === 'post' ? 'Salida registrada' : 'Entrada registrada'
       )
     } catch (error) {
-      console.error('Error al enviar el formulario:', error)
+      logger.error('Error al enviar el formulario:', error)
       await notify.error(
         'No se pudo registrar',
         'Ocurrió un error al guardar el movimiento. Inténtalo de nuevo.'

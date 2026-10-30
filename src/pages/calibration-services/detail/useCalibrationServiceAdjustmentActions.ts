@@ -5,6 +5,7 @@ import { useCalibrationServiceMutations } from '../../../hooks/useCalibrationSer
 import { CalibrationServiceDetailDialogs } from './useCalibrationServiceDetailDialogs'
 import { DetailTab } from './calibrationServiceDetailUtils'
 
+import { logger } from 'src/utils/logger'
 type CalibrationServiceMutations = ReturnType<typeof useCalibrationServiceMutations>
 
 interface CalibrationServiceAdjustmentActionsParams {
@@ -74,7 +75,7 @@ const useCalibrationServiceAdjustmentActions = ({
       setIsAdjustmentDialogOpen(false)
       setActiveTab('adjustments')
     } catch (adjustmentError) {
-      console.error(adjustmentError)
+      logger.error(adjustmentError)
       const serverMessage = getApiErrorReason(adjustmentError)
 
       toast.error(
@@ -119,7 +120,7 @@ const useCalibrationServiceAdjustmentActions = ({
       toast.success('La revisión de la novedad quedó guardada.')
       setActiveTab('adjustments')
     } catch (adjustmentError) {
-      console.error(adjustmentError)
+      logger.error(adjustmentError)
       toast.error(getApiErrorMessage(adjustmentError, 'No pudimos guardar la revisión de la novedad.'))
     }
   }
@@ -150,7 +151,7 @@ const useCalibrationServiceAdjustmentActions = ({
         toast.success(`${pending.length} novedad(es) enviada(s) al cliente.`)
       }
     } catch (sendError) {
-      console.error(sendError)
+      logger.error(sendError)
       toast.error(getApiErrorMessage(sendError, 'No pudimos enviar las novedades al cliente.'))
     }
 
@@ -204,7 +205,7 @@ const useCalibrationServiceAdjustmentActions = ({
         })
         successCount++
       } catch (adjustmentError) {
-        console.error(adjustmentError)
+        logger.error(adjustmentError)
         failCount++
       }
     }
@@ -227,7 +228,7 @@ const useCalibrationServiceAdjustmentActions = ({
       })
       toast.success('Firma del cliente guardada.')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(getApiErrorMessage(error, 'No pudimos guardar la firma del cliente.'))
     }
   }

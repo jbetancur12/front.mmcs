@@ -14,6 +14,7 @@ import {
 import { useSearchParams } from 'react-router-dom'
 import { axiosPublic } from '@utils/api'
 
+import { logger } from 'src/utils/logger'
 interface BatchAdjustmentEntry {
   adjustmentId: number
   itemName: string
@@ -101,7 +102,7 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
         )
         setError(null)
       } catch (requestError) {
-        console.error(requestError)
+        logger.error(requestError)
         setError('No pudimos cargar las novedades para responder.')
       } finally {
         setIsLoading(false)
@@ -156,7 +157,7 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
         }
       })
     } catch (submitError) {
-      console.error(submitError)
+      logger.error(submitError)
       setError('No pudimos guardar tus respuestas. Intenta nuevamente.')
     } finally {
       setIsSubmitting(false)

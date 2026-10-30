@@ -18,6 +18,7 @@ import {
 } from './sessionEnd'
 import { syncUserAccess } from './syncUserAccess'
 
+import { logger } from 'src/utils/logger'
 type QueuedRequest = {
   reject: (error?: unknown) => void
   resolve: (token: string) => void
@@ -87,7 +88,7 @@ const handleLogout = async (revokedReason: string | null = null) => {
       try {
         await axiosPrivate.post('/auth/logout', {})
       } catch (logoutError) {
-        console.error('Error al cerrar sesión:', logoutError)
+        logger.error('Error al cerrar sesión:', logoutError)
       }
     }
 

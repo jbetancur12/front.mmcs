@@ -66,6 +66,7 @@ import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from '../../..
 import PDFViewer from 'src/Components/PDFViewer'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
+import { logger } from 'src/utils/logger'
 const fadeIn = { animation: 'fadeSlideIn 0.35s ease-out' }
 const styles = `
 @keyframes fadeSlideIn {
@@ -367,7 +368,7 @@ const LmsCourseView: React.FC = () => {
       await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
     },
     onError: (error: any) => {
-      console.error('Error al completar lección:', error)
+      logger.error('Error al completar lección:', error)
     }
   })
 
@@ -377,7 +378,7 @@ const LmsCourseView: React.FC = () => {
       await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
     },
     onError: (error: any) => {
-      console.error('Error al completar quiz:', error)
+      logger.error('Error al completar quiz:', error)
     }
   })
 
@@ -587,7 +588,7 @@ const LmsCourseView: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error completing lesson:', error)
+      logger.error('Error completing lesson:', error)
     }
   }, [lessonStartTime, updateProgressMutation, autoAdvance, getNextLesson, isLessonUnlocked, isMobile])
 
@@ -637,7 +638,7 @@ const LmsCourseView: React.FC = () => {
         await handleLessonComplete(currentLesson.id)
       }
     } catch (error) {
-      console.error('Error completing quiz:', error)
+      logger.error('Error completing quiz:', error)
     }
   }, [
     currentQuizConfig,

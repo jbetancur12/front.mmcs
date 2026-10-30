@@ -21,6 +21,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { handleDownload } from '../utils/fileHandlers'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { logger } from 'src/utils/logger'
 // import PDFViewer from 'src/Components/PDFViewer'
 
 // Key for sessionStorage
@@ -68,7 +69,7 @@ export const TableView = ({
         return JSON.parse(saved)
       }
     } catch (error) {
-      console.error('Error loading table state:', error)
+      logger.error('Error loading table state:', error)
     }
     return null
   }
@@ -99,7 +100,7 @@ export const TableView = ({
     try {
       localStorage.setItem(TABLE_STATE_KEY, JSON.stringify(state))
     } catch (error) {
-      console.error('Error saving table state:', error)
+      logger.error('Error saving table state:', error)
     }
   }, [pagination, sorting, globalFilter])
 

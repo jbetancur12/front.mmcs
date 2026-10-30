@@ -77,6 +77,7 @@ import {
   EquipmentQuoteTermKey,
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
+import { logger } from 'src/utils/logger'
 
 type FormState = Omit<
   EquipmentQuotationPayload,
@@ -724,7 +725,7 @@ const EquipmentSalesWorkspacePage = () => {
               `Evidencia de solicitud ${savedQuotation.quoteCode}`
           })
         } catch (uploadError) {
-          console.error(uploadError)
+          logger.error(uploadError)
           toast.error(
             'La cotización se guardo, pero no fue posible subir la evidencia.'
           )
@@ -757,7 +758,7 @@ const EquipmentSalesWorkspacePage = () => {
           anchor.click()
           window.URL.revokeObjectURL(objectUrl)
         } catch (pdfError) {
-          console.error(pdfError)
+          logger.error(pdfError)
           toast.error('No se pudo generar la cotización PDF.')
         }
       }
@@ -768,7 +769,7 @@ const EquipmentSalesWorkspacePage = () => {
       )
       navigate(`/equipment-sales/${savedQuotation.id}`)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       toast.error(
         isEditing
           ? 'No pudimos actualizar la cotización.'
@@ -785,7 +786,7 @@ const EquipmentSalesWorkspacePage = () => {
       toast.success('El consecutivo inicial quedó configurado.')
       setIsSequenceDialogOpen(false)
     } catch (configError) {
-      console.error(configError)
+      logger.error(configError)
       toast.error('No pudimos guardar la configuración.')
     }
   }

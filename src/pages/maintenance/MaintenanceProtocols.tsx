@@ -49,6 +49,7 @@ import type {
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { logger } from 'src/utils/logger'
 const surfaceSx = {
   borderRadius: '16px',
   border: '1px solid #e5e7eb',
@@ -242,7 +243,7 @@ const MaintenanceProtocols = () => {
     try {
       await deleteProtocolMutation.mutateAsync(protocol.id)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
     }
   }
 

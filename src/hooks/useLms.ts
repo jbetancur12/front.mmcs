@@ -30,6 +30,7 @@ import type {
 } from 'src/services/lmsService'
 import { notify } from 'src/utils/notify'
 
+import { logger } from 'src/utils/logger'
 // ===========================
 // Course Hooks
 // ===========================
@@ -1255,7 +1256,7 @@ export const useMarkNotificationAsRead = (
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        console.error('Error marking notification as read:', error)
+        logger.error('Error marking notification as read:', error)
         options?.onError?.(error, variables, context)
       }
     }

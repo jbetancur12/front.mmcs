@@ -89,6 +89,7 @@ import {
 } from 'src/hooks/useServerTable'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { logger } from 'src/utils/logger'
 
 const emptyAccessory = (): AssetLifeSheetAccessory => ({ accessoryType: '' })
 const emptyMaintenanceTask = (): AssetLifeSheetMaintenanceTask => ({
@@ -351,7 +352,7 @@ const AssetLifeSheetsPage: React.FC = () => {
       closeAssetDialog()
       notify.success('Activo guardado correctamente')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       notify.error('No fue posible guardar el activo')
     }
   }
@@ -363,7 +364,7 @@ const AssetLifeSheetsPage: React.FC = () => {
       setAssetPendingDelete(null)
       notify.success('Activo eliminado')
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       notify.error('No fue posible eliminar el activo')
     }
   }

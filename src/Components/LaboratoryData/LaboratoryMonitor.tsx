@@ -49,6 +49,7 @@ import { jsPDF } from 'jspdf'
 import { FileDownloadOutlined } from '@mui/icons-material'
 import LaboratoryMqttGuide from '../LaboratoryMqttGuide'
 
+import { logger } from 'src/utils/logger'
 // --- INTERFACES (MANTENEMOS LAS EXISTENTES Y AÑADIMOS NUEVAS) ---
 
 // Interfaz para los datos del sensor (sin cambios)
@@ -172,7 +173,7 @@ const LaboratoryMonitor: React.FC = () => {
   // Efecto para manejar WebSocket (sin cambios, excepto usar refetchDevices)
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'LABORATORY_DATA') {
-      console.log(
+      logger.log(
         'Received LABORATORY_DATA WebSocket message:',
         lastMessage.data
       )
@@ -180,7 +181,7 @@ const LaboratoryMonitor: React.FC = () => {
         lastMessage.data?.deviceState
 
       if (!updatedDeviceState || updatedDeviceState.id === undefined) {
-        console.warn(
+        logger.warn(
           'Received LABORATORY_DATA message with missing or invalid deviceState payload.',
           lastMessage.data
         )
@@ -193,7 +194,7 @@ const LaboratoryMonitor: React.FC = () => {
         )
 
         if (deviceIndex === -1) {
-          console.warn(
+          logger.warn(
             `WebSocket update for unknown DeviceLaboratory ID: ${updatedDeviceState.id}. Refetching list.`
           )
           refetchDevices() // Usar refetch de la query de dispositivos
@@ -214,7 +215,7 @@ const LaboratoryMonitor: React.FC = () => {
         deviceToUpdate.color = updatedDeviceState.color ?? deviceToUpdate.color
 
         newDevices[deviceIndex] = deviceToUpdate
-        console.log(
+        logger.log(
           `Updated state for device ID "${updatedDeviceState.id}" via WebSocket.`
         )
         return newDevices
@@ -295,15 +296,15 @@ const LaboratoryMonitor: React.FC = () => {
     setSensorToDeleteId(null)
   }
   const handleSensorAdded = (newSensor: ApiDeviceData) => {
-    console.log('Sensor successfully added via modal:', newSensor)
+    logger.log('Sensor successfully added via modal:', newSensor)
     // Refetch de dispositivos o invalidación de caché maneja la actualización
   }
   const handleSensorUpdated = (updatedSensor: ApiDeviceData) => {
-    console.log('Sensor successfully updated via modal:', updatedSensor)
+    logger.log('Sensor successfully updated via modal:', updatedSensor)
     // Refetch de dispositivos o invalidación de caché maneja la actualización
   }
   const handleSensorDeleted = (deletedSensorId: number) => {
-    console.log('Sensor successfully deleted via dialog:', deletedSensorId)
+    logger.log('Sensor successfully deleted via dialog:', deletedSensorId)
     // Refetch de dispositivos o invalidación de caché maneja la actualización
   }
 
@@ -375,7 +376,7 @@ const LaboratoryMonitor: React.FC = () => {
         `Control de condiciones ambientales ${format(selectedDate || new Date(), 'yyyy-MM-dd')}.pdf`
       )
     } else {
-      console.error('La referencia al elemento no está disponible.')
+      logger.error('La referencia al elemento no está disponible.')
     }
   }
 
