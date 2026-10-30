@@ -61,17 +61,23 @@ const markAllAsRead = async (): Promise<void> => {
 export const useCalibrationNotifications = ({
   page = 0,
   limit = 20,
-  showRead = false
+  showRead = false,
+  enabled = true,
+  refetchInterval = 60 * 1000
 }: {
   page?: number
   limit?: number
   showRead?: boolean
+  enabled?: boolean
+  refetchInterval?: number | false
 } = {}) => {
   return useQuery({
     queryKey: [QUERY_KEY, 'list', page, limit, showRead],
     queryFn: () => fetchNotifications({ page, limit, showRead }),
+    enabled,
+    // La campana solo consulta la lista cuando se abre; el contador lleva el tiempo real
     staleTime: 5 * 1000,
-    refetchInterval: 15 * 1000
+    refetchInterval
   })
 }
 
@@ -79,8 +85,9 @@ export const useCalibrationUnreadCount = () => {
   return useQuery({
     queryKey: [QUERY_KEY, 'unread-count'],
     queryFn: fetchUnreadCount,
-    staleTime: 3000,
-    refetchInterval: 8000
+    staleTime: 15 * 1000,
+    // Antes 8 s: con varias pestañas abiertas agotaba el límite de la API de toda la red
+    refetchInterval: 30 * 1000
   })
 }
 

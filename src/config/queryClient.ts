@@ -1,4 +1,5 @@
 import { QueryClient } from 'react-query'
+import type { AxiosError } from 'axios'
 
 /**
  * React Query configuration
@@ -15,8 +16,14 @@ export const queryClient = new QueryClient({
       // Refetch on reconnect (network recovery)
       refetchOnReconnect: true,
 
-      // Retry failed requests (3 times with exponential backoff)
-      retry: 3,
+      // Retry failed requests (3 times with exponential backoff).
+      // Un 429 nunca se reintenta: significa "espera" y reintentarlo solo multiplica
+      // el tráfico y alarga el bloqueo del limitador.
+      retry: (failureCount, error) => {
+        const status = (error as AxiosError | undefined)?.response?.status
+        if (status === 429) return false
+        return failureCount < 3
+      },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 
       // Stale time: Data considered fresh for 5 minutes

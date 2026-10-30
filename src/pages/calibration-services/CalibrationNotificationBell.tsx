@@ -40,10 +40,16 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
 
 const NotificationBell = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const open = Boolean(anchorEl)
   const navigate = useNavigate()
 
   const { data: countData } = useCalibrationUnreadCount()
-  const { data: notifData } = useCalibrationNotifications({ limit: 5, showRead: false })
+  // La lista solo se pide al abrir la campana, no cada 15 s con el menú cerrado
+  const { data: notifData } = useCalibrationNotifications({
+    limit: 5,
+    showRead: false,
+    enabled: open
+  })
   const { markAsRead } = useCalibrationNotificationMutations()
 
   const unreadCount = countData?.unreadCount ?? 0
@@ -64,8 +70,6 @@ const NotificationBell = () => {
     }
     handleClose()
   }
-
-  const open = Boolean(anchorEl)
 
   return (
     <>

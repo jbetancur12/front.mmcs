@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
+  Alert,
   Autocomplete,
   Box,
   Button,
@@ -13,7 +14,10 @@ import {
 } from '@mui/material'
 import { getApiErrorMessage } from '@utils/apiError'
 import { useCreateTypeAlias } from 'src/hooks/useCustomerIndicators'
-import { IndicatorTypeRow } from 'src/types/customerIndicators'
+import {
+  AvailableCertificateType,
+  IndicatorTypeRow
+} from 'src/types/customerIndicators'
 import { notify } from 'src/utils/notify'
 import {
   EMERALD_GRADIENT,
@@ -26,21 +30,62 @@ interface Props {
   source: IndicatorTypeRow | null
   /** Todos los tipos de la tabla: los que tienen certificados son los destinos posibles. */
   rows: IndicatorTypeRow[]
+  /** Tipos de equipo con certificados de cualquier tipo, aunque no sumen al avance. */
+  availableTypes?: AvailableCertificateType[]
   onClose: () => void
 }
 
+interface AliasOption {
+  key: string
+  label: string
+  /** Certificados que cuentan para el avance; `undefined` si no se conoce el desglose. */
+  counted?: number
+  certificateTypes?: { name: string; count: number }[]
+}
+
+/** "Calibración (3) · Verificación (1)" o el texto de respaldo si la API no manda el desglose. */
+const describeCertificateTypes = (option: AliasOption) => {
+  if (!option.certificateTypes?.length) return 'Con certificados de calibración'
+  return option.certificateTypes
+    .map((type) => `${type.name} (${type.count})`)
+    .join(' · ')
+}
+
 /** Asocia, una sola vez y para todos los clientes, un nombre de la ODS con un tipo de certificado. */
-const TypeAliasDialog: React.FC<Props> = ({ source, rows, onClose }) => {
-  const [target, setTarget] = useState<IndicatorTypeRow | null>(null)
+const TypeAliasDialog: React.FC<Props> = ({
+  source,
+  rows,
+  availableTypes,
+  onClose
+}) => {
+  const [target, setTarget] = useState<AliasOption | null>(null)
   const { mutateAsync, isLoading } = useCreateTypeAlias()
 
   useEffect(() => {
     setTarget(null)
   }, [source])
 
-  const options = rows.filter(
-    (row) => row.calibrated > 0 && row.key !== source?.key
-  )
+  // El mismo equipo puede tener calibración y verificación: se ofrecen todos los tipos con certificados del
+  // periodo, no solo los que ya suman al avance.
+  const options = useMemo(() => {
+    const byKey = new Map<string, AliasOption>()
+    for (const row of rows) {
+      if (row.calibrated > 0) byKey.set(row.key, { key: row.key, label: row.label })
+    }
+    for (const type of availableTypes ?? []) {
+      byKey.set(type.key, {
+        key: type.key,
+        label: type.label,
+        counted: type.counted,
+        certificateTypes: type.certificateTypes
+      })
+    }
+    return [...byKey.values()]
+      .filter((option) => option.key !== source?.key)
+      .sort((a, b) =>
+        cleanTypeLabel(a.label).localeCompare(cleanTypeLabel(b.label), 'es')
+      )
+  }, [rows, availableTypes, source?.key])
 
   const handleSave = async () => {
     if (!source || !target) return
@@ -87,7 +132,22 @@ const TypeAliasDialog: React.FC<Props> = ({ source, rows, onClose }) => {
             onChange={(_, value) => setTarget(value)}
             getOptionLabel={(option) => cleanTypeLabel(option.label)}
             isOptionEqualToValue={(a, b) => a.key === b.key}
-            noOptionsText='No hay tipos con certificados en este periodo'
+            noOptionsText='No hay tipos de equipo con certificados en este periodo'
+            renderOption={(props, option) => (
+              <Box
+                component='li'
+                {...props}
+                key={option.key}
+                sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
+              >
+                <Typography variant='body2' fontWeight={600}>
+                  {cleanTypeLabel(option.label)}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {describeCertificateTypes(option)}
+                </Typography>
+              </Box>
+            )}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -96,6 +156,16 @@ const TypeAliasDialog: React.FC<Props> = ({ source, rows, onClose }) => {
               />
             )}
           />
+          {target && target.counted === 0 && (
+            <Alert severity='warning' sx={{ borderRadius: '12px' }}>
+              «{cleanTypeLabel(target.label)}» solo tiene certificados que no
+              cuentan para el avance (
+              {target.certificateTypes?.map((type) => type.name).join(', ')}).
+              La asociación unifica el nombre, pero el porcentaje seguirá en 0
+              hasta que exista un certificado de calibración, verificación,
+              informe de validación, calificación o caracterización.
+            </Alert>
+          )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>

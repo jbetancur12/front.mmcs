@@ -13,6 +13,7 @@ import {
   CalibrationService,
   CalibrationServiceFilters,
   CalibrationServiceQuoteTerms,
+  CalibrationServiceQuoteTermsTemplate,
   CalibrationServiceSlaConfigPayload
 } from '../../../types/calibrationService'
 import { mergeCalibrationQuoteTerms } from '../calibrationQuoteTerms'
@@ -119,8 +120,19 @@ const useCalibrationServicesListActions = ({
     }
   }
 
-  const handleOpenTemplate = () => {
-    setTemplateTerms(mergeCalibrationQuoteTerms(quoteTermsTemplate?.terms))
+  const handleOpenTemplate = async () => {
+    // Quien edita parte de la versión del servidor, no de una copia de hasta 5 min
+    const key = [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']
+    // Si falla (sin red, 429) se abre con la copia que ya hay
+    try {
+      await queryClient.refetchQueries(key, { exact: true })
+    } catch {
+      // se usa la copia local
+    }
+    const current =
+      queryClient.getQueryData<CalibrationServiceQuoteTermsTemplate>(key) ??
+      quoteTermsTemplate
+    setTemplateTerms(mergeCalibrationQuoteTerms(current?.terms))
     setTemplateDialogOpen(true)
   }
 

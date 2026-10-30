@@ -28,6 +28,17 @@ export interface IndicatorTypeRow {
   progressPct: number | null
 }
 
+/** Tipo de equipo con certificados del periodo, aunque sus certificados no sumen al avance. */
+export interface AvailableCertificateType {
+  key: string
+  label: string
+  /** Certificados del equipo en el periodo y la sede filtrada. */
+  certificates: number
+  /** De esos, cuántos son de un tipo que cuenta para el avance. */
+  counted: number
+  certificateTypes: { name: string; count: number }[]
+}
+
 export interface IndicatorObservations {
   text: string | null
   updatedBy: IndicatorEditor | null
@@ -44,6 +55,8 @@ export interface CustomerIndicators {
   progressPct: number | null
   lastCalibrationDate: string | null
   byType: IndicatorTypeRow[]
+  /** Tipos de equipo con certificados de cualquier tipo: son las opciones del diálogo de asociación. */
+  availableCertificateTypes?: AvailableCertificateType[]
   observations: IndicatorObservations
   availableYears: number[]
   headquarters: string[]

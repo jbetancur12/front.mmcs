@@ -29,7 +29,10 @@ const useCalibrationServiceWorkspaceData = () => {
   } = useCalibrationServiceSequenceConfig(canAccessWorkspace)
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
   const { data: quoteTermsTemplate, isFetchedAfterMount: isTemplateFresh } =
-    useCalibrationServiceQuoteTermsTemplate(canAccessWorkspace && !isEditing)
+    useCalibrationServiceQuoteTermsTemplate(
+      canAccessWorkspace && !isEditing,
+      'always' // isFetchedAfterMount necesita una consulta nueva en cada apertura
+    )
   const {
     data: customers = [],
     error: customersError,

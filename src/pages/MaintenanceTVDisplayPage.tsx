@@ -1,4 +1,5 @@
 import React from 'react'
+import type { AxiosError } from 'axios'
 import { Box } from '@mui/material'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import MaintenanceTVDisplayPublic from '../Components/Maintenance/TVDisplayModern'
@@ -7,7 +8,11 @@ import MaintenanceTVDisplayPublic from '../Components/Maintenance/TVDisplayModer
 const tvDisplayQueryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 3,
+      // Un 429 pide esperar: reintentarlo multiplica el tráfico del televisor
+      retry: (failureCount, error) => {
+        const status = (error as AxiosError | undefined)?.response?.status
+        return status !== 429 && failureCount < 3
+      },
       retryDelay: 1000,
       staleTime: 30000, // 30 seconds
       cacheTime: 5 * 60 * 1000, // 5 minutes

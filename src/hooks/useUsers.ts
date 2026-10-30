@@ -67,8 +67,8 @@ const handleQueryError = (error: unknown): boolean => {
   if (error instanceof AxiosError) {
     // Don't retry on client errors (4xx) except for timeout
     if (error.response?.status && error.response.status >= 400 && error.response.status < 500) {
-      // Retry on timeout (408) or rate limiting (429)
-      return error.response.status === 408 || error.response.status === 429
+      // El 408 (timeout) es transitorio y se reintenta; el 429 pide esperar, no reintentar
+      return error.response.status === 408
     }
     // Retry on network errors and server errors (5xx)
     return error.code === 'NETWORK_ERROR' || !error.response || (error.response.status >= 500)

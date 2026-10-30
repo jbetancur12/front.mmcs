@@ -131,7 +131,7 @@ const IndicatorGoalProgressCard: React.FC<Props> = ({ indicators }) => {
           </Box>
           <Box sx={{ flex: 1, width: '100%' }}>
             <Row label='Meta' value={formatCount(goal.value)} />
-            <Row label='Calibrados' value={formatCount(calibrated)} />
+            <Row label='Con servicio metrológico' value={formatCount(calibrated)} />
             <Row label='Pendientes' value={formatCount(pending)} />
             <Row
               label='Último certificado'

@@ -79,7 +79,6 @@ export const useTVDisplayDataWithWebSocket = () => {
     staleTime: isWebSocketConnected ? Infinity : 10000,
     refetchOnWindowFocus: false,
     refetchInterval: isWebSocketConnected ? false : 30000,
-    retry: 3,
     retryDelay: 1000
   })
 
@@ -225,7 +224,6 @@ export const useTVDisplayData = () => {
     staleTime: 30000, // 30 seconds
     refetchInterval: 30000, // Auto-refresh every 30 seconds
     refetchOnWindowFocus: false,
-    retry: 3,
     retryDelay: 1000
   })
 }

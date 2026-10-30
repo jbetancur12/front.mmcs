@@ -36,8 +36,11 @@ interface WebSocketProviderProps {
   children: ReactNode
 }
 
-const wss = () => {
+// null si no hay sesión: sin token el servidor solo responde 401/403 y el reintento
+// llenaría el log (y el limitador) con `?token=null`.
+const wss = (): string | null => {
   const token = localStorage.getItem('accessToken')
+  if (!token) return null
   const currentHost = window.location.hostname
   const isPrivateNetworkHost =
     /^10\./.test(currentHost) ||
@@ -102,7 +105,15 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         return
       }
 
-      const socket = new WebSocket(wss())
+      const wsUrl = wss()
+      if (!wsUrl) {
+        // Sin sesión no se conecta: se vuelve a mirar en unos segundos (sin tráfico)
+        setStatus('closed')
+        reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000)
+        return
+      }
+
+      const socket = new WebSocket(wsUrl)
       wsRef.current = socket
 
       socket.onopen = () => {
