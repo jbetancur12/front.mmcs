@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import Cookies from 'js-cookie'
 import type { AxiosError } from 'axios'
 import { axiosPublic } from './api'
@@ -57,33 +56,32 @@ const askPasswordToContinue =
     return null
   }
 
-const useRefreshToken = () => {
-  const refresh = useCallback(async (): Promise<RefreshSessionResponse> => {
-    /**
-     * This sends a request to the server to get
-     * a new access token. the refresh token is valid (if valid)
-     * as an httpOnly cookie. so no setup for cookies is required here.
-     */
-    let refreshData: RefreshSessionResponse
-    try {
-      const response = await axiosPublic.get('/auth/refresh-token', {
-        withCredentials: true
-      })
-      refreshData = response.data
-    } catch (error) {
-      // Tope de días de la sesión: se confirma con la contraseña desde cualquier
-      // pantalla que renueve (cargar la página, el aviso de vencimiento, un 401)
-      if (!isReauthRequired(error)) throw error
-      const confirmed = await askPasswordToContinue()
-      if (!confirmed) throw error
-      refreshData = confirmed
-    }
+/**
+ * Pide un access token nuevo. El refresh token viaja como cookie httpOnly, así que aquí
+ * no hace falta configurar nada. Es una función suelta (no un hook) para que los
+ * interceptores de axios la usen sin depender de ningún componente.
+ */
+export const refreshSession = async (): Promise<RefreshSessionResponse> => {
+  let refreshData: RefreshSessionResponse
+  try {
+    const response = await axiosPublic.get('/auth/refresh-token', {
+      withCredentials: true
+    })
+    refreshData = response.data
+  } catch (error) {
+    // Tope de días de la sesión: se confirma con la contraseña desde cualquier
+    // pantalla que renueve (cargar la página, el aviso de vencimiento, un 401)
+    if (!isReauthRequired(error)) throw error
+    const confirmed = await askPasswordToContinue()
+    if (!confirmed) throw error
+    refreshData = confirmed
+  }
 
-    storeSessionExpiry(refreshData.expiresIn)
+  storeSessionExpiry(refreshData.expiresIn)
 
-    return refreshData
-  }, [])
-  return refresh
+  return refreshData
 }
+
+const useRefreshToken = () => refreshSession
 
 export default useRefreshToken
