@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect, useMemo } from 'react'
 import { AcUnit, PauseCircleOutline, Speed } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -9,7 +10,6 @@ import {
   Button,
   Container,
   Grid,
-  CircularProgress,
   Alert,
   Paper,
 } from '@mui/material'
@@ -481,10 +481,7 @@ const CalibrationChamberView: React.FC = () => {
   if (isLoadingChambers) {
     return (
       <Container maxWidth='lg' sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress size={60} />
-        <Typography variant='h6' sx={{ mt: 2 }}>
-          Cargando datos de cámaras...
-        </Typography>
+        <SignalLoader message='Cargando datos de cámaras...' />
       </Container>
     )
   }

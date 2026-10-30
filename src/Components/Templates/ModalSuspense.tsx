@@ -1,7 +1,8 @@
 // Suspense wrapper for lazy-loaded modals
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { Suspense } from 'react'
-import { Dialog, DialogContent, CircularProgress, Box } from '@mui/material'
-import { colors, spacing } from '../../theme/designSystem'
+import { Dialog, DialogContent, Box } from '@mui/material'
+import { spacing } from '../../theme/designSystem'
 
 interface ModalSuspenseProps {
   children: React.ReactNode
@@ -21,12 +22,7 @@ const ModalLoadingFallback: React.FC = () => (
           minHeight: 200
         }}
       >
-        <CircularProgress
-          size={40}
-          sx={{
-            color: colors.primary[500]
-          }}
-        />
+        <SignalLoader />
       </Box>
     </DialogContent>
   </Dialog>

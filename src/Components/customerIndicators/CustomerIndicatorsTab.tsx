@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
@@ -7,7 +8,6 @@ import {
   CircularProgress,
   Grid,
   MenuItem,
-  Skeleton,
   TextField,
   Typography
 } from '@mui/material'
@@ -174,22 +174,8 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
   if (indicatorsQuery.isLoading) {
     return (
       <Box>
-        {filters}
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          {[0, 1, 2, 3].map((item) => (
-            <Grid item xs={6} md={3} key={item}>
-              <Skeleton variant='rounded' height={170} />
-            </Grid>
-          ))}
-        </Grid>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Skeleton variant='rounded' height={300} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Skeleton variant='rounded' height={300} />
-          </Grid>
-        </Grid>
+        
+        <SignalLoader message='Cargando indicadores...' />
       </Box>
     )
   }

@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useNavigate, useParams } from 'react-router-dom'
 import React, { useState } from 'react'
 import { useQueryClient } from 'react-query'
@@ -7,7 +8,6 @@ import {
   Container,
   Grid,
   Paper,
-  Skeleton,
   Typography
 } from '@mui/material'
 import {
@@ -210,20 +210,7 @@ const Certificates: React.FC = () => {
   }
 
   if (loading) {
-    return (
-      <Container maxWidth='xl' sx={{ py: 3 }}>
-        <Skeleton variant='text' width={320} height={48} />
-        <Skeleton variant='text' width={200} height={28} sx={{ mb: 3 }} />
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
-            <Skeleton variant='rounded' height={320} />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Skeleton variant='rounded' height={320} />
-          </Grid>
-        </Grid>
-      </Container>
-    )
+    return <SignalLoader message='Cargando certificado...' fullPage />
   }
 
   const missing = 'No especificado'

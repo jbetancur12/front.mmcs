@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect, ReactNode } from 'react'
 import {
   Box,
@@ -168,7 +169,7 @@ export const ApiErrorBoundary: React.FC<Props> = ({
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

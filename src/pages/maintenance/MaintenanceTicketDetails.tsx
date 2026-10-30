@@ -1,5 +1,6 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
-import { Container, Grid, Alert, Button, Skeleton } from '@mui/material'
+import { Container, Grid, Alert, Button } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import useMaintenanceTicketDetails from './ticket-details/useMaintenanceTicketDetails'
@@ -29,52 +30,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   // Loading state
   if (ticketLoading) {
-    return (
-      <Container
-        maxWidth={false}
-        sx={{
-          py: { xs: 2, sm: 3 },
-          px: { xs: 1, sm: 2, md: 3 },
-          backgroundColor: '#f8fafc',
-          minHeight: '100vh'
-        }}
-      >
-        <Skeleton
-          variant='rectangular'
-          width='100%'
-          height={60}
-          sx={{
-            mb: { xs: 2, sm: 3 },
-            borderRadius: '14px',
-            backgroundColor: '#ffffff'
-          }}
-        />
-        <Grid container spacing={{ xs: 2, sm: 3 }}>
-          <Grid item xs={12} md={8}>
-            <Skeleton
-              variant='rectangular'
-              width='100%'
-              height={400}
-              sx={{
-                borderRadius: '14px',
-                backgroundColor: '#ffffff'
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Skeleton
-              variant='rectangular'
-              width='100%'
-              height={300}
-              sx={{
-                borderRadius: '14px',
-                backgroundColor: '#ffffff'
-              }}
-            />
-          </Grid>
-        </Grid>
-      </Container>
-    )
+    return <SignalLoader message='Cargando ticket...' fullPage />
   }
 
   // Error state

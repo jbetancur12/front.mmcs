@@ -1,9 +1,9 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -97,9 +97,7 @@ const ActiveSessionsListDialog: React.FC<ActiveSessionsListDialogProps> = ({
         </DialogTitle>
         <DialogContent dividers sx={{ pt: 2.5 }}>
           {isLoading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={28} sx={{ color: '#00BFA5' }} />
-            </Box>
+            <SignalLoader size='small' />
           )}
           {isError && (
             <Alert severity='error'>

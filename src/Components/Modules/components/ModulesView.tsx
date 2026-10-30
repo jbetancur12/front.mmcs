@@ -1,7 +1,8 @@
 // src/modules/components/ModulesView.tsx
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useState } from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { Button, Chip, CircularProgress, Box, Grid, Paper, Typography } from '@mui/material'
+import { Button, Chip, Box, Grid, Paper, Typography } from '@mui/material'
 import { Add, Apps } from '@mui/icons-material'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
@@ -70,7 +71,7 @@ const ModulesView = () => {
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress />
+          <SignalLoader />
         </Box>
       ) : (
         <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>

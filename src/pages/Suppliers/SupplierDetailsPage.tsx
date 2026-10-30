@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCan } from '@utils/functions'
@@ -505,8 +506,7 @@ const SupplierDetailsPage: React.FC = () => {
   if (isLoadingSupplier) {
     return (
       <Container sx={{ textAlign: 'center', mt: 5 }}>
-        <CircularProgress />
-        <Typography>Cargando detalles del proveedor...</Typography>
+        <SignalLoader message='Cargando detalles del proveedor...' />
       </Container>
     )
   }

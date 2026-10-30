@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueries } from 'react-query'
 import {
@@ -41,7 +42,6 @@ import { notify as appNotify } from 'src/utils/notify'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 import {
   COURSE_STATUS_LABELS,
-  PLAN_TEAL,
   PLAN_TEAL_SOFT,
   PlanDialogHeader,
   planDialogPaperProps,
@@ -243,7 +243,7 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
       <DialogContent sx={{ pt: 3 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <CircularProgress sx={{ color: PLAN_TEAL }} />
+            <SignalLoader />
           </Box>
         ) : (
           <Grid container spacing={3} sx={{ mt: 0 }}>

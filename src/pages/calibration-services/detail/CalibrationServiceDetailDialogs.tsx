@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import {
   Box,
   Button,
@@ -513,7 +514,7 @@ const CalibrationServiceDetailDialogsHost = ({
               />
             </Box>
           ) : (
-            <Typography color='text.secondary'>Cargando vista previa...</Typography>
+            <SignalLoader message='Cargando vista previa...' />
           )}
         </DialogContent>
       </Dialog>

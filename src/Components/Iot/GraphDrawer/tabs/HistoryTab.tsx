@@ -1,11 +1,12 @@
 // components/DeviceGraphs/GraphDrawer/tabs/HistoryTab.tsx
 
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { RANGE_OPTIONS } from 'src/Components/Iot/constants'
 import { RangeSelector } from '../parts/RangeSelector'
 import { StatsTable } from '../parts/StatsTable'
 
 import { RangeOption } from '../types'
-import { Skeleton, TextField, Typography } from '@mui/material'
+import { TextField, Typography } from '@mui/material'
 import MainChart from 'src/Components/Iot/GraphDrawer/parts/MainChart'
 import { useState } from 'react'
 import { DatePicker } from '@mui/x-date-pickers'
@@ -86,7 +87,7 @@ export const HistoryTab = ({
       )}
 
       {isLoading ? (
-        <Skeleton variant='rectangular' width='100%' height={400} />
+        <SignalLoader message='Cargando datos históricos...' />
       ) : error ? (
         <Typography color='error'>Error al cargar datos históricos</Typography>
       ) : (

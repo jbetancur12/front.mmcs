@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Container,
@@ -11,8 +12,7 @@ import {
   CardContent,
   Grid,
   Avatar,
-  Chip,
-  LinearProgress
+  Chip
 } from '@mui/material'
 import {
   Search,
@@ -119,10 +119,7 @@ const MaintenanceTracking: React.FC = () => {
 
           {isLoading && (
             <Box mt={3}>
-              <LinearProgress />
-              <Typography variant='body2' textAlign='center' mt={1}>
-                Buscando ticket...
-              </Typography>
+              <SignalLoader size='small' message='Buscando ticket...' />
             </Box>
           )}
 

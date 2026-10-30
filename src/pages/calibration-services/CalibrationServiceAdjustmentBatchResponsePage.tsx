@@ -1,9 +1,9 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { FormEvent, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Container,
   MenuItem,
   Paper,
@@ -181,7 +181,7 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
 
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-              <CircularProgress />
+              <SignalLoader />
             </Box>
           ) : error ? (
             <Alert severity='error'>{error}</Alert>

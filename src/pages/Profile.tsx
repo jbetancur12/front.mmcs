@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -10,7 +11,6 @@ import {
   Container,
   Grid,
   Paper,
-  Skeleton,
   TextField,
   Typography
 } from '@mui/material'
@@ -162,20 +162,7 @@ const Profile: React.FC = () => {
   }
 
   if (loading) {
-    return (
-      <Container maxWidth='xl' sx={{ py: 3 }}>
-        <Skeleton variant='text' width={280} height={48} />
-        <Skeleton variant='text' width={180} height={28} sx={{ mb: 3 }} />
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Skeleton variant='rounded' height={360} />
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <Skeleton variant='rounded' height={360} />
-          </Grid>
-        </Grid>
-      </Container>
-    )
+    return <SignalLoader message='Cargando perfil...' fullPage />
   }
 
   if (!profile) {

@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import {
   Box,
@@ -193,7 +194,7 @@ const MobileListPage = () => {
         </Box>
 
         {isLoading ? (
-          <Box sx={{ textAlign: 'center', py: 8 }}><CircularProgress /></Box>
+          <Box sx={{ textAlign: 'center', py: 8 }}><SignalLoader /></Box>
         ) : groups.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8, px: 3 }}>
             <EventOutlinedIcon sx={{ fontSize: 48, color: C.gray300 }} />

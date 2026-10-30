@@ -1,5 +1,6 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { ArrowBack } from '@mui/icons-material'
-import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
+import { Box, IconButton } from '@mui/material'
 import { useCalibrationTimelinePdf } from '@hooks/fleet/useFleetQueries'
 
 import { useNavigate, useParams } from 'react-router-dom'
@@ -19,10 +20,7 @@ export const CalibrationTimelinePDF = () => {
         height='100vh'
         flexDirection='column'
       >
-        <CircularProgress />
-        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-          Generando PDF...
-        </Typography>
+        <SignalLoader message='Generando PDF...' />
       </Box>
     )
   }

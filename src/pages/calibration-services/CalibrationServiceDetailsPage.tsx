@@ -1,4 +1,5 @@
-import { Alert, Box, Button, CircularProgress } from '@mui/material'
+import SignalLoader from 'src/Components/Common/SignalLoader'
+import { Alert, Box, Button } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   useCalibrationService,
@@ -34,7 +35,7 @@ const CalibrationServiceDetailsPage = () => {
         alignItems='center'
         minHeight='55vh'
       >
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

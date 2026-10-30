@@ -1,10 +1,10 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { FormEvent, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
   Button,
   Checkbox,
-  CircularProgress,
   Container,
   FormControlLabel,
   Paper,
@@ -142,7 +142,7 @@ const CalibrationServiceRemoteSignaturePage = () => {
 
           {isLoading ? (
             <Box display='flex' justifyContent='center' py={4}>
-              <CircularProgress />
+              <SignalLoader />
             </Box>
           ) : null}
 

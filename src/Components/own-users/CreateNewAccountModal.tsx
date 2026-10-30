@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { Stack, Typography } from '@mui/material'
 import React, { useMemo, useState } from 'react'
 
@@ -6,7 +7,6 @@ import FormDialog, { FormDialogSection } from '../Common/FormDialog'
 
 import RoleChangePreview from './RoleChangePreview'
 import RoleHelpDialog from './RoleHelpDialog'
-import { FormFieldSkeleton } from './Skeletons'
 import { AssignableRole, Role, UserData, UserFormValues } from './types'
 import { FormErrorsAlert, RolesField, UserTextField } from './UserFormFields'
 import { useUserForm } from './useUserForm'
@@ -123,11 +123,7 @@ const CreateNewAccountModal: React.FC<CreateModalProps> = ({
       maxWidth='md'
     >
       {loadingRoles ? (
-        <Stack spacing={2}>
-          <FormFieldSkeleton />
-          <FormFieldSkeleton />
-          <FormFieldSkeleton />
-        </Stack>
+        <SignalLoader size='small' />
       ) : (
         <>
           <FormDialogSection title='Datos de la persona'>

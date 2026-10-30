@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -369,7 +370,7 @@ const LmsCourseContentEditor: React.FC = () => {
   if (isLoading || !draftCourse) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <Typography>Cargando contenido del curso...</Typography>
+        <SignalLoader message='Cargando contenido del curso...' />
       </Box>
     )
   }

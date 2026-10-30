@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 
 import {
@@ -9,7 +10,6 @@ import {
   TableRow,
   Paper,
   Box,
-  Skeleton,
   Chip,
   Button
 } from '@mui/material'
@@ -76,13 +76,7 @@ const DeviceAlarmEventsTable: React.FC<DeviceAlarmEventsTableProps> = ({
   })
 
   if (isLoading) {
-    return (
-      <Box sx={{ p: 2 }}>
-        {[...Array(5)].map((_, index) => (
-          <Skeleton key={index} height={45} />
-        ))}
-      </Box>
-    )
+    return <SignalLoader size='small' />
   }
 
   if (error) {

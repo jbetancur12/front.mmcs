@@ -1,4 +1,5 @@
-import { Alert, Box, CircularProgress, Typography } from '@mui/material'
+import SignalLoader from 'src/Components/Common/SignalLoader'
+import { Alert, Box, Typography } from '@mui/material'
 import React from 'react'
 
 import CalibrationTimeline from '../CalibrationTimeline'
@@ -62,8 +63,7 @@ export const UsersTab = ({
         <React.Suspense
           fallback={
             <Box display='flex' justifyContent='center' py={4}>
-              <CircularProgress />
-              <Typography sx={{ ml: 2 }}>Cargando usuarios...</Typography>
+              <SignalLoader message='Cargando usuarios...' />
             </Box>
           }
         >
@@ -102,8 +102,7 @@ export const ModulesTab = ({
         <React.Suspense
           fallback={
             <Box display='flex' justifyContent='center' py={4}>
-              <CircularProgress />
-              <Typography sx={{ ml: 2 }}>Cargando módulos...</Typography>
+              <SignalLoader message='Cargando módulos...' />
             </Box>
           }
         >

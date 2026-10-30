@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 import {
   Document,
@@ -11,7 +12,7 @@ import {
 import { CalibrationHistory, DataSheetData } from './ListDataSheet'
 import { format } from 'date-fns'
 import { createTw } from 'react-pdf-tailwind'
-import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
+import { Box, IconButton } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router-dom'
 import { buildMinioObjectUrl } from '@utils/minio'
@@ -281,10 +282,7 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
         height='100vh'
         flexDirection='column'
       >
-        <CircularProgress />
-        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-          Generando PDF...
-        </Typography>
+        <SignalLoader message='Generando PDF...' />
       </Box>
     )
   }

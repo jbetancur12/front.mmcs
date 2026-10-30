@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -7,7 +8,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Collapse,
   Divider,
   LinearProgress,
@@ -297,7 +297,7 @@ const MyTrainingPlans: React.FC<MyTrainingPlansProps> = ({
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <CircularProgress sx={{ color: PLAN_TEAL }} />
+        <SignalLoader />
       </Box>
     )
   }

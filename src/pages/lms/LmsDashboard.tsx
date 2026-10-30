@@ -1,8 +1,9 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
-import { Box, CircularProgress, Typography } from '@mui/material'
+import { Box } from '@mui/material'
 import { useLmsPermissions } from '../../hooks/useLms'
 import { getLmsExperienceRole } from '../../utils/lmsIdentity'
 
@@ -85,10 +86,7 @@ const LmsDashboard: React.FC = () => {
         height='100vh'
         flexDirection='column'
       >
-        <CircularProgress />
-        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-          Cargando LMS...
-        </Typography>
+        <SignalLoader message='Cargando LMS...' />
       </Box>
     )
   }
@@ -101,10 +99,7 @@ const LmsDashboard: React.FC = () => {
       height='100vh'
       flexDirection='column'
     >
-      <CircularProgress />
-      <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-        Redirigiendo a tu dashboard...
-      </Typography>
+      <SignalLoader message='Redirigiendo a tu dashboard...' />
     </Box>
   )
 }

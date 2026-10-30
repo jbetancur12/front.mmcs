@@ -1,9 +1,9 @@
 // src/components/Purchases/SupplierPurchaseHistoryTable.tsx
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo } from 'react'
 import {
   Box,
   Typography,
-  CircularProgress,
   Alert,
   Chip,
   Link
@@ -231,8 +231,7 @@ const SupplierPurchaseHistoryTable: React.FC<
           p: 2
         }}
       >
-        <CircularProgress size={24} sx={{ mr: 1 }} />{' '}
-        <Typography>Cargando historial de compras...</Typography>
+        <SignalLoader size='small' message='Cargando historial de compras...' />
       </Box>
     )
   }

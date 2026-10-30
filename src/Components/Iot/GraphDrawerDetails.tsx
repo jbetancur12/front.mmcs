@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -13,7 +14,6 @@ import {
   TableBody,
   Grid,
   Button,
-  Skeleton,
   AppBar,
   Toolbar,
   Tabs,
@@ -441,7 +441,7 @@ const GraphDrawer = ({
               </Box>
 
               {isLoading ? (
-                <Skeleton variant='rectangular' width='100%' height={400} />
+                <SignalLoader message='Cargando datos históricos...' />
               ) : error ? (
                 <Typography color='error'>
                   Error al cargar datos históricos

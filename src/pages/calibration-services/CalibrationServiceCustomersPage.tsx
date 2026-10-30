@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useDeferredValue, useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import {
@@ -5,7 +6,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Collapse,
   Container,
   Divider,
@@ -206,7 +206,7 @@ const CalibrationServiceCustomersPage = () => {
   if (isLoading) {
     return (
       <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

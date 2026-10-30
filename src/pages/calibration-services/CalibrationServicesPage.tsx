@@ -1,5 +1,6 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useStore } from '@nanostores/react'
-import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from '@mui/material'
+import { Alert, Box, Button, Container, Stack, Typography } from '@mui/material'
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { useCalibrationServices } from '../../hooks/useCalibrationServices'
@@ -85,7 +86,7 @@ const CalibrationServicesPage = () => {
         alignItems='center'
         minHeight='55vh'
       >
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

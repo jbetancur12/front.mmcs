@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -11,7 +12,6 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import AddIcon from '@mui/icons-material/Add'
 
-import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 // Importaciones para la tabla de estadísticas
 import Table from '@mui/material/Table'
@@ -384,8 +384,7 @@ const LaboratoryMonitor: React.FC = () => {
     // Carga inicial de la lista de sensores
     return (
       <Box className='flex justify-center items-center h-64'>
-        <CircularProgress />
-        <Typography className='ml-4'>Cargando sensores...</Typography>
+        <SignalLoader message='Cargando sensores...' />
       </Box>
     )
   }
@@ -844,10 +843,7 @@ const LaboratoryMonitor: React.FC = () => {
             {/* Mostrar indicador de carga o error específico para históricos */}
             {isLoadingHistory && selectedSensorIds.length > 0 && (
               <Box className='flex justify-center items-center h-32'>
-                <CircularProgress size={24} />
-                <Typography className='ml-2'>
-                  Cargando datos históricos...
-                </Typography>
+                <SignalLoader size='small' message='Cargando datos históricos...' />
               </Box>
             )}
             {isErrorHistory && selectedSensorIds.length > 0 && (

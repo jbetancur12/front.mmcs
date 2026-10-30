@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useState } from 'react'
 import {
   Alert,
@@ -476,9 +477,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
 
       <DialogContent dividers sx={{ backgroundColor: '#f8fafc' }}>
         {loading && (
-          <Alert severity='info' sx={{ mb: 2 }}>
-            Cargando estructura del reporte técnico...
-          </Alert>
+          <SignalLoader message='Cargando estructura del reporte técnico...' />
         )}
 
         <Stack spacing={2}>

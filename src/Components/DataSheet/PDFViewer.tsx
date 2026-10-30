@@ -1,10 +1,10 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useState } from 'react'
 import { ArrowBack, Download } from '@mui/icons-material'
 import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Container,
   Typography
 } from '@mui/material'
@@ -113,10 +113,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ path }) => {
         height='100vh'
         flexDirection='column'
       >
-        <CircularProgress sx={{ color: '#00BFA5' }} />
-        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-          Generando PDF...
-        </Typography>
+        <SignalLoader message='Generando PDF...' />
       </Box>
     )
   }

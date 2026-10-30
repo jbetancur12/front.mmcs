@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
@@ -207,7 +208,7 @@ const LmsCourseAssignments: React.FC = () => {
   if (courseLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <Typography>Cargando curso...</Typography>
+        <SignalLoader message='Cargando curso...' />
       </Box>
     )
   }
@@ -329,7 +330,7 @@ const LmsCourseAssignments: React.FC = () => {
             <CardHeader title="Asignaciones Activas" />
             <CardContent>
               {assignmentsLoading ? (
-                <Typography>Cargando asignaciones...</Typography>
+                <SignalLoader message='Cargando asignaciones...' />
               ) : assignments.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   <AssignmentIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />

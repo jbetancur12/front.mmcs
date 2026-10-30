@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Alert,
@@ -333,9 +334,7 @@ const RolesPermissions: React.FC = () => {
             </Alert>
           )}
           {isLoading && (
-            <Box sx={{ py: 6, textAlign: 'center', color: 'text.secondary' }}>
-              Cargando matriz…
-            </Box>
+            <SignalLoader message='Cargando matriz...' />
           )}
           {matrix && tab === 'role' && (
             <RolePermissionsView

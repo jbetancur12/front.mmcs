@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect } from 'react'
 import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -780,10 +781,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   if (isLoadingQuiz) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 8 }}>
-        <CircularProgress size={60} />
-        <Typography sx={{ ml: 3 }} variant="h6">
-          Cargando quiz...
-        </Typography>
+        <SignalLoader message='Cargando quiz...' />
       </Box>
     )
   }
@@ -1504,8 +1502,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           {isLoadingStats && (
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <CircularProgress />
-                <Typography sx={{ ml: 2 }}>Cargando estadísticas...</Typography>
+                <SignalLoader message='Cargando estadísticas...' />
               </Box>
             </Grid>
           )}

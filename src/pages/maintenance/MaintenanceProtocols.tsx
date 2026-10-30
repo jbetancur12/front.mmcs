@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -284,7 +285,7 @@ const MaintenanceProtocols = () => {
       </Grid>
 
       {isLoading ? (
-        <Alert severity='info'>Cargando protocolos...</Alert>
+        <SignalLoader message='Cargando protocolos...' />
       ) : protocols.length === 0 ? (
         <Alert severity='warning'>
           No hay protocolos registrados. Puedes crear el primero desde aquí.

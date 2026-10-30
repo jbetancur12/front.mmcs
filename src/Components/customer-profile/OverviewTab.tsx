@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { CheckCircleOutline, Download } from '@mui/icons-material'
 import {
   Box,
@@ -6,7 +7,6 @@ import {
   CardContent,
   CircularProgress,
   Grid,
-  Skeleton,
   Typography
 } from '@mui/material'
 import React from 'react'
@@ -116,9 +116,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 'Equipos vencidos o que vencen en los próximos 30 días.'
               )}
               {isLoading ? (
-                [0, 1, 2].map((key) => (
-                  <Skeleton key={key} height={56} sx={{ borderRadius: 2 }} />
-                ))
+                <SignalLoader size='small' />
               ) : dueSoon.length === 0 ? (
                 <EmptyState
                   compact
@@ -225,9 +223,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             <CardContent sx={{ p: 3 }}>
               {sectionTitle('Equipos por sede')}
               {isLoading ? (
-                [0, 1, 2].map((key) => (
-                  <Skeleton key={key} height={44} sx={{ borderRadius: 2 }} />
-                ))
+                <SignalLoader size='small' />
               ) : headquarters.length === 0 ? (
                 <Typography variant='body2' color='text.secondary'>
                   Este cliente aún no tiene equipos.

@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import CalibrationServiceStageTimesCard from './CalibrationServiceStageTimesCard'
 import CalibrationServiceCollectionsCard from './CalibrationServiceCollectionsCard'
 import { useEffect, useMemo, useState } from 'react'
@@ -9,7 +10,6 @@ import {
   CardContent,
   Chip,
   Collapse,
-  CircularProgress,
   Container,
   Grid,
   LinearProgress,
@@ -902,10 +902,7 @@ const CalibrationServiceAnalyticsPage = () => {
 
       {isLoading ? (
         <Stack alignItems='center' py={8}>
-          <CircularProgress />
-          <Typography variant='body2' sx={{ mt: 2, color: ui.muted }}>
-            Calculando analíticas...
-          </Typography>
+          <SignalLoader message='Calculando analíticas...' />
         </Stack>
       ) : (
         <>

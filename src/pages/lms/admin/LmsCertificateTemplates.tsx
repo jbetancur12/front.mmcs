@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import {
@@ -1705,7 +1706,7 @@ const LmsCertificateTemplates: React.FC = () => {
         )}
 
       {isLoading ? (
-        <Typography color='text.secondary'>Cargando plantillas...</Typography>
+        <SignalLoader message='Cargando plantillas...' />
       ) : templateCards.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant='h6' gutterBottom>

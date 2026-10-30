@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useState } from 'react'
 import {
   Button,
@@ -5,7 +6,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  LinearProgress,
   MenuItem,
   Stack,
   TextField,
@@ -233,9 +233,7 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
             )
           })}
 
-          {isSaving ? (
-            <LinearProgress />
-          ) : null}
+          {isSaving ? <SignalLoader size='small' message='Guardando...' /> : null}
         </Stack>
       </DialogContent>
       <DialogActions>

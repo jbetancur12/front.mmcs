@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Alert,
@@ -5,7 +6,6 @@ import {
   Card,
   CardContent,
   Grid,
-  Skeleton,
   Switch,
   Typography
 } from '@mui/material'
@@ -115,20 +115,7 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
   }
 
   if (loading) {
-    return (
-      <Grid container spacing={3}>
-        {[...Array(3)].map((_, i) => (
-          <Grid item xs={12} sm={6} md={4} key={i}>
-            <Skeleton
-              variant='rectangular'
-              width='100%'
-              height={132}
-              sx={{ borderRadius: '16px' }}
-            />
-          </Grid>
-        ))}
-      </Grid>
-    )
+    return <SignalLoader message='Cargando módulos...' />
   }
 
   if (error) {

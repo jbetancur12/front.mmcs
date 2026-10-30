@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 import { MRT_ColumnDef, MRT_Row } from 'material-react-table'
 import {
@@ -235,7 +236,7 @@ const PurchaseVerificationsTable: React.FC = () => {
     }
   }
 
-  if (isLoading) return <Typography variant='h6'>Cargando...</Typography>
+  if (isLoading) return <SignalLoader fullPage />
 
   const verifications = data ?? []
   const now = new Date()

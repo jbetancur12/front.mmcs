@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 import {
   Box,
@@ -9,24 +10,7 @@ import {
 } from '@mui/material'
 
 // Skeleton for metric cards
-export const MetricCardSkeleton: React.FC = () => (
-  <Card sx={{
-    borderRadius: '16px',
-    border: '1px solid #e5e7eb',
-    height: '100%'
-  }}>
-    <CardContent sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Skeleton variant="circular" width={48} height={48} sx={{ mr: 2 }} />
-        <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width="60%" height={20} />
-          <Skeleton variant="text" width="40%" height={32} sx={{ mt: 0.5 }} />
-        </Box>
-      </Box>
-      <Skeleton variant="rectangular" width="80%" height={24} sx={{ borderRadius: 1 }} />
-    </CardContent>
-  </Card>
-)
+export const MetricCardSkeleton: React.FC = () => <SignalLoader size='small' />
 
 // Skeleton for widget cards
 export const WidgetCardSkeleton: React.FC<{ height?: number }> = ({ height = 300 }) => (

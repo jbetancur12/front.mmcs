@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
@@ -7,7 +8,6 @@ import {
   Grid,
   Button,
   Box,
-  CircularProgress,
   Alert,
   TextField,
   FormControlLabel,
@@ -156,8 +156,7 @@ const SupplierEditPage: React.FC = () => {
   if (isLoadingSupplier) {
     return (
       <Container sx={{ textAlign: 'center', mt: 5 }}>
-        <CircularProgress />
-        <Typography>Cargando datos del proveedor para editar...</Typography>
+        <SignalLoader message='Cargando datos del proveedor para editar...' />
       </Container>
     )
   }

@@ -1,4 +1,5 @@
 // Enhanced Templates Table Component with Modern Styling, Accessibility and Performance
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useMemo, memo } from 'react'
 import {
   Table,
@@ -10,8 +11,7 @@ import {
   InputAdornment,
   Box,
   Typography,
-  Chip,
-  Skeleton
+  Chip
 } from '@mui/material'
 import { Search as SearchIcon } from '@mui/icons-material'
 import { TemplatesData, TemplateData } from './types'
@@ -372,44 +372,11 @@ const TemplatesTable: React.FC<TemplatesTableProps> = ({
           </TableHead>
           <TableBody role='rowgroup'>
             {loading ? (
-              // Loading skeleton rows
-              Array.from({ length: 5 }).map((_, index) => (
-                <ModernTableRow key={index}>
-                  <TableCell>
-                    <Skeleton width={40} />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton width={120} />
-                  </TableCell>
-                  <TableCell className='hide-mobile'>
-                    <Skeleton width={200} />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton width={100} />
-                  </TableCell>
-                  <TableCell className='hide-tablet'>
-                    <Skeleton width={100} />
-                  </TableCell>
-                  <TableCell className='hide-tablet'>
-                    <Skeleton width={80} />
-                  </TableCell>
-                  <TableCell className='hide-mobile'>
-                    <Skeleton width={120} />
-                  </TableCell>
-                  <TableCell className='hide-mobile'>
-                    <Skeleton width={100} />
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}
-                    >
-                      <Skeleton variant='circular' width={32} height={32} />
-                      <Skeleton variant='circular' width={32} height={32} />
-                      <Skeleton variant='circular' width={32} height={32} />
-                    </Box>
-                  </TableCell>
-                </ModernTableRow>
-              ))
+              <ModernTableRow>
+                <TableCell colSpan={9} align='center'>
+                  <SignalLoader message='Cargando plantillas...' />
+                </TableCell>
+              </ModernTableRow>
             ) : paginatedTemplates.length === 0 ? (
               <ModernTableRow>
                 <TableCell colSpan={9} align='center' sx={{ padding: 6 }}>

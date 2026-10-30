@@ -1,10 +1,10 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import {
   Box,
   Typography,
   Paper,
   Chip,
-  CircularProgress,
   Divider,
   LinearProgress,
   Button,
@@ -91,7 +91,7 @@ const LmsUserCourseReview = () => {
   if (isLoading) {
     return (
       <Box sx={{ p: 6, textAlign: 'center' }}>
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

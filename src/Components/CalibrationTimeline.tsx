@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import {
   CheckCircleOutline,
   ErrorOutline,
@@ -12,7 +13,6 @@ import {
   Button,
   Menu,
   MenuItem,
-  Skeleton,
   Tooltip,
   Typography
 } from '@mui/material'
@@ -328,17 +328,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
   )
 
   if (loading) {
-    return (
-      <Box>
-        <Skeleton variant='text' width={220} height={36} />
-        <Skeleton
-          variant='rectangular'
-          width='100%'
-          height={400}
-          sx={{ borderRadius: '16px', mt: 2 }}
-        />
-      </Box>
-    )
+    return <SignalLoader message='Cargando programación...' />
   }
 
   if (isError) {

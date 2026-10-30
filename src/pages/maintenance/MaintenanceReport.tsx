@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Container,
@@ -14,7 +15,6 @@ import {
   Card,
   CardContent,
   FormControl,
-  LinearProgress,
   Chip,
   Divider
 } from '@mui/material'
@@ -590,10 +590,7 @@ const MaintenanceReport: React.FC = () => {
           {/* Loading indicator */}
           {createTicketMutation.isLoading && (
             <Box mb={2}>
-              <LinearProgress />
-              <Typography variant='body2' textAlign='center' mt={1}>
-                Enviando solicitud...
-              </Typography>
+              <SignalLoader size='small' message='Enviando solicitud...' />
             </Box>
           )}
 

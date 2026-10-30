@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useCallback } from 'react' // Import useCallback
 import {
   LineChart,
@@ -15,7 +16,7 @@ import {
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { format, parseISO, isValid } from 'date-fns'
-import { Alert, CircularProgress } from '@mui/material'
+import { Alert } from '@mui/material'
 
 // --- Interfaces (sin cambios) ---
 interface ChartDataPoint {
@@ -176,10 +177,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
   if (isLoading) {
     return (
       <Box className='flex justify-center items-center h-64'>
-        <CircularProgress />
-        <Typography className='ml-4 text-gray-600'>
-          Cargando gráficos...
-        </Typography>
+        <SignalLoader message='Cargando gráficos...' />
       </Box>
     )
   }

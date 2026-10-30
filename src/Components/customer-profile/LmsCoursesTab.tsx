@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { Add } from '@mui/icons-material'
 import {
   Alert,
@@ -6,7 +7,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   FormControl,
   Grid,
   InputLabel,
@@ -93,7 +93,7 @@ const LmsCoursesTab: React.FC<LmsCoursesTabProps> = ({
 
     {isLoadingCustomerLmsCourses ? (
       <Box display='flex' justifyContent='center' alignItems='center' py={6}>
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     ) : (customerLmsCourses?.visibleCourses || []).length === 0 ? (
       <Typography color='text.secondary'>

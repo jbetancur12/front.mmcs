@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Box,
@@ -16,7 +17,6 @@ import {
   Chip,
   Button,
   Paper,
-  CircularProgress,
   InputAdornment
 } from '@mui/material'
 import { Search as SearchIcon, WorkspacePremium as WorkspacePremiumIcon } from '@mui/icons-material'
@@ -126,7 +126,7 @@ const LmsIssuedCertificates = () => {
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                    <CircularProgress />
+                    <SignalLoader />
                   </TableCell>
                 </TableRow>
               ) : certificates.length === 0 ? (

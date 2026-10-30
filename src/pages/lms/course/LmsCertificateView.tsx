@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
@@ -24,7 +25,6 @@ import {
   InputAdornment,
   Tooltip,
   Avatar,
-  LinearProgress,
 } from '@mui/material'
 import {
   Download as DownloadIcon,
@@ -311,8 +311,7 @@ const LmsCertificateView: React.FC = () => {
   if (loading && viewMode === 'single') {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
-        <LinearProgress sx={{ mb: 2 }} />
-        <Typography>Cargando certificado...</Typography>
+        <SignalLoader message='Cargando certificado...' />
       </Box>
     )
   }
@@ -645,8 +644,7 @@ const LmsCertificateView: React.FC = () => {
 
           {loading ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <LinearProgress sx={{ mb: 2 }} />
-              <Typography>Cargando certificados...</Typography>
+              <SignalLoader message='Cargando certificados...' />
             </Box>
           ) : (
             <Grid container spacing={3}>

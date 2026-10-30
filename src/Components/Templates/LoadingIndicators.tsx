@@ -1,4 +1,5 @@
 // Loading Indicators for Async Operations
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 import {
   Box,
@@ -46,18 +47,7 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
         }}
         open={open}
       >
-        <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress
-            color='inherit'
-            size={getSize()}
-            sx={{ marginBottom: 2 }}
-          />
-          {message && (
-            <Typography variant='body1' color='inherit'>
-              {message}
-            </Typography>
-          )}
-        </Box>
+        <SignalLoader size={size} message={message || 'Cargando...'} />
       </Backdrop>
     )
   }
@@ -107,15 +97,7 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
           gap: 2
         }}
       >
-        <CircularProgress
-          size={getSize()}
-          sx={{ color: colors.primary[500] }}
-        />
-        {message && (
-          <Typography variant='body2' color='text.secondary'>
-            {message}
-          </Typography>
-        )}
+        <SignalLoader size='small' message={message || 'Cargando...'} />
       </Box>
     )
   }
@@ -145,15 +127,7 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
           gap: 2
         }}
       >
-        <CircularProgress
-          size={getSize()}
-          sx={{ color: colors.primary[500] }}
-        />
-        {message && (
-          <Typography variant='body2' color='text.secondary' textAlign='center'>
-            {message}
-          </Typography>
-        )}
+        <SignalLoader size={size} message={message || 'Cargando...'} />
       </Box>
     </Fade>
   )

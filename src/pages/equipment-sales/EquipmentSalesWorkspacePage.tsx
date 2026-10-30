@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from 'react-query'
 import {
@@ -11,7 +12,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   FormControl,
   Grid,
   InputLabel,
@@ -798,7 +798,7 @@ const EquipmentSalesWorkspacePage = () => {
         alignItems='center'
         minHeight='55vh'
       >
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

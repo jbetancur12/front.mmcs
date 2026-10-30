@@ -1,8 +1,9 @@
 // src/Components/LaboratoryMonitor/PatternSection.tsx
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
-import { Box, Button, CircularProgress, Paper, Stack } from '@mui/material'
+import { Box, Button, Paper, Stack } from '@mui/material'
 import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined'
 import SectionHeader from 'src/Components/Common/SectionHeader'
 import EmptyState from 'src/Components/Common/EmptyState'
@@ -75,7 +76,7 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
   if (isLoadingPatterns) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

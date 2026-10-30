@@ -1,4 +1,5 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -117,7 +118,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
           minHeight: '400px'
         }}
       >
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

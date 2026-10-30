@@ -647,10 +647,7 @@ const MaintenanceDashboard: React.FC = () => {
       <Grid container spacing={3} mb={3} role='region' aria-label='Estadísticas del dashboard'>
         {statsLoading ? (
           <>
-            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
-            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
-            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
-            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
+            <Grid item xs={12}><StatCardSkeleton /></Grid>
           </>
         ) : (
           <>

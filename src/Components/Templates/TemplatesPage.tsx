@@ -1,4 +1,5 @@
 // Enhanced Templates Page - Main Container Component
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { Button, Container, Grid, Typography, Box } from '@mui/material'
 import { Add as AddIcon, Description } from '@mui/icons-material'
@@ -12,7 +13,6 @@ import {
   useUpdateTemplate
 } from '@hooks/templates/useTemplates'
 import { TemplatesData, TemplateData, ErrorState } from './types'
-import LoadingState from './LoadingState'
 import EmptyState from './EmptyState'
 import CreateTemplateModal from './CreateTemplateModal'
 import DuplicateTemplateModal from './DuplicateTemplateModal'
@@ -154,7 +154,7 @@ const TemplatesPage: React.FC = () => {
   if (loading && templates.length === 0) {
     return (
       <Container maxWidth='xl' sx={{ py: 3 }}>
-        <LoadingState />
+        <SignalLoader message='Cargando plantillas...' />
       </Container>
     )
   }

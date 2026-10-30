@@ -1,5 +1,6 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useMemo, useState } from 'react'
-import { Box, Button, CircularProgress, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { Download, OpenInNew, PictureAsPdf } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { buildMinioObjectUrl } from '@utils/minio'
@@ -108,10 +109,7 @@ const PDFViewer = ({
           gap: 2
         }}
       >
-        <CircularProgress size={32} />
-        <Typography color='text.secondary'>
-          Cargando vista previa del PDF...
-        </Typography>
+        <SignalLoader message='Cargando vista previa del PDF...' />
       </Box>
     )
   }

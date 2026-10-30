@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { Suspense, lazy, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -5,7 +6,6 @@ import { ArrowBack } from '@mui/icons-material'
 import {
   Box,
   Button,
-  CircularProgress,
   Stack,
   Typography
 } from '@mui/material'
@@ -94,7 +94,7 @@ const VehicleDataSheetPDF = () => {
         <Suspense
           fallback={
             <Box display='flex' justifyContent='center' py={6}>
-              <CircularProgress />
+              <SignalLoader />
             </Box>
           }
         >

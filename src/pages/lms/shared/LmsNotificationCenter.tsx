@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box,
@@ -23,8 +24,7 @@ import {
   Select,
   MenuItem,
   Alert,
-  Divider,
-  CircularProgress
+  Divider
 } from '@mui/material'
 import {
   Notifications as NotificationsIcon,
@@ -387,8 +387,7 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
           )}
           {isLoading ? (
             <Box sx={{ p: 4, textAlign: 'center' }}>
-              <CircularProgress sx={{ mb: 2 }} />
-              <Typography color='text.secondary'>Cargando notificaciones...</Typography>
+              <SignalLoader message='Cargando notificaciones...' />
             </Box>
           ) : error ? (
             <Box sx={{ p: 3 }}>

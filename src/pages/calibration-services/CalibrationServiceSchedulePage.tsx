@@ -1,9 +1,9 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Container,
   Grid,
   IconButton,
@@ -183,7 +183,7 @@ const CalibrationServiceSchedulePage = () => {
             </Stack>
 
             {isLoading ? (
-              <Stack alignItems='center' py={6}><CircularProgress /></Stack>
+              <Stack alignItems='center' py={6}><SignalLoader /></Stack>
             ) : (
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: { xs: 0.5, md: 0.75 } }}>
                 {WEEKDAYS.map((day, index) => (

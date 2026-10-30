@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
 import {
@@ -11,7 +12,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts'
-import { Container, Grid, Box, CircularProgress, Alert, Button, Card, CardContent, LinearProgress, Paper, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import { Container, Grid, Box, Alert, Button, Card, CardContent, LinearProgress, Paper, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import { BarChart as BarChart, DateRange, ErrorOutline, FactCheck, HourglassEmpty, ListAlt, ReceiptLong, RemoveShoppingCart } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -151,7 +152,7 @@ const PurchaseStatistics = () => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress size={60} />
+        <SignalLoader />
       </Box>
     )
   }

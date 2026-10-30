@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
@@ -387,7 +388,7 @@ const LmsCoursePreview: React.FC = () => {
           height: '50vh'
         }}
       >
-        <Typography>Cargando vista previa...</Typography>
+        <SignalLoader message='Cargando vista previa...' />
       </Box>
     )
   }

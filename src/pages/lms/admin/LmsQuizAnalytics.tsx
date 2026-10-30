@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
@@ -9,7 +10,6 @@ import {
   FormControl,
   Grid,
   InputLabel,
-  LinearProgress,
   MenuItem,
   Select,
   Stack,
@@ -175,7 +175,9 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
           </Card>
         )}
 
-        {(isLoadingOptions || isLoadingAnalytics) && <LinearProgress />}
+        {(isLoadingOptions || isLoadingAnalytics) && (
+          <SignalLoader message='Cargando analíticas...' />
+        )}
 
         {analyticsError ? (
           <Alert severity='error'>

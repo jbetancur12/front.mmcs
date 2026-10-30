@@ -1,9 +1,9 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useState } from 'react'
 import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   IconButton,
   Paper,
   Stack,
@@ -140,7 +140,7 @@ const CalibrationNotificationCenter = () => {
       </Stack>
 
       {isLoading ? (
-        <Box display='flex' justifyContent='center' py={6}><CircularProgress /></Box>
+        <Box display='flex' justifyContent='center' py={6}><SignalLoader /></Box>
       ) : notifications.length > 0 ? (
         <Stack spacing={1.5}>
           {notifications.map((notification) => (

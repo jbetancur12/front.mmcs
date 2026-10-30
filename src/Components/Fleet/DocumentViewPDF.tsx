@@ -1,6 +1,7 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
+import { Box, IconButton } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
 import { buildMinioObjectUrl } from '@utils/minio'
 
@@ -22,10 +23,7 @@ const DocumentViewPDF = () => {
         height='100vh'
         flexDirection='column'
       >
-        <CircularProgress />
-        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-          Generando PDF...
-        </Typography>
+        <SignalLoader message='Generando PDF...' />
       </Box>
     )
   } else {

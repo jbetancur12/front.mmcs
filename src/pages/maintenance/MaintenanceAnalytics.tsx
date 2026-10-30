@@ -1,6 +1,6 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo, useState } from 'react'
 import {
-  Alert,
   Box,
   Button,
   Card,
@@ -85,7 +85,6 @@ const MaintenanceAnalytics: React.FC = () => {
 
   const {
     data: analytics,
-    isLoading,
     refetch,
     isFetching
   } = useMaintenanceAnalytics(filters)
@@ -245,10 +244,8 @@ const MaintenanceAnalytics: React.FC = () => {
         </Grid>
       </Paper>
 
-      {(isLoading || isFetching) && <LinearProgress sx={{ mb: 2, borderRadius: 999 }} />}
-
       {!analytics ? (
-        <Alert severity='info'>Cargando analíticas de mantenimiento...</Alert>
+        <SignalLoader message='Cargando analíticas de mantenimiento...' />
       ) : (
         <>
           <Grid container spacing={3} mb={3}>

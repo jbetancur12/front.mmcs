@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PERMISSIONS } from 'src/constants/permissions'
@@ -12,7 +13,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Container,
   Dialog,
   DialogActions,
@@ -491,7 +491,7 @@ const EquipmentSalesPage = () => {
           alignItems='center'
           minHeight='40vh'
         >
-          <CircularProgress />
+          <SignalLoader />
         </Box>
       ) : filteredQuotations.length === 0 ? (
         <Paper

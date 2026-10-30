@@ -1,10 +1,10 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import {
   Paper,
   Typography,
   Box,
   IconButton,
-  Collapse,
-  CircularProgress
+  Collapse
 } from '@mui/material'
 import {
   ExpandMore,
@@ -93,10 +93,7 @@ const MaintenanceTicketActivitySections = ({ ticket, details }: MaintenanceTicke
               role='status'
               aria-live='polite'
             >
-              <CircularProgress
-                size={24}
-                aria-label='Cargando historial'
-              />
+              <SignalLoader size='small' message='Cargando historial' />
             </Box>
           ) : (
             <MaintenanceTimeline timeline={timelineData || []} />

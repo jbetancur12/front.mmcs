@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 
 import {
@@ -7,7 +8,6 @@ import {
   ListItemText,
   ListItemIcon,
   Button,
-  CircularProgress,
   Alert,
   Chip,
   Divider,
@@ -190,7 +190,7 @@ const ClientDeviceAssignment: React.FC<ClientDeviceAssignmentProps> = ({
         </Box>
         <Collapse in={openAssigned} timeout='auto' unmountOnExit>
           {isLoadingClientDevices ? (
-            <CircularProgress />
+            <SignalLoader />
           ) : filteredClientDevices.length > 0 ? (
             <List
               height={400}
@@ -245,7 +245,7 @@ const ClientDeviceAssignment: React.FC<ClientDeviceAssignmentProps> = ({
         </Box>
         <Collapse in={openAvailable} timeout='auto' unmountOnExit>
           {isLoadingDevices ? (
-            <CircularProgress />
+            <SignalLoader />
           ) : filteredAllDevices.length > 0 ? (
             <List
               height={400}

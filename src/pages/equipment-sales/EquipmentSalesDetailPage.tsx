@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -7,7 +8,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Grid,
   Stack,
   Tab,
@@ -372,7 +372,7 @@ const EquipmentSalesDetailPage = () => {
         alignItems='center'
         minHeight='55vh'
       >
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

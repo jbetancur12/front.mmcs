@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useState } from 'react'
 import {
   DataGrid,
@@ -9,7 +10,6 @@ import {
   Box,
   Paper,
   Typography,
-  CircularProgress,
   Alert,
   Chip,
   IconButton,
@@ -285,7 +285,7 @@ const EventHistory = ({ deviceId }: EventosProps) => {
 
       <Paper sx={{ p: 2 }}>
         {loading ? (
-          <CircularProgress />
+          <SignalLoader />
         ) : error ? (
           <Alert severity='error'>Error al cargar eventos</Alert>
         ) : (

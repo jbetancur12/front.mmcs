@@ -1,5 +1,6 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { Suspense, lazy, useState } from 'react'
-import { Box, Container, IconButton, Tooltip } from '@mui/material'
+import { Container, IconButton, Tooltip } from '@mui/material'
 import { Settings, UploadFile } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
@@ -39,7 +40,7 @@ const Zip = () => {
           </Tooltip>
         }
       />
-      <Suspense fallback={<Box py={4}>Cargando analizador...</Box>}>
+      <Suspense fallback={<SignalLoader message='Cargando analizador...' />}>
         <AnalyzeExcelComponent
           hideUpload={false}
           isFile={true}

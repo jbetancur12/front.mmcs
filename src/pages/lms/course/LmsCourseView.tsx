@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
@@ -19,7 +20,6 @@ import {
   DialogActions,
   Paper,
   Stack,
-  Skeleton,
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -746,31 +746,7 @@ const LmsCourseView: React.FC = () => {
 
   // Early return states (must be after all hooks)
   if (isLoadingCourse) {
-    return (
-      <>
-      <style>{styles}</style>
-      <Box sx={{ display: 'flex', height: '100%', minHeight: '100vh', overflow: 'hidden', bgcolor: '#f3fbfa' }}>
-        <Box sx={{ width: 344, display: { xs: 'none', md: 'block' }, p: 2 }}>
-          <Box sx={{ mb: 2 }}>
-            <Skeleton variant="text" width={100} height={14} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width={180} height={24} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width={140} height={14} />
-          </Box>
-          {[1, 2, 3].map((i) => (
-            <Box key={i} sx={{ mb: 1.5, p: 1.5, borderRadius: 2, bgcolor: 'white', border: '1px solid rgba(24,49,83,0.08)' }}>
-              <Skeleton variant="text" width={80} height={12} sx={{ mb: 0.5 }} />
-              <Skeleton variant="text" width={160} height={18} sx={{ mb: 1 }} />
-              <Skeleton variant="rounded" width="100%" height={8} />
-            </Box>
-          ))}
-        </Box>
-        <Box sx={{ flex: 1, p: 3 }}>
-          <Skeleton variant="rounded" width="100%" height={120} sx={{ mb: 3, borderRadius: 4 }} />
-          <Skeleton variant="rounded" width="100%" height={400} sx={{ borderRadius: 5 }} />
-        </Box>
-      </Box>
-      </>
-    )
+    return <SignalLoader message='Cargando curso...' fullPage />
   }
 
   if (courseError || !course) {

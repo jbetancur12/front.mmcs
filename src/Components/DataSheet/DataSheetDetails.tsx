@@ -1,6 +1,7 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { Suspense, lazy, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
+import { Box, Button, Stack, Typography } from '@mui/material'
 
 import { DataSheetData } from './ListDataSheet'
 import { useDataSheet } from '@hooks/dataSheets/useDataSheets'
@@ -45,7 +46,7 @@ const DataSheetDetail: React.FC = () => {
           <Suspense
             fallback={
               <Box display='flex' justifyContent='center' py={6}>
-                <CircularProgress />
+                <SignalLoader />
               </Box>
             }
           >

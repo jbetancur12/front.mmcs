@@ -1,7 +1,8 @@
 // components/DeviceIotMap/index.tsx
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import 'leaflet/dist/leaflet.css'
 import { useStore } from '@nanostores/react'
-import { Box, CircularProgress } from '@mui/material'
+import { Box } from '@mui/material'
 import {
   LayersControl,
   MapContainer,
@@ -95,7 +96,7 @@ const DeviceIotMap = () => {
             transform: 'translate(-50%, -50%)'
           }}
         >
-          <CircularProgress />
+          <SignalLoader />
         </Box>
       )}
       <AlarmNotification onFilterChange={handleFilterChange} />

@@ -1,11 +1,10 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useMemo } from 'react'
 import {
   Container,
   Typography,
-  Box,
   Grid,
   IconButton,
-  Skeleton,
   Tooltip,
   ToggleButton,
   ToggleButtonGroup
@@ -89,30 +88,7 @@ const Dashboard: React.FC = () => {
     setDueFilter((current) => (current === filter ? null : filter))
 
   if (isLoading) {
-    return (
-      <Container maxWidth='xl' sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Skeleton variant='circular' width={48} height={48} sx={{ mr: 2 }} />
-          <Skeleton variant='text' width={400} height={40} />
-        </Box>
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {[...Array(4)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Skeleton
-                variant='rectangular'
-                height={78}
-                sx={{ borderRadius: '16px' }}
-              />
-            </Grid>
-          ))}
-        </Grid>
-        <Skeleton
-          variant='rectangular'
-          height={400}
-          sx={{ borderRadius: '16px' }}
-        />
-      </Container>
-    )
+    return <SignalLoader fullPage />
   }
 
   if (customers.length === 0) {

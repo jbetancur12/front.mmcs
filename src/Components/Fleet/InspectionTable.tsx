@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
@@ -8,7 +9,6 @@ import {
   IconButton,
   Paper,
   Tooltip,
-  Typography,
   Modal
 } from '@mui/material'
 
@@ -134,7 +134,7 @@ const InspectionsTable = () => {
         icon={<Summarize />}
       />
       {loading ? (
-        <Typography variant='body1'>Cargando...</Typography>
+        <SignalLoader />
       ) : (
         <>
           <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>

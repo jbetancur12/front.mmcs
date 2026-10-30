@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import {
   Container,
@@ -6,7 +7,6 @@ import {
   Grid,
   Button,
   IconButton,
-  Skeleton,
   Avatar,
   Tooltip
 } from '@mui/material'
@@ -275,30 +275,7 @@ const Dashboard: React.FC = () => {
   )
 
   if (loading) {
-    return (
-      <Container maxWidth='xl' sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Skeleton variant='circular' width={48} height={48} sx={{ mr: 2 }} />
-          <Skeleton variant='text' width={400} height={40} />
-        </Box>
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          {[...Array(3)].map((_, index) => (
-            <Grid item xs={12} sm={4} key={index}>
-              <Skeleton
-                variant='rectangular'
-                height={78}
-                sx={{ borderRadius: '16px' }}
-              />
-            </Grid>
-          ))}
-        </Grid>
-        <Skeleton
-          variant='rectangular'
-          height={400}
-          sx={{ borderRadius: '16px' }}
-        />
-      </Container>
-    )
+    return <SignalLoader fullPage />
   }
 
   const backButton = id ? (

@@ -1,8 +1,7 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useState } from 'react'
 import DOMPurify from 'dompurify'
 import {
-  Box,
-  CircularProgress,
   Button,
   Dialog,
   DialogActions,
@@ -360,20 +359,18 @@ export const DialogHost: React.FC = () => {
         aria-busy
       >
         <DialogContent
-          sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 3 }}
+          sx={{ py: 2 }}
         >
-          <CircularProgress
-            size={28}
-            sx={{ color: '#00BFA5', flexShrink: 0 }}
-          />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={700}>{busy?.title}</Typography>
-            {busy?.text && (
-              <Typography variant='body2' color='text.secondary'>
-                {busy.text}
-              </Typography>
-            )}
-          </Box>
+          <SignalLoader message={busy?.title} />
+          {busy?.text && (
+            <Typography
+              variant='body2'
+              color='text.secondary'
+              align='center'
+            >
+              {busy.text}
+            </Typography>
+          )}
         </DialogContent>
       </Dialog>
     </>

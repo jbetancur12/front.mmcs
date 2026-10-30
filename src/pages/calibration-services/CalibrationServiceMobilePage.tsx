@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Alert, Autocomplete, Badge, BottomNavigation, BottomNavigationAction, Box, Button, Card, CardContent, Checkbox,
@@ -353,7 +354,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, pb: 22 }}>
-      {isLoading ? <Box sx={{ textAlign: 'center', py: 8 }}><CircularProgress /></Box> :
+      {isLoading ? <Box sx={{ textAlign: 'center', py: 8 }}><SignalLoader /></Box> :
       !s ? <Box sx={{ p: 2 }}><Alert severity='error'>Servicio no encontrado</Alert></Box> : (
       <Box sx={{ maxWidth: 430, mx: 'auto' }}>
         {/* Encabezado compacto */}

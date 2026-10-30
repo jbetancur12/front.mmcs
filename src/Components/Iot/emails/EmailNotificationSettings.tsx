@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Box,
@@ -220,8 +221,7 @@ export const EmailNotificationSettings = ({
               py: 2
             }}
           >
-            <CircularProgress size={20} sx={{ mr: 1 }} />
-            <Typography variant='body2'>Cargando...</Typography>
+            <SignalLoader size='small' />
           </Box>
         ) : emails.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>

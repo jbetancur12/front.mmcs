@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useMemo } from 'react'
 import {
   Box,
@@ -200,10 +201,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress size={60} sx={{ mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            Cargando cursos disponibles...
-          </Typography>
+          <SignalLoader message='Cargando cursos disponibles...' />
         </Box>
       </Box>
     )

@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
@@ -6,7 +7,6 @@ import {
   Container,
   Grid,
   IconButton,
-  Skeleton,
   Tooltip,
   Typography
 } from '@mui/material'
@@ -258,27 +258,7 @@ const EquipmentAlertsPage: React.FC = () => {
   )
 
   if (loading && equipments.length === 0) {
-    return (
-      <Container maxWidth='xl' sx={{ py: 3 }}>
-        <Skeleton variant='text' width={360} height={48} sx={{ mb: 3 }} />
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          {[0, 1, 2].map((key) => (
-            <Grid item xs={12} sm={4} key={key}>
-              <Skeleton
-                variant='rectangular'
-                height={78}
-                sx={{ borderRadius: '16px' }}
-              />
-            </Grid>
-          ))}
-        </Grid>
-        <Skeleton
-          variant='rectangular'
-          height={400}
-          sx={{ borderRadius: '16px' }}
-        />
-      </Container>
-    )
+    return <SignalLoader message='Cargando alertas...' fullPage />
   }
 
   return (

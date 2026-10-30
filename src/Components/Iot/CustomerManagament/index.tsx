@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Container,
@@ -10,7 +11,6 @@ import {
   DialogContent,
   DialogActions,
   Grid,
-  CircularProgress,
   Card,
   CardContent,
   CardActions,
@@ -167,7 +167,7 @@ const CustomersManagement: React.FC = () => {
       <Box sx={{ mb: 4 }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
+            <SignalLoader />
           </Box>
         ) : error ? (
           <Alert severity='error' sx={{ mb: 2 }}>

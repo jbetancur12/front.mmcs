@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Typography,
@@ -140,7 +141,7 @@ const DeviceAlarmsPanel: React.FC<DeviceAlarmsPanelProps> = ({ deviceId }) => {
   }
 
   if (isLoading) {
-    return <Typography>Cargando alarmas...</Typography>
+    return <SignalLoader message='Cargando alarmas...' />
   }
 
   if (error) {

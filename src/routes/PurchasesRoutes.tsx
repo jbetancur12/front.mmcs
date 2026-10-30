@@ -1,9 +1,9 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { lazy, Suspense } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 import PersonnelManagementPage from 'src/pages/Admin/PersonnelManagementPage'
-import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 
 const PDFViewer = lazy(() => import('src/Components/DataSheet/PDFViewer'))
@@ -47,7 +47,7 @@ const PDFViewerWithSuspense = ({ path }: { path: string }) => (
           height: '80vh'
         }}
       >
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     }
   >

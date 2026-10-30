@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -221,7 +222,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
                       showPercentage={true}
                     />
                   ) : (
-                    <CircularProgress size={60} />
+                    <SignalLoader />
                   )}
                   <Typography variant="h6" color="text.primary">
                     {message}
@@ -261,7 +262,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
                   showPercentage={true}
                 />
               ) : (
-                <CircularProgress />
+                <SignalLoader />
               )}
               <Typography variant="body1" color="text.primary">
                 {message}

@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import {
   Box,
@@ -24,7 +25,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  CircularProgress,
   Popover,
   Container,
   Paper,
@@ -820,10 +820,7 @@ const LmsComplianceTracker: React.FC = () => {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress size={60} sx={{ mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            Cargando datos de cumplimiento...
-          </Typography>
+          <SignalLoader message='Cargando datos de cumplimiento...' />
         </Box>
       </Box>
     )

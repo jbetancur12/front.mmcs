@@ -1,4 +1,5 @@
 // src/Components/LaboratoryMonitor/SensorsSummaryTable.tsx
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useState } from 'react'
 import {
   Table,
@@ -57,9 +58,7 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
   const now = useNow(15000)
   if (isLoading) {
     return (
-      <Typography sx={{ p: 2, textAlign: 'center' }}>
-        Cargando resumen de sensores...
-      </Typography>
+      <SignalLoader message='Cargando resumen de sensores...' />
     )
   }
   if (!summaryData || summaryData.length === 0) {

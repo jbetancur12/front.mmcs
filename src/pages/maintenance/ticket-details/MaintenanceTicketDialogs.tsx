@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import {
   Typography,
   Box,
@@ -6,9 +7,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Alert,
-  CircularProgress,
-  LinearProgress
+  Alert
 } from '@mui/material'
 import {
   Error,
@@ -85,9 +84,17 @@ const MaintenanceTicketDialogs = ({ ticket, details }: MaintenanceTicketDialogsP
         deleteFileMutation.isLoading ||
         addCommentMutation.isLoading) && (
         <Box
-          sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }}
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.6)'
+          }}
         >
-          <LinearProgress color='primary' />
+          <SignalLoader message='Guardando...' />
         </Box>
       )}
 
@@ -108,7 +115,7 @@ const MaintenanceTicketDialogs = ({ ticket, details }: MaintenanceTicketDialogsP
               alignItems='center'
               minHeight={320}
             >
-              <CircularProgress />
+              <SignalLoader />
             </Box>
           )}
 

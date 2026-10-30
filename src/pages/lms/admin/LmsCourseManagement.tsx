@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -23,8 +24,7 @@ import {
   ListItemText,
   OutlinedInput,
   Alert,
-  Tooltip,
-  CircularProgress
+  Tooltip
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -767,8 +767,7 @@ const LmsCourseManagement: React.FC = () => {
           flexDirection: 'column'
         }}
       >
-        <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Cargando cursos...</Typography>
+        <SignalLoader message='Cargando cursos...' />
       </Box>
     )
   }

@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
@@ -354,7 +355,7 @@ const LmsAnalytics: React.FC = () => {
         ) : null}
 
         {isLoading ? (
-          <Typography color='text.secondary'>Cargando analíticas reales...</Typography>
+          <SignalLoader message='Cargando analíticas...' />
         ) : (
           <>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ mb: 3 }}>

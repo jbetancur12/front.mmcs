@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
   Card,
@@ -10,7 +11,6 @@ import {
   LinearProgress,
   IconButton,
   Tooltip,
-  Skeleton,
   Button,
   Dialog,
   DialogTitle,
@@ -166,20 +166,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
   const [expandedRecommendations, setExpandedRecommendations] = useState<number[]>([])
 
   if (loading) {
-    return (
-      <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.gray[200]}` }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Skeleton variant="circular" width={48} height={48} sx={{ mr: 2 }} />
-            <Box sx={{ flex: 1 }}>
-              <Skeleton variant="text" width="60%" height={24} />
-              <Skeleton variant="text" width="40%" height={20} />
-            </Box>
-          </Box>
-          <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2 }} />
-        </CardContent>
-      </Card>
-    )
+    return <SignalLoader size='small' />
   }
 
   if (error || !data) {

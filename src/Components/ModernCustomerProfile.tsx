@@ -1,11 +1,10 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   Box,
   Card,
   CardContent,
-  Typography,
-  CircularProgress,
   useTheme,
   useMediaQuery,
   Container,
@@ -329,10 +328,7 @@ const ModernCustomerProfile: React.FC = () => {
           alignItems='center'
           minHeight='60vh'
         >
-          <CircularProgress size={60} />
-          <Typography variant='h6' sx={{ ml: 2 }}>
-            Cargando...
-          </Typography>
+          <SignalLoader message='Cargando...' />
         </Box>
       </Container>
     )
@@ -357,7 +353,7 @@ const ModernCustomerProfile: React.FC = () => {
           alignItems='center'
           minHeight='60vh'
         >
-          <CircularProgress size={60} />
+          <SignalLoader />
         </Box>
       </Container>
     )

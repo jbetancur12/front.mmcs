@@ -1,8 +1,8 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Typography,
-  CircularProgress,
   Container,
   Card,
   Chip
@@ -407,25 +407,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
           gap: 4
         }}
       >
-        <CircularProgress
-          size={80}
-          sx={{
-            color: modernColors.primary,
-            '& .MuiCircularProgress-circle': {
-              strokeLinecap: 'round'
-            }
-          }}
-        />
-        <Typography
-          variant='h4'
-          sx={{
-            color: modernColors.textPrimary,
-            fontWeight: 600,
-            textAlign: 'center'
-          }}
-        >
-          Cargando Dashboard de Mantenimiento
-        </Typography>
+        <SignalLoader size='large' message='Cargando Dashboard de Mantenimiento' />
         <Typography
           variant='body1'
           sx={{

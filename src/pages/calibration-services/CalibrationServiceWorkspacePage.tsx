@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useState } from 'react'
 import {
   Alert,
@@ -6,7 +7,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Container,
   Grid,
   Stack,
@@ -113,7 +113,7 @@ const CalibrationServiceWorkspacePage = () => {
   if (isPageLoading) {
     return (
       <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
-        <CircularProgress />
+        <SignalLoader />
       </Box>
     )
   }

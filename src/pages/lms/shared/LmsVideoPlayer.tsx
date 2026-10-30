@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useRef, useEffect } from 'react'
 import {
   Box,
@@ -440,7 +441,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
                 color: 'white'
               }}
             >
-              <Typography>Cargando video...</Typography>
+              <SignalLoader size='small' message='Cargando video...' />
             </Box>
           )}
         </>

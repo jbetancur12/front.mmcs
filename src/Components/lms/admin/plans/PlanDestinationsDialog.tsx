@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -5,7 +6,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogContent,
   IconButton,
@@ -245,7 +245,7 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
         )}
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <CircularProgress sx={{ color: PLAN_TEAL }} />
+            <SignalLoader />
           </Box>
         ) : assignments.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 5 }}>

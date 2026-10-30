@@ -1,3 +1,4 @@
+import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
@@ -214,9 +215,7 @@ const RolesHelp: React.FC = () => {
         </Alert>
       )}
       {isLoading && (
-        <Box sx={{ py: 6, textAlign: 'center', color: 'text.secondary' }}>
-          Cargando guía…
-        </Box>
+        <SignalLoader message='Cargando guía...' />
       )}
       {matrix && groups.length === 0 && (
         <Paper
