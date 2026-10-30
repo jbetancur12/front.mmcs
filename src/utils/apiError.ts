@@ -66,10 +66,26 @@ export const parseApiError = (error: unknown): ParsedApiError => {
 
   return {
     status,
-    code: null,
+    // Formato viejo: el código va en la raíz ({ code, message, reason, ... })
+    code: asText(data.code),
     message: asText(apiError) ?? asText(data.message),
     details: asDetails(data.details)
   }
+}
+
+/**
+ * Campos del error sin importar dónde vengan: la raíz de la respuesta (formato
+ * viejo: { code, reason, sessions, limit, ... }) y, encima, el objeto `error`
+ * del formato estándar ({ error: { code, reason, details, ... } }). Sirve para
+ * los protocolos de sesión, que llevan datos propios además del mensaje.
+ */
+export const getApiErrorPayload = (error: unknown): Record<string, any> => {
+  const data = (error as ApiErrorLike)?.response?.data
+  if (!data || typeof data !== 'object') return {}
+  const root = data as Record<string, any>
+  const nested =
+    root.error && typeof root.error === 'object' ? (root.error as Record<string, any>) : {}
+  return { ...root, ...nested }
 }
 
 /**

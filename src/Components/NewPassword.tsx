@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 import toast from 'react-hot-toast'
 import { axiosPublic } from '@utils/api'
-import type { AxiosError } from 'axios'
+import { getApiErrorPayload } from 'src/utils/apiError'
 import { Link } from 'react-router-dom'
 import { Alert, Box, Button, Link as MuiLink, Stack } from '@mui/material'
 import AuthLayout from 'src/Components/Common/AuthLayout'
@@ -64,9 +64,10 @@ const PasswordGeneratorForm: React.FC = () => {
         window.location.href = '/login'
       }
     } catch (error) {
-      const data = (
-        error as AxiosError<{ code?: string; reasons?: string[] }>
-      ).response?.data
+      const data = getApiErrorPayload(error) as {
+        code?: string
+        reasons?: string[]
+      }
       if (data?.code === 'WEAK_PASSWORD') {
         toast.error(data.reasons?.join('. ') || 'La contraseña no es segura')
       } else if (data?.code === 'CODE_EXPIRED') {

@@ -1,4 +1,4 @@
-import type { AxiosError } from 'axios'
+import { getApiErrorPayload } from './apiError'
 
 const SESSION_ENDED_KEY = 'sessionEndedReason'
 
@@ -12,20 +12,17 @@ const MESSAGES: Record<string, string> = {
 
 /** Motivo de cierre si el error es un SESSION_REVOKED del API; si no, null. */
 export const getSessionRevokedReason = (error: unknown): string | null => {
-  const data = (error as AxiosError<{ code?: string; reason?: string }>)
-    ?.response?.data
-  return data?.code === 'SESSION_REVOKED' ? data.reason || 'revoked' : null
+  const data = getApiErrorPayload(error)
+  return data.code === 'SESSION_REVOKED' ? data.reason || 'revoked' : null
 }
 
 /** El API avisa que los roles del usuario cambiaron: el token es viejo, se renueva y se repite la petición. */
 export const isRolesChangedError = (error: unknown): boolean =>
-  (error as AxiosError<{ code?: string }>)?.response?.data?.code ===
-  'ROLES_CHANGED'
+  getApiErrorPayload(error).code === 'ROLES_CHANGED'
 
 /** El API pide confirmar la contraseña porque la sesión cumplió su tope de días. */
 export const isReauthRequired = (error: unknown): boolean =>
-  (error as AxiosError<{ code?: string }>)?.response?.data?.code ===
-  'SESSION_REAUTH_REQUIRED'
+  getApiErrorPayload(error).code === 'SESSION_REAUTH_REQUIRED'
 
 /**
  * Recuerda por qué se cerró la sesión para decírselo en el login. Va en

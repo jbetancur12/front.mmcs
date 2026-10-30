@@ -1,4 +1,5 @@
 import {
+  getApiErrorPayload,
   getApiErrorCode,
   getApiErrorMessage,
   getApiErrorReason,
@@ -87,5 +88,32 @@ describe('getApiErrorCode', () => {
       'FORBIDDEN'
     )
     expect(getApiErrorCode(fail(403, { error: 'texto' }))).toBeNull()
+  })
+})
+
+describe('getApiErrorPayload y código de la raíz', () => {
+  it('lee los campos de la raíz (formato viejo)', () => {
+    const error = fail(401, { message: 'Sesión cerrada', code: 'SESSION_REVOKED', reason: 'replaced' })
+    expect(getApiErrorPayload(error)).toMatchObject({ code: 'SESSION_REVOKED', reason: 'replaced' })
+    expect(getApiErrorCode(error)).toBe('SESSION_REVOKED')
+  })
+
+  it('lee los campos dentro de error (formato estándar)', () => {
+    const error = fail(409, {
+      success: false,
+      error: { code: 'ACTIVE_SESSIONS', message: 'Ya tienes una sesión', limit: 3, sessions: [{ id: 'a' }] }
+    })
+    expect(getApiErrorPayload(error)).toMatchObject({ code: 'ACTIVE_SESSIONS', limit: 3 })
+    expect(getApiErrorPayload(error).sessions).toHaveLength(1)
+  })
+
+  it('con el espejo (estándar + raíz) coincide en ambos', () => {
+    const error = fail(401, { success: false, error: { code: 'ROLES_CHANGED', message: 'Tus permisos cambiaron' }, code: 'ROLES_CHANGED', message: 'Tus permisos cambiaron' })
+    expect(getApiErrorPayload(error).code).toBe('ROLES_CHANGED')
+    expect(getApiErrorReason(error)).toBe('Tus permisos cambiaron')
+  })
+
+  it('sin respuesta devuelve un objeto vacío', () => {
+    expect(getApiErrorPayload(new Error('x'))).toEqual({})
   })
 })

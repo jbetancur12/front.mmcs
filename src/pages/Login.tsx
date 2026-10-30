@@ -1,4 +1,4 @@
-import { getApiErrorReason } from 'src/utils/apiError'
+import { getApiErrorPayload, getApiErrorReason } from 'src/utils/apiError'
 import { AxiosError } from 'axios' // Import Axios
 import { useEffect, useState } from 'react'
 
@@ -105,14 +105,8 @@ const Login: React.FC = () => {
           )
           break
         case 400:
-          const responseData = error.response.data
-
-          if (
-            responseData &&
-            typeof responseData === 'object' &&
-            'message' in responseData
-          ) {
-            const message = responseData.message
+          {
+            const message = getApiErrorReason(error)
             if (message === 'You are not verified') {
               setError(
                 'Tu cuenta aún no está activada. Revisa el correo de activación.'
@@ -122,23 +116,15 @@ const Login: React.FC = () => {
                 'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
               )
             }
-          } else {
-            setError(
-              'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
-            )
           }
           break
 
         case 403:
-          if (
-            error.response.data &&
-            typeof error.response.data === 'object' &&
-            'message' in error.response.data
-          ) {
+          {
             const message = getApiErrorReason(error)
             if (
               message ===
-              '"El cliente asociado está inactivo. Contacta al administrador.'
+              'El cliente asociado está inactivo. Contacta al administrador.'
             ) {
               setError(
                 'El cliente asociado está inactivo. Contacta al administrador.'
@@ -148,21 +134,14 @@ const Login: React.FC = () => {
                 'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
               )
             }
-          } else {
-            setError(
-              'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
-            )
           }
           break
 
         case 429:
           {
+            const payload = getApiErrorPayload(error)
             const seconds = Number(
-              (
-                error.response.data as {
-                  error?: { details?: { retryAfterSeconds?: number } }
-                }
-              )?.error?.details?.retryAfterSeconds
+              payload.details?.retryAfterSeconds ?? payload.retryAfterSeconds
             )
             const minutes = seconds > 0 ? Math.ceil(seconds / 60) : 10
             setError(
@@ -282,7 +261,7 @@ const Login: React.FC = () => {
     } catch (error: any) {
       // La cuenta ya tiene sesiones abiertas, o llegó al tope: preguntar cuáles cerrar
       if (isAxiosError(error) && error.response?.status === 409) {
-        const body = error.response.data as {
+        const body = getApiErrorPayload(error) as {
           code?: string
           limit?: number
           sessions?: LoginSession[]

@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+import { getApiErrorPayload, getApiErrorReason } from './apiError'
+
 /** Mensajes en español para los códigos estables que devuelve la API de /rbac. */
 const MESSAGES: Record<string, string> = {
   SENSITIVE_PERMISSION:
@@ -28,17 +30,18 @@ export interface RbacApiError {
 /** Convierte cualquier error de la API de permisos en algo que se pueda mostrar. */
 export const parseRbacError = (error: unknown): RbacApiError => {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { error?: string; code?: string; details?: { keys?: string[] } }
-      | undefined
-    const code = data?.code
+    const data = getApiErrorPayload(error) as {
+      code?: string
+      details?: { keys?: string[] }
+    }
+    const code = data.code
     return {
       status: error.response?.status,
       code,
-      details: data?.details,
+      details: Array.isArray(data.details) ? undefined : data.details,
       message:
         (code && MESSAGES[code]) ||
-        data?.error ||
+        getApiErrorReason(error) ||
         (error.response?.status === 403
           ? 'No tienes permiso para realizar este cambio.'
           : 'No se pudo completar la operación. Intenta de nuevo.')
