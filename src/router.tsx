@@ -29,6 +29,7 @@ import LmsRoutes from './routes/LmsRoutes'
 import SignalLoader from './Components/Common/SignalLoader'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
+import LibraryRoutes from './routes/LibraryRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
 import RbacRoutes from './routes/RbacRoutes'
 import AssetLifeSheetRoutes from './routes/AssetLifeSheetRoutes'
@@ -71,6 +72,7 @@ function Router() {
           {LmsRoutes($userStore.rol)}
           {LaboratoryRoutes($userStore.rol)}
           {NonConformRoutes($userStore.rol)}
+          {LibraryRoutes($userStore.rol)}
           {MaintenanceRoutes($userStore.rol)}
           {RbacRoutes($userStore.rol)}
           {AssetLifeSheetRoutes($userStore.rol)}

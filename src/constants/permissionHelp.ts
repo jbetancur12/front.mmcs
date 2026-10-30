@@ -515,6 +515,18 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Trabajo no conforme: informes.'
   ],
 
+  // --- Biblioteca (Calidad)
+  'library:document:view': [
+    'Consultar la biblioteca',
+    'Consultar y descargar los documentos de gestión y técnicos de la biblioteca.',
+    'Biblioteca: listado de documentos y visor del PDF.'
+  ],
+  'library:document:manage': [
+    'Administrar la biblioteca',
+    'Agregar documentos, subir una versión nueva, editar sus datos y eliminarlos.',
+    'Biblioteca: botones de agregar, nueva versión, editar y eliminar.'
+  ],
+
   // --- Usuarios, roles y perfiles
   'users:user:list': [
     'Ver la lista de usuarios',

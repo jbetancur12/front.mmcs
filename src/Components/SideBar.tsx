@@ -21,7 +21,8 @@ import {
   ShoppingCartOutlined,
   SpeedOutlined,
   StorefrontOutlined,
-  VerifiedOutlined
+  VerifiedOutlined,
+  LocalLibraryOutlined
 } from '@mui/icons-material'
 
 import DropdownButton from './DropdownButton'
@@ -289,6 +290,15 @@ const sidebarItems = ($userStore: UserData) => [
   },
   {
     type: 'link',
+    label: 'Biblioteca',
+    to: '/library',
+    icon: <LocalLibraryOutlined />,
+    roles: [] as string[],
+    permission: PERMISSIONS.LIBRARY_DOCUMENT_VIEW,
+    moduleName: 'quality'
+  },
+  {
+    type: 'link',
     label: 'Trabajo no conforme',
     to: '/non-conform-work-reports',
     icon: <VerifiedOutlined />,
@@ -537,7 +547,7 @@ const SIDEBAR_SECTIONS: {
   {
     title: 'Calidad y personas',
     clientTitle: 'Capacitación',
-    items: ['Trabajo no conforme', 'Academia']
+    items: ['Trabajo no conforme', 'Biblioteca', 'Academia']
   },
   { title: 'Administración', items: ['Ajustes'] }
 ]

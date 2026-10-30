@@ -637,6 +637,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'laboratory:device:view': [
     { path: "/laboratory/conditions", label: "Laboratorio › Condiciones", kind: 'screen' }
   ],
+  'library:document:view': [
+    { path: "/library", label: "Biblioteca", kind: 'screen' }
+  ],
   'lms:assignment:manage': [
     { path: "/lms/admin/assignments", label: "Academia › Asignaciones", kind: 'screen' },
     { path: "/lms/admin/courses/:courseId/assignments", label: "Academia › Administración › Cursos › Asignaciones", kind: 'screen' },

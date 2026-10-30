@@ -210,6 +210,10 @@ export const PERMISSIONS = {
   NONCONFORM_REPORT_VIEW: 'nonconform:report:view',
   /** Crear, editar y eliminar informes de trabajo no conforme */
   NONCONFORM_REPORT_MANAGE: 'nonconform:report:manage',
+  /** Consultar y descargar los documentos de gestión y técnicos de la biblioteca */
+  LIBRARY_DOCUMENT_VIEW: 'library:document:view',
+  /** Agregar, actualizar versión, editar y eliminar documentos de la biblioteca */
+  LIBRARY_DOCUMENT_MANAGE: 'library:document:manage',
   /** Listar los usuarios y los usuarios internos */
   USERS_USER_LIST: 'users:user:list',
   /** Ver un usuario. OJO: el controlador NO limita al usuario de una empresa cliente al suyo (pendiente, ver docs/rbac/RUTAS_SOLO_SESION.md) */
