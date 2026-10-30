@@ -18,11 +18,9 @@ Que un archivo salga en la lista no prueba que sobre. Antes de borrar uno, busca
 
 | Archivo | Motivo |
 |---|---|
-| `src/hooks/useDashboardNotifications.ts` | Nadie lo importa, pero se refactorizó el 2026-10-19; puede ser una campana de notificaciones en camino |
-| `src/pages/lms/admin/shared/LmsAdminPendingFeature.tsx` | Pantalla de función pendiente del LMS (marzo de 2026), hoy sin uso |
 | `src/utils/apiError.test.ts`, `src/test/lms/LmsCourseManagement.test.tsx` | Son tests; `knip` los marca porque no hay runner configurado |
 
-El 2026-10-30 se borraron además los hooks viejos de notificaciones del LMS (`useNotifications`, `useHybridNotifications`, `useNotificationPolling`, `useLmsWebSocket`), `LazyModals`, `ModalSuspense`, `AutoComplete`, `scripts/build.js` y `scripts/update-version.cjs` (vacío). `src/constants/version.ts` sigue vivo: lo leen los scripts de versión; `knip.json` lo declara como entrada.
+El 2026-10-30 se borraron además `useDashboardNotifications` y `LmsAdminPendingFeature` (confirmado sin uso), los hooks viejos de notificaciones del LMS (`useNotifications`, `useHybridNotifications`, `useNotificationPolling`, `useLmsWebSocket`), `LazyModals`, `ModalSuspense`, `AutoComplete`, `scripts/build.js` y `scripts/update-version.cjs` (vacío). `src/constants/version.ts` sigue vivo: lo leen los scripts de versión; `knip.json` lo declara como entrada.
 
 ## Cómo se borró
 
