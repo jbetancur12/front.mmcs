@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { FormEvent, useEffect, useState } from 'react'
 import {
@@ -30,9 +31,7 @@ interface PublicSignatureData {
 }
 
 const getErrorMessage = (error: unknown, fallback: string) => {
-  const message = (error as { response?: { data?: { error?: string } } })
-    ?.response?.data?.error
-  return message || fallback
+  return getApiErrorReason(error) || fallback
 }
 
 const CalibrationServiceRemoteSignaturePage = () => {

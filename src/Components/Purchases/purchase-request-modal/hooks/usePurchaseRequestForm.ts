@@ -1,4 +1,5 @@
 // hooks/usePurchaseRequestForm.ts
+import { getApiErrorReason } from 'src/utils/apiError'
 import { useState, useEffect } from 'react'
 import {
   usePurchaseRequesters,
@@ -152,11 +153,8 @@ export const usePurchaseRequestForm = (
       console.error('Error creating/updating purchase request:', err)
 
       let message = `Error al ${existingRequest ? 'actualizar' : 'crear'} la solicitud.`
-      if (isAxiosError(err) && err.response?.data?.message) {
-        message =
-          typeof err.response.data.message === 'string'
-            ? err.response.data.message
-            : JSON.stringify(err.response.data.message)
+      if (isAxiosError(err) && getApiErrorReason(err)) {
+        message = getApiErrorReason(err) ?? message
       } else if (err instanceof Error) {
         message = err.message
       }

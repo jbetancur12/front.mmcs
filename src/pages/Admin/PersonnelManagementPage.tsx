@@ -1,4 +1,5 @@
 // src/pages/Admin/PersonnelManagementPage.tsx
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useState, useMemo } from 'react'
 import {
   Container,
@@ -80,7 +81,7 @@ const PersonnelManagementPage: React.FC = () => {
       onError: (err: any) => {
         notify.error(
           'Error',
-          err.response?.data?.message || 'No se pudo guardar la información.'
+          getApiErrorReason(err) || 'No se pudo guardar la información.'
         )
       }
     }
@@ -98,7 +99,7 @@ const PersonnelManagementPage: React.FC = () => {
       onError: (err: any) => {
         notify.error(
           'Error',
-          err.response?.data?.message || 'No se pudo eliminar a la persona.'
+          getApiErrorReason(err) || 'No se pudo eliminar a la persona.'
         )
       }
     }

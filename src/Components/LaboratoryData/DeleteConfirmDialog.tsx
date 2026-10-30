@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React from 'react'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -67,7 +68,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
         // El tipo 'any' es temporal
         console.error(`Error deleting sensor with ID ${sensorId}:`, error)
         const apiErrorMessage =
-          error.response?.data?.message ||
+          getApiErrorReason(error) ||
           error.message ||
           'Ocurrió un error al eliminar el sensor.'
         // Mostrar el error en el diálogo mismo

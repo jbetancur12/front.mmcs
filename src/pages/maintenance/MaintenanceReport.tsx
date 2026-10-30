@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import {
@@ -113,10 +114,8 @@ const MaintenanceReport: React.FC = () => {
         console.error('Maintenance form submission error:', error)
         let errorMessage = 'Error al enviar la solicitud. Intente nuevamente.'
 
-        if (error.response?.data?.message) {
-          errorMessage = error.response.data.message
-        } else if (error.response?.data?.error) {
-          errorMessage = error.response.data.error
+        if (getApiErrorReason(error)) {
+          errorMessage = getApiErrorReason(error) ?? errorMessage
         } else if (error.message) {
           errorMessage = error.message
         }

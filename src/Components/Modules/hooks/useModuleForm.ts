@@ -1,4 +1,5 @@
 // src/modules/hooks/useModuleForm.ts
+import { getApiErrorReason } from 'src/utils/apiError'
 import { useState } from 'react'
 import { IModule } from '../types/moduleTypes'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -17,7 +18,7 @@ export const useModuleForm = () => {
       return true
     } catch (err: any) {
       const errorMessage =
-        err.response?.data?.message || 'Error al crear el módulo'
+        getApiErrorReason(err) || 'Error al crear el módulo'
       setError(errorMessage)
       return false
     } finally {

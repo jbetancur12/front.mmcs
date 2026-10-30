@@ -1,4 +1,5 @@
 // components/SupplierSelectionModal.tsx
+import { getApiErrorReason } from 'src/utils/apiError'
 import {
   Dialog,
   DialogTitle,
@@ -359,8 +360,8 @@ const SupplierSelectionModal = ({
     } catch (error) {
       console.log(error)
       let message = 'Error guardando la información.'
-      if (isAxiosError(error) && error.response?.data?.message) {
-        message = error.response.data.message
+      if (isAxiosError(error) && getApiErrorReason(error)) {
+        message = getApiErrorReason(error) ?? message
       }
       setError(message)
     }

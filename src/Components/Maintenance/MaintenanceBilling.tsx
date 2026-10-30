@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import {
   Box,
@@ -122,7 +123,7 @@ const MaintenanceBilling: React.FC = () => {
     },
     onError: (error: any) => {
       notify.error(
-        error.response?.data?.error ||
+        getApiErrorReason(error) ||
           'Error al actualizar estado de facturación'
       )
     }

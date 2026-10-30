@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useState, useCallback, useRef } from 'react';
 import {
   Box,
@@ -174,7 +175,7 @@ const SecureFileUpload: React.FC<FileUploadProps> = ({
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      const errorMessage = error.response?.data?.error?.message || error.message || 'Upload failed';
+      const errorMessage = getApiErrorReason(error) || error.message || 'Upload failed';
       setValidationErrors([errorMessage]);
       
       if (onUploadError) {

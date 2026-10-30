@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Chip, useMediaQuery, useTheme } from '@mui/material'
@@ -251,8 +252,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: any) {
       console.error('Error updating ticket:', error)
       const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
+        getApiErrorReason(error) ||
         'Error al actualizar el ticket'
       showToast(errorMessage, 'error')
     }
@@ -346,8 +346,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: any) {
       console.error('Error completing ticket:', error)
       const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
+        getApiErrorReason(error) ||
         'Error al completar el ticket'
       showToast(errorMessage, 'error')
       throw error
@@ -372,8 +371,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: any) {
       console.error('Error completing ticket:', error)
       const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
+        getApiErrorReason(error) ||
         'Error al completar el ticket'
       showToast(errorMessage, 'error')
       throw error
@@ -443,8 +441,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: any) {
       console.error('Error saving signatures:', error)
       const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
+        getApiErrorReason(error) ||
         'Error al guardar las firmas'
       showToast(errorMessage, 'error')
       throw error
@@ -473,8 +470,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: any) {
       console.error('Error revoking customer signature:', error)
       const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
+        getApiErrorReason(error) ||
         'Error al revocar la firma del cliente'
       showToast(errorMessage, 'error')
     }
@@ -616,8 +612,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: any) {
       console.error('Error saving technical report:', error)
       const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
+        getApiErrorReason(error) ||
         'Error al guardar el reporte técnico'
       showToast(errorMessage, 'error')
       throw error

@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
@@ -43,7 +44,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
         onSuccess?.()
       } catch (error: any) {
         const errorMessage =
-          error.response?.data?.message || 'Error al procesar el módulo'
+          getApiErrorReason(error) || 'Error al procesar el módulo'
         setStatus({ success: false, error: errorMessage })
       } finally {
         setSubmitting(false)

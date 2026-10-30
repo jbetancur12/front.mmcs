@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -224,7 +225,7 @@ const MaintenanceProtocols = () => {
       resetDialog()
     } catch (error: any) {
       setFormError(
-        error?.response?.data?.error ||
+        getApiErrorReason(error) ||
           error?.message ||
           'No se pudo guardar el protocolo.'
       )

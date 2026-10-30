@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import {
   Container,
@@ -153,8 +154,7 @@ const MaintenanceTechnicians: React.FC = () => {
         refetch()
       } catch (error: any) {
         console.error('Error saving technician:', error)
-        notify.error(error?.response?.data?.error ||
-            error?.response?.data?.message ||
+        notify.error(getApiErrorReason(error) ||
             'No se pudo guardar el técnico.')
       }
     }
@@ -217,7 +217,7 @@ const MaintenanceTechnicians: React.FC = () => {
     } catch (error: any) {
       console.error('Error deleting technician:', error)
       const message =
-        error.response?.data?.error || 'Error al eliminar el técnico'
+        getApiErrorReason(error) || 'Error al eliminar el técnico'
       setDeleteError(message)
     }
   }

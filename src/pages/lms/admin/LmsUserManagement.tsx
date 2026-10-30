@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
@@ -218,7 +219,7 @@ const LmsUserManagement: React.FC = () => {
         notify.success(editingUser ? 'Usuario LMS actualizado' : 'Usuario LMS creado')
       },
       onError: (error: any) => {
-        notify.error(error.response?.data?.error?.message || error.response?.data?.message || 'No se pudo guardar el usuario LMS')
+        notify.error(getApiErrorReason(error) || 'No se pudo guardar el usuario LMS')
       }
     }
   )

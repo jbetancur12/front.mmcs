@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect } from 'react'
 import type { AxiosError } from 'axios'
@@ -424,7 +425,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: any) => {
         console.error('❌ Error creating question:', error)
-        appNotify.error('Error', error.response?.data?.error?.message || 'Error al crear la pregunta')
+        appNotify.error('Error', getApiErrorReason(error) || 'Error al crear la pregunta')
       }
     }
   )
@@ -456,7 +457,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: any) => {
         console.error('❌ Error updating question:', error)
-        appNotify.error('Error', error.response?.data?.error?.message || 'Error al actualizar la pregunta')
+        appNotify.error('Error', getApiErrorReason(error) || 'Error al actualizar la pregunta')
       }
     }
   )
@@ -475,7 +476,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: any) => {
         console.error('❌ Error deleting question:', error)
-        appNotify.error('Error', error.response?.data?.error?.message || 'Error al eliminar la pregunta')
+        appNotify.error('Error', getApiErrorReason(error) || 'Error al eliminar la pregunta')
       }
     }
   )

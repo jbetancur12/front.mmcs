@@ -1,6 +1,6 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useState } from 'react'
-import { isAxiosError } from 'axios'
 import {
   Bar,
   Line,
@@ -82,8 +82,7 @@ const PurchaseStatistics = () => {
 
   const loading = statisticsLoading || rangeLoading
   const error: string | null = statisticsError
-    ? (isAxiosError(statisticsError) &&
-        statisticsError.response?.data?.details) ||
+    ? getApiErrorReason(statisticsError) ||
       'Error al cargar las estadísticas'
     : rangeError
 
@@ -108,7 +107,7 @@ const PurchaseStatistics = () => {
       
     } catch (err: any) {
       console.error('Error fetching date range statistics:', err)
-      setRangeError(err.response?.data?.error || 'Error al cargar las estadísticas por fecha')
+      setRangeError(getApiErrorReason(err) || 'Error al cargar las estadísticas por fecha')
     } finally {
       setRangeLoading(false)
     }

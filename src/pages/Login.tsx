@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import { AxiosError } from 'axios' // Import Axios
 import { useEffect, useState } from 'react'
 
@@ -134,7 +135,7 @@ const Login: React.FC = () => {
             typeof error.response.data === 'object' &&
             'message' in error.response.data
           ) {
-            const message = error.response.data.message
+            const message = getApiErrorReason(error)
             if (
               message ===
               '"El cliente asociado está inactivo. Contacta al administrador.'

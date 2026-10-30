@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { getApiErrorReason } from 'src/utils/apiError'
 import {
   Cancel,
   CheckCircle,
@@ -165,7 +166,7 @@ const Table: React.FC = () => {
       // Manejar errores de Axios con respuesta del servidor
       if (error.response) {
         // Extraer mensaje de error del backend
-        errorMessage = error.response.data?.error || 'Error en el servidor'
+        errorMessage = getApiErrorReason(error) || 'Error en el servidor'
 
         // Mensajes específicos basados en códigos de estado
         switch (error.response.status) {

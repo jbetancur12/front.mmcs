@@ -1,4 +1,5 @@
 // src/Components/Purchases/UploadQuotationModal.tsx
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useEffect, useState, useCallback, FC, ChangeEvent } from 'react'
 import {
   Dialog,
@@ -201,8 +202,8 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
     onErrorDisplay: (error: unknown, defaultMessage: string) => {
       console.error(`Error: ${defaultMessage}`, error)
       let userMessage = defaultMessage
-      if (isAxiosError(error) && error.response?.data?.message) {
-        userMessage = error.response.data.message
+      if (isAxiosError(error) && getApiErrorReason(error)) {
+        userMessage = getApiErrorReason(error) ?? userMessage
       } else if (error instanceof Error) {
         userMessage = error.message
       }

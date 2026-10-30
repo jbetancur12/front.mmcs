@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import { useState, useEffect } from 'react'
 import {
   Box,
@@ -183,15 +184,14 @@ export const CreateFileModal = ({
 
       if (axios.isAxiosError(error)) {
         errorMessage =
-          error.response?.data?.error ||
-          error.response?.data?.message ||
+          getApiErrorReason(error) ||
           error.message
 
         // Archivo duplicado (409)
         if (error.response && error.response.status === 409) {
           notify.error(
             'Archivo duplicado',
-            error.response.data.error ||
+            getApiErrorReason(error) ||
               'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.'
           )
           return

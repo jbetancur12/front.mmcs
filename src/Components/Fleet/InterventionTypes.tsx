@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import {
@@ -65,7 +66,7 @@ const InterventionTypes = () => {
         setModalOpen(false)
       },
       onError: (error: any) => {
-        notify.error(`Error: ${error.response?.data?.message || error.message}`)
+        notify.error(`Error: ${getApiErrorReason(error) || error.message}`)
       }
     }
   )
@@ -82,7 +83,7 @@ const InterventionTypes = () => {
         notify.success('Tipo de Intervención Eliminado Exitosamente!')
       },
       onError: (error: any) => {
-        notify.error(`Error: ${error.response?.data?.message || error.message}`)
+        notify.error(`Error: ${getApiErrorReason(error) || error.message}`)
       }
     }
   )

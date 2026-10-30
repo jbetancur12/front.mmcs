@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useState } from 'react'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -83,7 +84,7 @@ const AddSensorModal: React.FC<AddSensorModalProps> = ({
         console.error('Error creating sensor:', error)
         // Puedes intentar extraer un mensaje de error más amigable de la respuesta de Axios
         const apiErrorMessage =
-          error.response?.data?.message ||
+          getApiErrorReason(error) ||
           error.message ||
           'Ocurrió un error al crear el sensor.'
         // Establecer un error genérico en el formulario o en un estado separado

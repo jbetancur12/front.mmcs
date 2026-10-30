@@ -1,3 +1,4 @@
+import { getApiErrorReason } from './apiError'
 import { notify } from './notify'
 import { busyDialog, confirmDialog } from './confirm'
 
@@ -62,26 +63,30 @@ export const handleErrorWithAlert = async (error: unknown): Promise<string> => {
         await showTimeoutAlert()
         return 'Tiempo de espera agotado. Intente nuevamente.'
       } else if (axiosError.response?.status === 400) {
-        errorMessage = 'Datos inválidos: ' + (axiosError.response?.data?.error || 'Verifique los datos ingresados')
+        errorMessage =
+          'Datos inválidos: ' +
+          (getApiErrorReason(error) ?? 'Verifique los datos ingresados')
         await showErrorAlert(errorMessage)
         return errorMessage
       } else if (axiosError.response?.status === 404) {
-        errorMessage = 'Recurso no encontrado'
+        errorMessage = getApiErrorReason(error) ?? 'Recurso no encontrado'
         await showErrorAlert(errorMessage)
         return errorMessage
       } else if (axiosError.response?.status === 403) {
-        errorMessage = 'No tiene permisos para realizar esta acción'
+        errorMessage =
+          getApiErrorReason(error) ??
+          'No tiene permisos para realizar esta acción'
         await showErrorAlert(errorMessage)
         return errorMessage
       } else if (axiosError.response?.status === 409) {
-        errorMessage = 'El recurso ya existe'
+        errorMessage = getApiErrorReason(error) ?? 'El recurso ya existe'
         await showErrorAlert(errorMessage)
         return errorMessage
       } else if (axiosError.response?.status >= 500) {
         await showServerErrorAlert()
         return 'Error del servidor. Intente nuevamente más tarde.'
       } else {
-        errorMessage = axiosError.response?.data?.error || 'Error desconocido'
+        errorMessage = getApiErrorReason(error) ?? 'Error desconocido'
         await showErrorAlert(errorMessage)
         return errorMessage
       }

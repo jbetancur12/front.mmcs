@@ -1,4 +1,5 @@
 // src/components/Purchases/SupplierPurchaseHistoryTable.tsx
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo } from 'react'
 import {
@@ -107,11 +108,8 @@ const SupplierPurchaseHistoryTable: React.FC<
         if (err.response?.status === 404) {
           errorMessage =
             'Reporte o datos para la orden de compra no encontrados.'
-        } else if (err.response?.data?.message) {
-          errorMessage =
-            typeof err.response.data.message === 'string'
-              ? err.response.data.message
-              : JSON.stringify(err.response.data.message)
+        } else if (getApiErrorReason(err)) {
+          errorMessage = getApiErrorReason(err) ?? errorMessage
         } else if (err.message) {
           errorMessage = err.message
         }

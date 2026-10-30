@@ -1,5 +1,6 @@
 // src/components/Purchases/SupplierEvaluationForm.tsx
 
+import { getApiErrorReason } from 'src/utils/apiError'
 import { useState, useEffect, FC, FormEvent, ChangeEvent } from 'react'
 import {
   Box,
@@ -269,11 +270,8 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
       onError: (err) => {
         console.error('Error guardando evaluación:', err)
         let message = `Error al ${existingEvaluation ? 'actualizar' : 'guardar'} la evaluación.`
-        if (isAxiosError(err) && err.response?.data?.message) {
-          message =
-            typeof err.response.data.message === 'string'
-              ? err.response.data.message
-              : JSON.stringify(err.response.data.message)
+        if (isAxiosError(err) && getApiErrorReason(err)) {
+          message = getApiErrorReason(err) ?? message
         } else if (err instanceof Error) {
           message = err.message
         }

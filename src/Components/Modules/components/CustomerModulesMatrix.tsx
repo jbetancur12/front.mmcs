@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import {
@@ -59,7 +60,7 @@ const cellTooltip = (cell: CustomerModuleCell | null | undefined) => {
 }
 
 const errorMessage = (error: unknown) =>
-  (error as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+  getApiErrorReason(error) ??
   'No se pudo actualizar el módulo'
 
 interface PendingChange {

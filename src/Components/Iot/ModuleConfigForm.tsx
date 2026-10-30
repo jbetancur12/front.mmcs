@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useState } from 'react'
 import { AxiosError } from 'axios'
 import {
@@ -280,7 +281,7 @@ const ModuleConfigForm: React.FC<{
           {mutation.isError && (
             <Grid item xs={12}>
               <Alert severity='error'>
-                {mutation.error.response?.data.message || 'Error desconocido'}
+                {getApiErrorReason(mutation.error) || 'Error desconocido'}
                 {mutation.error.response?.data.errors?.map((e, i) => (
                   <div key={i}>{e}</div>
                 ))}

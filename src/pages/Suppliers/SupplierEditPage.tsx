@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -98,8 +99,8 @@ const SupplierEditPage: React.FC = () => {
       onError: (error) => {
         console.error('Error updating supplier:', error)
         let errorMessage = 'Error al actualizar el proveedor.'
-        if (isAxiosError(error) && error.response?.data?.message) {
-          errorMessage = error.response.data.message
+        if (isAxiosError(error) && getApiErrorReason(error)) {
+          errorMessage = getApiErrorReason(error) ?? errorMessage
         } else if (error instanceof Error) {
           errorMessage = error.message
         }

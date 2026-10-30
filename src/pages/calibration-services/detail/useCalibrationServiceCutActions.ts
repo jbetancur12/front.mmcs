@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import { toast } from 'react-hot-toast'
 import { CalibrationService } from '../../../types/calibrationService'
 import { getApiErrorMessage } from '../../../utils/apiError'
@@ -77,8 +78,7 @@ const useCalibrationServiceCutActions = ({
         toast.success('El corte quedó creado y listo para facturar.')
       } catch (readyError) {
         const message =
-          (readyError as { response?: { data?: { error?: string } } })
-            ?.response?.data?.error ||
+          getApiErrorReason(readyError) ||
           'El corte se creó pero no pudo marcarse listo para facturar.'
         toast.error(message)
       }
@@ -99,7 +99,7 @@ const useCalibrationServiceCutActions = ({
     } catch (cutError) {
       console.error(cutError)
       const message =
-        (cutError as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        getApiErrorReason(cutError) ||
         'No pudimos mover el corte a listo para facturar.'
       toast.error(message)
     }

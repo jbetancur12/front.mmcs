@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -269,7 +270,7 @@ const MobilePage = () => {
   const handleAction = async (key: string, fn: () => Promise<any>, msg: string, onDone?: () => void) => {
     setActionLoading(key)
     try { await serviceActionMutation.mutateAsync(fn); toast.success(msg); onDone?.() }
-    catch (e: any) { toast.error(e?.response?.data?.details || e?.response?.data?.error || `Error: ${msg}`) }
+    catch (e: any) { toast.error(getApiErrorReason(e) || `Error: ${msg}`) }
     setActionLoading(null)
   }
 

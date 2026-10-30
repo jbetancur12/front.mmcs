@@ -23,6 +23,15 @@ const noRoleLiterals = [
     "No escribas roles como string: usa ROLES.X o ROLE_GROUPS.X de 'src/constants/roles'."
 }));
 
+// Los errores del API llegan en varios formatos: se leen con parseApiError /
+// getApiErrorReason de 'src/utils/apiError', no con response.data.error|message.
+const noRawApiErrorReads = {
+  selector:
+    "MemberExpression[property.name=/^(error|message)$/] > MemberExpression[property.name='data'] > MemberExpression[property.name='response']",
+  message:
+    "No leas response.data.error|message a mano: usa getApiErrorReason() / parseApiError() de 'src/utils/apiError'."
+};
+
 export default [
   {languageOptions: { globals: globals.browser }},
   pluginJs.configs.recommended,
@@ -31,6 +40,17 @@ export default [
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/constants/roles.ts"],
+    rules: {
+      "no-restricted-syntax": ["error", ...noRoleLiterals, noRawApiErrorReads]
+    }
+  },
+  {
+    // Lectores propios del formato (apiError) o con contrato específico (RBAC, quiz)
+    files: [
+      "src/utils/apiError.ts",
+      "src/utils/rbacErrors.ts",
+      "src/services/quizService.ts"
+    ],
     rules: { "no-restricted-syntax": ["error", ...noRoleLiterals] }
   }
 ];

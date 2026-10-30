@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
@@ -159,8 +160,7 @@ const emptyScheduleForm = {
 }
 
 const getApiMessage = (error: any, fallback: string) =>
-  error?.response?.data?.error?.message
-  || error?.response?.data?.message
+  getApiErrorReason(error)
   || error?.message
   || fallback
 

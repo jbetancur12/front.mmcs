@@ -1,4 +1,5 @@
 // Enhanced Templates Page - Main Container Component
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { Button, Container, Grid, Typography, Box } from '@mui/material'
@@ -67,10 +68,10 @@ const TemplatesPage: React.FC = () => {
       console.error('Error creating template:', error)
 
       if (error.response?.status === 409) {
-        notify.error(error.response.data.message ||
+        notify.error(getApiErrorReason(error) ||
             'Ya existe una plantilla con ese nombre')
       } else {
-        notify.error(error.response?.data?.error ||
+        notify.error(getApiErrorReason(error) ||
             'Error al crear la plantilla. Por favor, intenta de nuevo.')
       }
     }
@@ -90,10 +91,10 @@ const TemplatesPage: React.FC = () => {
       console.error('Error duplicating template:', error)
 
       if (error.response?.status === 409) {
-        notify.error(error.response.data.message ||
+        notify.error(getApiErrorReason(error) ||
             'Ya existe una plantilla con ese nombre')
       } else {
-        notify.error(error.response?.data?.error ||
+        notify.error(getApiErrorReason(error) ||
             'Error al duplicar la plantilla. Por favor, intenta de nuevo.')
       }
     }
@@ -117,7 +118,7 @@ const TemplatesPage: React.FC = () => {
       return false
     } catch (error: any) {
       console.error('Error updating template:', error)
-      notify.error(error.response?.data?.error ||
+      notify.error(getApiErrorReason(error) ||
           'Error al actualizar la plantilla. Por favor, intenta de nuevo.')
       return false
     }
@@ -139,7 +140,7 @@ const TemplatesPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error deleting template:', error)
-      notify.error(error.response?.data?.error ||
+      notify.error(getApiErrorReason(error) ||
           'Error al eliminar la plantilla. Por favor, intenta de nuevo.')
     }
   }

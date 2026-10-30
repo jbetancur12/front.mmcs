@@ -5,6 +5,7 @@ import {
 import { useCallback } from 'react'
 
 import { useUserMutations } from '../../hooks/useUsers'
+import { generateStrongPassword } from '../../utils/passwordPolicy'
 import {
   closeLoadingAlert,
   handleErrorWithAlert,
@@ -91,7 +92,8 @@ export const useOwnUsersActions = (validationErrors: {
           email: userData.email,
           phone: userData.phone || null,
           roles: userData.roles,
-          contraseña: 'Metromedics@2025'
+          // Temporal: la persona define la suya con el enlace de activación
+          contraseña: generateStrongPassword()
         }
 
         const created = await createUser.mutateAsync(createData)

@@ -1,6 +1,6 @@
 import { toast } from 'react-hot-toast'
 import { CalibrationService } from '../../../types/calibrationService'
-import { getApiErrorMessage } from '../../../utils/apiError'
+import { getApiErrorMessage, getApiErrorReason } from '../../../utils/apiError'
 import { useCalibrationServiceMutations } from '../../../hooks/useCalibrationServices'
 import { CalibrationServiceDetailDialogs } from './useCalibrationServiceDetailDialogs'
 import { DetailTab } from './calibrationServiceDetailUtils'
@@ -75,30 +75,7 @@ const useCalibrationServiceAdjustmentActions = ({
       setActiveTab('adjustments')
     } catch (adjustmentError) {
       console.error(adjustmentError)
-      const serverMessage =
-        typeof adjustmentError === 'object' &&
-        adjustmentError !== null &&
-        'response' in adjustmentError &&
-        adjustmentError.response &&
-        typeof adjustmentError.response === 'object' &&
-        'data' in adjustmentError.response &&
-        adjustmentError.response.data &&
-        typeof adjustmentError.response.data === 'object' &&
-        'details' in adjustmentError.response.data &&
-        typeof adjustmentError.response.data.details === 'string'
-          ? adjustmentError.response.data.details
-          : typeof adjustmentError === 'object' &&
-              adjustmentError !== null &&
-              'response' in adjustmentError &&
-              adjustmentError.response &&
-              typeof adjustmentError.response === 'object' &&
-              'data' in adjustmentError.response &&
-              adjustmentError.response.data &&
-              typeof adjustmentError.response.data === 'object' &&
-              'error' in adjustmentError.response.data &&
-              typeof adjustmentError.response.data.error === 'string'
-            ? adjustmentError.response.data.error
-            : null
+      const serverMessage = getApiErrorReason(adjustmentError)
 
       toast.error(
         serverMessage

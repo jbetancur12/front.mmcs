@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useState, useEffect } from 'react'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -120,15 +121,15 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
         console.error('Error updating sensor:', error)
         // Intentar extraer un mensaje de error más amigable de la respuesta de Axios
         const apiErrorMessage =
-          error.response?.data?.message ||
+          getApiErrorReason(error) ||
           error.message ||
           'Ocurrió un error al actualizar el sensor.'
         // Establecer el error de la API en el estado de errores
         setFormErrors((prev) => ({ ...prev, apiError: apiErrorMessage }))
         // Si el error es de validación específico del campo 'name'
         if (
-          error.response?.data?.message?.includes('nombre') ||
-          error.response?.data?.error?.includes('UniqueConstraintError')
+          getApiErrorReason(error)?.includes('nombre') ||
+          getApiErrorReason(error)?.includes('UniqueConstraintError')
         ) {
           setFormErrors((prev) => ({ ...prev, name: apiErrorMessage }))
         }

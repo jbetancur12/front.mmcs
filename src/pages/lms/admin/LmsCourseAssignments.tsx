@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -132,7 +133,7 @@ const LmsCourseAssignments: React.FC = () => {
         notify.success('Asignación creada exitosamente')
       },
       onError: (error: any) => {
-        notify.error('Error al crear asignación: ' + (error.response?.data?.message || error.message))
+        notify.error('Error al crear asignación: ' + (getApiErrorReason(error) || error.message))
       }
     }
   )
@@ -148,7 +149,7 @@ const LmsCourseAssignments: React.FC = () => {
         notify.success('Asignación eliminada exitosamente')
       },
       onError: (error: any) => {
-        notify.error('Error al eliminar asignación: ' + (error.response?.data?.message || error.message))
+        notify.error('Error al eliminar asignación: ' + (getApiErrorReason(error) || error.message))
       }
     }
   )

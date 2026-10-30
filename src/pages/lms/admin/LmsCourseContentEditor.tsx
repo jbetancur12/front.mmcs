@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -313,7 +314,7 @@ const LmsCourseContentEditor: React.FC = () => {
       notify.success('Cambios guardados')
     },
     onError: (error: any) => {
-      const msg = error?.response?.data?.error?.message || error?.message || 'Error al guardar los cambios'
+      const msg = getApiErrorReason(error) || error?.message || 'Error al guardar los cambios'
       notify.error('Error', msg)
     }
   })

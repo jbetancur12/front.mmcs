@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import { axiosPrivate, axiosPublic } from 'src/utils/api'
 import type { AxiosProgressEvent } from 'axios'
 import type { Notification as UiNotification } from '../types/notifications'
@@ -1436,7 +1437,7 @@ class LMSService {
     } catch (error: any) {
       return {
         isValid: false,
-        error: error.response?.data?.message || 'Error al verificar el certificado'
+        error: getApiErrorReason(error) || 'Error al verificar el certificado'
       }
     }
   }

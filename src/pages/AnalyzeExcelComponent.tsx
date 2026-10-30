@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useEffect, useState } from 'react'
 import {
   Box,
@@ -501,7 +502,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         // El diálogo espera al usuario: el cargando no debe taparlo
         setLoading(false)
         const obj = await choiceDialog({
-          title: error.response.data.message,
+          title: getApiErrorReason(error) ?? 'El archivo ya existe',
           text: (
             <div>
               <ul>

@@ -1,4 +1,5 @@
 // src/pages/Evaluations/ListAllSupplierEvaluationsPage.tsx (o donde lo coloques)
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import {
   Container,
@@ -113,8 +114,8 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
     } catch (err) {
       console.error('Error al generar o mostrar el reporte PDF:', err)
       let message = 'No se pudo generar el reporte PDF.'
-      if (isAxiosError(err) && err.response?.data?.message) {
-        message = err.response.data.message
+      if (isAxiosError(err) && getApiErrorReason(err)) {
+        message = getApiErrorReason(err) ?? message
       } else if (err instanceof Error) {
         message = err.message
       }

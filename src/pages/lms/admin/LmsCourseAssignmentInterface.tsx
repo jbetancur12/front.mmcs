@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -204,8 +205,7 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
 }
 
 const getApiMessage = (error: any, fallback: string) =>
-  error?.response?.data?.error?.message
-  || error?.response?.data?.message
+  getApiErrorReason(error)
   || error?.message
   || fallback
 
@@ -307,7 +307,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        notify.error('Error al cargar cursos', error.response?.data?.message || error.message || 'Ocurrió un error')
+        notify.error('Error al cargar cursos', getApiErrorReason(error) || error.message || 'Ocurrió un error')
       }
     }
   )
@@ -328,7 +328,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        notify.error('Error al cargar asignaciones', error.response?.data?.message || error.message || 'Ocurrió un error')
+        notify.error('Error al cargar asignaciones', getApiErrorReason(error) || error.message || 'Ocurrió un error')
       }
     }
   )

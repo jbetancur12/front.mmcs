@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -288,7 +289,7 @@ const LmsCourseManagement: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        notify.error('Error al cargar los cursos: ' + (error.response?.data?.message || error.message))
+        notify.error('Error al cargar los cursos: ' + (getApiErrorReason(error) || error.message))
       }
     }
   )
@@ -333,7 +334,7 @@ const LmsCourseManagement: React.FC = () => {
         notify.success(editingCourse ? 'Curso actualizado exitosamente' : 'Curso creado exitosamente')
       },
       onError: (error: any) => {
-        notify.error('Error al guardar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
+        notify.error('Error al guardar curso: ' + (getApiErrorReason(error) || error.message))
       }
     }
   )
@@ -349,7 +350,7 @@ const LmsCourseManagement: React.FC = () => {
         notify.success('Curso eliminado exitosamente')
       },
       onError: (error: any) => {
-        notify.error('Error al eliminar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
+        notify.error('Error al eliminar curso: ' + (getApiErrorReason(error) || error.message))
       }
     }
   )
@@ -365,7 +366,7 @@ const LmsCourseManagement: React.FC = () => {
         notify.success('Curso publicado exitosamente')
       },
       onError: (error: any) => {
-        notify.error('Error al publicar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
+        notify.error('Error al publicar curso: ' + (getApiErrorReason(error) || error.message))
       }
     }
   )
@@ -381,7 +382,7 @@ const LmsCourseManagement: React.FC = () => {
         notify.success('Curso archivado exitosamente')
       },
       onError: (error: any) => {
-        notify.error('Error al archivar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message))
+        notify.error('Error al archivar curso: ' + (getApiErrorReason(error) || error.message))
       }
     }
   )

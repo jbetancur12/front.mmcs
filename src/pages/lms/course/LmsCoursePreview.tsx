@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -442,7 +443,7 @@ const LmsCoursePreview: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Error al completar lección:', error);
 
-      notify.error('Error al guardar progreso', error.response?.data?.error?.message || 'No se pudo marcar la lección como completada');
+      notify.error('Error al guardar progreso', getApiErrorReason(error) || 'No se pudo marcar la lección como completada');
     } finally {
       busyDialog.hide()
     }
@@ -841,7 +842,7 @@ const LmsCoursePreview: React.FC = () => {
                           busyDialog.hide()
                           console.error('❌ Error al completar quiz:', error);
 
-                          notify.error('Error al guardar resultados', error.response?.data?.error?.message || 'No se pudo guardar el quiz');
+                          notify.error('Error al guardar resultados', getApiErrorReason(error) || 'No se pudo guardar el quiz');
                         }
                       }}
                     />

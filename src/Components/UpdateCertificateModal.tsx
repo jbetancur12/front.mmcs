@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useState, useEffect } from 'react'
 import { Box, Typography } from '@mui/material'
 import toast from 'react-hot-toast'
@@ -91,7 +92,7 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
       // Archivo duplicado (409)
       if (error.response && error.response.status === 409) {
         toast.error(
-          error.response.data.error ||
+          getApiErrorReason(error) ||
             'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.',
           { duration: 5000, position: 'top-center' }
         )
