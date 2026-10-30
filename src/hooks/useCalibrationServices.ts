@@ -817,13 +817,18 @@ export const useCalibrationServiceStepRoles = () => {
   })
 }
 
-export const useCalibrationServiceQuoteTermsTemplate = (enabled = true) => {
+export const useCalibrationServiceQuoteTermsTemplate = (
+  enabled = true,
+  // 'always' para quien necesita la plantilla recién traída (el formulario de servicio nuevo)
+  refetchOnMount: boolean | 'always' = true
+) => {
   return useQuery({
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'],
     queryFn: calibrationServiceApi.getQuoteTermsTemplate,
     enabled,
     // Casi no cambia; al guardar se invalida. Con staleTime 0 se pedía en cada montaje
     staleTime: 5 * 60 * 1000,
+    refetchOnMount,
     refetchOnWindowFocus: false
   })
 }
