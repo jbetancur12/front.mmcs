@@ -780,7 +780,9 @@ export const useCalibrationServiceSequenceConfig = (enabled = true) => {
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config'],
     queryFn: calibrationServiceApi.getSequenceConfig,
     enabled,
+    // Cambia con cada cotización generada: se mantiene en 1 min, solo sin refetch por foco
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: 1
   })
 }
@@ -790,7 +792,9 @@ export const useCalibrationServiceSlaConfig = (enabled = true) => {
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'sla-config'],
     queryFn: calibrationServiceApi.getSlaConfig,
     enabled,
-    staleTime: 60 * 1000,
+    // Casi no cambia; al guardar se invalida (ver upsertSlaConfig)
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: 1
   })
 }
@@ -818,7 +822,9 @@ export const useCalibrationServiceQuoteTermsTemplate = (enabled = true) => {
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'],
     queryFn: calibrationServiceApi.getQuoteTermsTemplate,
     enabled,
-    staleTime: 0
+    // Casi no cambia; al guardar se invalida. Con staleTime 0 se pedía en cada montaje
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false
   })
 }
 
@@ -957,7 +963,7 @@ export const useCalibrationServiceMutations = () => {
   const sendCertificate = useMutation(calibrationServiceApi.sendCertificate, { onSuccess: (_: any, v: any) => { iA(); iD(v.serviceId) } })
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
   const upsertSequenceConfig = useMutation(calibrationServiceApi.upsertSequenceConfig, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config']) } })
-  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig)
+  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'sla-config']) } })
   const updateCustomerSignature = useMutation(calibrationServiceApi.updateCustomerSignature, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const createRemoteSignatureLink = useMutation(calibrationServiceApi.createRemoteSignatureLink, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
   const revokeRemoteSignatureLink = useMutation(calibrationServiceApi.revokeRemoteSignatureLink, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
