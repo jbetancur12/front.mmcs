@@ -216,7 +216,8 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
       {noServices && (
         <Alert severity='warning' sx={{ mb: 3 }}>
           Este año no hay órdenes de servicio emitidas. Se muestran los equipos
-          con servicio metrológico, pero no se puede calcular el avance frente a una meta.
+          con servicio metrológico, pero no se puede calcular el avance frente a
+          una meta.
         </Alert>
       )}
 
@@ -282,10 +283,19 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
         </Grid>
       </Grid>
 
+      {canManageGoal && !!indicators.excluded?.quantity && (
+        <Alert severity='info' sx={{ mb: 3 }}>
+          Fuera de la meta por no ser metrológicos:{' '}
+          {indicators.excluded.byType
+            .map((entry) => `${entry.label} (${entry.quantity})`)
+            .join(', ')}
+          .
+        </Alert>
+      )}
       {headquarter && (
         <Alert severity='info' sx={{ mb: 3 }}>
-          Con una sede elegida, los equipos con servicio metrológico y el avance son de esa sede. La
-          meta sigue siendo la del cliente completo.
+          Con una sede elegida, los equipos con servicio metrológico y el avance
+          son de esa sede. La meta sigue siendo la del cliente completo.
         </Alert>
       )}
 

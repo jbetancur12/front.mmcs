@@ -9,6 +9,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
+  Switch,
   TextField,
   Typography
 } from '@mui/material'
@@ -59,10 +61,12 @@ const TypeAliasDialog: React.FC<Props> = ({
   onClose
 }) => {
   const [target, setTarget] = useState<AliasOption | null>(null)
+  const [notMetrological, setNotMetrological] = useState(false)
   const { mutateAsync, isLoading } = useCreateTypeAlias()
 
   useEffect(() => {
     setTarget(null)
+    setNotMetrological(false)
   }, [source])
 
   // El mismo equipo puede tener calibración y verificación: se ofrecen todos los tipos con certificados del
@@ -70,7 +74,8 @@ const TypeAliasDialog: React.FC<Props> = ({
   const options = useMemo(() => {
     const byKey = new Map<string, AliasOption>()
     for (const row of rows) {
-      if (row.calibrated > 0) byKey.set(row.key, { key: row.key, label: row.label })
+      if (row.calibrated > 0)
+        byKey.set(row.key, { key: row.key, label: row.label })
     }
     for (const type of availableTypes ?? []) {
       byKey.set(type.key, {
@@ -88,10 +93,16 @@ const TypeAliasDialog: React.FC<Props> = ({
   }, [rows, availableTypes, source?.key])
 
   const handleSave = async () => {
-    if (!source || !target) return
+    if (!source || (!notMetrological && !target)) return
     try {
-      await mutateAsync({ sourceName: source.label, targetName: target.label })
-      notify.success('Tipos asociados')
+      await mutateAsync(
+        notMetrological
+          ? { sourceName: source.label, notMetrological: true }
+          : { sourceName: source.label, targetName: target?.label }
+      )
+      notify.success(
+        notMetrological ? 'Ítem excluido de la meta' : 'Tipos asociados'
+      )
       onClose()
     } catch (error) {
       notify.error(getApiErrorMessage(error, 'No se pudo asociar el tipo.'))
@@ -126,37 +137,60 @@ const TypeAliasDialog: React.FC<Props> = ({
             al que equivale. Se aplica a todos los clientes y no se puede
             deshacer desde aquí.
           </Typography>
-          <Autocomplete
-            options={options}
-            value={target}
-            onChange={(_, value) => setTarget(value)}
-            getOptionLabel={(option) => cleanTypeLabel(option.label)}
-            isOptionEqualToValue={(a, b) => a.key === b.key}
-            noOptionsText='No hay tipos de equipo con certificados en este periodo'
-            renderOption={(props, option) => (
-              <Box
-                component='li'
-                {...props}
-                key={option.key}
-                sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
-              >
-                <Typography variant='body2' fontWeight={600}>
-                  {cleanTypeLabel(option.label)}
-                </Typography>
-                <Typography variant='caption' color='text.secondary'>
-                  {describeCertificateTypes(option)}
-                </Typography>
-              </Box>
-            )}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label='Tipo de los certificados'
-                required
+          <FormControlLabel
+            control={
+              <Switch
+                checked={notMetrological}
+                onChange={(_, checked) => setNotMetrological(checked)}
+                disabled={isLoading}
               />
-            )}
+            }
+            label='No es un equipo metrológico (viáticos, transporte, etc.)'
           />
-          {target && target.counted === 0 && (
+          {notMetrological && (
+            <Alert severity='info' sx={{ borderRadius: '12px' }}>
+              «{source ? cleanTypeLabel(source.label) : ''}» sale de la meta y
+              del avance de todos los clientes, y deja de aparecer para asociar.
+              Queda registrado quién lo decidió.
+            </Alert>
+          )}
+          {!notMetrological && (
+            <Autocomplete
+              options={options}
+              value={target}
+              onChange={(_, value) => setTarget(value)}
+              getOptionLabel={(option) => cleanTypeLabel(option.label)}
+              isOptionEqualToValue={(a, b) => a.key === b.key}
+              noOptionsText='No hay tipos de equipo con certificados en este periodo'
+              renderOption={(props, option) => (
+                <Box
+                  component='li'
+                  {...props}
+                  key={option.key}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <Typography variant='body2' fontWeight={600}>
+                    {cleanTypeLabel(option.label)}
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    {describeCertificateTypes(option)}
+                  </Typography>
+                </Box>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label='Tipo de los certificados'
+                  required
+                />
+              )}
+            />
+          )}
+          {!notMetrological && target && target.counted === 0 && (
             <Alert severity='warning' sx={{ borderRadius: '12px' }}>
               «{cleanTypeLabel(target.label)}» solo tiene certificados que no
               cuentan para el avance (
@@ -179,7 +213,7 @@ const TypeAliasDialog: React.FC<Props> = ({
         <Button
           variant='contained'
           onClick={handleSave}
-          disabled={!target || isLoading}
+          disabled={(!target && !notMetrological) || isLoading}
           startIcon={
             isLoading ? (
               <CircularProgress size={16} color='inherit' />
@@ -187,7 +221,7 @@ const TypeAliasDialog: React.FC<Props> = ({
           }
           sx={emeraldButtonSx}
         >
-          Asociar
+          {notMetrological ? 'Excluir de la meta' : 'Asociar'}
         </Button>
       </DialogActions>
     </Dialog>

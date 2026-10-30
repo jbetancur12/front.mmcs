@@ -51,6 +51,11 @@ export interface CustomerIndicators {
   goal: IndicatorGoal
   calibrated: number
   pending: number
+  /** Ítems de la ODS marcados "no es metrológico": no suman a la meta. */
+  excluded?: {
+    quantity: number
+    byType: { key: string; label: string; quantity: number }[]
+  }
   /** `null` si no hay base para calcular ("Sin meta"). */
   progressPct: number | null
   lastCalibrationDate: string | null
@@ -119,7 +124,10 @@ export interface SaveGoalResponse {
 
 export interface CreateTypeAliasPayload {
   sourceName: string
-  targetName: string
+  /** Tipo de los certificados al que equivale; no se envía si `notMetrological`. */
+  targetName?: string
+  /** El ítem de la ODS no es metrología (viáticos, transporte): sale de la meta. */
+  notMetrological?: boolean
 }
 
 export type CustomerServiceDocumentType =
