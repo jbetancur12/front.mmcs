@@ -10,6 +10,7 @@ import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { useNavigate } from 'react-router-dom'
 import CalibrationNotificationBell from '../CalibrationNotificationBell'
+import CalibrationBillingGuide from '../CalibrationBillingGuide'
 import { CalibrationServicesListPermissions } from './useCalibrationServicesListPermissions'
 import { CalibrationServicesListActions } from './useCalibrationServicesListActions'
 
@@ -56,6 +57,7 @@ const CalibrationServicesHeaderActions = ({
           Clientes
         </Button>
       ) : null}
+      <CalibrationBillingGuide />
       <CalibrationNotificationBell />
       <IconButton
         aria-label='Más acciones'

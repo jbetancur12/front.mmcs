@@ -10,6 +10,7 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import { CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS } from '../../../constants/calibrationServices'
 import { CalibrationService } from '../../../types/calibrationService'
 import CalibrationServiceCutsPanel from '../CalibrationServiceCutsPanel'
+import CalibrationBillingGuide from '../CalibrationBillingGuide'
 import { BlockedActionTooltip } from './CalibrationServiceDetailLayout'
 import { DetailTab } from './calibrationServiceDetailUtils'
 import {
@@ -176,6 +177,9 @@ const CalibrationServiceCutsTab = ({
           </Box>
         </Alert>
       ) : null}
+      <Stack direction='row' justifyContent='flex-end' sx={{ mb: 1 }}>
+        <CalibrationBillingGuide compact />
+      </Stack>
       <CalibrationServiceCutsPanel
         cuts={service.cuts || []}
         canMarkReady={canMarkCutReady}
