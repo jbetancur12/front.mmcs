@@ -1,3 +1,4 @@
+import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -457,9 +458,9 @@ const SupplierDetailsPage: React.FC = () => {
           } else if (status === 403) {
             errorMessage =
               'Prohibido: No tienes los permisos necesarios para ver este documento.'
-          } else if (responseData && typeof responseData.message === 'string') {
-            // Si el backend envía un JSON con una propiedad "message"
-            errorMessage = responseData.message
+          } else if (getApiErrorReason(error)) {
+            // JSON del backend con el motivo (formato estándar o { message })
+            errorMessage = getApiErrorReason(error) ?? errorMessage
           } else if (
             typeof responseData === 'string' &&
             responseData.trim() !== ''

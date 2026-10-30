@@ -1,5 +1,6 @@
 // src/pages/Admin/FiscalParametersManagementPage.tsx (o la ubicación que prefieras)
 
+import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState, ChangeEvent } from 'react'
 import { type MRT_ColumnDef } from 'material-react-table'
 import {
@@ -181,11 +182,10 @@ const FiscalParametersManagementPage: React.FC = () => {
     if (isAxiosError(err) && err.response?.data) {
       const data = err.response.data
       errorMessage =
-        typeof data.message === 'string'
-          ? data.message
-          : Array.isArray(data.errors)
-            ? data.errors.map((e: any) => e.message).join(', ')
-            : JSON.stringify(data)
+        getApiErrorReason(err) ??
+        (Array.isArray(data.errors)
+          ? data.errors.map((e: any) => e.message).join(', ')
+          : JSON.stringify(data))
     } else if (err instanceof Error) {
       errorMessage = err.message
     }
