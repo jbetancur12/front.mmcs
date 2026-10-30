@@ -3,7 +3,7 @@ import { RepositoryData, ResourceOption } from './Types'
 import { certificateTypeStore } from '../../store/certificateTypeStore'
 import { deviceStore } from '../../store/deviceStore'
 import { customerStore } from '../../store/customerStore'
-import useAxiosPrivate from '@utils/use-axios-private'
+import type { AxiosInstance } from 'axios'
 
 export const limitArraySize = (arra: any, newItem: any) => {
   // Verificar si el nuevo item ya existe en el array
@@ -97,11 +97,11 @@ export const mask = (num: number) =>
     : '0[00000]'
 
 export const loadOptions = async (
+  axiosPrivate: AxiosInstance,
   inputValue: string,
   resource: string,
   mapFunction: (item: any) => ResourceOption
 ): Promise<ResourceOption[]> => {
-  const axiosPrivate = useAxiosPrivate()
   return new Promise((resolve, reject) => {
     const endpoint = `/${resource}` // Construye la URL del endpoint
     const fetchData = async () => {

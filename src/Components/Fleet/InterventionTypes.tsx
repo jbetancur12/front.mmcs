@@ -19,6 +19,7 @@ import { useFormik } from 'formik'
 import * as yup from 'yup'
 import { notify } from 'src/utils/notify'
 import useAxiosPrivate from '@utils/use-axios-private'
+import type { AxiosInstance } from 'axios'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -31,8 +32,9 @@ const validationSchema = yup.object().shape({
   description: yup.string().required('Descripción es obligatoria')
 })
 
-const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
-  const axiosPrivate = useAxiosPrivate()
+const fetchInterventionTypes = async (
+  axiosPrivate: AxiosInstance
+): Promise<InterventionType[]> => {
   const { data } = await axiosPrivate.get(`/interventionType`)
   return data
 }
@@ -48,7 +50,7 @@ const InterventionTypes = () => {
 
   const { data: interventionTypes = [] } = useQuery(
     'interventionType',
-    fetchInterventionTypes
+    () => fetchInterventionTypes(axiosPrivate)
   )
 
   const createOrUpdateInterventionType = useMutation(

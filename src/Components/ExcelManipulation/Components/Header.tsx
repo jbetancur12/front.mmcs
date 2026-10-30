@@ -1,5 +1,6 @@
 import { Grid, Paper, TextField } from '@mui/material'
 import AsyncSelect from 'react-select/async'
+import useAxiosPrivate from '@utils/use-axios-private'
 import { loadOptions, styles } from '../Utils'
 import { ComponentsCertificateProps, ResourceOptionDevice } from '../Types'
 
@@ -9,6 +10,7 @@ const Header = ({
   setFormData,
   error
 }: ComponentsCertificateProps) => {
+  const axiosPrivate = useAxiosPrivate()
   return (
     <Paper
       elevation={3}
@@ -36,7 +38,7 @@ const Header = ({
             cacheOptions
             // defaultOptions
             loadOptions={(inputValue) =>
-              loadOptions(inputValue, 'certificateTypes', mapDevices)
+              loadOptions(axiosPrivate, inputValue, 'certificateTypes', mapDevices)
             }
             onChange={(selectedOption: any) =>
               setFormData({

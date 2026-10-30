@@ -62,9 +62,7 @@ export default [
       "@typescript-eslint/ban-ts-comment": "warn",
       // Las comillas en el texto de JSX se pintan bien; no vale la pena escaparlas
       "react/no-unescaped-entities": "off",
-      // Hay 6 llamadas a useAxiosPrivate dentro de funciones comunes (Fleet, ExcelManipulation):
-      // funcionan si las llama un componente, pero rompen la regla; aviso hasta corregirlas.
-      "react-hooks/rules-of-hooks": "warn",
+      "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn"
     }
   },

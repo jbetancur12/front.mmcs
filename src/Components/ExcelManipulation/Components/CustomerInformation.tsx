@@ -1,5 +1,6 @@
 import AsyncSelect from 'react-select/async'
 import { Grid, Paper, Stack, TextField, Typography } from '@mui/material'
+import useAxiosPrivate from '@utils/use-axios-private'
 import { loadOptions, styles } from '../Utils'
 import { ComponentsCertificateProps, ResourceOptionCustomer } from '../Types'
 
@@ -9,6 +10,7 @@ const CustomerInformation = ({
   formData,
   error
 }: ComponentsCertificateProps) => {
+  const axiosPrivate = useAxiosPrivate()
   return (
     <Paper elevation={3} style={{ padding: 20 }}>
       <Stack spacing={2}>
@@ -22,7 +24,7 @@ const CustomerInformation = ({
 
                 placeholder='Solicitante'
                 loadOptions={(inputValue) =>
-                  loadOptions(inputValue, 'customers', mapCustomers)
+                  loadOptions(axiosPrivate, inputValue, 'customers', mapCustomers)
                 }
                 onChange={(selectedOption: any) => {
                   setFormData({

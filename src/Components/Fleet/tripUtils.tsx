@@ -1,6 +1,5 @@
-import useAxiosPrivate from '@utils/use-axios-private'
 import { Trip } from './types'
-import { isAxiosError } from 'axios'
+import { isAxiosError, type AxiosInstance } from 'axios'
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -9,20 +8,21 @@ const formatDate = (dateString: string) => {
 }
 
 // Add Trip
-export const addTrip = async (trip: Trip) => {
-  const axiosPrivate = useAxiosPrivate()
+export const addTrip = async (axiosPrivate: AxiosInstance, trip: Trip) => {
   await axiosPrivate.post(`/trip`, trip)
 }
 
 // Update Trip
-export const updateTrip = async (trip: Trip) => {
-  const axiosPrivate = useAxiosPrivate()
+export const updateTrip = async (axiosPrivate: AxiosInstance, trip: Trip) => {
   await axiosPrivate.put(`/trip/${trip.id}`, trip)
 }
 
-export const addTripWithInspection = async (trip: Trip, inspection: any) => {
+export const addTripWithInspection = async (
+  axiosPrivate: AxiosInstance,
+  trip: Trip,
+  inspection: any
+) => {
   try {
-    const axiosPrivate = useAxiosPrivate()
     const formattedStartDate = trip.startDate
       ? formatDate(trip.startDate)
       : null
@@ -64,8 +64,11 @@ export const addTripWithInspection = async (trip: Trip, inspection: any) => {
 }
 
 // Update Trip with Inspection
-export const updateTripWithInspection = async (trip: Trip, inspection: any) => {
-  const axiosPrivate = useAxiosPrivate()
+export const updateTripWithInspection = async (
+  axiosPrivate: AxiosInstance,
+  trip: Trip,
+  inspection: any
+) => {
   const formattedStartDate = trip.startDate ? formatDate(trip.startDate) : null
   const formattedEndDate = trip.endDate ? formatDate(trip.endDate) : null
   const { driver, startMileage, endMileage, purpose, vehicleId } = trip

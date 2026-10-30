@@ -1,5 +1,6 @@
 import { Grid, Paper, Stack, TextField, Typography } from '@mui/material'
 import AsyncSelect from 'react-select/async'
+import useAxiosPrivate from '@utils/use-axios-private'
 import { loadOptions, mask, styles } from '../Utils'
 import { ComponentsCertificateProps, ResourceOptionDevice } from '../Types'
 import { TextMaskCustom } from '../../NumericFormatCustom'
@@ -10,6 +11,7 @@ const DeviceInformation = ({
   formData,
   error
 }: ComponentsCertificateProps) => {
+  const axiosPrivate = useAxiosPrivate()
   return (
     <Paper elevation={3} style={{ padding: 20 }}>
       <Typography variant='h6'>Información Del Equipo</Typography>
@@ -20,7 +22,7 @@ const DeviceInformation = ({
               cacheOptions
               // defaultOptions
               loadOptions={(inputValue) =>
-                loadOptions(inputValue, 'devices', mapDevices)
+                loadOptions(axiosPrivate, inputValue, 'devices', mapDevices)
               }
               onChange={(optionSelected: any) => {
                 setFormData({

@@ -14,11 +14,13 @@ import { Inspection, Trip, TripsResponse } from './types'
 import { addTripWithInspection, updateTripWithInspection } from './tripUtils'
 import InspectionComponent from './InspectionComponent'
 import { notify } from 'src/utils/notify'
+import useAxiosPrivate from '@utils/use-axios-private'
 import { ArrowBack } from '@mui/icons-material'
 
 const NewTrip = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const axiosPrivate = useAxiosPrivate()
 
   const { lastTrip } = location.state as TripsResponse
   const [trip, setTrip] = useState<Trip | null>(null)
@@ -50,13 +52,13 @@ const NewTrip = () => {
     if (trip && inspection) {
       try {
         if (vehicleIsBusy) {
-          await updateTripWithInspection(trip, {
+          await updateTripWithInspection(axiosPrivate, trip, {
             ...inspection,
             inspectionType: 'Inspección de Entrada'
           })
           notify.success('Viaje Actualizado Exitosamente!')
         } else {
-          await addTripWithInspection(trip, {
+          await addTripWithInspection(axiosPrivate, trip, {
             ...inspection,
             inspectionType: 'Inspección de Salida'
           })
