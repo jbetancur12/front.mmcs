@@ -24,7 +24,7 @@ import {
 import { styled } from '@mui/material/styles'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { useStore } from '@nanostores/react'
-import axios, { AxiosError, type AxiosResponse } from 'axios'
+import { AxiosError, type AxiosResponse } from 'axios'
 import { differenceInDays, format } from 'date-fns'
 import {
   MaterialReactTable,
@@ -36,10 +36,8 @@ import {
 import React, { useCallback, useMemo, useState } from 'react'
 import { useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
-import { userStore } from '../store/userStore'
 import { certificateTypeStore } from '../store/certificateTypeStore'
 import { deviceStore } from '../store/deviceStore'
-import AutoComplete from './AutoComplete'
 
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import Loader from './Loader2'
@@ -59,7 +57,6 @@ import {
   useUpdateFile
 } from '@hooks/files/useFiles'
 
-import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
@@ -129,7 +126,6 @@ interface ResourceOption {
 // Main component
 const Table: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
-  const $userStore = useStore(userStore)
   const canDeleteFile = useCan(PERMISSIONS.CALIBRATION_FILE_DELETE)
   const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
 
@@ -314,7 +310,7 @@ const Table: React.FC = () => {
         }
       )
 
-      if ((response.statusText = 'OK')) {
+      if (response.status >= 200 && response.status < 300) {
         // Crear un objeto URL para el archivo descargado
         const url = window.URL.createObjectURL(new Blob([response.data]))
 
@@ -382,7 +378,7 @@ const Table: React.FC = () => {
         accessorKey: 'nextCalibrationDate', //access nested data with dot notation
         header: 'Proxima Fecha de Calibración',
         size: 350,
-        Cell: ({ cell, row }) => {
+        Cell: ({ row }) => {
           const now = new Date()
           const nextCalibrationDate = new Date(row.original.nextCalibrationDate)
           const daysRemaining = differenceInDays(nextCalibrationDate, now)
@@ -534,7 +530,7 @@ const Table: React.FC = () => {
         size: 150,
         hidden: true,
         enableEditing: false,
-        muiTableBodyCellEditTextFieldProps: ({ cell, column }) => ({
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell)
         }),
         // Cell : (w) => w.column.getIsVisible(),
@@ -661,7 +657,7 @@ export const CreateNewFileModal = ({
   const [file, setFile] = useState<File | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [selectedValue, setSelectedValue] = useState('option2')
-  const [device, setDevice] = useState<any>({
+  const [_device, _setDevice] = useState<any>({
     id: '',
     name: ''
   })
@@ -688,7 +684,7 @@ export const CreateNewFileModal = ({
     const selectedOption = event.target.value
 
     // Calcula la nueva fecha en función de la opción seleccionada
-    let newDate =
+    const newDate =
       values.calibrationDate !== ''
         ? new Date(values.calibrationDate)
         : new Date()
@@ -706,7 +702,7 @@ export const CreateNewFileModal = ({
   }
 
   const handleChangeCalibrationDate = (e, accessorKey) => {
-    let newDate = new Date(e)
+    const newDate = new Date(e)
 
     if (selectedValue === 'option2') {
       // Suma un año
@@ -809,10 +805,10 @@ export const CreateNewFileModal = ({
                             })
                           }
                         />
-                        <div class='flex justify-start mt-0'>
-                          <div class='mb-[0.125rem] mr-4 inline-block min-h-[1.5rem] pl-[1.5rem]'>
+                        <div className='flex justify-start mt-0'>
+                          <div className='mb-[0.125rem] mr-4 inline-block min-h-[1.5rem] pl-[1.5rem]'>
                             <input
-                              class="relative float-left -ml-[1.5rem] mr-1 mt-0.5 h-5 w-5 appearance-none rounded-full border-2 border-solid border-neutral-300 before:pointer-events-none before:absolute before:h-4 before:w-4 before:scale-0 before:rounded-full before:bg-transparent before:opacity-0 before:shadow-[0px_0px_0px_13px_transparent] before:content-[''] after:absolute after:z-[1] after:block after:h-4 after:w-4 after:rounded-full after:content-[''] checked:border-primary checked:before:opacity-[0.16] checked:after:absolute checked:after:left-1/2 checked:after:top-1/2 checked:after:h-[0.625rem] checked:after:w-[0.625rem] checked:after:rounded-full checked:after:border-primary checked:after:bg-primary checked:after:content-[''] checked:after:[transform:translate(-50%,-50%)] hover:cursor-pointer hover:before:opacity-[0.04] hover:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:shadow-none focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] checked:focus:border-primary checked:focus:before:scale-100 checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:border-neutral-600 dark:checked:border-primary dark:checked:after:border-primary dark:checked:after:bg-primary dark:focus:before:shadow-[0px_0px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:border-primary dark:checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca]"
+                              className="relative float-left -ml-[1.5rem] mr-1 mt-0.5 h-5 w-5 appearance-none rounded-full border-2 border-solid border-neutral-300 before:pointer-events-none before:absolute before:h-4 before:w-4 before:scale-0 before:rounded-full before:bg-transparent before:opacity-0 before:shadow-[0px_0px_0px_13px_transparent] before:content-[''] after:absolute after:z-[1] after:block after:h-4 after:w-4 after:rounded-full after:content-[''] checked:border-primary checked:before:opacity-[0.16] checked:after:absolute checked:after:left-1/2 checked:after:top-1/2 checked:after:h-[0.625rem] checked:after:w-[0.625rem] checked:after:rounded-full checked:after:border-primary checked:after:bg-primary checked:after:content-[''] checked:after:[transform:translate(-50%,-50%)] hover:cursor-pointer hover:before:opacity-[0.04] hover:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:shadow-none focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] checked:focus:border-primary checked:focus:before:scale-100 checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:border-neutral-600 dark:checked:border-primary dark:checked:after:border-primary dark:checked:after:bg-primary dark:focus:before:shadow-[0px_0px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:border-primary dark:checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca]"
                               type='radio'
                               name='inlineRadioOptions'
                               id='inlineRadio1'
@@ -823,16 +819,16 @@ export const CreateNewFileModal = ({
                               }
                             />
                             <label
-                              class='mt-px inline-block pl-[0.15rem] hover:cursor-pointer'
-                              for='inlineRadio1'
+                              className='mt-px inline-block pl-[0.15rem] hover:cursor-pointer'
+                              htmlFor='inlineRadio1'
                             >
                               6 Meses
                             </label>
                           </div>
 
-                          <div class='mb-[0.125rem] mr-4 inline-block min-h-[1.5rem] pl-[1.5rem]'>
+                          <div className='mb-[0.125rem] mr-4 inline-block min-h-[1.5rem] pl-[1.5rem]'>
                             <input
-                              class="relative float-left -ml-[1.5rem] mr-1 mt-0.5 h-5 w-5 appearance-none rounded-full border-2 border-solid border-neutral-300 before:pointer-events-none before:absolute before:h-4 before:w-4 before:scale-0 before:rounded-full before:bg-transparent before:opacity-0 before:shadow-[0px_0px_0px_13px_transparent] before:content-[''] after:absolute after:z-[1] after:block after:h-4 after:w-4 after:rounded-full after:content-[''] checked:border-primary checked:before:opacity-[0.16] checked:after:absolute checked:after:left-1/2 checked:after:top-1/2 checked:after:h-[0.625rem] checked:after:w-[0.625rem] checked:after:rounded-full checked:after:border-primary checked:after:bg-primary checked:after:content-[''] checked:after:[transform:translate(-50%,-50%)] hover:cursor-pointer hover:before:opacity-[0.04] hover:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:shadow-none focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] checked:focus:border-primary checked:focus:before:scale-100 checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:border-neutral-600 dark:checked:border-primary dark:checked:after:border-primary dark:checked:after:bg-primary dark:focus:before:shadow-[0px_0px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:border-primary dark:checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca]"
+                              className="relative float-left -ml-[1.5rem] mr-1 mt-0.5 h-5 w-5 appearance-none rounded-full border-2 border-solid border-neutral-300 before:pointer-events-none before:absolute before:h-4 before:w-4 before:scale-0 before:rounded-full before:bg-transparent before:opacity-0 before:shadow-[0px_0px_0px_13px_transparent] before:content-[''] after:absolute after:z-[1] after:block after:h-4 after:w-4 after:rounded-full after:content-[''] checked:border-primary checked:before:opacity-[0.16] checked:after:absolute checked:after:left-1/2 checked:after:top-1/2 checked:after:h-[0.625rem] checked:after:w-[0.625rem] checked:after:rounded-full checked:after:border-primary checked:after:bg-primary checked:after:content-[''] checked:after:[transform:translate(-50%,-50%)] hover:cursor-pointer hover:before:opacity-[0.04] hover:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:shadow-none focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] checked:focus:border-primary checked:focus:before:scale-100 checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:border-neutral-600 dark:checked:border-primary dark:checked:after:border-primary dark:checked:after:bg-primary dark:focus:before:shadow-[0px_0px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:border-primary dark:checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca]"
                               type='radio'
                               name='inlineRadioOptions'
                               id='inlineRadio2'
@@ -843,8 +839,8 @@ export const CreateNewFileModal = ({
                               }
                             />
                             <label
-                              class='mt-px inline-block pl-[0.15rem] hover:cursor-pointer'
-                              for='inlineRadio2'
+                              className='mt-px inline-block pl-[0.15rem] hover:cursor-pointer'
+                              htmlFor='inlineRadio2'
                             >
                               12 Meses
                             </label>
@@ -1018,7 +1014,7 @@ const validateEmail = (email: string) =>
     )
 const validateAge = (age: number) => age >= 18 && age <= 50
 
-const mapDevices = (option: any): ResourceOption => ({
+const _mapDevices = (option: any): ResourceOption => ({
   value: option.id,
   label: option.name
 })

@@ -6,27 +6,23 @@ export const handleCreateFile = async (
   axiosPrivate: any,
   fetchFiles: (options?: { force?: boolean }) => Promise<void>
 ) => {
-  try {
-    if (!file) throw new Error('Debe seleccionar un archivo PDF')
-    const formData = new FormData()
-    Object.entries(values).forEach(([key, value]) => {
-      if (value instanceof Date) {
-        formData.append(key, value.toISOString())
-      } else if (value !== null) {
-        formData.append(key, value.toString())
-      }
-    })
-    if (file) formData.append('pdf', file)
-
-    const response = await axiosPrivate.post('/files', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-
-    if (response.status === 201) {
-      await fetchFiles({ force: true })
-      return true
+  if (!file) throw new Error('Debe seleccionar un archivo PDF')
+  const formData = new FormData()
+  Object.entries(values).forEach(([key, value]) => {
+    if (value instanceof Date) {
+      formData.append(key, value.toISOString())
+    } else if (value !== null) {
+      formData.append(key, value.toString())
     }
-  } catch (error) {
-    throw error
+  })
+  if (file) formData.append('pdf', file)
+
+  const response = await axiosPrivate.post('/files', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+
+  if (response.status === 201) {
+    await fetchFiles({ force: true })
+    return true
   }
 }

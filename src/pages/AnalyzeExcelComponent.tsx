@@ -108,7 +108,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     mapFunction: (item: any) => ResourceOption | DeviceOption
   ): Promise<ResourceOption[]> => {
     return new Promise((resolve, reject) => {
-      let timer
       const endpoint = `/${resource}` // Construye la URL del endpoint
       const fetchData = async () => {
         try {
@@ -124,11 +123,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           reject(error)
         }
       }
-      if (timer) {
-        clearTimeout(timer)
-      }
 
-      timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
+      setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
     })
   }
 
@@ -209,7 +205,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             typeof cellValue === 'string' &&
             cellValue.includes('Instrumento')
           ) {
-            for (let col of ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']) {
+            for (const col of ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']) {
               const value = sheet.cell(`${col}${row}`)
 
               if (value.value()) {

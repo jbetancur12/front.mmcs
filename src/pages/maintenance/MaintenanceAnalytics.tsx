@@ -63,6 +63,7 @@ const formatCurrency = (value: number) =>
 
 // Totales, abiertos (pendiente), cerrados (correcto), tiempo, costo y satisfacción
 const KPI_TONES: LmsStatTone[] = ['teal', 'orange', 'green', 'blue', 'blue', 'teal']
+// eslint-disable-next-line react/jsx-key -- se leen por índice, no se pintan como lista
 const KPI_ICONS = [<Assignment />, <FolderOpen />, <CheckCircle />, <Schedule />, <AttachMoney />, <SentimentSatisfied />]
 
 const formatHours = (value: number) => {

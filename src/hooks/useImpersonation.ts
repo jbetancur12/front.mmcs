@@ -32,7 +32,9 @@ const loadState = (): ImpersonationState => {
         targetUser: JSON.parse(targetData),
       }
     }
-  } catch {}
+  } catch {
+    // datos de suplantacion ilegibles: se trata como sin suplantacion
+  }
   return { isImpersonating: false, impersonator: null, targetUser: null }
 }
 

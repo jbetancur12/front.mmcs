@@ -315,15 +315,15 @@ const ExcelManipulation: React.FC = () => {
             const updatedRows = rows.map((row) => {
               if (row.id === update.id) {
                 // Calcular el promedio
-                let sum =
+                const sum =
                   update.first +
                   update.second +
                   update.third +
                   update.fourth +
                   update.fifth +
                   update.sixth
-                let count = 6 // Total de elementos a sumar
-                let average = sum / count
+                const count = 6 // Total de elementos a sumar
+                const average = sum / count
 
                 // Devolver el objeto actualizado con el promedio asignado al campo "average"
                 return { ...row, ...update, average: average }

@@ -107,6 +107,7 @@ const DeviceMarker = memo(
     )
   }
 )
+DeviceMarker.displayName = 'DeviceMarker'
 
 export const DeviceMarkers = ({
   devices,

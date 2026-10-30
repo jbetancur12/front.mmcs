@@ -161,7 +161,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           switch (message.type) {
             case 'LABORATORY_DATA':
               break
-            case 'REAL_TIME_DATA':
+            case 'REAL_TIME_DATA': {
               setLastDeviceReading({ ...message.data, ts: new Date() }) // Assuming the payload has a timestamp
               const reading: DeviceReadingPayload = {
                 ...message.data,
@@ -174,6 +174,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
               }))
 
               break
+            }
             case 'CALIBRATION_SENSOR_UPDATE': // <--- NUEVO CASE
               // La lógica de actualización del caché de React Query se hará en un hook consumidor,
               // así que aquí solo necesitamos asegurarnos de que setLastMessage(message) se ejecute.

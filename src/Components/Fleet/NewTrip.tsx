@@ -182,7 +182,7 @@ const NewTrip = () => {
               value={trip?.driver || ''}
               onChange={(e) =>
                 setTrip((prev) => ({
-                  ...prev!!,
+                  ...prev!,
                   [e.target.name]: e.target.value
                 }))
               }

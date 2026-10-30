@@ -86,7 +86,7 @@ function CertificatesList() {
         }
       )
 
-      if ((response.statusText = 'OK')) {
+      if (response.status >= 200 && response.status < 300) {
         // Crear un objeto URL para el archivo descargado
         const url = window.URL.createObjectURL(new Blob([response.data]))
 

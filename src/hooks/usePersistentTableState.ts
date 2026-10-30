@@ -38,7 +38,7 @@ const DEFAULT_TABLE_STATE: TableState = {
 }
 
 // Debounce utility function
-const useDebounce = (callback: Function, delay: number) => {
+const useDebounce = (callback: (...args: any[]) => void, delay: number) => {
   const timeoutRef = useRef<NodeJS.Timeout>()
 
   return useCallback(

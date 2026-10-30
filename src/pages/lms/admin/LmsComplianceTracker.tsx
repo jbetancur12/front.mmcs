@@ -243,7 +243,7 @@ const LmsComplianceTracker: React.FC = () => {
     setEditMode(next)
     sessionStorage.setItem('lms:compliance:edit', next ? '1' : '0')
     if (!next) setSelectedKeys([])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [searchParams, canEdit])
 
   // Persistir filtros y tab entre navegaciones
@@ -722,7 +722,7 @@ const LmsComplianceTracker: React.FC = () => {
         size: 170
       }
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     []
   )
 

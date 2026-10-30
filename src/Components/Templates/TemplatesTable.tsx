@@ -92,7 +92,7 @@ const TemplatesTable: React.FC<TemplatesTableProps> = ({
 
   // Advanced filter, sort, and paginate templates
   const { filteredTemplates, paginatedTemplates } = useMemo(() => {
-    let filtered = templates.filter((template) => {
+    const filtered = templates.filter((template) => {
       // Text search filter
       if (debouncedSearchTerm) {
         const searchLower = debouncedSearchTerm.toLowerCase()

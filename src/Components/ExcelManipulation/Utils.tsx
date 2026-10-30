@@ -103,7 +103,6 @@ export const loadOptions = async (
 ): Promise<ResourceOption[]> => {
   const axiosPrivate = useAxiosPrivate()
   return new Promise((resolve, reject) => {
-    let timer
     const endpoint = `/${resource}` // Construye la URL del endpoint
     const fetchData = async () => {
       try {
@@ -119,11 +118,8 @@ export const loadOptions = async (
         reject(error)
       }
     }
-    if (timer) {
-      clearTimeout(timer)
-    }
 
-    timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
+    setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
   })
 }
 

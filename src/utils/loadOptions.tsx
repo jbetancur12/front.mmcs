@@ -6,7 +6,6 @@ export const loadOptions = async <T,>(
   mapFunction: (item: T) => ResourceOption
 ): Promise<T[]> => {
   return new Promise((resolve, reject) => {
-    let timer
     const endpoint = `/${resource}` // Construir la URL del endpoint
     const fetchData = async () => {
       try {
@@ -22,11 +21,8 @@ export const loadOptions = async <T,>(
         reject(error)
       }
     }
-    if (timer) {
-      clearTimeout(timer)
-    }
 
-    timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
+    setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
   })
 }
 

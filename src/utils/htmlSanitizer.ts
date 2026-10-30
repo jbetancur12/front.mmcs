@@ -19,6 +19,7 @@ const sanitizerConfigs = {
       'href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel',
       'colspan', 'rowspan', 'align', 'valign', 'width', 'height'
     ],
+    // eslint-disable-next-line no-useless-escape -- el \- va dentro de rangos del patron
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
     FORBID_TAGS: ['script', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'option'],
     FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit'],
@@ -189,6 +190,7 @@ export const sanitizeUserInput = (input: string): string => {
   }
 
   // Remove null bytes and control characters
+  // eslint-disable-next-line no-control-regex -- quitar bytes de control es el objetivo
   let sanitized = input.replace(/[\x00-\x1F\x7F]/g, '');
 
   // Trim whitespace

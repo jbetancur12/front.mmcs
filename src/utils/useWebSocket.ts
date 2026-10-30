@@ -99,8 +99,6 @@ const useWebSocket = () => {
           }
         }
 
-        if (type === 'power') {
-        }
         if (type === 'DEVICE_STATUS') {
           const statusData = message.data
           if (
