@@ -14,7 +14,8 @@ SPA de Metromedics (calibración, mantenimiento, compras, IoT/laboratorio, flota
 
 ```bash
 npm run dev      # Vite, http://localhost:5173
-npm run check    # tsc --noEmit
+npm run check    # tsc --noEmit incremental (caché en node_modules/.cache/tsc; bórrala si cambias tsconfig o TypeScript)
+npm run check:full  # tsc --noEmit sin caché
 npm run lint     # eslint (--max-warnings 0)
 npm run build    # tsc + vite build (usa 8GB de heap)
 npm run version:patch|minor|major   # scripts/update-version.js (ver VERSIONING.md)
