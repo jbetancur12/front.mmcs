@@ -6,8 +6,6 @@ import {
   CardContent,
   Divider,
   LinearProgress,
-  Menu,
-  MenuItem,
   Tooltip,
   Typography
 } from '@mui/material'
@@ -23,15 +21,15 @@ import {
 
 interface Props {
   rows: IndicatorTypeRow[]
-  /** Si se pasa, los tipos de ODS sin certificados muestran "Asociar". */
-  onAssociate?: (row: IndicatorTypeRow) => void
+  /** Si se pasa (quien gestiona la meta), se ofrece revisar los tipos sin cruce. */
+  onReview?: () => void
 }
 
 // Tipos que se muestran antes de "Ver todos"
 const VISIBLE_ROWS = 6
 
 /** Indicador 2: equipos con servicio metrológico frente a contratados de cada tipo de equipo. */
-const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
+const IndicatorByTypeCard: React.FC<Props> = ({ rows, onReview }) => {
   const sorted = useMemo(
     () =>
       [...rows].sort(
@@ -53,9 +51,9 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
   const totalPct =
     totals.contracted > 0 ? (totals.calibrated / totals.contracted) * 100 : null
   const [expanded, setExpanded] = useState(false)
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
+  // Contratado sin ningún certificado cruzado: no es lo mismo que "no se ha hecho", casi siempre falta asociar el nombre
   const isUnmatched = (row: IndicatorTypeRow) =>
-    !!onAssociate && row.contracted > 0 && row.calibrated === 0
+    row.contracted > 0 && row.calibrated === 0
   const unmatchedRows = sorted.filter(isUnmatched)
   const visibleRows = expanded ? sorted : sorted.slice(0, VISIBLE_ROWS)
 
@@ -78,39 +76,19 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
           <Typography variant='h6' fontWeight='bold'>
             Con servicio metrológico por tipo de equipo
           </Typography>
-          {unmatchedRows.length > 0 && (
-            <>
-              <Button
-                size='small'
-                startIcon={<LinkIcon />}
-                onClick={(event) => setMenuAnchor(event.currentTarget)}
-                aria-haspopup='menu'
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  color: TEAL_TEXT
-                }}
-              >
-                Asociar tipos ({unmatchedRows.length})
-              </Button>
-              <Menu
-                anchorEl={menuAnchor}
-                open={Boolean(menuAnchor)}
-                onClose={() => setMenuAnchor(null)}
-              >
-                {unmatchedRows.map((row) => (
-                  <MenuItem
-                    key={row.key}
-                    onClick={() => {
-                      setMenuAnchor(null)
-                      onAssociate?.(row)
-                    }}
-                  >
-                    {cleanTypeLabel(row.label)}
-                  </MenuItem>
-                ))}
-              </Menu>
-            </>
+          {onReview && unmatchedRows.length > 0 && (
+            <Button
+              size='small'
+              startIcon={<LinkIcon />}
+              onClick={onReview}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                color: TEAL_TEXT
+              }}
+            >
+              Revisar tipos ({unmatchedRows.length})
+            </Button>
           )}
         </Box>
         {unmatchedRows.length > 0 && (
@@ -121,9 +99,9 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
           >
             {unmatchedRows.length}{' '}
             {unmatchedRows.length === 1
-              ? 'tipo sin certificados asociados'
-              : 'tipos sin certificados asociados'}
-            .
+              ? 'tipo contratado aún no se relaciona con certificados'
+              : 'tipos contratados aún no se relacionan con certificados'}
+            ; su avance puede estar subestimado.
           </Typography>
         )}
         {sorted.length === 0 ? (
@@ -171,9 +149,9 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
                     >
                       {label}
                       {unmatched && (
-                        <Tooltip title='Sin certificados asociados'>
+                        <Tooltip title='Aún no se relaciona con ningún certificado: el avance de este tipo puede estar subestimado'>
                           <WarningAmberRounded
-                            aria-label='Sin certificados asociados'
+                            aria-label='Sin cruce con certificados'
                             sx={{
                               ml: 0.75,
                               fontSize: 16,
@@ -195,7 +173,7 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
                         gridColumn: { xs: '1 / 2', sm: 2 },
                         gridRow: { xs: 2, sm: 1 },
                         '& .MuiLinearProgress-bar': {
-                          bgcolor: TEAL,
+                          bgcolor: unmatched ? '#d1d5db' : TEAL,
                           borderRadius: 4
                         }
                       }}
@@ -209,21 +187,21 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onAssociate }) => {
                         gridRow: 1
                       }}
                     >
-                      {formatCount(row.calibrated)} /{' '}
+                      {unmatched ? '—' : formatCount(row.calibrated)} /{' '}
                       {formatCount(row.contracted)}
                     </Typography>
                     <Typography
                       variant='body2'
                       fontWeight={600}
                       sx={{
-                        color: TEAL_TEXT,
+                        color: unmatched ? '#b45309' : TEAL_TEXT,
                         fontVariantNumeric: 'tabular-nums',
                         textAlign: 'right',
                         gridColumn: { xs: 2, sm: 4 },
                         gridRow: { xs: 2, sm: 1 }
                       }}
                     >
-                      {formatPctOrDash(pct)}
+                      {unmatched ? 'Sin cruce' : formatPctOrDash(pct)}
                     </Typography>
                   </Box>
                 )

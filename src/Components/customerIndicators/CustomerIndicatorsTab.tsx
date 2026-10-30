@@ -26,7 +26,6 @@ import {
   useContractedServices,
   useCustomerIndicators
 } from 'src/hooks/useCustomerIndicators'
-import { IndicatorTypeRow } from 'src/types/customerIndicators'
 import ProfileStatCard from '../Common/ProfileStatCard'
 import { notify } from 'src/utils/notify'
 import ContractedServicesPanel from './ContractedServicesPanel'
@@ -34,7 +33,7 @@ import IndicatorByTypeCard from './IndicatorByTypeCard'
 import IndicatorGoalCard from './IndicatorGoalCard'
 import IndicatorGoalProgressCard from './IndicatorGoalProgressCard'
 import IndicatorObservationsCard from './IndicatorObservationsCard'
-import TypeAliasDialog from './TypeAliasDialog'
+import TypeReviewDialog from './TypeReviewDialog'
 import {
   TEAL_TEXT,
   formatCount,
@@ -54,7 +53,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
   const [year, setYear] = useState(currentYear)
   const [headquarter, setHeadquarter] = useState(ALL_SITES)
   const [downloading, setDownloading] = useState(false)
-  const [aliasSource, setAliasSource] = useState<IndicatorTypeRow | null>(null)
+  const [reviewOpen, setReviewOpen] = useState(false)
 
   const canViewContracted = useCan(
     PERMISSIONS.CUSTOMERS_INDICATOR_CONTRACTED_VIEW
@@ -272,7 +271,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
         </Grid>
         <Grid item xs={6} md={3}>
           <ProfileStatCard
-            label='Pendientes por calibrar'
+            label='Pendientes'
             value={formatCount(indicators.pending)}
             icon={<HourglassTop />}
             color='#b45309'
@@ -312,7 +311,7 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
         <Grid item xs={12} md={6}>
           <IndicatorByTypeCard
             rows={indicators.byType}
-            onAssociate={canManageGoal ? setAliasSource : undefined}
+            onReview={canManageGoal ? () => setReviewOpen(true) : undefined}
           />
         </Grid>
       </Grid>
@@ -334,11 +333,14 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
         />
       )}
 
-      <TypeAliasDialog
-        source={aliasSource}
+      <TypeReviewDialog
+        open={reviewOpen}
+        unmatched={indicators.byType.filter(
+          (row) => row.contracted > 0 && row.calibrated === 0
+        )}
         rows={indicators.byType}
         availableTypes={indicators.availableCertificateTypes}
-        onClose={() => setAliasSource(null)}
+        onClose={() => setReviewOpen(false)}
       />
     </Box>
   )
