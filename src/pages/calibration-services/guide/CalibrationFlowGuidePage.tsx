@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -233,6 +233,29 @@ const SectionCard = ({
 const CalibrationFlowGuidePage = () => {
   const navigate = useNavigate()
   const [active, setActive] = useState(GUIDE_SECTIONS[0].id)
+  const navRef = useRef<HTMLElement | null>(null)
+
+  // El layout envuelve las páginas en contenedores con overflow (auto/hidden) que no son los que
+  // se desplazan; atrapan el `sticky` del índice. Mientras la guía está abierta se pasan a `clip`,
+  // que recorta igual pero no crea un contenedor de scroll, y al salir se restauran.
+  useEffect(() => {
+    const changed: Array<[HTMLElement, string]> = []
+    let element = navRef.current?.parentElement ?? null
+    while (element && element !== document.body) {
+      const { overflowY } = getComputedStyle(element)
+      if (
+        overflowY === 'auto' ||
+        overflowY === 'hidden' ||
+        overflowY === 'scroll'
+      ) {
+        changed.push([element, element.style.overflow])
+        element.style.overflow = 'clip'
+      }
+      element = element.parentElement
+    }
+    return () =>
+      changed.forEach(([node, value]) => (node.style.overflow = value))
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -287,6 +310,7 @@ const CalibrationFlowGuidePage = () => {
       >
         <Box
           component='nav'
+          ref={navRef}
           aria-label='Índice de la guía'
           sx={{
             display: { xs: 'none', md: 'block' },
