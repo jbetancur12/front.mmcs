@@ -2,6 +2,7 @@ import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import pluginReactConfig from "eslint-plugin-react/configs/recommended.js";
+import pluginReactJsxRuntime from "eslint-plugin-react/configs/jsx-runtime.js";
 
 
 // Nombres de rol de la tabla `roles` (espejo de src/constants/roles.ts). Escribirlos como
@@ -37,6 +38,8 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   pluginReactConfig,
+  // "jsx": "react-jsx" en tsconfig: no hace falta importar React en cada archivo
+  pluginReactJsxRuntime,
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/constants/roles.ts"],
