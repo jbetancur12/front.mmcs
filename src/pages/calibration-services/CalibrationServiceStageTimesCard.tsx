@@ -1,4 +1,6 @@
 import {
+  Alert,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -26,7 +28,8 @@ const formatDuration = (hours: number | null) => {
  * con el detalle por rol de quien cerró cada etapa.
  */
 const CalibrationServiceStageTimesCard = () => {
-  const { data, isLoading } = useCalibrationServiceStageTimes()
+  const { data, isLoading, isError, refetch, isFetching } =
+    useCalibrationServiceStageTimes()
 
   return (
     <Card
@@ -43,6 +46,23 @@ const CalibrationServiceStageTimesCard = () => {
         </Typography>
         {isLoading ? (
           <Typography variant='body2'>Calculando…</Typography>
+        ) : isError ? (
+          <Alert
+            severity='warning'
+            action={
+              <Button
+                color='inherit'
+                size='small'
+                onClick={() => void refetch()}
+                disabled={isFetching}
+              >
+                Reintentar
+              </Button>
+            }
+          >
+            No pudimos calcular el tiempo por etapa. Reintenta en un momento; el
+            resto de la analítica no se ve afectado.
+          </Alert>
         ) : (
           <Table size='small'>
             <TableHead>
