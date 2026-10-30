@@ -78,6 +78,10 @@ const CalibrationServicesKanban = ({
       >
         {columns.map((column) => {
           const isEmptyColumn = column.services.length === 0
+          const missingCount =
+            column.serverTotal !== null
+              ? Math.max(column.serverTotal - column.services.length, 0)
+              : 0
 
           return (
           <Box
@@ -127,7 +131,11 @@ const CalibrationServicesKanban = ({
                 </Box>
                 <Chip
                   size='small'
-                  label={column.services.length}
+                  label={
+                    missingCount > 0
+                      ? `${column.services.length} de ${column.serverTotal}`
+                      : column.services.length
+                  }
                   sx={{
                     bgcolor: alpha(column.accent, 0.14),
                     color: column.accent,
@@ -176,6 +184,14 @@ const CalibrationServicesKanban = ({
                   />
                 ))
               )}
+              {missingCount > 0 ? (
+                <Typography
+                  variant='caption'
+                  sx={{ color: ui.textSecondary, lineHeight: 1.45, px: 0.5 }}
+                >
+                  {`Faltan ${missingCount} por cargar. Usa «Cargar más» al final de la página.`}
+                </Typography>
+              ) : null}
             </Stack>
           </Box>
           )

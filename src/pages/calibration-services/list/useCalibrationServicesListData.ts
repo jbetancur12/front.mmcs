@@ -17,6 +17,16 @@ interface CalibrationServicesListDataParams {
   filters: CalibrationServicesListFilters
   isTechnicalOnlyView: boolean
   userEmail?: string | null
+  /** Conteo por estado del servidor (todas las páginas, no solo las cargadas). */
+  statusCounts?: Partial<Record<string, number>>
+}
+
+// Columnas del kanban que corresponden solo a estos estados, así su total sale del servidor
+const COLUMN_STATUSES: Record<string, string[]> = {
+  to_schedule: ['ods_issued', 'pending_programming'],
+  in_service: ['scheduled', 'in_execution'],
+  pending_close: ['technically_completed'],
+  closed: ['closed']
 }
 
 /** Servicios visibles tras los filtros locales, contadores, columnas del kanban y grupos de la lista. */
@@ -24,7 +34,8 @@ const useCalibrationServicesListData = ({
   services,
   filters,
   isTechnicalOnlyView,
-  userEmail
+  userEmail,
+  statusCounts
 }: CalibrationServicesListDataParams) => {
   const {
     scopeFilter,
@@ -123,6 +134,13 @@ const useCalibrationServicesListData = ({
     return { pendingApproval, requestedChanges, odsIssued, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent }
   }, [visibleServices])
 
+  const hasLocalFilters =
+    scopeFilter !== FILTER_ALL ||
+    slaFilter !== FILTER_ALL ||
+    metrologistFilter !== FILTER_ALL ||
+    showOnlyMyLoad ||
+    siteFilter.trim() !== ''
+
   const kanbanColumns = useMemo(
     () => getKanbanColumns(isTechnicalOnlyView),
     [isTechnicalOnlyView]
@@ -161,11 +179,21 @@ const useCalibrationServicesListData = ({
           }).length
         : 0
 
+      const columnStatuses = COLUMN_STATUSES[column.key]
+      const serverTotal =
+        statusCounts && columnStatuses && !hasLocalFilters
+          ? columnStatuses.reduce(
+              (sum, status) => sum + (statusCounts[status] ?? 0),
+              0
+            )
+          : null
+
       return {
         ...column,
         services: servicesForColumn,
         urgentCount,
-        myLoadCount
+        myLoadCount,
+        serverTotal
       }
     })
 
@@ -199,7 +227,9 @@ const useCalibrationServicesListData = ({
     isTechnicalOnlyView,
     kanbanColumns,
     showOnlyMyLoad,
-    visibleServices
+    visibleServices,
+    statusCounts,
+    hasLocalFilters
   ])
 
   const groupedListServices = useMemo(() => {

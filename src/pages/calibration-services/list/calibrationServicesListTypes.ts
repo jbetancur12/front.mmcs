@@ -32,6 +32,8 @@ export type CalibrationServicesColumn = KanbanColumnDefinition & {
 export type CalibrationServicesKanbanColumn = CalibrationServicesColumn & {
   urgentCount: number
   myLoadCount: number
+  /** Total en el servidor para la columna; null si no se puede saber (estados mezclados o filtros locales). */
+  serverTotal: number | null
 }
 
 export interface CalibrationServicesMetrologistOption {

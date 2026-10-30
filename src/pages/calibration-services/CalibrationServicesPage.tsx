@@ -72,7 +72,8 @@ const CalibrationServicesPage = () => {
     services: data?.services ?? [],
     filters,
     isTechnicalOnlyView,
-    userEmail: $userStore.email
+    userEmail: $userStore.email,
+    statusCounts: data?.statusCounts
   })
 
   const loadedCount = data?.services?.length ?? 0
