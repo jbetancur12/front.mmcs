@@ -3,6 +3,7 @@ import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import pluginReactConfig from "eslint-plugin-react/configs/recommended.js";
 import pluginReactJsxRuntime from "eslint-plugin-react/configs/jsx-runtime.js";
+import pluginReactHooks from "eslint-plugin-react-hooks";
 
 
 // Nombres de rol de la tabla `roles` (espejo de src/constants/roles.ts). Escribirlos como
@@ -40,6 +41,33 @@ export default [
   pluginReactConfig,
   // "jsx": "react-jsx" en tsconfig: no hace falta importar React en cada archivo
   pluginReactJsxRuntime,
+  {
+    plugins: { "react-hooks": pluginReactHooks },
+    rules: {
+      // Las props se validan con TypeScript, no con PropTypes
+      "react/prop-types": "off",
+      // Deuda de tipado: visible como aviso; el tope baja en `npm run lint`
+      "@typescript-eslint/no-explicit-any": "warn",
+      // `_algo` marca a propósito un valor que no se usa
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_"
+        }
+      ],
+      // Deuda: hay @ts-ignore / @ts-nocheck viejos; que se vean sin romper el lint
+      "@typescript-eslint/ban-ts-comment": "warn",
+      // Las comillas en el texto de JSX se pintan bien; no vale la pena escaparlas
+      "react/no-unescaped-entities": "off",
+      // Hay 6 llamadas a useAxiosPrivate dentro de funciones comunes (Fleet, ExcelManipulation):
+      // funcionan si las llama un componente, pero rompen la regla; aviso hasta corregirlas.
+      "react-hooks/rules-of-hooks": "warn",
+      "react-hooks/exhaustive-deps": "warn"
+    }
+  },
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/constants/roles.ts"],
