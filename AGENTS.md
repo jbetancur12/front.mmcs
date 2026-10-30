@@ -26,14 +26,14 @@ npm run version:patch|minor|major   # scripts/update-version.js (ver VERSIONING.
 
 | Carpeta | Contenido |
 |---|---|
-| `main.tsx`, `App.tsx`, `router.tsx` | Entrada, providers, árbol de rutas (lazy + `RequireAuth`) |
+| `main.tsx`, `router.tsx` | Entrada, providers, árbol de rutas (lazy + `RequireAuth`) |
 | `routes/` | Un archivo `*Routes.tsx` por módulo (Calibration, Maintenance, Lms, Fleet, Iot, ...) que `router.tsx` compone |
 | `pages/` | Pantallas por ruta (`pages/lms/{admin,employee,client,course}`, `pages/Admin`, ...) |
 | `Components/` | Componentes por dominio (`Maintenance`, `Purchases`, `lms`, `Authentication`, `Table`, ...) + `Layout`, `SideBar` |
 | `hooks/` | Hooks de datos/tiempo real (`useLms`, `useMaintenance`, `useCalibrationServices`, `use*WebSocket`...) |
 | `services/` | Clientes API puntuales (`lmsService`, `quizService`) |
 | `store/` | nanostores (`userStore`, `customerStore`, `deviceStore`, ...) |
-| `utils/` | `api.ts` (`axiosPublic`/`axiosPrivate`), `use-axios-private`, `refreshToken`, `roleUtils`, `lmsIdentity`, WebSocket |
+| `utils/` | `api.ts` (`axiosPublic`/`axiosPrivate`), `use-axios-private`, `roleUtils`, `lmsIdentity`, WebSocket |
 | `constants/`, `types/`, `theme/` | Roles/módulos/versión, tipos de dominio, design system |
 
 Alias de imports: `src/...` (baseUrl `.`), `@utils/*`, `@stores/*`, `@hooks/*`, `@services/*`, `@config/*`.

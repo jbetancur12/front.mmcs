@@ -1,130 +1,31 @@
-# Código sin uso en `src/` (pendiente)
+# Código sin uso en `src/`
 
-Última revisión: 2026-10-23. **Pendiente futuro**: revisar y borrar lo que sea seguro.
+Última revisión: 2026-10-30. Se borraron **55 archivos** (unas 8.100 líneas) del front en la rama `chore/codigo-sin-uso` (un commit por carpeta, `npm run check` en 0 errores tras cada una y `vite build` correcto). Antes, el 2026-10-23, se habían borrado 8 (commit e6a67d5).
 
-## Cómo se detectó
+## Cómo se detecta
 
-Se recorrió el grafo de importaciones de `src/` (imports estáticos y `import()` dinámicos, con los alias `src/`, `@utils/`, `@hooks/`, `@stores/`, `@services/` y `@config/`) partiendo de `src/main.tsx`. Hay **61 archivos** de `.ts`/`.tsx` que no se alcanzan desde ahí. Ya se borraron 8 del mismo tipo el 2026-10-23 (commit e6a67d5).
+```bash
+npx knip@5 --include files --no-progress
+```
 
-## Antes de borrar cualquiera
+`knip` entiende `import()` dinámicos, los alias del `tsconfig` y la configuración de Vite. El 2026-10-30 coincidió con el recorrido manual de imports desde `main.tsx` (los 61 archivos de la lista anterior) y encontró 7 más.
 
-Que no se alcance desde `main.tsx` no prueba que sobre. Comprueba cada archivo:
+Que un archivo salga en la lista no prueba que sobre. Antes de borrar uno, busca referencias fuera del grafo: `scripts/`, `vite.config`, `package.json`, tests, `.md` y rutas escritas como texto.
 
-- **Referencias fuera del grafo:** scripts (`scripts/`), `vite.config`, `package.json`, tests, `.md` y rutas escritas como texto. Ejemplo: `constants/version.ts` lo pueden leer los scripts de versión (ver `VERSIONING.md`); `App.tsx` es la plantilla de Vite sin uso.
-- **Barriles y tipos:** `types/index.ts`, `Components/Templates/index.ts` y similares pueden ser reexportaciones que algo importa por la carpeta.
-- **Cadenas muertas:** si un archivo solo lo importa otro muerto, hay que borrar los dos a la vez (`npm run check` avisa si se rompe algo).
-- **Código a medio hacer:** `LazyModals`, `ModalSuspense`, `LmsAdminPendingFeature` y los hooks de notificaciones pueden ser trabajo futuro; pregunta antes.
+## Lo que se dejó a propósito
 
-Procedimiento sugerido: borrar por carpeta, `npm run check` después de cada una, abrir en el navegador las pantallas de esa área y un commit por carpeta.
+`knip` sigue listando estos archivos; no se borraron porque pueden ser trabajo a medio hacer o los usa algo fuera del grafo. Pregunta antes de borrarlos.
 
-## Archivos
+| Archivo | Motivo |
+|---|---|
+| `src/Components/Templates/LazyModals.tsx`, `ModalSuspense.tsx` | Carga diferida de modales, posible trabajo futuro |
+| `src/pages/lms/admin/shared/LmsAdminPendingFeature.tsx` | Pantalla de función pendiente del LMS |
+| `src/hooks/useNotifications.ts`, `useDashboardNotifications.ts`, `useHybridNotifications.ts`, `useNotificationPolling.ts` | Sistema de notificaciones sin conectar |
+| `src/hooks/useLmsWebSocket.ts` | Tiempo real del LMS sin conectar |
+| `src/constants/version.ts` | Lo leen los scripts de versión (`version:current`, ver `VERSIONING.md`) |
+| `scripts/build.js`, `scripts/update-version.cjs` | Sin referencias en `package.json`; `package.json` usa `update-version.js`. Revisar si son residuo |
+| `src/utils/apiError.test.ts`, `src/test/lms/LmsCourseManagement.test.tsx` | Son tests; `knip` los marca porque no hay runner configurado |
 
-### `(raíz de src)` (1)
+## Cómo se borró
 
-- `src/App.tsx`
-
-### `Components` (4)
-
-- `src/Components/ErrorBoundary.tsx`
-- `src/Components/Excel.tsx`
-- `src/Components/ModalHq.tsx`
-- `src/Components/SimpleSidebar.tsx`
-
-### `Components/Dashboard` (1)
-
-- `src/Components/Dashboard/FilterIndicator.tsx`
-
-### `Components/DataSheet` (2)
-
-- `src/Components/DataSheet/common/pdf.tsx`
-- `src/Components/DataSheet/common/styles.tsx`
-
-### `Components/Fleet` (2)
-
-- `src/Components/Fleet/CalibrationTimelinePDF.tsx`
-- `src/Components/Fleet/TripComponent.back.tsx`
-
-### `Components/Iot` (15)
-
-- `src/Components/Iot/DeviceIotListSidebar.tsx`
-- `src/Components/Iot/DeviceIotMap/parts/DeviceMapController.tsx`
-- `src/Components/Iot/DeviceIotMap/utils/createDeviceIcon.ts`
-- `src/Components/Iot/EventHistory.tsx`
-- `src/Components/Iot/Gauge.tsx`
-- `src/Components/Iot/GaugeChart.tsx`
-- `src/Components/Iot/GraphDrawer/hooks/useSensorConfig.ts`
-- `src/Components/Iot/GraphDrawer/parts/ConfigButton.tsx`
-- `src/Components/Iot/GraphDrawer/parts/SensorGauge.tsx`
-- `src/Components/Iot/GraphDrawer/tabs/EventsTab.tsx`
-- `src/Components/Iot/GraphDrawer/tabs/SummaryTab.tsx`
-- `src/Components/Iot/GraphDrawerDetails.tsx`
-- `src/Components/Iot/helpers.ts`
-- `src/Components/Iot/ModuleConfigForm.tsx`
-- `src/Components/Iot/TemperatureChart.tsx`
-
-### `Components/Maintenance` (10)
-
-- `src/Components/Maintenance/FilterPresetSelector.tsx`
-- `src/Components/Maintenance/FiltersSkeleton.tsx`
-- `src/Components/Maintenance/TicketDetailsSkeleton.tsx`
-- `src/Components/Maintenance/TVDisplayModern/components/CriticalTicketsSection.tsx`
-- `src/Components/Maintenance/TVDisplayModern/components/EnhancedMetricCard.tsx`
-- `src/Components/Maintenance/TVDisplayModern/components/EnhancedTimeDisplay.tsx`
-- `src/Components/Maintenance/TVDisplayModern/components/RotatingInfo.tsx`
-- `src/Components/Maintenance/TVDisplayModern/components/SystemHealthIndicator.tsx`
-- `src/Components/Maintenance/TVDisplayModern/config.ts`
-- `src/Components/Maintenance/TVDisplayModern/export.ts`
-
-### `Components/Modules` (1)
-
-- `src/Components/Modules/hooks/useModuleForm.ts`
-
-### `Components/Purchases` (1)
-
-- `src/Components/Purchases/purchase-request-modal/utils/formUtils.ts`
-
-### `Components/Templates` (5)
-
-- `src/Components/Templates/index.ts`
-- `src/Components/Templates/LazyModals.tsx`
-- `src/Components/Templates/LoadingIndicators.tsx`
-- `src/Components/Templates/ModalSuspense.tsx`
-- `src/Components/Templates/TemplateRow.tsx`
-
-### `Components/lms` (3)
-
-- `src/Components/lms/ErrorBoundary/ApiErrorBoundary.tsx`
-- `src/Components/lms/LoadingStates/ProgressIndicators.tsx`
-- `src/Components/lms/SecureFileUpload.tsx`
-
-### `constants` (1)
-
-- `src/constants/version.ts`
-
-### `hooks` (7)
-
-- `src/hooks/useDashboardNotifications.ts`
-- `src/hooks/useFilterPresets.ts`
-- `src/hooks/useHybridNotifications.ts`
-- `src/hooks/useLmsWebSocket.ts`
-- `src/hooks/useNotificationPolling.ts`
-- `src/hooks/useNotifications.ts`
-- `src/hooks/useSecurity.ts`
-
-### `pages/lms` (2)
-
-- `src/pages/lms/admin/shared/LmsAdminPendingFeature.tsx`
-- `src/pages/lms/shared/LmsProgressBar.tsx`
-
-### `types` (2)
-
-- `src/types/index.ts`
-- `src/types/tableState.ts`
-
-### `utils` (4)
-
-- `src/utils/common.tsx`
-- `src/utils/ErrorBoundary.tsx`
-- `src/utils/refreshToken.ts`
-- `src/utils/useEvents.ts`
-
+Por carpeta: `git rm`, `npm run check` completo y un commit con `HUSKY=0` (el hook `post-commit` despliega a producción en `main`/`staging`, por eso se trabajó en una rama). No se hizo push.
