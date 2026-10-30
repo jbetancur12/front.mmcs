@@ -41,6 +41,12 @@ const onRequestError = (error: AxiosError): Promise<never> =>
 
 let lastRevokedLogoutAt = 0
 
+/** Fallo del refresh que no prueba que la sesión terminó: límite de peticiones, error del servidor o sin red. */
+const isTransientRefreshFailure = (error: unknown): boolean => {
+  const status = (error as AxiosError)?.response?.status
+  return status === undefined || status === 429 || status >= 500
+}
+
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken()
   const navigate = useNavigate()
@@ -149,6 +155,11 @@ const useAxiosPrivate = () => {
             return axiosPrivate(originalConfig)
           } catch (refreshError) {
             processQueue(refreshError, null)
+            // Un 429, un 5xx o la red caída no significan sesión vencida: la sesión del servidor
+            // sigue viva. No se cierra; la siguiente petición vuelve a intentar renovar.
+            if (isTransientRefreshFailure(refreshError)) {
+              return Promise.reject(refreshError)
+            }
             await handleLogout(getSessionRevokedReason(refreshError))
             return Promise.reject(refreshError)
           } finally {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -240,7 +241,8 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     () => quizService.getQuizStatistics(initialQuizId!),
     {
       enabled: !!initialQuizId && activeTab === 3,
-      retry: 1,
+      retry: (failureCount, error) =>
+        (error as AxiosError | undefined)?.response?.status !== 429 && failureCount < 1,
       refetchInterval: 30000, // Refresh every 30 seconds when on analytics tab
       onError: (error: any) => {
         console.error('❌ Error loading quiz stats:', error)
