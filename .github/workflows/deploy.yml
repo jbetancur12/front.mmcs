@@ -1,9 +1,23 @@
 name: Deploy
 
-# Despliegue manual: Actions -> Deploy -> Run workflow (solo desde main).
+# Se lanza en cada push a main que cambie código de la app, y también a mano:
+# Actions -> Deploy -> Run workflow (solo desde main).
+# Corre los checks y luego el job deploy queda ESPERANDO tu aprobación (revisor obligatorio
+# del entorno production: Settings -> Environments -> production -> Required reviewers).
+# Sin ese revisor, el despliegue arrancaría solo al pasar los checks.
 # Ejecuta deploy.sh: build, subida comprimida y publicación con swap atómico.
 # Rollback: ver el final de deploy.sh.
 on:
+  push:
+    branches: [main]
+    # Cambios que no afectan lo que se publica no piden despliegue
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '**/*.test.ts'
+      - '**/*.test.tsx'
+      - 'src/test/**'
+      - '.github/workflows/test.yml'
   workflow_dispatch:
 
 concurrency:
