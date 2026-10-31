@@ -1,0 +1,51 @@
+name: Deploy
+
+# Despliegue manual: Actions -> Deploy -> Run workflow (solo desde main).
+# Ejecuta deploy.sh: build, subida comprimida y publicación con swap atómico.
+# Rollback: ver el final de deploy.sh.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-front-produccion
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm run lint
+      - run: npm test
+
+  deploy:
+    needs: verificar
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Preparar variables y SSH
+        env:
+          FRONT_ENV_PRODUCTION: ${{ secrets.FRONT_ENV_PRODUCTION }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          printf '%s\n' "$FRONT_ENV_PRODUCTION" > .env.production
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Ejecutar deploy.sh
+        run: bash deploy.sh
