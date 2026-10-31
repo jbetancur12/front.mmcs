@@ -23,6 +23,12 @@ vi.mock('@utils/use-axios-private', () => ({
   default: () => mockAxiosPrivate
 }))
 
+// lmsService llama a axiosPrivate de utils/api: sin esto intenta conectarse a localhost
+vi.mock('src/utils/api', async () => ({
+  ...(await vi.importActual<typeof import('src/utils/api')>('src/utils/api')),
+  axiosPrivate: mockAxiosPrivate
+}))
+
 vi.mock('react-router-dom', async () => ({
   ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
   useNavigate: () => mockNavigate
@@ -97,7 +103,11 @@ const mockCourses = {
 describe('LmsCourseManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockAxiosPrivate.get.mockResolvedValue({ data: mockCourses })
+    mockAxiosPrivate.get.mockImplementation(async (url: string) =>
+      url.includes('certificates/templates')
+        ? { data: [] }
+        : { data: mockCourses }
+    )
   })
 
   // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
