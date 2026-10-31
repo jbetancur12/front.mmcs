@@ -3,6 +3,8 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
+/* DM Sans font for LMS course view */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
 
 /* En tu archivo de estilos principal */
 .custom-marker-icon.blinking {
@@ -154,6 +156,3 @@
   --lms-badge-bg: rgba(13,110,138,0.3);
   --lms-badge-text: #7dd3e8;
 }
-
-/* DM Sans font for LMS course view */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
