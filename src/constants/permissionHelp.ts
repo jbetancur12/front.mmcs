@@ -578,6 +578,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Permite dar o quitar cualquier rol, incluso los que otorgan administración total, y modificar a quien los tiene. Sin ella solo se dan roles cuyas capacidades uno ya tiene.',
     'Configuración › Usuarios (asignar roles).'
   ],
+  'system:billing:view': [
+    'Ver el aviso de pago de la nube',
+    'Muestra un aviso en pantalla cuando DigitalOcean, donde corre la plataforma, reporta un problema de pago, para actualizar la tarjeta antes de que se apaguen los servidores.',
+    'Todas las pantallas (aviso en la parte superior).'
+  ],
   'system:realtime:view': [
     'Ver todo en tiempo real',
     'Recibir al instante los datos de toda la plataforma (IoT, tickets de mantenimiento, pantalla de turnos). Sin ella solo llegan los de la propia empresa.',

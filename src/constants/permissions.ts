@@ -242,6 +242,8 @@ export const PERMISSIONS = {
   USERS_PROFILE_MANAGE: 'users:profile:manage',
   /** Ver las contraseñas de libros Excel guardadas (Subir Excel) */
   SYSTEM_SETTINGS_VIEW: 'system:settings:view',
+  /** Ver el aviso de pago pendiente de la nube (DigitalOcean) donde corre la plataforma */
+  SYSTEM_BILLING_VIEW: 'system:billing:view',
   /** Recibir en tiempo real todos los datos de la plataforma (IoT, mantenimiento, turnos) */
   SYSTEM_REALTIME_VIEW: 'system:realtime:view',
   /** Crear, editar y eliminar las contraseñas de libros Excel guardadas (Subir Excel) */
