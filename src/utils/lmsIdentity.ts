@@ -153,5 +153,5 @@ export const getPreferredPostLoginRoute = ({
     return preferredLmsHomeRoute
   }
 
-  return lastLocation || '/'
+  return '/'
 }

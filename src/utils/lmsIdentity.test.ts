@@ -130,6 +130,12 @@ describe('getPreferredPostLoginRoute', () => {
     }
   })
 
+  it('un usuario normal con una última ruta sin sentido va al inicio, no de vuelta al login', () => {
+    for (const lastLocation of ['/login', '/not-authorized']) {
+      expect(getPreferredPostLoginRoute({ lastLocation })).toBe('/')
+    }
+  })
+
   it('sin última ruta, un usuario normal va al inicio', () => {
     expect(getPreferredPostLoginRoute({ lastLocation: '/' })).toBe('/')
     expect(getPreferredPostLoginRoute({ lastLocation: null })).toBe('/')
