@@ -110,19 +110,6 @@ describe('LmsCourseManagement', () => {
     )
   })
 
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('renders course management interface', async () => {
-    renderWithProviders(<LmsCourseManagement />)
-
-    expect(screen.getByText('Gestión de Cursos')).toBeInTheDocument()
-    expect(screen.getByText('Crear Curso')).toBeInTheDocument()
-
-    await waitFor(() => {
-      expect(screen.getByText('JavaScript Fundamentals')).toBeInTheDocument()
-      expect(screen.getByText('React Development')).toBeInTheDocument()
-    })
-  })
-
   it('displays course information correctly', async () => {
     renderWithProviders(<LmsCourseManagement />)
 
@@ -143,70 +130,6 @@ describe('LmsCourseManagement', () => {
     })
   })
 
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('opens create course dialog when create button is clicked', async () => {
-    renderWithProviders(<LmsCourseManagement />)
-
-    const createButton = screen.getByText('Crear Curso')
-    fireEvent.click(createButton)
-
-    await waitFor(() => {
-      expect(screen.getByText('Crear Nuevo Curso')).toBeInTheDocument()
-      expect(screen.getByLabelText('Título del curso')).toBeInTheDocument()
-      expect(screen.getByLabelText('Descripción')).toBeInTheDocument()
-      expect(screen.getByLabelText('Audiencia')).toBeInTheDocument()
-    })
-  })
-
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('creates a new course successfully', async () => {
-    mockAxiosPrivate.post.mockResolvedValue({ 
-      data: { 
-        id: 3, 
-        title: 'New Course',
-        description: 'New course description',
-        audience: 'internal',
-        is_mandatory: false,
-        has_certificate: true,
-        estimated_duration_minutes: 90
-      } 
-    })
-
-    renderWithProviders(<LmsCourseManagement />)
-
-    // Open create dialog
-    const createButton = screen.getByText('Crear Curso')
-    fireEvent.click(createButton)
-
-    await waitFor(() => {
-      expect(screen.getByText('Crear Nuevo Curso')).toBeInTheDocument()
-    })
-
-    // Fill form
-    const titleInput = screen.getByLabelText('Título del curso')
-    const descriptionInput = screen.getByLabelText('Descripción')
-    const durationInput = screen.getByLabelText('Duración estimada (minutos)')
-
-    fireEvent.change(titleInput, { target: { value: 'New Course' } })
-    fireEvent.change(descriptionInput, { target: { value: 'New course description' } })
-    fireEvent.change(durationInput, { target: { value: '90' } })
-
-    // Submit form
-    const saveButton = screen.getByText('Guardar')
-    fireEvent.click(saveButton)
-
-    await waitFor(() => {
-      expect(mockAxiosPrivate.post).toHaveBeenCalledWith('/lms/courses', {
-        title: 'New Course',
-        description: 'New course description',
-        audience: 'internal',
-        is_mandatory: false,
-        has_certificate: false,
-        estimated_duration_minutes: 90
-      })
-    })
-  })
-
   it('opens edit dialog with course data', async () => {
     renderWithProviders(<LmsCourseManagement />)
 
@@ -223,71 +146,6 @@ describe('LmsCourseManagement', () => {
       expect(screen.getByDisplayValue('JavaScript Fundamentals')).toBeInTheDocument()
       expect(screen.getByDisplayValue('Learn the basics of JavaScript programming')).toBeInTheDocument()
     })
-  })
-
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('updates course successfully', async () => {
-    mockAxiosPrivate.put.mockResolvedValue({ 
-      data: { 
-        id: 1,
-        title: 'Updated Course Title',
-        description: 'Updated description'
-      } 
-    })
-
-    renderWithProviders(<LmsCourseManagement />)
-
-    await waitFor(() => {
-      expect(screen.getByText('JavaScript Fundamentals')).toBeInTheDocument()
-    })
-
-    // Open edit dialog
-    const editButtons = screen.getAllByLabelText('Editar curso')
-    fireEvent.click(editButtons[0])
-
-    await waitFor(() => {
-      expect(screen.getByText('Editar Curso')).toBeInTheDocument()
-    })
-
-    // Update title
-    const titleInput = screen.getByDisplayValue('JavaScript Fundamentals')
-    fireEvent.change(titleInput, { target: { value: 'Updated Course Title' } })
-
-    // Submit form
-    const saveButton = screen.getByText('Guardar')
-    fireEvent.click(saveButton)
-
-    await waitFor(() => {
-      expect(mockAxiosPrivate.put).toHaveBeenCalledWith('/lms/courses/1', expect.objectContaining({
-        title: 'Updated Course Title'
-      }))
-    })
-  })
-
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('deletes course after confirmation', async () => {
-    mockAxiosPrivate.delete.mockResolvedValue({ data: {} })
-    
-    // Mock window.confirm
-    const originalConfirm = window.confirm
-    window.confirm = vi.fn(() => true)
-
-    renderWithProviders(<LmsCourseManagement />)
-
-    await waitFor(() => {
-      expect(screen.getByText('JavaScript Fundamentals')).toBeInTheDocument()
-    })
-
-    // Find and click delete button
-    const deleteButtons = screen.getAllByLabelText('Eliminar curso')
-    fireEvent.click(deleteButtons[0])
-
-    await waitFor(() => {
-      expect(mockAxiosPrivate.delete).toHaveBeenCalledWith('/lms/courses/1')
-    })
-
-    // Restore window.confirm
-    window.confirm = originalConfirm
   })
 
   it('navigates to content editor when edit content is clicked', async () => {
@@ -318,21 +176,6 @@ describe('LmsCourseManagement', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/lms/course/1/preview')
   })
 
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('navigates to course assignments when assign is clicked', async () => {
-    renderWithProviders(<LmsCourseManagement />)
-
-    await waitFor(() => {
-      expect(screen.getByText('JavaScript Fundamentals')).toBeInTheDocument()
-    })
-
-    // Find and click assign button
-    const assignButtons = screen.getAllByLabelText('Asignar curso')
-    fireEvent.click(assignButtons[0])
-
-    expect(mockNavigate).toHaveBeenCalledWith('/lms/admin/courses/1/assignments')
-  })
-
   it('navigates to analytics when analytics button is clicked', async () => {
     renderWithProviders(<LmsCourseManagement />)
 
@@ -345,19 +188,6 @@ describe('LmsCourseManagement', () => {
     fireEvent.click(analyticsButtons[0])
 
     expect(mockNavigate).toHaveBeenCalledWith('/lms/admin/analytics?courseId=1')
-  })
-
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('handles pagination correctly', async () => {
-    renderWithProviders(<LmsCourseManagement />)
-
-    await waitFor(() => {
-      expect(screen.getByText('JavaScript Fundamentals')).toBeInTheDocument()
-    })
-
-    // Check pagination component exists
-    expect(screen.getByText('Filas por página:')).toBeInTheDocument()
-    expect(screen.getByText('1–2 de 2')).toBeInTheDocument()
   })
 
   it('displays empty state when no courses exist', async () => {
@@ -379,26 +209,6 @@ describe('LmsCourseManagement', () => {
     await waitFor(() => {
       expect(screen.getByText('Error al cargar los cursos. Por favor, intenta nuevamente.')).toBeInTheDocument()
     })
-  })
-
-  // Obsoleto: la pantalla cambió (títulos, botón de crear y paginación); reescribir contra la versión actual
-  it.skip('validates required fields in create form', async () => {
-    renderWithProviders(<LmsCourseManagement />)
-
-    // Open create dialog
-    const createButton = screen.getByText('Crear Curso')
-    fireEvent.click(createButton)
-
-    await waitFor(() => {
-      expect(screen.getByText('Crear Nuevo Curso')).toBeInTheDocument()
-    })
-
-    // Try to submit without filling required fields
-    const saveButton = screen.getByText('Guardar')
-    fireEvent.click(saveButton)
-
-    // Form should not submit without required fields
-    expect(mockAxiosPrivate.post).not.toHaveBeenCalled()
   })
 
   it('formats duration correctly', async () => {

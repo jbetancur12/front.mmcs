@@ -1,6 +1,6 @@
 # Estrategia de tests del front
 
-Estado a 2026-10-31: 4 archivos de test (`libraryFlags`, `apiError`, `clientErrors` y `LmsCourseManagement`), 35 pasan y 8 están omitidos. Los checks que hoy protegen de verdad son `npm run check` (TypeScript estricto) y `npm run lint`.
+Estado a 2026-10-31: 4 archivos de test (`libraryFlags`, `apiError`, `clientErrors` y `LmsCourseManagement`), 35 pasan y no hay omitidos (se borraron 8 obsoletos de `LmsCourseManagement`; siguen en el historial de git). Los checks que hoy protegen de verdad son `npm run check` (TypeScript estricto) y `npm run lint`.
 
 La meta **no** es un porcentaje de cobertura. Es cubrir lo que duele cuando falla y cambia poco.
 
@@ -28,7 +28,7 @@ Los más valiosos, pero los más caros. Un puñado, no cientos, y en navegador (
 
 ## Dónde no vale la pena
 
-- **Tests de componentes de pantallas que cambian seguido.** Se rompen con cada rediseño y cuestan más de lo que protegen. Ejemplo: los 8 tests omitidos de `LmsCourseManagement.test.tsx` son obsoletos (la pantalla cambió). Reescribirlos solo si se vuelve a trabajar esa pantalla, junto con el cambio.
+- **Tests de componentes de pantallas que cambian seguido.** Se rompen con cada rediseño y cuestan más de lo que protegen. Ejemplo: 8 tests de `LmsCourseManagement.test.tsx` quedaron obsoletos al cambiar la pantalla y se borraron. Si se vuelve a trabajar esa pantalla, escribir tests nuevos junto con el cambio.
 - **Perseguir un porcentaje de cobertura.** Un 80 % con tests vacíos no protege nada.
 - **Llamadas reales a la API** en los tests: se simulan (`vi.mock('src/utils/api', ...)`, ver `LmsCourseManagement.test.tsx`).
 
