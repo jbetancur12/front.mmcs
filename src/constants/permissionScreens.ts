@@ -1062,6 +1062,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/equipment-sales/new", label: "Venta de equipos › Nuevo", kind: 'related' },
     { path: "/equipment-sales/products", label: "Venta de equipos › Productos", kind: 'related' }
   ],
+  'system:billing:view': [
+    { path: "/settings/cloud-billing", label: "Ajustes › Facturación de la nube", kind: 'screen' }
+  ],
   'system:settings:manage': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }
   ],

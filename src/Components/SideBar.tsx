@@ -495,7 +495,8 @@ const sidebarItems = ($userStore: UserData) => [
     permission: [
       PERMISSIONS.USERS_USER_LIST,
       PERMISSIONS.RBAC_VIEW,
-      PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW
+      PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW,
+      PERMISSIONS.SYSTEM_BILLING_VIEW
     ] as PermissionKey[],
     moduleName: 'Basic',
     icon: <SettingsOutlined />,
@@ -514,6 +515,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Módulos',
         url: 'modules',
         permission: PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW
+      },
+      {
+        label: 'Facturación de la nube',
+        url: 'settings/cloud-billing',
+        permission: PERMISSIONS.SYSTEM_BILLING_VIEW
       }
     ]
   }
