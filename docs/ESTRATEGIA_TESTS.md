@@ -32,6 +32,16 @@ Los más valiosos, pero los más caros. Un puñado, no cientos, y en navegador (
 - **Perseguir un porcentaje de cobertura.** Un 80 % con tests vacíos no protege nada.
 - **Llamadas reales a la API** en los tests: se simulan (`vi.mock('src/utils/api', ...)`, ver `LmsCourseManagement.test.tsx`).
 
+## Al crear un módulo nuevo
+
+Probar la lógica, no la pantalla.
+
+- **Sí:** cálculos, estados derivados, validaciones, formateo y transformación de lo que devuelve la API. Todo lo que se explique como "dado esto, devuelve aquello" lleva un `*.test.ts` sencillo, sin renderizar.
+- **Sí, siempre:** lo que toque dinero, fechas, plazos o estados (cotizaciones, vencimientos, SLA), y los permisos por rol del módulo (que cada rol vea lo que debe).
+- **No:** el JSX y el diseño de la pantalla, y formularios o tablas que solo muestran datos del backend. Los cubren `npm run check` y el backend.
+- **Truco para que sea barato:** al diseñar el módulo, sacar la lógica a funciones aparte (en `utils/` o junto al hook) en lugar de dejarla dentro del componente. Probarla cuesta unos 10 minutos y la pantalla queda delgada.
+- **Cuánto:** un módulo típico termina con 1 a 3 archivos de test pequeños, no uno por componente.
+
 ## Regla para crecer sin proyecto aparte
 
 Cada vez que se arregle un bug, agregar el test que lo habría detectado. La cobertura crece justo donde falla.
