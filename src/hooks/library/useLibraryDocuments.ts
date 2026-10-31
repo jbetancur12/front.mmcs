@@ -15,6 +15,9 @@ export const LIBRARY_QUERY_KEYS = {
 
 export const libraryFileUrl = (id: number) => `/library/documents/${id}/file`
 
+export const librarySourceUrl = (id: number) =>
+  `/library/documents/${id}/source`
+
 /** Documentos vigentes de una categoría. */
 export const useLibraryDocuments = (category: LibraryCategory) => {
   const axiosPrivate = useAxiosPrivate()
@@ -48,6 +51,7 @@ const toFormData = (
   data.append('documentDate', form.documentDate)
   Object.entries(extra).forEach(([key, value]) => data.append(key, value))
   if (form.file) data.append('pdf', form.file)
+  if (form.source) data.append('source', form.source)
   return data
 }
 

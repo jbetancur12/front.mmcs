@@ -526,6 +526,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Agregar documentos, subir una versión nueva, editar sus datos y eliminarlos.',
     'Biblioteca: botones de agregar, nueva versión, editar y eliminar.'
   ],
+  'library:source:download': [
+    'Descargar editables de la biblioteca',
+    'Descargar el archivo original (Word o Excel) de cada versión de un documento, para editarlo y sacar la versión siguiente.',
+    'Biblioteca: botón de descargar editable en el listado y en el historial.'
+  ],
 
   // --- Usuarios, roles y perfiles
   'users:user:list': [

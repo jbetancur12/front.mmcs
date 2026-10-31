@@ -11,6 +11,7 @@ import {
 import {
   AddRounded,
   DeleteOutline,
+  DescriptionOutlined,
   EditOutlined,
   FileDownloadOutlined,
   HistoryRounded,
@@ -39,13 +40,15 @@ import {
 } from 'src/Components/Library/Library.types'
 import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import {
-  libraryFileUrl,
+  downloadLibraryPdf,
+  downloadLibrarySource
+} from 'src/Components/Library/libraryDownloads'
+import {
   useDeleteLibraryDocument,
   useLibraryDocuments,
   useSaveLibraryDocument
 } from 'src/hooks/library/useLibraryDocuments'
 import { userStore } from 'src/store/userStore'
-import { downloadPrivateFile } from '@utils/downloadBlob'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 
@@ -61,6 +64,10 @@ const Library: React.FC = () => {
   const canManage = hasPermission(
     $userStore.permissions,
     PERMISSIONS.LIBRARY_DOCUMENT_MANAGE
+  )
+  const canDownloadSource = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.LIBRARY_SOURCE_DOWNLOAD
   )
 
   const [category, setCategory] = useState<LibraryCategory>('management')
@@ -190,7 +197,7 @@ const Library: React.FC = () => {
           displayColumnDefOptions={{
             'mrt-row-actions': {
               header: 'Acciones',
-              size: canManage ? 240 : 100
+              size: 100 + (canManage ? 160 : 0) + (canDownloadSource ? 40 : 0)
             }
           }}
           renderRowActions={({ row }) => {
@@ -206,22 +213,25 @@ const Library: React.FC = () => {
                     <VisibilityOutlined fontSize='small' />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title='Descargar'>
+                <Tooltip title='Descargar PDF'>
                   <IconButton
-                    aria-label={`Descargar ${document.name}`}
-                    onClick={() =>
-                      downloadPrivateFile(
-                        libraryFileUrl(document.id),
-                        `${document.name} v${document.version}.pdf`,
-                        { download: true }
-                      ).catch(() =>
-                        notify.error('No se pudo descargar el documento')
-                      )
-                    }
+                    aria-label={`Descargar PDF de ${document.name}`}
+                    onClick={() => downloadLibraryPdf(document)}
                   >
                     <FileDownloadOutlined fontSize='small' />
                   </IconButton>
                 </Tooltip>
+                {canDownloadSource && document.hasSource && (
+                  <Tooltip title='Descargar archivo original (Word o Excel)'>
+                    <IconButton
+                      aria-label={`Descargar archivo original de ${document.name}`}
+                      sx={{ color: '#2563eb' }}
+                      onClick={() => downloadLibrarySource(document)}
+                    >
+                      <DescriptionOutlined fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 {canManage && (
                   <>
                     <Tooltip title='Subir nueva versión'>
@@ -281,6 +291,7 @@ const Library: React.FC = () => {
         document={history}
         onClose={() => setHistory(null)}
         onView={setViewing}
+        canDownloadSource={canDownloadSource}
       />
       <ConfirmDialog
         open={deleting !== null}

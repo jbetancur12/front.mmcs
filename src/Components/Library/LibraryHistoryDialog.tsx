@@ -11,14 +11,14 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import { FileDownloadOutlined, VisibilityOutlined } from '@mui/icons-material'
-import SignalLoader from 'src/Components/Common/SignalLoader'
-import { downloadPrivateFile } from '@utils/downloadBlob'
 import {
-  libraryFileUrl,
-  useLibraryHistory
-} from 'src/hooks/library/useLibraryDocuments'
-import { notify } from 'src/utils/notify'
+  DescriptionOutlined,
+  FileDownloadOutlined,
+  VisibilityOutlined
+} from '@mui/icons-material'
+import SignalLoader from 'src/Components/Common/SignalLoader'
+import { useLibraryHistory } from 'src/hooks/library/useLibraryDocuments'
+import { downloadLibraryPdf, downloadLibrarySource } from './libraryDownloads'
 import { formatLibraryDate } from './libraryFormat'
 import { LibraryDocument } from './Library.types'
 
@@ -26,13 +26,16 @@ interface LibraryHistoryDialogProps {
   document: LibraryDocument | null
   onClose: () => void
   onView: (document: LibraryDocument) => void
+  /** El usuario tiene el permiso de descargar los archivos originales. */
+  canDownloadSource: boolean
 }
 
 /** Todas las versiones de un documento; la vigente va marcada. */
 const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
   document,
   onClose,
-  onView
+  onView,
+  canDownloadSource
 }) => {
   const { data: versions, isLoading } = useLibraryHistory(document?.id ?? null)
 
@@ -87,22 +90,25 @@ const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
                     <VisibilityOutlined fontSize='small' />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title='Descargar'>
+                <Tooltip title='Descargar PDF'>
                   <IconButton
-                    aria-label={`Descargar versión ${version.version}`}
-                    onClick={() =>
-                      downloadPrivateFile(
-                        libraryFileUrl(version.id),
-                        `${version.name} v${version.version}.pdf`,
-                        { download: true }
-                      ).catch(() =>
-                        notify.error('No se pudo descargar el documento')
-                      )
-                    }
+                    aria-label={`Descargar PDF de la versión ${version.version}`}
+                    onClick={() => downloadLibraryPdf(version)}
                   >
                     <FileDownloadOutlined fontSize='small' />
                   </IconButton>
                 </Tooltip>
+                {canDownloadSource && version.hasSource && (
+                  <Tooltip title='Descargar archivo original'>
+                    <IconButton
+                      aria-label={`Descargar archivo original de la versión ${version.version}`}
+                      sx={{ color: '#2563eb' }}
+                      onClick={() => downloadLibrarySource(version)}
+                    >
+                      <DescriptionOutlined fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Box>
             ))}
           </Box>

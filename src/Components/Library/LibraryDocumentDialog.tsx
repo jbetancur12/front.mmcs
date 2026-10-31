@@ -3,7 +3,11 @@ import { Alert, Box, TextField } from '@mui/material'
 import FormDialog from 'src/Components/Common/FormDialog'
 import FileDropZone from 'src/Components/Common/FileDropZone'
 import FormDateField from 'src/Components/Common/FormDateField'
-import { LibraryDocument, LibraryDocumentForm } from './Library.types'
+import {
+  LIBRARY_SOURCE_ACCEPT,
+  LibraryDocument,
+  LibraryDocumentForm
+} from './Library.types'
 
 export type LibraryDialogMode = 'create' | 'version' | 'edit'
 
@@ -31,7 +35,8 @@ const emptyForm = (): LibraryDocumentForm => ({
   name: '',
   version: '',
   documentDate: today(),
-  file: null
+  file: null,
+  source: null
 })
 
 const LibraryDocumentDialog: React.FC<LibraryDocumentDialogProps> = ({
@@ -57,7 +62,8 @@ const LibraryDocumentDialog: React.FC<LibraryDocumentDialogProps> = ({
       // En una versión nueva la versión y la fecha son las del cambio, no las de la anterior.
       version: mode === 'edit' ? document.version : '',
       documentDate: mode === 'edit' ? document.documentDate : today(),
-      file: null
+      file: null,
+      source: null
     })
   }, [open, mode, document])
 
@@ -81,13 +87,15 @@ const LibraryDocumentDialog: React.FC<LibraryDocumentDialogProps> = ({
       onSubmit={() => onSubmit(form)}
       loading={loading}
       submitDisabled={!valid}
-      maxWidth='xs'
+      maxWidth='sm'
     >
       <Box sx={{ display: 'grid', gap: 2, pt: 1 }}>
         {mode === 'version' && (
           <Alert severity='info'>
             La versión actual ({document?.version}) quedará en el historial y
-            esta pasará a ser la vigente.
+            esta pasará a ser la vigente. Si necesitas partir del archivo
+            original, descárgalo desde el listado, modifícalo y adjunta aquí el
+            PDF nuevo y, si quieres, el original actualizado.
           </Alert>
         )}
         <TextField
@@ -124,6 +132,23 @@ const LibraryDocumentDialog: React.FC<LibraryDocumentDialogProps> = ({
             onReject={setFileError}
             accept='application/pdf'
             acceptLabel='PDF'
+            maxSizeMb={20}
+            inputKey={inputKey}
+            disabled={loading}
+          />
+        )}
+        {needsFile && (
+          <FileDropZone
+            file={form.source}
+            onFileSelected={(source) => {
+              setFileError('')
+              setForm({ ...form, source })
+            }}
+            onReject={setFileError}
+            accept={LIBRARY_SOURCE_ACCEPT}
+            acceptLabel='Word o Excel'
+            title='Arrastra el archivo original (opcional) o haz clic para elegirlo'
+            hint='Word o Excel (.docx, .doc, .xlsx, .xls) · máximo 20 MB'
             maxSizeMb={20}
             inputKey={inputKey}
             disabled={loading}

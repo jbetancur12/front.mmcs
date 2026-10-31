@@ -214,6 +214,8 @@ export const PERMISSIONS = {
   LIBRARY_DOCUMENT_VIEW: 'library:document:view',
   /** Agregar, actualizar versión, editar y eliminar documentos de la biblioteca */
   LIBRARY_DOCUMENT_MANAGE: 'library:document:manage',
+  /** Descargar los archivos originales editables (Word o Excel) de los documentos de la biblioteca */
+  LIBRARY_SOURCE_DOWNLOAD: 'library:source:download',
   /** Listar los usuarios y los usuarios internos */
   USERS_USER_LIST: 'users:user:list',
   /** Ver un usuario. OJO: el controlador NO limita al usuario de una empresa cliente al suyo (pendiente, ver docs/rbac/RUTAS_SOLO_SESION.md) */
