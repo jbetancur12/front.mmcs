@@ -1,5 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Alert, Box, Button, Chip, Container, Grid } from '@mui/material'
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Container,
+  Grid,
+  Typography
+} from '@mui/material'
 import {
   AccountBalanceWalletOutlined,
   CloudOutlined,
@@ -12,6 +20,7 @@ import {
 import { type MRT_ColumnDef } from 'material-react-table'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import PlatformExpirationsSection from 'src/Components/Admin/PlatformExpirationsSection'
 import DataTable from 'src/Components/Common/DataTable'
 import {
   downloadPlatformInvoice,
@@ -177,6 +186,15 @@ const PlatformBillingPage = () => {
         </Alert>
       ) : null}
 
+      {data?.configured && data.billingAccess === false ? (
+        <Alert severity='warning' sx={{ mb: 3 }}>
+          El token de DigitalOcean no tiene permiso para leer la facturación,
+          así que no se pueden mostrar saldo, facturas ni movimientos. El estado
+          de la cuenta sí se está vigilando. Crea un token con permiso de
+          lectura de facturación y cámbialo en DO_API_TOKEN.
+        </Alert>
+      ) : null}
+
       {hasProblem && data?.message ? (
         <Alert severity='error' sx={{ mb: 3 }}>
           {data.message}
@@ -228,6 +246,16 @@ const PlatformBillingPage = () => {
       </Grid>
 
       <Box sx={{ mb: 3 }}>
+        <Typography variant='h6' sx={{ fontWeight: 700, mb: 1.5 }}>
+          Vencimientos de servicios
+        </Typography>
+        <PlatformExpirationsSection />
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant='h6' sx={{ fontWeight: 700, mb: 1.5 }}>
+          Facturas
+        </Typography>
         <DataTable
           columns={invoiceColumns}
           data={invoices}
@@ -238,6 +266,9 @@ const PlatformBillingPage = () => {
         />
       </Box>
 
+      <Typography variant='h6' sx={{ fontWeight: 700, mb: 1.5 }}>
+        Movimientos
+      </Typography>
       <DataTable
         columns={historyColumns}
         data={history}

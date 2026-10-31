@@ -244,6 +244,8 @@ export const PERMISSIONS = {
   SYSTEM_SETTINGS_VIEW: 'system:settings:view',
   /** Ver el aviso de pago pendiente de la nube (DigitalOcean) donde corre la plataforma */
   SYSTEM_BILLING_VIEW: 'system:billing:view',
+  /** Registrar, editar y borrar los vencimientos de servicios de la plataforma (dominio, hosting, certificados) */
+  SYSTEM_BILLING_MANAGE: 'system:billing:manage',
   /** Recibir en tiempo real todos los datos de la plataforma (IoT, mantenimiento, turnos) */
   SYSTEM_REALTIME_VIEW: 'system:realtime:view',
   /** Crear, editar y eliminar las contraseñas de libros Excel guardadas (Subir Excel) */

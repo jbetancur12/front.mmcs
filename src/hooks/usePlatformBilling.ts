@@ -1,7 +1,25 @@
-import { useQuery, useQueryClient } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '../utils/api'
 
+export interface PlatformExpiration {
+  id: number
+  name: string
+  provider: string | null
+  expiresOn: string
+  cost: string | null
+  renewUrl: string | null
+  notes: string | null
+  daysLeft: number
+  severity: 'green' | 'orange' | 'red'
+}
+
+export type PlatformExpirationInput = Pick<
+  PlatformExpiration,
+  'name' | 'provider' | 'expiresOn' | 'cost' | 'renewUrl' | 'notes'
+>
+
 export interface PlatformBillingStatus {
+  expiring?: PlatformExpiration[]
   configured: boolean
   hasProblem: boolean
   status?: string
@@ -15,8 +33,11 @@ export const usePlatformBilling = (enabled: boolean) =>
   useQuery<PlatformBillingStatus>(
     ['platform-billing', 'status'],
     async () =>
-      (await axiosPrivate.get<PlatformBillingStatus>('/platform-billing/status'))
-        .data,
+      (
+        await axiosPrivate.get<PlatformBillingStatus>(
+          '/platform-billing/status'
+        )
+      ).data,
     {
       enabled,
       staleTime: 10 * 60 * 1000,
@@ -40,6 +61,8 @@ export interface PlatformBillingEntry {
 }
 
 export interface PlatformBillingOverview extends PlatformBillingStatus {
+  /** false si el token de DigitalOcean no puede leer saldo, facturas ni movimientos */
+  billingAccess?: boolean
   accountBalance?: string | null
   monthToDateUsage?: string | null
   invoices?: PlatformInvoice[]
@@ -89,4 +112,51 @@ export const downloadPlatformInvoice = async (uuid: string) => {
   link.download = `factura-digitalocean-${uuid}.pdf`
   link.click()
   URL.revokeObjectURL(url)
+}
+
+const expirationsKey = ['platform-billing', 'expirations']
+
+/** Vencimientos de servicios registrados a mano (dominio, hosting...). */
+export const usePlatformExpirations = () =>
+  useQuery<PlatformExpiration[]>(
+    expirationsKey,
+    async () =>
+      (
+        await axiosPrivate.get<PlatformExpiration[]>(
+          '/platform-billing/expirations'
+        )
+      ).data,
+    { staleTime: 60 * 1000 }
+  )
+
+export const useSavePlatformExpiration = () => {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async ({ id, ...body }: PlatformExpirationInput & { id?: number }) =>
+      id
+        ? (await axiosPrivate.put(`/platform-billing/expirations/${id}`, body))
+            .data
+        : (await axiosPrivate.post('/platform-billing/expirations', body)).data,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(expirationsKey)
+        queryClient.invalidateQueries(['platform-billing', 'status'])
+      }
+    }
+  )
+}
+
+export const useDeletePlatformExpiration = () => {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (id: number) => {
+      await axiosPrivate.delete(`/platform-billing/expirations/${id}`)
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(expirationsKey)
+        queryClient.invalidateQueries(['platform-billing', 'status'])
+      }
+    }
+  )
 }

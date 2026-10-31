@@ -583,6 +583,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Muestra un aviso en pantalla cuando DigitalOcean, donde corre la plataforma, reporta un problema de pago, para actualizar la tarjeta antes de que se apaguen los servidores.',
     'Todas las pantallas (aviso en la parte superior).'
   ],
+  'system:billing:manage': [
+    'Registrar vencimientos de servicios',
+    'Permite agregar, editar y borrar las fechas de vencimiento del dominio, el hosting y otros servicios de la plataforma, para recibir avisos antes de que venzan.',
+    'Ajustes › Facturación de la nube.'
+  ],
   'system:realtime:view': [
     'Ver todo en tiempo real',
     'Recibir al instante los datos de toda la plataforma (IoT, tickets de mantenimiento, pantalla de turnos). Sin ella solo llegan los de la propia empresa.',
