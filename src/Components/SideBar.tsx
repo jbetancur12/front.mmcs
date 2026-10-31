@@ -58,6 +58,7 @@ import {
   PermissionKey
 } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
+import { libraryEnabled } from 'src/features/libraryFlags'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -754,6 +755,11 @@ const SideBar = ({
 
   // El usuario puede ver el ítem del menú (rol/capacidad, módulo y LMS).
   const canSeeItem = (item: SidebarItem) => {
+    // Biblioteca oculta hasta darla por lista (src/features/libraryFlags.ts)
+    if (!libraryEnabled && 'to' in item && item.to === '/library') {
+      return false
+    }
+
     if (
       isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
       !isLmsSidebarItem(item)

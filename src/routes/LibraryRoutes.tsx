@@ -4,10 +4,14 @@ import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import { PERMISSIONS } from 'src/constants/permissions'
 import Box from '@mui/material/Box'
+import { libraryEnabled } from 'src/features/libraryFlags'
 
 const LibraryPage = lazy(() => import('src/pages/Library'))
 
 const LibraryRoutes = (role: string[]) => {
+  // Oculta hasta darla por lista (src/features/libraryFlags.ts): sin ruta, /library cae en la página no encontrada
+  if (!libraryEnabled) return null
+
   return (
     <Route
       element={
