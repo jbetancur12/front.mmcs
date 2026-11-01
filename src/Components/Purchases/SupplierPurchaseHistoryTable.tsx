@@ -27,6 +27,7 @@ import { notify } from 'src/utils/notify'
 import { busyDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
+import { headerText } from 'src/utils/responseHeaders'
 interface SupplierPurchaseHistoryTableProps {
   supplierId: string | number
 }
@@ -76,7 +77,7 @@ const SupplierPurchaseHistoryTable: React.FC<
       busyDialog.hide()
 
       const effectiveMimeType =
-        response.headers['content-type'] || 'application/pdf'
+        headerText(response.headers, 'content-type') || 'application/pdf'
       const blob = new Blob([response.data], { type: effectiveMimeType })
       const fileURL = URL.createObjectURL(blob)
 

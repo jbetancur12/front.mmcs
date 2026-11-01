@@ -47,6 +47,7 @@ import SupplierPurchaseHistoryTable from 'src/Components/Purchases/SupplierPurch
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { headerText } from 'src/utils/responseHeaders'
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
 export interface Supplier {
   id: number
@@ -413,7 +414,7 @@ const SupplierDetailsPage: React.FC = () => {
       })
 
       const effectiveMimeType =
-        response.headers['content-type'] ||
+        headerText(response.headers, 'content-type') ||
         fileMimeType ||
         'application/octet-stream'
 

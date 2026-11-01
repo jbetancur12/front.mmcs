@@ -20,6 +20,7 @@ import { api } from 'src/config'
 import useAxiosPrivate from 'src/utils/use-axios-private'
 import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
 
+import { headerText } from 'src/utils/responseHeaders'
 interface LmsVideoPlayerProps {
   src: string
   videoSource: 'minio' | 'youtube' | 'gdrive'
@@ -195,8 +196,8 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
         )
 
         const contentType =
-          response.headers['content-type'] ||
-          response.headers['Content-Type'] ||
+          headerText(response.headers, 'content-type') ||
+          headerText(response.headers, 'Content-Type') ||
           'video/mp4'
         const blob = new Blob([response.data], { type: contentType })
 

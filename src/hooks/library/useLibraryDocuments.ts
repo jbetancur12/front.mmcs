@@ -6,6 +6,7 @@ import {
   LibraryDocumentForm
 } from 'src/Components/Library/Library.types'
 
+import type { AxiosResponse } from 'axios'
 export const LIBRARY_QUERY_KEYS = {
   all: ['libraryDocuments'] as const,
   list: (category: LibraryCategory) =>
@@ -65,7 +66,7 @@ export const useSaveLibraryDocument = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   return useMutation(
-    (action: LibrarySaveAction) => {
+    (action: LibrarySaveAction): Promise<AxiosResponse> => {
       switch (action.type) {
         case 'create':
           return axiosPrivate.post(

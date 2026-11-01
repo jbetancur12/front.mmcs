@@ -41,6 +41,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
+import { headerText } from 'src/utils/responseHeaders'
 type ReportType = 'user_progress' | 'course_analytics' | 'compliance' | 'quiz_performance' | 'custom'
 type ReportFormat = 'csv' | 'pdf' | 'xlsx'
 type ReportFrequency = 'daily' | 'weekly' | 'monthly'
@@ -484,7 +485,9 @@ const LmsReporting: React.FC = () => {
       })
 
       const blob = new Blob([response.data], {
-        type: response.headers['content-type'] || 'application/octet-stream'
+        type:
+          headerText(response.headers, 'content-type') ||
+          'application/octet-stream'
       })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')

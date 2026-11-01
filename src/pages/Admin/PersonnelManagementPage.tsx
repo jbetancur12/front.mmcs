@@ -31,6 +31,7 @@ import { useNavigate } from 'react-router-dom'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
+import type { AxiosResponse } from 'axios'
 export interface Personnel {
   id: number | string
   name: string
@@ -66,7 +67,7 @@ const PersonnelManagementPage: React.FC = () => {
 
   // Mutación para crear/actualizar
   const saveMutation = useMutation(
-    (person: Omit<Personnel, 'id'> | Personnel) => {
+    (person: Omit<Personnel, 'id'> | Personnel): Promise<AxiosResponse> => {
       if ('id' in person) {
         return axiosPrivate.put(`/personnel/${person.id}`, person) // UPDATE
       }
