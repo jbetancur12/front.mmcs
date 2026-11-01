@@ -4,11 +4,12 @@ import { wss } from 'src/utils/useWebSocket'
 import {
   clearLocalSession,
   getTokenSessionId,
+  isTokenExpired,
   rememberSessionEnded
 } from 'src/utils/sessionEnd'
+import { nextRetryMs } from 'src/utils/sessionGuardRetry'
 import { syncUserAccess } from 'src/utils/syncUserAccess'
 
-const MAX_RETRY_MS = 60_000
 // Todas las pestañas del navegador reciben el mismo aviso y comparten cookie: se escalonan para que la primera
 // renueve el token y las demás ya encuentren el nuevo, en vez de renovar todas a la vez
 const ROLES_CHANGED_JITTER_MS = 1_500
@@ -27,13 +28,13 @@ const useSessionGuard = () => {
   useEffect(() => {
     let socket: WebSocket | null = null
     let retryTimer: ReturnType<typeof setTimeout> | undefined
-    let retryMs = 5_000
+    // Intentos seguidos que se cerraron sin llegar a abrir (el servidor rechazó el handshake o no hay red)
+    let failures = 0
     let stopped = false
 
     const scheduleRetry = () => {
       if (stopped) return
-      retryTimer = setTimeout(connect, retryMs)
-      retryMs = Math.min(retryMs * 2, MAX_RETRY_MS)
+      retryTimer = setTimeout(connect, nextRetryMs(failures))
     }
 
     const connect = () => {
@@ -52,9 +53,11 @@ const useSessionGuard = () => {
       url.searchParams.set('channel', 'session')
       url.searchParams.set('token', token)
       socket = new WebSocket(url.toString())
+      let opened = false
 
       socket.onopen = () => {
-        retryMs = 5_000
+        opened = true
+        failures = 0
       }
 
       socket.onmessage = (event) => {
@@ -81,7 +84,16 @@ const useSessionGuard = () => {
         }
       }
 
-      socket.onclose = scheduleRetry
+      socket.onclose = () => {
+        if (!opened) {
+          failures += 1
+          // El servidor responde 403 si el token venció. En una pestaña inactiva nadie lo renueva (solo consulta
+          // /version.json), y reintentar con el mismo token fallaría para siempre. Una petición autenticada pasa por
+          // el interceptor, que renueva el token con la cookie de refresh, o cierra la sesión si ya terminó.
+          if (isTokenExpired(token)) void syncUserAccess()
+        }
+        scheduleRetry()
+      }
     }
 
     connect()

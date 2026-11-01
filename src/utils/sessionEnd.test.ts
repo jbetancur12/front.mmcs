@@ -5,6 +5,7 @@ import {
   getSessionRevokedReason,
   getTokenSessionId,
   isReauthRequired,
+  isTokenExpired,
   isRolesChangedError,
   peekSessionEndedMessage,
   rememberSessionEnded
@@ -121,5 +122,25 @@ describe('clearLocalSession', () => {
     clearLocalSession()
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
+  })
+})
+
+describe('isTokenExpired', () => {
+  const tokenWith = (payload: object) => {
+    const encode = (value: object) =>
+      btoa(JSON.stringify(value)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
+    return `${encode({ alg: 'HS256' })}.${encode(payload)}.firma`
+  }
+  const NOW = 1_800_000_000_000
+
+  it('detecta un token vencido y uno vigente', () => {
+    expect(isTokenExpired(tokenWith({ exp: NOW / 1000 - 60 }), NOW)).toBe(true)
+    expect(isTokenExpired(tokenWith({ exp: NOW / 1000 + 60 }), NOW)).toBe(false)
+  })
+
+  it('no asume que venció si no se puede leer', () => {
+    expect(isTokenExpired(tokenWith({ sid: 'abc' }), NOW)).toBe(false)
+    expect(isTokenExpired('no-es-un-jwt', NOW)).toBe(false)
+    expect(isTokenExpired('', NOW)).toBe(false)
   })
 })

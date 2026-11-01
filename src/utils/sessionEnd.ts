@@ -68,6 +68,23 @@ export const getTokenSessionId = (token: string): string | null => {
   }
 }
 
+/**
+ * ¿El access token ya venció? Solo lee `exp` del payload (no verifica la firma). Si no se puede leer, devuelve false:
+ * mejor no asumir que venció algo que no se sabe.
+ */
+export const isTokenExpired = (
+  token: string,
+  now: number = Date.now()
+): boolean => {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const exp = JSON.parse(atob(payload)).exp
+    return typeof exp === 'number' && exp * 1000 <= now
+  } catch {
+    return false
+  }
+}
+
 /** Limpia lo que deja una sesión local (la cookie del refresh es del servidor). */
 export const clearLocalSession = () => {
   localStorage.clear()
