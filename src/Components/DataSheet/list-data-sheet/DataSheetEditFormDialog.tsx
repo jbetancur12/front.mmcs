@@ -15,6 +15,7 @@ import { menuOptions } from './constants'
 import { DataSheetData } from './types'
 import { currencyFormatter, toDateInputValue } from './utils'
 
+import { toNumber, withNumericFields } from './editPayload'
 /** Campos de la hoja de vida que se envían al guardar. */
 const PAYLOAD_KEYS = [
   'pictureUrl',
@@ -85,13 +86,6 @@ interface EditValues {
 
 const text = (value: unknown) => (value == null ? '' : String(value))
 
-const toNumber = (value: unknown) => {
-  const digits = String(value ?? '')
-    .split('.')[0]
-    .replace(/[^0-9]/g, '')
-  return digits ? parseInt(digits, 10) : 0
-}
-
 const buildInitialValues = (row: DataSheetData): EditValues => ({
   internalCode: text(row.internalCode),
   equipmentName: text(row.equipmentName),
@@ -159,7 +153,7 @@ const DataSheetEditFormDialog: React.FC<DataSheetEditFormDialogProps> = ({
         payload[key] =
           key in values ? values[key as keyof EditValues] : row[key]
       })
-      await onSave(row.id, payload)
+      await onSave(row.id, withNumericFields(payload))
       onClose()
     }
   })
