@@ -972,6 +972,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' },
     { path: "/users", label: "Usuarios", kind: 'action' }
   ],
+  'release:certificate:view': [
+    { path: "/release-certificates", label: "Certificados a liberar", kind: 'screen' }
+  ],
   'repositories:repository:manage': [
     { path: "/", label: "Inicio", kind: 'action' },
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'action' },

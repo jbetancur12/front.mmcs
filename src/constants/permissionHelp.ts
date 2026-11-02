@@ -532,6 +532,23 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Biblioteca: botón de descargar editable en el listado y en el historial.'
   ],
 
+  // --- Certificados a liberar (Empresas)
+  'release:certificate:view': [
+    'Ver certificados a liberar',
+    'Ver la bandeja de certificados cargados por el laboratorio, sus datos leídos y descargar los PDF.',
+    'Certificados a liberar: bandeja, tarjetas por estado y visor del PDF.'
+  ],
+  'release:certificate:upload': [
+    'Cargar certificados a liberar',
+    'Cargar certificados en PDF en masa y subir el PDF corregido de uno que requiere ajustes.',
+    'Certificados a liberar: botón Cargar certificado.'
+  ],
+  'release:certificate:rules': [
+    'Reglas de lectura de certificados',
+    'Editar las etiquetas, tipos de documento y magnitud por prefijo con los que el sistema lee los PDF.',
+    'Certificados a liberar: reglas de lectura (administración).'
+  ],
+
   // --- Usuarios, roles y perfiles
   'users:user:list': [
     'Ver la lista de usuarios',

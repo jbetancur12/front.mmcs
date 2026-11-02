@@ -30,6 +30,7 @@ import SignalLoader from './Components/Common/SignalLoader'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
 import LibraryRoutes from './routes/LibraryRoutes'
+import ReleaseCertificatesRoutes from './routes/ReleaseCertificatesRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
 import RbacRoutes from './routes/RbacRoutes'
 import PlatformBillingRoutes from './routes/PlatformBillingRoutes'
@@ -74,6 +75,7 @@ function Router() {
           {LaboratoryRoutes($userStore.rol)}
           {NonConformRoutes($userStore.rol)}
           {LibraryRoutes($userStore.rol)}
+          {ReleaseCertificatesRoutes($userStore.rol)}
           {MaintenanceRoutes($userStore.rol)}
           {RbacRoutes($userStore.rol)}
           {PlatformBillingRoutes($userStore.rol)}
