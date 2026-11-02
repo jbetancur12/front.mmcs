@@ -1,13 +1,10 @@
-// Modern Templates Module - Re-export from Templates directory
+// Módulo de plantillas: reexporta lo que usan otras pantallas
 export { default as TemplatesPage } from './Templates/TemplatesPage'
 export { default as TemplatesTable } from './Templates/TemplatesTable'
-export { default as TemplateCard } from './Templates/TemplateCard'
 export { default as CreateTemplateModal } from './Templates/CreateTemplateModal'
 export { default as EditTemplateModal } from './Templates/EditTemplateModal'
 export { default as DuplicateTemplateModal } from './Templates/DuplicateTemplateModal'
-export { default as TemplateActions } from './Templates/TemplateActions'
-export { default as EmptyState } from './Templates/EmptyState'
-export { default as LoadingState } from './Templates/LoadingState'
+export { default as TemplateFormDialog } from './Templates/TemplateFormDialog'
 
 // Re-export types
 export type { TemplateData, TemplatesData, ErrorState } from './Templates/types'
