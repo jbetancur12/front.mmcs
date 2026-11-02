@@ -14,6 +14,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material'
+import ReleaseDriveGuideDialog from './ReleaseDriveGuideDialog'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import {
@@ -49,6 +50,7 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
   const [rootFolderId, setRootFolderId] = useState('')
   const [preset, setPreset] = useState(0)
   const [confirmRemove, setConfirmRemove] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
 
   useEffect(() => {
     if (!status) return
@@ -143,6 +145,14 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
               carpeta del Drive. Si Google falla, el certificado sigue liberado
               y la copia se reintenta sola.
             </Typography>
+            <Button
+              size='small'
+              variant='outlined'
+              sx={{ mb: 2 }}
+              onClick={() => setGuideOpen(true)}
+            >
+              ¿Cómo obtengo la credencial? Guía paso a paso
+            </Button>
 
             {status.configured ? (
               <Box sx={{ mb: 2 }}>
@@ -255,6 +265,10 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
           Guardar
         </Button>
       </DialogActions>
+      <ReleaseDriveGuideDialog
+        open={guideOpen}
+        onClose={() => setGuideOpen(false)}
+      />
       <ConfirmDialog
         open={confirmRemove}
         title='¿Quitar la conexión con el Drive?'
