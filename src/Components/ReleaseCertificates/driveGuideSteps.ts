@@ -26,10 +26,11 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
     actions: [
       'Abre la dirección de abajo en el navegador.',
       'Inicia sesión con la cuenta de Google que será la dueña de esta conexión. Que sea una cuenta del laboratorio y no la de una persona que pueda irse, porque quien administra esta cuenta administra el acceso al Drive.',
-      'Si Google muestra los términos de servicio, léelos y acéptalos. Para este paso no se pide tarjeta de crédito.'
+      'Si es la primera vez, Google muestra una ventana de bienvenida con el país y las condiciones del servicio. Deja el país (Colombia), marca la casilla de las condiciones y pulsa «Aceptar y continuar». La casilla de actualizaciones por correo es opcional.',
+      'Es normal que aparezca una oferta de «prueba gratis con $300 de crédito». No la necesitas: ignórala o pulsa «Descartar» arriba a la derecha. Para esta conexión no hace falta activar la facturación ni poner tarjeta.'
     ],
     expect:
-      'Ves la consola de Google Cloud: arriba el nombre «Google Cloud», un botón con el nombre de un proyecto y el buscador en el centro.',
+      'Ves la consola de Google Cloud: arriba el nombre «Google Cloud», un botón que dice «Selecciona un proyecto» (o el nombre de un proyecto si ya tienes uno) y el buscador en el centro.',
     link: {
       label: 'Abrir Google Cloud',
       url: 'https://console.cloud.google.com'
@@ -37,15 +38,15 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
   },
   {
     id: 'elegir-proyecto',
-    title: 'Elige el proyecto de trabajo',
+    title: 'Elige o crea el proyecto de trabajo',
     where: 'En Google Cloud',
     actions: [
-      'Mira arriba a la izquierda, junto al nombre «Google Cloud»: hay un botón con el nombre del proyecto en el que estás trabajando (por ejemplo «Metromedics»).',
-      'Si ya hay un proyecto para esta conexión, úsalo. No hace falta crear otro.',
-      'Si no hay ninguno, pulsa ese botón, luego «Proyecto nuevo», ponle un nombre como «Metromedics Certificados» y pulsa «Crear». Espera a que termine y selecciónalo.'
+      'Mira arriba a la izquierda, junto al nombre «Google Cloud»: hay un botón. Si dice «Selecciona un proyecto», todavía no tienes ninguno; si muestra un nombre (por ejemplo «Metromedics»), ya estás dentro de un proyecto y puedes usarlo.',
+      'Para crear uno: pulsa ese botón, en la ventana que se abre pulsa «Proyecto nuevo» (arriba a la derecha), escribe el nombre «Metromedics Certificados» y pulsa «Crear». Deja «Organización» o «Ubicación» como están.',
+      'Espera la notificación de que el proyecto se creó (la campana arriba a la derecha) y, si hace falta, pulsa de nuevo el botón de proyectos y elígelo en la lista.'
     ],
     expect:
-      'El botón de arriba muestra el nombre de tu proyecto. En la pantalla de bienvenida dice «Estás trabajando en» seguido de ese nombre, y aparecen su número y su ID de proyecto.'
+      'El botón de arriba ya no dice «Selecciona un proyecto» sino el nombre del tuyo. En la pantalla de bienvenida dice «Estás trabajando en» seguido de ese nombre, y aparecen su número y su ID de proyecto.'
   },
   {
     id: 'activar-drive-api',
