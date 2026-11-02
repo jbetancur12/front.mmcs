@@ -50,6 +50,7 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
   laboratory: 'Laboratorio',
   iot: 'IoT',
   nonconform: 'Trabajo no conforme',
+  library: 'Biblioteca',
   users: 'Usuarios y perfiles',
   system: 'Sistema',
   calibration: 'Calibración',
