@@ -162,9 +162,26 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({
                 {name.charAt(0).toUpperCase()}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant='body2' fontWeight={600}>
-                  {name}
-                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    flexWrap: 'wrap'
+                  }}
+                >
+                  <Typography variant='body2' fontWeight={600}>
+                    {name}
+                  </Typography>
+                  {row.original.certificateType?.name && (
+                    <Chip
+                      label={row.original.certificateType.name}
+                      size='small'
+                      variant='outlined'
+                      sx={{ height: 20, fontSize: '0.7rem' }}
+                    />
+                  )}
+                </Box>
                 <Typography variant='caption' color='text.secondary'>
                   Serie {row.original.serie || '—'} · Activo{' '}
                   {row.original.activoFijo || '—'}

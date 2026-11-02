@@ -30,6 +30,8 @@ export interface Certificate {
     createdAt: string
     updatedAt: string
   }
+  /** Tipo del certificado vigente del equipo (Calibración, Seguridad Electrica…). */
+  certificateType?: { id: number; name: string } | null
   searchMatches?: { field: string }[]
 }
 
