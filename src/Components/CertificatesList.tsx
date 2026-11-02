@@ -1,25 +1,19 @@
 import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AxiosError, AxiosResponse, isAxiosError } from 'axios'
+import { Box, IconButton, Tooltip, Typography } from '@mui/material'
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  IconButton,
-  Collapse,
-  Fade,
-  Tooltip,
-  Alert
-} from '@mui/material'
+  DeleteOutline,
+  FileDownloadOutlined,
+  PictureAsPdfOutlined,
+  TaskOutlined
+} from '@mui/icons-material'
+import type { MRT_ColumnDef } from 'material-react-table'
 
-import Loader from './Loader2'
+import SignalLoader from 'src/Components/Common/SignalLoader'
+import DataTable from 'src/Components/Common/DataTable'
+import EmptyState from 'src/Components/Common/EmptyState'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import { notify } from 'src/utils/notify'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
@@ -27,419 +21,207 @@ import {
   useCertificateHistory,
   useDeleteCertificateHistory
 } from '@hooks/certificates/useCertificateHistory'
-import {
-  Download,
-  Delete,
-  CalendarToday,
-  ExpandMore,
-  ExpandLess,
-  PictureAsPdf
-} from '@mui/icons-material'
 import PDFViewer from './PDFViewer'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { logger } from 'src/utils/logger'
+
 type Certificate = CertificateHistoryItem
 
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString('es-CO', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+
+/** Historial de certificados de un equipo: una fila por certificado, con la vista previa del PDF al expandirla. */
 function CertificatesList() {
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const { data: certificatesData, isLoading: loading } =
     useCertificateHistory(id)
-  const certificates: Certificate[] = certificatesData ?? []
+  const certificates: Certificate[] = useMemo(
+    () => certificatesData ?? [],
+    [certificatesData]
+  )
   const deleteCertificateMutation = useDeleteCertificateHistory()
-  const [certificateId, setCertificateId] = useState<number>(0)
-  const [previewId, setPreviewId] = useState<number | null>(null)
-  const [certificatePath, setCertificatePath] = useState<string>('')
-  const [open, setOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Certificate | null>(null)
 
-  const canDeleteCertificate = useCan(PERMISSIONS.CALIBRATION_CERTIFICATE_HISTORY_DELETE)
+  const canDeleteCertificate = useCan(
+    PERMISSIONS.CALIBRATION_CERTIFICATE_HISTORY_DELETE
+  )
 
-  // const years = certificates.map((certificate) => {
-  //   const getYear = new Date(certificate.calibrationDate).getFullYear()
-  //   return getYear
-  // })
+  const columns = useMemo<MRT_ColumnDef<Certificate>[]>(
+    () => [
+      {
+        accessorKey: 'filePath',
+        header: 'Archivo',
+        size: 420,
+        Cell: ({ row }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <PictureAsPdfOutlined
+              fontSize='small'
+              sx={{ color: '#dc2626', flexShrink: 0 }}
+            />
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 600, wordBreak: 'break-word' }}
+            >
+              {row.original.filePath}
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        // Se ordena por la fecha real, no por el texto largo
+        id: 'calibrationDate',
+        header: 'Fecha de calibración',
+        size: 220,
+        accessorFn: (row) => new Date(row.calibrationDate).getTime(),
+        Cell: ({ row }) => formatDate(row.original.calibrationDate)
+      }
+    ],
+    []
+  )
 
-  // const uniqueYears = years.filter((value, index, self) => {
-  //   return self.indexOf(value) === index
-  // })
-
-  const handleDownload = async (path: string) => {
-    const filePath = path
-
-    // const partes = filePath.split('-')
-    // let resultado = ''
-
-    // if (partes.length > 1) {
-    //   resultado = partes.slice(1).join('-')
-    // } else {
-    //   resultado = filePath
-    // }
-
-    const resultado = filePath
-
+  const handleDownload = async (filePath: string) => {
     try {
       const response: AxiosResponse<Blob> = await axiosPrivate.get(
         `/files/download/${filePath}`,
-        {
-          responseType: 'blob' // Indicar que esperamos una respuesta binaria
-        }
+        { responseType: 'blob' }
       )
 
       if (response.status >= 200 && response.status < 300) {
-        // Crear un objeto URL para el archivo descargado
         const url = window.URL.createObjectURL(new Blob([response.data]))
-
-        // Crear un enlace en el DOM para descargar el archivo
         const link = document.createElement('a')
         link.href = url
-        link.setAttribute('download', resultado) // Nombre del archivo a descargar
+        link.setAttribute('download', filePath)
         document.body.appendChild(link)
-
-        // Simular el clic en el enlace para iniciar la descarga
         link.click()
-
-        // Liberar el objeto URL y eliminar el enlace después de la descarga
         window.URL.revokeObjectURL(url)
         document.body.removeChild(link)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (isAxiosError(error)) {
-        // Manejo de errores de Axios
         const axiosError = error as AxiosError
-        if (axiosError.response) {
-          // La solicitud recibió una respuesta del servidor
-
-          notify.error(`Error al descargar el archivo: ${axiosError.response.statusText}`)
-        } else {
-          notify.error(`Error al descargar el archivo: ${axiosError.message}`)
-        }
+        notify.error(
+          `Error al descargar el archivo: ${
+            axiosError.response
+              ? axiosError.response.statusText
+              : axiosError.message
+          }`
+        )
       } else {
-        notify.error(`Error desconocido al descargar el archivo: ${error.message}`)
+        notify.error('Error desconocido al descargar el archivo')
       }
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
     try {
-      const response = await deleteCertificateMutation.mutateAsync(id)
-
+      const response = await deleteCertificateMutation.mutateAsync(
+        deleteTarget.id
+      )
       if (response.status === 200) {
         notify.success('Certificado eliminado con éxito')
       }
     } catch (error) {
       logger.error('Error al eliminar el certificado:', error)
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
-  const handleClickOpen = (id: number) => {
-    setOpen(true)
-    setCertificateId(id)
-  }
-
-  const handleClose = () => {
-    setOpen(false)
-  }
-
-  const handleConfirmDelete = () => {
-    handleDelete(certificateId)
-    handleClose()
-  }
-
-  const handlePreview = (certificate: Certificate) => {
-    if (previewId === certificate.id) {
-      setPreviewId(null) // Cerrar el preview si ya estaba abierto
-      setCertificatePath('')
-    } else {
-      setPreviewId(certificate.id) // Abrir el preview para este certificado
-      setCertificatePath(certificate.filePath)
-    }
+  if (loading) {
+    return <SignalLoader message='Cargando certificados...' size='small' />
   }
 
   return (
     <>
-      <Loader loading={loading} />
-
       {certificates.length === 0 ? (
-        <Alert
-          severity='info'
-          sx={{
-            borderRadius: '12px',
-            backgroundColor: '#f0f9ff',
-            border: '1px solid #bfdbfe',
-            '& .MuiAlert-icon': {
-              color: '#3b82f6'
-            }
-          }}
-        >
-          <Typography variant='body2'>
-            No hay certificados disponibles para este equipo.
-          </Typography>
-        </Alert>
+        <EmptyState
+          compact
+          icon={<TaskOutlined />}
+          title='No hay certificados para este equipo'
+          hint='Cuando se suba uno, aparecerá aquí con su fecha de calibración.'
+        />
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {certificates.map((certificate, index) => (
-            <Fade in={true} timeout={300 + index * 100} key={certificate.id}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    borderColor: '#10b981',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
-                    transform: 'translateY(-2px)'
-                  }
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box
-                    display='flex'
-                    alignItems='center'
-                    justifyContent='space-between'
+        <DataTable<Certificate>
+          columns={columns}
+          data={certificates}
+          itemLabel={['certificado', 'certificados']}
+          searchPlaceholder='Buscar certificados'
+          enableColumnFilters={false}
+          initialState={{
+            sorting: [{ id: 'calibrationDate', desc: true }]
+          }}
+          muiTableContainerProps={{ sx: { maxHeight: 'none' } }}
+          // Al expandir una fila se ve el PDF debajo
+          renderDetailPanel={({ row }) => (
+            <Box
+              sx={{
+                width: '100%',
+                backgroundColor: '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                p: 2
+              }}
+            >
+              <PDFViewer
+                path={row.original.filePath}
+                buttons={false}
+                compactActions
+              />
+            </Box>
+          )}
+          enableRowActions
+          renderRowActions={({ row }) => (
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Tooltip arrow placement='top' title='Descargar'>
+                <IconButton
+                  size='small'
+                  aria-label='Descargar certificado'
+                  sx={{ color: '#2563eb' }}
+                  onClick={() => handleDownload(row.original.filePath)}
+                >
+                  <FileDownloadOutlined fontSize='small' />
+                </IconButton>
+              </Tooltip>
+              {canDeleteCertificate && (
+                <Tooltip arrow placement='top' title='Eliminar'>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    aria-label='Eliminar certificado'
+                    onClick={() => setDeleteTarget(row.original)}
                   >
-                    {/* File Info */}
-                    <Box display='flex' alignItems='center' flex={1}>
-                      <Box
-                        sx={{
-                          p: 1.5,
-                          backgroundColor: '#fef2f2',
-                          borderRadius: '8px',
-                          mr: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <PictureAsPdf sx={{ color: '#dc2626', fontSize: 24 }} />
-                      </Box>
-
-                      <Box flex={1}>
-                        <Typography
-                          variant='body1'
-                          fontWeight='600'
-                          sx={{
-                            color: '#1f2937',
-                            mb: 0.5,
-                            wordBreak: 'break-word'
-                          }}
-                        >
-                          {certificate.filePath}
-                        </Typography>
-
-                        <Box display='flex' alignItems='center' gap={1}>
-                          <CalendarToday
-                            sx={{ fontSize: 16, color: '#6b7280' }}
-                          />
-                          <Typography variant='body2' sx={{ color: '#6b7280' }}>
-                            Fecha de Calibración:{' '}
-                            {new Date(
-                              certificate.calibrationDate
-                            ).toLocaleDateString('es-ES', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-
-                    {/* Actions */}
-                    <Box display='flex' alignItems='center' gap={1}>
-                      <Tooltip
-                        title={
-                          previewId === certificate.id
-                            ? 'Ocultar vista previa'
-                            : 'Ver vista previa'
-                        }
-                      >
-                        <IconButton
-                          onClick={() => handlePreview(certificate)}
-                          sx={{
-                            color:
-                              previewId === certificate.id
-                                ? '#10b981'
-                                : '#6b7280',
-                            backgroundColor:
-                              previewId === certificate.id
-                                ? '#f0fdf4'
-                                : 'transparent',
-                            '&:hover': {
-                              backgroundColor: '#f0fdf4',
-                              color: '#10b981'
-                            }
-                          }}
-                        >
-                          {previewId === certificate.id ? (
-                            <ExpandLess />
-                          ) : (
-                            <ExpandMore />
-                          )}
-                        </IconButton>
-                      </Tooltip>
-
-                      <Tooltip title='Descargar certificado'>
-                        <Button
-                          variant='outlined'
-                          size='small'
-                          startIcon={<Download />}
-                          onClick={() => handleDownload(certificate.filePath)}
-                          sx={{
-                            borderColor: '#10b981',
-                            color: '#10b981',
-                            borderRadius: '8px',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            '&:hover': {
-                              borderColor: '#059669',
-                              backgroundColor: '#f0fdf4',
-                              color: '#059669'
-                            }
-                          }}
-                        >
-                          Descargar
-                        </Button>
-                      </Tooltip>
-
-                      {canDeleteCertificate && (
-                        <Tooltip title='Eliminar certificado'>
-                          <Button
-                            variant='outlined'
-                            size='small'
-                            startIcon={<Delete />}
-                            onClick={() => handleClickOpen(certificate.id)}
-                            sx={{
-                              borderColor: '#dc2626',
-                              color: '#dc2626',
-                              borderRadius: '8px',
-                              textTransform: 'none',
-                              fontWeight: 600,
-                              ml: 1,
-                              '&:hover': {
-                                borderColor: '#b91c1c',
-                                backgroundColor: '#fef2f2',
-                                color: '#b91c1c'
-                              }
-                            }}
-                          >
-                            Eliminar
-                          </Button>
-                        </Tooltip>
-                      )}
-                    </Box>
-                  </Box>
-
-                  {/* PDF Preview */}
-                  <Collapse in={previewId === certificate.id} timeout={300}>
-                    <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #e5e7eb' }}>
-                      <Box
-                        sx={{
-                          backgroundColor: '#f8fafc',
-                          borderRadius: '8px',
-                          p: 2,
-                          border: '1px solid #e5e7eb'
-                        }}
-                      >
-                        <PDFViewer
-                          path={certificatePath}
-                          buttons={false}
-                          compactActions
-                        />
-                      </Box>
-                    </Box>
-                  </Collapse>
-                </CardContent>
-              </Card>
-            </Fade>
-          ))}
-        </Box>
+                    <DeleteOutline fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          )}
+        />
       )}
 
-      {/* Modern Delete Confirmation Dialog */}
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        maxWidth='sm'
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: '16px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            textAlign: 'center',
-            fontWeight: 'bold',
-            pb: 1,
-            borderBottom: '1px solid #e5e7eb'
-          }}
-        >
-          <Box
-            display='flex'
-            alignItems='center'
-            justifyContent='center'
-            gap={1}
-            mb={1}
-          >
-            <Delete sx={{ color: '#dc2626' }} />
-            <Typography variant='h6' fontWeight='bold'>
-              Confirmar Eliminación
-            </Typography>
-          </Box>
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 3, textAlign: 'center' }}>
-          <DialogContentText sx={{ fontSize: '1rem', color: '#374151' }}>
-            ¿Estás seguro de que quieres eliminar este certificado?
-          </DialogContentText>
-          <DialogContentText
-            sx={{ fontSize: '0.875rem', color: '#6b7280', mt: 1 }}
-          >
-            Esta acción no se puede deshacer.
-          </DialogContentText>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button
-            onClick={handleClose}
-            variant='outlined'
-            sx={{
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 600,
-              borderColor: '#d1d5db',
-              color: '#374151',
-              '&:hover': {
-                borderColor: '#9ca3af',
-                backgroundColor: '#f9fafb'
-              }
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            variant='contained'
-            sx={{
-              backgroundColor: '#dc2626',
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 600,
-              ml: 2,
-              '&:hover': {
-                backgroundColor: '#b91c1c'
-              }
-            }}
-          >
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title='Eliminar certificado'
+        tone='danger'
+        message={
+          <>
+            Vas a eliminar <strong>{deleteTarget?.filePath}</strong>. Esta
+            acción no se puede deshacer.
+          </>
+        }
+        confirmLabel='Eliminar'
+        loading={deleteCertificateMutation.isLoading}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </>
   )
 }
