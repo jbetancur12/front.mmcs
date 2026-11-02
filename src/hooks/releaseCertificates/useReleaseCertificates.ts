@@ -34,6 +34,7 @@ export const useReleaseCertificates = (filters: ReleaseFilters) => {
             status: filters.status || undefined,
             kind: filters.kind || undefined,
             customerId: filters.customerId || undefined,
+            withoutCustomer: filters.withoutCustomer ? 'true' : undefined,
             uploadedBy: filters.uploadedBy || undefined,
             search: filters.search || undefined,
             withAnomalies: filters.withAnomalies ? 'true' : undefined
@@ -362,3 +363,16 @@ export const useReleaseUploaders = () => {
 /** Buscador de clientes de la plataforma para los filtros (mismo que usa la edición). */
 export const useReleaseCustomerOptions = (search: string) =>
   useReleaseCustomerSearch(search)
+
+/** Clientes de la plataforma que se parecen al nombre que trae el PDF (para cuando no se identificó solo). */
+export const useCustomerSuggestions = (id: number | null, enabled: boolean) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<{ id: number; nombre: string; score: number }[]>(
+    ['releaseCertificates', 'customer-suggestions', id],
+    () =>
+      axiosPrivate
+        .get(`/release-certificates/${id}/customer-suggestions`)
+        .then((response) => response.data),
+    { enabled: enabled && id !== null }
+  )
+}

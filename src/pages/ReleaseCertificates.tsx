@@ -120,6 +120,7 @@ const ReleaseCertificates: React.FC = () => {
   const [status, setStatus] = useState<ReleaseStatus | undefined>()
   const [kind, setKind] = useState<ReleaseKind | ''>('')
   const [withAnomalies, setWithAnomalies] = useState(false)
+  const [withoutCustomer, setWithoutCustomer] = useState(false)
   const [customer, setCustomer] = useState<{
     id: number
     nombre: string
@@ -154,7 +155,15 @@ const ReleaseCertificates: React.FC = () => {
   // Cualquier filtro nuevo vuelve a la primera página.
   useEffect(() => {
     setPagination((current) => ({ ...current, pageIndex: 0 }))
-  }, [status, kind, withAnomalies, search, customer, uploadedBy])
+  }, [
+    status,
+    kind,
+    withAnomalies,
+    withoutCustomer,
+    search,
+    customer,
+    uploadedBy
+  ])
 
   const { data, isLoading, isFetching } = useReleaseCertificates({
     status,
@@ -162,6 +171,7 @@ const ReleaseCertificates: React.FC = () => {
     search,
     withAnomalies,
     customerId: customer?.id ?? null,
+    withoutCustomer,
     uploadedBy: uploadedBy === '' ? null : uploadedBy,
     page: pagination.pageIndex + 1,
     limit: pagination.pageSize
@@ -200,9 +210,15 @@ const ReleaseCertificates: React.FC = () => {
                 <Box
                   sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}
                 >
-                  {row.original.customer?.nombre ??
-                    row.original.customerName ??
-                    'Cliente sin identificar'}
+                  {row.original.customer?.nombre ?? (
+                    <Box
+                      component='span'
+                      sx={{ color: '#b45309', fontWeight: 600 }}
+                    >
+                      Cliente sin identificar ·{' '}
+                      {row.original.customerName ?? 'sin nombre'}
+                    </Box>
+                  )}
                 </Box>
               </Box>
             )}
@@ -232,7 +248,25 @@ const ReleaseCertificates: React.FC = () => {
         id: 'customer',
         header: 'Cliente',
         size: 240,
-        accessorFn: (row) => row.customer?.nombre ?? row.customerName ?? '—'
+        accessorFn: (row) => row.customer?.nombre ?? row.customerName ?? '—',
+        Cell: ({ row }) =>
+          row.original.customer ? (
+            row.original.customer.nombre
+          ) : (
+            <Box>
+              <Chip
+                size='small'
+                color='warning'
+                variant='outlined'
+                label='Cliente sin identificar'
+              />
+              <Box
+                sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}
+              >
+                {row.original.customerName ?? 'Sin nombre en el PDF'}
+              </Box>
+            </Box>
+          )
       },
       { accessorKey: 'instrument', header: 'Instrumento', size: 210 },
       { accessorKey: 'serie', header: 'Serie', size: 150 },
@@ -306,7 +340,13 @@ const ReleaseCertificates: React.FC = () => {
   }
 
   const hasFilters = Boolean(
-    status || kind || withAnomalies || search || customer || uploadedBy
+    status ||
+      kind ||
+      withAnomalies ||
+      withoutCustomer ||
+      search ||
+      customer ||
+      uploadedBy
   )
 
   return (
@@ -462,12 +502,28 @@ const ReleaseCertificates: React.FC = () => {
           }
           label='Solo con rarezas por revisar'
         />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={withoutCustomer}
+              onChange={(event) => setWithoutCustomer(event.target.checked)}
+              sx={{
+                '& .MuiSwitch-switchBase.Mui-checked': { color: '#b45309' },
+                '& .MuiSwitch-track': {
+                  bgcolor: withoutCustomer ? '#f59e0b' : undefined
+                }
+              }}
+            />
+          }
+          label='Solo sin cliente identificado'
+        />
         {hasFilters && (
           <Button
             onClick={() => {
               setStatus(undefined)
               setKind('')
               setWithAnomalies(false)
+              setWithoutCustomer(false)
               setSearchInput('')
               setCustomer(null)
               setCustomerSearch('')

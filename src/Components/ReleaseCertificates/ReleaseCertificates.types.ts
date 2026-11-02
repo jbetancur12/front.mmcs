@@ -121,6 +121,7 @@ export interface ReleaseFilters {
   status?: ReleaseStatus
   kind?: ReleaseKind | ''
   customerId?: number | null
+  withoutCustomer?: boolean
   uploadedBy?: number | null
   search?: string
   withAnomalies?: boolean

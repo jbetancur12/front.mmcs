@@ -28,6 +28,7 @@ import ReleaseSignatureDialog from './ReleaseSignatureDialog'
 import {
   releaseFileUrl,
   ReleaseCorrections,
+  useCustomerSuggestions,
   useMySignature,
   useSignReleaseCertificates,
   ReleaseReviewAction,
@@ -114,6 +115,11 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
   const review = useReleaseReview()
   const versionInput = useRef<HTMLInputElement>(null)
   const [editing, setEditing] = useState(false)
+  const missingCustomer = Boolean(certificate && !certificate.customer)
+  const { data: suggestions = [] } = useCustomerSuggestions(
+    certificateId,
+    missingCustomer && canReview
+  )
   const [asking, setAsking] = useState(false)
   const [observation, setObservation] = useState('')
 
@@ -235,6 +241,80 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                     </Typography>
                   </Alert>
                 )}
+              {!certificate.customer && !editing && (
+                <Alert
+                  severity='warning'
+                  variant='outlined'
+                  sx={{ mb: 2, borderWidth: 2 }}
+                >
+                  <Typography variant='body2' fontWeight={700}>
+                    Cliente sin identificar en la plataforma
+                  </Typography>
+                  <Typography variant='body2' sx={{ mb: 1 }}>
+                    El PDF dice «{certificate.customerName ?? 'sin dato'}».{' '}
+                    {suggestions.length > 0
+                      ? 'Puede que esté escrito distinto en la plataforma. ¿Es alguno de estos?'
+                      : canReview
+                        ? 'No hay un cliente parecido: puede que no exista todavía. Búscalo por otro nombre o créalo en Empresas.'
+                        : 'Un analista debe identificarlo antes de verificar.'}
+                  </Typography>
+                  {canReview && (
+                    <>
+                      {suggestions.length > 0 && (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            gap: 1,
+                            flexWrap: 'wrap',
+                            mb: 1
+                          }}
+                        >
+                          {suggestions.map((candidate) => (
+                            <Chip
+                              key={candidate.id}
+                              clickable
+                              color='warning'
+                              variant='outlined'
+                              disabled={
+                                review.isLoading ||
+                                ![
+                                  'pendiente_revision',
+                                  'requiere_ajustes'
+                                ].includes(certificate.status)
+                              }
+                              label={candidate.nombre}
+                              onClick={() =>
+                                run(
+                                  {
+                                    type: 'correct',
+                                    id: certificate.id,
+                                    data: { customerId: candidate.id }
+                                  },
+                                  `Cliente identificado: ${candidate.nombre}`
+                                )
+                              }
+                            />
+                          ))}
+                        </Box>
+                      )}
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Button size='small' onClick={() => setEditing(true)}>
+                          Buscar otro cliente
+                        </Button>
+                        <Button
+                          size='small'
+                          component='a'
+                          href='/customers'
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          Crear en Empresas
+                        </Button>
+                      </Box>
+                    </>
+                  )}
+                </Alert>
+              )}
               {certificate.anomalies.length > 0 && (
                 <Alert severity='warning' sx={{ mb: 2 }}>
                   <Typography variant='body2' fontWeight={600}>
@@ -274,7 +354,11 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                   <Grid item xs={6}>
                     <Field
                       label='Cliente en la plataforma'
-                      value={certificate.customer?.nombre ?? 'Sin identificar'}
+                      value={
+                        certificate.customer?.nombre ??
+                        'Sin identificar en la plataforma'
+                      }
+                      warn={!certificate.customer}
                     />
                   </Grid>
                   <Grid item xs={6}>
