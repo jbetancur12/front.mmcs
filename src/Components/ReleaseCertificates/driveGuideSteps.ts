@@ -86,7 +86,7 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'Marca la casilla de acuerdo con la política de datos de usuario de los servicios de API de Google y pulsa «Continuar» y luego «Crear».'
     ],
     expect:
-      'Ves el panel de la plataforma de autenticación de Google («Descripción general») con el nombre de tu app, sin errores.
+      'Ves el panel de la plataforma de autenticación de Google («Descripción general») con el nombre de tu app, sin errores.'
   },
   {
     id: 'crear-cuenta-servicio',
