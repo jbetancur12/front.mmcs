@@ -75,7 +75,7 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
   onSelect
 }) => (
   <Box
-    onClick={onSelect}
+    onClick={candidate.otherCertificateType ? undefined : onSelect}
     sx={{
       display: 'flex',
       gap: 1,
@@ -83,7 +83,8 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
       p: 1.5,
       mb: 1,
       borderRadius: 2,
-      cursor: 'pointer',
+      cursor: candidate.otherCertificateType ? 'not-allowed' : 'pointer',
+      opacity: candidate.otherCertificateType ? 0.55 : 1,
       border: '1px solid',
       borderColor: selected ? '#00695C' : '#e5e7eb',
       bgcolor: selected ? '#f0fbf9' : '#fff'
@@ -91,6 +92,7 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
   >
     <Radio
       checked={selected}
+      disabled={candidate.otherCertificateType}
       inputProps={{
         'aria-label': `Actualizar el equipo ${candidate.deviceName ?? candidate.id}`
       }}
@@ -111,6 +113,13 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
         {candidate.typeMatches === false && (
           <Chip size='small' color='warning' label='Otro tipo de equipo' />
         )}
+        {candidate.certificateTypeName && (
+          <Chip
+            size='small'
+            variant='outlined'
+            label={candidate.certificateTypeName}
+          />
+        )}
         {candidate.serieDiffers && (
           <Chip
             size='small'
@@ -125,6 +134,15 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
         {candidate.activoFijo || '—'} · {candidate.location || '—'}
         {candidate.sede ? ` · ${candidate.sede}` : ''}
       </Typography>
+      {candidate.otherCertificateType && (
+        <Typography
+          variant='caption'
+          sx={{ color: '#b45309', display: 'block' }}
+        >
+          Es el registro de «{candidate.certificateTypeName}» de este equipo: no
+          se actualiza con este certificado.
+        </Typography>
+      )}
       {candidate.serieDiffers && (
         <Typography
           variant='caption'
@@ -197,6 +215,9 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
     setForm({
       ...EMPTY,
       deviceId: data.prefill.deviceId ?? '',
+      certificateTypeId: data.prefill.certificateTypeId ?? '',
+      city: data.prefill.city,
+      headquarter: data.prefill.headquarter,
       serie: data.prefill.serie,
       activoFijo: data.prefill.activoFijo,
       location: data.prefill.location,
@@ -272,6 +293,15 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
           <SignalLoader message='Buscando el equipo del cliente' />
         ) : (
           <>
+            {data.prefill.copiedFrom && (
+              <Alert severity='info' sx={{ mb: 2 }}>
+                Este equipo ya tiene un registro de «
+                {data.prefill.copiedFrom.certificateTypeName ?? 'otro tipo'}».
+                Si eliges «Ninguno», el alta nueva toma de ahí la ciudad, la
+                sede y la ubicación. Cada tipo de certificado es un registro
+                aparte del equipo.
+              </Alert>
+            )}
             <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
               Elige el equipo del cliente que corresponde a este certificado, o
               crea uno nuevo. No se crea ni se actualiza nada hasta que

@@ -821,9 +821,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
       />
       <ReleaseEquipmentDialog
         certificateId={releasing && certificate ? certificate.id : null}
-        confirmOnly={Boolean(
-          certificate?.kind === 'anexo' && certificate.parentId
-        )}
+        confirmOnly={false}
         releasing={review.isLoading}
         onClose={() => setReleasing(false)}
         onRelease={(target, saveEquivalence) =>

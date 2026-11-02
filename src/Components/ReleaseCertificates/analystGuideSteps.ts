@@ -58,6 +58,7 @@ export const ANALYST_GUIDE_STEPS: DriveGuideStep[] = [
     actions: [
       'En un certificado firmado pulsa «Liberar». El sistema busca el equipo del cliente por tipo y serie y te propone coincidencias.',
       'Elige el equipo correcto. Si no aparece, mira «¿Es alguno de estos?» (mismo tipo, serie distinta) o usa «Buscar otro equipo del cliente». Si de verdad es nuevo, elige «Ninguno» y completa los datos.',
+      'Un reporte de seguridad eléctrica se registra como «Seguridad Electrica» del equipo, aparte de su calibración: son dos registros del mismo equipo. El sistema no deja actualizar uno con el certificado del otro.',
       'Revisa «Próxima calibración» (6 o 12 meses) y, si la serie no coincide, confirma que es el mismo equipo. Pulsa «Actualizar equipo y liberar» (o «Crear equipo y liberar»).'
     ],
     expect:

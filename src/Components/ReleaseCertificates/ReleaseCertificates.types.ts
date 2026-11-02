@@ -155,6 +155,9 @@ export interface ReleaseEquipmentCandidate {
   typeMatches: boolean | null
   /** El certificado y el equipo no traen la misma serie. */
   serieDiffers: boolean
+  certificateTypeName?: string | null
+  /** Es el registro de la otra clase (calibración vs. seguridad eléctrica): no se puede actualizar con este certificado. */
+  otherCertificateType?: boolean
 }
 
 export interface ReleaseEquipmentMatches {
@@ -164,6 +167,10 @@ export interface ReleaseEquipmentMatches {
   deviceSuggestions: { id: number; name: string; source: string }[]
   prefill: {
     deviceId: number | null
+    certificateTypeId: number | null
+    city: string
+    headquarter: string
+    copiedFrom: { id: number; certificateTypeName: string | null } | null
     serie: string
     activoFijo: string
     location: string
