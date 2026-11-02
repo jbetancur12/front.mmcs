@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -10,14 +10,23 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  TextField,
   Typography
 } from '@mui/material'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { downloadPrivateFile } from '@utils/downloadBlob'
+import { useStore } from '@nanostores/react'
+import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
+import { userStore } from 'src/store/userStore'
+import { getApiErrorReason } from 'src/utils/apiError'
+import ReleaseEditForm from './ReleaseEditForm'
 import {
   releaseFileUrl,
-  useReleaseCertificate
+  ReleaseCorrections,
+  ReleaseReviewAction,
+  useReleaseCertificate,
+  useReleaseReview
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { notify } from 'src/utils/notify'
 import ReleaseStatusPill from './ReleaseStatusPill'
@@ -73,6 +82,45 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
   const axiosPrivate = useAxiosPrivate()
   const { data: certificate, isLoading } = useReleaseCertificate(certificateId)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const $userStore = useStore(userStore)
+  const canReview = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_REVIEW
+  )
+  const canUpload = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD
+  )
+  const review = useReleaseReview()
+  const versionInput = useRef<HTMLInputElement>(null)
+  const [editing, setEditing] = useState(false)
+  const [asking, setAsking] = useState(false)
+  const [observation, setObservation] = useState('')
+
+  const run = (action: ReleaseReviewAction, done: string, after?: () => void) =>
+    review.mutate(action, {
+      onSuccess: () => {
+        notify.success(done)
+        after?.()
+      },
+      onError: (error) =>
+        notify.error(
+          'No se pudo completar la acción',
+          getApiErrorReason(error) ?? undefined
+        )
+    })
+
+  const save = (data: ReleaseCorrections) =>
+    certificate &&
+    run({ type: 'correct', id: certificate.id, data }, 'Datos guardados', () =>
+      setEditing(false)
+    )
+
+  useEffect(() => {
+    setEditing(false)
+    setAsking(false)
+    setObservation('')
+  }, [certificateId])
 
   useEffect(() => {
     if (certificateId === null) return
@@ -134,6 +182,17 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               md={5}
               sx={{ p: 2.5, overflow: 'auto', maxHeight: '75vh' }}
             >
+              {certificate.status === 'requiere_ajustes' &&
+                certificate.history[0]?.observation && (
+                  <Alert severity='error' sx={{ mb: 2 }}>
+                    <Typography variant='body2' fontWeight={600}>
+                      Ajustes pedidos
+                    </Typography>
+                    <Typography variant='body2'>
+                      {certificate.history[0].observation}
+                    </Typography>
+                  </Alert>
+                )}
               {certificate.anomalies.length > 0 && (
                 <Alert severity='warning' sx={{ mb: 2 }}>
                   <Typography variant='body2' fontWeight={600}>
@@ -154,75 +213,87 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                 {RELEASE_READ_LABELS[certificate.readStatus]}. Los datos se
                 leyeron del PDF; la analista los confirma o corrige.
               </Typography>
-              <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                <Grid item xs={6}>
-                  <Field
-                    label='Cliente (solicitante)'
-                    value={certificate.customerName}
-                    warn={warnFields.has('customerName')}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field
-                    label='Cliente en la plataforma'
-                    value={certificate.customer?.nombre ?? 'Sin identificar'}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field
-                    label='Instrumento'
-                    value={certificate.instrument}
-                    warn={warnFields.has('instrument')}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field label='Magnitud' value={certificate.magnitude} />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field label='Fabricante' value={certificate.manufacturer} />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field label='Modelo' value={certificate.model} />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field
-                    label='Serie'
-                    value={certificate.serie}
-                    warn={warnFields.has('serie')}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field
-                    label='Activo fijo (código interno)'
-                    value={certificate.activoFijo}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Field label='Ubicación' value={certificate.location} />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field
-                    label='Fecha de calibración'
-                    value={formatDate(certificate.calibrationDate)}
-                    warn={warnFields.has('calibrationDate')}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Field
-                    label='Fecha de emisión'
-                    value={formatDate(certificate.issueDate)}
-                    warn={warnFields.has('issueDate')}
-                  />
-                </Grid>
-                {allCalibrationDates.length > 1 && (
-                  <Grid item xs={12}>
+              {editing && certificate ? (
+                <ReleaseEditForm
+                  certificate={certificate}
+                  saving={review.isLoading}
+                  onSave={save}
+                  onCancel={() => setEditing(false)}
+                />
+              ) : (
+                <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                  <Grid item xs={6}>
                     <Field
-                      label='Todas las fechas de calibración del PDF'
-                      value={allCalibrationDates.map(formatDate).join(' · ')}
+                      label='Cliente (solicitante)'
+                      value={certificate.customerName}
+                      warn={warnFields.has('customerName')}
                     />
                   </Grid>
-                )}
-              </Grid>
+                  <Grid item xs={6}>
+                    <Field
+                      label='Cliente en la plataforma'
+                      value={certificate.customer?.nombre ?? 'Sin identificar'}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field
+                      label='Instrumento'
+                      value={certificate.instrument}
+                      warn={warnFields.has('instrument')}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field label='Magnitud' value={certificate.magnitude} />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field
+                      label='Fabricante'
+                      value={certificate.manufacturer}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field label='Modelo' value={certificate.model} />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field
+                      label='Serie'
+                      value={certificate.serie}
+                      warn={warnFields.has('serie')}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field
+                      label='Activo fijo (código interno)'
+                      value={certificate.activoFijo}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Field label='Ubicación' value={certificate.location} />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field
+                      label='Fecha de calibración'
+                      value={formatDate(certificate.calibrationDate)}
+                      warn={warnFields.has('calibrationDate')}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Field
+                      label='Fecha de emisión'
+                      value={formatDate(certificate.issueDate)}
+                      warn={warnFields.has('issueDate')}
+                    />
+                  </Grid>
+                  {allCalibrationDates.length > 1 && (
+                    <Grid item xs={12}>
+                      <Field
+                        label='Todas las fechas de calibración del PDF'
+                        value={allCalibrationDates.map(formatDate).join(' · ')}
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+              )}
 
               <Divider sx={{ my: 2 }} />
               <Typography variant='subtitle2' gutterBottom>
@@ -297,7 +368,119 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
           </Grid>
         )}
       </DialogContent>
-      <DialogActions>
+      {asking && certificate && (
+        <Box sx={{ px: 3, pt: 2 }}>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            size='small'
+            autoFocus
+            label='Observaciones para quien cargó el certificado'
+            value={observation}
+            onChange={(event) => setObservation(event.target.value)}
+            inputProps={{ maxLength: 2000 }}
+          />
+        </Box>
+      )}
+      <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
+        <input
+          ref={versionInput}
+          type='file'
+          accept='application/pdf,.pdf'
+          hidden
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            if (file && certificate)
+              run(
+                { type: 'version', id: certificate.id, file },
+                'PDF corregido cargado'
+              )
+          }}
+        />
+        {certificate &&
+          canReview &&
+          !editing &&
+          !asking &&
+          ['pendiente_revision', 'requiere_ajustes'].includes(
+            certificate.status
+          ) && (
+            <Button
+              onClick={() => setEditing(true)}
+              disabled={review.isLoading}
+            >
+              Editar datos
+            </Button>
+          )}
+        {certificate &&
+          canReview &&
+          !asking &&
+          ['pendiente_revision', 'verificado'].includes(certificate.status) && (
+            <Button
+              color='error'
+              onClick={() => setAsking(true)}
+              disabled={review.isLoading || editing}
+            >
+              Pedir ajustes
+            </Button>
+          )}
+        {asking && certificate && (
+          <>
+            <Button
+              onClick={() => setAsking(false)}
+              disabled={review.isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color='error'
+              variant='contained'
+              disabled={!observation.trim() || review.isLoading}
+              onClick={() =>
+                run(
+                  { type: 'adjustments', id: certificate.id, observation },
+                  'Se pidieron ajustes y se avisó al responsable',
+                  () => {
+                    setAsking(false)
+                    setObservation('')
+                  }
+                )
+              }
+            >
+              Enviar observaciones
+            </Button>
+          </>
+        )}
+        {certificate &&
+          canUpload &&
+          certificate.status === 'requiere_ajustes' && (
+            <Button
+              variant='outlined'
+              onClick={() => versionInput.current?.click()}
+              disabled={review.isLoading}
+            >
+              Subir PDF corregido
+            </Button>
+          )}
+        {certificate &&
+          canReview &&
+          !asking &&
+          certificate.status === 'pendiente_revision' && (
+            <Button
+              variant='contained'
+              disabled={review.isLoading || editing}
+              onClick={() =>
+                run(
+                  { type: 'verify', id: certificate.id },
+                  'Certificado verificado'
+                )
+              }
+              sx={{ bgcolor: '#00897B', '&:hover': { bgcolor: '#00695C' } }}
+            >
+              Verificar
+            </Button>
+          )}
         <Button onClick={onClose}>Cerrar</Button>
         <Button
           variant='contained'

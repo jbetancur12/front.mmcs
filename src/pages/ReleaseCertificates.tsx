@@ -23,6 +23,7 @@ import {
   WarningAmberRounded
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
+import { useSearchParams } from 'react-router-dom'
 import { MRT_ColumnDef, MRT_PaginationState } from 'material-react-table'
 import { downloadPrivateFile } from '@utils/downloadBlob'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -86,7 +87,12 @@ const ReleaseCertificates: React.FC = () => {
     pageSize: PAGE_SIZE
   })
   const [uploadOpen, setUploadOpen] = useState(false)
-  const [viewingId, setViewingId] = useState<number | null>(null)
+  // Los avisos de ajustes abren el certificado con ?id=
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialId = Number(searchParams.get('id'))
+  const [viewingId, setViewingId] = useState<number | null>(
+    Number.isInteger(initialId) && initialId > 0 ? initialId : null
+  )
 
   useEffect(() => {
     const timer = setTimeout(
@@ -352,7 +358,10 @@ const ReleaseCertificates: React.FC = () => {
       />
       <ReleaseDetailDialog
         certificateId={viewingId}
-        onClose={() => setViewingId(null)}
+        onClose={() => {
+          setViewingId(null)
+          if (searchParams.has('id')) setSearchParams({}, { replace: true })
+        }}
       />
     </Container>
   )

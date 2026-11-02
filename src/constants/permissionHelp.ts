@@ -543,6 +543,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Cargar certificados en PDF en masa y subir el PDF corregido de uno que requiere ajustes.',
     'Certificados a liberar: botón Cargar certificado.'
   ],
+  'release:certificate:review': [
+    'Revisar certificados a liberar',
+    'Confirmar o corregir el cliente y los datos leídos del PDF, marcar el certificado como verificado o pedir ajustes con observaciones.',
+    'Certificados a liberar: edición de datos, Verificar y Pedir ajustes.'
+  ],
   'release:certificate:rules': [
     'Reglas de lectura de certificados',
     'Editar las etiquetas, tipos de documento y magnitud por prefijo con los que el sistema lee los PDF.',

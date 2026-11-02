@@ -65,3 +65,64 @@ export const useUploadReleaseCertificates = () => {
     { onSuccess: () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all) }
   )
 }
+
+export interface ReleaseCorrections {
+  customerId?: number | null
+  kind?: string
+  documentNumber?: string | null
+  magnitude?: string | null
+  instrument?: string | null
+  manufacturer?: string | null
+  model?: string | null
+  serie?: string | null
+  activoFijo?: string | null
+  location?: string | null
+  calibrationDate?: string | null
+  issueDate?: string | null
+}
+
+export type ReleaseReviewAction =
+  | { type: 'correct'; id: number; data: ReleaseCorrections }
+  | { type: 'verify'; id: number }
+  | { type: 'adjustments'; id: number; observation: string }
+  | { type: 'version'; id: number; file: File }
+
+/** Acciones de la revisión; todas responden con el certificado actualizado. */
+export const useReleaseReview = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation(
+    (action: ReleaseReviewAction) => {
+      const base = `/release-certificates/${action.id}`
+      switch (action.type) {
+        case 'correct':
+          return axiosPrivate.put(base, action.data)
+        case 'verify':
+          return axiosPrivate.post(`${base}/verify`)
+        case 'adjustments':
+          return axiosPrivate.post(`${base}/request-adjustments`, {
+            observation: action.observation
+          })
+        default: {
+          const data = new FormData()
+          data.append('files', action.file)
+          return axiosPrivate.post(`${base}/versions`, data)
+        }
+      }
+    },
+    { onSuccess: () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all) }
+  )
+}
+
+/** Clientes de la plataforma para identificar el del certificado. */
+export const useReleaseCustomerSearch = (search: string) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<{ id: number; nombre: string }[]>(
+    ['releaseCertificates', 'customers', search],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/customers', { params: { search } })
+        .then((response) => response.data),
+    { enabled: search.trim().length >= 2, keepPreviousData: true }
+  )
+}

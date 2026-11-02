@@ -220,6 +220,8 @@ export const PERMISSIONS = {
   RELEASE_CERTIFICATE_VIEW: 'release:certificate:view',
   /** Cargar certificados a liberar (carga masiva) y subir el PDF corregido de uno que requiere ajustes */
   RELEASE_CERTIFICATE_UPLOAD: 'release:certificate:upload',
+  /** Confirmar o corregir los datos leídos de un certificado a liberar, marcarlo como verificado o pedir ajustes con observaciones */
+  RELEASE_CERTIFICATE_REVIEW: 'release:certificate:review',
   /** Editar las reglas de lectura de PDF de certificados (etiquetas, tipos y magnitud por prefijo) */
   RELEASE_CERTIFICATE_RULES: 'release:certificate:rules',
   /** Listar los usuarios y los usuarios internos */
