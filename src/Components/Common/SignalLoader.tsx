@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, Typography, keyframes } from '@mui/material'
+import { brand, neutral } from 'src/theme/designTokens'
 
 type SignalLoaderSize = 'small' | 'medium' | 'large'
 
@@ -64,11 +65,11 @@ const SignalLoader: React.FC<SignalLoaderProps> = ({
           px: 1.5,
           py: 1,
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          bgcolor: '#ffffff',
+          border: `1px solid ${neutral.border}`,
+          bgcolor: neutral.surface,
           backgroundImage:
-            'linear-gradient(#f3f4f6 1px, transparent 1px),' +
-            'linear-gradient(90deg, #f3f4f6 1px, transparent 1px)',
+            `linear-gradient(${neutral.surfaceHead} 1px, transparent 1px),` +
+            `linear-gradient(90deg, ${neutral.surfaceHead} 1px, transparent 1px)`,
           backgroundSize: '12px 12px'
         }}
       >
@@ -80,12 +81,12 @@ const SignalLoader: React.FC<SignalLoaderProps> = ({
           strokeLinejoin='round'
           aria-hidden='true'
         >
-          <path d={TRACE} stroke='#E0F7F4' strokeWidth='3' />
+          <path d={TRACE} stroke={brand.soft} strokeWidth='3' />
           <Box
             component='path'
             d={TRACE}
             pathLength={100}
-            stroke='#00BFA5'
+            stroke={brand.main}
             strokeWidth='3'
             strokeDasharray='30 100'
             sx={{
@@ -104,7 +105,7 @@ const SignalLoader: React.FC<SignalLoaderProps> = ({
             width: 8,
             height: 8,
             borderRadius: '50%',
-            bgcolor: '#00BFA5',
+            bgcolor: brand.main,
             animation: `${blink} 1.6s ease-in-out infinite`,
             '@media (prefers-reduced-motion: reduce)': { animation: 'none' }
           }}

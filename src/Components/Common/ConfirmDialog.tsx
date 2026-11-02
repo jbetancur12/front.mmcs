@@ -10,6 +10,7 @@ import {
   Typography
 } from '@mui/material'
 import { WarningAmberRounded, HelpOutlineRounded } from '@mui/icons-material'
+import { brand, intent } from 'src/theme/designTokens'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -41,7 +42,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onClose
 }) => {
   const danger = tone === 'danger'
-  const accent = danger ? '#dc2626' : '#00BFA5'
+  const accent = danger ? intent.danger : brand.main
   const Icon = danger ? WarningAmberRounded : HelpOutlineRounded
 
   return (
@@ -60,7 +61,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             borderRadius: 2,
             display: 'grid',
             placeItems: 'center',
-            bgcolor: danger ? '#fef2f2' : '#e0f7f4',
+            bgcolor: danger ? '#fef2f2' : brand.soft,
             color: accent,
             flexShrink: 0
           }}
@@ -89,7 +90,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             textTransform: 'none',
             fontWeight: 600,
             bgcolor: accent,
-            '&:hover': { bgcolor: danger ? '#b91c1c' : '#00ACC1' }
+            '&:hover': { bgcolor: danger ? intent.dangerInk : brand.hover }
           }}
         >
           {confirmLabel}

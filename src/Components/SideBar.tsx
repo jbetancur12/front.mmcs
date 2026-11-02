@@ -61,6 +61,7 @@ import {
 import { logger } from 'src/utils/logger'
 import { libraryEnabled } from 'src/features/libraryFlags'
 import { releaseCertificatesEnabled } from 'src/features/releaseCertificatesFlags'
+import { brand } from 'src/theme/designTokens'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -954,7 +955,7 @@ const SideBar = ({
           aria-label='Búsqueda rápida'
           aria-keyshortcuts='Control+K'
           title='Búsqueda rápida (Ctrl K)'
-          className={`flex w-full items-center rounded-xl border border-gray-200 bg-white text-sm text-gray-500 hover:border-[#00BFA5] hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00BFA5] ${
+          className={`flex w-full items-center rounded-xl border border-gray-200 bg-white text-sm text-gray-500 hover:border-[${brand.main}] hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[${brand.main}] ${
             minimized ? 'justify-center py-2.5' : 'gap-2 px-3 py-2'
           }`}
         >
@@ -980,8 +981,8 @@ const SideBar = ({
       {/* En móvil no hay nada que minimizar: el pie solo existe en escritorio. */}
       <div className='hidden lg:block flex-shrink-0 border-t border-gray-200 px-3 py-2'>
         {isLmsRoute && !minimized && !isLmsHintDismissed && (
-          <div className='mb-3 flex items-start gap-2 rounded-lg bg-[#e0f7f4] p-3'>
-            <p className='flex-1 text-xs leading-5 text-[#00695c]'>
+          <div className={`mb-3 flex items-start gap-2 rounded-lg bg-[${brand.soft}] p-3`}>
+            <p className={`flex-1 text-xs leading-5 text-[${brand.ink}]`}>
               <span className='block font-semibold'>
                 Gana espacio en Academia
               </span>
@@ -991,7 +992,7 @@ const SideBar = ({
             <button
               type='button'
               onClick={dismissLmsHint}
-              className='rounded p-0.5 text-[#00695c] hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00695c]'
+              className={`rounded p-0.5 text-[${brand.ink}] hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[${brand.ink}]`}
               aria-label='Cerrar sugerencia'
             >
               <Close sx={{ fontSize: 16 }} />

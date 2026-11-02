@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { Box, Button, Typography } from '@mui/material'
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface FileDropZoneProps {
   file: File | null
@@ -115,8 +116,8 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
       }}
       sx={{
         border: '1.5px dashed',
-        borderColor: isDragOver ? '#00BFA5' : '#d1d5db',
-        bgcolor: isDragOver ? '#E0F7F4' : '#f9fafb',
+        borderColor: isDragOver ? brand.main : '#d1d5db',
+        bgcolor: isDragOver ? brand.soft : neutral.surfaceAlt,
         borderRadius: '12px',
         px: 2,
         py: file ? 2 : 3,
@@ -125,8 +126,8 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
         transition: 'border-color .15s, background-color .15s',
         '&:hover': disabled
           ? undefined
-          : { borderColor: '#00897B', bgcolor: '#E0F7F4' },
-        '&:focus-visible': { outline: '2px solid #00BFA5', outlineOffset: 2 },
+          : { borderColor: brand.hover, bgcolor: brand.soft },
+        '&:focus-visible': { outline: `2px solid ${brand.main}`, outlineOffset: 2 },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
       }}
     >
@@ -152,24 +153,24 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
             flexWrap: 'wrap'
           }}
         >
-          <InsertDriveFileOutlinedIcon sx={{ color: '#00695C' }} />
+          <InsertDriveFileOutlinedIcon sx={{ color: brand.ink }} />
           <Box sx={{ minWidth: 0, textAlign: 'left' }}>
             <Typography
               variant='body2'
               fontWeight={600}
               noWrap
-              sx={{ color: '#111827', maxWidth: 360 }}
+              sx={{ color: neutral.text, maxWidth: 360 }}
             >
               {file.name}
             </Typography>
-            <Typography variant='caption' sx={{ color: '#6b7280' }}>
+            <Typography variant='caption' sx={{ color: neutral.textMuted }}>
               {formatSize(file.size)}
             </Typography>
           </Box>
           <Button
             size='small'
             component='span'
-            sx={{ textTransform: 'none', fontWeight: 600, color: '#00695C' }}
+            sx={{ textTransform: 'none', fontWeight: 600, color: brand.ink }}
           >
             Cambiar
           </Button>
@@ -177,19 +178,19 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
       ) : (
         <>
           <CloudUploadOutlinedIcon
-            sx={{ fontSize: 36, color: isDragOver ? '#00BFA5' : '#6b7280' }}
+            sx={{ fontSize: 36, color: isDragOver ? brand.main : neutral.textMuted }}
           />
           <Typography
             variant='body2'
             fontWeight={600}
-            sx={{ color: '#111827', mt: 0.5 }}
+            sx={{ color: neutral.text, mt: 0.5 }}
           >
             {isDragOver
               ? 'Suelta el archivo aquí'
               : title ??
                 `Arrastra el ${acceptLabel} aquí o haz clic para elegirlo`}
           </Typography>
-          <Typography variant='caption' sx={{ color: '#6b7280' }}>
+          <Typography variant='caption' sx={{ color: neutral.textMuted }}>
             {hint ?? `Solo ${acceptLabel} · máximo ${maxSizeMb} MB`}
           </Typography>
         </>

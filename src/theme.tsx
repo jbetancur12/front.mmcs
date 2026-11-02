@@ -1,14 +1,33 @@
 import { createTheme } from '@mui/material/styles'
-import { colors, typography, borderRadius, shadows } from './theme/designSystem'
+import {
+  colors,
+  typography,
+  borderRadius,
+  shadows,
+  brand,
+  neutral
+} from './theme/designSystem'
+
+// Expone `theme.palette.brand` (ink, soft, softer...) para usarlo en `sx`: color: 'brand.ink'
+declare module '@mui/material/styles' {
+  interface Palette {
+    brand: typeof brand
+  }
+  interface PaletteOptions {
+    brand?: typeof brand
+  }
+}
 
 export const theme = createTheme({
   palette: {
+    // Turquesa de la marca (antes esmeralda). El esmeralda queda reservado en `detail`.
     primary: {
-      light: colors.primary[400],
-      main: colors.primary[500], // #10b981 - emerald green
-      dark: colors.primary[600], // #059669 - dark emerald
-      contrastText: '#fff'
+      light: brand.soft,
+      main: brand.main,
+      dark: brand.hover,
+      contrastText: brand.onMain
     },
+    brand,
     secondary: {
       light: colors.info[400],
       main: colors.info[500],
@@ -35,11 +54,13 @@ export const theme = createTheme({
     },
     grey: colors.gray,
     background: {
-      default: colors.gray[50],
-      paper: '#ffffff'
+      default: neutral.surfaceAlt,
+      paper: neutral.surface
     },
+    // text.secondary sigue en #4b5563: pasarlo a neutral.textBody oscurecería todo el texto de apoyo
+    // de la aplicación y está pendiente de decisión (plans/tema-de-colores, README).
     text: {
-      primary: colors.gray[900],
+      primary: neutral.text,
       secondary: colors.gray[600]
     }
   },

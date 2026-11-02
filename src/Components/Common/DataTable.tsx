@@ -8,13 +8,14 @@ import MaterialReactTable, {
   MRT_ToggleFiltersButton
 } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import { brand, neutral } from 'src/theme/designTokens'
 
-const TEAL_INK = '#00695C'
-const TEAL_DARK = '#00897B'
+const TEAL_INK = brand.ink
+const TEAL_DARK = brand.hover
 // Grises del sistema (levemente fríos), los mismos del menú lateral y las tarjetas
-const HEAD_BG = '#f3f4f6'
-const TOOLBAR_BG = '#f9fafb'
-const LINE = '#e5e7eb'
+const HEAD_BG = neutral.surfaceHead
+const TOOLBAR_BG = neutral.surfaceAlt
+const LINE = neutral.border
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- misma restricción que MRT; las interfaces no encajan en Record<string, unknown>
 type DataTableProps<TData extends Record<string, any>> =
@@ -100,7 +101,7 @@ function DataTable<TData extends Record<string, any>>({
           },
           muiTableBodyCellProps: {
             align: 'left',
-            sx: { backgroundColor: '#fff', boxShadow: `-1px 0 0 ${LINE}` }
+            sx: { backgroundColor: neutral.surface, boxShadow: `-1px 0 0 ${LINE}` }
           }
         },
         ...props.displayColumnDefOptions
@@ -166,7 +167,7 @@ function DataTable<TData extends Record<string, any>>({
           sx: {
             '& .MuiTableHead-root .MuiTableCell-root': {
               backgroundColor: HEAD_BG,
-              color: '#374151',
+              color: neutral.textBody,
               fontWeight: 600,
               fontSize: 14
             },
@@ -174,7 +175,7 @@ function DataTable<TData extends Record<string, any>>({
               { outline: `3px solid ${TEAL_INK}`, outlineOffset: 2 },
             '& .MuiTableBody-root .MuiTableRow-root:hover > td': {
               // Turquesa al 4 % sobre blanco, sólido para la columna fija
-              backgroundColor: '#f6fcfb'
+              backgroundColor: brand.softer
             }
           }
         }

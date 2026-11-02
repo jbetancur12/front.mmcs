@@ -7,6 +7,7 @@ import {
   type TextFieldProps
 } from '@mui/material'
 import type { FormikProps } from 'formik'
+import { brand } from 'src/theme/designTokens'
 
 type Option = string | { label: string; value: string | number }
 
@@ -89,7 +90,7 @@ export function FormCheckboxField<T>({
           name={name}
           checked={Boolean((formik.values as Record<string, unknown>)[name])}
           onChange={formik.handleChange}
-          sx={{ '&.Mui-checked': { color: '#00BFA5' } }}
+          sx={{ '&.Mui-checked': { color: brand.main } }}
         />
       }
     />

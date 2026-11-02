@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, Paper, Typography } from '@mui/material'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface FormSectionProps {
   /** Qué agrupa: "Datos generales", "Servicio afectado". */
@@ -19,7 +20,7 @@ const gridSx = {
 
 /**
  * Sección de un formulario de página completa: tarjeta blanca con borde
- * `#e5e7eb`, título en negrita y los campos en una cuadrícula que se adapta al ancho
+ * neutral.border, título en negrita y los campos en una cuadrícula que se adapta al ancho
  * (1 a 3 columnas, mínimo 300px por campo). Es el equivalente de `FormDialogSection` fuera de un diálogo.
  * Los hijos directos son subsecciones (`FormSubsection`) o campos.
  */
@@ -34,12 +35,12 @@ const FormSection: React.FC<FormSectionProps> = ({
     sx={{
       p: { xs: 2, md: 3 },
       borderRadius: '16px',
-      border: '1px solid #e5e7eb'
+      border: `1px solid ${neutral.border}`
     }}
   >
     <Typography
       component='h2'
-      sx={{ fontSize: 17, fontWeight: 700, color: '#111827' }}
+      sx={{ fontSize: 17, fontWeight: 700, color: neutral.text }}
     >
       {title}
     </Typography>
@@ -72,7 +73,7 @@ export const FormSubsection: React.FC<FormSubsectionProps> = ({
   >
     <Typography
       component='legend'
-      sx={{ p: 0, fontSize: 15, fontWeight: 600, color: '#00695C' }}
+      sx={{ p: 0, fontSize: 15, fontWeight: 600, color: brand.ink }}
     >
       {title}
     </Typography>

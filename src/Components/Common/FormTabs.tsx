@@ -1,5 +1,6 @@
 import React from 'react'
 import { Chip, Paper, Stack, Tab, Tabs } from '@mui/material'
+import { brand, neutral } from 'src/theme/designTokens'
 
 export interface FormTab {
   key: string
@@ -26,7 +27,7 @@ const FormTabs: React.FC<FormTabsProps> = ({ tabs, value, onChange }) => (
     sx={{
       mb: 3,
       borderRadius: '14px',
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${neutral.border}`,
       overflow: 'hidden'
     }}
   >
@@ -46,10 +47,10 @@ const FormTabs: React.FC<FormTabsProps> = ({ tabs, value, onChange }) => (
           px: 2,
           gap: 1,
           color: 'text.secondary',
-          '&.Mui-selected': { color: '#00897B' }
+          '&.Mui-selected': { color: brand.hover }
         },
         '& .MuiTabs-indicator': {
-          backgroundColor: '#00BFA5',
+          backgroundColor: brand.main,
           height: 3,
           borderRadius: '3px 3px 0 0'
         }

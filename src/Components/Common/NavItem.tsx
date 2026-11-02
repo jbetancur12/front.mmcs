@@ -2,9 +2,10 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Box, ButtonBase, Tooltip } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import { brand, neutral } from 'src/theme/designTokens'
 
-const TEAL_INK = '#00695c'
-const TEAL_SOFT = '#e0f7f4'
+const TEAL_INK = brand.ink
+const TEAL_SOFT = brand.soft
 
 interface NavItemProps {
   label: string
@@ -71,11 +72,11 @@ const NavItem: React.FC<NavItemProps> = ({
         fontFamily: 'inherit',
         fontSize: 14,
         fontWeight: active ? 600 : 500,
-        color: active ? TEAL_INK : nested ? '#4b5563' : '#374151',
+        color: active ? TEAL_INK : nested ? neutral.textBody : neutral.textBody,
         bgcolor: active && (!isGroup || minimized) ? TEAL_SOFT : 'transparent',
         '&:hover': {
-          bgcolor: active && (!isGroup || minimized) ? TEAL_SOFT : '#f3f4f6',
-          color: active ? TEAL_INK : '#111827'
+          bgcolor: active && (!isGroup || minimized) ? TEAL_SOFT : neutral.surfaceHead,
+          color: active ? TEAL_INK : neutral.text
         },
         '&.Mui-focusVisible': {
           outline: `3px solid ${TEAL_INK}`,
@@ -104,7 +105,7 @@ const NavItem: React.FC<NavItemProps> = ({
           sx={{
             display: 'flex',
             flexShrink: 0,
-            color: active ? TEAL_INK : '#6b7280',
+            color: active ? TEAL_INK : neutral.textMuted,
             '& svg': { fontSize: 22 }
           }}
         >
@@ -129,7 +130,7 @@ const NavItem: React.FC<NavItemProps> = ({
           aria-hidden='true'
           sx={{
             fontSize: 20,
-            color: '#6b7280',
+            color: neutral.textMuted,
             transition: 'transform .2s',
             transform: expanded ? 'rotate(180deg)' : 'none',
             '@media (prefers-reduced-motion: reduce)': { transition: 'none' }

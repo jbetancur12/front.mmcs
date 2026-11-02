@@ -1,14 +1,15 @@
 import React from 'react'
 import { Box } from '@mui/material'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 export type StatusPillTone = 'live' | 'idle' | 'success' | 'warning' | 'error'
 
 const TONES: Record<StatusPillTone, { color: string; bg: string }> = {
-  live: { color: '#00695C', bg: '#E0F7F4' },
-  idle: { color: '#4b5563', bg: '#f3f4f6' },
+  live: { color: brand.ink, bg: brand.soft },
+  idle: { color: neutral.textBody, bg: neutral.surfaceHead },
   success: { color: '#166534', bg: '#dcfce7' },
   warning: { color: '#92400e', bg: '#fef3c7' },
-  error: { color: '#b91c1c', bg: '#fee2e2' }
+  error: { color: intent.dangerInk, bg: intent.dangerSoft }
 }
 
 interface StatusPillProps {

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Avatar, Box, Typography } from '@mui/material'
+import { brand } from 'src/theme/designTokens'
 
 interface LmsPageHeaderProps {
   title: string
@@ -19,7 +20,7 @@ const LmsPageHeader: React.FC<LmsPageHeaderProps> = ({
   title,
   subtitle,
   icon,
-  color = '#00BFA5',
+  color = brand.main,
   actions
 }) => (
   <Box

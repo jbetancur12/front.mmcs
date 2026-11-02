@@ -13,6 +13,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface UserMenuProps {
   name: string
@@ -29,8 +30,8 @@ interface UserMenuProps {
   versionLabel?: string
 }
 
-const TEAL_INK = '#00695c'
-const AMBER = '#b45309'
+const TEAL_INK = brand.ink
+const AMBER = intent.warningInk
 
 const initials = (name: string) =>
   name
@@ -76,7 +77,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           px: { xs: 0.5, md: 1 },
           py: 0.5,
           textAlign: 'left',
-          '&:hover': { bgcolor: '#f3f4f6' },
+          '&:hover': { bgcolor: neutral.surfaceHead },
           '&.Mui-focusVisible': {
             outline: `3px solid ${accent}`,
             outlineOffset: 2
@@ -100,7 +101,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             sx={{
               fontSize: 14,
               fontWeight: 600,
-              color: '#111827',
+              color: neutral.text,
               lineHeight: 1.3,
               maxWidth: 200
             }}
@@ -112,7 +113,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
               noWrap
               sx={{
                 fontSize: 12,
-                color: impersonating ? AMBER : '#4b5563',
+                color: impersonating ? AMBER : neutral.textBody,
                 fontWeight: impersonating ? 600 : 400,
                 lineHeight: 1.3,
                 maxWidth: 200
@@ -126,7 +127,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           sx={{
             display: { xs: 'none', md: 'block' },
             fontSize: 20,
-            color: '#4b5563',
+            color: neutral.textBody,
             transition: 'transform .2s',
             transform: open ? 'rotate(180deg)' : 'none'
           }}
@@ -145,17 +146,17 @@ const UserMenu: React.FC<UserMenuProps> = ({
             mt: 1,
             minWidth: 260,
             borderRadius: '12px',
-            border: '1px solid #e5e7eb',
+            border: `1px solid ${neutral.border}`,
             boxShadow:
               '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)'
           }
         }}
       >
         <Box sx={{ px: 2, py: 1.5 }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: neutral.text }}>
             {displayName}
           </Typography>
-          <Typography sx={{ fontSize: 13, color: '#4b5563' }}>
+          <Typography sx={{ fontSize: 13, color: neutral.textBody }}>
             {email}
           </Typography>
           {roleLabel && (
@@ -166,7 +167,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 px: 1,
                 py: 0.25,
                 borderRadius: '6px',
-                bgcolor: '#e0f7f4',
+                bgcolor: brand.soft,
                 color: TEAL_INK,
                 fontSize: 12,
                 fontWeight: 600
@@ -221,7 +222,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           <Divider key='version-divider' />,
           <Typography
             key='version'
-            sx={{ px: 2, pt: 1, pb: 0.5, fontSize: 12, color: '#4b5563' }}
+            sx={{ px: 2, pt: 1, pb: 0.5, fontSize: 12, color: neutral.textBody }}
           >
             {versionLabel}
           </Typography>

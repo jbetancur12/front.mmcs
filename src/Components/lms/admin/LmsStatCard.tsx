@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, Card, CardContent, Typography } from '@mui/material'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 export type LmsStatTone = 'blue' | 'green' | 'orange' | 'red' | 'teal'
 
@@ -22,7 +23,7 @@ const GRADIENTS: Record<LmsStatTone, { background: string; ring: string }> = {
     ring: 'rgba(244,67,54,0.35)'
   },
   teal: {
-    background: 'linear-gradient(135deg, #00acc1 0%, #26c6da 100%)',
+    background: `linear-gradient(135deg, ${brand.hover} 0%, #26c6da 100%)`,
     ring: 'rgba(0,172,193,0.35)'
   }
 }
@@ -30,13 +31,13 @@ const GRADIENTS: Record<LmsStatTone, { background: string; ring: string }> = {
 // Estilo "quiet": tarjeta blanca; el color va en el número y en la cajita del
 // ícono, con contraste suficiente sobre blanco (más de 4.5:1).
 const QUIET: Record<LmsStatTone, { ink: string; soft: string }> = {
-  blue: { ink: '#1565c0', soft: '#e3f2fd' },
-  green: { ink: '#2e7d32', soft: '#e8f5e9' },
-  orange: { ink: '#b45309', soft: '#fff3e0' },
-  red: { ink: '#b91c1c', soft: '#fee2e2' },
-  teal: { ink: '#00695c', soft: '#e0f7f4' }
+  blue: { ink: intent.infoInk, soft: intent.infoSoft },
+  green: { ink: intent.successInk, soft: intent.successSoft },
+  orange: { ink: intent.warningInk, soft: intent.warningSoft },
+  red: { ink: intent.dangerInk, soft: intent.dangerSoft },
+  teal: { ink: brand.ink, soft: brand.soft }
 }
-const QUIET_IDLE = { ink: '#374151', soft: '#f3f4f6' }
+const QUIET_IDLE = { ink: neutral.textBody, soft: neutral.surfaceHead }
 
 export type LmsStatVariant = 'gradient' | 'quiet'
 
@@ -97,21 +98,21 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
         height: '100%',
         borderRadius: '16px',
         border: '1px solid',
-        borderColor: active ? '#00695C' : '#e5e7eb',
+        borderColor: active ? brand.ink : neutral.border,
         // El borde de 2px del filtro activo no debe mover el contenido
-        boxShadow: active ? 'inset 0 0 0 1px #00695C' : 'none',
+        boxShadow: active ? `inset 0 0 0 1px ${brand.ink}` : 'none',
         bgcolor: active ? '#f0fbf9' : '#fff',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'border-color .15s, box-shadow .15s, background-color .15s',
         '&:hover': onClick
           ? {
-              borderColor: active ? '#00695C' : '#9ca3af',
+              borderColor: active ? brand.ink : '#9ca3af',
               boxShadow: active
-                ? 'inset 0 0 0 1px #00695C'
+                ? `inset 0 0 0 1px ${brand.ink}`
                 : '0 4px 12px rgba(17,24,39,0.08)'
             }
           : undefined,
-        '&:focus-visible': { outline: '3px solid #00695C', outlineOffset: 2 },
+        '&:focus-visible': { outline: `3px solid ${brand.ink}`, outlineOffset: 2 },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
       }}
     >
@@ -144,7 +145,7 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
             sx={{
               fontSize: 14,
               fontWeight: 500,
-              color: '#4b5563',
+              color: neutral.textBody,
               lineHeight: 1.3
             }}
           >
@@ -167,7 +168,7 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
               sx={{
                 display: 'block',
                 mt: 0.25,
-                color: '#4b5563',
+                color: neutral.textBody,
                 lineHeight: 1.4
               }}
             >

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Button, CircularProgress, Paper } from '@mui/material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface FormPageProps {
   /** Acción que hace el formulario: "Nuevo reporte", "Editar reporte". */
@@ -50,9 +51,9 @@ const FormPage: React.FC<FormPageProps> = ({
     onSubmit={onSubmit}
     sx={{
       '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: '#00897B'
+        borderColor: brand.hover
       },
-      '& .MuiInputLabel-root.Mui-focused': { color: '#00695C' }
+      '& .MuiInputLabel-root.Mui-focused': { color: brand.ink }
     }}
   >
     <LmsPageHeader
@@ -73,7 +74,7 @@ const FormPage: React.FC<FormPageProps> = ({
         px: 3,
         py: 1.5,
         borderRadius: '16px',
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${neutral.border}`,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
@@ -81,7 +82,7 @@ const FormPage: React.FC<FormPageProps> = ({
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>{notices}</Box>
-      <Button onClick={onCancel} disabled={loading} sx={{ color: '#4b5563' }}>
+      <Button onClick={onCancel} disabled={loading} sx={{ color: neutral.textBody }}>
         Cancelar
       </Button>
       <Button
@@ -91,7 +92,7 @@ const FormPage: React.FC<FormPageProps> = ({
         startIcon={
           loading ? <CircularProgress size={18} color='inherit' /> : undefined
         }
-        sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+        sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
       >
         {submitLabel}
       </Button>

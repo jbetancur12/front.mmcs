@@ -1,5 +1,6 @@
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 /**
  * Contenedor de avisos breves ("Enlace enviado", "No se pudo guardar") con el
@@ -18,9 +19,9 @@ const AppToaster: React.FC = () => (
     toastOptions={{
       duration: 4000,
       style: {
-        background: '#ffffff',
-        color: '#111827',
-        border: '1px solid #e5e7eb',
+        background: neutral.surface,
+        color: neutral.text,
+        border: `1px solid ${neutral.border}`,
         borderRadius: '12px',
         boxShadow:
           '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
@@ -30,10 +31,10 @@ const AppToaster: React.FC = () => (
         maxWidth: '420px'
       },
       success: {
-        iconTheme: { primary: '#00BFA5', secondary: '#ffffff' }
+        iconTheme: { primary: brand.main, secondary: '#ffffff' }
       },
       error: {
-        iconTheme: { primary: '#dc2626', secondary: '#ffffff' },
+        iconTheme: { primary: intent.danger, secondary: '#ffffff' },
         duration: 5000
       }
     }}

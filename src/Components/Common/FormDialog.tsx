@@ -11,6 +11,7 @@ import {
   Typography
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface FormDialogProps {
   open: boolean
@@ -89,15 +90,15 @@ const FormDialog: React.FC<FormDialogProps> = ({
         pt: 2.5,
         // Foco turquesa en los campos, igual que AuthField y DataTable
         '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
-          { borderColor: '#00897B' },
-        '& .MuiInputLabel-root.Mui-focused': { color: '#00695C' }
+          { borderColor: brand.hover },
+        '& .MuiInputLabel-root.Mui-focused': { color: brand.ink }
       }}
     >
       {children}
     </DialogContent>
     <DialogActions sx={{ p: '16px 24px' }}>
       {extraActions ? <Box sx={{ mr: 'auto' }}>{extraActions}</Box> : null}
-      <Button onClick={onClose} disabled={loading} sx={{ color: '#4b5563' }}>
+      <Button onClick={onClose} disabled={loading} sx={{ color: neutral.textBody }}>
         {cancelLabel}
       </Button>
       <Button
@@ -107,7 +108,7 @@ const FormDialog: React.FC<FormDialogProps> = ({
         startIcon={
           loading ? <CircularProgress size={18} color='inherit' /> : undefined
         }
-        sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+        sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
       >
         {submitLabel}
       </Button>
@@ -141,7 +142,7 @@ export const FormDialogSection: React.FC<FormDialogSectionProps> = ({
   >
     <Typography
       component='legend'
-      sx={{ p: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}
+      sx={{ p: 0, fontSize: 15, fontWeight: 700, color: neutral.text }}
     >
       {title}
     </Typography>
