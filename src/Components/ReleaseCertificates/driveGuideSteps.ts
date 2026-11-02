@@ -89,6 +89,40 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'Ves el panel de la plataforma de autenticación de Google («Descripción general») con el nombre de tu app, sin errores.'
   },
   {
+    id: 'crear-cliente-oauth',
+    paths: ['gmail'],
+    title: 'Crea el cliente OAuth',
+    where: 'En Google Cloud',
+    actions: [
+      'En la página «Descripción general de OAuth» pulsa «Crear cliente de OAuth». Si no la ves, ve al menú «Clientes» de esa misma sección y pulsa «Crear cliente».',
+      'En «Tipo de aplicación» elige «Aplicación web».',
+      'En «Nombre» escribe Metromedics Certificados web.',
+      'En «URI de redireccionamiento autorizados» pulsa «Agregar URI» y pega la dirección que muestra la plataforma en «Certificados a liberar → Drive → pestaña Cuenta de Gmail», en «Dirección de redireccionamiento autorizada» (tiene la forma …/release-certificates/drive/oauth/callback). Debe quedar idéntica, sin espacios ni barra final.',
+      'Cuando pases a producción, agrega también la dirección del servidor de producción (con https) en esta misma lista.',
+      'Pulsa «Crear». Google muestra el «ID de cliente» y el «Secreto de cliente».',
+      'Copia los dos valores. El secreto se pega solo en la plataforma, no en un chat ni en un archivo compartido.'
+    ],
+    expect:
+      'Aparece el cuadro «Cliente de OAuth creado» con el ID de cliente (termina en .apps.googleusercontent.com) y el secreto. En la lista de clientes ves «Metromedics Certificados web».',
+    warning:
+      'Si más adelante Google dice «redirect_uri_mismatch», la dirección registrada no es idéntica a la de la plataforma: corrígela aquí.'
+  },
+  {
+    id: 'publicar-app',
+    paths: ['gmail'],
+    title: 'Publica la app para que el permiso no caduque',
+    where: 'En Google Cloud',
+    actions: [
+      'En el menú de la izquierda de la plataforma de autenticación de Google pulsa «Público» (o «Audiencia»).',
+      'Mira «Estado de publicación»: dice «Prueba» o «En pruebas».',
+      'Pulsa «Publicar app» y confirma. Si pide agregar usuarios de prueba o verificar la app, no hace falta: es una app interna de tu laboratorio.'
+    ],
+    expect:
+      'El estado cambia a «En producción». Puede aparecer un aviso de «verificación necesaria»: ignóralo; solo significa que Google mostrará una pantalla de «app no verificada» cuando autorices.',
+    warning:
+      'Si la app se queda «en pruebas», el permiso de Google caduca a los 7 días y la copia al Drive dejará de funcionar sin avisar.'
+  },
+  {
     id: 'crear-cuenta-servicio',
     paths: ['workspace'],
     title: 'Crea la cuenta de servicio',
@@ -180,5 +214,24 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'Aparece «Credencial guardada (cifrada)» con el correo de la cuenta de servicio, y la prueba dice «Conectado a la carpeta «Certificados MMCS»». Después puedes pulsar «Copiar liberados pendientes» para subir los que ya estaban liberados.',
     warning:
       'Si la prueba falla, el mensaje dice por qué. Si menciona que la cuenta «no tiene espacio propio», el Drive personal no sirve para una cuenta de servicio: hay que usar una unidad compartida de Google Workspace o conectar con una cuenta de Gmail (OAuth).'
+  },
+  {
+    id: 'conectar-google',
+    paths: ['gmail'],
+    title: 'Conecta la plataforma con Google',
+    where: 'En la plataforma',
+    actions: [
+      'Entra a «Certificados a liberar» y pulsa «Drive» (solo lo ve quien administra). Deja la pestaña «Cuenta de Gmail».',
+      'Pega el «ID de cliente» y el «Secreto de cliente» del paso del cliente OAuth.',
+      'En «Identificador de la carpeta raíz» pega el identificador de la carpeta «Certificados MMCS».',
+      'Pulsa «Conectar con Google». Se abre la pantalla de Google: elige la cuenta de Gmail dueña del Drive.',
+      'Si Google dice «Google no verificó esta aplicación», pulsa «Avanzado» y luego «Ir a Metromedics Certificados (no seguro)». Es tu propia app.',
+      'Acepta el permiso para ver y administrar los archivos de Drive y pulsa «Continuar».',
+      'La plataforma te devuelve a «Certificados a liberar» y muestra «Cuenta de Google conectada». Abre «Drive» y pulsa «Probar conexión».'
+    ],
+    expect:
+      'La plataforma dice «Conectado (Cuenta de Gmail, cifrado)» con tu correo, y la prueba responde «Conectado a la carpeta «Certificados MMCS»». Después pulsa «Copiar liberados pendientes».',
+    warning:
+      'Si falla con «redirect_uri_mismatch», revisa la dirección del cliente OAuth. Si dice «access_denied» o el permiso no se entrega, quita el acceso en myaccount.google.com/permissions y vuelve a conectar.'
   }
 ]
