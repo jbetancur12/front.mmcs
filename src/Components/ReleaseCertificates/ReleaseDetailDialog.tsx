@@ -11,7 +11,9 @@ import {
   Divider,
   Grid,
   TextField,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -83,6 +85,8 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
   certificateId,
   onClose
 }) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const axiosPrivate = useAxiosPrivate()
   const { data: certificate, isLoading } = useReleaseCertificate(certificateId)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
@@ -189,6 +193,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
 
   return (
     <Dialog
+      fullScreen={fullScreen}
       open={certificateId !== null}
       onClose={onClose}
       fullWidth

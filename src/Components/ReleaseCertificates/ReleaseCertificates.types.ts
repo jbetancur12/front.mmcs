@@ -120,6 +120,8 @@ export interface ReleaseListResponse {
 export interface ReleaseFilters {
   status?: ReleaseStatus
   kind?: ReleaseKind | ''
+  customerId?: number | null
+  uploadedBy?: number | null
   search?: string
   withAnomalies?: boolean
   page: number

@@ -9,7 +9,9 @@ import {
   DialogTitle,
   IconButton,
   LinearProgress,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import {
   CheckCircleOutline,
@@ -50,6 +52,8 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   open,
   onClose
 }) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<File[]>([])
   const [rejected, setRejected] = useState<string[]>([])
@@ -105,7 +109,13 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   const okCount = results?.filter((r) => r.ok).length ?? 0
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth='sm'>
+    <Dialog
+      fullScreen={fullScreen}
+      open={open}
+      onClose={close}
+      fullWidth
+      maxWidth='sm'
+    >
       <DialogTitle>Cargar certificados</DialogTitle>
       <DialogContent>
         {results ? (

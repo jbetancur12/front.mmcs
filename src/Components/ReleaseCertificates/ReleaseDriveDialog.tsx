@@ -10,7 +10,9 @@ import {
   DialogTitle,
   MenuItem,
   TextField,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
@@ -39,6 +41,8 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
   open,
   onClose
 }) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const { data: status, isLoading } = useDriveStatus(open)
   const actions = useDriveActions()
   const [credentials, setCredentials] = useState('')
@@ -114,7 +118,13 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
     (status?.configured || credentials.trim() !== '')
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth='sm'>
+    <Dialog
+      fullScreen={fullScreen}
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth='sm'
+    >
       <DialogTitle>Copia al Drive</DialogTitle>
       <DialogContent>
         {isLoading || !status ? (

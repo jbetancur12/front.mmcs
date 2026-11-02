@@ -33,6 +33,8 @@ export const useReleaseCertificates = (filters: ReleaseFilters) => {
             limit: filters.limit,
             status: filters.status || undefined,
             kind: filters.kind || undefined,
+            customerId: filters.customerId || undefined,
+            uploadedBy: filters.uploadedBy || undefined,
             search: filters.search || undefined,
             withAnomalies: filters.withAnomalies ? 'true' : undefined
           }
@@ -283,3 +285,80 @@ export const useDriveActions = () => {
     )
   }
 }
+
+export type ReleaseRuleType =
+  | 'field_label'
+  | 'document_type'
+  | 'magnitude_prefix'
+  | 'instrument_device'
+
+export interface ReleaseRule {
+  id: number
+  ruleType: ReleaseRuleType
+  key: string
+  patterns: string[]
+  value: string | null
+  active: boolean
+}
+
+export const useReleaseRules = (enabled: boolean) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseRule[]>(
+    ['releaseCertificates', 'rules'],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/rules')
+        .then((response) => response.data),
+    { enabled, cacheTime: 0 }
+  )
+}
+
+export const useRuleActions = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  const refresh = () =>
+    queryClient.invalidateQueries(['releaseCertificates', 'rules'])
+  return {
+    create: useMutation(
+      (data: {
+        ruleType: ReleaseRuleType
+        key: string
+        patterns: string[]
+        value?: string | null
+      }) => axiosPrivate.post('/release-certificates/rules', data),
+      { onSuccess: refresh }
+    ),
+    update: useMutation(
+      ({
+        id,
+        ...data
+      }: {
+        id: number
+        patterns?: string[]
+        value?: string | null
+        active?: boolean
+      }) => axiosPrivate.put(`/release-certificates/rules/${id}`, data),
+      { onSuccess: refresh }
+    ),
+    remove: useMutation(
+      (id: number) => axiosPrivate.delete(`/release-certificates/rules/${id}`),
+      { onSuccess: refresh }
+    )
+  }
+}
+
+export const useReleaseUploaders = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<{ id: number; nombre: string }[]>(
+    ['releaseCertificates', 'uploaders'],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/uploaders')
+        .then((response) => response.data),
+    { staleTime: 60 * 1000 }
+  )
+}
+
+/** Buscador de clientes de la plataforma para los filtros (mismo que usa la edición). */
+export const useReleaseCustomerOptions = (search: string) =>
+  useReleaseCustomerSearch(search)

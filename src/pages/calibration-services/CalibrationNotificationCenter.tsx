@@ -32,7 +32,9 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   adjustment_reported: 'Novedad reportada',
   adjustment_technical_reviewed: 'Revisión técnica',
   cut_ready_for_invoicing: 'Listo para facturar',
-  cut_invoiced: 'Corte facturado'
+  cut_invoiced: 'Corte facturado',
+  release_adjustments_requested: 'Certificado requiere ajustes',
+  certificates_pending: 'Certificado corregido'
 }
 
 const PRIORITY_COLORS: Record<string, 'error' | 'warning' | 'info' | 'default'> = {

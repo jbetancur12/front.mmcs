@@ -14,7 +14,9 @@ import {
   MenuItem,
   Radio,
   TextField,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import {
@@ -63,6 +65,8 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
   onClose,
   onRelease
 }) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const { data, isLoading } = useReleaseMatches(
     confirmOnly ? null : certificateId
   )
@@ -119,6 +123,7 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
 
   return (
     <Dialog
+      fullScreen={fullScreen}
       open={certificateId !== null}
       onClose={releasing ? undefined : onClose}
       fullWidth

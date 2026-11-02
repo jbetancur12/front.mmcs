@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -10,7 +11,9 @@ import {
   MenuItem,
   Switch,
   TextField,
-  Tooltip
+  Tooltip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import {
   AssignmentTurnedInOutlined,
@@ -36,6 +39,8 @@ import DataTable from 'src/Components/Common/DataTable'
 import EmptyState from 'src/Components/Common/EmptyState'
 import ReleaseDetailDialog from 'src/Components/ReleaseCertificates/ReleaseDetailDialog'
 import ReleaseStatusPill from 'src/Components/ReleaseCertificates/ReleaseStatusPill'
+import CalibrationNotificationBell from 'src/pages/calibration-services/CalibrationNotificationBell'
+import ReleaseRulesDialog from 'src/Components/ReleaseCertificates/ReleaseRulesDialog'
 import ReleaseDriveDialog from 'src/Components/ReleaseCertificates/ReleaseDriveDialog'
 import ReleaseSignatureDialog from 'src/Components/ReleaseCertificates/ReleaseSignatureDialog'
 import ReleaseUploadDialog from 'src/Components/ReleaseCertificates/ReleaseUploadDialog'
@@ -51,6 +56,8 @@ import {
   releaseFileUrl,
   useMySignature,
   useReleaseCertificates,
+  useReleaseCustomerSearch,
+  useReleaseUploaders,
   useSignReleaseCertificates
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { userStore } from 'src/store/userStore'
@@ -94,6 +101,17 @@ const ReleaseCertificates: React.FC = () => {
     $userStore.permissions,
     PERMISSIONS.RELEASE_DRIVE_MANAGE
   )
+  const canManageRules = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_RULES
+  )
+  const canSeeBell = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.CALIBRATION_SERVICE_VIEW
+  )
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [rulesOpen, setRulesOpen] = useState(false)
   const [driveOpen, setDriveOpen] = useState(false)
   const sign = useSignReleaseCertificates()
   const { data: mySignature } = useMySignature(canSign)
@@ -102,6 +120,15 @@ const ReleaseCertificates: React.FC = () => {
   const [status, setStatus] = useState<ReleaseStatus | undefined>()
   const [kind, setKind] = useState<ReleaseKind | ''>('')
   const [withAnomalies, setWithAnomalies] = useState(false)
+  const [customer, setCustomer] = useState<{
+    id: number
+    nombre: string
+  } | null>(null)
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [uploadedBy, setUploadedBy] = useState<number | ''>('')
+  const { data: customerOptions = [], isFetching: loadingCustomers } =
+    useReleaseCustomerSearch(customerSearch)
+  const { data: uploaders = [] } = useReleaseUploaders()
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [pagination, setPagination] = useState<MRT_PaginationState>({
@@ -127,13 +154,15 @@ const ReleaseCertificates: React.FC = () => {
   // Cualquier filtro nuevo vuelve a la primera página.
   useEffect(() => {
     setPagination((current) => ({ ...current, pageIndex: 0 }))
-  }, [status, kind, withAnomalies, search])
+  }, [status, kind, withAnomalies, search, customer, uploadedBy])
 
   const { data, isLoading, isFetching } = useReleaseCertificates({
     status,
     kind,
     search,
     withAnomalies,
+    customerId: customer?.id ?? null,
+    uploadedBy: uploadedBy === '' ? null : uploadedBy,
     page: pagination.pageIndex + 1,
     limit: pagination.pageSize
   })
@@ -143,9 +172,16 @@ const ReleaseCertificates: React.FC = () => {
       {
         accessorKey: 'documentNumber',
         header: 'Número',
-        size: 190,
+        size: isMobile ? 170 : 190,
         Cell: ({ row }) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.75,
+              flexWrap: 'wrap'
+            }}
+          >
             {row.original.documentNumber ?? 'Sin número'}
             {row.original.anomalies.length > 0 && (
               <Tooltip
@@ -157,6 +193,18 @@ const ReleaseCertificates: React.FC = () => {
                   aria-label={`${row.original.anomalies.length} por revisar`}
                 />
               </Tooltip>
+            )}
+            {isMobile && (
+              <Box sx={{ width: '100%' }}>
+                <ReleaseStatusPill status={row.original.status} />
+                <Box
+                  sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}
+                >
+                  {row.original.customer?.nombre ??
+                    row.original.customerName ??
+                    'Cliente sin identificar'}
+                </Box>
+              </Box>
             )}
           </Box>
         )
@@ -208,7 +256,7 @@ const ReleaseCertificates: React.FC = () => {
           new Date(cell.getValue<string>()).toLocaleDateString('es-CO')
       }
     ],
-    []
+    [isMobile]
   )
 
   const uploadButton = canUpload && (
@@ -257,7 +305,9 @@ const ReleaseCertificates: React.FC = () => {
     })
   }
 
-  const hasFilters = Boolean(status || kind || withAnomalies || search)
+  const hasFilters = Boolean(
+    status || kind || withAnomalies || search || customer || uploadedBy
+  )
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -266,7 +316,20 @@ const ReleaseCertificates: React.FC = () => {
         subtitle='Revisión de los certificados cargados antes de pasar al equipo del cliente'
         icon={<FactCheckOutlined />}
         actions={
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              flexWrap: 'wrap',
+              alignItems: 'center'
+            }}
+          >
+            {canSeeBell && <CalibrationNotificationBell />}
+            {canManageRules && (
+              <Button variant='text' onClick={() => setRulesOpen(true)}>
+                Reglas
+              </Button>
+            )}
             {canManageDrive && (
               <Button variant='text' onClick={() => setDriveOpen(true)}>
                 Drive
@@ -303,6 +366,7 @@ const ReleaseCertificates: React.FC = () => {
               value={data?.counts[value] ?? 0}
               icon={icon}
               tone={tone}
+              compact={isMobile}
               active={status === value}
               onClick={() => setStatus(status === value ? undefined : value)}
             />
@@ -325,15 +389,56 @@ const ReleaseCertificates: React.FC = () => {
           placeholder='Número, cliente, instrumento o serie'
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
-          sx={{ minWidth: 280 }}
+          sx={{ minWidth: 280, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
         />
+        <Autocomplete
+          size='small'
+          options={customerOptions}
+          value={customer}
+          loading={loadingCustomers}
+          getOptionLabel={(option) => option.nombre}
+          isOptionEqualToValue={(a, b) => a.id === b.id}
+          filterOptions={(all) => all}
+          onChange={(_event, value) => setCustomer(value)}
+          onInputChange={(_event, value, reason) => {
+            if (reason === 'input') setCustomerSearch(value)
+          }}
+          noOptionsText='Escribe al menos 2 letras del cliente'
+          sx={{ minWidth: 240, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label='Cliente'
+              placeholder='Buscar cliente'
+            />
+          )}
+        />
+        <TextField
+          select
+          size='small'
+          label='Cargado por'
+          value={uploadedBy}
+          onChange={(event) =>
+            setUploadedBy(
+              event.target.value === '' ? '' : Number(event.target.value)
+            )
+          }
+          sx={{ minWidth: 180, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+        >
+          <MenuItem value=''>Todos</MenuItem>
+          {uploaders.map((user) => (
+            <MenuItem key={user.id} value={user.id}>
+              {user.nombre}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField
           select
           size='small'
           label='Tipo'
           value={kind}
           onChange={(event) => setKind(event.target.value as ReleaseKind | '')}
-          sx={{ minWidth: 160 }}
+          sx={{ minWidth: 160, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
         >
           <MenuItem value=''>Todos</MenuItem>
           {(Object.keys(RELEASE_KIND_LABELS) as ReleaseKind[]).map((value) => (
@@ -364,6 +469,9 @@ const ReleaseCertificates: React.FC = () => {
               setKind('')
               setWithAnomalies(false)
               setSearchInput('')
+              setCustomer(null)
+              setCustomerSearch('')
+              setUploadedBy('')
             }}
           >
             Limpiar filtros
@@ -390,6 +498,7 @@ const ReleaseCertificates: React.FC = () => {
           enableGlobalFilter={false}
           enableRowSelection={(row) =>
             canSign &&
+            !isMobile &&
             row.original.status === 'verificado' &&
             row.original.kind === 'principal'
           }
@@ -401,7 +510,20 @@ const ReleaseCertificates: React.FC = () => {
           state={{
             pagination,
             showProgressBars: isFetching,
-            rowSelection: selection
+            rowSelection: selection,
+            // En celular solo lo esencial: número, estado y cliente
+            columnVisibility: isMobile
+              ? {
+                  status: false,
+                  customer: false,
+                  kind: false,
+                  instrument: false,
+                  serie: false,
+                  calibrationDate: false,
+                  uploader: false,
+                  createdAt: false
+                }
+              : {}
           }}
           muiTablePaginationProps={{ rowsPerPageOptions: [25, 50, 100] }}
           enableRowActions
@@ -447,6 +569,10 @@ const ReleaseCertificates: React.FC = () => {
         />
       )}
 
+      <ReleaseRulesDialog
+        open={rulesOpen}
+        onClose={() => setRulesOpen(false)}
+      />
       <ReleaseDriveDialog
         open={driveOpen}
         onClose={() => setDriveOpen(false)}
