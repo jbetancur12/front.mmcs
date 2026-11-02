@@ -113,9 +113,11 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
     title: 'Publica la app para que el permiso no caduque',
     where: 'En Google Cloud',
     actions: [
-      'En el menú de la izquierda de la plataforma de autenticación de Google pulsa «Público» (o «Audiencia»).',
-      'Mira «Estado de publicación»: dice «Prueba» o «En pruebas».',
-      'Pulsa «Publicar app» y confirma. Si pide agregar usuarios de prueba o verificar la app, no hace falta: es una app interna de tu laboratorio.'
+      'En el menú de la izquierda de esta sección (Google Auth Platform) pulsa «Público» (o «Audiencia») y mira «Estado de publicación»: dice «Prueba».',
+      'Si el botón «Publicar app» está gris, debajo dice «debes completar la configuración en la página de desarrollo de la marca». Pulsa ese enlace (o «Desarrollo de la marca» en el menú de la izquierda).',
+      'Completa todos los datos de esa página y pulsa «Guardar» al final: nombre de la app, correo de asistencia al usuario y datos de contacto del desarrollador, más los demás campos que pida (por ejemplo, página principal de la aplicación, vínculo a la política de privacidad y a las condiciones del servicio, y dominios autorizados).',
+      'Vuelve a «Público». El botón «Publicar app» ya debe estar activo (con color).',
+      'Pulsa «Publicar app» y confirma. Si pide agregar usuarios de prueba o verificar la app, no hace falta: es una app tuya, de uso interno.'
     ],
     expect:
       'El estado cambia a «En producción». Puede aparecer un aviso de «verificación necesaria»: ignóralo; solo significa que Google mostrará una pantalla de «app no verificada» cuando autorices.',
