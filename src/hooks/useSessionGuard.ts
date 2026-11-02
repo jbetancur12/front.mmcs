@@ -7,7 +7,11 @@ import {
   isTokenExpired,
   rememberSessionEnded
 } from 'src/utils/sessionEnd'
-import { nextRetryMs } from 'src/utils/sessionGuardRetry'
+import {
+  GIVE_UP_FAILURES,
+  nextRetryMs,
+  shouldGiveUp
+} from 'src/utils/sessionGuardRetry'
 import { syncUserAccess } from 'src/utils/syncUserAccess'
 
 // Todas las pestañas del navegador reciben el mismo aviso y comparten cookie: se escalonan para que la primera
@@ -32,8 +36,15 @@ const useSessionGuard = () => {
     let failures = 0
     let stopped = false
 
+    // Token con el que se dejó de insistir; se retoma si cambia o si la pestaña vuelve a verse
+    let gaveUpWith: string | null = null
+
     const scheduleRetry = () => {
       if (stopped) return
+      if (shouldGiveUp(failures)) {
+        gaveUpWith = localStorage.getItem('accessToken')
+        return
+      }
       retryTimer = setTimeout(connect, nextRetryMs(failures))
     }
 
@@ -41,6 +52,11 @@ const useSessionGuard = () => {
       const token = localStorage.getItem('accessToken')
       const baseUrl = wss()
       if (stopped || !token || !baseUrl) return
+      // Una pestaña oculta no reintenta: lo hace al volver a verse
+      if (document.hidden) {
+        gaveUpWith = token
+        return
+      }
 
       // Un token anterior a las sesiones no trae sid: el servidor lo rechazaría. Se espera a que el
       // refresh lo cambie por uno con sid (se vuelve a leer el token en cada intento).
@@ -96,10 +112,28 @@ const useSessionGuard = () => {
       }
     }
 
+    // Retoma tras rendirse u ocultarse: con token nuevo desde cero, con el mismo token un solo intento más
+    const resume = () => {
+      if (stopped || gaveUpWith === null || document.hidden) return
+      const token = localStorage.getItem('accessToken')
+      if (token !== gaveUpWith) failures = 0
+      else if (failures >= GIVE_UP_FAILURES) failures = GIVE_UP_FAILURES - 1
+      gaveUpWith = null
+      if (retryTimer) clearTimeout(retryTimer)
+      connect()
+    }
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'accessToken') resume()
+    }
+    document.addEventListener('visibilitychange', resume)
+    window.addEventListener('storage', onStorage)
+
     connect()
 
     return () => {
       stopped = true
+      document.removeEventListener('visibilitychange', resume)
+      window.removeEventListener('storage', onStorage)
       if (retryTimer) clearTimeout(retryTimer)
       socket?.close()
     }

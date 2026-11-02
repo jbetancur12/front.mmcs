@@ -1,4 +1,11 @@
-import { nextRetryMs } from './sessionGuardRetry'
+import { nextRetryMs, shouldGiveUp } from './sessionGuardRetry'
+
+describe('shouldGiveUp', () => {
+  it('deja de insistir tras ocho cierres seguidos sin abrir', () => {
+    expect(shouldGiveUp(7)).toBe(false)
+    expect(shouldGiveUp(8)).toBe(true)
+  })
+})
 
 describe('nextRetryMs', () => {
   it('empieza en 5 s y se duplica hasta 60 s', () => {

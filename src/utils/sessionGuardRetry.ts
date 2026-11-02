@@ -3,6 +3,8 @@ const MAX_FAST_RETRY_MS = 60_000
 // Tras varios cierres seguidos sin llegar a abrir, reintentar cada minuto solo llena el log del servidor
 const SLOW_RETRY_MS = 300_000
 const FAST_FAILURES = 6
+// Con tantos cierres seguidos sin abrir el servidor rechaza este token (403) y reintentar no lo arregla: se deja de insistir
+export const GIVE_UP_FAILURES = 8
 
 /**
  * Espera antes del siguiente intento del canal de sesión, según cuántos intentos seguidos se cerraron sin abrir:
@@ -15,3 +17,7 @@ export const nextRetryMs = (failures: number): number => {
     MAX_FAST_RETRY_MS
   )
 }
+
+/** Si ya hubo demasiados cierres seguidos sin abrir: se espera a que cambie el token o la pestaña vuelva a verse. */
+export const shouldGiveUp = (failures: number): boolean =>
+  failures >= GIVE_UP_FAILURES
