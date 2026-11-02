@@ -29,10 +29,36 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'Si Google muestra los términos de servicio, léelos y acéptalos. Para este paso no se pide tarjeta de crédito.'
     ],
     expect:
-      'Ves la consola de Google Cloud: una barra arriba con el nombre «Google Cloud» y el buscador en el centro.',
+      'Ves la consola de Google Cloud: arriba el nombre «Google Cloud», un botón con el nombre de un proyecto y el buscador en el centro.',
     link: {
       label: 'Abrir Google Cloud',
       url: 'https://console.cloud.google.com'
     }
+  },
+  {
+    id: 'elegir-proyecto',
+    title: 'Elige el proyecto de trabajo',
+    where: 'En Google Cloud',
+    actions: [
+      'Mira arriba a la izquierda, junto al nombre «Google Cloud»: hay un botón con el nombre del proyecto en el que estás trabajando (por ejemplo «Metromedics»).',
+      'Si ya hay un proyecto para esta conexión, úsalo. No hace falta crear otro.',
+      'Si no hay ninguno, pulsa ese botón, luego «Proyecto nuevo», ponle un nombre como «Metromedics Certificados» y pulsa «Crear». Espera a que termine y selecciónalo.'
+    ],
+    expect:
+      'El botón de arriba muestra el nombre de tu proyecto. En la pantalla de bienvenida dice «Estás trabajando en» seguido de ese nombre, y aparecen su número y su ID de proyecto.'
+  },
+  {
+    id: 'activar-drive-api',
+    title: 'Activa la API de Google Drive',
+    where: 'En Google Cloud',
+    actions: [
+      'En el buscador de arriba escribe «Google Drive API» y elige el resultado que dice «Google Drive API» (en la sección Marketplace).',
+      'En la página de esa API pulsa el botón azul «Habilitar».',
+      'Espera unos segundos. Cuando termina, la página cambia y muestra «API habilitada» o un panel con gráficas.'
+    ],
+    expect:
+      'La página de «Google Drive API» muestra el estado «API habilitada» (o un botón «Administrar» en lugar de «Habilitar»).',
+    warning:
+      'Asegúrate de que arriba sigue seleccionado el proyecto correcto antes de pulsar «Habilitar»: la API se activa solo en el proyecto elegido.'
   }
 ]
