@@ -41,6 +41,7 @@ import ReleaseDetailDialog from 'src/Components/ReleaseCertificates/ReleaseDetai
 import ReleaseStatusPill from 'src/Components/ReleaseCertificates/ReleaseStatusPill'
 import CalibrationNotificationBell from 'src/pages/calibration-services/CalibrationNotificationBell'
 import ReleaseRulesDialog from 'src/Components/ReleaseCertificates/ReleaseRulesDialog'
+import ReleaseAnalystGuideDialog from 'src/Components/ReleaseCertificates/ReleaseAnalystGuideDialog'
 import ReleaseDriveDialog from 'src/Components/ReleaseCertificates/ReleaseDriveDialog'
 import ReleaseSignatureDialog from 'src/Components/ReleaseCertificates/ReleaseSignatureDialog'
 import ReleaseUploadDialog from 'src/Components/ReleaseCertificates/ReleaseUploadDialog'
@@ -113,6 +114,7 @@ const ReleaseCertificates: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [rulesOpen, setRulesOpen] = useState(false)
   const [driveOpen, setDriveOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const driveResult = new URLSearchParams(window.location.search).get('drive')
   const sign = useSignReleaseCertificates()
   const { data: mySignature } = useMySignature(canSign)
@@ -389,6 +391,9 @@ const ReleaseCertificates: React.FC = () => {
             }}
           >
             {canSeeBell && <CalibrationNotificationBell />}
+            <Button variant='text' onClick={() => setHelpOpen(true)}>
+              Ayuda
+            </Button>
             {canManageRules && (
               <Button variant='text' onClick={() => setRulesOpen(true)}>
                 Reglas
@@ -660,6 +665,10 @@ const ReleaseCertificates: React.FC = () => {
         />
       )}
 
+      <ReleaseAnalystGuideDialog
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+      />
       <ReleaseRulesDialog
         open={rulesOpen}
         onClose={() => setRulesOpen(false)}
