@@ -18,6 +18,8 @@ interface AsyncSelectFieldProps<T extends AsyncSelectOption> {
   required?: boolean
   disabled?: boolean
   helperText?: string
+  /** Marca el campo con error; el texto del error va en `helperText`. */
+  error?: boolean
 }
 
 const SEARCH_DELAY_MS = 350
@@ -35,7 +37,8 @@ const AsyncSelectField = <T extends AsyncSelectOption>({
   defaultOptions = [],
   required = false,
   disabled = false,
-  helperText
+  helperText,
+  error = false
 }: AsyncSelectFieldProps<T>) => {
   const [inputValue, setInputValue] = useState('')
   const [options, setOptions] = useState<T[]>(defaultOptions)
@@ -84,12 +87,16 @@ const AsyncSelectField = <T extends AsyncSelectOption>({
       loading={loading}
       loadingText='Buscando…'
       noOptionsText='Sin resultados'
+      openText='Abrir'
+      closeText='Cerrar'
+      clearText='Limpiar'
       disabled={disabled}
       renderInput={(params) => (
         <TextField
           {...params}
           label={label}
           required={required}
+          error={error}
           helperText={helperText}
           InputProps={{
             ...params.InputProps,

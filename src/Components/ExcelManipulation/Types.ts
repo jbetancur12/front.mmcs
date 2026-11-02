@@ -21,6 +21,8 @@ export interface AnalyzeExcelComponentProps {
   fileNames?: string[]
   selectedFile?: string | null
   isFile: boolean
+  /** Controles a la derecha del encabezado de la página. */
+  headerActions?: React.ReactNode
   setFileNames?: React.Dispatch<React.SetStateAction<string[]>>
   wbPasswords: string[]
 }

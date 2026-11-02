@@ -1,19 +1,25 @@
 import React, { useEffect, useState } from 'react'
 import {
+  Alert,
+  Box,
   Button,
-  Dialog,
-  Divider,
   IconButton,
-  Paper,
-  Stack,
+  InputAdornment,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import axios from 'axios'
 import { useMutation, useQuery } from 'react-query'
 import { api } from '../config'
 import { notify } from 'src/utils/notify'
-import { Delete, Visibility, VisibilityOff } from '@mui/icons-material'
+import {
+  AddOutlined,
+  DeleteOutline,
+  Visibility,
+  VisibilityOff
+} from '@mui/icons-material'
+import FormDialog, { FormDialogSection } from './Common/FormDialog'
 
 import { logger } from 'src/utils/logger'
 const apiUrl = api()
@@ -29,6 +35,8 @@ interface Password {
   password: string
 }
 
+const FULL_WIDTH = { gridColumn: '1 / -1' }
+
 const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
   open,
   onClose,
@@ -38,8 +46,6 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
   const initialPasswordData = [{ password: '' }]
   const [passwords, setPasswords] = useState<Password[]>(initialPasswordData)
   const [showPassword, setShowPassword] = useState(false)
-
-  // const [wbPasswords, setWbPasswords] = useState<string[]>([])
   const [showUpdateButton, setShowUpdateButton] = useState(false)
 
   const authHeaders = () => ({
@@ -86,8 +92,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
     { retry: false }
   )
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     const passwordValues = passwords.map((password) => password.password)
 
     try {
@@ -146,101 +151,122 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
   }, [settingsPasswords])
 
   return (
-    <Dialog open={open} onClose={onCloseModal}>
-      <Paper elevation={3} sx={{ p: 2, width: 400 }}>
-        <Typography variant='h5' component='div'>
-          Contraseñas
-        </Typography>
-
-        <Stack spacing={2}>
+    <FormDialog
+      open={open}
+      onClose={onCloseModal}
+      title='Contraseñas de los libros'
+      subtitle='Se prueban en orden al abrir un Excel protegido'
+      submitLabel='Guardar contraseñas'
+      onSubmit={handleSubmit}
+      loading={createPasswords.isLoading}
+      submitDisabled={passwords.every((password) => !password.password)}
+    >
+      <FormDialogSection title='Guardadas'>
+        <Box sx={FULL_WIDTH}>
           {wbPasswords.length > 0 ? (
-            wbPasswords.map((password, index) => (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
+            <>
+              {wbPasswords.map((password, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    py: 0.5,
+                    borderBottom: '1px solid #e5e7eb'
+                  }}
+                >
+                  <Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {showPassword ? password : '••••••••'}
+                  </Typography>
+                  <Tooltip title='Quitar'>
+                    <IconButton
+                      size='small'
+                      color='error'
+                      aria-label='Quitar contraseña'
+                      onClick={() => handleRemoveFetchedPassword(index)}
+                    >
+                      <DeleteOutline fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              ))}
+              <Button
+                size='small'
+                startIcon={showPassword ? <VisibilityOff /> : <Visibility />}
+                onClick={() => setShowPassword((value) => !value)}
+                sx={{ mt: 1, color: '#00695C' }}
               >
-                {showPassword ? (
-                  <Typography>{password}</Typography>
-                ) : (
-                  <Typography>*********</Typography>
-                )}
-                <div>
-                  {!showPassword ? (
-                    <IconButton onClick={() => setShowPassword(true)}>
-                      <Visibility />
-                    </IconButton>
-                  ) : (
-                    <IconButton onClick={() => setShowPassword(false)}>
-                      <VisibilityOff />
-                    </IconButton>
-                  )}
-                  <Button
-                    variant='text'
-                    size='small'
-                    color='error'
-                    onClick={() => handleRemoveFetchedPassword(index)}
-                    startIcon={<Delete />}
-                  />
-                </div>
-              </div>
-            ))
+                {showPassword ? 'Ocultar' : 'Mostrar'}
+              </Button>
+            </>
           ) : (
-            <Typography variant='body2' color='error'>
-              ¡No hay contraseñas!
+            <Typography variant='body2' color='text.secondary'>
+              Aún no hay contraseñas guardadas.
             </Typography>
           )}
-        </Stack>
-
-        {showUpdateButton && <Button onClick={handleUpdate}>Actualizar</Button>}
-
-        <Divider />
-        <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
-          <Typography variant='h6' component='p' sx={{ mb: 2 }}>
-            Agregar Nueva Contraseña
-          </Typography>
-
-          {passwords.map((password, index) => (
-            <div className='mb-4 flex' key={index}>
-              <TextField
-                name={`password${index}`}
-                placeholder='Contraseña'
-                value={password.password}
-                onChange={(e) => handleFormChange(index, e.target.value)}
-                sx={{ mr: 2, width: '100%', flex: 1 }}
-              />
-
-              <IconButton
-                onClick={() => handleRemovePassword(index)}
-                color='error'
+        </Box>
+        {showUpdateButton ? (
+          <Alert
+            severity='warning'
+            variant='outlined'
+            sx={FULL_WIDTH}
+            action={
+              <Button
+                color='inherit'
                 size='small'
+                onClick={handleUpdate}
+                disabled={updatePasswords.isLoading}
               >
-                <Delete />
-              </IconButton>
-            </div>
-          ))}
-
-          <Button
-            variant='contained'
-            color='primary'
-            onClick={handleAddPassword}
-            sx={{ mb: 2 }}
+                Guardar cambios
+              </Button>
+            }
           >
-            Agregar Contraseña
+            Quitaste contraseñas de la lista. Guarda los cambios para
+            aplicarlos.
+          </Alert>
+        ) : null}
+      </FormDialogSection>
+
+      <FormDialogSection title='Agregar'>
+        {passwords.map((password, index) => (
+          <TextField
+            key={index}
+            label={`Contraseña ${index + 1}`}
+            type={showPassword ? 'text' : 'password'}
+            value={password.password}
+            onChange={(e) => handleFormChange(index, e.target.value)}
+            fullWidth
+            sx={FULL_WIDTH}
+            InputProps={{
+              endAdornment:
+                passwords.length > 1 ? (
+                  <InputAdornment position='end'>
+                    <IconButton
+                      size='small'
+                      color='error'
+                      aria-label='Quitar este campo'
+                      onClick={() => handleRemovePassword(index)}
+                    >
+                      <DeleteOutline fontSize='small' />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined
+            }}
+          />
+        ))}
+        <Box sx={FULL_WIDTH}>
+          <Button
+            size='small'
+            startIcon={<AddOutlined />}
+            onClick={handleAddPassword}
+            sx={{ color: '#00695C' }}
+          >
+            Agregar otra
           </Button>
-          <Divider style={{ marginBottom: '20px' }} />
-          <Button type='submit' variant='contained' sx={{ mr: 2 }}>
-            Guardar
-          </Button>
-          <Button variant='contained' onClick={onCloseModal} color='inherit'>
-            Cancelar
-          </Button>
-        </form>
-      </Paper>
-    </Dialog>
+        </Box>
+      </FormDialogSection>
+    </FormDialog>
   )
 }
 

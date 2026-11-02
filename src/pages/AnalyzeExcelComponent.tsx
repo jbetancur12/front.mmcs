@@ -1,40 +1,34 @@
 import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useEffect, useState } from 'react'
-import {
-  Box,
-  Button,
-  IconButton,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
-import AsyncSelect from 'react-select/async'
+import { Alert, Button, MenuItem, TextField, Typography } from '@mui/material'
+import { UploadFile } from '@mui/icons-material'
+import { addMonths, format, isValid, parse } from 'date-fns'
 
-import { DatePicker } from '@mui/x-date-pickers'
-
-import { Add, CloudUpload, Warning } from '@mui/icons-material'
 import ModalCustomer from '../Components/ModalCustomer'
+import ModalDevice from '../Components/ModalDevice'
 import { AnalyzeExcelComponentProps } from '../Components/ExcelManipulation/Types'
 import { ResourceOption } from '../utils/loadOptions'
-import { styles } from '../Components/ExcelManipulation/Utils'
-import ModalDevice from '../Components/ModalDevice'
-import { VisuallyHiddenInput } from '../Components/TableFiles'
-import Loader from '../Components/Loader2'
-import { addMonths, set } from 'date-fns'
-import Select from 'react-select'
+import AsyncSelectField, {
+  type AsyncSelectOption
+} from '../Components/Common/AsyncSelectField'
+import FileDropZone from '../Components/Common/FileDropZone'
+import FormDateField from '../Components/Common/FormDateField'
+import FormErrorSummary from '../Components/Common/FormErrorSummary'
+import FormPage from '../Components/Common/FormPage'
+import FormSection, { FormGridItem } from '../Components/Common/FormSection'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useUploadRawCertificate } from '@hooks/calibration/useUploadRawCertificate'
 import { notify } from 'src/utils/notify'
-import { choiceDialog } from 'src/utils/confirm'
+import { busyDialog, choiceDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
-// Importa los componentes de MUI
 
 const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   dataReceived,
   hideUpload,
   selectedFile,
   isFile,
+  headerActions,
   setFileNames,
   fileNames,
   wbPasswords
@@ -43,7 +37,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const uploadRawCertificate = useUploadRawCertificate()
   const [file, setFile] = useState<File | null>(null)
   const [filePdf, setFilePdf] = useState<File | null>(null)
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [_data, setData] = useState<any[]>([])
   const [data2, setData2] = useState<CertificateTemplateData>(
     {} as CertificateTemplateData
@@ -79,20 +72,28 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const [openModalCustomer, setOpenModalCustomer] = useState(false)
   const [openModalDevice, setOpenModalDevice] = useState(false)
 
+  // Campos que faltan; se resaltan solo después de intentar enviar
+  const missing = {
+    device: !device,
+    customer: !customer,
+    type: !typeOfCertificate,
+    hq: !hq,
+    city: !city,
+    location: !location,
+    headquarters: !headquarters,
+    fixedAsset: !fixedAsset,
+    serialNumber: !serialNumber,
+    certificateDate: !certificateDate,
+    pdf: !filePdf
+  }
+  const showError = (key: keyof typeof missing) =>
+    Boolean(validationError) && missing[key]
+  const errorCount = validationError
+    ? Object.values(missing).filter(Boolean).length
+    : 0
+
   const validateFields = () => {
-    if (
-      !city ||
-      !location ||
-      !headquarters ||
-      !fixedAsset ||
-      !serialNumber ||
-      !certificateDate ||
-      !customer ||
-      !device ||
-      !typeOfCertificate ||
-      !filePdf ||
-      !hq
-    ) {
+    if (Object.values(missing).some(Boolean)) {
       setValidationError('Todos los campos son obligatorios')
       return false
     }
@@ -103,30 +104,27 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     setData(dataReceived as any[])
   }, [dataReceived])
 
-  const loadOptions = async (
+  // La espera de leer el Excel o de enviar bloquea la pantalla con el aviso común
+  useEffect(() => {
+    if (loading) busyDialog.show('Procesando el archivo')
+    else busyDialog.hide()
+    return () => busyDialog.hide()
+  }, [loading])
+
+  const searchOptions = async <T,>(
     inputValue: string,
     resource: string,
-    mapFunction: (item: any) => ResourceOption | DeviceOption
-  ): Promise<ResourceOption[]> => {
-    return new Promise((resolve, reject) => {
-      const endpoint = `/${resource}` // Construye la URL del endpoint
-      const fetchData = async () => {
-        try {
-          const response = await axiosPrivate.get(endpoint, {
-            params: { q: inputValue }
-          })
-          const data = response.data
-          const options = data.map((item: any) => mapFunction(item))
-
-          resolve(options) // Aplica la función de mapeo
-        } catch (error) {
-          logger.error('Error al cargar opciones:', error)
-          reject(error)
-        }
-      }
-
-      setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
-    })
+    mapFunction: (item: any) => T
+  ): Promise<T[]> => {
+    try {
+      const response = await axiosPrivate.get(`/${resource}`, {
+        params: { q: inputValue }
+      })
+      return response.data.map((item: any) => mapFunction(item))
+    } catch (error) {
+      logger.error('Error al cargar opciones:', error)
+      return []
+    }
   }
 
   const readExcel = async (file: File) => {
@@ -157,26 +155,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       notify.error('Contraseña incorrecta')
       throw new Error('Failed to open file with any password')
     }
-
-    // return await XlsxPopulate.fromDataAsync(file, {
-    //   password: ''
-    // }).then(async (workbook) => {
-    // const fields: (keyof typeof device.certificateTemplate)[] = [
-    //   'city',
-    //   'location',
-    //   'sede',
-    //   'activoFijo',
-    //   'serie',
-    //   'calibrationDate',
-    //   'solicitante',
-    //   'instrumento'
-    // ]
-    // const info = fields.reduce((acc, field) => {
-    //   acc[field] = getValueFromCell(workbook, field)
-    //   return acc
-    // }, {} as any)
-    // return info
-    // ANCHOR // ! Probando buscar entre celdas
 
     try {
       let sheet = null
@@ -210,7 +188,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
               const value = sheet.cell(`${col}${row}`)
 
               if (value.value()) {
-                //device.certificateTemplate['instrumento'] = `${col}${row}`
                 const result = await fetchDevice(value.value() as string)
 
                 if (result.length > 0) {
@@ -275,36 +252,25 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     } catch (error) {
       throw new Error(error as string)
     }
-
-    // ! Fin de prueba
-    // })
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleExcelSelected = (uploadedFile: File) => {
     setLoading(true)
+    setFile(uploadedFile)
 
-    if (event.target.files && event.target.files.length > 0) {
-      const uploadedFile = event.target.files[0]
-
-      setFile(uploadedFile)
-
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        if (e.target) {
-          // const binaryString = e.target.result as string // Asegúrate de que sea de tipo string
-
-          const cells = await readExcel(uploadedFile)
-
-          // TODO descomentar siguienete linea
-          setData2(cells)
-        }
+    const reader = new FileReader()
+    reader.onload = async () => {
+      try {
+        const cells = await readExcel(uploadedFile)
+        // Sin celdas leídas no habrá análisis posterior que apague la espera
+        if (!cells) setLoading(false)
+        setData2(cells)
+      } catch (error) {
+        setLoading(false)
+        logger.error('Error al leer el Excel:', error)
       }
-      reader.readAsBinaryString(uploadedFile)
-      event.target.value = ''
-    } else {
-      setLoading(false)
-      notify.error('No se ha seleccionado un archivo')
     }
+    reader.readAsBinaryString(uploadedFile)
   }
 
   const dataReturned = (data: any) => {
@@ -402,20 +368,16 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       setFileNames(fileNames.filter((name) => name !== selectedFile))
     }
     setFile(null)
-    setSelectedFileName(null)
-    set
+    setFilePdf(null)
+  }
+
+  // Cancelar deja la pantalla como recién abierta
+  const handleCancel = () => {
+    resetForm()
+    setFilePdf(null)
   }
 
   const postData = (data: FormData) => uploadRawCertificate.mutateAsync(data)
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0]
-
-    if (selectedFile) {
-      setFilePdf(selectedFile)
-      setSelectedFileName(selectedFile.name)
-    }
-  }
 
   const onSubmit = async () => {
     if (!validateFields()) {
@@ -516,37 +478,32 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           defaultValue: 'update'
         })
         // Cancelar el diálogo descarta el archivo
-          if (obj.isDismissed) {
-            removeSelectedFile()
-            resetForm()
-            return
-          }
-          if (formData.has('replace')) {
-            formData.delete('replace')
-          }
-          if (formData.has('update')) {
-            formData.delete('update')
-          }
-          if (obj.value === 'create') {
-            formData.append('replace', 'true')
-          } else if (obj.value === 'update') {
-            formData.append('update', 'true')
-          }
-          const response = await postData(formData)
+        if (obj.isDismissed) {
+          removeSelectedFile()
+          resetForm()
+          return
+        }
+        if (formData.has('replace')) {
+          formData.delete('replace')
+        }
+        if (formData.has('update')) {
+          formData.delete('update')
+        }
+        if (obj.value === 'create') {
+          formData.append('replace', 'true')
+        } else if (obj.value === 'update') {
+          formData.append('update', 'true')
+        }
+        const response = await postData(formData)
 
-          if (response.status >= 200 && response.status < 300) {
-            removeSelectedFile()
-            resetForm()
-            // MySwal.fire(
-            //   obj.value === "create" ? "Creado" : "Actualizado",
-            //   "",
-            //   "success"
-            // );
+        if (response.status >= 200 && response.status < 300) {
+          removeSelectedFile()
+          resetForm()
 
-            notify.success(
-              obj.value === 'create' ? 'Archivo Creado' : 'Archivo Actualizado'
-            )
-          }
+          notify.success(
+            obj.value === 'create' ? 'Archivo Creado' : 'Archivo Actualizado'
+          )
+        }
       }
       logger.error('Error al enviar datos:', error)
     } finally {
@@ -554,14 +511,24 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     }
   }
 
+  const textField = (
+    label: string,
+    value: string,
+    setValue: (value: string) => void,
+    key: keyof typeof missing
+  ) => (
+    <TextField
+      label={label}
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+      error={showError(key)}
+      helperText={showError(key) ? 'Obligatorio' : undefined}
+      fullWidth
+    />
+  )
+
   return (
-    <Box
-      sx={{
-        maxWidth: 400,
-        margin: '0 auto'
-      }}
-    >
-      <Loader loading={loading} />
+    <>
       <ModalCustomer
         open={openModalCustomer}
         onClose={setOpenModalCustomer}
@@ -576,204 +543,219 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         resetForm={resetForm}
       />
 
-      <Stack direction='column' spacing={2} mb={3} mt={3}>
-        {/* <TextField type="file" /> */}
-        {!hideUpload && (
-          <div>
-            <label htmlFor='upload-photo'>
-              <input
-                style={{ display: 'none' }}
-                id='upload-photo'
-                name='upload-photo'
-                type='file'
-                onChange={handleFileUpload}
-                accept='.xls, .xlsx, .xlsm'
+      <FormPage
+        title='Subir Excel'
+        subtitle='Carga de certificados por archivo Excel y PDF asociado.'
+        icon={<UploadFile />}
+        actions={headerActions}
+        onSubmit={(event) => {
+          event?.preventDefault()
+          onSubmit()
+        }}
+        onCancel={handleCancel}
+        submitLabel='Enviar certificado'
+        loading={loading}
+        notices={<FormErrorSummary count={errorCount} />}
+      >
+        <FormSection
+          title='Archivo Excel'
+          description='Se lee la hoja CERTIFICADO o CC y se llenan los datos de abajo.'
+        >
+          <FormGridItem>
+            {hideUpload ? (
+              <Typography>{selectedFile}</Typography>
+            ) : (
+              <FileDropZone
+                file={file}
+                onFileSelected={handleExcelSelected}
+                onReject={notify.error}
+                accept='.xls,.xlsx,.xlsm'
+                acceptLabel='Excel'
+                title='Arrastra el Excel o haz clic para elegirlo'
+                hint='.xls, .xlsx o .xlsm, hasta 10 MB'
+                disabled={loading}
               />
+            )}
+          </FormGridItem>
+        </FormSection>
 
-              <Button color='secondary' variant='contained' component='span'>
-                {!file ? 'Leer Archivo Excel' : file.name}
-              </Button>
-            </label>
-          </div>
-        )}
-
-        {hideUpload && <Typography>{selectedFile}</Typography>}
-
-        <AsyncSelect
-          cacheOptions
-          // defaultOptions
-          loadOptions={(inputValue) =>
-            loadOptions(inputValue, 'devices', mapDevices)
-          }
-          // onChange={(selectedOption: any) =>
-          //   setDevice({
-          //     id: selectedOption.value,
-          //     name: selectedOption.label,
-          //   })
-          // }
-          onChange={(selectedOption: any) => setDevice(selectedOption)}
-          value={device}
-          placeholder='Buscar Equipo'
-          styles={styles(!(!!validationError && !device))}
-        />
-        {missedData2.device && !device && (
-          <div className='flex items-center justify-evenly'>
-            <p className='text-red-500'>{missedData2.device}</p>
-            <IconButton
-              aria-label='delete'
-              onClick={() => setOpenModalDevice(true)}
-            >
-              <Add />
-            </IconButton>
-          </div>
-        )}
-        {/* <Button variant="contained" onClick={analyzeCells} color="primary">
-          Analizar Celdas
-        </Button> */}
-        <AsyncSelect
-          cacheOptions
-          // defaultOptions
-          loadOptions={(inputValue) =>
-            loadOptions(inputValue, 'customers', mapCustomers)
-          }
-          onChange={(selectedOption: any) => setCustomer(selectedOption)}
-          placeholder='Buscar Cliente'
-          styles={styles(!(!!validationError && !customer))}
-          value={customer}
-        />
-        {missedData2.customer && !customer && (
-          <div className='flex items-center justify-evenly'>
-            <p className='text-red-500'>{missedData2.customer}</p>
-            <IconButton
-              aria-label='delete'
-              onClick={() => setOpenModalCustomer(true)}
-            >
-              <Add />
-            </IconButton>
-          </div>
-        )}
-
-        <AsyncSelect
-          cacheOptions
-          // defaultOptions
-          loadOptions={(inputValue) =>
-            loadOptions(inputValue, 'certificateTypes', mapDevices)
-          }
-          onChange={(selectedOption: any) =>
-            setTypeOfCertificate({
-              id: selectedOption.value,
-              name: selectedOption.label
-            })
-          }
-          placeholder='Buscar Tipo de Certificado'
-          defaultValue={{
-            value: typeOfCertificate?.id,
-            label: typeOfCertificate?.name
-          }}
-          styles={styles(!(!!validationError && !typeOfCertificate))}
-        />
-        <Select
-          value={hq}
-          options={customer?.sedes.map((item) => ({
-            value: item, // valor en minúsculas
-            label: item.toUpperCase() // etiqueta con el mismo texto
-          }))}
-          styles={styles(!(!!validationError && !hq))}
-          placeholder='Seleccionar Sede'
-          onChange={(selectedOption: any) =>
-            setHq({
-              value: selectedOption.value,
-              label: selectedOption.label
-            })
-          }
-        />
-
-        <TextField
-          error={!!validationError && !city}
-          label='Ciudad'
-          variant='outlined'
-          fullWidth
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-        />
-        <TextField
-          error={!!validationError && !location}
-          label='Ubicación'
-          variant='outlined'
-          fullWidth
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-        <TextField
-          error={!!validationError && !headquarters}
-          label='Direccion'
-          variant='outlined'
-          fullWidth
-          value={headquarters}
-          onChange={(e) => setHeadquartes(e.target.value)}
-        />
-        <TextField
-          error={!!validationError && !fixedAsset}
-          label='Activo Fijo'
-          variant='outlined'
-          fullWidth
-          value={fixedAsset}
-          onChange={(e) => setFixedAsset(e.target.value)}
-        />
-        <TextField
-          error={!!validationError && !serialNumber}
-          label='Serie'
-          variant='outlined'
-          fullWidth
-          value={serialNumber}
-          onChange={(e) => setSerialNumber(e.target.value)}
-        />
-        <DatePicker
-          label='Fecha de Certificación'
-          value={certificateDate}
-          onChange={(newValue) => setCertificateDate(newValue)}
-          sx={{
-            '& .MuiInputBase-root': {
-              border:
-                !!validationError && !certificateDate
-                  ? '1px #d32f2f solid'
-                  : 'none'
-            },
-            '& .MuiFormLabel-root': {
-              color: !!validationError && !certificateDate ? '#d32f2f' : 'none'
+        <FormSection
+          title='Equipo y cliente'
+          description='Busca por nombre. Si el Excel trae uno que no existe, puedes crearlo.'
+        >
+          <AsyncSelectField<DeviceOption>
+            label='Equipo'
+            value={device}
+            onChange={setDevice}
+            loadOptions={(input) => searchOptions(input, 'devices', mapDevices)}
+            error={showError('device')}
+            helperText={showError('device') ? 'Obligatorio' : undefined}
+          />
+          <AsyncSelectField<ResourceCustomerOption>
+            label='Cliente'
+            value={customer}
+            onChange={(option) => {
+              setCustomer(option)
+              // La sede depende del cliente
+              setHq(null)
+            }}
+            loadOptions={(input) =>
+              searchOptions(input, 'customers', mapCustomers)
             }
-          }}
-        />
-        {isFile && (
-          <Button
-            component='label'
-            variant='contained'
-            startIcon={<CloudUpload />}
-            color={!!validationError && !filePdf ? 'error' : 'primary'}
+            error={showError('customer')}
+            helperText={showError('customer') ? 'Obligatorio' : undefined}
+          />
+          <AsyncSelectField<AsyncSelectOption>
+            label='Tipo de certificado'
+            value={
+              typeOfCertificate
+                ? { value: typeOfCertificate.id, label: typeOfCertificate.name }
+                : null
+            }
+            onChange={(option) =>
+              setTypeOfCertificate(
+                option ? { id: String(option.value), name: option.label } : null
+              )
+            }
+            loadOptions={(input) =>
+              searchOptions<AsyncSelectOption>(
+                input,
+                'certificateTypes',
+                (o) => ({
+                  value: String(o.id),
+                  label: o.name
+                })
+              )
+            }
+            error={showError('type')}
+            helperText={showError('type') ? 'Obligatorio' : undefined}
+          />
+          <TextField
+            select
+            label='Sede'
+            value={hq?.value ?? ''}
+            onChange={(event) =>
+              setHq({
+                value: event.target.value,
+                label: event.target.value.toUpperCase()
+              })
+            }
+            disabled={!customer}
+            error={showError('hq')}
+            helperText={
+              showError('hq')
+                ? 'Obligatorio'
+                : !customer
+                  ? 'Elige primero el cliente'
+                  : undefined
+            }
+            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
           >
-            {selectedFileName ? selectedFileName : 'Cargar Archivo PDF'}
-            <VisuallyHiddenInput
-              type='file'
-              accept='.pdf'
-              onChange={handleFileChange}
-            />
-          </Button>
-        )}
-        {validationError && (
-          <Box display={'flex'} justifyContent={'center'}>
-            <Typography color='error' variant='caption'>
-              <span style={{ marginRight: 15 }}>
-                <Warning />
-              </span>
-              {validationError}
-            </Typography>
-          </Box>
-        )}
-        <Button variant='contained' onClick={onSubmit} disabled={loading}>
-          Enviar
-        </Button>
-      </Stack>
-    </Box>
+            <MenuItem value='' disabled>
+              Seleccionar sede
+            </MenuItem>
+            {(customer?.sedes ?? []).map((item) => (
+              <MenuItem key={item} value={item}>
+                {item.toUpperCase()}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {missedData2.device && !device ? (
+            <FormGridItem>
+              <Alert
+                severity='warning'
+                variant='outlined'
+                action={
+                  <Button
+                    color='inherit'
+                    size='small'
+                    onClick={() => setOpenModalDevice(true)}
+                  >
+                    Crear equipo
+                  </Button>
+                }
+              >
+                No encontramos el equipo “{missedData2.device}”. Créalo para
+                continuar.
+              </Alert>
+            </FormGridItem>
+          ) : null}
+          {missedData2.customer && !customer ? (
+            <FormGridItem>
+              <Alert
+                severity='warning'
+                variant='outlined'
+                action={
+                  <Button
+                    color='inherit'
+                    size='small'
+                    onClick={() => setOpenModalCustomer(true)}
+                  >
+                    Crear cliente
+                  </Button>
+                }
+              >
+                No encontramos el cliente “{missedData2.customer}”. Créalo para
+                continuar.
+              </Alert>
+            </FormGridItem>
+          ) : null}
+        </FormSection>
+
+        <FormSection title='Datos del certificado'>
+          {textField('Ciudad', city, setCity, 'city')}
+          {textField('Ubicación', location, setLocation, 'location')}
+          {textField('Dirección', headquarters, setHeadquartes, 'headquarters')}
+          {textField('Activo fijo', fixedAsset, setFixedAsset, 'fixedAsset')}
+          {textField('Serie', serialNumber, setSerialNumber, 'serialNumber')}
+          <FormDateField
+            label='Fecha de certificación'
+            name='certificateDate'
+            value={
+              certificateDate && isValid(certificateDate)
+                ? format(certificateDate, 'yyyy-MM-dd')
+                : ''
+            }
+            onChange={(value) =>
+              setCertificateDate(
+                value ? parse(value, 'yyyy-MM-dd', new Date()) : null
+              )
+            }
+            error={showError('certificateDate') && 'Obligatorio'}
+          />
+        </FormSection>
+
+        {isFile ? (
+          <FormSection
+            title='Certificado en PDF'
+            description='El PDF que se guarda junto con los datos.'
+          >
+            <FormGridItem>
+              <FileDropZone
+                file={filePdf}
+                onFileSelected={setFilePdf}
+                onReject={notify.error}
+                accept='.pdf'
+                acceptLabel='PDF'
+                title='Arrastra el PDF o haz clic para elegirlo'
+                disabled={loading}
+              />
+              {showError('pdf') ? (
+                <Typography
+                  variant='caption'
+                  sx={{ color: 'error.main', mt: 0.5, display: 'block' }}
+                >
+                  Obligatorio
+                </Typography>
+              ) : null}
+            </FormGridItem>
+          </FormSection>
+        ) : null}
+      </FormPage>
+    </>
   )
 }
 
@@ -809,4 +791,3 @@ export interface CertificateTemplateData {
 }
 
 export default AnalyzeExcelComponent
-// @ts-nocheck

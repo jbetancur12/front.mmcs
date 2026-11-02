@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { Modal, Box, TextField, Button, Typography } from '@mui/material'
+import { TextField } from '@mui/material'
 
+import FormDialog, { FormDialogSection } from './Common/FormDialog'
 import { notify } from 'src/utils/notify'
 import { useCreateCustomer } from 'src/hooks/customers/useCustomers'
 
@@ -12,16 +13,22 @@ interface ModalCustomerProps {
   dataReturned: (data: any) => void
 }
 
-const formFields = [
-  'nombre',
-  'email',
-  'identificacion',
-  'direccion',
-  'telefono',
-  'ciudad',
-  'departamento',
-  'pais'
+const FIELDS: Array<{ name: string; label: string; fullWidth?: boolean }> = [
+  { name: 'nombre', label: 'Nombre', fullWidth: true },
+  { name: 'email', label: 'Correo' },
+  { name: 'identificacion', label: 'Identificación' },
+  { name: 'direccion', label: 'Dirección' },
+  { name: 'telefono', label: 'Teléfono' },
+  { name: 'ciudad', label: 'Ciudad' },
+  { name: 'departamento', label: 'Departamento' },
+  { name: 'pais', label: 'País' }
 ]
+
+const emptyValues = () =>
+  FIELDS.reduce<Record<string, string>>(
+    (obj, field) => ({ ...obj, [field.name]: '' }),
+    {}
+  )
 
 const ModalCustomer: React.FC<ModalCustomerProps> = ({
   open,
@@ -30,39 +37,26 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
   dataReturned
 }) => {
   const createCustomer = useCreateCustomer<Record<string, string | boolean>>()
-  const [formValues, setFormValues] = useState<
-    Record<string, string | boolean>
-  >(formFields.reduce((obj, field) => ({ ...obj, [field]: '' }), {}))
-  const [errors, setErrors] = useState<any>(
-    formFields.reduce((obj, field) => ({ ...obj, [field]: false }), {})
-  )
+  const [formValues, setFormValues] =
+    useState<Record<string, string>>(emptyValues)
+  const [errors, setErrors] = useState<Record<string, boolean>>({})
 
   const handleClose = () => onClose(false)
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({
-      ...formValues,
-      [event.target.name]: event.target.value
-    })
-    setErrors({
-      ...errors,
-      [event.target.name]: event.target.value === ''
-    })
+    const { name: field, value } = event.target
+    setFormValues((prev) => ({ ...prev, [field]: value }))
+    setErrors((prev) => ({ ...prev, [field]: value === '' }))
   }
 
+  // El nombre llega del Excel; el resto lo completa quien crea el cliente
   useEffect(() => {
-    setFormValues({
-      ...formValues,
-      nombre: name
-    })
+    setFormValues((prev) => ({ ...prev, nombre: name }))
   }, [name])
 
   const handleSubmit = async () => {
-    const newErrors = formFields.reduce(
-      (obj: Record<string, boolean>, field) => ({
-        ...obj,
-        [field]: formValues[field] === ''
-      }),
+    const newErrors = FIELDS.reduce<Record<string, boolean>>(
+      (obj, field) => ({ ...obj, [field.name]: formValues[field.name] === '' }),
       {}
     )
     setErrors(newErrors)
@@ -75,7 +69,7 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
       const response = await createCustomer.mutateAsync(formValues)
 
       if (response.status === 201) {
-        notify.success('Cliente Creado Exitosamente!')
+        notify.success('Cliente creado')
         dataReturned(response.data)
         onClose(false)
       } else {
@@ -86,51 +80,34 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
     }
   }
 
-  const body = (
-    <Box
-      sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 400,
-        bgcolor: 'background.paper',
-        border: '2px solid #000',
-        boxShadow: 24,
-        p: 4
-      }}
-    >
-      <Typography variant='h5' component='div'>
-        Crear Cliente
-      </Typography>
-      {formFields.map((field) => (
-        <TextField
-          key={field}
-          name={field}
-          label={field.charAt(0).toUpperCase() + field.slice(1)}
-          value={formValues[field]}
-          onChange={handleChange}
-          fullWidth
-          margin='normal'
-          error={errors[field]}
-        />
-      ))}
-      <Button onClick={handleClose}>Close</Button>
-      <Button onClick={handleSubmit}>Crear</Button>
-    </Box>
-  )
-
   return (
-    <div>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby='modal-modal-title'
-        aria-describedby='modal-modal-description'
-      >
-        {body}
-      </Modal>
-    </div>
+    <FormDialog
+      open={open}
+      onClose={handleClose}
+      title='Crear cliente'
+      subtitle='Datos del cliente que trae el Excel'
+      submitLabel='Crear cliente'
+      onSubmit={handleSubmit}
+      loading={createCustomer.isLoading}
+      maxWidth='sm'
+    >
+      <FormDialogSection title='Datos del cliente'>
+        {FIELDS.map((field) => (
+          <TextField
+            key={field.name}
+            name={field.name}
+            label={field.label}
+            value={formValues[field.name]}
+            onChange={handleChange}
+            error={Boolean(errors[field.name])}
+            helperText={errors[field.name] ? 'Obligatorio' : undefined}
+            required
+            fullWidth
+            sx={field.fullWidth ? { gridColumn: '1 / -1' } : undefined}
+          />
+        ))}
+      </FormDialogSection>
+    </FormDialog>
   )
 }
 

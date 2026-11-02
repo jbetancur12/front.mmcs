@@ -9,6 +9,8 @@ interface FormPageProps {
   subtitle?: string
   /** Ícono del círculo del encabezado (de `@mui/icons-material`). */
   icon: React.ReactElement
+  /** Controles a la derecha del encabezado (por ejemplo, un acceso a ajustes). */
+  actions?: React.ReactNode
   onSubmit: (e?: React.FormEvent<HTMLFormElement>) => void
   onCancel: () => void
   /** Texto del botón principal; repite el verbo del título. */
@@ -33,6 +35,7 @@ const FormPage: React.FC<FormPageProps> = ({
   title,
   subtitle,
   icon,
+  actions,
   onSubmit,
   onCancel,
   submitLabel,
@@ -52,7 +55,12 @@ const FormPage: React.FC<FormPageProps> = ({
       '& .MuiInputLabel-root.Mui-focused': { color: '#00695C' }
     }}
   >
-    <LmsPageHeader title={title} subtitle={subtitle} icon={icon} />
+    <LmsPageHeader
+      title={title}
+      subtitle={subtitle}
+      icon={icon}
+      actions={actions}
+    />
     {tabs}
     <Box sx={{ display: 'grid', gap: 3 }}>{children}</Box>
     <Paper
