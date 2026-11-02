@@ -1,7 +1,7 @@
 import { CalibrationServiceCutTask } from '../../../types/calibrationService'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Paper, Stack, Typography } from '@mui/material'
+import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material'
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 import { useCalibrationServiceMyQueue } from '../../../hooks/useCalibrationServices'
@@ -36,6 +36,13 @@ const CUT_TASK_BY_SECTION: Record<string, CalibrationServiceCutTask> = {
   certificates: 'certificates_pending'
 }
 
+// Columnas de la cuadrícula según cuántas tarjetas hay: hasta 4 usan 4 columnas fijas (no se estiran), 5 y 6 se reparten
+// en 3 por fila, y con ancho de sobra 5 tarjetas caben en una sola fila.
+const columns = (count: number, wide: boolean) => {
+  const n = count <= 4 ? 4 : wide && count === 5 ? 5 : count <= 6 ? 3 : 4
+  return `repeat(${n}, minmax(0, 1fr))`
+}
+
 interface CalibrationServiceMyQueueStripProps {
   activeCutTask: CalibrationServiceCutTask | ''
   onSelectCutTask: (task: CalibrationServiceCutTask | '') => void
@@ -67,45 +74,64 @@ const CalibrationServiceMyQueueStrip = ({
 
   return (
     <Box sx={{ mb: 3 }}>
-      <Typography variant='subtitle2' color='text.secondary' sx={{ mb: 1 }}>
-        Mis pendientes · {total}
-      </Typography>
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 2,
-          gridTemplateColumns: {
-            xs: 'minmax(0, 1fr)',
-            sm: 'repeat(2, minmax(0, 1fr))',
-            lg: 'repeat(4, minmax(0, 1fr))'
-          }
-        }}
-      >
-        {sections.map((section) => (
-          <LmsStatCard
-            key={section.key}
-            label={section.label}
-            value={section.count}
-            icon={<AssignmentTurnedInOutlinedIcon />}
-            tone={SECTION_TONES[section.key] || 'teal'}
-            variant='quiet'
-            active={
-              CUT_TASK_BY_SECTION[section.key]
-                ? activeCutTask === CUT_TASK_BY_SECTION[section.key]
-                : selectedKey === section.key
+      <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1.5 }}>
+        <Typography
+          component='h2'
+          sx={{ fontSize: 16, fontWeight: 700, color: '#111827' }}
+        >
+          Mis pendientes
+        </Typography>
+        <Chip
+          size='small'
+          variant='outlined'
+          label={total}
+          aria-label={`${total} pendientes`}
+          sx={{ fontWeight: 600, color: '#00695C', borderColor: '#b2ebe3' }}
+        />
+      </Stack>
+      {/* Se mide el ancho del bloque (no el de la pantalla): con el menú lateral abierto o cerrado cambia el espacio. */}
+      <Box sx={{ containerType: 'inline-size' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr)',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              lg: columns(sections.length, false)
+            },
+            // 5 tarjetas caben en una fila solo con ancho de sobra; si no, 3 + 2 en vez de 4 + 1 huérfana.
+            '@container (min-width: 1240px)': {
+              gridTemplateColumns: columns(sections.length, true)
             }
-            onClick={() => {
-              const task = CUT_TASK_BY_SECTION[section.key]
-              if (task) {
-                setSelectedKey(null)
-                onSelectCutTask(activeCutTask === task ? '' : task)
-                return
+          }}
+        >
+          {sections.map((section) => (
+            <LmsStatCard
+              key={section.key}
+              label={section.label}
+              value={section.count}
+              icon={<AssignmentTurnedInOutlinedIcon />}
+              tone={SECTION_TONES[section.key] || 'teal'}
+              variant='quiet'
+              active={
+                CUT_TASK_BY_SECTION[section.key]
+                  ? activeCutTask === CUT_TASK_BY_SECTION[section.key]
+                  : selectedKey === section.key
               }
-              onSelectCutTask('')
-              setSelectedKey(selectedKey === section.key ? null : section.key)
-            }}
-          />
-        ))}
+              onClick={() => {
+                const task = CUT_TASK_BY_SECTION[section.key]
+                if (task) {
+                  setSelectedKey(null)
+                  onSelectCutTask(activeCutTask === task ? '' : task)
+                  return
+                }
+                onSelectCutTask('')
+                setSelectedKey(selectedKey === section.key ? null : section.key)
+              }}
+            />
+          ))}
+        </Box>
       </Box>
       {selected ? (
         <Paper

@@ -163,7 +163,7 @@ const CalibrationServicesFiltersCard = ({
             )
           }}
           sx={{
-            minWidth: { lg: 300 },
+            minWidth: { lg: 340 },
             '& .MuiOutlinedInput-root': {
               bgcolor: '#fff',
               borderRadius: '10px'

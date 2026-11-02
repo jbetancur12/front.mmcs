@@ -149,7 +149,7 @@ const TROUBLESHOOTING = (
   </>
 )
 
-const GuideDialog = ({
+export const GuideDialog = ({
   open,
   onClose
 }: {
