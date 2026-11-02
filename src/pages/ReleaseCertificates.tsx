@@ -389,7 +389,6 @@ const ReleaseCertificates: React.FC = () => {
           onPaginationChange={setPagination}
           state={{
             pagination,
-            isLoading,
             showProgressBars: isFetching,
             rowSelection: selection
           }}
