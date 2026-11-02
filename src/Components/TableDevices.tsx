@@ -1,4 +1,4 @@
-import { Add, Build, Delete, Edit } from '@mui/icons-material'
+import { Add, Build, DeleteOutline, EditOutlined } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -9,14 +9,12 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  Paper,
   Stack,
   TextField,
   Tooltip
 } from '@mui/material'
 
 import {
-  MaterialReactTable,
   type MRT_Cell,
   type MRT_ColumnDef,
   type MRT_Row,
@@ -26,7 +24,7 @@ import React, { useCallback, useMemo, useState } from 'react'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import DataTable from 'src/Components/Common/DataTable'
 import AsyncSelect from 'react-select/async'
 
 import { loadOptions, mapOptions } from '../utils/loadOptions'
@@ -326,60 +324,49 @@ const Table: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <MaterialReactTable
-            {...purchaseTableStyle}
-            displayColumnDefOptions={{
-              'mrt-row-actions': {
-                muiTableHeadCellProps: {
-                  align: 'center'
-                }
-                // size: 120,
-              }
-            }}
-            columns={columns}
-            data={tableData}
-            {...server.tableProps}
-            rowCount={devicesPage?.totalItems ?? 0}
-            state={{
-              ...server.tableState,
-              isLoading,
-              showProgressBars: isFetching && !isLoading
-            }}
-            editingMode='modal' //default
-            enableColumnOrdering
-            enableEditing={canManageDevices}
-            enableRowActions={canManageDevices}
-            onEditingRowSave={handleSaveRowEdits}
-            onEditingRowCancel={handleCancelRowEdits}
-            enablePinning
-            initialState={{
-              columnVisibility: { id: false },
-              columnPinning: { right: ['mrt-row-actions'] }
-            }}
-            renderRowActions={({ row, table }) => (
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: '1rem',
-                  width: 20,
-                  justifyItems: 'center'
-                }}
-              >
-                <Tooltip arrow placement='left' title='Edit'>
-                  <IconButton onClick={() => table.setEditingRow(row)}>
-                    <Edit />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip arrow placement='right' title='Delete'>
-                  <IconButton color='error' onClick={() => handleDeleteRow(row)}>
-                    <Delete />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            )}
-          />
-      </Paper>
+      <DataTable<DeviceData>
+        columns={columns}
+        data={tableData}
+        itemLabel={['equipo', 'equipos']}
+        searchPlaceholder='Buscar por nombre'
+        {...server.tableProps}
+        rowCount={devicesPage?.totalItems ?? 0}
+        state={{
+          ...server.tableState,
+          isLoading,
+          showProgressBars: isFetching && !isLoading
+        }}
+        editingMode='modal' //default
+        enableEditing={canManageDevices}
+        enableRowActions={canManageDevices}
+        onEditingRowSave={handleSaveRowEdits}
+        onEditingRowCancel={handleCancelRowEdits}
+        initialState={{ columnVisibility: { id: false } }}
+        renderRowActions={({ row, table }) => (
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip arrow placement='top' title='Editar'>
+            <IconButton
+            size='small'
+            aria-label='Editar'
+            sx={{ color: '#2563eb' }}
+            onClick={() => table.setEditingRow(row)}
+            >
+            <EditOutlined fontSize='small' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip arrow placement='top' title='Eliminar'>
+            <IconButton
+            size='small'
+            color='error'
+            aria-label='Eliminar'
+            onClick={() => handleDeleteRow(row)}
+            >
+            <DeleteOutline fontSize='small' />
+            </IconButton>
+          </Tooltip>
+          </Box>
+        )}
+      />
       <CreateNewDeviceModal
         columns={columns}
         open={createModalOpen}

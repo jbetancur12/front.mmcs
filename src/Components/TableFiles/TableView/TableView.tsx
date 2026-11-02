@@ -1,20 +1,17 @@
-import {
-  MaterialReactTable,
-  MRT_PaginationState,
-  MRT_SortingState
-} from 'material-react-table'
+import { MRT_PaginationState, MRT_SortingState } from 'material-react-table'
+import DataTable from 'src/Components/Common/DataTable'
 import { FileData } from '../types/fileTypes'
 import { createTableColumns } from './tableColumns'
 import { useMemo, useState, useEffect } from 'react'
 import { useValidation } from '../hooks/useValidation'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Box, Button, IconButton, Tooltip, Chip } from '@mui/material'
 import {
-  Delete,
-  FileDownload,
-  Visibility,
   Add,
-  FilterAltOff
+  DeleteOutline,
+  FileDownloadOutlined,
+  FilterAltOff,
+  VisibilityOutlined
 } from '@mui/icons-material'
 import { useFileActions } from '../hooks/useFileActions'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -22,7 +19,6 @@ import { handleDownload } from '../utils/fileHandlers'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { logger } from 'src/utils/logger'
-// import PDFViewer from 'src/Components/PDFViewer'
 
 // Key for sessionStorage
 const TABLE_STATE_KEY = 'calibration-table-state'
@@ -50,6 +46,7 @@ export const TableView = ({
   axiosPrivate,
   openModal
 }: TableViewProps) => {
+  const navigate = useNavigate()
   const canDeleteFile = useCan(PERMISSIONS.CALIBRATION_FILE_DELETE)
   const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
   const { handleDeleteRow } = useFileActions(axiosPrivate, fetchFiles)
@@ -163,15 +160,18 @@ export const TableView = ({
   )
 
   return (
-    <MaterialReactTable
+    <DataTable<FileData>
       columns={columns}
       data={data}
-      positionActionsColumn='first'
-      enableRowActions={true}
-      enableColumnOrdering
-      enableStickyHeader
-      enablePagination
-      // Controlled state
+      itemLabel={['certificado', 'certificados']}
+      searchPlaceholder='Buscar certificados'
+      enableColumnFilters={false}
+      // Búsqueda, orden y paginación las hace el servidor
+      manualPagination
+      manualFiltering
+      manualSorting
+      rowCount={rowCount}
+      autoResetPageIndex={false}
       state={{
         isLoading: loading,
         pagination,
@@ -189,285 +189,86 @@ export const TableView = ({
         setPagination((prev) => ({ ...prev, pageIndex: 0 }))
         setGlobalFilter(value ?? '')
       }}
-      initialState={{
-        density: 'comfortable',
-        columnVisibility: { filePath: false },
-        showGlobalFilter: true
-      }}
-      enableRowVirtualization
-      enableColumnResizing
-      enableColumnFilters={false}
-      columnResizeMode='onChange'
-      manualPagination
-      manualFiltering
-      manualSorting
-      rowCount={rowCount}
-      autoResetPageIndex={false}
-      muiTablePaperProps={{
-        elevation: 0,
-        sx: {
-          borderRadius: '0',
-          border: 'none',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column'
-        }
-      }}
+      // La columna del enlace del archivo (id 13) solo alimenta la descarga
+      initialState={{ columnVisibility: { '13': false } }}
       muiTableContainerProps={{
-        sx: {
-          borderRadius: '12px',
-          maxHeight: '100%',
-          flex: 1,
-          overflow: 'auto'
-        }
-      }}
-      muiTableProps={{
-        sx: {
-          tableLayout: 'fixed',
-          '& .MuiTableCell-root': {
-            borderColor: '#f3f4f6'
-          }
-        }
-      }}
-      muiTableHeadCellProps={{
-        sx: {
-          backgroundColor: '#f9fafb',
-          color: '#374151',
-          fontWeight: 700,
-          fontSize: '0.75rem',
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-          borderBottom: '2px solid #e5e7eb',
-          py: 2,
-          px: 1.5,
-          whiteSpace: 'normal',
-          wordWrap: 'break-word',
-          lineHeight: 1.3,
-          '&:first-of-type': {
-            borderTopLeftRadius: '12px'
-          },
-          '&:last-of-type': {
-            borderTopRightRadius: '12px'
-          },
-          '& .Mui-TableHeadCell-Content': {
-            whiteSpace: 'normal',
-            overflow: 'visible'
-          }
-        }
-      }}
-      muiTableBodyProps={{
-        sx: {
-          '& tr:hover': {
-            backgroundColor: '#f0fdf4 !important',
-            transition: 'background-color 0.2s ease'
-          }
-        }
-      }}
-      muiTableBodyCellProps={{
-        sx: {
-          fontSize: '0.8125rem',
-          color: '#1f2937',
-          py: 1.5,
-          px: 1.5,
-          borderColor: '#f3f4f6',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
-        }
+        sx: { maxHeight: 'calc(100vh - 360px)', minHeight: 320 }
       }}
       muiTableBodyRowProps={({ row }) => ({
-        sx: {
-          backgroundColor: row.index % 2 === 0 ? '#ffffff' : '#fafafa',
-          '&:hover': {
-            backgroundColor: '#f0fdf4 !important',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }
-        }
+        onClick: () => navigate(`${row.original.id}`),
+        sx: { cursor: 'pointer' }
       })}
-      muiTopToolbarProps={{
-        sx: {
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid #e5e7eb',
-          py: 2
-        }
-      }}
-      muiBottomToolbarProps={{
-        sx: {
-          backgroundColor: '#ffffff',
-          borderTop: '1px solid #e5e7eb'
-        }
-      }}
-      muiTablePaginationProps={{
-        color: 'primary',
-        sx: {
-          '& .MuiPaginationItem-root': {
-            borderRadius: '8px',
-            '&.Mui-selected': {
-              backgroundColor: '#10b981',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: '#059669'
+      enableRowActions
+      renderRowActions={({ row }) => (
+        <Box
+          sx={{ display: 'flex', gap: 0.5 }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <Tooltip arrow placement='top' title='Ver certificado'>
+            <IconButton
+              size='small'
+              aria-label='Ver certificado'
+              sx={{ color: '#00695C' }}
+              onClick={() => navigate(`${row.original.id}`)}
+            >
+              <VisibilityOutlined fontSize='small' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip arrow placement='top' title='Descargar'>
+            <IconButton
+              size='small'
+              aria-label='Descargar certificado'
+              sx={{ color: '#2563eb' }}
+              onClick={() =>
+                handleDownload(row.original.filePath, axiosPrivate)
               }
-            }
-          }
-        }
-      }}
-      renderRowActions={({ row }) => {
-        return (
-          <Box
-            sx={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
-          >
-            {canDeleteFile && (
-              <Tooltip arrow placement='top' title='Eliminar'>
-                <IconButton
-                  onClick={() => handleDeleteRow(Number(row.original.id))}
-                  sx={{
-                    color: '#ef4444',
-                    '&:hover': {
-                      backgroundColor: '#fee2e2',
-                      color: '#dc2626'
-                    }
-                  }}
-                >
-                  <Delete />
-                </IconButton>
-              </Tooltip>
-            )}
-            <Tooltip arrow placement='top' title='Descargar'>
+            >
+              <FileDownloadOutlined fontSize='small' />
+            </IconButton>
+          </Tooltip>
+          {canDeleteFile && (
+            <Tooltip arrow placement='top' title='Eliminar'>
               <IconButton
-                onClick={() =>
-                  handleDownload(row.original.filePath, axiosPrivate)
-                }
-                sx={{
-                  color: '#10b981',
-                  '&:hover': {
-                    backgroundColor: '#d1fae5',
-                    color: '#059669'
-                  }
-                }}
+                size='small'
+                color='error'
+                aria-label='Eliminar certificado'
+                onClick={() => handleDeleteRow(Number(row.original.id))}
               >
-                <FileDownload />
+                <DeleteOutline fontSize='small' />
               </IconButton>
             </Tooltip>
-            <Tooltip arrow placement='top' title='Ver archivo'>
-              <Link
-                to={`${row.original.id}`}
-                style={{ textDecoration: 'none' }}
-              >
-                <IconButton
-                  sx={{
-                    color: '#3b82f6',
-                    '&:hover': {
-                      backgroundColor: '#dbeafe',
-                      color: '#2563eb'
-                    }
-                  }}
-                >
-                  <Visibility />
-                </IconButton>
-              </Link>
-            </Tooltip>
-          </Box>
-        )
-      }}
-      renderTopToolbarCustomActions={() => {
-        return (
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            {hasActiveFilters && (
-              <Chip
-                label={`${(globalFilter ? 1 : 0) + (sorting.length > 0 ? 1 : 0)} filtro(s) activo(s)`}
-                onDelete={handleClearFilters}
-                deleteIcon={<FilterAltOff />}
-                sx={{
-                  backgroundColor: '#fef3c7',
-                  color: '#92400e',
-                  fontWeight: 600,
-                  '& .MuiChip-deleteIcon': {
-                    color: '#92400e',
-                    '&:hover': {
-                      color: '#78350f'
-                    }
-                  }
-                }}
-              />
-            )}
-
-            {canCreateFile && (
-                <Button
-                  onClick={() => openModal(true)}
-                  variant='contained'
-                  startIcon={<Add />}
-                  sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
-                >
-                  Subir Nuevo Certificado
-                </Button>
-              )}
-          </Box>
-        )
-      }}
-      // renderDetailPanel={({ row }) => {
-      //   return (
-      //     <Box
-      //       sx={{
-      //         p: 4,
-      //         backgroundColor: '#f9fafb',
-      //         borderRadius: '12px',
-      //         m: 2
-      //       }}
-      //     >
-      //       <Box
-      //         sx={{
-      //           mb: 3,
-      //           pb: 2,
-      //           borderBottom: '2px solid #e5e7eb'
-      //         }}
-      //       >
-      //         <Typography
-      //           variant='h6'
-      //           sx={{
-      //             color: '#374151',
-      //             fontWeight: 700,
-      //             display: 'flex',
-      //             alignItems: 'center',
-      //             gap: 1
-      //           }}
-      //         >
-      //           <Visibility sx={{ color: '#10b981' }} />
-      //           Vista Previa del Certificado
-      //         </Typography>
-      //         <Typography variant='body2' sx={{ color: '#6b7280', mt: 1 }}>
-      //           {row.original.customer?.nombre} - {row.original.device?.name}
-      //         </Typography>
-      //       </Box>
-      //       <Box
-      //         sx={{
-      //           display: 'flex',
-      //           justifyContent: 'center',
-      //           backgroundColor: 'white',
-      //           borderRadius: '8px',
-      //           p: 2,
-      //           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-      //         }}
-      //       >
-      //         <PDFViewer path={row.original.filePath} />
-      //       </Box>
-      //     </Box>
-      //   )
-      // }}
-      displayColumnDefOptions={{
-        'mrt-row-actions': {
-          header: 'Acciones',
-          muiTableHeadCellProps: {
-            align: 'center',
-            sx: {
-              backgroundColor: '#f9fafb',
-              color: '#374151',
-              fontWeight: 700
-            }
-          },
-          size: 150
-        }
-      }}
+          )}
+        </Box>
+      )}
+      renderTopToolbarCustomActions={() => (
+        <Box
+          sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          {hasActiveFilters && (
+            <Chip
+              variant='outlined'
+              label={`${(globalFilter ? 1 : 0) + (sorting.length > 0 ? 1 : 0)} filtro(s) activo(s)`}
+              onDelete={handleClearFilters}
+              deleteIcon={<FilterAltOff />}
+              sx={{ fontWeight: 600, color: '#00695C', borderColor: '#b2ebe3' }}
+            />
+          )}
+          {canCreateFile && (
+            <Button
+              onClick={() => openModal(true)}
+              variant='contained'
+              startIcon={<Add />}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
+              Subir nuevo certificado
+            </Button>
+          )}
+        </Box>
+      )}
     />
   )
 }
