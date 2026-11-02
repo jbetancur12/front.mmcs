@@ -2,6 +2,14 @@
  * Guía paso a paso para conectar la copia al Drive. Cada paso se agrega cuando se confirma que así se ve en pantalla,
  * por eso la lista crece de a poco. Si Google cambia su pantalla, se ajusta el texto aquí.
  */
+/** Cómo se conecta: con una cuenta de Gmail (OAuth) o con una cuenta de servicio (Google Workspace). */
+export type DriveGuidePath = 'gmail' | 'workspace'
+
+export const DRIVE_GUIDE_PATH_LABELS: Record<DriveGuidePath, string> = {
+  gmail: 'Cuenta de Gmail',
+  workspace: 'Google Workspace (cuenta de servicio)'
+}
+
 export interface DriveGuideStep {
   id: string
   title: string
@@ -14,6 +22,8 @@ export interface DriveGuideStep {
   /** Aviso importante del paso (opcional). */
   warning?: string
   link?: { label: string; url: string }
+  /** Caminos a los que aplica; sin este campo aplica a todos. */
+  paths?: DriveGuidePath[]
   /** Captura de pantalla confirmada (ruta pública), opcional. */
   image?: { src: string; alt: string }
 }
@@ -63,7 +73,24 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'Asegúrate de que arriba sigue seleccionado el proyecto correcto antes de pulsar «Habilitar»: la API se activa solo en el proyecto elegido.'
   },
   {
+    id: 'pantalla-consentimiento',
+    paths: ['gmail'],
+    title: 'Configura la pantalla de consentimiento',
+    where: 'En Google Cloud',
+    actions: [
+      'En el buscador de arriba escribe «Pantalla de consentimiento de OAuth» (o «Google Auth Platform») y entra a esa página.',
+      'Si ves el botón «Comenzar» (o «Configurar»), púlsalo. Si ya muestra un panel, sigue al siguiente paso de esta lista.',
+      'Información de la app: nombre «Metromedics Certificados» y, en «Correo de asistencia al usuario», elige tu correo. Pulsa «Siguiente».',
+      'Público: elige «Externo» y pulsa «Siguiente».',
+      'Datos de contacto: escribe tu correo y pulsa «Siguiente».',
+      'Marca la casilla de acuerdo con la política de datos de usuario de los servicios de API de Google y pulsa «Continuar» y luego «Crear».'
+    ],
+    expect:
+      'Ves el panel de la plataforma de autenticación de Google («Descripción general») con el nombre de tu app, sin errores.
+  },
+  {
     id: 'crear-cuenta-servicio',
+    paths: ['workspace'],
     title: 'Crea la cuenta de servicio',
     where: 'En Google Cloud',
     actions: [
@@ -78,6 +105,7 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
   },
   {
     id: 'crear-clave-json',
+    paths: ['workspace'],
     title: 'Descarga la clave (archivo JSON)',
     where: 'En Google Cloud',
     actions: [
@@ -108,6 +136,7 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
   },
   {
     id: 'compartir-carpeta',
+    paths: ['workspace'],
     title: 'Comparte la carpeta con la cuenta de servicio',
     where: 'En Google Drive',
     actions: [
@@ -136,6 +165,7 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
   },
   {
     id: 'pegar-en-plataforma',
+    paths: ['workspace'],
     title: 'Pega todo en la plataforma y prueba',
     where: 'En la plataforma',
     actions: [

@@ -113,6 +113,7 @@ const ReleaseCertificates: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [rulesOpen, setRulesOpen] = useState(false)
   const [driveOpen, setDriveOpen] = useState(false)
+  const driveResult = new URLSearchParams(window.location.search).get('drive')
   const sign = useSignReleaseCertificates()
   const { data: mySignature } = useMySignature(canSign)
   const [signatureOpen, setSignatureOpen] = useState(false)
@@ -143,6 +144,29 @@ const ReleaseCertificates: React.FC = () => {
   const [viewingId, setViewingId] = useState<number | null>(
     Number.isInteger(initialId) && initialId > 0 ? initialId : null
   )
+
+  // Google devuelve a esta pantalla con ?drive=connected o ?drive=error: se avisa y se abre la configuración.
+  useEffect(() => {
+    if (!driveResult) return
+    if (driveResult === 'connected') {
+      notify.success(
+        'Cuenta de Google conectada',
+        'Ahora pulsa «Probar conexión».'
+      )
+    } else {
+      notify.error(
+        'No se pudo conectar con Google',
+        new URLSearchParams(window.location.search).get('reason') ?? undefined
+      )
+    }
+    setDriveOpen(true)
+    const next = new URLSearchParams(window.location.search)
+    next.delete('drive')
+    next.delete('reason')
+    setSearchParams(next, { replace: true })
+    // Solo al volver de Google.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(

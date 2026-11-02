@@ -8,6 +8,8 @@ import {
   DialogContent,
   DialogTitle,
   Step,
+  Tab,
+  Tabs,
   StepButton,
   StepContent,
   Stepper,
@@ -16,7 +18,11 @@ import {
   useTheme
 } from '@mui/material'
 import { OpenInNewRounded } from '@mui/icons-material'
-import { DRIVE_GUIDE_STEPS } from './driveGuideSteps'
+import {
+  DRIVE_GUIDE_PATH_LABELS,
+  DRIVE_GUIDE_STEPS,
+  DriveGuidePath
+} from './driveGuideSteps'
 
 interface ReleaseDriveGuideDialogProps {
   open: boolean
@@ -31,7 +37,11 @@ const ReleaseDriveGuideDialog: React.FC<ReleaseDriveGuideDialogProps> = ({
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [active, setActive] = useState(0)
-  const last = DRIVE_GUIDE_STEPS.length - 1
+  const [path, setPath] = useState<DriveGuidePath>('gmail')
+  const steps = DRIVE_GUIDE_STEPS.filter(
+    (step) => !step.paths || step.paths.includes(path)
+  )
+  const last = steps.length - 1
 
   return (
     <Dialog
@@ -47,8 +57,30 @@ const ReleaseDriveGuideDialog: React.FC<ReleaseDriveGuideDialogProps> = ({
           Sigue los pasos en orden. Si algo se ve distinto en tu pantalla,
           avísale a quien administra la plataforma antes de seguir.
         </Typography>
+        <Tabs
+          value={path}
+          onChange={(_event, value: DriveGuidePath) => {
+            setPath(value)
+            setActive(0)
+          }}
+          sx={{
+            mb: 2,
+            '& .MuiTabs-indicator': { backgroundColor: '#00BFA5' },
+            '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }
+          }}
+        >
+          {(Object.keys(DRIVE_GUIDE_PATH_LABELS) as DriveGuidePath[]).map(
+            (value) => (
+              <Tab
+                key={value}
+                value={value}
+                label={DRIVE_GUIDE_PATH_LABELS[value]}
+              />
+            )
+          )}
+        </Tabs>
         <Stepper nonLinear activeStep={active} orientation='vertical'>
-          {DRIVE_GUIDE_STEPS.map((step, index) => (
+          {steps.map((step, index) => (
             <Step key={step.id} completed={index < active}>
               <StepButton onClick={() => setActive(index)}>
                 <Typography fontWeight={600}>{step.title}</Typography>

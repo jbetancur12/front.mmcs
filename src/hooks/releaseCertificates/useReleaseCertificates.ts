@@ -235,6 +235,9 @@ export const DRIVE_LEVEL_PRESETS: { label: string; levels: DriveLevel[] }[] = [
 export interface DriveStatus {
   encryptionReady: boolean
   configured: boolean
+  mode: 'oauth' | 'service_account' | null
+  awaitingAuthorization: boolean
+  redirectUri: string | null
   clientEmail: string | null
   rootFolderId: string | null
   levels: DriveLevel[]
@@ -269,6 +272,21 @@ export const useDriveActions = () => {
       }): Promise<DriveStatus> =>
         (await axiosPrivate.put('/release-certificates/drive', data)).data,
       { onSuccess: refresh }
+    ),
+    startOAuth: useMutation(
+      async (data: {
+        clientId: string
+        clientSecret: string
+        rootFolderId: string
+        levels: DriveLevel[]
+        returnUrl: string
+      }): Promise<{ authUrl: string; redirectUri: string }> =>
+        (
+          await axiosPrivate.post(
+            '/release-certificates/drive/oauth/start',
+            data
+          )
+        ).data
     ),
     test: useMutation(
       async (): Promise<DriveStatus> =>
