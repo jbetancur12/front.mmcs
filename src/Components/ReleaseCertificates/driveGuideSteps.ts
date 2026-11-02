@@ -43,7 +43,7 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
     actions: [
       'Mira arriba a la izquierda, junto al nombre «Google Cloud»: hay un botón. Si dice «Selecciona un proyecto», todavía no tienes ninguno; si muestra un nombre (por ejemplo «Metromedics»), ya estás dentro de un proyecto y puedes usarlo.',
       'Para crear uno: pulsa ese botón, en la ventana que se abre pulsa «Proyecto nuevo» (arriba a la derecha), escribe el nombre «Metromedics Certificados» y pulsa «Crear». Deja «Organización» o «Ubicación» como están.',
-      'Espera la notificación de que el proyecto se creó (la campana arriba a la derecha) y, si hace falta, pulsa de nuevo el botón de proyectos y elígelo en la lista.'
+      'Espera la notificación «Crear proyecto: Metromedics Certificados» (la campana arriba a la derecha). Si trae el enlace «Seleccionar proyecto», púlsalo. Si no, pulsa de nuevo el botón de proyectos y elígelo en la lista.'
     ],
     expect:
       'El botón de arriba ya no dice «Selecciona un proyecto» sino el nombre del tuyo. En la pantalla de bienvenida dice «Estás trabajando en» seguido de ese nombre, y aparecen su número y su ID de proyecto.'
