@@ -558,6 +558,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Elegir el equipo del cliente y liberar el certificado: crea el equipo o registra la recalibración en su historial.',
     'Certificados a liberar: botón Liberar y confirmación del equipo.'
   ],
+  'release:drive:manage': [
+    'Configurar la copia al Drive',
+    'Pegar o reemplazar la credencial de Google (se guarda cifrada y no se vuelve a ver), elegir la carpeta raíz y la estructura de carpetas, y probar la conexión.',
+    'Certificados a liberar: botón Drive (administración).'
+  ],
   'release:certificate:rules': [
     'Reglas de lectura de certificados',
     'Editar las etiquetas, tipos de documento y magnitud por prefijo con los que el sistema lee los PDF.',

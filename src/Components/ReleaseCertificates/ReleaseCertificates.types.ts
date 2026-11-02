@@ -65,6 +65,10 @@ export interface ReleaseCertificate {
   currentVersionId: number | null
   signedAt?: string | null
   releasedAt?: string | null
+  driveStatus?: 'pendiente' | 'copiado' | 'error' | null
+  driveError?: string | null
+  drivePath?: string | null
+  driveCopiedAt?: string | null
   fileId?: number | null
   createdAt: string
   uploader?: ReleaseUserRef | null

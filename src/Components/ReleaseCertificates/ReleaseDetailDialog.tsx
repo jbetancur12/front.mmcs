@@ -332,6 +332,49 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                 </Grid>
               )}
 
+              {certificate.status === 'liberado' && (
+                <Alert
+                  severity={
+                    certificate.driveStatus === 'copiado'
+                      ? 'success'
+                      : certificate.driveStatus === 'error'
+                        ? 'error'
+                        : 'info'
+                  }
+                  sx={{ mt: 2 }}
+                  action={
+                    canRelease &&
+                    (certificate.driveStatus === 'error' ||
+                      !certificate.driveStatus) ? (
+                      <Button
+                        color='inherit'
+                        size='small'
+                        disabled={review.isLoading}
+                        onClick={() =>
+                          run(
+                            { type: 'drive-retry', id: certificate.id },
+                            'Copia al Drive en cola'
+                          )
+                        }
+                      >
+                        Copiar
+                      </Button>
+                    ) : undefined
+                  }
+                >
+                  {certificate.driveStatus === 'copiado'
+                    ? `En el Drive: ${certificate.drivePath}`
+                    : certificate.driveStatus === 'pendiente'
+                      ? 'Copia al Drive en curso' +
+                        (certificate.driveError
+                          ? ` (reintentando: ${certificate.driveError})`
+                          : '')
+                      : certificate.driveStatus === 'error'
+                        ? `No se pudo copiar al Drive: ${certificate.driveError ?? 'error desconocido'}`
+                        : 'Sin copia en el Drive (la conexión no estaba configurada)'}
+                </Alert>
+              )}
+
               <Divider sx={{ my: 2 }} />
               <Typography variant='subtitle2' gutterBottom>
                 Versiones del PDF

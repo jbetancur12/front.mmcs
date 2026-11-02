@@ -89,6 +89,7 @@ export type ReleaseReviewAction =
   | { type: 'verify'; id: number }
   | { type: 'adjustments'; id: number; observation: string }
   | { type: 'version'; id: number; file: File }
+  | { type: 'drive-retry'; id: number }
   | {
       type: 'release'
       id: number
@@ -112,6 +113,8 @@ export const useReleaseReview = () => {
           return axiosPrivate.post(`${base}/request-adjustments`, {
             observation: action.observation
           })
+        case 'drive-retry':
+          return axiosPrivate.post(`${base}/drive-retry`)
         case 'release':
           return axiosPrivate.post(`${base}/release`, {
             confirm: true,
@@ -208,4 +211,75 @@ export const useSaveMySignature = () => {
         queryClient.invalidateQueries(['releaseCertificates', 'signature'])
     }
   )
+}
+
+export type DriveLevel = 'categoria' | 'cliente' | 'anio'
+
+/** Estructuras de carpetas ofrecidas; la regla es configurable, no está fija en el código. */
+export const DRIVE_LEVEL_PRESETS: { label: string; levels: DriveLevel[] }[] = [
+  {
+    label: 'Categoría / Cliente / Año',
+    levels: ['categoria', 'cliente', 'anio']
+  },
+  {
+    label: 'Cliente / Año / Categoría',
+    levels: ['cliente', 'anio', 'categoria']
+  },
+  { label: 'Cliente / Categoría', levels: ['cliente', 'categoria'] },
+  { label: 'Año / Cliente', levels: ['anio', 'cliente'] }
+]
+
+export interface DriveStatus {
+  encryptionReady: boolean
+  configured: boolean
+  clientEmail: string | null
+  rootFolderId: string | null
+  levels: DriveLevel[]
+  lastTestAt: string | null
+  lastTestOk: boolean | null
+  lastTestMessage: string | null
+}
+
+export const useDriveStatus = (enabled: boolean) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<DriveStatus>(
+    ['releaseCertificates', 'drive'],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/drive')
+        .then((response) => response.data),
+    { enabled, cacheTime: 0 }
+  )
+}
+
+export const useDriveActions = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  const refresh = () =>
+    queryClient.invalidateQueries(['releaseCertificates', 'drive'])
+  return {
+    save: useMutation(
+      async (data: {
+        credentials?: string
+        rootFolderId: string
+        levels: DriveLevel[]
+      }): Promise<DriveStatus> =>
+        (await axiosPrivate.put('/release-certificates/drive', data)).data,
+      { onSuccess: refresh }
+    ),
+    test: useMutation(
+      async (): Promise<DriveStatus> =>
+        (await axiosPrivate.post('/release-certificates/drive/test')).data,
+      { onSuccess: refresh }
+    ),
+    backfill: useMutation(
+      async (): Promise<{ queued: number }> =>
+        (await axiosPrivate.post('/release-certificates/drive/backfill')).data,
+      { onSuccess: () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all) }
+    ),
+    remove: useMutation(
+      () => axiosPrivate.delete('/release-certificates/drive'),
+      { onSuccess: refresh }
+    )
+  }
 }

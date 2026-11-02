@@ -36,6 +36,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import EmptyState from 'src/Components/Common/EmptyState'
 import ReleaseDetailDialog from 'src/Components/ReleaseCertificates/ReleaseDetailDialog'
 import ReleaseStatusPill from 'src/Components/ReleaseCertificates/ReleaseStatusPill'
+import ReleaseDriveDialog from 'src/Components/ReleaseCertificates/ReleaseDriveDialog'
 import ReleaseSignatureDialog from 'src/Components/ReleaseCertificates/ReleaseSignatureDialog'
 import ReleaseUploadDialog from 'src/Components/ReleaseCertificates/ReleaseUploadDialog'
 import {
@@ -89,6 +90,11 @@ const ReleaseCertificates: React.FC = () => {
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_SIGN
   )
+  const canManageDrive = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_DRIVE_MANAGE
+  )
+  const [driveOpen, setDriveOpen] = useState(false)
   const sign = useSignReleaseCertificates()
   const { data: mySignature } = useMySignature(canSign)
   const [signatureOpen, setSignatureOpen] = useState(false)
@@ -261,6 +267,11 @@ const ReleaseCertificates: React.FC = () => {
         icon={<FactCheckOutlined />}
         actions={
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {canManageDrive && (
+              <Button variant='text' onClick={() => setDriveOpen(true)}>
+                Drive
+              </Button>
+            )}
             {canSign && (
               <Button variant='text' onClick={() => setSignatureOpen(true)}>
                 Mi firma
@@ -436,6 +447,10 @@ const ReleaseCertificates: React.FC = () => {
         />
       )}
 
+      <ReleaseDriveDialog
+        open={driveOpen}
+        onClose={() => setDriveOpen(false)}
+      />
       <ReleaseSignatureDialog
         open={signatureOpen}
         onClose={() => setSignatureOpen(false)}
