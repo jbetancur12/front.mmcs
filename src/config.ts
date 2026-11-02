@@ -46,5 +46,14 @@ export const api = () => {
       ? normalizeLocalApiUrl(import.meta.env.VITE_API_URL_DEV)
       : import.meta.env.VITE_API_URL_CLOUDFLARE
   }
+  // Una página servida desde localhost o una IP privada nunca debe hablar con la API de producción por un VITE_ENV
+  // mal cargado (un servidor iniciado con --mode production, un preview de un build): iniciaría sesión con datos reales.
+  // Para hacerlo a propósito: VITE_ALLOW_PROD_API=true.
+  if (
+    isLocalDevelopmentHost(window.location.hostname) &&
+    import.meta.env.VITE_ALLOW_PROD_API !== 'true'
+  ) {
+    return normalizeLocalApiUrl(import.meta.env.VITE_API_URL_DEV)
+  }
   return import.meta.env.VITE_API_URL_PROD
 }
