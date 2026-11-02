@@ -61,5 +61,19 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'La página de «Google Drive API» muestra el estado «API habilitada» (o un botón «Administrar» en lugar de «Habilitar»).',
     warning:
       'Asegúrate de que arriba sigue seleccionado el proyecto correcto antes de pulsar «Habilitar»: la API se activa solo en el proyecto elegido.'
+  },
+  {
+    id: 'crear-cuenta-servicio',
+    title: 'Crea la cuenta de servicio',
+    where: 'En Google Cloud',
+    actions: [
+      'En el buscador de arriba escribe «Cuentas de servicio» y elige «Cuentas de servicio» (sección «IAM y administración»). Verás una lista vacía con el título «Cuentas de servicio del proyecto…».',
+      'Arriba de la lista, a la derecha del título, pulsa el botón «+ Crear cuenta de servicio».',
+      'En «Nombre de la cuenta de servicio» escribe certificados-mmcs. El ID se llena solo.',
+      'Pulsa «Crear y continuar».',
+      'Las secciones de roles y de acceso de usuarios no necesitan nada: pulsa «Continuar» y luego «Listo».'
+    ],
+    expect:
+      'La lista muestra tu cuenta con un correo parecido a certificados-mmcs@tu-proyecto.iam.gserviceaccount.com. Ese correo no es secreto: lo usarás para compartir la carpeta del Drive.'
   }
 ]
