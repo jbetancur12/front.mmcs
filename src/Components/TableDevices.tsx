@@ -47,6 +47,7 @@ import {
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
 // Define interfaces
@@ -174,12 +175,14 @@ const Table: React.FC = () => {
   }
 
   const handleDeleteRow = useCallback(
-    (row: MRT_Row<DeviceData>) => {
-      if (
-        !confirm(`Esta seguro que desea eliminar ${row.getValue('name')} ?`)
-      ) {
-        return
-      }
+    async (row: MRT_Row<DeviceData>) => {
+      const { isConfirmed } = await confirmDialog({
+        title: 'Eliminar equipo',
+        text: `Vas a eliminar "${row.getValue('name')}". Esta acción no se puede deshacer.`,
+        confirmLabel: 'Eliminar',
+        tone: 'danger'
+      })
+      if (!isConfirmed) return
       deleteUser(row.getValue('id'))
     },
     [deleteUser]

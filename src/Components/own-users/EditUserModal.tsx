@@ -11,6 +11,7 @@ import { FormErrorsAlert, RolesField, UserTextField } from './UserFormFields'
 import { useUserForm } from './useUserForm'
 
 import { logger } from 'src/utils/logger'
+import { confirmDialog } from 'src/utils/confirm'
 interface EditModalProps {
   open: boolean
   onClose: () => void
@@ -88,15 +89,17 @@ const EditUserModal: React.FC<EditModalProps> = ({
     }
   }
 
-  const handleClose = () => {
+  const handleClose = async () => {
     if (isUpdating) return
-    if (
-      hasUnsavedChanges &&
-      !window.confirm(
-        'Los cambios que hiciste se perderán. ¿Cerrar de todos modos?'
-      )
-    ) {
-      return
+    if (hasUnsavedChanges) {
+      const { isConfirmed } = await confirmDialog({
+        title: 'Salir sin guardar',
+        text: 'Los cambios que hiciste se perderán.',
+        confirmLabel: 'Salir',
+        cancelLabel: 'Seguir editando',
+        tone: 'danger'
+      })
+      if (!isConfirmed) return
     }
     onClose()
     form.setHasUnsavedChanges(false)

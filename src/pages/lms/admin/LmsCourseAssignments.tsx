@@ -1,4 +1,5 @@
 import { getApiErrorReason } from 'src/utils/apiError'
+import { confirmDialog } from 'src/utils/confirm'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -190,10 +191,14 @@ const LmsCourseAssignments: React.FC = () => {
     createAssignmentMutation.mutate(assignmentData)
   }
 
-  const handleDeleteAssignment = (assignmentId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta asignación?')) {
-      deleteAssignmentMutation.mutate(assignmentId)
-    }
+  const handleDeleteAssignment = async (assignmentId: number) => {
+    const { isConfirmed } = await confirmDialog({
+      title: 'Eliminar asignación',
+      text: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      tone: 'danger'
+    })
+    if (isConfirmed) deleteAssignmentMutation.mutate(assignmentId)
   }
 
   const formatDate = (dateString: string) => {

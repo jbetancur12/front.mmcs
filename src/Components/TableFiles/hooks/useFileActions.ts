@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
 export const useFileActions = (
@@ -22,10 +23,16 @@ export const useFileActions = (
   )
 
   const handleDeleteRow = useCallback(
-    (rowId: number) => {
-      if (confirm('¿Estás seguro de eliminar este archivo?')) {
-        deleteFile(rowId)
-      }
+    async (rowId: number, name?: string) => {
+      const { isConfirmed } = await confirmDialog({
+        title: 'Eliminar certificado',
+        text: `${
+          name ? `Vas a eliminar "${name}". ` : ''
+        }Esta acción no se puede deshacer.`,
+        confirmLabel: 'Eliminar',
+        tone: 'danger'
+      })
+      if (isConfirmed) deleteFile(rowId)
     },
     [deleteFile]
   )

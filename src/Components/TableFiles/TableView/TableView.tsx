@@ -232,7 +232,9 @@ export const TableView = ({
                 size='small'
                 color='error'
                 aria-label='Eliminar certificado'
-                onClick={() => handleDeleteRow(Number(row.original.id))}
+                onClick={() =>
+                handleDeleteRow(Number(row.original.id), row.original.filePath)
+              }
               >
                 <DeleteOutline fontSize='small' />
               </IconButton>

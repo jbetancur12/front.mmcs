@@ -38,6 +38,7 @@ import {
 } from '@hooks/certificates/useCertificateTypes'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
 // Define interfaces
@@ -181,10 +182,14 @@ const Table: React.FC = () => {
   }
 
   const handleDeleteRow = useCallback(
-    (row: MRT_Row<CertificateTypeData>) => {
-      if (!confirm(`Are you sure you want to delete ${row.getValue('name')}`)) {
-        return
-      }
+    async (row: MRT_Row<CertificateTypeData>) => {
+      const { isConfirmed } = await confirmDialog({
+        title: 'Eliminar tipo de certificado',
+        text: `Vas a eliminar "${row.getValue('name')}". Esta acción no se puede deshacer.`,
+        confirmLabel: 'Eliminar',
+        tone: 'danger'
+      })
+      if (!isConfirmed) return
       deleteUser(row.getValue('id'))
       removeRowFromCache(row.getValue('id'))
     },

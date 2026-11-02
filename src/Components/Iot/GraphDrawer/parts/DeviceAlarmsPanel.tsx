@@ -1,4 +1,5 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import { confirmDialog } from 'src/utils/confirm'
 import React, { useState } from 'react'
 import {
   Typography,
@@ -90,10 +91,14 @@ const DeviceAlarmsPanel: React.FC<DeviceAlarmsPanelProps> = ({ deviceId }) => {
     setOpenDialog(true)
   }
 
-  const handleDeleteAlarm = (alarmId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta alarma?')) {
-      deleteMutation.mutate(alarmId)
-    }
+  const handleDeleteAlarm = async (alarmId: number) => {
+    const { isConfirmed } = await confirmDialog({
+      title: 'Eliminar alarma',
+      text: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      tone: 'danger'
+    })
+    if (isConfirmed) deleteMutation.mutate(alarmId)
   }
 
   const handleCloseDialog = () => {

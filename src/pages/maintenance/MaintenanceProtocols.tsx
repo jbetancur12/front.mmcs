@@ -1,4 +1,5 @@
 import { getApiErrorReason } from 'src/utils/apiError'
+import { confirmDialog } from 'src/utils/confirm'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -234,11 +235,14 @@ const MaintenanceProtocols = () => {
   }
 
   const handleDelete = async (protocol: MaintenanceProtocolTemplate) => {
-    const confirmed = window.confirm(
-      `¿Eliminar el protocolo "${protocol.name}"?`
-    )
+    const { isConfirmed } = await confirmDialog({
+      title: 'Eliminar protocolo',
+      text: `Vas a eliminar el protocolo "${protocol.name}". Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar',
+      tone: 'danger'
+    })
 
-    if (!confirmed) return
+    if (!isConfirmed) return
 
     try {
       await deleteProtocolMutation.mutateAsync(protocol.id)

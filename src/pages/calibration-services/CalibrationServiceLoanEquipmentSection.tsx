@@ -1,4 +1,5 @@
 import { useDeferredValue, useState } from 'react'
+import { confirmDialog } from 'src/utils/confirm'
 import {
   Alert,
   Autocomplete,
@@ -125,10 +126,13 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
   }
 
   const handleCancel = async (loan: CalibrationServiceLoanEquipment) => {
-    const confirmed = window.confirm(
-      `¿Anular el préstamo de ${loan.internalCode || 'este equipo'}? Quedará disponible de nuevo.`
-    )
-    if (!confirmed) return
+    const { isConfirmed } = await confirmDialog({
+      title: 'Anular préstamo',
+      text: `Vas a anular el préstamo de ${loan.internalCode || 'este equipo'}. Quedará disponible de nuevo.`,
+      confirmLabel: 'Anular préstamo',
+      tone: 'danger'
+    })
+    if (!isConfirmed) return
 
     try {
       await cancelLoan.mutateAsync({ serviceId, loanId: loan.id })

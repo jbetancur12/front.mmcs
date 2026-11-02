@@ -1,4 +1,5 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import { confirmDialog } from 'src/utils/confirm'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import {
   Box,
@@ -460,10 +461,13 @@ const LmsComplianceTracker: React.FC = () => {
 
   const handleResetCourse = async () => {
     if (!detailsRecord) return
-    const confirmed = window.confirm(
-      `¿Reiniciar el avance de ${detailsRecord.userName} en "${detailsRecord.courseTitle}"?\n\nSe borran el progreso y los recordatorios. Los certificados emitidos se conservan.`
-    )
-    if (!confirmed) return
+    const { isConfirmed } = await confirmDialog({
+      title: 'Reiniciar el avance',
+      text: `Vas a reiniciar el avance de ${detailsRecord.userName} en "${detailsRecord.courseTitle}". Se borran el progreso y los recordatorios; los certificados emitidos se conservan.`,
+      confirmLabel: 'Reiniciar',
+      tone: 'danger'
+    })
+    if (!isConfirmed) return
     try {
       await resetProgressMutation.mutateAsync({
         userId: detailsRecord.userId,

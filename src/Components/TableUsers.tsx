@@ -1,4 +1,5 @@
 import { Delete, Edit } from '@mui/icons-material'
+import { confirmDialog } from 'src/utils/confirm'
 import {
   Box,
   Button,
@@ -184,12 +185,14 @@ const Table: React.FC = () => {
   }
 
   const handleDeleteRow = useCallback(
-    (row: MRT_Row<UserData>) => {
-      if (
-        !confirm(`Are you sure you want to delete ${row.getValue('nombre')}`)
-      ) {
-        return
-      }
+    async (row: MRT_Row<UserData>) => {
+      const { isConfirmed } = await confirmDialog({
+        title: 'Eliminar usuario',
+        text: `Vas a eliminar a "${row.getValue('nombre')}". Esta acción no se puede deshacer.`,
+        confirmLabel: 'Eliminar',
+        tone: 'danger'
+      })
+      if (!isConfirmed) return
       deleteUser(row.getValue('id'))
     },
     [filteredTableData]

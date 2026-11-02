@@ -1,4 +1,5 @@
 import { getApiErrorReason } from 'src/utils/apiError'
+import { confirmDialog } from 'src/utils/confirm'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect } from 'react'
 import type { AxiosError } from 'axios'
@@ -614,7 +615,13 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   }
 
   const handleDeleteQuestion = async (questionId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) {
+    const { isConfirmed } = await confirmDialog({
+      title: 'Eliminar pregunta',
+      text: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      tone: 'danger'
+    })
+    if (isConfirmed) {
       await deleteQuestionMutation.mutateAsync(questionId)
 
       // Also remove from quiz if present

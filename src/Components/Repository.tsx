@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { confirmDialog } from 'src/utils/confirm'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import React, { useMemo, useState } from 'react'
 
@@ -165,9 +166,12 @@ const Repository = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      const shouldDelete = window.confirm(
-        '¿Estás seguro de que deseas eliminar este archivo?'
-      )
+      const { isConfirmed: shouldDelete } = await confirmDialog({
+        title: 'Eliminar archivo',
+        text: 'Esta acción no se puede deshacer.',
+        confirmLabel: 'Eliminar',
+        tone: 'danger'
+      })
 
       if (shouldDelete) {
         const response = await deleteRepositoryMutation.mutateAsync(id)
