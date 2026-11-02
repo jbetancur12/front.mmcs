@@ -24,7 +24,11 @@ import {
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { useSearchParams } from 'react-router-dom'
-import { MRT_ColumnDef, MRT_PaginationState } from 'material-react-table'
+import {
+  MRT_ColumnDef,
+  MRT_PaginationState,
+  MRT_RowSelectionState
+} from 'material-react-table'
 import { downloadPrivateFile } from '@utils/downloadBlob'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -43,9 +47,11 @@ import {
 import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import {
   releaseFileUrl,
-  useReleaseCertificates
+  useReleaseCertificates,
+  useSignReleaseCertificates
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { userStore } from 'src/store/userStore'
+import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 
 const PAGE_SIZE = 25
@@ -77,6 +83,12 @@ const ReleaseCertificates: React.FC = () => {
     PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD
   )
 
+  const canSign = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_SIGN
+  )
+  const sign = useSignReleaseCertificates()
+  const [selection, setSelection] = useState<MRT_RowSelectionState>({})
   const [status, setStatus] = useState<ReleaseStatus | undefined>()
   const [kind, setKind] = useState<ReleaseKind | ''>('')
   const [withAnomalies, setWithAnomalies] = useState(false)
@@ -200,6 +212,32 @@ const ReleaseCertificates: React.FC = () => {
     </Button>
   )
 
+  const selectedIds = Object.keys(selection)
+    .filter((key) => selection[key])
+    .map(Number)
+
+  const signSelected = () =>
+    sign.mutate(selectedIds, {
+      onSuccess: (results) => {
+        const failed = results.filter((result) => !result.ok)
+        if (failed.length === 0) {
+          notify.success(
+            results.length === 1
+              ? 'Certificado firmado'
+              : `${results.length} certificados firmados`
+          )
+        } else {
+          notify.warning(
+            `${results.length - failed.length} firmados, ${failed.length} no se pudieron firmar`,
+            failed[0].error
+          )
+        }
+        setSelection({})
+      },
+      onError: (error) =>
+        notify.error('No se pudo firmar', getApiErrorReason(error) ?? undefined)
+    })
+
   const hasFilters = Boolean(status || kind || withAnomalies || search)
 
   return (
@@ -208,7 +246,24 @@ const ReleaseCertificates: React.FC = () => {
         title='Certificados a liberar'
         subtitle='Revisión de los certificados cargados antes de pasar al equipo del cliente'
         icon={<FactCheckOutlined />}
-        actions={uploadButton || undefined}
+        actions={
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {canSign && selectedIds.length > 0 && (
+              <Button
+                variant='outlined'
+                startIcon={<VerifiedOutlined />}
+                disabled={sign.isLoading}
+                onClick={signSelected}
+              >
+                Firmar{' '}
+                {selectedIds.length === 1
+                  ? 'el seleccionado'
+                  : `${selectedIds.length} seleccionados`}
+              </Button>
+            )}
+            {uploadButton || null}
+          </Box>
+        }
       />
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -304,10 +359,22 @@ const ReleaseCertificates: React.FC = () => {
           data={data?.items ?? []}
           itemLabel={['certificado', 'certificados']}
           enableGlobalFilter={false}
+          enableRowSelection={(row) =>
+            canSign &&
+            row.original.status === 'verificado' &&
+            row.original.kind === 'principal'
+          }
+          getRowId={(row) => String(row.id)}
+          onRowSelectionChange={setSelection}
           manualPagination
           rowCount={data?.total ?? 0}
           onPaginationChange={setPagination}
-          state={{ pagination, isLoading, showProgressBars: isFetching }}
+          state={{
+            pagination,
+            isLoading,
+            showProgressBars: isFetching,
+            rowSelection: selection
+          }}
           muiTablePaginationProps={{ rowsPerPageOptions: [25, 50, 100] }}
           enableRowActions
           positionActionsColumn='last'

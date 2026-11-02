@@ -548,6 +548,16 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Confirmar o corregir el cliente y los datos leídos del PDF, marcar el certificado como verificado o pedir ajustes con observaciones.',
     'Certificados a liberar: edición de datos, Verificar y Pedir ajustes.'
   ],
+  'release:certificate:sign': [
+    'Firmar certificados a liberar',
+    'Firmar los certificados verificados, uno a uno o varios seleccionados a la vez.',
+    'Certificados a liberar: botones Firmar y Firmar seleccionados.'
+  ],
+  'release:certificate:release': [
+    'Liberar certificados',
+    'Elegir el equipo del cliente y liberar el certificado: crea el equipo o registra la recalibración en su historial.',
+    'Certificados a liberar: botón Liberar y confirmación del equipo.'
+  ],
   'release:certificate:rules': [
     'Reglas de lectura de certificados',
     'Editar las etiquetas, tipos de documento y magnitud por prefijo con los que el sistema lee los PDF.',

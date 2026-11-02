@@ -222,6 +222,10 @@ export const PERMISSIONS = {
   RELEASE_CERTIFICATE_UPLOAD: 'release:certificate:upload',
   /** Confirmar o corregir los datos leídos de un certificado a liberar, marcarlo como verificado o pedir ajustes con observaciones */
   RELEASE_CERTIFICATE_REVIEW: 'release:certificate:review',
+  /** Firmar los certificados verificados (uno a uno o varios seleccionados) */
+  RELEASE_CERTIFICATE_SIGN: 'release:certificate:sign',
+  /** Liberar certificados: confirmar el equipo del cliente y sincronizar el certificado con su historial */
+  RELEASE_CERTIFICATE_RELEASE: 'release:certificate:release',
   /** Editar las reglas de lectura de PDF de certificados (etiquetas, tipos y magnitud por prefijo) */
   RELEASE_CERTIFICATE_RULES: 'release:certificate:rules',
   /** Listar los usuarios y los usuarios internos */

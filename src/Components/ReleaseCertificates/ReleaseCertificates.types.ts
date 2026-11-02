@@ -63,6 +63,9 @@ export interface ReleaseCertificate {
   readStatus: ReleaseReadStatus
   customerId: number | null
   currentVersionId: number | null
+  signedAt?: string | null
+  releasedAt?: string | null
+  fileId?: number | null
   createdAt: string
   uploader?: ReleaseUserRef | null
   customer?: { id: number; nombre: string } | null
@@ -124,4 +127,64 @@ export interface ReleaseUploadResult {
   ok: boolean
   error?: string
   certificate?: ReleaseCertificate
+}
+
+export interface ReleaseEquipmentCandidate {
+  id: number
+  deviceId: number
+  deviceName: string | null
+  serie: string | null
+  activoFijo: string | null
+  location: string | null
+  sede: string | null
+  city: string | null
+  calibrationDate: string | null
+  nextCalibrationDate: string | null
+  suggestedMonths: 6 | 12
+  matchBy: 'serie' | 'activo_fijo' | 'ubicacion'
+  confidence: 'alta' | 'media' | 'baja'
+  typeMatches: boolean | null
+}
+
+export interface ReleaseEquipmentMatches {
+  certificateId: number
+  candidates: ReleaseEquipmentCandidate[]
+  deviceSuggestions: { id: number; name: string; source: string }[]
+  prefill: {
+    deviceId: number | null
+    serie: string
+    activoFijo: string
+    location: string
+    sede: string
+    months: 6 | 12
+  }
+}
+
+export interface ReleaseCatalogs {
+  devices: { id: number; name: string; magnitude?: string | null }[]
+  certificateTypes: { id: number; name: string }[]
+}
+
+export interface ReleaseNewEquipment {
+  deviceId: number | ''
+  certificateTypeId: number | ''
+  city: string
+  location: string
+  sede: string
+  headquarter: string
+  activoFijo: string
+  serie: string
+}
+
+export type ReleaseTarget =
+  | { mode: 'existing'; fileId: number; months: 6 | 12 }
+  | ({ mode: 'new'; months: 6 | 12 } & ReleaseNewEquipment)
+
+export const RELEASE_MATCH_LABELS: Record<
+  ReleaseEquipmentCandidate['matchBy'],
+  string
+> = {
+  serie: 'Misma serie',
+  activo_fijo: 'Mismo activo fijo',
+  ubicacion: 'Misma ubicación'
 }

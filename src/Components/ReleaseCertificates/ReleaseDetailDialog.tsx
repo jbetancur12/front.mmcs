@@ -21,9 +21,11 @@ import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import { userStore } from 'src/store/userStore'
 import { getApiErrorReason } from 'src/utils/apiError'
 import ReleaseEditForm from './ReleaseEditForm'
+import ReleaseEquipmentDialog from './ReleaseEquipmentDialog'
 import {
   releaseFileUrl,
   ReleaseCorrections,
+  useSignReleaseCertificates,
   ReleaseReviewAction,
   useReleaseCertificate,
   useReleaseReview
@@ -91,6 +93,16 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD
   )
+  const canSign = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_SIGN
+  )
+  const canRelease = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_RELEASE
+  )
+  const sign = useSignReleaseCertificates()
+  const [releasing, setReleasing] = useState(false)
   const review = useReleaseReview()
   const versionInput = useRef<HTMLInputElement>(null)
   const [editing, setEditing] = useState(false)
@@ -110,6 +122,17 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         )
     })
 
+  const signNow = () =>
+    certificate &&
+    sign.mutate([certificate.id], {
+      onSuccess: ([result]) =>
+        result.ok
+          ? notify.success('Certificado firmado')
+          : notify.error('No se pudo firmar', result.error),
+      onError: (error) =>
+        notify.error('No se pudo firmar', getApiErrorReason(error) ?? undefined)
+    })
+
   const save = (data: ReleaseCorrections) =>
     certificate &&
     run({ type: 'correct', id: certificate.id, data }, 'Datos guardados', () =>
@@ -120,6 +143,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     setEditing(false)
     setAsking(false)
     setObservation('')
+    setReleasing(false)
   }, [certificateId])
 
   useEffect(() => {
@@ -481,6 +505,36 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               Verificar
             </Button>
           )}
+        {certificate &&
+          canSign &&
+          !asking &&
+          certificate.kind === 'principal' &&
+          certificate.status === 'verificado' && (
+            <Button
+              variant='contained'
+              disabled={sign.isLoading || editing}
+              onClick={signNow}
+              sx={{ bgcolor: '#00897B', '&:hover': { bgcolor: '#00695C' } }}
+            >
+              Firmar
+            </Button>
+          )}
+        {certificate &&
+          canRelease &&
+          !asking &&
+          !editing &&
+          ((certificate.kind === 'principal' &&
+            certificate.status === 'firmado') ||
+            (certificate.kind !== 'principal' &&
+              certificate.status === 'verificado')) && (
+            <Button
+              variant='contained'
+              onClick={() => setReleasing(true)}
+              sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+            >
+              Liberar
+            </Button>
+          )}
         <Button onClick={onClose}>Cerrar</Button>
         <Button
           variant='contained'
@@ -497,6 +551,22 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
           Descargar
         </Button>
       </DialogActions>
+      <ReleaseEquipmentDialog
+        certificateId={releasing && certificate ? certificate.id : null}
+        confirmOnly={Boolean(
+          certificate?.kind === 'anexo' && certificate.parentId
+        )}
+        releasing={review.isLoading}
+        onClose={() => setReleasing(false)}
+        onRelease={(target, saveEquivalence) =>
+          certificate &&
+          run(
+            { type: 'release', id: certificate.id, target, saveEquivalence },
+            'Certificado liberado y sincronizado con el equipo del cliente',
+            () => setReleasing(false)
+          )
+        }
+      />
     </Dialog>
   )
 }

@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
+  ReleaseCatalogs,
   ReleaseCertificateDetail,
+  ReleaseEquipmentMatches,
+  ReleaseTarget,
   ReleaseFilters,
   ReleaseListResponse,
   ReleaseUploadResult
@@ -86,6 +89,12 @@ export type ReleaseReviewAction =
   | { type: 'verify'; id: number }
   | { type: 'adjustments'; id: number; observation: string }
   | { type: 'version'; id: number; file: File }
+  | {
+      type: 'release'
+      id: number
+      target?: ReleaseTarget
+      saveEquivalence?: boolean
+    }
 
 /** Acciones de la revisión; todas responden con el certificado actualizado. */
 export const useReleaseReview = () => {
@@ -102,6 +111,12 @@ export const useReleaseReview = () => {
         case 'adjustments':
           return axiosPrivate.post(`${base}/request-adjustments`, {
             observation: action.observation
+          })
+        case 'release':
+          return axiosPrivate.post(`${base}/release`, {
+            confirm: true,
+            target: action.target,
+            saveEquivalence: action.saveEquivalence
           })
         default: {
           const data = new FormData()
@@ -124,5 +139,44 @@ export const useReleaseCustomerSearch = (search: string) => {
         .get('/release-certificates/customers', { params: { search } })
         .then((response) => response.data),
     { enabled: search.trim().length >= 2, keepPreviousData: true }
+  )
+}
+
+/** Equipos del cliente que coinciden con el certificado (serie, activo fijo o ubicación). */
+export const useReleaseMatches = (id: number | null) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseEquipmentMatches>(
+    ['releaseCertificates', 'matches', id],
+    () =>
+      axiosPrivate
+        .get(`/release-certificates/${id}/equipment-matches`)
+        .then((response) => response.data),
+    { enabled: id !== null, cacheTime: 0 }
+  )
+}
+
+export const useReleaseCatalogs = (enabled: boolean) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseCatalogs>(
+    ['releaseCertificates', 'catalogs'],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/catalogs')
+        .then((response) => response.data),
+    { enabled, staleTime: 5 * 60 * 1000 }
+  )
+}
+
+/** Firma por documento o varios seleccionados; devuelve el resultado de cada uno. */
+export const useSignReleaseCertificates = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (
+      ids: number[]
+    ): Promise<{ id: number; ok: boolean; error?: string }[]> =>
+      (await axiosPrivate.post('/release-certificates/sign', { ids })).data
+        .results,
+    { onSuccess: () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all) }
   )
 }
