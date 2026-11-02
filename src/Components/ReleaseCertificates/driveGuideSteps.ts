@@ -91,5 +91,35 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'Aparece un aviso «Se creó una clave privada» y el archivo .json queda en tu carpeta de descargas. En la pestaña «Claves» ya hay una fila con una fecha de creación.',
     warning:
       'Ese archivo es la llave de la cuenta: quien lo tenga puede escribir en el Drive conectado. No lo envíes por chat ni por correo, no lo subas al repositorio y bórralo de Descargas cuando lo hayas pegado en la plataforma. Google no lo puede volver a mostrar: si lo pierdes, se crea otro y se elimina el anterior.'
+  },
+  {
+    id: 'crear-carpeta-drive',
+    title: 'Crea la carpeta raíz en Drive',
+    where: 'En Google Drive',
+    actions: [
+      'Abre Google Drive con la misma cuenta de Google con la que creaste el proyecto.',
+      'Arriba a la izquierda pulsa «+ Nuevo» y elige «Carpeta nueva».',
+      'Ponle el nombre Certificados MMCS y pulsa «Crear».',
+      'Aquí es donde el sistema creará solo las subcarpetas (categoría, cliente, año) y guardará los PDF liberados. No hace falta crear nada más dentro.'
+    ],
+    expect:
+      'En «Mi unidad» ves la carpeta «Certificados MMCS». Si la abres, está vacía.',
+    link: { label: 'Abrir Google Drive', url: 'https://drive.google.com' }
+  },
+  {
+    id: 'compartir-carpeta',
+    title: 'Comparte la carpeta con la cuenta de servicio',
+    where: 'En Google Drive',
+    actions: [
+      'Haz clic derecho sobre la carpeta «Certificados MMCS» y elige «Compartir» (o ábrela y pulsa el botón «Compartir» de arriba).',
+      'En el cuadro «Agregar personas, grupos…» pega el correo de la cuenta de servicio: el que termina en .iam.gserviceaccount.com (por ejemplo certificados-mmcs@metromedics-certificados.iam.gserviceaccount.com).',
+      'A la derecha del correo, elige el rol «Editor».',
+      'Desmarca «Notificar a las personas» si aparece: la cuenta de servicio no lee correos.',
+      'Pulsa «Compartir» (o «Enviar»). Si Google avisa que el correo no es de una cuenta de Google normal, confirma que quieres compartir igual.'
+    ],
+    expect:
+      'En «Compartir», debajo de tu nombre aparece el correo de la cuenta de servicio con el rol «Editor».',
+    warning:
+      'Comparte solo esta carpeta con ese correo. La cuenta de servicio solo podrá ver y escribir ahí, no en el resto de tu Drive.'
   }
 ]
