@@ -216,6 +216,22 @@ export const PERMISSIONS = {
   LIBRARY_DOCUMENT_MANAGE: 'library:document:manage',
   /** Descargar los archivos originales editables (Word o Excel) de los documentos de la biblioteca */
   LIBRARY_SOURCE_DOWNLOAD: 'library:source:download',
+  /** Ver la bandeja de certificados a liberar y descargar sus PDF */
+  RELEASE_CERTIFICATE_VIEW: 'release:certificate:view',
+  /** Cargar certificados a liberar (carga masiva) y subir el PDF corregido de uno que requiere ajustes */
+  RELEASE_CERTIFICATE_UPLOAD: 'release:certificate:upload',
+  /** Confirmar o corregir los datos leídos de un certificado a liberar, marcarlo como verificado o pedir ajustes con observaciones */
+  RELEASE_CERTIFICATE_REVIEW: 'release:certificate:review',
+  /** Firmar los certificados verificados (uno a uno o varios seleccionados) */
+  RELEASE_CERTIFICATE_SIGN: 'release:certificate:sign',
+  /** Liberar certificados: confirmar el equipo del cliente y sincronizar el certificado con su historial */
+  RELEASE_CERTIFICATE_RELEASE: 'release:certificate:release',
+  /** Revertir la liberación de un certificado: devuelve el equipo del cliente a como estaba y el certificado a firmado */
+  RELEASE_CERTIFICATE_REVERT: 'release:certificate:revert',
+  /** Configurar la copia de certificados al Drive: pegar o reemplazar la credencial (se guarda cifrada), la carpeta raíz y la estructura de carpetas */
+  RELEASE_DRIVE_MANAGE: 'release:drive:manage',
+  /** Editar las reglas de lectura de PDF de certificados (etiquetas, tipos y magnitud por prefijo) */
+  RELEASE_CERTIFICATE_RULES: 'release:certificate:rules',
   /** Listar los usuarios y los usuarios internos */
   USERS_USER_LIST: 'users:user:list',
   /** Ver un usuario. OJO: el controlador NO limita al usuario de una empresa cliente al suyo (pendiente, ver docs/rbac/RUTAS_SOLO_SESION.md) */

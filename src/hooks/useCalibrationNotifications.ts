@@ -3,7 +3,14 @@ import { axiosPrivate } from '@utils/api'
 
 export interface CalibrationNotification {
   id: number
-  type: 'ods_issued' | 'adjustment_reported' | 'adjustment_technical_reviewed' | 'cut_ready_for_invoicing' | 'cut_invoiced'
+  type:
+    | 'ods_issued'
+    | 'adjustment_reported'
+    | 'adjustment_technical_reviewed'
+    | 'cut_ready_for_invoicing'
+    | 'cut_invoiced'
+    | 'release_adjustments_requested'
+    | 'certificates_pending'
   title: string
   message: string | null
   data: Record<string, unknown> | null

@@ -60,6 +60,7 @@ interface DeviceDetailsProps {
   device: { name?: string } | null
   customer: { nombre?: string } | null
   certificateTypeId: number
+  certificateType?: { id: number; name: string } | null
   createdAt: string
   updatedAt: string
 }
@@ -297,6 +298,11 @@ const Certificates: React.FC = () => {
               <DetailCell>
                 <DetailField label='Equipo'>
                   {certificateData?.device?.name || missing}
+                </DetailField>
+              </DetailCell>
+              <DetailCell>
+                <DetailField label='Tipo de certificado'>
+                  {certificateData?.certificateType?.name || missing}
                 </DetailField>
               </DetailCell>
               <DetailCell>

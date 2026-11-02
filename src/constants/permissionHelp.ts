@@ -532,6 +532,48 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Biblioteca: botón de descargar editable en el listado y en el historial.'
   ],
 
+  // --- Certificados a liberar (Empresas)
+  'release:certificate:view': [
+    'Ver certificados a liberar',
+    'Ver la bandeja de certificados cargados por el laboratorio, sus datos leídos y descargar los PDF.',
+    'Certificados a liberar: bandeja, tarjetas por estado y visor del PDF.'
+  ],
+  'release:certificate:upload': [
+    'Cargar certificados a liberar',
+    'Cargar certificados en PDF en masa y subir el PDF corregido de uno que requiere ajustes.',
+    'Certificados a liberar: botón Cargar certificado.'
+  ],
+  'release:certificate:review': [
+    'Revisar certificados a liberar',
+    'Confirmar o corregir el cliente y los datos leídos del PDF, marcar el certificado como verificado o pedir ajustes con observaciones.',
+    'Certificados a liberar: edición de datos, Verificar y Pedir ajustes.'
+  ],
+  'release:certificate:sign': [
+    'Firmar certificados a liberar',
+    'Firmar los certificados verificados, uno a uno o varios seleccionados a la vez.',
+    'Certificados a liberar: botones Firmar y Firmar seleccionados.'
+  ],
+  'release:certificate:release': [
+    'Liberar certificados',
+    'Elegir el equipo del cliente y liberar el certificado: crea el equipo o registra la recalibración en su historial.',
+    'Certificados a liberar: botón Liberar y confirmación del equipo.'
+  ],
+  'release:certificate:revert': [
+    'Revertir liberaciones',
+    'Deshacer la liberación de un certificado: el equipo del cliente vuelve a como estaba y el certificado a firmado.',
+    'Certificados a liberar: botón Revertir liberación en el detalle.'
+  ],
+  'release:drive:manage': [
+    'Configurar la copia al Drive',
+    'Pegar o reemplazar la credencial de Google (se guarda cifrada y no se vuelve a ver), elegir la carpeta raíz y la estructura de carpetas, y probar la conexión.',
+    'Certificados a liberar: botón Drive (administración).'
+  ],
+  'release:certificate:rules': [
+    'Reglas de lectura de certificados',
+    'Editar las etiquetas, tipos de documento y magnitud por prefijo con los que el sistema lee los PDF.',
+    'Certificados a liberar: reglas de lectura (administración).'
+  ],
+
   // --- Usuarios, roles y perfiles
   'users:user:list': [
     'Ver la lista de usuarios',

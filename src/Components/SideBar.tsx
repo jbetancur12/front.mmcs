@@ -22,7 +22,8 @@ import {
   SpeedOutlined,
   StorefrontOutlined,
   VerifiedOutlined,
-  LocalLibraryOutlined
+  LocalLibraryOutlined,
+  FactCheckOutlined
 } from '@mui/icons-material'
 
 import DropdownButton from './DropdownButton'
@@ -59,6 +60,7 @@ import {
 } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
 import { libraryEnabled } from 'src/features/libraryFlags'
+import { releaseCertificatesEnabled } from 'src/features/releaseCertificatesFlags'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -132,6 +134,15 @@ const sidebarItems = ($userStore: UserData) => [
     permission: PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE,
     icon: <BusinessOutlined />,
     roles: ROLE_GROUPS.METROLOGY_STAFF,
+    moduleName: 'Basic'
+  },
+  {
+    type: 'link',
+    label: 'Certificados a liberar',
+    to: '/release-certificates',
+    icon: <FactCheckOutlined />,
+    roles: [] as string[],
+    permission: PERMISSIONS.RELEASE_CERTIFICATE_VIEW,
     moduleName: 'Basic'
   },
 
@@ -763,6 +774,14 @@ const SideBar = ({
   const canSeeItem = (item: SidebarItem) => {
     // Biblioteca oculta hasta darla por lista (src/features/libraryFlags.ts)
     if (!libraryEnabled && 'to' in item && item.to === '/library') {
+      return false
+    }
+    // Certificados a liberar oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts)
+    if (
+      !releaseCertificatesEnabled &&
+      'to' in item &&
+      item.to === '/release-certificates'
+    ) {
       return false
     }
 
