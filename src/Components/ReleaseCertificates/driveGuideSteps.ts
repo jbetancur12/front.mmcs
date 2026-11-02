@@ -75,5 +75,21 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
     ],
     expect:
       'La lista muestra tu cuenta con un correo parecido a certificados-mmcs@tu-proyecto.iam.gserviceaccount.com. Ese correo no es secreto: lo usarás para compartir la carpeta del Drive.'
+  },
+  {
+    id: 'crear-clave-json',
+    title: 'Descarga la clave (archivo JSON)',
+    where: 'En Google Cloud',
+    actions: [
+      'En la lista de cuentas de servicio, pulsa el correo de tu cuenta (el que termina en .iam.gserviceaccount.com). Se abre su página.',
+      'Arriba, entre las pestañas «Detalles», «Permisos», «Claves»…, pulsa «Claves».',
+      'Pulsa «Agregar clave» y elige «Crear clave nueva».',
+      'Elige el tipo «JSON» y pulsa «Crear».',
+      'El navegador descarga un archivo con un nombre parecido a metromedics-certificados-1a2b3c.json. Anota dónde quedó (normalmente la carpeta Descargas).'
+    ],
+    expect:
+      'Aparece un aviso «Se creó una clave privada» y el archivo .json queda en tu carpeta de descargas. En la pestaña «Claves» ya hay una fila con una fecha de creación.',
+    warning:
+      'Ese archivo es la llave de la cuenta: quien lo tenga puede escribir en el Drive conectado. No lo envíes por chat ni por correo, no lo subas al repositorio y bórralo de Descargas cuando lo hayas pegado en la plataforma. Google no lo puede volver a mostrar: si lo pierdes, se crea otro y se elimina el anterior.'
   }
 ]
