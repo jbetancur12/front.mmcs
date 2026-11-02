@@ -39,7 +39,7 @@ import {
 import { Document, ReminderResponse } from './types'
 import { useNavigate, useParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
-import { VisuallyHiddenInput } from '../TableFiles'
+import { VisuallyHiddenInput } from '../Common/VisuallyHiddenInput'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PERMISSIONS } from 'src/constants/permissions'
