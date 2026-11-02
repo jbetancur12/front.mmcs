@@ -33,7 +33,8 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           onClick={toggleMobileMenu}
         />
       )}
-      <div className='flex pt-[calc(4rem+var(--imp-h,0px))] overflow-hidden bg-gray-50 dark:bg-gray-900'>
+      {/* min-h-screen: el fondo llega al borde de la ventana aunque el contenido sea corto */}
+      <div className='flex min-h-screen pt-[calc(4rem+var(--imp-h,0px))] overflow-hidden bg-gray-50 dark:bg-gray-900'>
         {!isCourseView && (
           <SideBar
             sidebarMinimized={sidebarMinimized}
