@@ -121,5 +121,34 @@ export const DRIVE_GUIDE_STEPS: DriveGuideStep[] = [
       'En «Compartir», debajo de tu nombre aparece el correo de la cuenta de servicio con el rol «Editor».',
     warning:
       'Comparte solo esta carpeta con ese correo. La cuenta de servicio solo podrá ver y escribir ahí, no en el resto de tu Drive.'
+  },
+  {
+    id: 'copiar-id-carpeta',
+    title: 'Copia el identificador de la carpeta',
+    where: 'En Google Drive',
+    actions: [
+      'Abre la carpeta «Certificados MMCS» (doble clic).',
+      'Mira la dirección del navegador: termina así: drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz. Ese texto largo después de «folders/» es el identificador.',
+      'Selecciona solo ese texto (sin «folders/» ni nada que venga después de un signo ?) y cópialo.'
+    ],
+    expect:
+      'Tienes copiado un texto de unas 33 letras y números mezclados, sin espacios ni barras.'
+  },
+  {
+    id: 'pegar-en-plataforma',
+    title: 'Pega todo en la plataforma y prueba',
+    where: 'En la plataforma',
+    actions: [
+      'Entra a «Certificados a liberar» y pulsa el botón «Drive» (solo lo ve quien administra).',
+      'Abre el archivo .json descargado con el Bloc de notas, selecciona todo el contenido (Ctrl+A), cópialo (Ctrl+C) y pégalo en el cuadro «Credencial (JSON de la cuenta de servicio)».',
+      'En «Identificador de la carpeta raíz» pega el identificador del paso anterior.',
+      'Deja la estructura de carpetas «Categoría / Cliente / Año» (se puede cambiar después).',
+      'Pulsa «Guardar». Después pulsa «Probar conexión».',
+      'Borra de tu carpeta de Descargas el archivo .json: ya no lo necesitas, la plataforma lo guardó cifrado.'
+    ],
+    expect:
+      'Aparece «Credencial guardada (cifrada)» con el correo de la cuenta de servicio, y la prueba dice «Conectado a la carpeta «Certificados MMCS»». Después puedes pulsar «Copiar liberados pendientes» para subir los que ya estaban liberados.',
+    warning:
+      'Si la prueba falla, el mensaje dice por qué. Si menciona que la cuenta «no tiene espacio propio», el Drive personal no sirve para una cuenta de servicio: hay que usar una unidad compartida de Google Workspace o conectar con una cuenta de Gmail (OAuth).'
   }
 ]
