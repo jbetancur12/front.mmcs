@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Box,
@@ -21,10 +21,12 @@ import {
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import {
   useReleaseCatalogs,
+  useReleaseEquipmentSearch,
   useReleaseMatches
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import {
   RELEASE_MATCH_LABELS,
+  ReleaseEquipmentCandidate,
   ReleaseNewEquipment,
   ReleaseTarget
 } from './ReleaseCertificates.types'
@@ -42,6 +44,7 @@ interface ReleaseEquipmentDialogProps {
 }
 
 const NEW = 'new'
+const SEARCH_DEBOUNCE_MS = 300
 
 const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleDateString('es-CO') : '—'
@@ -56,6 +59,89 @@ const EMPTY: ReleaseNewEquipment = {
   activoFijo: '',
   serie: ''
 }
+
+interface EquipmentOptionProps {
+  candidate: ReleaseEquipmentCandidate
+  selected: boolean
+  pdfSerie: string
+  onSelect: () => void
+}
+
+/** Un equipo del cliente: con qué coincide y, si la serie no coincide, la diferencia a la vista. */
+const EquipmentOption: React.FC<EquipmentOptionProps> = ({
+  candidate,
+  selected,
+  pdfSerie,
+  onSelect
+}) => (
+  <Box
+    onClick={onSelect}
+    sx={{
+      display: 'flex',
+      gap: 1,
+      alignItems: 'flex-start',
+      p: 1.5,
+      mb: 1,
+      borderRadius: 2,
+      cursor: 'pointer',
+      border: '1px solid',
+      borderColor: selected ? '#00695C' : '#e5e7eb',
+      bgcolor: selected ? '#f0fbf9' : '#fff'
+    }}
+  >
+    <Radio
+      checked={selected}
+      inputProps={{
+        'aria-label': `Actualizar el equipo ${candidate.deviceName ?? candidate.id}`
+      }}
+    />
+    <Box sx={{ minWidth: 0 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}
+      >
+        <Typography fontWeight={600}>
+          {candidate.deviceName?.trim() ?? 'Equipo'}
+        </Typography>
+        <Chip size='small' label={RELEASE_MATCH_LABELS[candidate.matchBy]} />
+        {candidate.typeMatches === false && (
+          <Chip size='small' color='warning' label='Otro tipo de equipo' />
+        )}
+        {candidate.serieDiffers && (
+          <Chip
+            size='small'
+            color='warning'
+            variant='outlined'
+            label='Serie distinta'
+          />
+        )}
+      </Box>
+      <Typography variant='body2' color='text.secondary'>
+        Serie {candidate.serie || '—'} · Activo fijo{' '}
+        {candidate.activoFijo || '—'} · {candidate.location || '—'}
+        {candidate.sede ? ` · ${candidate.sede}` : ''}
+      </Typography>
+      {candidate.serieDiffers && (
+        <Typography
+          variant='caption'
+          sx={{ color: '#b45309', display: 'block' }}
+        >
+          Serie del PDF: {pdfSerie || '—'} · serie del equipo:{' '}
+          {candidate.serie || '—'}
+        </Typography>
+      )}
+      <Typography variant='caption' color='text.secondary'>
+        Calibrado {formatDate(candidate.calibrationDate)} · vence{' '}
+        {formatDate(candidate.nextCalibrationDate)} (período de{' '}
+        {candidate.suggestedMonths} meses)
+      </Typography>
+    </Box>
+  </Box>
+)
 
 /** La analista elige el equipo del cliente (o crea uno) y confirma: nunca se sincroniza sin esto. */
 const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
@@ -77,6 +163,22 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
   const [months, setMonths] = useState<6 | 12>(12)
   const [form, setForm] = useState<ReleaseNewEquipment>(EMPTY)
   const [remember, setRemember] = useState(true)
+  const [searching, setSearching] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [picked, setPicked] = useState<ReleaseEquipmentCandidate | null>(null)
+  const [updateSerie, setUpdateSerie] = useState(false)
+
+  const { data: found = [], isFetching: searchingNow } =
+    useReleaseEquipmentSearch(certificateId, search, searching)
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setSearch(searchInput.trim()),
+      SEARCH_DEBOUNCE_MS
+    )
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   useEffect(() => {
     if (!data) return
@@ -88,6 +190,10 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
       setChoice(NEW)
       setMonths(data.prefill.months)
     }
+    setPicked(null)
+    setSearching(false)
+    setSearchInput('')
+    setUpdateSerie(false)
     setForm({
       ...EMPTY,
       deviceId: data.prefill.deviceId ?? '',
@@ -99,6 +205,17 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
   }, [data])
 
   const creating = choice === NEW
+  const selected = useMemo(
+    () =>
+      creating
+        ? null
+        : [
+            ...(data?.candidates ?? []),
+            ...(data?.sameType ?? []),
+            ...(picked ? [picked] : [])
+          ].find((item) => String(item.id) === choice) ?? null,
+    [creating, data, picked, choice]
+  )
   const missing =
     creating &&
     (!form.deviceId ||
@@ -108,11 +225,23 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
       !form.sede.trim() ||
       !form.headquarter.trim())
 
+  const choose = (candidate: ReleaseEquipmentCandidate, fromSearch = false) => {
+    setChoice(String(candidate.id))
+    setMonths(candidate.suggestedMonths)
+    setUpdateSerie(false)
+    if (fromSearch) setPicked(candidate)
+  }
+
   const confirm = () => {
     if (confirmOnly) return onRelease(undefined, false)
     const target: ReleaseTarget = creating
       ? { mode: 'new', months, ...form }
-      : { mode: 'existing', fileId: Number(choice), months }
+      : {
+          mode: 'existing',
+          fileId: Number(choice),
+          months,
+          updateSerie: Boolean(selected?.serieDiffers && updateSerie)
+        }
     onRelease(target, remember)
   }
 
@@ -120,6 +249,9 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
     (key: keyof ReleaseNewEquipment) =>
     (event: React.ChangeEvent<HTMLInputElement>) =>
       setForm((current) => ({ ...current, [key]: event.target.value }))
+
+  const pdfSerie = data?.prefill.serie ?? ''
+  const sameType = data?.sameType ?? []
 
   return (
     <Dialog
@@ -147,69 +279,76 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
             </Typography>
 
             {data.candidates.map((candidate) => (
-              <Box
+              <EquipmentOption
                 key={candidate.id}
-                onClick={() => {
-                  setChoice(String(candidate.id))
-                  setMonths(candidate.suggestedMonths)
-                }}
-                sx={{
-                  display: 'flex',
-                  gap: 1,
-                  alignItems: 'flex-start',
-                  p: 1.5,
-                  mb: 1,
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  border: '1px solid',
-                  borderColor:
-                    choice === String(candidate.id) ? '#00695C' : '#e5e7eb',
-                  bgcolor: choice === String(candidate.id) ? '#f0fbf9' : '#fff'
-                }}
-              >
-                <Radio
-                  checked={choice === String(candidate.id)}
-                  inputProps={{
-                    'aria-label': `Actualizar el equipo ${candidate.deviceName ?? candidate.id}`
-                  }}
-                />
-                <Box sx={{ minWidth: 0 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      gap: 1,
-                      flexWrap: 'wrap',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Typography fontWeight={600}>
-                      {candidate.deviceName ?? 'Equipo'}
-                    </Typography>
-                    <Chip
-                      size='small'
-                      label={RELEASE_MATCH_LABELS[candidate.matchBy]}
-                    />
-                    {candidate.typeMatches === false && (
-                      <Chip
-                        size='small'
-                        color='warning'
-                        label='Otro tipo de equipo'
-                      />
-                    )}
-                  </Box>
-                  <Typography variant='body2' color='text.secondary'>
-                    Serie {candidate.serie || '—'} · Activo fijo{' '}
-                    {candidate.activoFijo || '—'} · {candidate.location || '—'}
-                    {candidate.sede ? ` · ${candidate.sede}` : ''}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    Calibrado {formatDate(candidate.calibrationDate)} · vence{' '}
-                    {formatDate(candidate.nextCalibrationDate)} (período de{' '}
-                    {candidate.suggestedMonths} meses)
-                  </Typography>
-                </Box>
-              </Box>
+                candidate={candidate}
+                selected={choice === String(candidate.id)}
+                pdfSerie={pdfSerie}
+                onSelect={() => choose(candidate)}
+              />
             ))}
+
+            {sameType.length > 0 && (
+              <Box sx={{ mt: 2, mb: 1 }}>
+                <Typography variant='subtitle2'>
+                  ¿Es alguno de estos? Mismo tipo de equipo, serie distinta
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block', mb: 1 }}
+                >
+                  La serie del PDF es «{pdfSerie || 'sin dato'}». Si reconoces
+                  tu equipo, elígelo.
+                </Typography>
+                {sameType.map((candidate) => (
+                  <EquipmentOption
+                    key={candidate.id}
+                    candidate={candidate}
+                    selected={choice === String(candidate.id)}
+                    pdfSerie={pdfSerie}
+                    onSelect={() => choose(candidate)}
+                  />
+                ))}
+              </Box>
+            )}
+
+            <Box sx={{ mt: 1, mb: 1 }}>
+              {searching ? (
+                <>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    autoFocus
+                    label='Buscar en los equipos del cliente'
+                    placeholder='Serie, activo fijo, ubicación, sede o tipo de equipo'
+                    value={searchInput}
+                    onChange={(event) => setSearchInput(event.target.value)}
+                    helperText={
+                      search.length < 2
+                        ? 'Escribe al menos 2 letras o números'
+                        : searchingNow
+                          ? 'Buscando…'
+                          : `${found.length} resultado${found.length === 1 ? '' : 's'} (máximo 20)`
+                    }
+                    sx={{ mb: 1 }}
+                  />
+                  {found.map((candidate) => (
+                    <EquipmentOption
+                      key={candidate.id}
+                      candidate={candidate}
+                      selected={choice === String(candidate.id)}
+                      pdfSerie={pdfSerie}
+                      onSelect={() => choose(candidate, true)}
+                    />
+                  ))}
+                </>
+              ) : (
+                <Button size='small' onClick={() => setSearching(true)}>
+                  Buscar otro equipo del cliente
+                </Button>
+              )}
+            </Box>
 
             <Box
               onClick={() => setChoice(NEW)}
@@ -235,6 +374,28 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
                   : 'No hay equipos parecidos: crear un equipo nuevo del cliente'}
               </Typography>
             </Box>
+
+            {selected?.serieDiffers && (
+              <Alert severity='warning' sx={{ mt: 2 }}>
+                <Typography variant='body2' fontWeight={600}>
+                  La serie no coincide
+                </Typography>
+                <Typography variant='body2'>
+                  El certificado dice «{pdfSerie || 'sin dato'}» y el equipo «
+                  {selected.serie || 'sin dato'}». Confirma que es el mismo
+                  equipo antes de seguir. Quedará anotado en el historial.
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={updateSerie}
+                      onChange={(event) => setUpdateSerie(event.target.checked)}
+                    />
+                  }
+                  label='Corregir la serie del equipo con la del certificado'
+                />
+              </Alert>
+            )}
 
             {creating && (
               <Grid container spacing={2} sx={{ mt: 0.5 }}>

@@ -148,14 +148,17 @@ export interface ReleaseEquipmentCandidate {
   calibrationDate: string | null
   nextCalibrationDate: string | null
   suggestedMonths: 6 | 12
-  matchBy: 'serie' | 'activo_fijo' | 'ubicacion'
+  matchBy: 'serie' | 'activo_fijo' | 'ubicacion' | 'mismo_tipo' | 'manual'
   confidence: 'alta' | 'media' | 'baja'
   typeMatches: boolean | null
+  /** El certificado y el equipo no traen la misma serie. */
+  serieDiffers: boolean
 }
 
 export interface ReleaseEquipmentMatches {
   certificateId: number
   candidates: ReleaseEquipmentCandidate[]
+  sameType: ReleaseEquipmentCandidate[]
   deviceSuggestions: { id: number; name: string; source: string }[]
   prefill: {
     deviceId: number | null
@@ -184,7 +187,7 @@ export interface ReleaseNewEquipment {
 }
 
 export type ReleaseTarget =
-  | { mode: 'existing'; fileId: number; months: 6 | 12 }
+  | { mode: 'existing'; fileId: number; months: 6 | 12; updateSerie?: boolean }
   | ({ mode: 'new'; months: 6 | 12 } & ReleaseNewEquipment)
 
 export const RELEASE_MATCH_LABELS: Record<
@@ -193,5 +196,7 @@ export const RELEASE_MATCH_LABELS: Record<
 > = {
   serie: 'Misma serie',
   activo_fijo: 'Mismo activo fijo',
-  ubicacion: 'Misma ubicación'
+  ubicacion: 'Misma ubicación',
+  mismo_tipo: 'Mismo tipo de equipo',
+  manual: 'Elegido a mano'
 }

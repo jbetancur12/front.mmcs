@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
   ReleaseCatalogs,
+  ReleaseEquipmentCandidate,
   ReleaseCertificateDetail,
   ReleaseEquipmentMatches,
   ReleaseTarget,
@@ -392,5 +393,27 @@ export const useCustomerSuggestions = (id: number | null, enabled: boolean) => {
         .get(`/release-certificates/${id}/customer-suggestions`)
         .then((response) => response.data),
     { enabled: enabled && id !== null }
+  )
+}
+
+/** Búsqueda manual dentro de los equipos del cliente del certificado. */
+export const useReleaseEquipmentSearch = (
+  id: number | null,
+  search: string,
+  enabled: boolean
+) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseEquipmentCandidate[]>(
+    ['releaseCertificates', 'equipment-search', id, search],
+    () =>
+      axiosPrivate
+        .get(`/release-certificates/${id}/equipment-search`, {
+          params: { search }
+        })
+        .then((response) => response.data),
+    {
+      enabled: enabled && id !== null && search.length >= 2,
+      keepPreviousData: true
+    }
   )
 }
