@@ -10,7 +10,8 @@ const TONES: Record<ReleaseStatus, StatusPillTone> = {
   requiere_ajustes: 'error',
   verificado: 'live',
   firmado: 'live',
-  liberado: 'success'
+  liberado: 'success',
+  descartado: 'idle'
 }
 
 const ReleaseStatusPill: React.FC<{ status: ReleaseStatus }> = ({ status }) => (

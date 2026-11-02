@@ -558,6 +558,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Elegir el equipo del cliente y liberar el certificado: crea el equipo o registra la recalibración en su historial.',
     'Certificados a liberar: botón Liberar y confirmación del equipo.'
   ],
+  'release:certificate:revert': [
+    'Revertir liberaciones',
+    'Deshacer la liberación de un certificado: el equipo del cliente vuelve a como estaba y el certificado a firmado.',
+    'Certificados a liberar: botón Revertir liberación en el detalle.'
+  ],
   'release:drive:manage': [
     'Configurar la copia al Drive',
     'Pegar o reemplazar la credencial de Google (se guarda cifrada y no se vuelve a ver), elegir la carpeta raíz y la estructura de carpetas, y probar la conexión.',

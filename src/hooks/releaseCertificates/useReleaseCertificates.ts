@@ -94,6 +94,7 @@ export type ReleaseReviewAction =
   | { type: 'adjustments'; id: number; observation: string }
   | { type: 'version'; id: number; file: File }
   | { type: 'drive-retry'; id: number }
+  | { type: 'discard' | 'reopen' | 'revert'; id: number; observation: string }
   | {
       type: 'release'
       id: number
@@ -115,6 +116,12 @@ export const useReleaseReview = () => {
           return axiosPrivate.post(`${base}/verify`)
         case 'adjustments':
           return axiosPrivate.post(`${base}/request-adjustments`, {
+            observation: action.observation
+          })
+        case 'discard':
+        case 'reopen':
+        case 'revert':
+          return axiosPrivate.post(`${base}/${action.type}`, {
             observation: action.observation
           })
         case 'drive-retry':

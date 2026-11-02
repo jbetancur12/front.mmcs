@@ -226,6 +226,8 @@ export const PERMISSIONS = {
   RELEASE_CERTIFICATE_SIGN: 'release:certificate:sign',
   /** Liberar certificados: confirmar el equipo del cliente y sincronizar el certificado con su historial */
   RELEASE_CERTIFICATE_RELEASE: 'release:certificate:release',
+  /** Revertir la liberación de un certificado: devuelve el equipo del cliente a como estaba y el certificado a firmado */
+  RELEASE_CERTIFICATE_REVERT: 'release:certificate:revert',
   /** Configurar la copia de certificados al Drive: pegar o reemplazar la credencial (se guarda cifrada), la carpeta raíz y la estructura de carpetas */
   RELEASE_DRIVE_MANAGE: 'release:drive:manage',
   /** Editar las reglas de lectura de PDF de certificados (etiquetas, tipos y magnitud por prefijo) */

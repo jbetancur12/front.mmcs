@@ -100,6 +100,10 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD
   )
+  const canRevert = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_REVERT
+  )
   const canSign = hasPermission(
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_SIGN
@@ -121,6 +125,9 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     missingCustomer && canReview
   )
   const [asking, setAsking] = useState(false)
+  const [undoing, setUndoing] = useState<
+    'discard' | 'reopen' | 'revert' | null
+  >(null)
   const [observation, setObservation] = useState('')
 
   const run = (action: ReleaseReviewAction, done: string, after?: () => void) =>
@@ -166,6 +173,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     setEditing(false)
     setAsking(false)
     setObservation('')
+    setUndoing(null)
     setReleasing(false)
   }, [certificateId])
 
@@ -537,7 +545,18 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
           </Grid>
         )}
       </DialogContent>
-      {asking && certificate && (
+      {undoing === 'revert' && certificate && (
+        <Box sx={{ px: 3, pt: 2 }}>
+          <Alert severity='warning'>
+            El equipo del cliente vuelve a como estaba antes de esta liberación
+            (si lo creó, se elimina) y el certificado regresa a «
+            {certificate.kind === 'principal' ? 'firmado' : 'verificado'}». La
+            copia que ya se hizo en el Drive no se borra: hay que quitarla a
+            mano si no corresponde.
+          </Alert>
+        </Box>
+      )}
+      {(asking || undoing) && certificate && (
         <Box sx={{ px: 3, pt: 2 }}>
           <TextField
             fullWidth
@@ -545,7 +564,15 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
             minRows={2}
             size='small'
             autoFocus
-            label='Observaciones para quien cargó el certificado'
+            label={
+              undoing === 'discard'
+                ? 'Motivo para descartar el certificado'
+                : undoing === 'reopen'
+                  ? 'Motivo para reabrir la revisión'
+                  : undoing === 'revert'
+                    ? 'Motivo para revertir la liberación'
+                    : 'Observaciones para quien cargó el certificado'
+            }
             value={observation}
             onChange={(event) => setObservation(event.target.value)}
             inputProps={{ maxLength: 2000 }}
@@ -572,6 +599,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
           canReview &&
           !editing &&
           !asking &&
+          !undoing &&
           ['pendiente_revision', 'requiere_ajustes'].includes(
             certificate.status
           ) && (
@@ -585,6 +613,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         {certificate &&
           canReview &&
           !asking &&
+          !undoing &&
           ['pendiente_revision', 'verificado'].includes(certificate.status) && (
             <Button
               color='error'
@@ -635,6 +664,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         {certificate &&
           canReview &&
           !asking &&
+          !undoing &&
           certificate.status === 'pendiente_revision' && (
             <Button
               variant='contained'
@@ -653,6 +683,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         {certificate &&
           canSign &&
           !asking &&
+          !undoing &&
           certificate.kind === 'principal' &&
           certificate.status === 'verificado' && (
             <Button
@@ -667,6 +698,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         {certificate &&
           canRelease &&
           !asking &&
+          !undoing &&
           !editing &&
           ((certificate.kind === 'principal' &&
             certificate.status === 'firmado') ||
@@ -680,6 +712,93 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               Liberar
             </Button>
           )}
+        {certificate &&
+          !asking &&
+          !undoing &&
+          !editing &&
+          (canReview || canUpload) &&
+          [
+            'pendiente_revision',
+            'requiere_ajustes',
+            'verificado',
+            'firmado'
+          ].includes(certificate.status) && (
+            <Button
+              color='error'
+              onClick={() => setUndoing('discard')}
+              disabled={review.isLoading}
+            >
+              Descartar
+            </Button>
+          )}
+        {certificate &&
+          canReview &&
+          !asking &&
+          !undoing &&
+          !editing &&
+          ['verificado', 'firmado', 'descartado'].includes(
+            certificate.status
+          ) && (
+            <Button
+              onClick={() => setUndoing('reopen')}
+              disabled={review.isLoading}
+            >
+              {certificate.status === 'descartado'
+                ? 'Restaurar (reabrir revisión)'
+                : 'Reabrir revisión'}
+            </Button>
+          )}
+        {certificate &&
+          canRevert &&
+          !asking &&
+          !undoing &&
+          certificate.status === 'liberado' && (
+            <Button
+              color='error'
+              onClick={() => setUndoing('revert')}
+              disabled={review.isLoading}
+            >
+              Revertir liberación
+            </Button>
+          )}
+        {undoing && certificate && (
+          <>
+            <Button
+              onClick={() => {
+                setUndoing(null)
+                setObservation('')
+              }}
+              disabled={review.isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color='error'
+              variant='contained'
+              disabled={!observation.trim() || review.isLoading}
+              onClick={() =>
+                run(
+                  { type: undoing, id: certificate.id, observation },
+                  undoing === 'discard'
+                    ? 'Certificado descartado'
+                    : undoing === 'reopen'
+                      ? 'Revisión reabierta'
+                      : 'Liberación revertida: el equipo volvió a como estaba',
+                  () => {
+                    setUndoing(null)
+                    setObservation('')
+                  }
+                )
+              }
+            >
+              {undoing === 'discard'
+                ? 'Descartar certificado'
+                : undoing === 'reopen'
+                  ? 'Reabrir revisión'
+                  : 'Revertir liberación'}
+            </Button>
+          </>
+        )}
         <Button onClick={onClose}>Cerrar</Button>
         <Button
           variant='contained'

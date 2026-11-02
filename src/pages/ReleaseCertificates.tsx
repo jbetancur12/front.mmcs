@@ -529,6 +529,17 @@ const ReleaseCertificates: React.FC = () => {
         <FormControlLabel
           control={
             <Switch
+              checked={status === 'descartado'}
+              onChange={(event) =>
+                setStatus(event.target.checked ? 'descartado' : undefined)
+              }
+            />
+          }
+          label={`Ver descartados (${data?.counts.descartado ?? 0})`}
+        />
+        <FormControlLabel
+          control={
+            <Switch
               checked={withoutCustomer}
               onChange={(event) => setWithoutCustomer(event.target.checked)}
               sx={{

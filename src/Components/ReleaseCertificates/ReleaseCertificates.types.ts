@@ -4,6 +4,7 @@ export type ReleaseStatus =
   | 'verificado'
   | 'firmado'
   | 'liberado'
+  | 'descartado'
 
 export type ReleaseKind = 'principal' | 'anexo' | 'tercero'
 
@@ -14,7 +15,8 @@ export const RELEASE_STATUS_LABELS: Record<ReleaseStatus, string> = {
   requiere_ajustes: 'Requiere ajustes',
   verificado: 'Verificado',
   firmado: 'Firmado',
-  liberado: 'Liberado'
+  liberado: 'Liberado',
+  descartado: 'Descartado'
 }
 
 export const RELEASE_KIND_LABELS: Record<ReleaseKind, string> = {
