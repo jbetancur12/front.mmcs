@@ -36,6 +36,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import EmptyState from 'src/Components/Common/EmptyState'
 import ReleaseDetailDialog from 'src/Components/ReleaseCertificates/ReleaseDetailDialog'
 import ReleaseStatusPill from 'src/Components/ReleaseCertificates/ReleaseStatusPill'
+import ReleaseSignatureDialog from 'src/Components/ReleaseCertificates/ReleaseSignatureDialog'
 import ReleaseUploadDialog from 'src/Components/ReleaseCertificates/ReleaseUploadDialog'
 import {
   RELEASE_KIND_LABELS,
@@ -47,6 +48,7 @@ import {
 import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import {
   releaseFileUrl,
+  useMySignature,
   useReleaseCertificates,
   useSignReleaseCertificates
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
@@ -88,6 +90,8 @@ const ReleaseCertificates: React.FC = () => {
     PERMISSIONS.RELEASE_CERTIFICATE_SIGN
   )
   const sign = useSignReleaseCertificates()
+  const { data: mySignature } = useMySignature(canSign)
+  const [signatureOpen, setSignatureOpen] = useState(false)
   const [selection, setSelection] = useState<MRT_RowSelectionState>({})
   const [status, setStatus] = useState<ReleaseStatus | undefined>()
   const [kind, setKind] = useState<ReleaseKind | ''>('')
@@ -216,7 +220,15 @@ const ReleaseCertificates: React.FC = () => {
     .filter((key) => selection[key])
     .map(Number)
 
-  const signSelected = () =>
+  const signSelected = () => {
+    if (!mySignature?.configured) {
+      notify.info(
+        'Primero carga tu firma',
+        'Se estampa en los certificados que firmas.'
+      )
+      setSignatureOpen(true)
+      return
+    }
     sign.mutate(selectedIds, {
       onSuccess: (results) => {
         const failed = results.filter((result) => !result.ok)
@@ -237,6 +249,7 @@ const ReleaseCertificates: React.FC = () => {
       onError: (error) =>
         notify.error('No se pudo firmar', getApiErrorReason(error) ?? undefined)
     })
+  }
 
   const hasFilters = Boolean(status || kind || withAnomalies || search)
 
@@ -248,6 +261,11 @@ const ReleaseCertificates: React.FC = () => {
         icon={<FactCheckOutlined />}
         actions={
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {canSign && (
+              <Button variant='text' onClick={() => setSignatureOpen(true)}>
+                Mi firma
+              </Button>
+            )}
             {canSign && selectedIds.length > 0 && (
               <Button
                 variant='outlined'
@@ -419,6 +437,10 @@ const ReleaseCertificates: React.FC = () => {
         />
       )}
 
+      <ReleaseSignatureDialog
+        open={signatureOpen}
+        onClose={() => setSignatureOpen(false)}
+      />
       <ReleaseUploadDialog
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}

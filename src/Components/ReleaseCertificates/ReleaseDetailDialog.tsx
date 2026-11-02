@@ -22,9 +22,11 @@ import { userStore } from 'src/store/userStore'
 import { getApiErrorReason } from 'src/utils/apiError'
 import ReleaseEditForm from './ReleaseEditForm'
 import ReleaseEquipmentDialog from './ReleaseEquipmentDialog'
+import ReleaseSignatureDialog from './ReleaseSignatureDialog'
 import {
   releaseFileUrl,
   ReleaseCorrections,
+  useMySignature,
   useSignReleaseCertificates,
   ReleaseReviewAction,
   useReleaseCertificate,
@@ -102,6 +104,8 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     PERMISSIONS.RELEASE_CERTIFICATE_RELEASE
   )
   const sign = useSignReleaseCertificates()
+  const { data: mySignature } = useMySignature(canSign)
+  const [signatureOpen, setSignatureOpen] = useState(false)
   const [releasing, setReleasing] = useState(false)
   const review = useReleaseReview()
   const versionInput = useRef<HTMLInputElement>(null)
@@ -122,8 +126,16 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         )
     })
 
-  const signNow = () =>
-    certificate &&
+  const signNow = () => {
+    if (!certificate) return
+    if (!mySignature?.configured) {
+      notify.info(
+        'Primero carga tu firma',
+        'Se estampa en los certificados que firmas.'
+      )
+      setSignatureOpen(true)
+      return
+    }
     sign.mutate([certificate.id], {
       onSuccess: ([result]) =>
         result.ok
@@ -132,6 +144,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
       onError: (error) =>
         notify.error('No se pudo firmar', getApiErrorReason(error) ?? undefined)
     })
+  }
 
   const save = (data: ReleaseCorrections) =>
     certificate &&
@@ -551,6 +564,10 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
           Descargar
         </Button>
       </DialogActions>
+      <ReleaseSignatureDialog
+        open={signatureOpen}
+        onClose={() => setSignatureOpen(false)}
+      />
       <ReleaseEquipmentDialog
         certificateId={releasing && certificate ? certificate.id : null}
         confirmOnly={Boolean(

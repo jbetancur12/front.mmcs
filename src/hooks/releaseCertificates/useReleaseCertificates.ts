@@ -180,3 +180,32 @@ export const useSignReleaseCertificates = () => {
     { onSuccess: () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all) }
   )
 }
+
+/** ¿El usuario ya cargó la imagen de su firma? Se necesita para firmar. */
+export const useMySignature = (enabled: boolean) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<{ configured: boolean }>(
+    ['releaseCertificates', 'signature'],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/signature')
+        .then((response) => response.data),
+    { enabled }
+  )
+}
+
+export const useSaveMySignature = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation(
+    (file: File) => {
+      const data = new FormData()
+      data.append('signature', file)
+      return axiosPrivate.put('/release-certificates/signature', data)
+    },
+    {
+      onSuccess: () =>
+        queryClient.invalidateQueries(['releaseCertificates', 'signature'])
+    }
+  )
+}
