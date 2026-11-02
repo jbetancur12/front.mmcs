@@ -1,8 +1,9 @@
-// Enhanced Templates Page - Main Container Component
 import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+import CommonEmptyState from 'src/Components/Common/EmptyState'
 import React, { useState } from 'react'
-import { Button, Container, Grid, Typography, Box } from '@mui/material'
+import { Alert, Button, Container, Grid } from '@mui/material'
 import { Add as AddIcon, Description } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -13,95 +14,80 @@ import {
   useTemplates,
   useUpdateTemplate
 } from '@hooks/templates/useTemplates'
-import { TemplatesData, TemplateData, ErrorState } from './types'
-import EmptyState from './EmptyState'
+import { TemplatesData, TemplateData } from './types'
 import CreateTemplateModal from './CreateTemplateModal'
 import DuplicateTemplateModal from './DuplicateTemplateModal'
 import TemplatesTable from './TemplatesTable'
-import SkipLinks from './SkipLinks'
-import { AnimationProvider } from './AnimationProvider'
-import { AnimatedBox } from './AnimatedComponents'
-import { useAccessibility } from './hooks/useAccessibility'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import { logger } from 'src/utils/logger'
+
 const TemplatesPage: React.FC = () => {
   const canManageTemplates = useCan(PERMISSIONS.CALIBRATION_TEMPLATE_MANAGE)
-  const { announce } = useAccessibility({ announceChanges: true })
 
-  // State management
   const {
     data: templatesData,
     isFetching: loading,
     error: templatesError
   } = useTemplates<TemplatesData>()
   const templates = templatesData ?? []
-  const error: ErrorState | null = templatesError
-    ? {
-        type: 'network',
-        message: 'Error al cargar las plantillas. Por favor, intenta de nuevo.',
-        code: (
-          templatesError as { response?: { status?: number } }
-        ).response?.status?.toString()
-      }
-    : null
   const createTemplateMutation = useCreateTemplate()
   const updateTemplateMutation = useUpdateTemplate()
   const deleteTemplateMutation = useDeleteTemplate()
 
-  // Modal states
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false)
   const [templateToDuplicate, setTemplateToDuplicate] =
     useState<TemplatesData | null>(null)
+  const [templateToDelete, setTemplateToDelete] =
+    useState<TemplatesData | null>(null)
 
-  // Handle template creation
-  const handleCreateTemplate = async (templateData: TemplateData) => {
+  // Crear y duplicar usan el mismo endpoint; devuelven si salió bien para que
+  // el diálogo se cierre solo con éxito y conserve lo escrito si falla.
+  const saveNewTemplate = async (
+    templateData: TemplateData,
+    successMessage: string,
+    failureMessage: string
+  ): Promise<boolean> => {
     try {
       const response = await createTemplateMutation.mutateAsync(templateData)
-
       if (response.status >= 200 && response.status < 300) {
-        notify.success('Plantilla creada exitosamente!')
-        setCreateModalOpen(false)
+        notify.success(successMessage)
+        return true
       }
-    } catch (error: any) {
-      logger.error('Error creating template:', error)
-
-      if (error.response?.status === 409) {
-        notify.error(getApiErrorReason(error) ||
-            'Ya existe una plantilla con ese nombre')
-      } else {
-        notify.error(getApiErrorReason(error) ||
-            'Error al crear la plantilla. Por favor, intenta de nuevo.')
-      }
+      return false
+    } catch (error: unknown) {
+      logger.error('Error al guardar la plantilla:', error)
+      const status = (error as { response?: { status?: number } }).response
+        ?.status
+      notify.error(
+        getApiErrorReason(error) ||
+          (status === 409
+            ? 'Ya existe una plantilla con ese nombre'
+            : failureMessage)
+      )
+      return false
     }
   }
 
-  // Handle template duplication
+  const handleCreateTemplate = (templateData: TemplateData) =>
+    saveNewTemplate(
+      templateData,
+      'Plantilla creada',
+      'No se pudo crear la plantilla. Intenta de nuevo.'
+    )
+
   const handleDuplicateTemplate = async (templateData: TemplateData) => {
-    try {
-      const response = await createTemplateMutation.mutateAsync(templateData)
-
-      if (response.status >= 200 && response.status < 300) {
-        notify.success('Plantilla duplicada exitosamente!')
-        setDuplicateModalOpen(false)
-        setTemplateToDuplicate(null)
-      }
-    } catch (error: any) {
-      logger.error('Error duplicating template:', error)
-
-      if (error.response?.status === 409) {
-        notify.error(getApiErrorReason(error) ||
-            'Ya existe una plantilla con ese nombre')
-      } else {
-        notify.error(getApiErrorReason(error) ||
-            'Error al duplicar la plantilla. Por favor, intenta de nuevo.')
-      }
-    }
+    const saved = await saveNewTemplate(
+      templateData,
+      'Plantilla duplicada',
+      'No se pudo duplicar la plantilla. Intenta de nuevo.'
+    )
+    if (saved) setTemplateToDuplicate(null)
+    return saved
   }
 
-  // Handle template update
   const handleUpdateTemplate = async (
     id: number,
     templateData: TemplateData
@@ -111,48 +97,61 @@ const TemplatesPage: React.FC = () => {
         id,
         payload: templateData
       })
-
       if (response.status === 200 || response.status === 201) {
-        notify.success('Plantilla actualizada exitosamente!')
+        notify.success('Plantilla actualizada')
         return true
       }
       return false
-    } catch (error: any) {
-      logger.error('Error updating template:', error)
-      notify.error(getApiErrorReason(error) ||
-          'Error al actualizar la plantilla. Por favor, intenta de nuevo.')
+    } catch (error: unknown) {
+      logger.error('Error al actualizar la plantilla:', error)
+      notify.error(
+        getApiErrorReason(error) ||
+          'No se pudo actualizar la plantilla. Intenta de nuevo.'
+      )
       return false
     }
   }
 
-  // Handle template deletion
-  const handleDeleteTemplate = async (id: number) => {
-    const shouldDelete = window.confirm(
-      '¿Estás seguro de que deseas eliminar esta plantilla? Esta acción no se puede deshacer.'
-    )
-
-    if (!shouldDelete) return
-
+  const handleConfirmDelete = async () => {
+    if (!templateToDelete) return
     try {
-      const response = await deleteTemplateMutation.mutateAsync(id)
-
+      const response = await deleteTemplateMutation.mutateAsync(
+        templateToDelete.id
+      )
       if (response.status >= 200 && response.status < 300) {
-        notify.success('Plantilla eliminada exitosamente!')
+        notify.success('Plantilla eliminada')
       }
-    } catch (error: any) {
-      logger.error('Error deleting template:', error)
-      notify.error(getApiErrorReason(error) ||
-          'Error al eliminar la plantilla. Por favor, intenta de nuevo.')
+    } catch (error: unknown) {
+      logger.error('Error al eliminar la plantilla:', error)
+      notify.error(
+        getApiErrorReason(error) ||
+          'No se pudo eliminar la plantilla. Intenta de nuevo.'
+      )
+    } finally {
+      setTemplateToDelete(null)
     }
   }
 
-  // Handle duplicate action
   const handleDuplicateAction = (template: TemplatesData) => {
     setTemplateToDuplicate(template)
     setDuplicateModalOpen(true)
   }
 
-  // Render loading state
+  const createButton = canManageTemplates ? (
+    <Button
+      variant='contained'
+      startIcon={<AddIcon />}
+      onClick={() => setCreateModalOpen(true)}
+      sx={{
+        bgcolor: '#00BFA5',
+        whiteSpace: 'nowrap',
+        '&:hover': { bgcolor: '#00ACC1' }
+      }}
+    >
+      Crear plantilla
+    </Button>
+  ) : undefined
+
   if (loading && templates.length === 0) {
     return (
       <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -161,117 +160,93 @@ const TemplatesPage: React.FC = () => {
     )
   }
 
-  // Render empty state
-  if (!loading && templates.length === 0 && !error) {
-    return (
-      <Container maxWidth='xl' sx={{ py: 3 }}>
-        <LmsPageHeader
-          title='Plantillas'
-          subtitle='Plantillas que definen las celdas de lectura de los archivos Excel'
-          icon={<Description />}
-          actions={
-            canManageTemplates && (
-            <Button variant='contained' startIcon={<AddIcon />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
-              Crear plantilla
-            </Button>
-          )
-          }
-        />
-
-        {canManageTemplates ? (
-          <EmptyState onCreateTemplate={() => setCreateModalOpen(true)} />
-        ) : (
-          <Typography color='text.secondary'>
-            No hay plantillas para mostrar.
-          </Typography>
-        )}
-
-        <CreateTemplateModal
-          open={createModalOpen}
-          onClose={() => setCreateModalOpen(false)}
-          onSubmit={handleCreateTemplate}
-        />
-      </Container>
-    )
-  }
-
   return (
-    <AnimationProvider>
-      <Container maxWidth='xl' sx={{ py: 3 }}>
-        {/* Skip Links for Accessibility */}
-        <SkipLinks />
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Plantillas'
+        subtitle='Plantillas que definen las celdas de lectura de los archivos Excel'
+        icon={<Description />}
+        actions={createButton}
+      />
 
-        {/* Main Content */}
-        <Box component='main' id='main-content'>
-          <LmsPageHeader
-            title='Plantillas'
-            subtitle='Plantillas que definen las celdas de lectura de los archivos Excel'
-            icon={<Description />}
-            actions={
-              canManageTemplates && (
-                <Button
-                  id='create-template'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    announce('Abriendo formulario para crear nueva plantilla')
-                    setCreateModalOpen(true)
-                  }}
-                  aria-describedby='create-template-help'
-                  sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
-                >
-                  Crear plantilla
-                </Button>
-              )
-            }
-          />
+      {templatesError ? (
+        <Alert severity='error' variant='outlined' sx={{ mb: 3 }}>
+          No se pudieron cargar las plantillas. Recarga la página para
+          intentarlo de nuevo.
+        </Alert>
+      ) : null}
 
+      {templates.length === 0 && !templatesError ? (
+        <CommonEmptyState
+          icon={<Description />}
+          title='Aún no hay plantillas'
+          hint={
+            canManageTemplates
+              ? 'Crea la primera para indicar en qué celda del Excel está cada dato.'
+              : 'Cuando se cree una, aparecerá aquí.'
+          }
+          action={createButton}
+        />
+      ) : (
+        <>
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard label='Plantillas' value={templates.length} icon={<Description />} tone='teal' />
+              <LmsStatCard
+                label='Plantillas'
+                value={templates.length}
+                icon={<Description />}
+                tone='teal'
+              />
             </Grid>
           </Grid>
 
-          <Typography
-            id='create-template-help'
-            variant='body2'
-            sx={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
-          >
-            Abre un formulario para crear una nueva plantilla de mapeo Excel
-          </Typography>
-
-          <AnimatedBox animation='fadeIn' delay={300}>
-            <TemplatesTable
-              templates={templates}
-              loading={loading}
-              onUpdate={handleUpdateTemplate}
-              onDelete={handleDeleteTemplate}
-              onDuplicate={handleDuplicateAction}
-            />
-          </AnimatedBox>
-
-          {/* Create Template Modal */}
-          <CreateTemplateModal
-            open={createModalOpen}
-            onClose={() => setCreateModalOpen(false)}
-            onSubmit={handleCreateTemplate}
+          <TemplatesTable
+            templates={templates}
+            loading={loading}
+            onUpdate={handleUpdateTemplate}
+            onDelete={(id) =>
+              setTemplateToDelete(templates.find((t) => t.id === id) ?? null)
+            }
+            onDuplicate={handleDuplicateAction}
           />
+        </>
+      )}
 
-          {/* Duplicate Template Modal */}
-          {templateToDuplicate && (
-            <DuplicateTemplateModal
-              open={duplicateModalOpen}
-              template={templateToDuplicate}
-              onClose={() => {
-                setDuplicateModalOpen(false)
-                setTemplateToDuplicate(null)
-              }}
-              onSubmit={handleDuplicateTemplate}
-            />
-          )}
-        </Box>
-      </Container>
-    </AnimationProvider>
+      <CreateTemplateModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSubmit={handleCreateTemplate}
+      />
+
+      {templateToDuplicate && (
+        <DuplicateTemplateModal
+          open={duplicateModalOpen}
+          template={templateToDuplicate}
+          existingTemplates={templates}
+          onClose={() => {
+            setDuplicateModalOpen(false)
+            setTemplateToDuplicate(null)
+          }}
+          onSubmit={handleDuplicateTemplate}
+        />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(templateToDelete)}
+        title='Eliminar plantilla'
+        tone='danger'
+        message={
+          <>
+            Vas a eliminar <strong>{templateToDelete?.name}</strong>. Esta
+            acción no se puede deshacer.
+          </>
+        }
+        confirmLabel='Eliminar'
+        loading={deleteTemplateMutation.isLoading}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setTemplateToDelete(null)}
+      />
+    </Container>
   )
 }
 

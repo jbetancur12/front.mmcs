@@ -3,10 +3,6 @@ import {
   Box,
   Button,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Grid,
   IconButton,
   Stack,
@@ -25,6 +21,10 @@ import React, { useCallback, useMemo, useState } from 'react'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
+import FormDialog from 'src/Components/Common/FormDialog'
+import AsyncSelectField, {
+  type AsyncSelectOption
+} from 'src/Components/Common/AsyncSelectField'
 import AsyncSelect from 'react-select/async'
 
 import { loadOptions, mapOptions } from '../utils/loadOptions'
@@ -368,7 +368,6 @@ const Table: React.FC = () => {
         )}
       />
       <CreateNewDeviceModal
-        columns={columns}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
@@ -378,150 +377,83 @@ const Table: React.FC = () => {
 }
 
 interface CreateModalProps {
-  columns: MRT_ColumnDef<DeviceData>[]
   onClose: () => void
   onSubmit: (values: DeviceData) => void
   open: boolean
 }
 
-//example of creating a mui dialog modal for creating new rows
+type TemplateOption = AsyncSelectOption
+
 export const CreateNewDeviceModal = ({
   open,
-  columns,
   onClose,
   onSubmit
 }: CreateModalProps) => {
-  const [values, setValues] = useState<any>(() =>
-    columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = ''
-      return acc
-    }, {} as any)
-  )
+  const [name, setName] = useState('')
+  const [magnitude, setMagnitude] = useState('')
+  const [template, setTemplate] = useState<TemplateOption | null>(null)
 
-  const handleSubmit = () => {
-    //put your validation logic here
-
-    onSubmit(values)
+  const handleClose = () => {
+    setName('')
+    setMagnitude('')
+    setTemplate(null)
     onClose()
   }
 
-  return (
-    <Dialog open={open}>
-      <DialogTitle textAlign='center'>Crear Nuevo Equipo</DialogTitle>
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-              gap: '1.5rem'
-            }}
-          >
-            {columns.map(
-              (column) => {
-                if (column.accessorKey === 'id') {
-                  return null
-                }
-                if (column.id === 'certificateTemplateName') {
-                  return (
-                    <AsyncSelect
-                      key={column.id}
-                      cacheOptions
-                      // defaultOptions
-                      placeholder='Buscar Plantilla de Certificado'
-                      loadOptions={(inputValue) =>
-                        loadOptions<TemplatesData>(
-                          inputValue,
-                          'templates',
-                          (item) => mapOptions(item, 'id', 'name')
-                        )
-                      }
-                      onChange={(selectedOption: any) =>
-                        setValues({
-                          ...values,
-                          certificateTemplate: {
-                            id: selectedOption.value,
-                            name: selectedOption.label
-                          }
-                        }) as any
-                      }
-                      styles={styles(true)}
-                    />
-                  )
-                }
-                if (column.accessorKey === 'repository.name') {
-                  return null
-                  // return (
-                  //   <AsyncSelect
-                  //     key={column.accessorKey}
-                  //     cacheOptions
-                  //     // defaultOptions
-                  //     placeholder='Buscar Formato'
-                  //     loadOptions={(inputValue) =>
-                  //       loadOptions<RepositoryData>(
-                  //         inputValue,
-                  //         'repositories',
-                  //         (item) => mapOptions(item, 'id', 'name')
-                  //       )
-                  //     }
-                  //     onChange={(selectedOption: any) =>
-                  //       setValues({
-                  //         ...values,
-                  //         repository: {
-                  //           id: selectedOption.value,
-                  //           name: selectedOption.label
-                  //         }
-                  //       }) as any
-                  //     }
-                  //     styles={styles(false)}
-                  //   />
-                  // )
-                } else {
-                  return (
-                    <TextField
-                      key={column.id ?? column.accessorKey}
-                      label={column.header}
-                      name={column.accessorKey}
-                      onChange={(e) =>
-                        setValues({
-                          ...values,
-                          [e.target.name]: e.target.value
-                        })
-                      }
-                    />
-                  )
-                }
-              }
+  const handleSubmit = () => {
+    onSubmit({
+      name: name.trim(),
+      magnitude: magnitude.trim(),
+      ...(template
+        ? {
+            certificateTemplate: {
+              id: Number(template.value),
+              name: template.label
+            }
+          }
+        : {})
+    } as DeviceData)
+    handleClose()
+  }
 
-              // column.accessorKey !== "id" && (
-              //   <TextField
-              //     key={column.accessorKey}
-              //     label={column.header}
-              //     name={column.accessorKey}
-              //     onChange={(e) =>
-              //       setValues({ ...values, [e.target.name]: e.target.value })
-              //     }
-              //   />
-              // )
-            )}
-          </Stack>
-        </form>
-      </DialogContent>
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <button
-          className='bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10'
-          onClick={onClose}
-        >
-          Cancelar
-        </button>
-        <button
-          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-          onClick={handleSubmit}
-        >
-          Crear Equipo
-        </button>
-      </DialogActions>
-    </Dialog>
+  return (
+    <FormDialog
+      open={open}
+      onClose={handleClose}
+      title='Crear equipo'
+      subtitle='Catálogo de equipos del laboratorio'
+      submitLabel='Crear equipo'
+      onSubmit={handleSubmit}
+      submitDisabled={!name.trim()}
+    >
+      <Stack spacing={2.5}>
+        <TextField
+          label='Nombre'
+          required
+          fullWidth
+          autoFocus
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <TextField
+          label='Magnitud'
+          fullWidth
+          value={magnitude}
+          onChange={(event) => setMagnitude(event.target.value)}
+        />
+        <AsyncSelectField<TemplateOption>
+          label='Plantilla de certificado'
+          value={template}
+          onChange={setTemplate}
+          loadOptions={(input) =>
+            loadOptions<TemplatesData>(input, 'templates', (item) =>
+              mapOptions(item, 'id', 'name')
+            ) as unknown as Promise<TemplateOption[]>
+          }
+          helperText='Opcional. Escribe para buscar una plantilla.'
+        />
+      </Stack>
+    </FormDialog>
   )
 }
 
