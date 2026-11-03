@@ -761,8 +761,20 @@ const SideBar = ({
   // En el panel móvil siempre se ven los nombres.
   const minimized = sidebarMinimized && !mobileMenuOpen
 
-  const isLinkActive = (to: string) =>
+  const matchesPath = (to: string) =>
     pathname === to || (to !== '/' && pathname.startsWith(`${to}/`))
+
+  // Un ítem hermano con ruta más específica gana (Entregas cuelga de
+  // /calibration-services y no debe encender también a Servicios de calibración).
+  const isLinkActive = (to: string) =>
+    matchesPath(to) &&
+    !sidebarItems($userStore).some(
+      (other) =>
+        other.type === 'link' &&
+        other.to &&
+        other.to.length > to.length &&
+        matchesPath(other.to)
+    )
 
   type SidebarItem = ReturnType<typeof sidebarItems>[number]
 
