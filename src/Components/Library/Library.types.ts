@@ -22,6 +22,18 @@ export interface LibraryDocument {
   sourceSize?: number | null
   createdAt: string
   uploader?: { id: number; nombre: string } | null
+  /** Archivos reemplazados en esta versión (solo viene en el historial), el más reciente primero. */
+  replacements?: LibraryReplacement[]
+}
+
+export interface LibraryReplacement {
+  id: number
+  createdAt: string
+  replacer?: { id: number; nombre: string } | null
+  /** Nombre del PDF que se reemplazó, si se cambió el PDF. */
+  previousFileName?: string | null
+  /** Nombre del original editable que se reemplazó, si se cambió. */
+  previousSourceName?: string | null
 }
 
 export interface LibraryDocumentForm {

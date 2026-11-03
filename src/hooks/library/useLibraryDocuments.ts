@@ -79,11 +79,17 @@ export const useSaveLibraryDocument = () => {
             toFormData(action.form)
           )
         default:
-          return axiosPrivate.put(`/library/documents/${action.id}`, {
-            name: action.form.name,
-            version: action.form.version,
-            documentDate: action.form.documentDate
-          })
+          // Con archivos nuevos va como formulario (reemplazo); sin ellos, como JSON.
+          return axiosPrivate.put(
+            `/library/documents/${action.id}`,
+            action.form.file || action.form.source
+              ? toFormData(action.form)
+              : {
+                  name: action.form.name,
+                  version: action.form.version,
+                  documentDate: action.form.documentDate
+                }
+          )
       }
     },
     { onSuccess: () => queryClient.invalidateQueries(LIBRARY_QUERY_KEYS.all) }

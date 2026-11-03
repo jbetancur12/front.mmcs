@@ -94,7 +94,9 @@ const Library: React.FC = () => {
             ? 'Documento agregado'
             : dialog.mode === 'version'
               ? 'Versión nueva publicada'
-              : 'Documento actualizado'
+              : form.file || form.source
+                ? 'Archivo reemplazado'
+                : 'Documento actualizado'
         )
         setDialog(null)
       },

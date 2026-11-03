@@ -72,6 +72,31 @@ const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
                     {formatLibraryDate(version.documentDate)}
                     {version.uploader && ` · ${version.uploader.nombre}`}
                   </Typography>
+                  {(version.replacements ?? []).map((replacement) => (
+                    <Typography
+                      key={replacement.id}
+                      variant='caption'
+                      color='warning.main'
+                      sx={{ display: 'block' }}
+                    >
+                      Archivo reemplazado el{' '}
+                      {new Date(replacement.createdAt).toLocaleString('es-CO', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                      })}
+                      {replacement.replacer &&
+                        ` por ${replacement.replacer.nombre}`}
+                      {' · '}
+                      {[
+                        replacement.previousFileName &&
+                          `PDF: ${replacement.previousFileName}`,
+                        replacement.previousSourceName &&
+                          `original: ${replacement.previousSourceName}`
+                      ]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </Typography>
+                  ))}
                 </Box>
                 {version.isCurrent && (
                   <Chip

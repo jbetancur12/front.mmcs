@@ -122,37 +122,56 @@ const LibraryDocumentDialog: React.FC<LibraryDocumentDialogProps> = ({
           value={form.documentDate}
           onChange={(documentDate) => setForm({ ...form, documentDate })}
         />
-        {needsFile && (
-          <FileDropZone
-            file={form.file}
-            onFileSelected={(file) => {
-              setFileError('')
-              setForm({ ...form, file })
-            }}
-            onReject={setFileError}
-            accept='application/pdf'
-            acceptLabel='PDF'
-            maxSizeMb={20}
-            inputKey={inputKey}
-            disabled={loading}
-          />
+        {mode === 'edit' && (
+          <Alert severity='warning'>
+            Si subiste el archivo equivocado, elige aquí el correcto. Reemplaza
+            el de esta versión (no crea una versión nueva) y queda registrado
+            quién lo cambió y cuándo en el historial. Para un cambio real del
+            documento, usa «Subir nueva versión».
+          </Alert>
         )}
-        {needsFile && (
-          <FileDropZone
-            file={form.source}
-            onFileSelected={(source) => {
-              setFileError('')
-              setForm({ ...form, source })
-            }}
-            onReject={setFileError}
-            accept={LIBRARY_SOURCE_ACCEPT}
-            acceptLabel='Word o Excel'
-            title='Arrastra el archivo original (opcional) o haz clic para elegirlo'
-            hint='Word o Excel (.docx, .doc, .xlsx, .xls) · máximo 20 MB'
-            maxSizeMb={20}
-            inputKey={inputKey}
-            disabled={loading}
-          />
+        <FileDropZone
+          file={form.file}
+          onFileSelected={(file) => {
+            setFileError('')
+            setForm({ ...form, file })
+          }}
+          onReject={setFileError}
+          accept='application/pdf'
+          acceptLabel='PDF'
+          title={
+            mode === 'edit'
+              ? `Reemplazar el PDF (opcional): ${document?.fileName ?? ''}`
+              : undefined
+          }
+          maxSizeMb={20}
+          inputKey={inputKey}
+          disabled={loading}
+        />
+        <FileDropZone
+          file={form.source}
+          onFileSelected={(source) => {
+            setFileError('')
+            setForm({ ...form, source })
+          }}
+          onReject={setFileError}
+          accept={LIBRARY_SOURCE_ACCEPT}
+          acceptLabel='Word o Excel'
+          title={
+            mode === 'edit'
+              ? 'Reemplazar el archivo original (opcional)'
+              : 'Arrastra el archivo original (opcional) o haz clic para elegirlo'
+          }
+          hint='Word o Excel (.docx, .doc, .xlsx, .xls) · máximo 20 MB'
+          maxSizeMb={20}
+          inputKey={inputKey}
+          disabled={loading}
+        />
+        {mode === 'edit' && (form.file || form.source) && (
+          <Alert severity='info'>
+            Al guardar, el archivo actual se conserva en el rastro y este pasa a
+            ser el de la versión {form.version || document?.version}.
+          </Alert>
         )}
         {fileError && <Alert severity='error'>{fileError}</Alert>}
       </Box>
