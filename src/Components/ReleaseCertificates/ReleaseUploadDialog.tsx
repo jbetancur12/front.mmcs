@@ -184,7 +184,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
               <ReleaseServicePicker
                 value={service}
                 onChange={setService}
-                helperText='Opcional. Si los PDF son de un servicio, elígelo: el cliente se toma de ahí. Si no, déjalo vacío.'
+                helperText='Opcional. Si eliges uno, el cliente se toma del servicio.'
               />
             </Box>
             <Box
