@@ -8,6 +8,7 @@ import {
   ReleaseTarget,
   ReleaseFilters,
   ReleaseListResponse,
+  ReleaseServiceOption,
   ReleaseUploadResult
 } from 'src/Components/ReleaseCertificates/ReleaseCertificates.types'
 
@@ -63,8 +64,16 @@ export const useUploadReleaseCertificates = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   return useMutation(
-    async (files: File[]): Promise<ReleaseUploadResult[]> => {
+    async ({
+      files,
+      serviceId
+    }: {
+      files: File[]
+      serviceId?: number | null
+    }): Promise<ReleaseUploadResult[]> => {
       const data = new FormData()
+      // El servicio va antes de los archivos: el API lo lee del cuerpo del formulario.
+      if (serviceId) data.append('serviceId', String(serviceId))
       files.forEach((file) => data.append('files', file))
       const response = await axiosPrivate.post('/release-certificates', data)
       return response.data.results
@@ -91,6 +100,7 @@ export interface ReleaseCorrections {
 export type ReleaseReviewAction =
   | { type: 'correct'; id: number; data: ReleaseCorrections }
   | { type: 'verify'; id: number }
+  | { type: 'service'; id: number; serviceId: number | null }
   | { type: 'adjustments'; id: number; observation: string }
   | { type: 'version'; id: number; file: File }
   | { type: 'drive-retry'; id: number }
@@ -114,6 +124,10 @@ export const useReleaseReview = () => {
           return axiosPrivate.put(base, action.data)
         case 'verify':
           return axiosPrivate.post(`${base}/verify`)
+        case 'service':
+          return axiosPrivate.put(`${base}/service`, {
+            serviceId: action.serviceId
+          })
         case 'adjustments':
           return axiosPrivate.post(`${base}/request-adjustments`, {
             observation: action.observation
@@ -153,6 +167,30 @@ export const useReleaseCustomerSearch = (search: string) => {
         .get('/release-certificates/customers', { params: { search } })
         .then((response) => response.data),
     { enabled: search.trim().length >= 2, keepPreviousData: true }
+  )
+}
+
+/** Servicios abiertos para ligar un certificado: por cliente y/o por código de la ODS. */
+export const useReleaseServiceSearch = (
+  customerId: number | null,
+  search: string
+) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseServiceOption[]>(
+    ['releaseCertificates', 'services', customerId, search],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/services', {
+          params: {
+            customerId: customerId || undefined,
+            search: search || undefined
+          }
+        })
+        .then((response) => response.data),
+    {
+      enabled: Boolean(customerId) || search.length >= 2,
+      keepPreviousData: true
+    }
   )
 }
 

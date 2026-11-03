@@ -8,6 +8,7 @@ export const ANALYST_GUIDE_STEPS: DriveGuideStep[] = [
     where: 'Quien carga: metrólogo o técnico',
     actions: [
       'Pulsa «Cargar certificado» y suelta los PDF en el recuadro (o haz clic para elegirlos). Puedes cargar hasta 50 a la vez, de 20 MB cada uno.',
+      'Si los PDF son de un servicio de calibración, elige la ODS en el campo «Servicio de calibración (ODS)»: el cliente se toma del servicio. Es opcional; si no sabes la ODS o el certificado no es de un servicio, déjalo vacío y se carga como siempre. La analista lo puede ligar o cambiar después, al revisar.',
       'Pulsa «Cargar». No hay que llenar nada más: el sistema lee cada PDF y propone el tipo de documento, el número, el cliente, el equipo, la serie y las fechas.',
       'Al terminar verás una lista: los certificados correctos quedan «Pendiente de revisión» y, si alguno no se pudo registrar, dice por qué.'
     ],

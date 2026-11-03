@@ -444,7 +444,21 @@ export interface CalibrationServiceAvailableAction {
   pendingWith: string
 }
 
+/** Certificados de «Certificados a liberar» ligados a un servicio. */
+export interface CalibrationServiceReleaseCertificates {
+  total: number
+  released: number
+  items: {
+    id: number
+    documentNumber: string | null
+    instrument: string | null
+    serie: string | null
+    status: string
+  }[]
+}
+
 export interface CalibrationService {
+  releaseCertificates?: CalibrationServiceReleaseCertificates | null
   availableActions?: CalibrationServiceAvailableAction[]
   /** Siguiente tarea del flujo para el usuario y capacidad que la resuelve. */
   nextAction?: string | null

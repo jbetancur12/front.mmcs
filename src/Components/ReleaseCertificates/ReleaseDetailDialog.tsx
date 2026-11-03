@@ -24,6 +24,7 @@ import { userStore } from 'src/store/userStore'
 import { getApiErrorReason } from 'src/utils/apiError'
 import ReleaseEditForm from './ReleaseEditForm'
 import ReleaseEquipmentDialog from './ReleaseEquipmentDialog'
+import ReleaseServicePicker from './ReleaseServicePicker'
 import ReleaseSignatureDialog from './ReleaseSignatureDialog'
 import {
   releaseFileUrl,
@@ -368,6 +369,51 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                       }
                       warn={!certificate.customer}
                     />
+                  </Grid>
+                  <Grid item xs={12}>
+                    {canReview && certificate.status !== 'descartado' ? (
+                      <ReleaseServicePicker
+                        value={
+                          certificate.service
+                            ? {
+                                id: certificate.service.id,
+                                serviceCode: certificate.service.serviceCode,
+                                status: certificate.service.status,
+                                customerId: certificate.customerId,
+                                customerName:
+                                  certificate.customer?.nombre ?? null,
+                                certificates: { total: 0, released: 0 }
+                              }
+                            : null
+                        }
+                        customerId={certificate.customerId}
+                        disabled={review.isLoading}
+                        helperText={
+                          certificate.customerId
+                            ? 'Opcional. Solo servicios de este cliente.'
+                            : 'Opcional. Al elegir un servicio se toma su cliente.'
+                        }
+                        onChange={(option) =>
+                          run(
+                            {
+                              type: 'service',
+                              id: certificate.id,
+                              serviceId: option?.id ?? null
+                            },
+                            option
+                              ? `Ligado al servicio ${option.serviceCode}`
+                              : 'Servicio desligado'
+                          )
+                        }
+                      />
+                    ) : (
+                      <Field
+                        label='Servicio de calibración (ODS)'
+                        value={
+                          certificate.service?.serviceCode ?? 'Sin servicio'
+                        }
+                      />
+                    )}
                   </Grid>
                   <Grid item xs={6}>
                     <Field

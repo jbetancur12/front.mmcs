@@ -11,6 +11,7 @@ import { CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS } from '../../../constants
 import { CalibrationService } from '../../../types/calibrationService'
 import CalibrationServiceCutsPanel from '../CalibrationServiceCutsPanel'
 import CalibrationBillingGuide from '../CalibrationBillingGuide'
+import CalibrationServiceReleaseCertificatesCard from '../CalibrationServiceReleaseCertificates'
 import { BlockedActionTooltip } from './CalibrationServiceDetailLayout'
 import { DetailTab } from './calibrationServiceDetailUtils'
 import {
@@ -180,6 +181,9 @@ const CalibrationServiceCutsTab = ({
       <Stack direction='row' justifyContent='flex-end' sx={{ mb: 1 }}>
         <CalibrationBillingGuide compact />
       </Stack>
+      <CalibrationServiceReleaseCertificatesCard
+        summary={service.releaseCertificates}
+      />
       <CalibrationServiceCutsPanel
         cuts={service.cuts || []}
         canMarkReady={canMarkCutReady}

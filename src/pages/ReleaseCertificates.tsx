@@ -294,6 +294,12 @@ const ReleaseCertificates: React.FC = () => {
             </Box>
           )
       },
+      {
+        id: 'service',
+        header: 'ODS',
+        size: 130,
+        accessorFn: (row) => row.service?.serviceCode ?? '—'
+      },
       { accessorKey: 'instrument', header: 'Instrumento', size: 210 },
       { accessorKey: 'serie', header: 'Serie', size: 150 },
       {

@@ -64,6 +64,7 @@ export interface ReleaseCertificate {
   anomalies: ReleaseAnomaly[]
   readStatus: ReleaseReadStatus
   customerId: number | null
+  serviceId?: number | null
   currentVersionId: number | null
   signedAt?: string | null
   releasedAt?: string | null
@@ -75,6 +76,18 @@ export interface ReleaseCertificate {
   createdAt: string
   uploader?: ReleaseUserRef | null
   customer?: { id: number; nombre: string } | null
+  /** Servicio de calibración (ODS) al que pertenece, si se ligó. */
+  service?: { id: number; serviceCode: string; status: string } | null
+}
+
+/** Servicio que se puede elegir al ligar un certificado. */
+export interface ReleaseServiceOption {
+  id: number
+  serviceCode: string
+  status: string
+  customerId: number | null
+  customerName: string | null
+  certificates: { total: number; released: number }
 }
 
 export interface ReleaseVersion {

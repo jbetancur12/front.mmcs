@@ -22,7 +22,11 @@ import {
 } from '@mui/icons-material'
 import { useUploadReleaseCertificates } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { getApiErrorReason } from 'src/utils/apiError'
-import { ReleaseUploadResult } from './ReleaseCertificates.types'
+import ReleaseServicePicker from './ReleaseServicePicker'
+import {
+  ReleaseServiceOption,
+  ReleaseUploadResult
+} from './ReleaseCertificates.types'
 
 const MAX_FILES = 50
 const MAX_SIZE_MB = 20
@@ -60,6 +64,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   const [results, setResults] = useState<ReleaseUploadResult[] | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
+  const [service, setService] = useState<ReleaseServiceOption | null>(null)
   const upload = useUploadReleaseCertificates()
 
   const reset = () => {
@@ -67,6 +72,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
     setRejected([])
     setResults(null)
     setFailure(null)
+    setService(null)
   }
 
   const close = () => {
@@ -99,11 +105,16 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
 
   const send = () => {
     setFailure(null)
-    upload.mutate(files, {
-      onSuccess: (data) => setResults(data),
-      onError: (error) =>
-        setFailure(getApiErrorReason(error) ?? 'No se pudo completar la carga')
-    })
+    upload.mutate(
+      { files, serviceId: service?.id ?? null },
+      {
+        onSuccess: (data) => setResults(data),
+        onError: (error) =>
+          setFailure(
+            getApiErrorReason(error) ?? 'No se pudo completar la carga'
+          )
+      }
+    )
   }
 
   const okCount = results?.filter((r) => r.ok).length ?? 0
@@ -169,6 +180,13 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
           </Box>
         ) : (
           <>
+            <Box sx={{ mb: 2 }}>
+              <ReleaseServicePicker
+                value={service}
+                onChange={setService}
+                helperText='Opcional. Si los PDF son de un servicio, elígelo: el cliente se toma de ahí. Si no, déjalo vacío.'
+              />
+            </Box>
             <Box
               role='button'
               tabIndex={0}
