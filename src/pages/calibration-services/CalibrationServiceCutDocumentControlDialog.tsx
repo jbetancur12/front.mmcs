@@ -1,15 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from 'react-query'
 import { Box, Button, TextField, Typography } from '@mui/material'
 import FormDialog, {
   FormDialogSection
 } from '../../Components/Common/FormDialog'
 import FileDropZone from '../../Components/Common/FileDropZone'
-import { CalibrationServiceCut } from '../../types/calibrationService'
+import {
+  CalibrationService,
+  CalibrationServiceCut
+} from '../../types/calibrationService'
+import ReleaseUploadDialog from '../../Components/ReleaseCertificates/ReleaseUploadDialog'
+import { releaseCertificatesEnabled } from '../../features/releaseCertificatesFlags'
+import { CALIBRATION_SERVICE_QUERY_KEYS } from '../../hooks/useCalibrationServices'
+import { PERMISSIONS } from '../../constants/permissions'
+import { useCan } from '../../utils/functions'
 import { CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS } from '../../constants/calibrationServices'
 
 interface CalibrationServiceCutDocumentControlDialogProps {
   open: boolean
   cut: CalibrationServiceCut
+  /** Servicio del corte: permite subir certificados ya ligados a él. */
+  service?: CalibrationService
   isLoading?: boolean
   onClose: () => void
   onSubmit: (values: {
@@ -34,6 +45,7 @@ const clampValue = (value: number, min: number, max: number) =>
 const CalibrationServiceCutDocumentControlDialog = ({
   open,
   cut,
+  service,
   isLoading = false,
   onClose,
   onSubmit
@@ -47,6 +59,13 @@ const CalibrationServiceCutDocumentControlDialog = ({
   const [sentAt, setSentAt] = useState('')
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null)
   const [notes, setNotes] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const queryClient = useQueryClient()
+  const canUploadCertificates =
+    useCan(PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD) &&
+    releaseCertificatesEnabled &&
+    Boolean(service)
+  const platform = service?.releaseCertificates
   const suggestedCertificates = useMemo(
     () =>
       (cut.items || []).reduce(
@@ -178,6 +197,43 @@ const CalibrationServiceCutDocumentControlDialog = ({
             </Button>
           ) : null}
         </Box>
+        {(canUploadCertificates || platform) && (
+          <Box
+            sx={{
+              ...FULL_ROW,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1,
+              flexWrap: 'wrap',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              p: 1.5
+            }}
+          >
+            <Typography variant='body2' color='text.secondary'>
+              {platform && platform.total > 0
+                ? `En la plataforma: ${platform.total} cargados, ${platform.released} liberados (de todo el servicio). Son una referencia; los números de abajo los confirmas tú.`
+                : 'Aún no hay certificados cargados en la plataforma para este servicio.'}
+            </Typography>
+            {canUploadCertificates && (
+              <Button
+                size='small'
+                variant='outlined'
+                disabled={isLoading}
+                onClick={() => setUploading(true)}
+                sx={{
+                  textTransform: 'none',
+                  color: '#00695C',
+                  borderColor: '#00BFA5'
+                }}
+              >
+                Subir certificados
+              </Button>
+            )}
+          </Box>
+        )}
         <Box sx={{ ...FULL_ROW, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Button
             size='small'
@@ -187,7 +243,11 @@ const CalibrationServiceCutDocumentControlDialog = ({
               setUploadedCertificates(expectedCertificates)
               setReviewedCertificates(expectedCertificates)
             }}
-            sx={{ textTransform: 'none', color: '#00695C', borderColor: '#00BFA5' }}
+            sx={{
+              textTransform: 'none',
+              color: '#00695C',
+              borderColor: '#00BFA5'
+            }}
           >
             Todos emitidos y revisados ({expectedCertificates})
           </Button>
@@ -200,7 +260,11 @@ const CalibrationServiceCutDocumentControlDialog = ({
               setReviewedCertificates(expectedCertificates)
               setSentCertificates(expectedCertificates)
             }}
-            sx={{ textTransform: 'none', color: '#00695C', borderColor: '#00BFA5' }}
+            sx={{
+              textTransform: 'none',
+              color: '#00695C',
+              borderColor: '#00BFA5'
+            }}
           >
             Todos enviados ({expectedCertificates})
           </Button>
@@ -277,6 +341,26 @@ const CalibrationServiceCutDocumentControlDialog = ({
           minRows={3}
         />
       </FormDialogSection>
+      {service && (
+        <ReleaseUploadDialog
+          open={uploading}
+          onClose={() => setUploading(false)}
+          initialService={{
+            id: service.id,
+            serviceCode: service.serviceCode,
+            status: service.status,
+            customerId: service.customerId ?? null,
+            customerName: null,
+            certificates: {
+              total: platform?.total ?? 0,
+              released: platform?.released ?? 0
+            }
+          }}
+          onUploaded={() =>
+            queryClient.invalidateQueries(CALIBRATION_SERVICE_QUERY_KEYS.detail)
+          }
+        />
+      )}
     </FormDialog>
   )
 }

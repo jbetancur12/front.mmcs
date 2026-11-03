@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -35,6 +35,10 @@ const BUTTON_SX = { bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }
 interface ReleaseUploadDialogProps {
   open: boolean
   onClose: () => void
+  /** Servicio preelegido (cuando se abre desde un servicio). */
+  initialService?: ReleaseServiceOption | null
+  /** Se llama cuando al menos un PDF quedó registrado. */
+  onUploaded?: () => void
 }
 
 const isPdf = (file: File) =>
@@ -54,7 +58,9 @@ const resultDetail = (result: ReleaseUploadResult) => {
 /** Carga masiva: se sueltan los PDF y el sistema los lee; no se diligencia nada más. */
 const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   open,
-  onClose
+  onClose,
+  initialService = null,
+  onUploaded
 }) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
@@ -66,6 +72,10 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   const [failure, setFailure] = useState<string | null>(null)
   const [service, setService] = useState<ReleaseServiceOption | null>(null)
   const upload = useUploadReleaseCertificates()
+
+  useEffect(() => {
+    if (open) setService(initialService)
+  }, [open, initialService])
 
   const reset = () => {
     setFiles([])
@@ -108,7 +118,10 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
     upload.mutate(
       { files, serviceId: service?.id ?? null },
       {
-        onSuccess: (data) => setResults(data),
+        onSuccess: (data) => {
+          setResults(data)
+          if (data.some((result) => result.ok)) onUploaded?.()
+        },
         onError: (error) =>
           setFailure(
             getApiErrorReason(error) ?? 'No se pudo completar la carga'

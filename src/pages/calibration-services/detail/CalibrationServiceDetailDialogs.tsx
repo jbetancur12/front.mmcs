@@ -328,6 +328,7 @@ const CalibrationServiceDetailDialogsHost = ({
         <CalibrationServiceCutDocumentControlDialog
           open={Boolean(selectedCutForDocumentControl)}
           cut={selectedCutForDocumentControl}
+          service={service}
           isLoading={isOperationalBusy}
           onClose={() => setSelectedCutForDocumentControl(null)}
           onSubmit={handleUpdateCutDocumentControl}
