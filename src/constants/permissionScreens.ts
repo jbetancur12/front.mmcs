@@ -42,11 +42,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/lms/admin/quiz-management", label: "Academia › Administración › Banco de preguntas", kind: 'related' }
   ],
   'calibration:certificate_history:delete': [
-    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' },
-    { path: "/", label: "Inicio", kind: 'related' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' }
   ],
   'calibration:certificate_type:manage': [
     { path: "/calibraciones/tipos-de-certificado", label: "Calibraciones › Tipos de certificado", kind: 'screen' }
@@ -135,19 +131,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/:id/in-out", label: "Hojas de datos › Entradas y salidas", kind: 'screen' }
   ],
   'calibration:file:bulk_reassign': [
-    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' },
-    { path: "/", label: "Inicio", kind: 'related' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
+    { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' }
   ],
   'calibration:file:create': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'screen' },
-    { path: "/", label: "Inicio", kind: 'action' },
     { path: "/calibraciones/certificados", label: "Calibraciones › Certificados", kind: 'action' },
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'action' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' },
     { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' }
   ],
   'calibration:file:customer_view': [
@@ -157,36 +146,24 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/fleet/:id/interventions", label: "Flota › Tipos de intervención", kind: 'related' }
   ],
   'calibration:file:delete': [
-    { path: "/", label: "Inicio", kind: 'action' },
     { path: "/calibraciones/certificados", label: "Calibraciones › Certificados", kind: 'action' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'action' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'action' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' },
     { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' },
     { path: "/customers/:id", label: "Empresas", kind: 'related' }
   ],
   'calibration:file:expiring_grouped': [
     { path: "/", label: "Inicio", kind: 'related' },
     { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
+    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' }
   ],
   'calibration:file:list': [
     { path: "/", label: "Inicio", kind: 'related' },
     { path: "/calibraciones/certificados", label: "Calibraciones › Certificados", kind: 'related' },
     { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'related' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
+    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' }
   ],
   'calibration:file:update': [
     { path: "/calibraciones/certificados/:id", label: "Calibraciones › Certificados", kind: 'action' },
-    { path: "/", label: "Inicio", kind: 'related' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
-    { path: "/customers/:id", label: "Empresas", kind: 'related' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
+    { path: "/customers/:id", label: "Empresas", kind: 'related' }
   ],
   'calibration:inspection_maintenance:manage': [
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'screen' },
@@ -976,18 +953,10 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/release-certificates", label: "Certificados a liberar", kind: 'screen' }
   ],
   'repositories:repository:manage': [
-    { path: "/", label: "Inicio", kind: 'action' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'action' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'action' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' },
     { path: "/repository", label: "Repositorio", kind: 'action' }
   ],
   'repositories:repository:view': [
-    { path: "/repository", label: "Repositorio", kind: 'screen' },
-    { path: "/", label: "Inicio", kind: 'related' },
-    { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
-    { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'related' },
-    { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'related' }
+    { path: "/repository", label: "Repositorio", kind: 'screen' }
   ],
   'sales:config:manage': [
     { path: "/equipment-sales", label: "Venta de equipos", kind: 'action' },
