@@ -183,6 +183,7 @@ const CalibrationServiceCutsTab = ({
       </Stack>
       <CalibrationServiceReleaseCertificatesCard
         summary={service.releaseCertificates}
+        cuts={service.cuts}
       />
       <CalibrationServiceCutsPanel
         cuts={service.cuts || []}

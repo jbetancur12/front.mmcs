@@ -65,7 +65,22 @@ const CalibrationServiceCutDocumentControlDialog = ({
     useCan(PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD) &&
     releaseCertificatesEnabled &&
     Boolean(service)
-  const platform = service?.releaseCertificates
+  const cutCount = service?.cuts?.length ?? 1
+  // Con varios cortes cuenta lo ligado a este corte; con uno solo, también lo que no tiene corte.
+  const allItems = service?.releaseCertificates?.items ?? []
+  const platformItems = allItems.filter(
+    (item) => item.cutId === cut.id || (cutCount <= 1 && item.cutId === null)
+  )
+  const platform = {
+    total: platformItems.length,
+    released: platformItems.filter((item) => item.status === 'liberado').length
+  }
+  const withoutCut =
+    cutCount > 1 ? allItems.filter((item) => item.cutId === null).length : 0
+  const hasPlatform = platform.total > 0
+  const canAutofill = hasPlatform
+  const [manualCounts, setManualCounts] = useState(false)
+  const autoCounts = canAutofill && !manualCounts
   const suggestedCertificates = useMemo(
     () =>
       (cut.items || []).reduce(
@@ -94,18 +109,22 @@ const CalibrationServiceCutDocumentControlDialog = ({
     )
     setEvidenceFile(null)
     setNotes(current?.notes || '')
+    setManualCounts(false)
   }, [cut, open, suggestedCertificates])
 
   const normalizedUploaded = clampValue(
-    uploadedCertificates,
+    autoCounts ? platform.total : uploadedCertificates,
     0,
     expectedCertificates
   )
   const normalizedReviewed = clampValue(
-    reviewedCertificates,
+    autoCounts ? platform.released : reviewedCertificates,
     0,
     normalizedUploaded
   )
+  const allReviewed =
+    expectedCertificates > 0 && normalizedReviewed === expectedCertificates
+  const pendingReview = Math.max(0, expectedCertificates - normalizedReviewed)
   const normalizedSent = clampValue(sentCertificates, 0, normalizedReviewed)
 
   const nextStatus = useMemo(() => {
@@ -212,11 +231,37 @@ const CalibrationServiceCutDocumentControlDialog = ({
               p: 1.5
             }}
           >
-            <Typography variant='body2' color='text.secondary'>
-              {platform && platform.total > 0
-                ? `En la plataforma: ${platform.total} cargados, ${platform.released} liberados (de todo el servicio). Son una referencia; los números de abajo los confirmas tú.`
-                : 'Aún no hay certificados cargados en la plataforma para este servicio.'}
-            </Typography>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='body2' fontWeight={600}>
+                {!hasPlatform
+                  ? 'Aún no hay certificados cargados en la plataforma para este servicio.'
+                  : allReviewed
+                    ? `Los ${expectedCertificates} certificados están liberados: listos para enviar.`
+                    : `${platform.released} de ${platform.total} cargados están liberados.`}
+              </Typography>
+              {hasPlatform && (
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  display='block'
+                >
+                  {autoCounts
+                    ? 'Emitidos y revisados se toman de la plataforma.'
+                    : 'Estás editando emitidos y revisados a mano.'}
+                </Typography>
+              )}
+              {withoutCut > 0 && (
+                <Typography
+                  variant='caption'
+                  color='warning.main'
+                  display='block'
+                >
+                  Hay {withoutCut} certificado(s) del servicio sin corte
+                  asignado: asígnalos en «Certificados a liberar» para que
+                  cuenten en su corte.
+                </Typography>
+              )}
+            </Box>
             {canUploadCertificates && (
               <Button
                 size='small'
@@ -234,30 +279,42 @@ const CalibrationServiceCutDocumentControlDialog = ({
             )}
           </Box>
         )}
-        <Box sx={{ ...FULL_ROW, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            ...FULL_ROW,
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'wrap',
+            alignItems: 'center'
+          }}
+        >
+          {autoCounts ? null : (
+            <Button
+              size='small'
+              variant='outlined'
+              disabled={isLoading || expectedCertificates <= 0}
+              onClick={() => {
+                setUploadedCertificates(expectedCertificates)
+                setReviewedCertificates(expectedCertificates)
+              }}
+              sx={{
+                textTransform: 'none',
+                color: '#00695C',
+                borderColor: '#00BFA5'
+              }}
+            >
+              Todos emitidos y revisados ({expectedCertificates})
+            </Button>
+          )}
           <Button
             size='small'
             variant='outlined'
-            disabled={isLoading || expectedCertificates <= 0}
+            disabled={isLoading || !allReviewed}
             onClick={() => {
-              setUploadedCertificates(expectedCertificates)
-              setReviewedCertificates(expectedCertificates)
-            }}
-            sx={{
-              textTransform: 'none',
-              color: '#00695C',
-              borderColor: '#00BFA5'
-            }}
-          >
-            Todos emitidos y revisados ({expectedCertificates})
-          </Button>
-          <Button
-            size='small'
-            variant='outlined'
-            disabled={isLoading || expectedCertificates <= 0}
-            onClick={() => {
-              setUploadedCertificates(expectedCertificates)
-              setReviewedCertificates(expectedCertificates)
+              if (!autoCounts) {
+                setUploadedCertificates(expectedCertificates)
+                setReviewedCertificates(expectedCertificates)
+              }
               setSentCertificates(expectedCertificates)
             }}
             sx={{
@@ -268,20 +325,44 @@ const CalibrationServiceCutDocumentControlDialog = ({
           >
             Todos enviados ({expectedCertificates})
           </Button>
+          {expectedCertificates > 0 && !allReviewed && (
+            <Typography variant='caption' color='text.secondary'>
+              Faltan {pendingReview} por revisar para poder enviarlos todos.
+            </Typography>
+          )}
+          {canAutofill && (
+            <Button
+              size='small'
+              onClick={() => setManualCounts((value) => !value)}
+              sx={{ textTransform: 'none', color: '#00695C', ml: 'auto' }}
+            >
+              {manualCounts ? 'Usar los de la plataforma' : 'Editar a mano'}
+            </Button>
+          )}
         </Box>
         <TextField
           label='Emitidos'
           type='number'
-          value={uploadedCertificates}
+          value={autoCounts ? normalizedUploaded : uploadedCertificates}
           onChange={numberField(setUploadedCertificates)}
-          helperText='No pueden superar los esperados.'
+          disabled={autoCounts}
+          helperText={
+            autoCounts
+              ? 'Cargados en la plataforma.'
+              : 'No pueden superar los esperados.'
+          }
         />
         <TextField
           label='Revisados'
           type='number'
-          value={reviewedCertificates}
+          value={autoCounts ? normalizedReviewed : reviewedCertificates}
           onChange={numberField(setReviewedCertificates)}
-          helperText='No pueden superar los emitidos.'
+          disabled={autoCounts}
+          helperText={
+            autoCounts
+              ? 'Liberados en la plataforma.'
+              : 'No pueden superar los emitidos.'
+          }
         />
         <TextField
           label='Enviados'
@@ -345,6 +426,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
         <ReleaseUploadDialog
           open={uploading}
           onClose={() => setUploading(false)}
+          initialCutId={cut.id}
           initialService={{
             id: service.id,
             serviceCode: service.serviceCode,
@@ -352,8 +434,8 @@ const CalibrationServiceCutDocumentControlDialog = ({
             customerId: service.customerId ?? null,
             customerName: null,
             certificates: {
-              total: platform?.total ?? 0,
-              released: platform?.released ?? 0
+              total: platform.total,
+              released: platform.released
             }
           }}
           onUploaded={() =>

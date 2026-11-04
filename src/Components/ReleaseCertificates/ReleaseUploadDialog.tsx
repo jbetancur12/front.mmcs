@@ -37,6 +37,8 @@ interface ReleaseUploadDialogProps {
   onClose: () => void
   /** Servicio preelegido (cuando se abre desde un servicio). */
   initialService?: ReleaseServiceOption | null
+  /** Corte preelegido (cuando se abre desde el control documental de un corte). */
+  initialCutId?: number | null
   /** Se llama cuando al menos un PDF quedó registrado. */
   onUploaded?: () => void
 }
@@ -60,6 +62,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   open,
   onClose,
   initialService = null,
+  initialCutId = null,
   onUploaded
 }) => {
   const theme = useTheme()
@@ -116,7 +119,12 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   const send = () => {
     setFailure(null)
     upload.mutate(
-      { files, serviceId: service?.id ?? null },
+      {
+        files,
+        serviceId: service?.id ?? null,
+        // El corte solo vale mientras siga el servicio con el que se abrió.
+        cutId: service?.id === initialService?.id ? initialCutId : null
+      },
       {
         onSuccess: (data) => {
           setResults(data)

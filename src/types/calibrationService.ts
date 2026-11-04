@@ -454,6 +454,7 @@ export interface CalibrationServiceReleaseCertificates {
     instrument: string | null
     serie: string | null
     status: string
+    cutId: number | null
   }[]
 }
 

@@ -5,6 +5,7 @@ import { CalibrationServiceReleaseCertificates } from '../../types/calibrationSe
 
 interface CalibrationServiceReleaseCertificatesProps {
   summary?: CalibrationServiceReleaseCertificates | null
+  cuts?: { id: number; cutCode: string }[]
 }
 
 /**
@@ -12,9 +13,11 @@ interface CalibrationServiceReleaseCertificatesProps {
  * facturación, que siguen su propio flujo.
  */
 const CalibrationServiceReleaseCertificatesCard = ({
-  summary
+  summary,
+  cuts
 }: CalibrationServiceReleaseCertificatesProps) => {
   if (!summary || summary.total === 0) return null
+  const cutCodes = new Map((cuts ?? []).map((cut) => [cut.id, cut.cutCode]))
   const percent = Math.round((summary.released / summary.total) * 100)
 
   return (
@@ -71,7 +74,8 @@ const CalibrationServiceReleaseCertificatesCard = ({
               {[
                 item.documentNumber ?? 'Sin número',
                 item.instrument,
-                item.serie
+                item.serie,
+                cutCodes.get(item.cutId ?? 0)
               ]
                 .filter(Boolean)
                 .join(' · ')}

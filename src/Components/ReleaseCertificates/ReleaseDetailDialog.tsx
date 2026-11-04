@@ -10,6 +10,7 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  MenuItem,
   TextField,
   Typography,
   useMediaQuery,
@@ -415,6 +416,42 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                       />
                     )}
                   </Grid>
+                  {canReview &&
+                    certificate.status !== 'descartado' &&
+                    (certificate.service?.cuts?.length ?? 0) > 1 && (
+                      <Grid item xs={12}>
+                        <TextField
+                          select
+                          fullWidth
+                          size='small'
+                          label='Corte del servicio'
+                          value={certificate.cutId ?? ''}
+                          disabled={review.isLoading}
+                          helperText='Opcional. Así el control documental de ese corte lo cuenta.'
+                          onChange={(event) =>
+                            run(
+                              {
+                                type: 'service',
+                                id: certificate.id,
+                                serviceId: certificate.serviceId ?? null,
+                                cutId:
+                                  event.target.value === ''
+                                    ? null
+                                    : Number(event.target.value)
+                              },
+                              'Corte actualizado'
+                            )
+                          }
+                        >
+                          <MenuItem value=''>Sin corte</MenuItem>
+                          {certificate.service?.cuts?.map((cut) => (
+                            <MenuItem key={cut.id} value={cut.id}>
+                              {cut.cutCode}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                    )}
                   <Grid item xs={6}>
                     <Field
                       label='Instrumento'

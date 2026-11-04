@@ -65,6 +65,7 @@ export interface ReleaseCertificate {
   readStatus: ReleaseReadStatus
   customerId: number | null
   serviceId?: number | null
+  cutId?: number | null
   currentVersionId: number | null
   signedAt?: string | null
   releasedAt?: string | null
@@ -77,7 +78,21 @@ export interface ReleaseCertificate {
   uploader?: ReleaseUserRef | null
   customer?: { id: number; nombre: string } | null
   /** Servicio de calibración (ODS) al que pertenece, si se ligó. */
-  service?: { id: number; serviceCode: string; status: string } | null
+  service?: {
+    id: number
+    serviceCode: string
+    status: string
+    cuts?: ReleaseServiceCut[]
+  } | null
+  /** Corte del servicio al que pertenece, si se ligó. */
+  cut?: { id: number; cutCode: string } | null
+}
+
+export interface ReleaseServiceCut {
+  id: number
+  cutCode: string
+  cutType?: string
+  status?: string
 }
 
 /** Servicio que se puede elegir al ligar un certificado. */
@@ -88,6 +103,7 @@ export interface ReleaseServiceOption {
   customerId: number | null
   customerName: string | null
   certificates: { total: number; released: number }
+  cuts?: ReleaseServiceCut[]
 }
 
 export interface ReleaseVersion {

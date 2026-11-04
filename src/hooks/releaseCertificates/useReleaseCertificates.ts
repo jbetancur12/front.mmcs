@@ -66,14 +66,17 @@ export const useUploadReleaseCertificates = () => {
   return useMutation(
     async ({
       files,
-      serviceId
+      serviceId,
+      cutId
     }: {
       files: File[]
       serviceId?: number | null
+      cutId?: number | null
     }): Promise<ReleaseUploadResult[]> => {
       const data = new FormData()
       // El servicio va antes de los archivos: el API lo lee del cuerpo del formulario.
       if (serviceId) data.append('serviceId', String(serviceId))
+      if (serviceId && cutId) data.append('cutId', String(cutId))
       files.forEach((file) => data.append('files', file))
       const response = await axiosPrivate.post('/release-certificates', data)
       return response.data.results
@@ -100,7 +103,12 @@ export interface ReleaseCorrections {
 export type ReleaseReviewAction =
   | { type: 'correct'; id: number; data: ReleaseCorrections }
   | { type: 'verify'; id: number }
-  | { type: 'service'; id: number; serviceId: number | null }
+  | {
+      type: 'service'
+      id: number
+      serviceId: number | null
+      cutId?: number | null
+    }
   | { type: 'adjustments'; id: number; observation: string }
   | { type: 'version'; id: number; file: File }
   | { type: 'drive-retry'; id: number }
@@ -126,7 +134,8 @@ export const useReleaseReview = () => {
           return axiosPrivate.post(`${base}/verify`)
         case 'service':
           return axiosPrivate.put(`${base}/service`, {
-            serviceId: action.serviceId
+            serviceId: action.serviceId,
+            cutId: action.cutId ?? null
           })
         case 'adjustments':
           return axiosPrivate.post(`${base}/request-adjustments`, {
