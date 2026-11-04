@@ -12,6 +12,8 @@ interface FormDateFieldProps {
   onChange: (value: string) => void
   error?: string | false
   disabled?: boolean
+  /** Impide elegir o escribir una fecha posterior a hoy. */
+  disableFuture?: boolean
 }
 
 const toDate = (value: string): Date | null => {
@@ -31,13 +33,15 @@ const FormDateField: React.FC<FormDateFieldProps> = ({
   value,
   onChange,
   error,
-  disabled
+  disabled,
+  disableFuture
 }) => (
   <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={esLocale}>
     <DatePicker
       label={label}
       value={toDate(value)}
       disabled={disabled}
+      disableFuture={disableFuture}
       onChange={(date) =>
         onChange(date && isValid(date) ? format(date, 'yyyy-MM-dd') : '')
       }

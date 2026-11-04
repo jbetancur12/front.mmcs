@@ -8,6 +8,7 @@ import {
   type DeviceCatalogItem
 } from '@hooks/devices/useDevices'
 import { notify } from 'src/utils/notify'
+import { isFutureDay } from 'src/utils/dateOnly'
 
 export interface CertificateEditValues {
   deviceId: number | null
@@ -86,8 +87,15 @@ const CertificateEditDialog: React.FC<CertificateEditDialogProps> = ({
         notify.error('Selecciona la fecha de calibración')
         return
       }
-      payload.calibrationDate = values.calibrationDate
       const parsed = parse(values.calibrationDate, 'yyyy-MM-dd', new Date())
+      if (isValid(parsed) && isFutureDay(parsed)) {
+        notify.error(
+          'Fecha no válida',
+          'La fecha de calibración no puede ser posterior a hoy.'
+        )
+        return
+      }
+      payload.calibrationDate = values.calibrationDate
       if (isValid(parsed)) {
         payload.nextCalibrationDate = format(addYears(parsed, 1), 'yyyy-MM-dd')
       }
@@ -200,6 +208,7 @@ const CertificateEditDialog: React.FC<CertificateEditDialogProps> = ({
           onChange={(value) =>
             setValues((current) => ({ ...current, calibrationDate: value }))
           }
+          disableFuture
         />
         <Box
           sx={{
