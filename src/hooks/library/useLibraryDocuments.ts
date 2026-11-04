@@ -22,10 +22,15 @@ export const librarySourceUrl = (id: number) =>
 /** Documentos vigentes de una categoría. */
 export const useLibraryDocuments = (category: LibraryCategory) => {
   const axiosPrivate = useAxiosPrivate()
-  return useQuery<LibraryDocument[]>(LIBRARY_QUERY_KEYS.list(category), () =>
-    axiosPrivate
-      .get('/library/documents', { params: { category } })
-      .then((response) => response.data)
+  return useQuery<LibraryDocument[]>(
+    LIBRARY_QUERY_KEYS.list(category),
+    () =>
+      axiosPrivate
+        .get('/library/documents', { params: { category } })
+        .then((response) => response.data),
+    // El queryClient global mantiene los datos anteriores mientras carga una
+    // clave nueva; en pestañas eso muestra los documentos de otra categoría.
+    { keepPreviousData: false }
   )
 }
 
