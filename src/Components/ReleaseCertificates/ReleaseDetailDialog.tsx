@@ -965,8 +965,9 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         <DialogContent>
           <Typography variant='body2'>{otherCustomer?.message}</Typography>
           <Typography variant='body2' sx={{ mt: 1.5 }}>
-            ¿Es un servicio para un tercero y quieres ligarlo de todos modos?
-            Queda registrado en el historial.
+            ¿Es un servicio para un tercero y quieres ligarlo de todos modos? El
+            certificado pasará al cliente del servicio (el que cotizó) y queda
+            registrado en el historial.
           </Typography>
         </DialogContent>
         <DialogActions>
