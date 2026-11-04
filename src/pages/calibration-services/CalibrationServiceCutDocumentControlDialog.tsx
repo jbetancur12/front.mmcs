@@ -9,6 +9,7 @@ import {
   CalibrationService,
   CalibrationServiceCut
 } from '../../types/calibrationService'
+import CalibrationServiceCertificateRows from './CalibrationServiceCertificateRows'
 import ReleaseUploadDialog from '../../Components/ReleaseCertificates/ReleaseUploadDialog'
 import { releaseCertificatesEnabled } from '../../features/releaseCertificatesFlags'
 import { CALIBRATION_SERVICE_QUERY_KEYS } from '../../hooks/useCalibrationServices'
@@ -279,19 +280,12 @@ const CalibrationServiceCutDocumentControlDialog = ({
             )}
           </Box>
         )}
+        <CalibrationServiceCertificateRows items={platformItems} />
         {platformItems.some((item) => item.status === 'requiere_ajustes') && (
           <Alert severity='warning' sx={FULL_ROW}>
             <Typography variant='body2' fontWeight={700}>
               Hay certificados con observaciones del laboratorio
             </Typography>
-            {platformItems
-              .filter((item) => item.status === 'requiere_ajustes')
-              .map((item) => (
-                <Typography key={item.id} variant='body2'>
-                  {item.documentNumber ?? 'Sin número'}
-                  {item.observation ? `: ${item.observation}` : ''}
-                </Typography>
-              ))}
             <Typography variant='caption'>
               No cuentan como revisados hasta que se corrijan y se liberen.
             </Typography>
