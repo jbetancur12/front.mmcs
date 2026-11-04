@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Chip, Typography } from '@mui/material'
 import { ReleaseCertificateDetail } from './ReleaseCertificates.types'
+import { brand } from 'src/theme/designTokens'
 
 export type ReleaseReasonMode = 'adjustments' | 'discard' | 'reopen' | 'revert'
 
@@ -200,7 +201,7 @@ const ReleaseReasonChips: React.FC<ReleaseReasonChipsProps> = ({
               onClick={() => toggle(option)}
               sx={
                 selected
-                  ? { bgcolor: '#00897B', '&:hover': { bgcolor: '#00695C' } }
+                  ? { bgcolor: brand.hover, '&:hover': { bgcolor: brand.ink } }
                   : undefined
               }
             />

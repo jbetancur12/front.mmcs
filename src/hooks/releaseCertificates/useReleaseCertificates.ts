@@ -8,6 +8,9 @@ import {
   ReleaseTarget,
   ReleaseFilters,
   ReleaseListResponse,
+  ReleasePlacement,
+  ReleaseSignatory,
+  ReleaseSignPlan,
   ReleaseServiceOption,
   ReleaseUploadResult
 } from 'src/Components/ReleaseCertificates/ReleaseCertificates.types'
@@ -243,46 +246,105 @@ export const useReleaseCatalogs = (enabled: boolean) => {
   )
 }
 
-/** Firma por documento o varios seleccionados; devuelve el resultado de cada uno. */
+/** Firma uno o varios certificados con las firmas y el sello colocados; devuelve el resultado de cada uno. */
 export const useSignReleaseCertificates = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   return useMutation(
-    async (
+    async (payload: {
       ids: number[]
-    ): Promise<{ id: number; ok: boolean; error?: string }[]> =>
-      (await axiosPrivate.post('/release-certificates/sign', { ids })).data
+      placements: ReleasePlacement[]
+      remember: boolean
+    }): Promise<{ id: number; ok: boolean; error?: string }[]> =>
+      (await axiosPrivate.post('/release-certificates/sign', payload)).data
         .results,
-    { onSuccess: () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all) }
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all)
+        queryClient.invalidateQueries(['releaseCertificates', 'sign-plan'])
+      }
+    }
   )
 }
 
-/** ¿El usuario ya cargó la imagen de su firma? Se necesita para firmar. */
-export const useMySignature = (enabled: boolean) => {
+/** Registro de firmas del laboratorio (con las inactivas si `all`). */
+export const useSignatories = (enabled: boolean, all = false) => {
   const axiosPrivate = useAxiosPrivate()
-  return useQuery<{ configured: boolean }>(
-    ['releaseCertificates', 'signature'],
+  return useQuery<ReleaseSignatory[]>(
+    ['releaseCertificates', 'signatories', all],
     () =>
       axiosPrivate
-        .get('/release-certificates/signature')
+        .get('/release-certificates/signatories', {
+          params: all ? { all: 'true' } : undefined
+        })
         .then((response) => response.data),
     { enabled }
   )
 }
 
-export const useSaveMySignature = () => {
+/** Agrega una firma al registro o cambia una existente (nombre, cargo, estado o imagen). */
+export const useSaveSignatory = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   return useMutation(
-    (file: File) => {
+    (input: {
+      id?: number
+      name: string
+      role: string
+      active?: boolean
+      file?: File
+    }) => {
       const data = new FormData()
-      data.append('signature', file)
-      return axiosPrivate.put('/release-certificates/signature', data)
+      data.append('name', input.name)
+      data.append('role', input.role)
+      if (input.active !== undefined)
+        data.append('active', String(input.active))
+      if (input.file) data.append('signature', input.file)
+      return input.id
+        ? axiosPrivate.put(
+            `/release-certificates/signatories/${input.id}`,
+            data
+          )
+        : axiosPrivate.post('/release-certificates/signatories', data)
     },
     {
-      onSuccess: () =>
-        queryClient.invalidateQueries(['releaseCertificates', 'signature'])
+      onSuccess: () => {
+        queryClient.invalidateQueries(['releaseCertificates', 'signatories'])
+        queryClient.invalidateQueries([
+          'releaseCertificates',
+          'signatory-image'
+        ])
+        queryClient.invalidateQueries(['releaseCertificates', 'sign-plan'])
+      }
     }
+  )
+}
+
+/** Qué se propone para firmar un certificado: páginas, firmas del registro y posición propuesta. */
+export const useSignPlan = (id: number | null) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseSignPlan>(
+    ['releaseCertificates', 'sign-plan', id],
+    () =>
+      axiosPrivate
+        .get(`/release-certificates/${id}/sign-plan`)
+        .then((response) => response.data),
+    { enabled: id !== null, cacheTime: 0 }
+  )
+}
+
+/** Imagen de una firma del registro como URL local; se descarga con la sesión. */
+export const useSignatoryImage = (id: number) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<string>(
+    ['releaseCertificates', 'signatory-image', id],
+    () =>
+      axiosPrivate
+        .get(`/release-certificates/signatories/${id}/image`, {
+          responseType: 'blob'
+        })
+        .then((response) => window.URL.createObjectURL(response.data)),
+    { staleTime: Infinity, cacheTime: Infinity }
   )
 }
 

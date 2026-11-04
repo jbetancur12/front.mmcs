@@ -241,3 +241,34 @@ export const RELEASE_MATCH_LABELS: Record<
   mismo_tipo: 'Mismo tipo de equipo',
   manual: 'Elegido a mano'
 }
+
+/** Firma de una persona del laboratorio en el registro. */
+export interface ReleaseSignatory {
+  id: number
+  name: string
+  role: string | null
+  active: boolean
+  mimeType: string
+}
+
+/** Una firma o el sello en el documento. `x`, `y` (esquina superior izquierda) y `w` son fracciones de la página. */
+export interface ReleasePlacement {
+  type: 'signature' | 'seal'
+  signatoryId?: number
+  /** Desde 1; -1 es la última. */
+  page: number
+  x: number
+  y: number
+  w: number
+}
+
+export interface ReleaseSignPlan {
+  certificateId: number
+  documentNumber: string | null
+  pages: { width: number; height: number }[]
+  category: { key: string; label: string }
+  /** De dónde sale la posición propuesta. */
+  source: 'layout' | 'names' | 'none'
+  placements: ReleasePlacement[]
+  signatories: ReleaseSignatory[]
+}

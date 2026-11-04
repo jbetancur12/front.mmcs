@@ -45,9 +45,12 @@ export const ANALYST_GUIDE_STEPS: DriveGuideStep[] = [
     title: 'Firma',
     where: 'Analista de datos',
     actions: [
-      'La primera vez, pulsa «Mi firma» y dibújala (con mouse, lápiz o dedo) o sube una imagen. Se guarda y solo tú la ves.',
-      'En un certificado verificado pulsa «Firmar». Para varios a la vez, marca las casillas de la bandeja y pulsa «Firmar seleccionados».',
-      'El sistema estampa tu firma, tu nombre y la fecha en la última página y guarda el PDF firmado como versión nueva. Los certificados de otros laboratorios y los reportes de seguridad eléctrica no se firman.'
+      'Algunos PDF llegan ya firmados por los metrólogos y otros en blanco. Si ya traen las firmas, no los firmes otra vez: pasa a liberar.',
+      'La primera vez, pulsa «Firmas» y agrega la firma de cada persona con su nombre y su cargo (la tuya, la del coordinador, la del director, las de los metrólogos): se dibuja o se sube como imagen.',
+      'En un certificado verificado sin firmas pulsa «Firmar». Verás la página del PDF: toca la firma de quien firma para agregarla, arrástrala a su lugar y ajusta el tamaño con el control «Tamaño». Si el PDF no trae el sello «Firmado digitalmente», agrégalo también.',
+      'El sistema propone el lugar por el nombre impreso en el PDF y por la última posición que usaste para esa categoría de equipo; revísalo siempre. Deja marcado «Recordar esta posición» para que los siguientes de la categoría salgan ya ubicados.',
+      'Para varios a la vez, marca en la bandeja los certificados de la misma categoría (por ejemplo, todos los tensiómetros) y pulsa «Firmar seleccionados»: confirmas la posición en el primero y se aplica a todos.',
+      'El PDF firmado se guarda como versión nueva y en el historial queda quién aplicó cada firma. Los certificados de otros laboratorios y los reportes de seguridad eléctrica no se firman.'
     ],
     expect:
       'El certificado pasa a «Firmado» y en sus versiones aparece «(firmado)».'

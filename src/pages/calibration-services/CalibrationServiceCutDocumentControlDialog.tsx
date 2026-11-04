@@ -16,6 +16,7 @@ import { CALIBRATION_SERVICE_QUERY_KEYS } from '../../hooks/useCalibrationServic
 import { PERMISSIONS } from '../../constants/permissions'
 import { useCan } from '../../utils/functions'
 import { CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS } from '../../constants/calibrationServices'
+import { brand } from 'src/theme/designTokens'
 
 interface CalibrationServiceCutDocumentControlDialogProps {
   open: boolean
@@ -211,7 +212,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
               size='small'
               onClick={() => setExpectedCertificates(suggestedCertificates)}
               disabled={isLoading}
-              sx={{ textTransform: 'none', color: '#00695C', mt: 0.5 }}
+              sx={{ textTransform: 'none', color: brand.ink, mt: 0.5 }}
             >
               Usar sugerencia ({suggestedCertificates})
             </Button>
@@ -271,8 +272,8 @@ const CalibrationServiceCutDocumentControlDialog = ({
                 onClick={() => setUploading(true)}
                 sx={{
                   textTransform: 'none',
-                  color: '#00695C',
-                  borderColor: '#00BFA5'
+                  color: brand.ink,
+                  borderColor: brand.main
                 }}
               >
                 Subir certificados
@@ -311,8 +312,8 @@ const CalibrationServiceCutDocumentControlDialog = ({
               }}
               sx={{
                 textTransform: 'none',
-                color: '#00695C',
-                borderColor: '#00BFA5'
+                color: brand.ink,
+                borderColor: brand.main
               }}
             >
               Todos emitidos y revisados ({expectedCertificates})
@@ -331,8 +332,8 @@ const CalibrationServiceCutDocumentControlDialog = ({
             }}
             sx={{
               textTransform: 'none',
-              color: '#00695C',
-              borderColor: '#00BFA5'
+              color: brand.ink,
+              borderColor: brand.main
             }}
           >
             Todos enviados ({expectedCertificates})
@@ -346,7 +347,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
             <Button
               size='small'
               onClick={() => setManualCounts((value) => !value)}
-              sx={{ textTransform: 'none', color: '#00695C', ml: 'auto' }}
+              sx={{ textTransform: 'none', color: brand.ink, ml: 'auto' }}
             >
               {manualCounts ? 'Usar los de la plataforma' : 'Editar a mano'}
             </Button>

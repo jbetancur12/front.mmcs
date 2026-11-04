@@ -2,6 +2,7 @@ import { Alert, Box, LinearProgress, Typography } from '@mui/material'
 import ReleaseStatusPill from 'src/Components/ReleaseCertificates/ReleaseStatusPill'
 import { ReleaseStatus } from 'src/Components/ReleaseCertificates/ReleaseCertificates.types'
 import { CalibrationServiceReleaseCertificates } from '../../types/calibrationService'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceReleaseCertificatesProps {
   summary?: CalibrationServiceReleaseCertificates | null
@@ -53,8 +54,8 @@ const CalibrationServiceReleaseCertificatesCard = ({
           my: 1,
           height: 6,
           borderRadius: 3,
-          bgcolor: '#e5e7eb',
-          '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' }
+          bgcolor: neutral.border,
+          '& .MuiLinearProgress-bar': { bgcolor: brand.main }
         }}
       />
       <Box component='ul' sx={{ listStyle: 'none', p: 0, m: 0 }}>

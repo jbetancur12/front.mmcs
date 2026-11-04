@@ -27,13 +27,11 @@ import ReleaseEditForm from './ReleaseEditForm'
 import ReleaseEquipmentDialog from './ReleaseEquipmentDialog'
 import ReleaseReasonChips from './ReleaseReasonChips'
 import ReleaseServicePicker from './ReleaseServicePicker'
-import ReleaseSignatureDialog from './ReleaseSignatureDialog'
+import ReleaseSignDialog from './ReleaseSignDialog'
 import {
   releaseFileUrl,
   ReleaseCorrections,
   useCustomerSuggestions,
-  useMySignature,
-  useSignReleaseCertificates,
   ReleaseReviewAction,
   useReleaseCertificate,
   useReleaseReview
@@ -46,6 +44,7 @@ import {
   RELEASE_STATUS_LABELS,
   ReleaseServiceOption
 } from './ReleaseCertificates.types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface ReleaseDetailDialogProps {
   certificateId: number | null
@@ -76,7 +75,7 @@ const Field: React.FC<FieldProps> = ({ label, value, warn = false }) => (
       variant='body2'
       sx={{
         fontWeight: 600,
-        color: warn ? '#b45309' : undefined,
+        color: warn ? intent.warningInk : undefined,
         wordBreak: 'break-word'
       }}
     >
@@ -116,9 +115,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_RELEASE
   )
-  const sign = useSignReleaseCertificates()
-  const { data: mySignature } = useMySignature(canSign)
-  const [signatureOpen, setSignatureOpen] = useState(false)
+  const [signing, setSigning] = useState(false)
   const [releasing, setReleasing] = useState(false)
   const review = useReleaseReview()
   const versionInput = useRef<HTMLInputElement>(null)
@@ -192,26 +189,6 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         )
     })
 
-  const signNow = () => {
-    if (!certificate) return
-    if (!mySignature?.configured) {
-      notify.info(
-        'Primero carga tu firma',
-        'Se estampa en los certificados que firmas.'
-      )
-      setSignatureOpen(true)
-      return
-    }
-    sign.mutate([certificate.id], {
-      onSuccess: ([result]) =>
-        result.ok
-          ? notify.success('Certificado firmado')
-          : notify.error('No se pudo firmar', result.error),
-      onError: (error) =>
-        notify.error('No se pudo firmar', getApiErrorReason(error) ?? undefined)
-    })
-  }
-
   const save = (data: ReleaseCorrections) =>
     certificate &&
     run({ type: 'correct', id: certificate.id, data }, 'Datos guardados', () =>
@@ -225,6 +202,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     setReasons([])
     setUndoing(null)
     setReleasing(false)
+    setSigning(false)
   }, [certificateId])
 
   useEffect(() => {
@@ -644,7 +622,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               item
               xs={12}
               md={7}
-              sx={{ bgcolor: '#f3f4f6', minHeight: 420 }}
+              sx={{ bgcolor: neutral.surfaceHead, minHeight: 420 }}
             >
               {pdfUrl ? (
                 <Box
@@ -809,7 +787,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                   'Certificado verificado'
                 )
               }
-              sx={{ bgcolor: '#00897B', '&:hover': { bgcolor: '#00695C' } }}
+              sx={{ bgcolor: brand.hover, '&:hover': { bgcolor: brand.ink } }}
             >
               Verificar
             </Button>
@@ -822,9 +800,9 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
           certificate.status === 'verificado' && (
             <Button
               variant='contained'
-              disabled={sign.isLoading || editing}
-              onClick={signNow}
-              sx={{ bgcolor: '#00897B', '&:hover': { bgcolor: '#00695C' } }}
+              disabled={editing}
+              onClick={() => setSigning(true)}
+              sx={{ bgcolor: brand.hover, '&:hover': { bgcolor: brand.ink } }}
             >
               Firmar
             </Button>
@@ -841,7 +819,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
             <Button
               variant='contained'
               onClick={() => setReleasing(true)}
-              sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+              sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
             >
               Liberar
             </Button>
@@ -946,14 +924,15 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               `${certificate.documentNumber ?? 'certificado'}.pdf`
             ).catch(() => notify.error('No se pudo descargar el PDF'))
           }
-          sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+          sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
         >
           Descargar
         </Button>
       </DialogActions>
-      <ReleaseSignatureDialog
-        open={signatureOpen}
-        onClose={() => setSignatureOpen(false)}
+      <ReleaseSignDialog
+        open={signing && certificate !== undefined}
+        ids={certificate ? [certificate.id] : []}
+        onClose={() => setSigning(false)}
       />
       <Dialog
         open={otherCustomer !== null}
@@ -978,7 +957,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
             onClick={() =>
               otherCustomer && linkService(otherCustomer.option, true)
             }
-            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+            sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
           >
             Sí, ligar
           </Button>
