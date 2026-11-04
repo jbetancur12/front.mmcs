@@ -13,6 +13,7 @@ import {
   DeleteOutline,
   DescriptionOutlined,
   EditOutlined,
+  ErrorOutlineRounded,
   FileDownloadOutlined,
   HistoryRounded,
   LocalLibraryOutlined,
@@ -81,7 +82,8 @@ const Library: React.FC = () => {
   const [history, setHistory] = useState<LibraryDocument | null>(null)
   const [deleting, setDeleting] = useState<LibraryDocument | null>(null)
 
-  const { data: documents = [], isLoading } = useLibraryDocuments(category)
+  const { data: documents = [], isLoading, isError, refetch } =
+    useLibraryDocuments(category)
   const save = useSaveLibraryDocument()
   const remove = useDeleteLibraryDocument()
 
@@ -183,7 +185,18 @@ const Library: React.FC = () => {
         ))}
       </Tabs>
 
-      {isLoading ? (
+      {isError ? (
+        <EmptyState
+          icon={<ErrorOutlineRounded />}
+          title='No se pudieron cargar los documentos'
+          hint='Revisa la conexión e inténtalo de nuevo.'
+          action={
+            <Button variant='outlined' onClick={() => void refetch()}>
+              Reintentar
+            </Button>
+          }
+        />
+      ) : isLoading ? (
         <SignalLoader message='Cargando documentos' />
       ) : documents.length === 0 ? (
         <EmptyState
