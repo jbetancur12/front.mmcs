@@ -518,7 +518,7 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
   // --- Biblioteca (Calidad)
   'library:document:view': [
     'Consultar la biblioteca',
-    'Consultar y descargar los documentos de gestión y técnicos de la biblioteca.',
+    'Consultar y descargar los documentos vigentes de la biblioteca.',
     'Biblioteca: listado de documentos y visor del PDF.'
   ],
   'library:document:manage': [

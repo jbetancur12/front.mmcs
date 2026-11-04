@@ -52,7 +52,12 @@ import { userStore } from 'src/store/userStore'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 
-const CATEGORIES: LibraryCategory[] = ['management', 'technical']
+const CATEGORIES: LibraryCategory[] = [
+  'management',
+  'technical',
+  'calibration',
+  'reference'
+]
 
 interface DialogState {
   mode: LibraryDialogMode
@@ -152,7 +157,7 @@ const Library: React.FC = () => {
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
         title='Biblioteca'
-        subtitle='Documentos de gestión y técnicos vigentes del laboratorio'
+        subtitle='Documentos vigentes del laboratorio'
         icon={<LocalLibraryOutlined />}
         actions={addButton || undefined}
       />
@@ -160,6 +165,9 @@ const Library: React.FC = () => {
       <Tabs
         value={category}
         onChange={(_event, value: LibraryCategory) => setCategory(value)}
+        variant='scrollable'
+        scrollButtons='auto'
+        allowScrollButtonsMobile
         sx={{
           mb: 2,
           '& .MuiTabs-indicator': { backgroundColor: '#00BFA5' },

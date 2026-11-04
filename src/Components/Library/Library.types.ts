@@ -1,8 +1,14 @@
-export type LibraryCategory = 'management' | 'technical'
+export type LibraryCategory =
+  | 'management'
+  | 'technical'
+  | 'calibration'
+  | 'reference'
 
 export const LIBRARY_CATEGORY_LABELS: Record<LibraryCategory, string> = {
   management: 'Documentos de gestión',
-  technical: 'Documentos técnicos'
+  technical: 'Documentos técnicos',
+  calibration: 'Documentos de calibración',
+  reference: 'Documentos de referencia'
 }
 
 export interface LibraryDocument {
