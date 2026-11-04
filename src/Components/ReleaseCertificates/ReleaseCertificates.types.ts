@@ -104,6 +104,8 @@ export interface ReleaseServiceOption {
   customerName: string | null
   certificates: { total: number; released: number }
   cuts?: ReleaseServiceCut[]
+  /** Con un cliente de referencia: si el servicio es de ese mismo cliente. */
+  sameCustomer?: boolean | null
 }
 
 export interface ReleaseVersion {

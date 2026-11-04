@@ -22,7 +22,7 @@ import { downloadPrivateFile } from '@utils/downloadBlob'
 import { useStore } from '@nanostores/react'
 import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import { userStore } from 'src/store/userStore'
-import { getApiErrorReason } from 'src/utils/apiError'
+import { getApiErrorCode, getApiErrorReason } from 'src/utils/apiError'
 import ReleaseEditForm from './ReleaseEditForm'
 import ReleaseEquipmentDialog from './ReleaseEquipmentDialog'
 import ReleaseServicePicker from './ReleaseServicePicker'
@@ -42,7 +42,8 @@ import ReleaseStatusPill from './ReleaseStatusPill'
 import {
   RELEASE_KIND_LABELS,
   RELEASE_READ_LABELS,
-  RELEASE_STATUS_LABELS
+  RELEASE_STATUS_LABELS,
+  ReleaseServiceOption
 } from './ReleaseCertificates.types'
 
 interface ReleaseDetailDialogProps {
@@ -131,6 +132,50 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     'discard' | 'reopen' | 'revert' | null
   >(null)
   const [observation, setObservation] = useState('')
+
+  // Servicio de otro cliente (p. ej. cotizado a X pero para un tercero): el API pide confirmarlo.
+  const [otherCustomer, setOtherCustomer] = useState<{
+    option: ReleaseServiceOption
+    message: string
+  } | null>(null)
+
+  const linkService = (
+    option: ReleaseServiceOption | null,
+    confirmOtherCustomer = false
+  ) => {
+    if (!certificate) return
+    review.mutate(
+      {
+        type: 'service',
+        id: certificate.id,
+        serviceId: option?.id ?? null,
+        confirmOtherCustomer
+      },
+      {
+        onSuccess: () => {
+          setOtherCustomer(null)
+          notify.success(
+            option
+              ? `Ligado al servicio ${option.serviceCode}`
+              : 'Servicio desligado'
+          )
+        },
+        onError: (error) => {
+          if (option && getApiErrorCode(error) === 'SERVICE_OTHER_CUSTOMER') {
+            setOtherCustomer({
+              option,
+              message: getApiErrorReason(error) ?? ''
+            })
+            return
+          }
+          notify.error(
+            'No se pudo ligar el servicio',
+            getApiErrorReason(error) ?? undefined
+          )
+        }
+      }
+    )
+  }
 
   const run = (action: ReleaseReviewAction, done: string, after?: () => void) =>
     review.mutate(action, {
@@ -391,21 +436,10 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                         disabled={review.isLoading}
                         helperText={
                           certificate.customerId
-                            ? 'Opcional. Solo servicios de este cliente.'
+                            ? 'Opcional. Se ofrecen los de este cliente; escribe el código para buscar en todos (servicio para un tercero).'
                             : 'Opcional. Al elegir un servicio se toma su cliente.'
                         }
-                        onChange={(option) =>
-                          run(
-                            {
-                              type: 'service',
-                              id: certificate.id,
-                              serviceId: option?.id ?? null
-                            },
-                            option
-                              ? `Ligado al servicio ${option.serviceCode}`
-                              : 'Servicio desligado'
-                          )
-                        }
+                        onChange={(option) => linkService(option)}
                       />
                     ) : (
                       <Field
@@ -902,6 +936,34 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         open={signatureOpen}
         onClose={() => setSignatureOpen(false)}
       />
+      <Dialog
+        open={otherCustomer !== null}
+        onClose={() => setOtherCustomer(null)}
+        maxWidth='xs'
+        fullWidth
+      >
+        <DialogTitle>Servicio de otro cliente</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2'>{otherCustomer?.message}</Typography>
+          <Typography variant='body2' sx={{ mt: 1.5 }}>
+            ¿Es un servicio para un tercero y quieres ligarlo de todos modos?
+            Queda registrado en el historial.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOtherCustomer(null)}>Cancelar</Button>
+          <Button
+            variant='contained'
+            disabled={review.isLoading}
+            onClick={() =>
+              otherCustomer && linkService(otherCustomer.option, true)
+            }
+            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+          >
+            Sí, ligar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <ReleaseEquipmentDialog
         certificateId={releasing && certificate ? certificate.id : null}
         confirmOnly={false}

@@ -58,7 +58,7 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
       }}
       noOptionsText={
         customerId
-          ? 'Este cliente no tiene servicios abiertos'
+          ? 'Este cliente no tiene servicios abiertos; escribe el código para buscar en todos'
           : 'Escribe el código de la ODS'
       }
       renderOption={(props, option) => (
@@ -67,8 +67,19 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
             <Typography variant='body2' fontWeight={600}>
               {option.serviceCode}
             </Typography>
-            <Typography variant='caption' color='text.secondary'>
-              {[option.customerName, certificatesLabel(option)]
+            <Typography
+              variant='caption'
+              color={
+                option.sameCustomer === false
+                  ? 'warning.main'
+                  : 'text.secondary'
+              }
+            >
+              {[
+                option.sameCustomer === false ? 'Otro cliente' : null,
+                option.customerName,
+                certificatesLabel(option)
+              ]
                 .filter(Boolean)
                 .join(' · ')}
             </Typography>

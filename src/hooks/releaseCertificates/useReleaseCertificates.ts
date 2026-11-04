@@ -72,6 +72,7 @@ export const useUploadReleaseCertificates = () => {
       files: File[]
       serviceId?: number | null
       cutId?: number | null
+      confirmOtherCustomer?: boolean
     }): Promise<ReleaseUploadResult[]> => {
       const data = new FormData()
       // El servicio va antes de los archivos: el API lo lee del cuerpo del formulario.
@@ -108,6 +109,7 @@ export type ReleaseReviewAction =
       id: number
       serviceId: number | null
       cutId?: number | null
+      confirmOtherCustomer?: boolean
     }
   | { type: 'adjustments'; id: number; observation: string }
   | { type: 'version'; id: number; file: File }
@@ -135,7 +137,8 @@ export const useReleaseReview = () => {
         case 'service':
           return axiosPrivate.put(`${base}/service`, {
             serviceId: action.serviceId,
-            cutId: action.cutId ?? null
+            cutId: action.cutId ?? null,
+            confirmOtherCustomer: action.confirmOtherCustomer === true
           })
         case 'adjustments':
           return axiosPrivate.post(`${base}/request-adjustments`, {
