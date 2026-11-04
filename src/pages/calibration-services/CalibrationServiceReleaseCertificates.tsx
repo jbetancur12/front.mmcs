@@ -1,4 +1,4 @@
-import { Box, LinearProgress, Typography } from '@mui/material'
+import { Alert, Box, LinearProgress, Typography } from '@mui/material'
 import ReleaseStatusPill from 'src/Components/ReleaseCertificates/ReleaseStatusPill'
 import { ReleaseStatus } from 'src/Components/ReleaseCertificates/ReleaseCertificates.types'
 import { CalibrationServiceReleaseCertificates } from '../../types/calibrationService'
@@ -66,6 +66,7 @@ const CalibrationServiceReleaseCertificatesCard = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              flexWrap: 'wrap',
               gap: 1,
               py: 0.5
             }}
@@ -81,6 +82,15 @@ const CalibrationServiceReleaseCertificatesCard = ({
                 .join(' · ')}
             </Typography>
             <ReleaseStatusPill status={item.status as ReleaseStatus} />
+            {item.observation && (
+              <Typography
+                variant='caption'
+                color='error'
+                sx={{ flexBasis: '100%' }}
+              >
+                Observación: {item.observation}
+              </Typography>
+            )}
           </Box>
         ))}
       </Box>
@@ -89,3 +99,36 @@ const CalibrationServiceReleaseCertificatesCard = ({
 }
 
 export default CalibrationServiceReleaseCertificatesCard
+
+/** Aviso arriba del servicio: certificados a los que el laboratorio les pidió ajustes. */
+export const CalibrationServiceReleaseCertificatesAlert = ({
+  summary
+}: CalibrationServiceReleaseCertificatesProps) => {
+  const flagged = (summary?.items ?? []).filter(
+    (item) => item.status === 'requiere_ajustes'
+  )
+  if (flagged.length === 0) return null
+
+  return (
+    <Alert severity='warning' sx={{ mb: 2 }}>
+      <Typography variant='body2' fontWeight={700}>
+        {flagged.length === 1
+          ? '1 certificado con observaciones del laboratorio'
+          : `${flagged.length} certificados con observaciones del laboratorio`}
+      </Typography>
+      <Box component='ul' sx={{ m: 0, pl: 2 }}>
+        {flagged.map((item) => (
+          <li key={item.id}>
+            <Typography variant='body2'>
+              {item.documentNumber ?? 'Sin número'}
+              {item.observation ? `: ${item.observation}` : ''}
+            </Typography>
+          </li>
+        ))}
+      </Box>
+      <Typography variant='caption'>
+        Quien lo cargó debe subir el PDF corregido en «Certificados a liberar».
+      </Typography>
+    </Alert>
+  )
+}

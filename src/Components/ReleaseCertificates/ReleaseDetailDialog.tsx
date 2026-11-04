@@ -25,6 +25,7 @@ import { userStore } from 'src/store/userStore'
 import { getApiErrorCode, getApiErrorReason } from 'src/utils/apiError'
 import ReleaseEditForm from './ReleaseEditForm'
 import ReleaseEquipmentDialog from './ReleaseEquipmentDialog'
+import ReleaseReasonChips from './ReleaseReasonChips'
 import ReleaseServicePicker from './ReleaseServicePicker'
 import ReleaseSignatureDialog from './ReleaseSignatureDialog'
 import {
@@ -132,6 +133,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     'discard' | 'reopen' | 'revert' | null
   >(null)
   const [observation, setObservation] = useState('')
+  const [reasons, setReasons] = useState<string[]>([])
 
   // Servicio de otro cliente (p. ej. cotizado a X pero para un tercero): el API pide confirmarlo.
   const [otherCustomer, setOtherCustomer] = useState<{
@@ -220,6 +222,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     setEditing(false)
     setAsking(false)
     setObservation('')
+    setReasons([])
     setUndoing(null)
     setReleasing(false)
   }, [certificateId])
@@ -675,6 +678,14 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
       )}
       {(asking || undoing) && certificate && (
         <Box sx={{ px: 3, pt: 2 }}>
+          <ReleaseReasonChips
+            mode={undoing ?? 'adjustments'}
+            certificate={certificate}
+            reasons={reasons}
+            onReasons={setReasons}
+            observation={observation}
+            onObservation={setObservation}
+          />
           <TextField
             fullWidth
             multiline
@@ -754,11 +765,17 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               disabled={!observation.trim() || review.isLoading}
               onClick={() =>
                 run(
-                  { type: 'adjustments', id: certificate.id, observation },
+                  {
+                    type: 'adjustments',
+                    id: certificate.id,
+                    observation,
+                    reasons
+                  },
                   'Se pidieron ajustes y se avisó al responsable',
                   () => {
                     setAsking(false)
                     setObservation('')
+                    setReasons([])
                   }
                 )
               }
@@ -884,6 +901,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               onClick={() => {
                 setUndoing(null)
                 setObservation('')
+                setReasons([])
               }}
               disabled={review.isLoading}
             >
@@ -895,7 +913,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               disabled={!observation.trim() || review.isLoading}
               onClick={() =>
                 run(
-                  { type: undoing, id: certificate.id, observation },
+                  { type: undoing, id: certificate.id, observation, reasons },
                   undoing === 'discard'
                     ? 'Certificado descartado'
                     : undoing === 'reopen'
@@ -904,6 +922,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                   () => {
                     setUndoing(null)
                     setObservation('')
+                    setReasons([])
                   }
                 )
               }

@@ -28,6 +28,7 @@ import CalibrationServiceTimeline from '../CalibrationServiceTimeline'
 import CalibrationServiceGuidePanel from '../CalibrationServiceGuidePanel'
 import CalibrationServiceLogisticsPanel from '../CalibrationServiceLogisticsPanel'
 import CalibrationDeliveryReadyAction from './CalibrationDeliveryReadyAction'
+import { CalibrationServiceReleaseCertificatesAlert } from '../CalibrationServiceReleaseCertificates'
 import CalibrationServiceStageTracker from '../CalibrationServiceStageTracker'
 import { DetailTabPanel } from './CalibrationServiceDetailLayout'
 import {
@@ -375,6 +376,9 @@ const CalibrationServiceDetailsView = ({
           datos operativos del servicio.
         </Alert>
       ) : null}
+      <CalibrationServiceReleaseCertificatesAlert
+        summary={service.releaseCertificates}
+      />
       <CalibrationServiceStageTracker
         status={service.status}
         sla={service.slaIndicator}

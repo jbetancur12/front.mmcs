@@ -122,6 +122,7 @@ export interface ReleaseHistoryEntry {
   fromStatus: ReleaseStatus | null
   toStatus: ReleaseStatus
   observation: string | null
+  reasons?: string[] | null
   createdAt: string
   user?: ReleaseUserRef | null
 }

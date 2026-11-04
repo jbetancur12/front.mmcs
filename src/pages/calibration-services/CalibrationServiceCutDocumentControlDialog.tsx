@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from 'react-query'
-import { Box, Button, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, TextField, Typography } from '@mui/material'
 import FormDialog, {
   FormDialogSection
 } from '../../Components/Common/FormDialog'
@@ -278,6 +278,24 @@ const CalibrationServiceCutDocumentControlDialog = ({
               </Button>
             )}
           </Box>
+        )}
+        {platformItems.some((item) => item.status === 'requiere_ajustes') && (
+          <Alert severity='warning' sx={FULL_ROW}>
+            <Typography variant='body2' fontWeight={700}>
+              Hay certificados con observaciones del laboratorio
+            </Typography>
+            {platformItems
+              .filter((item) => item.status === 'requiere_ajustes')
+              .map((item) => (
+                <Typography key={item.id} variant='body2'>
+                  {item.documentNumber ?? 'Sin número'}
+                  {item.observation ? `: ${item.observation}` : ''}
+                </Typography>
+              ))}
+            <Typography variant='caption'>
+              No cuentan como revisados hasta que se corrijan y se liberen.
+            </Typography>
+          </Alert>
         )}
         <Box
           sx={{

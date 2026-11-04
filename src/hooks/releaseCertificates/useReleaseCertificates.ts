@@ -111,10 +111,20 @@ export type ReleaseReviewAction =
       cutId?: number | null
       confirmOtherCustomer?: boolean
     }
-  | { type: 'adjustments'; id: number; observation: string }
+  | {
+      type: 'adjustments'
+      id: number
+      observation: string
+      reasons?: string[]
+    }
   | { type: 'version'; id: number; file: File }
   | { type: 'drive-retry'; id: number }
-  | { type: 'discard' | 'reopen' | 'revert'; id: number; observation: string }
+  | {
+      type: 'discard' | 'reopen' | 'revert'
+      id: number
+      observation: string
+      reasons?: string[]
+    }
   | {
       type: 'release'
       id: number
@@ -142,13 +152,15 @@ export const useReleaseReview = () => {
           })
         case 'adjustments':
           return axiosPrivate.post(`${base}/request-adjustments`, {
-            observation: action.observation
+            observation: action.observation,
+            reasons: action.reasons
           })
         case 'discard':
         case 'reopen':
         case 'revert':
           return axiosPrivate.post(`${base}/${action.type}`, {
-            observation: action.observation
+            observation: action.observation,
+            reasons: action.reasons
           })
         case 'drive-retry':
           return axiosPrivate.post(`${base}/drive-retry`)

@@ -448,6 +448,8 @@ export interface CalibrationServiceAvailableAction {
 export interface CalibrationServiceReleaseCertificates {
   total: number
   released: number
+  /** Certificados a los que el laboratorio les pidió ajustes. */
+  withAdjustments?: number
   items: {
     id: number
     documentNumber: string | null
@@ -455,6 +457,8 @@ export interface CalibrationServiceReleaseCertificates {
     serie: string | null
     status: string
     cutId: number | null
+    /** Con ajustes pedidos: lo que el laboratorio observó. */
+    observation?: string | null
   }[]
 }
 
@@ -559,6 +563,8 @@ export interface CalibrationServiceFilters {
   cutTask?: CalibrationServiceCutTask
   billingStatus?: 'enviado' | 'no_enviado'
   paymentStatus?: 'pagado' | 'pendiente'
+  /** Servicios con algún certificado al que el laboratorio le pidió ajustes. */
+  certificateAlerts?: 'true'
   limit?: number
   offset?: number
 }
