@@ -15,3 +15,15 @@ export const formatDateOnly = (value?: string | null): string | null => {
   const date = new Date(value)
   return isValid(date) ? format(date, 'dd/MM/yyyy') : null
 }
+
+/**
+ * `true` si `value` cae después de hoy, comparando solo el día de calendario
+ * (la hora no cuenta para decidir si una fecha es futura). Una fecha inválida
+ * no se considera futura.
+ */
+export const isFutureDay = (value: Date, now: Date = new Date()): boolean => {
+  if (!isValid(value)) return false
+  const day = new Date(value.getFullYear(), value.getMonth(), value.getDate())
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return day.getTime() > today.getTime()
+}

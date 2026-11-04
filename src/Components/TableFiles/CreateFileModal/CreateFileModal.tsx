@@ -30,6 +30,7 @@ import {
   limitArraySizeDevice
 } from '../utils/limitArraySizes'
 import { notify } from 'src/utils/notify'
+import { isFutureDay } from 'src/utils/dateOnly'
 
 import { logger } from 'src/utils/logger'
 interface CreateFileModalProps {
@@ -147,6 +148,17 @@ export const CreateFileModal = ({
       )
     }
 
+  const handleCalibrationDateChange = (date: Date | null) => {
+    if (date && isFutureDay(date)) {
+      notify.warning(
+        'Fecha no válida',
+        'La fecha de calibración no puede ser posterior a hoy.'
+      )
+      return
+    }
+    setValues({ ...values, calibrationDate: date as Date })
+  }
+
   const isIncomplete =
     !file ||
     !values.customerId ||
@@ -159,6 +171,7 @@ export const CreateFileModal = ({
     !values.activoFijo?.trim() ||
     !values.serie?.trim() ||
     !values.calibrationDate ||
+    isFutureDay(values.calibrationDate) ||
     !values.nextCalibrationDate
 
   const handleSubmit = async () => {
@@ -350,10 +363,14 @@ export const CreateFileModal = ({
         <DatePicker
           label='Fecha de calibración'
           value={values.calibrationDate}
-          onChange={(newDate) =>
-            setValues({ ...values, calibrationDate: newDate as Date })
-          }
-          slotProps={{ textField: { required: true } }}
+          onChange={handleCalibrationDateChange}
+          disableFuture
+          slotProps={{
+            textField: {
+              required: true,
+              helperText: 'No puede ser una fecha futura'
+            }
+          }}
         />
         <DatePicker
           label='Próxima calibración'

@@ -7,6 +7,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import useAxiosPrivate from '@utils/use-axios-private'
 import FormDialog, { FormDialogSection } from './Common/FormDialog'
 import FileDropZone from './Common/FileDropZone'
+import { isFutureDay } from 'src/utils/dateOnly'
+import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
 interface UpdateCertificateModalProps {
@@ -47,16 +49,29 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   }, [open])
 
   const handleChangeCalibrationDate = (date: Date | null) => {
-    if (date) {
-      const next = new Date(date)
-      next.setFullYear(next.getFullYear() + 1)
-      setPreviousDate(date.toISOString())
-      setNextDate(next.toISOString())
+    if (!date) return
+    if (isFutureDay(date)) {
+      notify.warning(
+        'Fecha no válida',
+        'La fecha de calibración no puede ser posterior a hoy.'
+      )
+      return
     }
+    const next = new Date(date)
+    next.setFullYear(next.getFullYear() + 1)
+    setPreviousDate(date.toISOString())
+    setNextDate(next.toISOString())
   }
 
   const handleSave = async () => {
     if (!file || !previousDate || !nextDate) return
+    if (isFutureDay(new Date(previousDate))) {
+      notify.warning(
+        'Fecha no válida',
+        'La fecha de calibración no puede ser posterior a hoy.'
+      )
+      return
+    }
 
     try {
       const formData = new FormData()
@@ -147,7 +162,13 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
               label='Fecha de calibración'
               value={previousDate ? new Date(previousDate) : null}
               onChange={handleChangeCalibrationDate}
-              slotProps={{ textField: { required: true } }}
+              disableFuture
+              slotProps={{
+                textField: {
+                  required: true,
+                  helperText: 'No puede ser una fecha futura'
+                }
+              }}
             />
             <DatePicker
               label='Próxima calibración'
