@@ -77,6 +77,8 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+  // Al soltar un arrastre el navegador manda un clic a la página: se ignora para no perder la selección.
+  const justDragged = useRef(false)
   const dragRef = useRef<{ key: string; dx: number; dy: number } | null>(null)
   const [doc, setDoc] = useState<pdfjs.PDFDocumentProxy | null>(null)
   const [pageNo, setPageNo] = useState(1)
@@ -243,6 +245,43 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', end)
       window.removeEventListener('pointercancel', end)
+      justDragged.current = true
+      window.setTimeout(() => {
+        justDragged.current = false
+      }, 0)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
+  }
+
+  // Estirar desde la esquina: el ancho sigue al puntero y el alto se mantiene proporcional.
+  const startResize = (event: React.PointerEvent, placement: Placed) => {
+    const stage = stageRef.current
+    if (!stage) return
+    event.preventDefault()
+    event.stopPropagation()
+    setSelected(placement.key)
+    const move = (moveEvent: PointerEvent) => {
+      const box = stageRef.current?.getBoundingClientRect()
+      if (!box) return
+      const width = (moveEvent.clientX - box.left) / box.width - placement.x
+      setPlacements((current) =>
+        current.map((p) =>
+          p.key === placement.key
+            ? { ...p, w: Math.min(Math.max(width, MIN_WIDTH), MAX_WIDTH) }
+            : p
+        )
+      )
+    }
+    const end = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      justDragged.current = true
+      window.setTimeout(() => {
+        justDragged.current = false
+      }, 0)
     }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', end)
@@ -376,7 +415,14 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
               <Box sx={{ overflow: 'auto', textAlign: 'center' }}>
                 <Box
                   ref={stageRef}
-                  onClick={() => setSelected(null)}
+                  onClick={(event) => {
+                    if (justDragged.current) return
+                    if (
+                      event.target === event.currentTarget ||
+                      event.target === canvasRef.current
+                    )
+                      setSelected(null)
+                  }}
                   sx={{
                     position: 'relative',
                     width: VIEW_WIDTH,
@@ -413,6 +459,26 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
                           bgcolor: 'rgba(224,247,244,.25)'
                         }}
                       >
+                        {p.key === selected && (
+                          <Box
+                            role='slider'
+                            aria-label='Cambiar tamaño'
+                            onPointerDown={(event) => startResize(event, p)}
+                            sx={{
+                              position: 'absolute',
+                              right: -10,
+                              bottom: -10,
+                              width: 20,
+                              height: 20,
+                              borderRadius: '3px',
+                              bgcolor: brand.main,
+                              border: `2px solid ${neutral.surface}`,
+                              cursor: 'nwse-resize',
+                              touchAction: 'none',
+                              zIndex: 2
+                            }}
+                          />
+                        )}
                         {p.type === 'signature' && p.signatoryId ? (
                           <SignatoryImage
                             id={p.signatoryId}
