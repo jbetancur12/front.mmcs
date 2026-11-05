@@ -9,7 +9,6 @@ import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
 import PasswordRequirements from 'src/Components/Common/PasswordRequirements'
 import { isPasswordValid } from 'src/utils/passwordPolicy'
-// import * as Yup from 'yup'; // Importa Yup para la validación
 
 const PasswordGeneratorForm: React.FC = () => {
   const queryString = window.location.search
@@ -20,12 +19,6 @@ const PasswordGeneratorForm: React.FC = () => {
     password: '',
     confirmPassword: ''
   })
-
-  // Define el esquema de validación del formulario con Yup
-  // const validationSchema = Yup.object().shape({
-  //   confirmPassword: Yup.string().required('La contraseña es obligatoria'),
-  //   password: Yup.string().required('La contraseña es obligatoria'),
-  // });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target

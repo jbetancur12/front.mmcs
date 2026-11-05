@@ -289,11 +289,6 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
         throw new Error('Datos de cotización insuficientes para visualización.')
       }
       // Ejemplo: Si filePath es una URL directa y pública
-      // if (quotation.filePath?.startsWith('http')) {
-      //   window.open(quotation.filePath, '_blank');
-      //   setActionStates(prev => ({ ...prev, [supplierId]: { ...prev[supplierId], pdfLoading: false } }));
-      //   return;
-      // }
       // O si necesitas un endpoint para obtener el blob por ID de cotización (más seguro)
       const response = await axiosPrivate.get(
         // Ajusta este endpoint: puede ser por ID de cotización o PR_ID + Supplier_ID

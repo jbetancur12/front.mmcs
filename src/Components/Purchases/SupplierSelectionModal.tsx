@@ -186,12 +186,6 @@ const SupplierSelectionModal = ({
     const newSelections = { ...formState.selections }
     const newWhichAnswers = { ...formState.whichAnswers }
 
-    // // Manejar campo which
-    // if (category === 'CALIDAD' && criterion.requiresWhich) {
-    //   setFormState((prev) => ({ ...prev, showWhich: isChecked }))
-    //   if (!isChecked) setFormState((prev) => ({ ...prev, which: undefined }))
-    // }
-
     const isSingleSelect = [
       'PRECIO',
       'TIEMPO DE ENTREGA',
