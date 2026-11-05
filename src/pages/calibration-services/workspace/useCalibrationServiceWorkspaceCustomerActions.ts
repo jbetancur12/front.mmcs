@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 import { toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import { CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY } from '../../../hooks/useCalibrationServices'
 import { CalibrationServiceCustomer } from '../../../types/calibrationService'
 import { CalibrationServiceCustomerDialogValues } from '../CalibrationServiceCustomerDialog'
@@ -47,12 +48,18 @@ const useCalibrationServiceWorkspaceCustomerActions = (
           )
         }
       )
+      queryClient.invalidateQueries(['customer-identification-check'])
       handleCustomerChange(customer)
       if (customer.sites?.[0]) {
         handleCustomerSiteChange(customer.sites[0])
       }
       setCustomerDialogMode(null)
       toast.success('Cliente creado y seleccionado.')
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, 'No se pudo crear el cliente comercial.')
+      )
     }
   })
 

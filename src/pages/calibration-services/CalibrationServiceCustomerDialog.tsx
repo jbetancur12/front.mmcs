@@ -9,10 +9,12 @@ import {
 import FormDialog, {
   FormDialogSection
 } from '../../Components/Common/FormDialog'
+import IdentificationField from '../../Components/Common/IdentificationField'
 import {
   CalibrationServiceCustomer,
   CalibrationServiceCustomerSite
 } from '../../types/calibrationService'
+import { normalizeIdentification } from '@utils/identification'
 
 export interface CalibrationServiceCustomerDialogValues {
   customer: {
@@ -78,9 +80,13 @@ const CalibrationServiceCustomerDialog = ({
 }: CalibrationServiceCustomerDialogProps) => {
   const [values, setValues] =
     useState<CalibrationServiceCustomerDialogValues>(emptyValues)
+  const [hasDuplicateIdentification, setHasDuplicateIdentification] =
+    useState(false)
 
   useEffect(() => {
     if (!open) return
+
+    setHasDuplicateIdentification(false)
 
     if (mode === 'site' && customer) {
       setValues({
@@ -161,7 +167,13 @@ const CalibrationServiceCustomerDialog = ({
   }
 
   const handleSubmit = () => {
-    onSubmit(values)
+    onSubmit({
+      ...values,
+      customer: {
+        ...values.customer,
+        identificacion: normalizeIdentification(values.customer.identificacion)
+      }
+    })
   }
 
   const isEdit = mode === 'customer' && Boolean(customer)
@@ -233,7 +245,10 @@ const CalibrationServiceCustomerDialog = ({
 
   const isIncomplete =
     (mode === 'customer' && !values.customer.nombre.trim()) ||
-    (!isEdit && !values.site.name.trim())
+    (mode === 'customer' &&
+      !normalizeIdentification(values.customer.identificacion)) ||
+    (!isEdit && !values.site.name.trim()) ||
+    hasDuplicateIdentification
 
   return (
     <FormDialog
@@ -267,12 +282,12 @@ const CalibrationServiceCustomerDialog = ({
             value={values.customer.nombre}
             onChange={(event) => setCustomerField('nombre', event.target.value)}
           />
-          <TextField
-            label='NIT / identificación'
+          <IdentificationField
+            required
             value={values.customer.identificacion}
-            onChange={(event) =>
-              setCustomerField('identificacion', event.target.value)
-            }
+            onChange={(value) => setCustomerField('identificacion', value)}
+            excludeCustomerId={isEdit ? customer?.id : null}
+            onDuplicateChange={setHasDuplicateIdentification}
           />
           <TextField
             type='email'

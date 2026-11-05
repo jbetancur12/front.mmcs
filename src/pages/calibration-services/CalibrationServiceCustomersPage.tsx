@@ -43,6 +43,7 @@ import CalibrationServiceCustomerDialog, {
 } from './CalibrationServiceCustomerDialog'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
@@ -129,8 +130,14 @@ const CalibrationServiceCustomersPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(customerQueryKey)
+      queryClient.invalidateQueries(['customer-identification-check'])
       setCustomerDialogMode(null)
       toast.success('Cliente creado para calibración.')
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, 'No se pudo crear el cliente comercial.')
+      )
     }
   })
 
@@ -147,10 +154,16 @@ const CalibrationServiceCustomersPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(customerQueryKey)
+      queryClient.invalidateQueries(['customer-identification-check'])
       setCustomerDialogMode(null)
       setSelectedCustomer(null)
       setIsEditingCustomer(false)
       toast.success('Cliente actualizado.')
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, 'No se pudo actualizar el cliente.')
+      )
     }
   })
 

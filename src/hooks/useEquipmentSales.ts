@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '@utils/api'
+import { notify } from 'src/utils/notify'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import {
   EquipmentQuotation,
   EquipmentQuotationDocument,
@@ -517,7 +519,13 @@ export const useCreateEquipmentSalesCustomer = (
           )
         }
       )
+      queryClient.invalidateQueries(['customer-identification-check'])
       onCreated?.(customer)
+    },
+    onError: (error) => {
+      notify.error(
+        getApiErrorMessage(error, 'No se pudo crear el cliente comercial.')
+      )
     }
   })
 }

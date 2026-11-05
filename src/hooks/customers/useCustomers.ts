@@ -71,6 +71,7 @@ export const useCreateCustomer = <
       retry: false,
       onSuccess: () => {
         queryClient.invalidateQueries(customersKeys.lists())
+        queryClient.invalidateQueries(['customer-identification-check'])
       }
     }
   )
@@ -90,6 +91,7 @@ export const useUpdateCustomer = <
     retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries(customersKeys.lists())
+      queryClient.invalidateQueries(['customer-identification-check'])
     }
   })
 }

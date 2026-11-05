@@ -3,10 +3,12 @@ import { TextField } from '@mui/material'
 import FormDialog, {
   FormDialogSection
 } from '../../Components/Common/FormDialog'
+import IdentificationField from '../../Components/Common/IdentificationField'
 import {
   EquipmentCustomerOption,
   EquipmentCustomerSite
 } from '../../types/equipmentSales'
+import { normalizeIdentification } from '@utils/identification'
 
 export interface EquipmentSalesCustomerDialogValues {
   customer: {
@@ -70,9 +72,13 @@ const EquipmentSalesCustomerDialog = ({
 }: EquipmentSalesCustomerDialogProps) => {
   const [values, setValues] =
     useState<EquipmentSalesCustomerDialogValues>(emptyValues)
+  const [hasDuplicateIdentification, setHasDuplicateIdentification] =
+    useState(false)
 
   useEffect(() => {
     if (!open) return
+
+    setHasDuplicateIdentification(false)
 
     if (mode === 'site' && customer) {
       setValues({
@@ -125,7 +131,13 @@ const EquipmentSalesCustomerDialog = ({
   }
 
   const handleSubmit = () => {
-    onSubmit(values)
+    onSubmit({
+      ...values,
+      customer: {
+        ...values.customer,
+        identificacion: normalizeIdentification(values.customer.identificacion)
+      }
+    })
   }
 
   const title =
@@ -193,7 +205,10 @@ const EquipmentSalesCustomerDialog = ({
 
   const isIncomplete =
     !values.site.name.trim() ||
-    (mode === 'customer' && !values.customer.nombre.trim())
+    (mode === 'customer' &&
+      (!values.customer.nombre.trim() ||
+        !normalizeIdentification(values.customer.identificacion))) ||
+    hasDuplicateIdentification
 
   return (
     <FormDialog
@@ -225,12 +240,11 @@ const EquipmentSalesCustomerDialog = ({
             value={values.customer.nombre}
             onChange={(event) => setCustomerField('nombre', event.target.value)}
           />
-          <TextField
-            label='NIT / identificación'
+          <IdentificationField
+            required
             value={values.customer.identificacion}
-            onChange={(event) =>
-              setCustomerField('identificacion', event.target.value)
-            }
+            onChange={(value) => setCustomerField('identificacion', value)}
+            onDuplicateChange={setHasDuplicateIdentification}
           />
           <TextField
             type='email'
