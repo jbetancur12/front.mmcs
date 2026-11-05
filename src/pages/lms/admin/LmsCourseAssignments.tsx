@@ -133,8 +133,8 @@ const LmsCourseAssignments: React.FC = () => {
         handleCloseDialog()
         notify.success('Asignación creada exitosamente')
       },
-      onError: (error: any) => {
-        notify.error('Error al crear asignación: ' + (getApiErrorReason(error) || error.message))
+      onError: (error: unknown) => {
+        notify.error('Error al crear asignación: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
       }
     }
   )
@@ -149,8 +149,8 @@ const LmsCourseAssignments: React.FC = () => {
         queryClient.invalidateQueries(['lms-course-assignments', courseId])
         notify.success('Asignación eliminada exitosamente')
       },
-      onError: (error: any) => {
-        notify.error('Error al eliminar asignación: ' + (getApiErrorReason(error) || error.message))
+      onError: (error: unknown) => {
+        notify.error('Error al eliminar asignación: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
       }
     }
   )

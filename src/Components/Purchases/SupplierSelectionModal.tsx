@@ -31,7 +31,8 @@ import { useSaveSupplierSelection } from 'src/hooks/purchases/useSuppliers'
 import {
   FormState,
   Criterion,
-  SelectionSupplier
+  SelectionSupplier,
+  SelectionSupplierDetail
 } from 'src/pages/Purchases/Types'
 import { isAxiosError } from 'axios'
 import { Close } from '@mui/icons-material'
@@ -97,7 +98,7 @@ const SupplierSelectionModal = ({
 
         // Reconstruir selections, scores, y whichAnswers a partir de existingSelectionData.details
         // Asumiendo que existingSelectionData.details es Array<SelectionSupplierDetail>
-        ;(existingSelectionData.details || []).forEach((detail: any) => {
+        ;(existingSelectionData.details || []).forEach((detail: SelectionSupplierDetail) => {
           const criterion = criteria.find(
             (c) => c.id === detail.selectionSupplierSubItemId
           )
@@ -420,7 +421,7 @@ const SupplierSelectionModal = ({
                 onChange={(e) =>
                   setFormState((prev) => ({
                     ...prev,
-                    providerType: e.target.value as any,
+                    providerType: e.target.value as FormState['providerType'],
                     selections: {},
                     scores: {},
                     totalScore: 0

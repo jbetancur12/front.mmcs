@@ -106,6 +106,17 @@ export interface Approver {
   email: string
 }
 
+/** Cotización cargada para una solicitud de compra. */
+export interface Quotation {
+  id: string | number
+  supplierId: number | string
+  filePath?: string
+  originalFileName?: string
+  fileName?: string
+  createdAt?: string
+  accepted?: boolean
+}
+
 export interface PurchaseRequest {
   id: number
   elaborationDate: Date
@@ -121,7 +132,7 @@ export interface PurchaseRequest {
   approved?: boolean
   createdAt: Date
   updatedAt: Date
-  quotations: any[]
+  quotations: Quotation[]
   purchaseType: string
   hasOrder: boolean
 

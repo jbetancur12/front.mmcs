@@ -1,5 +1,14 @@
 export type NotificationSeverity = 'critical' | 'warning' | 'info' | 'system'
 
+export interface NotificationMetadata {
+  courseId?: number
+  courseTitle?: string
+  certificateNumber?: string
+  isMandatory?: boolean
+  assignmentId?: number
+  [key: string]: unknown
+}
+
 export interface Notification {
   id: string
   title: string
@@ -9,7 +18,7 @@ export interface Notification {
   read: boolean
   actionUrl?: string
   actionLabel?: string
-  metadata?: Record<string, any>
+  metadata?: NotificationMetadata
 }
 
 export interface NotificationSummary {

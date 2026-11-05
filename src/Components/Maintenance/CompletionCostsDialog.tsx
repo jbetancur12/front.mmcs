@@ -33,7 +33,7 @@ import MaintenanceFileUpload from './MaintenanceFileUpload'
 import SignaturePad from './SignaturePad'
 import type { MaintenanceFile } from '../../types/maintenance'
 
-interface Cost {
+export interface CompletionCost {
   name: string
   description?: string
   amount: number | string
@@ -57,7 +57,7 @@ interface CompletionCostsDialogProps {
   onComplete: (
     workPerformed: string,
     technicianWorkMinutes: number,
-    costs: Cost[],
+    costs: CompletionCost[],
     completionPhotos: CompletionPhotoInput[],
     technicianSignature: {
       technicianSignatureData?: string | null
@@ -95,7 +95,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const [technicianWorkMinutes, setTechnicianWorkMinutes] = useState<string>('')
   const [technicianWorkMinutesError, setTechnicianWorkMinutesError] =
     useState<string>('')
-  const [costs, setCosts] = useState<Cost[]>([
+  const [costs, setCosts] = useState<CompletionCost[]>([
     { name: '', description: '', amount: '' }
   ])
   const [errors, setErrors] = useState<
@@ -138,7 +138,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
   const handleCostChange = (
     index: number,
-    field: keyof Cost,
+    field: keyof CompletionCost,
     value: string
   ) => {
     const updated = [...costs]

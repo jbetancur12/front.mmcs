@@ -96,7 +96,7 @@ interface RawHistoricalDataPoint {
 // Interfaz para los datos procesados para Recharts (sin cambios)
 interface ChartDataPoint {
   timestamp: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 // --- NUEVAS INTERFACES ---
@@ -177,8 +177,9 @@ const LaboratoryMonitor: React.FC = () => {
         'Received LABORATORY_DATA WebSocket message:',
         lastMessage.data
       )
-      const updatedDeviceState: WebSocketDeviceState =
-        lastMessage.data?.deviceState
+      const data = lastMessage.data as { deviceState?: WebSocketDeviceState }
+      const updatedDeviceState: WebSocketDeviceState | undefined =
+        data.deviceState
 
       if (!updatedDeviceState || updatedDeviceState.id === undefined) {
         logger.warn(

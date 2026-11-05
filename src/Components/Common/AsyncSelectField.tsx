@@ -4,10 +4,10 @@ import { Autocomplete, CircularProgress, TextField } from '@mui/material'
 export interface AsyncSelectOption {
   value: string | number
   label: string
-  [extra: string]: any
+  [extra: string]: unknown
 }
 
-interface AsyncSelectFieldProps<T extends AsyncSelectOption> {
+interface AsyncSelectFieldProps<T extends { value: string | number; label: string }> {
   label: string
   value: T | null
   onChange: (option: T | null) => void
@@ -29,7 +29,7 @@ const SEARCH_DELAY_MS = 350
  * tipos). Mismo contorno y foco turquesa que los demás campos del
  * `FormDialog`; reemplaza al `react-select` asíncrono suelto.
  */
-const AsyncSelectField = <T extends AsyncSelectOption>({
+const AsyncSelectField = <T extends { value: string | number; label: string }>({
   label,
   value,
   onChange,

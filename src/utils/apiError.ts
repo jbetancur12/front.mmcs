@@ -79,12 +79,14 @@ export const parseApiError = (error: unknown): ParsedApiError => {
  * del formato estándar ({ error: { code, reason, details, ... } }). Sirve para
  * los protocolos de sesión, que llevan datos propios además del mensaje.
  */
-export const getApiErrorPayload = (error: unknown): Record<string, any> => {
+export const getApiErrorPayload = (error: unknown): Record<string, unknown> => {
   const data = (error as ApiErrorLike)?.response?.data
   if (!data || typeof data !== 'object') return {}
-  const root = data as Record<string, any>
+  const root = data as Record<string, unknown>
   const nested =
-    root.error && typeof root.error === 'object' ? (root.error as Record<string, any>) : {}
+    root.error && typeof root.error === 'object'
+      ? (root.error as Record<string, unknown>)
+      : {}
   return { ...root, ...nested }
 }
 

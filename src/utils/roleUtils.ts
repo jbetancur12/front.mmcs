@@ -161,7 +161,10 @@ export const canAccessFeature = (userRole: LMSRole, feature: string): boolean =>
 /**
  * Get filtered quick actions based on user role
  */
-export const getFilteredQuickActions = (userRole: LMSRole, allActions: any[]) => {
+export const getFilteredQuickActions = <T extends { id: string }>(
+  userRole: LMSRole,
+  allActions: T[]
+): T[] => {
   const permissions = ROLE_PERMISSIONS[userRole]
   
   return allActions.filter(action => {

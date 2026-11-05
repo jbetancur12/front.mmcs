@@ -62,7 +62,7 @@ export const queryKeys = {
   courses: {
     all: ['courses'] as const,
     lists: () => [...queryKeys.courses.all, 'list'] as const,
-    list: (filters?: any) => [...queryKeys.courses.lists(), filters] as const,
+    list: (filters?: object) => [...queryKeys.courses.lists(), filters] as const,
     available: (scope?: string) => [...queryKeys.courses.all, 'available', scope] as const,
     details: () => [...queryKeys.courses.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.courses.details(), id] as const,
@@ -116,7 +116,7 @@ export const queryKeys = {
   // Analytics
   analytics: {
     all: ['analytics'] as const,
-    dashboard: (filters?: any) => [...queryKeys.analytics.all, 'dashboard', filters] as const,
+    dashboard: (filters?: object) => [...queryKeys.analytics.all, 'dashboard', filters] as const,
     course: (courseId: number) => [...queryKeys.analytics.all, 'course', courseId] as const,
     user: (userId?: number) => [...queryKeys.analytics.all, 'user', userId] as const
   },

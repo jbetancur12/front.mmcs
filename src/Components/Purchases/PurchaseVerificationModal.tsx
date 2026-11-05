@@ -66,7 +66,10 @@ const CreatePurchaseVerificationModal: React.FC<
 
   const [error, setError] = React.useState('')
 
-  const handleChange = (field: keyof PurchaseVerificationData, value: any) => {
+  const handleChange = (
+    field: keyof PurchaseVerificationData,
+    value: PurchaseVerificationData[keyof PurchaseVerificationData]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 

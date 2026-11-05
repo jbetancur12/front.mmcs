@@ -121,7 +121,7 @@ const MaintenanceBilling: React.FC = () => {
       notify.success(data.message)
       queryClient.invalidateQueries({ queryKey: ['maintenance-billing'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       notify.error(
         getApiErrorReason(error) ||
           'Error al actualizar estado de facturación'

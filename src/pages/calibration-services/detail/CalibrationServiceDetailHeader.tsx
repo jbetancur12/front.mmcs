@@ -43,6 +43,7 @@ import {
   secondaryActionSx,
   cautionActionSx
 } from './calibrationServiceDetailUtils'
+import { getServiceFlag } from '../calibrationServiceOtherFields'
 import {
   CalibrationServiceDetailPermissions,
   CalibrationServiceDetailData,
@@ -187,7 +188,7 @@ const CalibrationServiceDetailHeader = ({
               sx={{ fontWeight: 600 }}
             />
           ) : null}
-          {(service.otherFields as any)?.hasEquipmentSale === true ? (
+          {(getServiceFlag(service, 'hasEquipmentSale')) ? (
             <Chip size='small' color='warning' variant='outlined' label='Venta equipo' sx={{ fontWeight: 600 }} />
           ) : null}
           <CalibrationServiceStageDecisionHelp

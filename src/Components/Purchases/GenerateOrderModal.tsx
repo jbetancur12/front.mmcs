@@ -232,7 +232,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   ) => {
     setAssignedItems((prevItems) => {
       const newItems = [...prevItems]
-      ;(newItems[index] as any)[field] = value
+      Object.assign(newItems[index], { [field]: value })
       if (field === 'unitValue' || field === 'quantity') {
         const quantity = Number(newItems[index].quantity) || 0
         const unitValue =

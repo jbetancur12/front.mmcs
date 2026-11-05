@@ -22,7 +22,7 @@ import { logger } from 'src/utils/logger'
 // --- Interfaces (sin cambios) ---
 interface ChartDataPoint {
   timestamp: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface SensorInfo {

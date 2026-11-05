@@ -17,7 +17,7 @@ interface ErrorReport {
   buildVersion?: string
   severity: 'low' | 'medium' | 'high' | 'critical'
   tags?: Record<string, string>
-  extra?: Record<string, any>
+  extra?: Record<string, unknown>
 }
 
 interface ErrorReportingConfig {
@@ -92,7 +92,7 @@ class ErrorReportingService {
       section?: string
       severity?: ErrorReport['severity']
       tags?: Record<string, string>
-      extra?: Record<string, any>
+      extra?: Record<string, unknown>
       componentStack?: string
     } = {}
   ) {

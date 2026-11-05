@@ -296,9 +296,9 @@ const CalibrationServiceOperationsPanel = ({
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <DetailField label='Metrólogos asignados'>{(() => {
-              const metrologists: any = operations.assignedMetrologists
+              const metrologists = operations.assignedMetrologists
               if (Array.isArray(metrologists) && metrologists.length > 0) {
-                return metrologists.map((m: any) => m.name).join(', ')
+                return metrologists.map((m) => m.name).join(', ')
               }
               return operations.assignedMetrologistName || 'Sin asignar'
             })()}</DetailField>

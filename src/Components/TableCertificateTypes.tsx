@@ -72,7 +72,7 @@ const Table: React.FC = () => {
 
   // Create a new certificateType
   const onCreateCertificateType = async (
-    certificateTypeData: CertificateTypeData
+    certificateTypeData: Record<string, string>
   ) => {
     try {
       const response = await createCertificateTypeMutation.mutateAsync({
@@ -115,7 +115,7 @@ const Table: React.FC = () => {
   //   }
   // }
 
-  const handleCreateNewRow = (values: CertificateTypeData) => {
+  const handleCreateNewRow = (values: Record<string, string>) => {
     onCreateCertificateType(values)
     setCreateModalOpen(false)
   }
@@ -333,7 +333,7 @@ const Table: React.FC = () => {
 interface CreateModalProps {
   columns: MRT_ColumnDef<CertificateTypeData>[]
   onClose: () => void
-  onSubmit: (values: CertificateTypeData) => void
+  onSubmit: (values: Record<string, string>) => void
   open: boolean
 }
 
@@ -344,7 +344,7 @@ export const CreateNewAccountModal = ({
   onClose,
   onSubmit
 }: CreateModalProps) => {
-  const [values, setValues] = useState<any>({})
+  const [values, setValues] = useState<Record<string, string>>({})
 
   // Cada vez que se abre, el formulario empieza vacío
   useEffect(() => {

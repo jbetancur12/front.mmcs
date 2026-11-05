@@ -38,6 +38,7 @@ import ListItemCard from 'src/Components/Common/ListItemCard'
 import {
   CalibrationService
 } from '../../types/calibrationService'
+import { getOperationsSummary } from './calibrationServiceOtherFields'
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
@@ -50,14 +51,14 @@ const LOAD_STEPS = [
 const loadColor = (count: number) => LOAD_STEPS.find((step) => count >= step.min)?.bg ?? '#ffffff'
 
 const getScheduledDate = (service: CalibrationService): string | null => {
-  const ops: any = service.otherFields?.operations
+  const ops = getOperationsSummary(service)
   return ops?.scheduledDate || null
 }
 
 const getMetrologistNames = (service: CalibrationService): string[] => {
-  const ops: any = service.otherFields?.operations
+  const ops = getOperationsSummary(service)
   const arr = ops?.assignedMetrologists
-  if (Array.isArray(arr) && arr.length > 0) return arr.map((m: any) => m.name).filter(Boolean)
+  if (Array.isArray(arr) && arr.length > 0) return arr.map((m) => m.name).filter(Boolean)
   const legacy = ops?.assignedMetrologistName
   return legacy ? [legacy] : []
 }

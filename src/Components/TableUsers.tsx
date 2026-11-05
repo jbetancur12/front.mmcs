@@ -71,7 +71,7 @@ const Table: React.FC = () => {
     server.setPagination
   )
   const filteredTableData = useMemo(() => usersPage?.items ?? [], [usersPage])
-  const registerUser = useRegisterUser<UserData>()
+  const registerUser = useRegisterUser<Record<string, string>>()
   const updateUserById = useUpdateUserById()
   const deleteUserById = useDeleteUserById()
 
@@ -80,7 +80,7 @@ const Table: React.FC = () => {
   }>({})
 
   // Create a new user
-  const onCreateUser = async (userData: UserData) => {
+  const onCreateUser = async (userData: Record<string, string>) => {
     try {
       const response = await registerUser.mutateAsync(userData)
 
@@ -131,7 +131,7 @@ const Table: React.FC = () => {
   //   }
   // }
 
-  const handleCreateNewRow = (values: UserData) => {
+  const handleCreateNewRow = (values: Record<string, string>) => {
     onCreateUser(values)
     setCreateModalOpen(false)
   }
@@ -351,7 +351,7 @@ const Table: React.FC = () => {
 interface CreateModalProps {
   columns: MRT_ColumnDef<UserData>[]
   onClose: () => void
-  onSubmit: (values: UserData) => void
+  onSubmit: (values: Record<string, string>) => void
   open: boolean
 }
 
@@ -362,11 +362,11 @@ export const CreateNewAccountModal = ({
   onClose,
   onSubmit
 }: CreateModalProps) => {
-  const [values, setValues] = useState<any>(() =>
-    columns.reduce((acc, column) => {
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    columns.reduce<Record<string, string>>((acc, column) => {
       acc[column.accessorKey ?? ''] = ''
       return acc
-    }, {} as any)
+    }, {})
   )
 
   const handleSubmit = () => {

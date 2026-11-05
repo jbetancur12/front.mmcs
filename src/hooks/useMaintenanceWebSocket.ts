@@ -6,11 +6,22 @@ import {
 } from '../types/maintenance'
 
 import { logger } from 'src/utils/logger'
-interface MaintenanceWebSocketMessage {
-  type: 'ticket_updated' | 'notification' | 'technician_status_changed'
-  data: any
-  timestamp: string
-}
+type MaintenanceWebSocketMessage =
+  | {
+      type: 'ticket_updated'
+      data: MaintenanceTicket
+      timestamp: string
+    }
+  | {
+      type: 'notification'
+      data: MaintenanceNotification
+      timestamp: string
+    }
+  | {
+      type: 'technician_status_changed'
+      data: { technicianId?: number; status?: string }
+      timestamp: string
+    }
 
 interface UseMaintenanceWebSocketProps {
   onNotification?: (notification: MaintenanceNotification) => void
@@ -126,7 +137,7 @@ export const useMaintenanceWebSocket = ({
           break
 
         default:
-          logger.log('Unknown WebSocket message type:', message.type)
+          logger.log('Unknown WebSocket message:', message)
       }
     },
     [onNotification, onTicketUpdate, queryClient]
@@ -159,7 +170,7 @@ export const useMaintenanceWebSocket = ({
   )
 
   const handleTechnicianStatusChange = useCallback(
-    (_data: any) => {
+    (_data: { technicianId?: number; status?: string }) => {
       // Invalidate technicians query to get updated status
       queryClient.invalidateQueries({ queryKey: ['maintenance-technicians'] })
     },
@@ -180,7 +191,7 @@ export const useMaintenanceWebSocket = ({
     reconnectAttempts.current = 0
   }, [])
 
-  const sendMessage = useCallback((message: any) => {
+  const sendMessage = useCallback((message: Record<string, unknown>) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(
         JSON.stringify({

@@ -218,6 +218,7 @@ export interface CalibrationServiceOperationsSummary {
   commitmentDate?: string | null
   scheduledDate?: string | null
   scheduledAt?: string | null
+  scheduledFor?: string | null
   assignedMetrologistUserIds?: number[] | null
   assignedMetrologists?: CalibrationServiceMetrologistDetail[] | null
   /** @deprecated use assignedMetrologists */
@@ -238,6 +239,7 @@ export interface CalibrationServiceOperationsSummary {
   deliveryName?: string | null
   deliveryRole?: string | null
   deliverySignatureData?: string | null
+  completionNotes?: string | null
 }
 
 export interface CalibrationServicePhysicalTraceabilityEntry {

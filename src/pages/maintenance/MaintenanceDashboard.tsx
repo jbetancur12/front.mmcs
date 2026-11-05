@@ -80,7 +80,7 @@ import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcut
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
-import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
+import type { CompletionCost, CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -411,7 +411,7 @@ const MaintenanceDashboard: React.FC = () => {
   const handleCompleteWithCosts = async (
     workPerformed: string,
     technicianWorkMinutes: number,
-    costs: any[],
+    costs: CompletionCost[],
     completionPhotos: CompletionPhotoInput[],
     technicianSignature: {
       technicianSignatureData?: string | null
@@ -442,7 +442,10 @@ const MaintenanceDashboard: React.FC = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             technicianWorkMinutes,
-            costs,
+            costs: costs.map((cost) => ({
+              ...cost,
+              amount: Number(cost.amount)
+            })),
             technicianSignatureData: maintenanceSignaturesEnabled
               ? technicianSignature.technicianSignatureData ||
                 selectedTicket.technicianSignatureData ||
@@ -456,7 +459,10 @@ const MaintenanceDashboard: React.FC = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             technicianWorkMinutes,
-            costs,
+            costs: costs.map((cost) => ({
+              ...cost,
+              amount: Number(cost.amount)
+            })),
             technicianSignatureData: maintenanceSignaturesEnabled
               ? technicianSignature.technicianSignatureData ||
                 selectedTicket.technicianSignatureData ||
@@ -554,7 +560,7 @@ const MaintenanceDashboard: React.FC = () => {
       onSuccess: () => {
         showToast('Reporte técnico generado exitosamente', 'success')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('Error generating technical report:', error)
         showToast('Error al generar reporte técnico', 'error')
       }

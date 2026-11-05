@@ -64,7 +64,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
     setLocalFilters(filters)
   }, [filters])
 
-  const handleFilterChange = (key: keyof IMaintenanceFilters, value: any) => {
+  const handleFilterChange = (
+    key: keyof IMaintenanceFilters,
+    value: IMaintenanceFilters[keyof IMaintenanceFilters]
+  ) => {
     const newFilters = { ...localFilters, [key]: value }
     setLocalFilters(newFilters)
     onFiltersChange(newFilters)
@@ -466,10 +469,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                     : null
                 }
                 onChange={(date) => {
-                  const dateRange = localFilters.dateRange || {}
+                  const dateRange = localFilters.dateRange ?? { from: '', to: '' }
                   handleFilterChange('dateRange', {
                     ...dateRange,
-                    from: date ? date.toISOString() : undefined
+                    from: date ? date.toISOString() : ''
                   })
                 }}
                 slotProps={{
@@ -490,10 +493,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                     : null
                 }
                 onChange={(date) => {
-                  const dateRange = localFilters.dateRange || {}
+                  const dateRange = localFilters.dateRange ?? { from: '', to: '' }
                   handleFilterChange('dateRange', {
                     ...dateRange,
-                    to: date ? date.toISOString() : undefined
+                    to: date ? date.toISOString() : ''
                   })
                 }}
                 slotProps={{

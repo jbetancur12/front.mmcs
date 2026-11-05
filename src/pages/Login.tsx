@@ -29,7 +29,7 @@ import {
 } from 'src/utils/sessionEnd'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
-function isAxiosError(obj: any): obj is AxiosError {
+function isAxiosError(obj: unknown): obj is AxiosError {
   return obj instanceof Error && 'isAxiosError' in obj
 }
 
@@ -140,9 +140,13 @@ const Login: React.FC = () => {
         case 429:
           {
             const payload = getApiErrorPayload(error)
-            const seconds = Number(
-              payload.details?.retryAfterSeconds ?? payload.retryAfterSeconds
-            )
+            const details =
+              payload.details && typeof payload.details === 'object'
+                ? (payload.details as Record<string, unknown>)
+                : {}
+            const rawSeconds = details.retryAfterSeconds ?? payload.retryAfterSeconds
+            const seconds =
+              typeof rawSeconds === 'number' ? rawSeconds : Number(rawSeconds ?? 0)
             const minutes = seconds > 0 ? Math.ceil(seconds / 60) : 10
             setError(
               `Hiciste demasiados intentos. Espera ${minutes} ${

@@ -22,6 +22,7 @@ import {
   Refresh
 } from '@mui/icons-material'
 import { useDropzone } from 'react-dropzone'
+import type { FileRejection } from 'react-dropzone'
 import { MaintenanceFile } from '../../types/maintenance'
 
 import { logger } from 'src/utils/logger'
@@ -88,7 +89,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
   }
 
   const onDrop = useCallback(
-    (acceptedFiles: File[], fileRejections: any[]) => {
+    (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       setError(null)
 
       // Check for file rejections

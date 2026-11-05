@@ -12,7 +12,8 @@ import {
   Checkbox,
   Tooltip,
   Alert,
-  IconButton
+  IconButton,
+  type ChipProps
 } from '@mui/material'
 import {
   Send,
@@ -118,7 +119,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       .slice(0, 2)
   }
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string): ChipProps['color'] => {
     switch (role) {
       case 'admin':
         return 'error'
@@ -331,7 +332,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                         color={
                           getRoleColor(
                             comment.authorType || comment.userRole
-                          ) as any
+                          )
                         }
                         variant={getRoleColor(comment.authorType || comment.userRole) === 'primary' ? 'filled' : 'outlined'}
                       />

@@ -18,9 +18,10 @@ import {
   Clear
 } from '@mui/icons-material'
 import { hasActiveFilters, getActiveFiltersCount, getFilterSummary } from '../../utils/tableStateUtils'
+import type { TableStateLike } from '../../utils/tableStateUtils'
 
 interface ActiveFiltersIndicatorProps {
-  tableState: any
+  tableState: TableStateLike
   onClearFilters: () => void
   showDetails?: boolean
   compact?: boolean

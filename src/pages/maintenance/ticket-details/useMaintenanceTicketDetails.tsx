@@ -30,6 +30,7 @@ import {
 } from '../../../types/maintenance'
 import { maintenanceSignaturesEnabled } from '../../../features/maintenanceFlags'
 import type {
+  CompletionCost,
   CompletionPhotoInput,
   CompletionSignatureInput
 } from '../../../Components/Maintenance/CompletionCostsDialog'
@@ -262,7 +263,7 @@ const useMaintenanceTicketDetails = () => {
   const handleCompleteWithCosts = async (
     workPerformed: string,
     technicianWorkMinutes: number,
-    costs: any[],
+    costs: CompletionCost[],
     completionPhotos: CompletionPhotoInput[],
     technicianSignature: {
       technicianSignatureData?: string | null
@@ -293,7 +294,10 @@ const useMaintenanceTicketDetails = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             technicianWorkMinutes,
-            costs,
+            costs: costs.map((cost) => ({
+              ...cost,
+              amount: Number(cost.amount)
+            })),
             technicianSignatureData:
               technicianSignature.technicianSignatureData ||
               ticket.technicianSignatureData ||
@@ -306,7 +310,10 @@ const useMaintenanceTicketDetails = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             technicianWorkMinutes,
-            costs,
+            costs: costs.map((cost) => ({
+              ...cost,
+              amount: Number(cost.amount)
+            })),
             technicianSignatureData:
               technicianSignature.technicianSignatureData ||
               ticket.technicianSignatureData ||

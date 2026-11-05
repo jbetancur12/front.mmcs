@@ -156,7 +156,7 @@ const MobilePage = () => {
     void queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
   }
   // Las acciones de la vista móvil no se reintentan: un POST repetido duplicaría la operación
-  const serviceActionMutation = useMutation((action: () => Promise<any>) => action(), {
+  const serviceActionMutation = useMutation((action: () => Promise<unknown>) => action(), {
     retry: 0,
     onSuccess: refreshService
   })

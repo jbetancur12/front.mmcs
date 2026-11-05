@@ -1,9 +1,10 @@
 import { FileData } from '../types/fileTypes'
+import type { AxiosInstance } from 'axios'
 
 export const handleCreateFile = async (
   values: FileData,
   file: File | null,
-  axiosPrivate: any,
+  axiosPrivate: AxiosInstance,
   fetchFiles: (options?: { force?: boolean }) => Promise<void>
 ) => {
   if (!file) throw new Error('Debe seleccionar un archivo PDF')

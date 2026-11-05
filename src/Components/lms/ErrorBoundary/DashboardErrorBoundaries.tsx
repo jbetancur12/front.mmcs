@@ -141,8 +141,18 @@ export const DashboardErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
       logger.error('Critical Dashboard Error:', error, errorInfo)
       
       // Report to error tracking service
-      if (typeof window !== 'undefined' && (window as any).errorTracker) {
-        (window as any).errorTracker.captureException(error, {
+      if (typeof window !== 'undefined') {
+        const errorTracker = (
+          window as Window & {
+            errorTracker?: {
+              captureException: (
+                error: Error,
+                context: { tags: Record<string, unknown>; extra: Record<string, unknown> }
+              ) => void
+            }
+          }
+        ).errorTracker
+        errorTracker?.captureException(error, {
           tags: {
             section: 'dashboard',
             critical: true

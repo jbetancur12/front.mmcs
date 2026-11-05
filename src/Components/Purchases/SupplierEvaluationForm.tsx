@@ -347,7 +347,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
                 label={criterion.label}
                 name={criterion.name}
                 value={formData[criterion.name]} // El valor es un número (0, 2, 10, 15)
-                onChange={handleChange as any} // Cast a 'any' para simplificar el tipo de evento del Select
+                onChange={handleChange} // Cast a 'any' para simplificar el tipo de evento del Select
                 error={!!errors[criterion.name]}
                 helperText={errors[criterion.name]}
                 // SelectProps={{ displayEmpty: true }} // Si quieres un placeholder visible
@@ -382,7 +382,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
               label='Evaluado por (Elaboró)'
               name='preparedBy'
               value={formData.preparedBy}
-              onChange={handleChange as any}
+              onChange={handleChange}
               fullWidth
               required
             >
@@ -400,7 +400,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
               label='Aprobado por'
               name='approvedBy'
               value={formData.approvedBy}
-              onChange={handleChange as any}
+              onChange={handleChange}
               fullWidth
               required
             >
@@ -434,7 +434,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
                 </Typography>
                 <Typography
                   variant='h5'
-                  fontWeight='bold' // @ts-ignore
+                  fontWeight='bold'
                   color={
                     calculatedCondition === 'NO APROBADO' ||
                     calculatedCondition === 'INDETERMINADO'

@@ -13,7 +13,8 @@ const MESSAGES: Record<string, string> = {
 /** Motivo de cierre si el error es un SESSION_REVOKED del API; si no, null. */
 export const getSessionRevokedReason = (error: unknown): string | null => {
   const data = getApiErrorPayload(error)
-  return data.code === 'SESSION_REVOKED' ? data.reason || 'revoked' : null
+  if (data.code !== 'SESSION_REVOKED') return null
+  return typeof data.reason === 'string' ? data.reason : 'revoked'
 }
 
 /** El API avisa que los roles del usuario cambiaron: el token es viejo, se renueva y se repite la petición. */

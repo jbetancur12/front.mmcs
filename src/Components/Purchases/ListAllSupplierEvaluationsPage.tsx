@@ -161,12 +161,13 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
       id: evaluation.supplier.id,
       name: evaluation.supplier.name,
       taxId: evaluation.supplier.taxId,
-      // Rellenar otros campos de ISupplier con valores por defecto o de 'evaluation.supplier' si están disponibles
-      typePerson: (evaluation.supplier as any).typePerson || 0,
-      contactName: (evaluation.supplier as any).contactName || '',
-      email: (evaluation.supplier as any).email || '',
-      phone: (evaluation.supplier as any).phone || '',
-      purchaseType: (evaluation.supplier as any).purchaseType || 1
+      // El backend solo expone id/name/taxId en la evaluación, así que el
+      // resto del proveedor se completa con sus valores por defecto.
+      typePerson: 0,
+      contactName: '',
+      email: '',
+      phone: '',
+      purchaseType: 1
     }
 
     setSelectedEvaluation(evaluation)

@@ -1,6 +1,7 @@
 import { getApiErrorReason } from './apiError'
 import { notify } from './notify'
 import { busyDialog, confirmDialog } from './confirm'
+import type { AxiosError } from 'axios'
 
 // Antes eran diálogos de SweetAlert; ahora usan confirmDialog / notify / busyDialog (ver utils/confirm.tsx
 // y utils/notify.tsx). Se conservan los nombres para no tocar a quienes los llaman.
@@ -54,7 +55,7 @@ export const handleErrorWithAlert = async (error: unknown): Promise<string> => {
   if (error instanceof Error) {
     // Handle Axios errors
     if ('isAxiosError' in error && error.isAxiosError) {
-      const axiosError = error as any
+      const axiosError = error as AxiosError
       
       if (axiosError.code === 'NETWORK_ERROR' || !axiosError.response) {
         await showNetworkErrorAlert()

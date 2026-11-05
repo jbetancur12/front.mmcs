@@ -1179,7 +1179,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                                   <Chip 
                                     label={question.difficulty} 
                                     size="small" 
-                                    color={getDifficultyColor(question.difficulty) as any}
+                                    color={getDifficultyColor(question.difficulty)}
                                   />
                                 )}
                               </Box>
@@ -1348,7 +1348,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                                 <Chip 
                                   label={question.difficulty} 
                                   size="small" 
-                                  color={getDifficultyColor(question.difficulty) as any}
+                                  color={getDifficultyColor(question.difficulty)}
                                 />
                               )}
                               {question.usageCount !== undefined && (

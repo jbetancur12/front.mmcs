@@ -31,8 +31,17 @@ export const getCourseTone = (course: { progress?: number; has_certificate?: boo
   return { color: 'secondary', icon: <StoriesIcon /> }
 }
 
+export interface LmsCourseCard {
+  id: number
+  title: string
+  progress?: number
+  has_certificate?: boolean
+  totalLessons?: number
+  completedLessons?: number
+}
+
 interface LmsCourseGridProps {
-  courses: any[]
+  courses: LmsCourseCard[]
   onOpen: (courseId: number) => void
 }
 

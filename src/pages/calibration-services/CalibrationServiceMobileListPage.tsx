@@ -23,6 +23,7 @@ import { axiosPrivate } from '@utils/api'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import { CalibrationService, CalibrationServiceStatus } from '../../types/calibrationService'
+import { getItemOperationalStatus, getOperationsSummary } from './calibrationServiceOtherFields'
 import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
 
 // Misma paleta del detalle móvil
@@ -39,12 +40,14 @@ const TODO_STATUSES: CalibrationServiceStatus[] = ['scheduled', 'in_execution']
 
 type ListFilter = 'todo' | 'done' | 'all'
 
-const getOps = (s: CalibrationService): any => s.otherFields?.operations || {}
+const getOps = (s: CalibrationService) => getOperationsSummary(s)
 
 const getAssignedEmails = (s: CalibrationService): string[] => {
   const ops = getOps(s)
   if (Array.isArray(ops.assignedMetrologists) && ops.assignedMetrologists.length > 0) {
-    return ops.assignedMetrologists.map((m: any) => m.email).filter(Boolean)
+    return ops.assignedMetrologists
+      .map((m) => m.email)
+      .filter((email): email is string => Boolean(email))
   }
   return ops.assignedMetrologistEmail ? [ops.assignedMetrologistEmail] : []
 }
@@ -78,7 +81,7 @@ const getGroupKey = (s: CalibrationService, today: Date): { key: string; label: 
 
 const getProgress = (s: CalibrationService) => {
   const items = s.items || []
-  const done = items.filter((i: any) => i.otherFields?.operationalStatus === 'completed').length
+  const done = items.filter((i) => getItemOperationalStatus(i) === 'completed').length
   return { done, total: items.length }
 }
 

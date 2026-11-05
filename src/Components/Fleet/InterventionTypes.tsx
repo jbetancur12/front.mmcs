@@ -67,8 +67,8 @@ const InterventionTypes = () => {
             : 'Tipo de Intervención Creado Exitosamente!')
         setModalOpen(false)
       },
-      onError: (error: any) => {
-        notify.error(`Error: ${getApiErrorReason(error) || error.message}`)
+      onError: (error: unknown) => {
+        notify.error(`Error: ${getApiErrorReason(error) || (error instanceof Error ? error.message : '')}`)
       }
     }
   )
@@ -84,8 +84,8 @@ const InterventionTypes = () => {
         queryClient.invalidateQueries('interventionType')
         notify.success('Tipo de Intervención Eliminado Exitosamente!')
       },
-      onError: (error: any) => {
-        notify.error(`Error: ${getApiErrorReason(error) || error.message}`)
+      onError: (error: unknown) => {
+        notify.error(`Error: ${getApiErrorReason(error) || (error instanceof Error ? error.message : '')}`)
       }
     }
   )
@@ -112,7 +112,7 @@ const InterventionTypes = () => {
     setModalOpen(true)
   }
 
-  const handleFormSubmit = (values: Record<string, any>) => {
+  const handleFormSubmit = (values: InterventionType) => {
     const payload: Omit<InterventionType, 'id'> = {
       name: values.name,
       requiresReminder: values.requiresReminder,

@@ -298,9 +298,9 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         </Tabs>
 
         {activeTab === 0 && (() => {
-          const pending = availableCourses.filter((course: any) => course.progress < 100)
-          const hero = [...pending].sort((left: any, right: any) => right.progress - left.progress)[0]
-          const others = pending.filter((course: any) => !hero || course.id !== hero.id)
+          const pending = availableCourses.filter((course) => course.progress < 100)
+          const hero = [...pending].sort((left, right) => right.progress - left.progress)[0]
+          const others = pending.filter((course) => !hero || course.id !== hero.id)
           const heroTone = hero ? getCourseTone(hero) : null
           return (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

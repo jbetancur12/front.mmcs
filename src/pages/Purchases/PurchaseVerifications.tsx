@@ -1,6 +1,6 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
-import { MRT_ColumnDef, MRT_Row } from 'material-react-table'
+import { MRT_ColumnDef, MRT_Row, type MRT_TableInstance } from 'material-react-table'
 import {
   Avatar,
   Box,
@@ -220,8 +220,8 @@ const PurchaseVerificationsTable: React.FC = () => {
   }: {
     exitEditingMode: () => void
     row: MRT_Row<PurchaseVerification>
-    table: any // puedes ajustar el tipo según tus necesidades
-    values: Record<string, any>
+    table: MRT_TableInstance<PurchaseVerification>
+    values: Record<string, unknown>
   }) => {
     try {
       const updatedData = { ...row.original, ...values }

@@ -25,21 +25,23 @@ export interface FieldConfig {
   options?: string[]
 }
 
-interface GenericFormModalProps {
+interface GenericFormModalProps<T extends object> {
   open: boolean
   fields: FieldConfig[]
   onClose: () => void
   submitButtonText: string
-  formik: FormikProps<any>
+  formik: FormikProps<T>
 }
 
-const GenericFormModal: React.FC<GenericFormModalProps> = ({
+const GenericFormModal = <T extends object>({
   open,
   fields,
   onClose,
   submitButtonText,
-  formik
-}) => {
+  formik: typedFormik
+}: GenericFormModalProps<T>) => {
+  // Los campos se configuran por nombre, así que se leen como registro.
+  const formik = typedFormik as unknown as FormikProps<Record<string, unknown>>
   return (
     <Dialog open={open}>
       <form onSubmit={formik?.handleSubmit}>
@@ -97,7 +99,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({
                           src={
                             formik.values[field.accessorKey]
                               ? URL.createObjectURL(
-                                  formik.values[field.accessorKey]
+                                  formik.values[field.accessorKey] as Blob
                                 )
                               : '/images/no-img.jpg'
                           } // Mostramos la foto de perfil seleccionada
@@ -150,7 +152,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({
                     control={
                       <Checkbox
                         name={field.accessorKey}
-                        checked={formik.values[field.accessorKey]}
+                        checked={Boolean(formik.values[field.accessorKey])}
                         onChange={formik.handleChange}
                       />
                     }

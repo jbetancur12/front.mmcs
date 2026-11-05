@@ -15,11 +15,11 @@ import {
   getCustomerResponseType,
   getLatestChangeRequest,
   getLogisticsDetails,
-  getOperationsDetails,
   getOtherFieldRecord,
   getOtherFieldText,
   toNumber
 } from './calibrationServiceDetailUtils'
+import { getOperationsSummary } from '../calibrationServiceOtherFields'
 
 /**
  * Datos derivados del servicio que usa la vista de detalle: textos de la ficha,
@@ -45,7 +45,7 @@ export const getCalibrationServiceDetailData = (service: CalibrationService) => 
   const rawExecutionCustomerName = service.executionCustomerName || null
   const rawExecutionSiteName = service.executionSiteName || null
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
-  const operationsDetails = getOperationsDetails(service.otherFields)
+  const operationsDetails = getOperationsSummary(service)
   const logisticsDetails = getLogisticsDetails(service.otherFields)
   const odsScheduleWindow =
     typeof odsDetails?.scheduleWindow === 'string'
@@ -68,20 +68,20 @@ export const getCalibrationServiceDetailData = (service: CalibrationService) => 
         ? odsDetails.scheduledFor
         : ''
   const operationsAssignedMetrologistUserIds = (() => {
-    const raw = operationsDetails?.assignedMetrologistUserIds
-    if (Array.isArray(raw) && raw.length > 0) return (raw as number[]).map(String)
-    const legacyId = operationsDetails?.assignedMetrologistUserId
+    const raw = operationsDetails.assignedMetrologistUserIds
+    if (Array.isArray(raw) && raw.length > 0) return raw.map(String)
+    const legacyId = operationsDetails.assignedMetrologistUserId
     return legacyId ? [String(legacyId)] : []
   })()
   const operationsAssignedMetrologistNames = (() => {
-    const raw: any = operationsDetails?.assignedMetrologists
-    if (Array.isArray(raw) && raw.length > 0) return raw.map((m: any) => m.name).join(', ')
-    const legacyName = operationsDetails?.assignedMetrologistName
+    const raw = operationsDetails.assignedMetrologists
+    if (Array.isArray(raw) && raw.length > 0) return raw.map((m) => m.name).join(', ')
+    const legacyName = operationsDetails.assignedMetrologistName
     return legacyName || ''
   })()
   const operationsResponsibleName: string =
-    typeof (operationsDetails as any)?.operationalResponsibleName === 'string'
-      ? (operationsDetails as any).operationalResponsibleName
+    typeof operationsDetails.operationalResponsibleName === 'string'
+      ? operationsDetails.operationalResponsibleName
       : (operationsAssignedMetrologistNames || '')
   const operationsResponsibleRole =
     typeof operationsDetails?.operationalResponsibleRole === 'string'

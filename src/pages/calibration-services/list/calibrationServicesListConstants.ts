@@ -15,7 +15,11 @@ export const CALIBRATION_SERVICES_FILTERS_STORAGE_KEY =
   'calibrationServicesFilters'
 
 export const STATUS_OPTIONS: Array<{
-  value: CalibrationServiceStatus | typeof FILTER_ALL
+  value:
+    | CalibrationServiceStatus
+    | typeof FILTER_ALL
+    | 'ready_for_invoicing'
+    | 'invoiced'
   label: string
 }> = [
   { value: FILTER_ALL, label: 'Todos los estados' },
@@ -29,8 +33,8 @@ export const STATUS_OPTIONS: Array<{
   { value: 'technically_completed', label: 'Finalizada técnicamente' },
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'closed', label: 'Cerrado' },
-  { value: 'ready_for_invoicing' as any, label: 'Por facturar' },
-  { value: 'invoiced' as any, label: 'Facturado' }
+  { value: 'ready_for_invoicing', label: 'Por facturar' },
+  { value: 'invoiced', label: 'Facturado' }
 ]
 
 export const TECHNICAL_STATUS_OPTIONS: Array<{

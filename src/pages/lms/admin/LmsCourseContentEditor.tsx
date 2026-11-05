@@ -39,7 +39,10 @@ interface FrontendCourseDraft {
   modules: ContentModuleDraft[]
 }
 
-const getApiData = <T,>(response: any): T => response?.data?.data ?? response?.data ?? response
+const getApiData = <T,>(response: unknown): T => {
+  const root = response as { data?: { data?: unknown } }
+  return (root?.data?.data ?? root?.data ?? response) as T
+}
 
 const pluralize = (count: number, singular: string, plural?: string) =>
   `${count} ${count === 1 ? singular : plural || `${singular}s`}`
@@ -92,7 +95,7 @@ const transformCourseFromBackend = (backendCourse: BackendCourse): FrontendCours
 })
 
 const normalizeLessonPayload = (lesson: ContentLessonDraft) => {
-  const basePayload: Record<string, any> = {
+  const basePayload: Record<string, unknown> = {
     title: lesson.title,
     type: lesson.type,
     order_index: lesson.order,
@@ -313,8 +316,8 @@ const LmsCourseContentEditor: React.FC = () => {
       setHasUnsavedChanges(false)
       notify.success('Cambios guardados')
     },
-    onError: (error: any) => {
-      const msg = getApiErrorReason(error) || error?.message || 'Error al guardar los cambios'
+    onError: (error: unknown) => {
+      const msg = getApiErrorReason(error) || (error instanceof Error ? error.message : '') || 'Error al guardar los cambios'
       notify.error('Error', msg)
     }
   })

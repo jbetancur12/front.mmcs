@@ -218,7 +218,7 @@ const LmsUserManagement: React.FC = () => {
         setForm(emptyForm)
         notify.success(editingUser ? 'Usuario LMS actualizado' : 'Usuario LMS creado')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error(getApiErrorReason(error) || 'No se pudo guardar el usuario LMS')
       }
     }

@@ -94,7 +94,7 @@ const Table: React.FC = () => {
   const createDeviceMutation = useCreateDevice()
   const updateDeviceMutation = useUpdateDevice()
   const deleteDeviceMutation = useDeleteDevice()
-  const [format, setFormat] = useState<{ labe: string; value: string } | null>(
+  const [format, setFormat] = useState<{ label: string; value: number } | null>(
     null
   )
   // const [filteredTableData, setFilteredTableData] = useState<DeviceData[]>([]);
@@ -271,7 +271,9 @@ const Table: React.FC = () => {
                 mapOptions(item, 'id', 'name')
               )
             }
-            onChange={(selectedOption: any) => setFormat(selectedOption) as any}
+            onChange={(selectedOption) =>
+              setFormat(selectedOption as { label: string; value: number } | null)
+            }
             styles={styles(false)}
           />
         )
@@ -292,7 +294,7 @@ const Table: React.FC = () => {
       //           mapOptions(item, 'id', 'name')
       //         )
       //       }
-      //       onChange={(selectedOption: any) => setFormat(selectedOption) as any}
+      //       onChange={(selectedOption) => setFormat(selectedOption)}
       //       styles={styles(false)}
       //     />
       //   )
