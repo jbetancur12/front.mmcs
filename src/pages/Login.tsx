@@ -144,9 +144,12 @@ const Login: React.FC = () => {
               payload.details && typeof payload.details === 'object'
                 ? (payload.details as Record<string, unknown>)
                 : {}
-            const rawSeconds = details.retryAfterSeconds ?? payload.retryAfterSeconds
+            const rawSeconds =
+              details.retryAfterSeconds ?? payload.retryAfterSeconds
             const seconds =
-              typeof rawSeconds === 'number' ? rawSeconds : Number(rawSeconds ?? 0)
+              typeof rawSeconds === 'number'
+                ? rawSeconds
+                : Number(rawSeconds ?? 0)
             const minutes = seconds > 0 ? Math.ceil(seconds / 60) : 10
             setError(
               `Hiciste demasiados intentos. Espera ${minutes} ${
