@@ -72,86 +72,107 @@ export const sanitizeHtml = (html: string, contentType: keyof typeof sanitizerCo
  * @param quizData - Quiz data object
  * @returns Sanitized quiz data
  */
-export const sanitizeQuizContent = (quizData: any): any => {
+export function sanitizeQuizContent<T extends object>(quizData: T): T;
+export function sanitizeQuizContent(quizData: null): null;
+export function sanitizeQuizContent(quizData: undefined): undefined;
+export function sanitizeQuizContent<T extends object>(
+  quizData: T | null | undefined
+): T | null | undefined {
   if (!quizData) return quizData;
 
-  const sanitized = { ...quizData };
+  const sanitized = { ...quizData } as Record<string, unknown>;
 
   // Sanitize quiz title and instructions
-  if (sanitized.title) {
+  if (typeof sanitized.title === 'string') {
     sanitized.title = sanitizeHtml(sanitized.title, 'basicText');
   }
 
-  if (sanitized.instructions) {
+  if (typeof sanitized.instructions === 'string') {
     sanitized.instructions = sanitizeHtml(sanitized.instructions, 'richText');
   }
 
   // Sanitize questions
-  if (sanitized.questions && Array.isArray(sanitized.questions)) {
-    sanitized.questions = sanitized.questions.map((question: any) => ({
-      ...question,
-      question: sanitizeHtml(question.question, 'quiz'),
-      explanation: question.explanation ? sanitizeHtml(question.explanation, 'basicText') : question.explanation,
-      options: question.options ? question.options.map((option: string) => 
-        sanitizeHtml(option, 'quiz')
-      ) : question.options
-    }));
+  if (Array.isArray(sanitized.questions)) {
+    sanitized.questions = sanitized.questions.map((question) => {
+      if (!question || typeof question !== 'object') return question;
+      const item = question as Record<string, unknown>;
+      return {
+        ...item,
+        question: typeof item.question === 'string' ? sanitizeHtml(item.question, 'quiz') : item.question,
+        explanation: typeof item.explanation === 'string'
+          ? sanitizeHtml(item.explanation, 'basicText')
+          : item.explanation,
+        options: Array.isArray(item.options)
+          ? item.options.map((option) => (typeof option === 'string' ? sanitizeHtml(option, 'quiz') : option))
+          : item.options
+      };
+    });
   }
 
-  return sanitized;
-};
+  return sanitized as T;
+}
 
 /**
  * Sanitize course content
  * @param courseData - Course data object
  * @returns Sanitized course data
  */
-export const sanitizeCourseContent = (courseData: any): any => {
+export function sanitizeCourseContent<T extends object>(courseData: T): T;
+export function sanitizeCourseContent(courseData: null): null;
+export function sanitizeCourseContent(courseData: undefined): undefined;
+export function sanitizeCourseContent<T extends object>(
+  courseData: T | null | undefined
+): T | null | undefined {
   if (!courseData) return courseData;
 
-  const sanitized = { ...courseData };
+  const sanitized = { ...courseData } as Record<string, unknown>;
 
   // Sanitize basic fields
-  if (sanitized.title) {
+  if (typeof sanitized.title === 'string') {
     sanitized.title = sanitizeHtml(sanitized.title, 'basicText');
   }
 
-  if (sanitized.description) {
+  if (typeof sanitized.description === 'string') {
     sanitized.description = sanitizeHtml(sanitized.description, 'richText');
   }
 
-  if (sanitized.objectives) {
+  if (typeof sanitized.objectives === 'string') {
     sanitized.objectives = sanitizeHtml(sanitized.objectives, 'richText');
   }
 
-  return sanitized;
-};
+  return sanitized as T;
+}
 
 /**
  * Sanitize lesson content
  * @param lessonData - Lesson data object
  * @returns Sanitized lesson data
  */
-export const sanitizeLessonContent = (lessonData: any): any => {
+export function sanitizeLessonContent<T extends object>(lessonData: T): T;
+export function sanitizeLessonContent(lessonData: null): null;
+export function sanitizeLessonContent(lessonData: undefined): undefined;
+export function sanitizeLessonContent<T extends object>(
+  lessonData: T | null | undefined
+): T | null | undefined {
   if (!lessonData) return lessonData;
 
-  const sanitized = { ...lessonData };
+  const sanitized = { ...lessonData } as Record<string, unknown>;
 
   // Sanitize basic fields
-  if (sanitized.title) {
+  if (typeof sanitized.title === 'string') {
     sanitized.title = sanitizeHtml(sanitized.title, 'basicText');
   }
 
-  if (sanitized.description) {
+  if (typeof sanitized.description === 'string') {
     sanitized.description = sanitizeHtml(sanitized.description, 'richText');
   }
 
-  if (sanitized.content) {
+  if (typeof sanitized.content === 'string') {
     sanitized.content = sanitizeHtml(sanitized.content, 'richText');
   }
 
-  return sanitized;
-};
+  return sanitized as T;
+}
 
 /**
  * Validate and sanitize YouTube URL

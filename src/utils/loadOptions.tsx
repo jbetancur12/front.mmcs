@@ -1,85 +1,96 @@
 import { axiosPrivate } from './api'
 
 import { logger } from 'src/utils/logger'
+
+/** Opción mínima que consumen los selectores con búsqueda. */
+export interface ResourceOption {
+  value: number
+  label: string
+}
+
+export interface CustomerOption extends ResourceOption {
+  sede: string
+}
+
+/**
+ * Busca en el servidor y mapea cada resultado a una opción del selector.
+ * El debounce vive aquí para que todas las pantallas se comporten igual.
+ */
 export const loadOptions = async <T,>(
   inputValue: string,
   resource: string,
   mapFunction: (item: T) => ResourceOption
-): Promise<T[]> => {
+): Promise<ResourceOption[]> => {
   return new Promise((resolve, reject) => {
-    const endpoint = `/${resource}` // Construir la URL del endpoint
+    const endpoint = `/${resource}`
     const fetchData = async () => {
       try {
         const response = await axiosPrivate.get(endpoint, {
           params: { q: inputValue }
         })
-        const data = response.data
-        const options = data.map((item: any) => mapFunction(item))
-
-        resolve(options) // Aplicar la función de mapeo
+        const data = response.data as T[]
+        resolve(data.map((item) => mapFunction(item)))
       } catch (error) {
         logger.error('Error al cargar opciones:', error)
         reject(error)
       }
     }
 
-    setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
+    setTimeout(fetchData, 1000)
   })
 }
 
-export interface ResourceOption {
-  value: number // Tipo adecuado para el valor
-  label: string // Tipo adecuado para la etiqueta
-}
+type RawOption = Record<string, unknown>
 
-export interface CustomerOption extends ResourceOption {
-  sede: string // Tipo adecuado para la sede
-}
+const readProperty = (option: RawOption, property: string): unknown =>
+  option[property]
 
-export const genericMapOptions = (
-  option: any,
-  valueProperty: string, // Propiedad a usar como value
-  labelProperty: string, // Propiedad a usar como label
-  extraMappings?: { [key: string]: string } // Propiedades extra a mapear: { nuevaPropiedad: 'nombreEnOption' }
-): { value: any; label: any; [key: string]: any } => {
-  const base: { value: any; label: any; [key: string]: any } = {
-    value: option[valueProperty],
-    label: option[labelProperty]
+export const genericMapOptions = <T extends object>(
+  option: T,
+  valueProperty: string,
+  labelProperty: string,
+  extraMappings?: Record<string, string>
+): ResourceOption & Record<string, unknown> => {
+  const source = option as RawOption
+  const base: ResourceOption & Record<string, unknown> = {
+    value: readProperty(source, valueProperty) as number,
+    label: readProperty(source, labelProperty) as string
   }
 
   if (extraMappings) {
     Object.keys(extraMappings).forEach((key) => {
-      base[key] = option[extraMappings[key]]
+      base[key] = readProperty(source, extraMappings[key])
     })
   }
 
   return base
 }
 
-export const mapOptions = (
-  option: any,
-  valueProperty: string, // Nombre de la propiedad a utilizar como valor
-  labelProperty: string // Nombre de la propiedad a utilizar como etiqueta
-): ResourceOption => ({
-  value: option[valueProperty], // Utiliza la propiedad especificada como valor
-  label: option[labelProperty] // Utiliza la propiedad especificada como etiqueta
-})
+export const mapOptions = <T extends object>(
+  option: T,
+  valueProperty: string,
+  labelProperty: string
+): ResourceOption => {
+  const source = option as RawOption
+  return {
+    value: readProperty(source, valueProperty) as number,
+    label: readProperty(source, labelProperty) as string
+  }
+}
 
-export const mapOptionsCustomer = (
-  option: any,
-  valueProperty: string, // Nombre de la propiedad a utilizar como valor
-  labelProperty: string, // Nombre de la propiedad a utilizar como etiqueta
-  sedeProperty: string // Nombre de la propiedad a utilizar como sede
-): CustomerOption => ({
-  value: option[valueProperty], // Utiliza la propiedad especificada como valor
-  label: option[labelProperty], // Utiliza la propiedad especificada como etiqueta
-  sede: option[sedeProperty] // Utiliza la propiedad especificada como sede
-})
-
-// export function logFormData(formData: any) {
-//   for (const [key, value] of formData.entries()) {
-//   }
-// }
+export const mapOptionsCustomer = <T extends object>(
+  option: T,
+  valueProperty: string,
+  labelProperty: string,
+  sedeProperty: string
+): CustomerOption => {
+  const source = option as RawOption
+  return {
+    value: readProperty(source, valueProperty) as number,
+    label: readProperty(source, labelProperty) as string,
+    sede: readProperty(source, sedeProperty) as string
+  }
+}
 
 export const capitalize = (str: string) => {
   if (typeof str !== 'string') return str

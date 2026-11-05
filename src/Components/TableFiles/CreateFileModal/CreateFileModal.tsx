@@ -33,11 +33,12 @@ import { notify } from 'src/utils/notify'
 import { isFutureDay } from 'src/utils/dateOnly'
 
 import { logger } from 'src/utils/logger'
+import type { AxiosInstance } from 'axios'
 interface CreateFileModalProps {
   open: boolean
   onClose: () => void
   fetchFiles: (options?: { force?: boolean }) => Promise<void>
-  axiosPrivate: any
+  axiosPrivate: AxiosInstance
   preSelectedCustomer?: {
     id: number
     nombre: string
@@ -143,7 +144,8 @@ export const CreateFileModal = ({
       const response = await axiosPrivate.get(`/${resource}`, {
         params: { q: input }
       })
-      return response.data.map((item: unknown) =>
+      const data = response.data as object[]
+      return data.map((item) =>
         genericMapOptions(item, valueKey, labelKey, extra)
       )
     }

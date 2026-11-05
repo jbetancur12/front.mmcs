@@ -2,62 +2,29 @@ import { certificateTypeStore } from '@stores/certificateTypeStore'
 import { customerStore } from '@stores/customerStore'
 import { deviceStore } from '@stores/deviceStore'
 
-export const limitArraySize = (arra: any, newItem: any) => {
-  // Verificar si el nuevo item ya existe en el array
-  const isDuplicate = arra.some(
-    (item: any) => item.value === newItem.value && item.label === newItem.label
-  )
-
-  let arr
-  if (!isDuplicate) {
-    if (arra.length < 2) {
-      arr = [...arra, newItem]
-    } else {
-      arr = [...arra.slice(1), newItem]
-    }
-  } else {
-    arr = arra // No se agrega el nuevo elemento si ya existe
-  }
-
-  certificateTypeStore.set(arr)
+/** Opción de los selectores: las tres tiendas comparten la misma forma. */
+interface StoreOption {
+  label: string
+  value: string | number
 }
 
-export const limitArraySizeDevice = (arra: any, newItem: any) => {
-  // Verificar si el nuevo item ya existe en el array
+// Mantiene como máximo dos opciones: la última elegida y la anterior.
+const pushLimited = <T extends StoreOption>(arra: T[], newItem: T): T[] => {
   const isDuplicate = arra.some(
-    (item: any) => item.value === newItem.value && item.label === newItem.label
+    (item) => item.value === newItem.value && item.label === newItem.label
   )
-
-  let arr
-  if (!isDuplicate) {
-    if (arra.length < 2) {
-      arr = [...arra, newItem]
-    } else {
-      arr = [...arra.slice(1), newItem]
-    }
-  } else {
-    arr = arra // No se agrega el nuevo elemento si ya existe
-  }
-
-  deviceStore.set(arr)
+  if (isDuplicate) return arra
+  return arra.length < 2 ? [...arra, newItem] : [...arra.slice(1), newItem]
 }
 
-export const limitArraySizeCustomer = (arra: any, newItem: any) => {
-  // Verificar si el nuevo item ya existe en el array
-  const isDuplicate = arra.some(
-    (item: any) => item.value === newItem.value && item.label === newItem.label
-  )
+export const limitArraySize = (arra: StoreOption[], newItem: StoreOption) => {
+  certificateTypeStore.set(pushLimited(arra, newItem))
+}
 
-  let arr
-  if (!isDuplicate) {
-    if (arra.length < 2) {
-      arr = [...arra, newItem]
-    } else {
-      arr = [...arra.slice(1), newItem]
-    }
-  } else {
-    arr = arra // No se agrega el nuevo elemento si ya existe
-  }
+export const limitArraySizeDevice = (arra: StoreOption[], newItem: StoreOption) => {
+  deviceStore.set(pushLimited(arra, newItem))
+}
 
-  customerStore.set(arr)
+export const limitArraySizeCustomer = (arra: StoreOption[], newItem: StoreOption) => {
+  customerStore.set(pushLimited(arra, newItem))
 }
