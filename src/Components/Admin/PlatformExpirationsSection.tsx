@@ -1,7 +1,16 @@
-import { useMemo, useState } from 'react'
-import { Box, Button, Chip, IconButton, Link, Stack } from '@mui/material'
+import { useCallback, useMemo, useState } from 'react'
+import {
+  Box,
+  Button,
+  Chip,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography
+} from '@mui/material'
 import {
   AddOutlined,
+  AutorenewOutlined,
   DeleteOutline,
   EditOutlined,
   OpenInNewOutlined
@@ -18,12 +27,15 @@ import {
   type PlatformExpiration,
   useDeletePlatformExpiration,
   usePlatformExpirations,
+  useRenewPlatformExpiration,
   useSavePlatformExpiration
 } from 'src/hooks/usePlatformBilling'
 import { useCan } from '@utils/functions'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
 import { notify } from 'src/utils/notify'
+import { nextRenewalDate } from 'src/utils/renewalDate'
+import { brand } from 'src/theme/designTokens'
 
 interface FormValues {
   name: string
@@ -75,8 +87,12 @@ const PlatformExpirationsSection = () => {
   const { data, isLoading, isFetching } = usePlatformExpirations()
   const save = useSavePlatformExpiration()
   const remove = useDeletePlatformExpiration()
+  const renew = useRenewPlatformExpiration()
   const [editing, setEditing] = useState<PlatformExpiration | null>(null)
   const [open, setOpen] = useState(false)
+  const [renewing, setRenewing] = useState<PlatformExpiration | null>(null)
+  const [renewDate, setRenewDate] = useState('')
+  const [renewError, setRenewError] = useState<string | false>(false)
 
   const formik = useFormik<FormValues>({
     initialValues: EMPTY,
@@ -117,6 +133,27 @@ const PlatformExpirationsSection = () => {
         : EMPTY
     })
     setOpen(true)
+  }
+
+  const openRenew = useCallback((item: PlatformExpiration) => {
+    setRenewing(item)
+    setRenewDate(nextRenewalDate(item.expiresOn))
+    setRenewError(false)
+  }, [])
+
+  const submitRenew = async () => {
+    if (!renewing) return
+    if (!renewDate) {
+      setRenewError('Elige la nueva fecha de vencimiento')
+      return
+    }
+    try {
+      await renew.mutateAsync({ id: renewing.id, expiresOn: renewDate })
+      notify.success('Vencimiento renovado')
+      setRenewing(null)
+    } catch (err) {
+      notify.error('No se pudo renovar', getApiErrorReason(err) ?? undefined)
+    }
   }
 
   const handleDelete = async (item: PlatformExpiration) => {
@@ -173,23 +210,47 @@ const PlatformExpirationsSection = () => {
         id: 'renew',
         header: 'Renovar',
         enableSorting: false,
-        Cell: ({ row }) =>
-          row.original.renewUrl ? (
-            <Link
-              href={row.original.renewUrl}
-              target='_blank'
-              rel='noopener noreferrer'
-              underline='hover'
-              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
-            >
-              Abrir <OpenInNewOutlined sx={{ fontSize: 14 }} />
-            </Link>
-          ) : (
-            '—'
+        Cell: ({ row }) => {
+          const item = row.original
+          if (!canManage && !item.renewUrl) return '—'
+          return (
+            <Stack direction='row' spacing={0.5} alignItems='center'>
+              {canManage ? (
+                <Button
+                  size='small'
+                  startIcon={<AutorenewOutlined />}
+                  onClick={() => openRenew(item)}
+                  sx={{
+                    textTransform: 'none',
+                    color: brand.ink,
+                    minWidth: 0,
+                    px: 1
+                  }}
+                >
+                  Renovar
+                </Button>
+              ) : null}
+              {item.renewUrl ? (
+                <Tooltip title='Ir al sitio del proveedor'>
+                  <IconButton
+                    size='small'
+                    component='a'
+                    href={item.renewUrl}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    aria-label={`Abrir sitio de ${item.name}`}
+                    sx={{ color: brand.ink }}
+                  >
+                    <OpenInNewOutlined fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              ) : null}
+            </Stack>
           )
+        }
       }
     ],
-    []
+    [canManage, openRenew]
   )
 
   return (
@@ -298,6 +359,38 @@ const PlatformExpirationsSection = () => {
             label='Notas (opcional)'
             multiline
             fullWidth
+          />
+        </Stack>
+      </FormDialog>
+
+      <FormDialog
+        open={Boolean(renewing)}
+        onClose={() => setRenewing(null)}
+        title='Renovar servicio'
+        subtitle={renewing?.name}
+        submitLabel='Renovar'
+        onSubmit={submitRenew}
+        loading={renew.isLoading}
+        submitDisabled={!renewDate}
+        maxWidth='sm'
+      >
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          <Typography variant='body2' color='text.secondary'>
+            {renewing
+              ? `Vencimiento actual: ${formatDate(renewing.expiresOn)} (${describeDays(
+                  renewing.daysLeft
+                ).toLowerCase()}). Elige la nueva fecha; los avisos se reinician para el próximo ciclo.`
+              : ''}
+          </Typography>
+          <FormDateField
+            label='Nueva fecha de vencimiento'
+            name='renewExpiresOn'
+            value={renewDate}
+            onChange={(value) => {
+              setRenewDate(value)
+              setRenewError(false)
+            }}
+            error={renewError}
           />
         </Stack>
       </FormDialog>
