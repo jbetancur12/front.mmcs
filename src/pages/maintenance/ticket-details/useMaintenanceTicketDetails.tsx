@@ -22,7 +22,6 @@ import {
   useGenerateStatusReport,
   useGenerateServiceCertificate,
   useGenerateServiceInvoice
-  // useGetPDFOptions
 } from '../../../hooks/useMaintenance'
 import {
   MaintenanceStatus,
@@ -59,7 +58,6 @@ const useMaintenanceTicketDetails = () => {
   const [showComments, setShowComments] = useState(true)
   const [showFiles, setShowFiles] = useState(true)
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<null | HTMLElement>(null)
-  // const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [signaturesDialogOpen, setSignaturesDialogOpen] = useState(false)
   const [briefCostsDialogOpen, setBriefCostsDialogOpen] = useState(false)
@@ -145,7 +143,6 @@ const useMaintenanceTicketDetails = () => {
   const generateStatusReportMutation = useGenerateStatusReport()
   const generateServiceCertificateMutation = useGenerateServiceCertificate()
   const generateServiceInvoiceMutation = useGenerateServiceInvoice()
-  // const { data: pdfOptions } = useGetPDFOptions(ticketId || '')
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({

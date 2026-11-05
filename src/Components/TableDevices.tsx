@@ -97,7 +97,6 @@ const Table: React.FC = () => {
   const [format, setFormat] = useState<{ label: string; value: number } | null>(
     null
   )
-  // const [filteredTableData, setFilteredTableData] = useState<DeviceData[]>([]);
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string

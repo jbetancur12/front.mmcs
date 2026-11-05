@@ -108,29 +108,6 @@ const Table: React.FC = () => {
     }
   }
 
-  // const updateUser = async (userData: UserData) => {
-
-  //   try {
-  //     const response = await axiosPrivate.put(`/users/${userData.id}`, userData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Usuario Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear usuario');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
-
   const handleCreateNewRow = (values: Record<string, string>) => {
     onCreateUser(values)
     setCreateModalOpen(false)

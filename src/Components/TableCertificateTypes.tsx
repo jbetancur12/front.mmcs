@@ -64,7 +64,6 @@ const Table: React.FC = () => {
   const createCertificateTypeMutation = useCreateCertificateType()
   const updateCertificateTypeMutation = useUpdateCertificateType()
   const deleteCertificateTypeMutation = useDeleteCertificateType()
-  // const [filteredTableData, setFilteredTableData] = useState<CertificateTypeData[]>([]);
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -91,29 +90,6 @@ const Table: React.FC = () => {
       logger.error('Error de red:', error)
     }
   }
-
-  // const updateUser = async (certificateTypeData: CertificateTypeData) => {
-
-  //   try {
-  //     const response = await axiosPrivate.put(`/certificateTypes/${certificateTypeData.id}`, certificateTypeData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Equipo Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear tipo de certificado');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
 
   const handleCreateNewRow = (values: Record<string, string>) => {
     onCreateCertificateType(values)

@@ -96,29 +96,6 @@ const Table: React.FC = () => {
     }
   }
 
-  // const updateCustomer = async (customerData: CustomerData) => {
-
-  //   try {
-  //     const response = await axiosPrivate.put(`/customers/${customerData.id}`, customerData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Cliente Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear cliente');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
-
   useEffect(() => {
     const savedFilters = sessionStorage.getItem('columnFiltersCustomers')
     if (savedFilters) {
