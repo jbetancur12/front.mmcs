@@ -79,13 +79,28 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
     }
   })
 
-  const { data: reusableCodes = [] } = useReusableCodes(
-    formik.values.serviceType
-  )
+  const { data: reusableCodes = [] } = useReusableCodes()
 
-  // El código liberado depende del tipo de servicio: al cambiarlo se limpia.
+  const normalizedServiceType = String(formik.values.serviceType ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+  const expectedPrefix =
+    normalizedServiceType === 'equipo de prestamo' ? 'PRES-' : 'MMCS-'
+  const availableCodes = formik.values.serviceType
+    ? (reusableCodes as Array<Record<string, unknown>>).filter((code) =>
+        String(code.internalCode ?? '').startsWith(expectedPrefix)
+      )
+    : (reusableCodes as Array<Record<string, unknown>>)
+
+  // Si el código elegido no corresponde al tipo de servicio, se limpia.
   useEffect(() => {
-    formik.setFieldValue('internalCode', '')
+    const selected = String(formik.values.internalCode ?? '')
+    if (!selected || !formik.values.serviceType) return
+    if (!selected.startsWith(expectedPrefix)) {
+      formik.setFieldValue('internalCode', '')
+    }
     // Solo cuando cambia el tipo de servicio.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.serviceType])
@@ -249,10 +264,14 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
           value={formik.values.internalCode}
           onChange={formik.handleChange}
           sx={{ gridColumn: { sm: '1 / -1' } }}
-          helperText='Automático usa el siguiente consecutivo. También puedes reutilizar un código liberado por un equipo dado de baja.'
+          helperText={
+            formik.values.serviceType
+              ? 'Automático usa el siguiente consecutivo. También puedes reutilizar un código liberado compatible con el tipo de servicio.'
+              : 'Selecciona el tipo de servicio para filtrar los códigos liberados. Mientras tanto se muestran todos.'
+          }
         >
           <MuiMenuItem value=''>Automático (siguiente)</MuiMenuItem>
-          {(reusableCodes as Array<Record<string, unknown>>).map((code) => {
+          {availableCodes.map((code) => {
             const value = String(code.internalCode ?? '')
             const name = String(code.equipmentName ?? 'Equipo anterior')
             return (
@@ -261,6 +280,11 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
               </MuiMenuItem>
             )
           })}
+          {availableCodes.length === 0 && (
+            <MuiMenuItem value='__sin_codigos__' disabled>
+              No hay códigos liberados
+            </MuiMenuItem>
+          )}
         </TextField>
         {columns
           .filter(

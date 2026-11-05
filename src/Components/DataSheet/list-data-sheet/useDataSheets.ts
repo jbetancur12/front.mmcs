@@ -113,7 +113,6 @@ export const useReusableCodes = (serviceType?: string) => {
       return Array.isArray(response.data) ? response.data : []
     },
     {
-      enabled: Boolean(serviceType),
       staleTime: 30 * 1000,
       onError: (error) => {
         logger.error('Error fetching reusable dataSheet codes:', error)
