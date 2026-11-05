@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-// import { sentryVitePlugin } from '@sentry/vite-plugin'
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -40,24 +39,7 @@ export default defineConfig({
         )
       }
     }
-    // sentryVitePlugin({
-    //   org: 'metromedics',
-    //   project: 'javascript-react'
-    // })
   ],
-
-  // server: {
-  //   proxy: {
-  //     '/lms': {
-  //       target: 'http://localhost:5050',
-  //       changeOrigin: true
-  //     },
-  //     '/api': {
-  //       target: 'http://localhost:5050',
-  //       changeOrigin: true
-  //     }
-  //   }
-  // },
 
   build: {
     sourcemap: false,
