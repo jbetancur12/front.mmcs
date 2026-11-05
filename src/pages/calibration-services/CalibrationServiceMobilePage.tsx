@@ -32,7 +32,16 @@ import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined'
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
-  CalibrationServiceCut, CalibrationServiceDocument, CalibrationServiceOperationalItemStatus, CalibrationServiceStatus
+  CalibrationService,
+  CalibrationServiceAdjustment,
+  CalibrationServiceCustomer,
+  CalibrationServiceCut,
+  CalibrationServiceDocument,
+  CalibrationServiceItem,
+  CalibrationServiceLogisticsControlSheet,
+  CalibrationServiceLogisticsInspectionValue,
+  CalibrationServiceOperationalItemStatus,
+  CalibrationServiceStatus
 } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_STATUS_LABELS,
@@ -77,14 +86,40 @@ const CUT_STATUSES: Record<string, { label: string; color: string }> = {
   invoiced: { label: 'Facturado', color: G.gray600 }
 }
 
-const getOps = (s: any) => (s?.otherFields?.operations || {})
-const getScheduledDate = (s: any) => getOps(s)?.scheduledDate || getOps(s)?.scheduledFor
+interface ServiceOperationsFields {
+  scheduledDate?: string
+  scheduledFor?: string
+  deliveryName?: string
+  deliveryRole?: string
+  deliverySignatureData?: string | null
+}
 
-const getEffectiveQty = (item: any, adjustments: any[] = []) => {
+interface ServiceOtherFields {
+  operations?: ServiceOperationsFields
+  logistics?: { controlSheet?: Partial<CalibrationServiceLogisticsControlSheet> }
+}
+
+interface ItemOtherFields {
+  operationalStatus?: CalibrationServiceOperationalItemStatus
+  technicalNotes?: string
+  executedQuantity?: number | string | null
+  releasedQuantity?: number | string | null
+}
+
+const otherFieldsOf = (s?: CalibrationService | null): ServiceOtherFields =>
+  (s?.otherFields ?? {}) as ServiceOtherFields
+
+const itemFieldsOf = (item: CalibrationServiceItem): ItemOtherFields =>
+  (item.otherFields ?? {}) as ItemOtherFields
+
+const getOps = (s?: CalibrationService | null) => otherFieldsOf(s).operations || {}
+const getScheduledDate = (s?: CalibrationService | null) => getOps(s)?.scheduledDate || getOps(s)?.scheduledFor
+
+const getEffectiveQty = (item: CalibrationServiceItem, adjustments: CalibrationServiceAdjustment[] = []) => {
   const base = item.quantity || 1
   const approvedStatuses = ['approved', 'applied_to_cut', 'customer_approved', 'tacitly_accepted']
   const delta = adjustments.filter(a => a.serviceItemId === item.id && approvedStatuses.includes(a.status) && a.changeType !== 'extra_item')
-    .reduce((sum: number, a: any) => sum + (a.differenceQuantity || 0), 0)
+    .reduce((sum: number, a) => sum + (a.differenceQuantity || 0), 0)
   return Math.max(base + delta, 0)
 }
 
@@ -96,17 +131,18 @@ const sheetSx = {
   '& .MuiDialogActions-root .MuiButton-root': { minHeight: 44, borderRadius: '12px', textTransform: 'none', fontWeight: 600 }
 } as const
 
-const getReleased = (item: any) => {
-  const value = item.otherFields?.releasedQuantity
-  return typeof value === 'number' ? value : (parseInt(value, 10) || 0)
+const getReleased = (item: CalibrationServiceItem) => {
+  const value = itemFieldsOf(item).releasedQuantity
+  return typeof value === 'number' ? value : (parseInt(String(value ?? ''), 10) || 0)
 }
 
-const getSavedExecuted = (item: any, adjustments: any[] = []) => {
+const getSavedExecuted = (item: CalibrationServiceItem, adjustments: CalibrationServiceAdjustment[] = []) => {
+  const fields = itemFieldsOf(item)
   const effective = getEffectiveQty(item, adjustments)
-  const stored = Number(item.otherFields?.executedQuantity)
-  const recorded = Number.isFinite(stored) && item.otherFields?.executedQuantity !== null && item.otherFields?.executedQuantity !== undefined
+  const stored = Number(fields.executedQuantity)
+  const recorded = Number.isFinite(stored) && fields.executedQuantity !== null && fields.executedQuantity !== undefined
     ? stored
-    : (item.otherFields?.operationalStatus === 'completed' ? effective : 0)
+    : (fields.operationalStatus === 'completed' ? effective : 0)
   return Math.min(Math.max(recorded, getReleased(item)), effective)
 }
 
@@ -130,7 +166,7 @@ const MobilePage = () => {
   const cuts = s?.cuts || []
   const status = s?.status || ''
   const scheduledDate = getScheduledDate(s)
-  const paused = Boolean((s as any)?.isPaused)
+  const paused = Boolean(s?.isPaused)
 
   // Execution state
   const [draftItems, setDraftItems] = useState<Record<number, CalibrationServiceOperationalItemStatus>>({})
@@ -148,8 +184,8 @@ const MobilePage = () => {
   // Pre-fill logistics fields when dialog opens from service data
   useEffect(() => {
     if (!showLogistics || !s) return
-    const existing: any = (s.otherFields as any)?.logistics?.controlSheet || {}
-    const cust = s.customer as any || {}
+    const existing = otherFieldsOf(s).logistics?.controlSheet || {}
+    const cust: Partial<CalibrationServiceCustomer> = s.customer ?? {}
     setLogCompany(existing.requesterCompanyName ?? cust.nombre ?? '')
     setLogOffer(existing.requesterOfferNumber ?? s.quoteCode ?? '')
     setLogIntake(existing.intakeDate ?? '')
@@ -158,7 +194,7 @@ const MobilePage = () => {
     setLogPhone(existing.requesterPhone ?? cust.telefono ?? '')
     setLogContact(existing.requesterContactName ?? s.contactName ?? '')
     setLogCity(existing.requesterCity ?? cust.ciudad ?? '')
-    setLogEquipment((existing.items || []).map((i: any) => ({
+    setLogEquipment((existing.items || []).map((i) => ({
       equipmentName: i.equipmentName || '', brand: i.brand || '', model: i.model || '',
       serial: i.serialNumber || '', asset: i.assetNumber || '', location: i.location || '',
       physIn: i.physicalInspectionIn ?? null, physOut: i.physicalInspectionOut ?? null,
@@ -248,26 +284,26 @@ const MobilePage = () => {
   }, [s?.id])
 
   // Los borradores se rehacen cuando cambia lo guardado (por ejemplo, al iniciar la ejecución el servidor mueve el estado de los ítems)
-  const savedItemsKey = JSON.stringify((s?.items || []).map((i: any) => [i.id, i.quantity, i.otherFields?.operationalStatus, i.otherFields?.technicalNotes, i.otherFields?.executedQuantity, i.otherFields?.releasedQuantity])) + (s?.adjustments?.length ?? 0)
+  const savedItemsKey = JSON.stringify((s?.items || []).map((i) => [i.id, i.quantity, i.otherFields?.operationalStatus, i.otherFields?.technicalNotes, i.otherFields?.executedQuantity, i.otherFields?.releasedQuantity])) + (s?.adjustments?.length ?? 0)
   useEffect(() => {
     if (!s) return
     setDraftItems({}); setDraftNotes({}); setDraftExecuted({})
     for (const item of (s.items || [])) {
-      const st = (item as any).otherFields?.operationalStatus || 'pending'
+      const st = itemFieldsOf(item).operationalStatus || 'pending'
       setDraftItems(p => ({ ...p, [item.id]: st }))
-      setDraftNotes(p => ({ ...p, [item.id]: (item as any).otherFields?.technicalNotes || '' }))
+      setDraftNotes(p => ({ ...p, [item.id]: itemFieldsOf(item).technicalNotes || '' }))
       setDraftExecuted(p => ({ ...p, [item.id]: getSavedExecuted(item, s.adjustments) }))
     }
   }, [s?.id, savedItemsKey])
 
   const allCompleted = useMemo(() => items.length > 0 && items.every(i => draftItems[i.id] === 'completed'), [items, draftItems])
 
-  const apiCall = async (method: string, url: string, body?: any) => {
-    const res = await axiosPrivate({ method, url, data: body } as any)
+  const apiCall = async (method: string, url: string, body?: unknown) => {
+    const res = await axiosPrivate({ method, url, data: body })
     return res.data
   }
 
-  const handleAction = async (key: string, fn: () => Promise<any>, msg: string, onDone?: () => void) => {
+  const handleAction = async (key: string, fn: () => Promise<unknown>, msg: string, onDone?: () => void) => {
     setActionLoading(key)
     try { await serviceActionMutation.mutateAsync(fn); toast.success(msg); onDone?.() }
     catch (e: unknown) { toast.error(getApiErrorReason(e) || `Error: ${msg}`) }
@@ -283,12 +319,12 @@ const MobilePage = () => {
     }))
   })
 
-  const setItemStatus = (item: any, next: CalibrationServiceOperationalItemStatus) => {
+  const setItemStatus = (item: CalibrationServiceItem, next: CalibrationServiceOperationalItemStatus) => {
     setDraftItems(p => ({ ...p, [item.id]: next }))
     if (next === 'completed') setDraftExecuted(p => ({ ...p, [item.id]: getEffectiveQty(item, s?.adjustments) }))
   }
 
-  const changeExecuted = (item: any, delta: number) => {
+  const changeExecuted = (item: CalibrationServiceItem, delta: number) => {
     const max = getEffectiveQty(item, s?.adjustments)
     setDraftExecuted(p => ({ ...p, [item.id]: Math.min(Math.max((p[item.id] ?? 0) + delta, getReleased(item)), max) }))
   }
@@ -326,16 +362,16 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
   }, [showCut])
   const cutSelected = cutCandidates.filter(c => cutSel[c.item.id]?.on && (cutSel[c.item.id]?.qty ?? 0) > 0)
 
-  const adjustments = (s?.adjustments || []) as any[]
+  const adjustments = s?.adjustments || []
   const completedCount = items.filter(i => draftItems[i.id] === 'completed').length
   const pendingCount = items.length - completedCount
   const dirty = items.some(i => {
-    const savedStatus = (i as any).otherFields?.operationalStatus || 'pending'
-    const savedNotes = (i as any).otherFields?.technicalNotes || ''
+    const savedStatus = itemFieldsOf(i).operationalStatus || 'pending'
+    const savedNotes = itemFieldsOf(i).technicalNotes || ''
     return (draftItems[i.id] || 'pending') !== savedStatus || (draftNotes[i.id] || '') !== savedNotes
       || (draftExecuted[i.id] ?? 0) !== getSavedExecuted(i, s?.adjustments)
   })
-  const controlSheet: any = (s?.otherFields as any)?.logistics?.controlSheet || {}
+  const controlSheet = otherFieldsOf(s).logistics?.controlSheet || {}
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([s?.address, s?.city].filter(Boolean).join(', '))}`
   const canEditItems = !paused && ['scheduled', 'in_execution'].includes(status)
   const canCreateCut = ['in_execution', 'technically_completed'].includes(status)
@@ -606,7 +642,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
               <Typography sx={{ ...sectionTitle, mt: 1 }}>Novedades del servicio ({adjustments.length})</Typography>
               {adjustments.length === 0 ? (
                 <Typography variant='body2' sx={{ color: G.gray600 }}>Aún no hay novedades. Si algo no coincide con la cotización, repórtalo aquí.</Typography>
-              ) : adjustments.map((adj: any) => (
+              ) : adjustments.map((adj) => (
                 <Card key={adj.id} elevation={0} sx={cardSx}>
                   <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
                     <Stack spacing={0.75}>
@@ -937,8 +973,10 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                   rowNumber: i + 1, equipmentName: e.equipmentName, brand: e.brand || null, model: e.model || null,
                   serialNumber: e.serial || null, assetNumber: e.asset || null, location: e.location || null,
                   serviceScope: 'NA',
-                  physicalInspectionIn: e.physIn as any, physicalInspectionOut: e.physOut as any,
-                  operationalInspectionIn: e.opIn as any, operationalInspectionOut: e.opOut as any
+                  physicalInspectionIn: e.physIn as CalibrationServiceLogisticsInspectionValue | null,
+                  physicalInspectionOut: e.physOut as CalibrationServiceLogisticsInspectionValue | null,
+                  operationalInspectionIn: e.opIn as CalibrationServiceLogisticsInspectionValue | null,
+                  operationalInspectionOut: e.opOut as CalibrationServiceLogisticsInspectionValue | null
                 }))
               })
             }, 'Control guardado', () => setShowLogistics(false))} disabled={actionLoading === 'log'}
@@ -958,7 +996,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
             <Stack spacing={2} sx={{ mt: 1 }}>
               <FormControl fullWidth size='small'>
                 <InputLabel>Tipo</InputLabel>
-                <Select value={traceMovement} label='Tipo' onChange={e => setTraceMovement(e.target.value as any)}>
+                <Select value={traceMovement} label='Tipo' onChange={e => setTraceMovement(e.target.value as 'pickup' | 'delivery')}>
                   <MenuItem value='pickup'>Recogida</MenuItem>
                   <MenuItem value='delivery'>Entrega</MenuItem>
                 </Select>
