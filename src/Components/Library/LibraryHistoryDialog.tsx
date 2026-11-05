@@ -28,6 +28,8 @@ interface LibraryHistoryDialogProps {
   onView: (document: LibraryDocument) => void
   /** El usuario tiene el permiso de descargar los archivos originales. */
   canDownloadSource: boolean
+  /** El usuario tiene el permiso de descargar el PDF. */
+  canDownloadPdf: boolean
 }
 
 /** Todas las versiones de un documento; la vigente va marcada. */
@@ -35,7 +37,8 @@ const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
   document,
   onClose,
   onView,
-  canDownloadSource
+  canDownloadSource,
+  canDownloadPdf
 }) => {
   const { data: versions, isLoading } = useLibraryHistory(document?.id ?? null)
 
@@ -115,14 +118,16 @@ const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
                     <VisibilityOutlined fontSize='small' />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title='Descargar PDF'>
-                  <IconButton
-                    aria-label={`Descargar PDF de la versión ${version.version}`}
-                    onClick={() => downloadLibraryPdf(version)}
-                  >
-                    <FileDownloadOutlined fontSize='small' />
-                  </IconButton>
-                </Tooltip>
+                {canDownloadPdf && (
+                  <Tooltip title='Descargar PDF'>
+                    <IconButton
+                      aria-label={`Descargar PDF de la versión ${version.version}`}
+                      onClick={() => downloadLibraryPdf(version)}
+                    >
+                      <FileDownloadOutlined fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 {canDownloadSource && version.hasSource && (
                   <Tooltip title='Descargar archivo original'>
                     <IconButton

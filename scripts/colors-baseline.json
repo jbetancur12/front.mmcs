@@ -82,7 +82,6 @@
   "src/Components/LaboratoryMonitor/views/CalibrationChamberView.tsx": 5,
   "src/Components/LaboratoryMqttGuide.tsx": 10,
   "src/Components/Library/LibraryHistoryDialog.tsx": 3,
-  "src/Components/Library/LibraryPdfDialog.tsx": 2,
   "src/Components/lms/admin/plans/PlanAssignDialog.tsx": 4,
   "src/Components/lms/admin/plans/PlanComplianceTab.tsx": 1,
   "src/Components/lms/admin/plans/PlanDestinationsDialog.tsx": 1,

@@ -210,8 +210,10 @@ export const PERMISSIONS = {
   NONCONFORM_REPORT_VIEW: 'nonconform:report:view',
   /** Crear, editar y eliminar informes de trabajo no conforme */
   NONCONFORM_REPORT_MANAGE: 'nonconform:report:manage',
-  /** Consultar y descargar los documentos de gestión y técnicos de la biblioteca */
+  /** Consultar los documentos vigentes de la biblioteca en el visor */
   LIBRARY_DOCUMENT_VIEW: 'library:document:view',
+  /** Descargar el PDF de los documentos de la biblioteca */
+  LIBRARY_DOCUMENT_DOWNLOAD: 'library:document:download',
   /** Agregar, actualizar versión, editar y eliminar documentos de la biblioteca */
   LIBRARY_DOCUMENT_MANAGE: 'library:document:manage',
   /** Descargar los archivos originales editables (Word o Excel) de los documentos de la biblioteca */

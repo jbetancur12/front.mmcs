@@ -518,8 +518,13 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
   // --- Biblioteca (Calidad)
   'library:document:view': [
     'Consultar la biblioteca',
-    'Consultar y descargar los documentos vigentes de la biblioteca.',
-    'Biblioteca: listado de documentos y visor del PDF.'
+    'Consultar los documentos vigentes de la biblioteca en el visor, sin descargar el PDF.',
+    'Biblioteca: listado de documentos y visor por páginas.'
+  ],
+  'library:document:download': [
+    'Descargar los PDF de la biblioteca',
+    'Descargar el PDF de un documento de la biblioteca. Sin este permiso solo se puede consultar en el visor.',
+    'Biblioteca: botón de descargar PDF en el listado, el visor y el historial.'
   ],
   'library:document:manage': [
     'Administrar la biblioteca',
