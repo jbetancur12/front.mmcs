@@ -183,24 +183,10 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     keywords: ['archivos', 'documentos']
   },
   {
-    label: 'Manipulación de Excel',
-    path: '/excel-manipulation',
-    parents: ['Herramientas'],
-    permission: PERMISSIONS.TOOLS_UTILITY_USE,
-    keywords: ['xlsx', 'hoja de calculo']
-  },
-  {
     label: 'Generador de scripts PDF',
     path: '/pdf-script',
     parents: ['Herramientas'],
     permission: PERMISSIONS.TOOLS_UTILITY_USE,
     keywords: ['plantillas', 'certificados']
-  },
-  {
-    label: 'Gotenberg',
-    path: '/gotemberg',
-    parents: ['Herramientas'],
-    permission: PERMISSIONS.TOOLS_UTILITY_USE,
-    keywords: ['convertir', 'pdf']
   }
 ]
