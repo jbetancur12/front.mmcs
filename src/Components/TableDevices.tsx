@@ -280,27 +280,6 @@ const Table: React.FC = () => {
           />
         )
       }
-
-      // {
-      //   accessorKey: 'repository.name',
-      //   header: 'Formato',
-
-      //   Edit: () => (
-      //     <AsyncSelect
-      //       cacheOptions
-      //       // defaultOptions
-
-      //       placeholder='Buscar Formato'
-      //       loadOptions={(inputValue) =>
-      //         loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
-      //           mapOptions(item, 'id', 'name')
-      //         )
-      //       }
-      //       onChange={(selectedOption) => setFormat(selectedOption)}
-      //       styles={styles(false)}
-      //     />
-      //   )
-      // }
     ],
     [getCommonEditTextFieldProps]
   )

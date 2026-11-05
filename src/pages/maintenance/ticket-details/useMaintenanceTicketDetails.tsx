@@ -613,64 +613,6 @@ const useMaintenanceTicketDetails = () => {
     }
   }
 
-  // const handleGenerateStatusReport = () => {
-  //   if (!ticketId) return
-  //   generateStatusReportMutation.mutate(ticketId, {
-  //     onSuccess: () => {
-  //       showToast('Reporte de estado generado exitosamente', 'success')
-  //       setPdfMenuAnchor(null)
-  //     },
-  //     onError: (error) => {
-  //       console.error('Error generating status report:', error)
-  //       showToast('Error al generar reporte de estado', 'error')
-  //     }
-  //   })
-  // }
-
-  // const handleGenerateServiceCertificate = () => {
-  //   if (ticket?.status !== MaintenanceStatus.COMPLETED) {
-  //     showToast(
-  //       'El certificado solo se puede generar para tickets completados',
-  //       'warning'
-  //     )
-  //     return
-  //   }
-
-  //   if (!ticketId) return
-  //   generateServiceCertificateMutation.mutate(ticketId, {
-  //     onSuccess: () => {
-  //       showToast('Certificado de servicio generado exitosamente', 'success')
-  //       setPdfMenuAnchor(null)
-  //     },
-  //     onError: (error) => {
-  //       console.error('Error generating service certificate:', error)
-  //       showToast('Error al generar certificado de servicio', 'error')
-  //     }
-  //   })
-  // }
-
-  // const handleGenerateInvoice = () => {
-  //   if (!ticket?.actualCost && !ticket?.estimatedCost) {
-  //     showToast(
-  //       'Debe haber un costo especificado para generar factura',
-  //       'warning'
-  //     )
-  //     return
-  //   }
-
-  //   if (!ticketId) return
-  //   generateServiceInvoiceMutation.mutate(ticketId, {
-  //     onSuccess: () => {
-  //       showToast('Factura generada exitosamente', 'success')
-  //       setPdfMenuAnchor(null)
-  //     },
-  //     onError: (error) => {
-  //       console.error('Error generating invoice:', error)
-  //       showToast('Error al generar factura', 'error')
-  //     }
-  //   })
-  // }
-
   const handlePdfMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setPdfMenuAnchor(event.currentTarget)
   }
