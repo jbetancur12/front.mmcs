@@ -83,8 +83,8 @@ interface CourseMetrics {
     enrollmentCount: number
     averageRating: number | null
     isMandatory: boolean
-    timeToComplete: number
-    trend: 'up' | 'down' | 'stable'
+    timeToComplete?: number
+    trend?: 'up' | 'down' | 'stable'
   }>
   topPerformingCourses?: Array<{
     courseId: number
@@ -92,8 +92,8 @@ interface CourseMetrics {
     completionRate: number
     totalUsers: number
     isMandatory: boolean
-    timeToComplete: number
-    trend: 'up' | 'down' | 'stable'
+    timeToComplete?: number
+    trend?: 'up' | 'down' | 'stable'
   }>
   underperformingCourses?: Array<{
     courseId: number
@@ -101,8 +101,8 @@ interface CourseMetrics {
     completionRate: number
     totalUsers: number
     isMandatory: boolean
-    timeToComplete: number
-    trend: 'up' | 'down' | 'stable'
+    timeToComplete?: number
+    trend?: 'up' | 'down' | 'stable'
   }>
   timeToCompletionAnalytics?: {
     average: number

@@ -53,6 +53,7 @@ import {
 } from '../../../hooks/useLms'
 import { LmsQuizAnalyticsPanel } from './LmsQuizAnalytics'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import type { ComprehensiveDashboard } from '../../../services/lmsService'
 
 type DashboardFilters = {
   startDate?: string
@@ -148,11 +149,46 @@ const LmsAnalytics: React.FC = () => {
     }
   )
 
-  const metrics = dashboard?.metrics || {}
-  const userAnalytics = dashboard?.userAnalytics || {}
-  const courseMetrics = dashboard?.courseMetrics || {}
-  const quizAnalytics = dashboard?.quizAnalytics || {}
-  const assignmentStatus = dashboard?.assignmentStatus || {}
+  const metrics: ComprehensiveDashboard['metrics'] = dashboard?.metrics ?? {
+    totalUsers: 0,
+    totalCourses: 0,
+    totalCertificates: 0,
+    completionRate: 0,
+    activeUsers: 0,
+    pendingAssignments: 0,
+    overdueTraining: 0
+  }
+  const userAnalytics: ComprehensiveDashboard['userAnalytics'] =
+    dashboard?.userAnalytics ?? {
+      totalUsers: 0,
+      internalUsers: 0,
+      clientUsers: 0,
+      activeUsers: 0,
+      completionRateByUserType: { internal: 0, client: 0 },
+      progressDistribution: { notStarted: 0, inProgress: 0, completed: 0 }
+    }
+  const courseMetrics: ComprehensiveDashboard['courseMetrics'] =
+    dashboard?.courseMetrics ?? {
+      totalCourses: 0,
+      publishedCourses: 0,
+      draftCourses: 0,
+      averageCompletionRate: 0,
+      averageTimeSpent: 0,
+      topPerformingCourses: [],
+      underperformingCourses: []
+    }
+  const quizAnalytics: ComprehensiveDashboard['quizAnalytics'] = dashboard?.quizAnalytics ?? {}
+  const assignmentStatus: ComprehensiveDashboard['assignmentStatus'] =
+    dashboard?.assignmentStatus ?? {
+      totalAssignments: 0,
+      completedAssignments: 0,
+      pendingAssignments: 0,
+      overdueAssignments: 0,
+      upcomingDeadlines: [],
+      complianceByRole: [],
+      complianceRate: 0,
+      usersAtRisk: 0
+    }
   const generatedAt = dashboard?.generatedAt
 
   useEffect(() => {
@@ -502,7 +538,7 @@ const LmsAnalytics: React.FC = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {topCourses.map((course: any) => (
+                            {topCourses.map((course) => (
                               <TableRow key={course.courseId}>
                                 <TableCell>{course.title}</TableCell>
                                 <TableCell align='right'>{formatPercent(course.completionRate)}</TableCell>
@@ -530,7 +566,7 @@ const LmsAnalytics: React.FC = () => {
                         <Alert severity='success'>No hay cursos por debajo del umbral actual.</Alert>
                       ) : (
                         <Stack spacing={2}>
-                          {underperformingCourses.map((course: any) => (
+                          {underperformingCourses.map((course) => (
                             <Box key={course.courseId}>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                                 <Typography variant='body2'>{course.title}</Typography>
@@ -584,7 +620,7 @@ const LmsAnalytics: React.FC = () => {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {complianceByRole.map((role: any, index: number) => (
+                              {complianceByRole.map((role, index: number) => (
                                 <TableRow key={`${role.role || 'role'}-${index}`}>
                                   <TableCell>{role.role || 'Sin rol'}</TableCell>
                                   <TableCell align='right'>{formatPercent(role.complianceRate)}</TableCell>
@@ -651,7 +687,7 @@ const LmsAnalytics: React.FC = () => {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {upcomingDeadlines.map((deadline: any) => (
+                              {upcomingDeadlines.map((deadline) => (
                                 <TableRow key={`${deadline.courseId}-${deadline.deadline}`}>
                                   <TableCell>{deadline.courseTitle}</TableCell>
                                   <TableCell align='right'>{safeNumber(deadline.pendingUsers || deadline.assignedUsers)}</TableCell>

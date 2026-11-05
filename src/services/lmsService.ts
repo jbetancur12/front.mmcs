@@ -1222,6 +1222,374 @@ export interface CourseReviewResponse {
 }
 
 // ===========================
+// Analítica administrativa
+// ===========================
+
+export interface CourseRanking {
+  courseId: number
+  title: string
+  completionRate: number
+  totalUsers: number
+  isMandatory: boolean
+}
+
+export interface UpcomingDeadline {
+  courseId: number
+  courseTitle: string
+  deadline: string
+  assignedUsers: number
+  pendingUsers: number
+  daysUntilDeadline: number | null
+}
+
+export interface ComplianceByRole {
+  role: string
+  totalAssignments: number
+  completedAssignments: number
+  complianceRate: number
+  overdueCount: number
+  overdueUsers: number
+  totalUsers: number
+  averageCompletionTime: number
+}
+
+export interface ComplianceByDepartment {
+  department: string
+  totalUsers: number
+  compliantUsers: number
+  complianceRate: number
+}
+
+export interface QuizQuestionPerformance {
+  questionId: number
+  questionText: string
+  successRate: number
+  courseTitle: string
+  quizTitle: string
+  totalAttempts: number
+  averageTimeSpent: number | null
+  difficultyLevel: 'easy' | 'medium' | 'hard' | 'very_hard'
+  needsReview?: boolean
+}
+
+export interface QuizPerformanceAnalytics {
+  totalQuizzes?: number
+  averageScore?: number
+  averageAttempts?: number
+  passRate?: number
+  difficultQuestions?: QuizQuestionPerformance[]
+  timeSpentAnalysis?: {
+    average: number
+    median: number
+    distribution: number[]
+  }
+  trendsData?: Array<{
+    date: string
+    passRate: number
+    failRate: number
+    averageScore: number
+    totalAttempts: number
+  }>
+  retryPatterns?: {
+    averageRetries: number
+    retrySuccessRate: number
+    retryDistribution: Array<{
+      attemptNumber: number
+      count: number
+      successRate: number
+    }>
+  }
+  questionDifficultyHeatmap?: QuizQuestionPerformance[]
+  recommendations?: Array<{
+    type: 'question_review' | 'content_improvement' | 'time_adjustment' | 'difficulty_balance'
+    priority: 'high' | 'medium' | 'low'
+    title: string
+    description: string
+    actionItems: string[]
+    affectedQuestions?: number[]
+  }>
+}
+
+export interface CourseCompletionMetrics {
+  totalUsers: number
+  completed: number
+  inProgress: number
+  notStarted: number
+  completionRate: number
+  engagementRate: number
+}
+
+export interface CourseTimeMetrics {
+  totalTimeSpent: number
+  averageTimePerUser: number
+  averageSessionTime: number
+  totalSessions: number
+}
+
+export interface CourseQuizAnalytics {
+  quizzes: QuizPerformanceAnalytics[]
+  overall: {
+    totalQuizzes: number
+    averagePassRate: number
+    averageScore: number
+    totalAttempts: number
+    hardQuestions: number
+  }
+}
+
+export interface CourseAnalytics {
+  courseId: number
+  courseTitle: string
+  courseStatus: string
+  isMandatory: boolean
+  audience: CourseAudience
+  hasCertificate: boolean
+  eligibleUsers: number
+  completion: CourseCompletionMetrics
+  timeMetrics: CourseTimeMetrics
+  quizAnalytics: CourseQuizAnalytics
+  certificates: {
+    issued: number
+    issuanceRate: number
+  }
+}
+
+export interface CourseAnalyticsResponse {
+  courses: CourseAnalytics[]
+  overall: {
+    totalCourses: number
+    averageCompletionRate: number
+    totalEligibleUsers: number
+    totalCompletedUsers: number
+    averageTimeSpent: number
+    totalCertificatesIssued: number
+    mandatoryCourses: number
+    optionalCourses: number
+  }
+  generatedAt?: string
+}
+
+export interface UserAnalyticsEntry {
+  userId: number
+  userName: string
+  email?: string
+  userType: 'internal' | 'client'
+  completion: {
+    totalCourses: number
+    completedCourses: number
+    inProgressCourses: number
+    notStartedCourses: number
+    completionRate: number
+  }
+}
+
+export interface UserAnalyticsResponse {
+  users: UserAnalyticsEntry[]
+  overall: {
+    totalUsers: number
+    activeUsers: number
+    internalUsers: number
+    clientUsers: number
+    totalTimeSpent: number
+  }
+  generatedAt?: string
+}
+
+export interface ComprehensiveDashboard {
+  metrics: {
+    totalUsers: number
+    totalCourses: number
+    totalCertificates: number
+    completionRate: number
+    activeUsers: number
+    pendingAssignments: number
+    overdueTraining: number
+  }
+  userAnalytics: {
+    totalUsers: number
+    internalUsers: number
+    clientUsers: number
+    activeUsers: number
+    completionRateByUserType: {
+      internal: number
+      client: number
+    }
+    progressDistribution: {
+      notStarted: number
+      inProgress: number
+      completed: number
+    }
+  }
+  courseMetrics: {
+    totalCourses: number
+    publishedCourses: number
+    draftCourses: number
+    averageCompletionRate: number
+    averageTimeSpent: number
+    topPerformingCourses: CourseRanking[]
+    underperformingCourses: CourseRanking[]
+  }
+  quizAnalytics: QuizPerformanceAnalytics
+  assignmentStatus: {
+    totalAssignments: number
+    completedAssignments: number
+    pendingAssignments: number
+    overdueAssignments: number
+    upcomingDeadlines: UpcomingDeadline[]
+    complianceByRole: ComplianceByRole[]
+    complianceRate: number
+    usersAtRisk: number
+  }
+  generatedAt: string
+}
+
+export interface AssignmentManagementAnalytics {
+  mandatoryTraining: {
+    totalAssignments: number
+    completedAssignments: number
+    overdueAssignments: number
+    upcomingDeadlines: UpcomingDeadline[]
+    complianceRate: number
+  }
+  complianceByRole: ComplianceByRole[]
+  complianceByDepartment: ComplianceByDepartment[]
+  deadlineTracking: {
+    upcomingDeadlines: UpcomingDeadline[]
+    overdueAssignments: number
+    criticalDeadlines: UpcomingDeadline[]
+    deadlineDistribution: Record<string, number>
+  }
+  roleInsights: Array<{
+    role: string
+    totalUsers: number
+    averageCoursesPerUser: number
+    completionRate: number
+    riskLevel: string
+    recommendations: string[]
+  }>
+  trends: {
+    assignmentTrends: Array<{ period: string; assignments: number; completed: number }>
+    completionTrends: Array<{ period: string; completionRate: number }>
+    complianceTrends: Array<{ period: string; complianceRate: number }>
+  }
+  recommendations: Array<{
+    type: string
+    priority: 'high' | 'medium' | 'low'
+    message: string
+    action: string
+    affectedUsers?: number
+    affectedRole?: string
+    affectedCourses?: string[]
+  }>
+  summary: {
+    totalUsers: number
+    totalMandatoryCourses: number
+    overallComplianceRate: number
+    averageCompletionTime: number
+    usersAtRisk: number
+  }
+}
+
+export interface MandatoryTrainingAnalytics {
+  courses: Array<{
+    courseId: number
+    courseTitle: string
+    courseStatus: string
+    totalAssigned: number
+    assignments: number
+    progress: {
+      completed: number
+      inProgress: number
+      notStarted: number
+      completionRate: number
+    }
+  }>
+  overall: {
+    totalMandatoryCourses: number
+    totalAssignedUsers: number
+    overallCompletionRate: number
+    totalOverdue: number
+    totalUrgent: number
+    criticalAlerts: number
+    warningAlerts: number
+    averageAssignmentsPerCourse: number
+  }
+  escalationSummary?: {
+    totalCritical: number
+    totalWarning: number
+    overdueUsers: number
+    urgentDeadlines: number
+  }
+  generatedAt?: string
+}
+
+export interface ManualReminderResult {
+  totalAssignments: number
+  successfulAssignments: number
+  totalNotifications: number
+  results: Array<{
+    assignmentId: number
+    success: boolean
+    notificationsSent?: number
+    usersNotified?: number
+    courseTitle?: string
+    message?: string
+    error?: string
+  }>
+}
+
+export interface AssignmentDateOverride {
+  id?: number
+  user_id: number
+  course_id: number
+  assigned_at?: string | null
+  deadline?: string | null
+  created_by?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CourseCompletionOverride {
+  userId: number
+  courseId: number
+  completedAt: string
+}
+
+export interface BulkCourseCompletionResult {
+  updated: Array<{ userId: number; courseId: number }>
+  skipped: Array<{ userId: number; courseId: number; reason: string }>
+}
+
+export interface LmsNotificationRecord {
+  id: string
+  title: string
+  message: string
+  severity: 'critical' | 'warning' | 'info' | 'system'
+  actionUrl?: string
+  actionLabel?: string
+  isRead?: boolean
+  createdAt?: string
+}
+
+/** Certificado emitido tal como lo devuelve la búsqueda de administración. */
+export interface AdminCertificateSearchResult {
+  id: number
+  certificateNumber: string
+  courseId: number
+  course_id: number
+  courseTitle: string | null
+  issuedAt: string
+  pdfPath?: string | null
+  hiddenByReset: boolean
+  userName: string
+  userEmail: string | null
+  userId: number
+  currentUserName: string | null
+  currentUserEmail: string | null
+  verificationUrl?: string
+}
+
+// ===========================
 // LMS Service
 // ===========================
 
@@ -1722,7 +2090,7 @@ class LMSService {
   /**
    * Get course analytics
    */
-  async getCourseAnalytics(courseId: number): Promise<any> {
+  async getCourseAnalytics(courseId: number): Promise<CourseAnalyticsResponse> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/course/${courseId}`)
     return response.data.analytics || response.data
   }
@@ -1730,7 +2098,7 @@ class LMSService {
   /**
    * Get user analytics
    */
-  async getUserAnalytics(userId?: number): Promise<any> {
+  async getUserAnalytics(userId?: number): Promise<UserAnalyticsResponse> {
     const url = userId
       ? `${this.baseURL}/analytics/user/${userId}`
       : `${this.baseURL}/analytics/user/me`
@@ -1746,7 +2114,7 @@ class LMSService {
     endDate?: string; 
     userType?: string;
     courseStatus?: string;
-  }): Promise<any> {
+  }): Promise<ComprehensiveDashboard> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/dashboard`, { params })
     return response.data.data
   }
@@ -1760,7 +2128,7 @@ class LMSService {
     startDate?: string;
     endDate?: string;
     includeQuestionAnalysis?: boolean;
-  }): Promise<any> {
+  }): Promise<QuizPerformanceAnalytics> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/quizzes/performance`, { params })
     return response.data.data
   }
@@ -1775,7 +2143,7 @@ class LMSService {
     startDate?: string;
     endDate?: string;
     includeOverdue?: boolean;
-  }): Promise<any> {
+  }): Promise<AssignmentManagementAnalytics> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/management`, { params })
     return response.data.data
   }
@@ -1803,7 +2171,7 @@ class LMSService {
     startDate?: string;
     endDate?: string;
     includeEscalation?: boolean;
-  }): Promise<any> {
+  }): Promise<MandatoryTrainingAnalytics> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/mandatory-training`, { params })
     return response.data.data
   }
@@ -1814,7 +2182,7 @@ class LMSService {
   async triggerManualReminders(data: {
     assignmentIds: number[];
     customMessage?: string;
-  }): Promise<any> {
+  }): Promise<ManualReminderResult> {
     const response = await axiosPrivate.post(`${this.baseURL}/analytics/reminders/trigger-manual`, data)
     return response.data.data
   }
@@ -1822,7 +2190,7 @@ class LMSService {
   /**
    * Override the completion date of a course for a single user (admin/compliance)
    */
-  async setCourseCompletionDate(userId: number, courseId: number, completedAt: string): Promise<any> {
+  async setCourseCompletionDate(userId: number, courseId: number, completedAt: string): Promise<CourseCompletionOverride> {
     const response = await axiosPrivate.put(
       `${this.baseURL}/progress/users/${userId}/courses/${courseId}/completed-at`,
       { completedAt }
@@ -1836,7 +2204,7 @@ class LMSService {
   async bulkSetCourseCompletionDates(
     completedAt: string,
     items: Array<{ userId: number; courseId: number }>
-  ): Promise<any> {
+  ): Promise<BulkCourseCompletionResult> {
     const response = await axiosPrivate.post(
       `${this.baseURL}/progress/completion-dates/bulk`,
       { completedAt, items }
@@ -1851,7 +2219,7 @@ class LMSService {
     userId: number,
     courseId: number,
     data: { assigned_at?: string | null; deadline?: string | null }
-  ): Promise<any> {
+  ): Promise<AssignmentDateOverride> {
     const response = await axiosPrivate.put(
       `${this.baseURL}/assignments/user-dates/${userId}/courses/${courseId}`,
       data
@@ -1862,11 +2230,10 @@ class LMSService {
   /**
    * Reset per-user assignment dates so the user inherits the group values
    */
-  async clearUserAssignmentDates(userId: number, courseId: number): Promise<any> {
-    const response = await axiosPrivate.delete(
+  async clearUserAssignmentDates(userId: number, courseId: number): Promise<void> {
+    await axiosPrivate.delete(
       `${this.baseURL}/assignments/user-dates/${userId}/courses/${courseId}`
     )
-    return response.data.data
   }
 
   /**
@@ -1875,7 +2242,7 @@ class LMSService {
   async updateAssignmentDates(
     assignmentId: number,
     data: { assigned_at?: string | null; deadline?: string | null }
-  ): Promise<any> {
+  ): Promise<CourseAssignment> {
     const response = await axiosPrivate.put(
       `${this.baseURL}/assignments/assignments/${assignmentId}`,
       data
@@ -1886,7 +2253,7 @@ class LMSService {
   /**
    * Clear every per-user date override of a course (all users back to group)
    */
-  async clearCourseUserDates(courseId: number): Promise<any> {
+  async clearCourseUserDates(courseId: number): Promise<{ deleted: number }> {
     const response = await axiosPrivate.delete(
       `${this.baseURL}/assignments/user-dates/courses/${courseId}`
     )
@@ -1896,11 +2263,10 @@ class LMSService {
   /**
    * Reset a user's progress for a course (admin). Keeps issued certificates.
    */
-  async resetUserCourseProgress(userId: number, courseId: number): Promise<any> {
-    const response = await axiosPrivate.delete(
+  async resetUserCourseProgress(userId: number, courseId: number): Promise<void> {
+    await axiosPrivate.delete(
       `${this.baseURL}/progress/users/${userId}/courses/${courseId}/reset`
     )
-    return response.data
   }
 
   /**
@@ -1916,7 +2282,7 @@ class LMSService {
   /**
    * Search issued certificates (admin). Includes hidden-by-reset ones.
    */
-  async searchAdminCertificates(params: { q?: string; courseId?: number }): Promise<any> {
+  async searchAdminCertificates(params: { q?: string; courseId?: number }): Promise<AdminCertificateSearchResult[]> {
     const response = await axiosPrivate.get(`${this.baseURL}/certificates/admin/search`, { params })
     return response.data?.data || []
   }
@@ -1994,7 +2360,7 @@ class LMSService {
     actionUrl?: string;
     actionLabel?: string;
     metadata?: Record<string, unknown>;
-  }): Promise<any> {
+  }): Promise<LmsNotificationRecord> {
     const response = await axiosPrivate.post(`${this.baseURL}/notifications`, data)
     return response.data
   }
@@ -2013,7 +2379,7 @@ class LMSService {
     resolved?: boolean;
     severity?: string;
     type?: string;
-  }): Promise<any[]> {
+  }): Promise<LmsNotificationRecord[]> {
     const response = await axiosPrivate.get(`${this.baseURL}/notifications/system-alerts`, { params })
     return response.data.alerts || response.data
   }
@@ -2026,7 +2392,7 @@ class LMSService {
     severity?: string;
     userId?: number;
     courseId?: number;
-  }): Promise<any[]> {
+  }): Promise<LmsNotificationRecord[]> {
     const response = await axiosPrivate.get(`${this.baseURL}/notifications/training-alerts`, { params })
     return response.data.alerts || response.data
   }

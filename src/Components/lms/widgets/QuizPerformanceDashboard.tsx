@@ -55,6 +55,7 @@ import {
   Legend
 } from 'recharts'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
+import type { QuizPerformanceAnalytics as QuizAnalytics } from '../../../services/lmsService'
 
 
 // Modern color palette
@@ -87,61 +88,6 @@ const getDifficultyColor = (successRate: number) => {
 }
 
 
-
-interface QuizAnalytics {
-  totalQuizzes?: number
-  averageScore?: number
-  averageAttempts?: number
-  passRate?: number
-  difficultQuestions?: Array<{
-    questionId: number
-    questionText: string
-    successRate: number
-    courseTitle: string
-    quizTitle: string
-    totalAttempts: number
-    averageTimeSpent: number | null
-    difficultyLevel: 'easy' | 'medium' | 'hard' | 'very_hard'
-  }>
-  timeSpentAnalysis?: {
-    average: number
-    median: number
-    distribution: number[]
-  }
-  trendsData?: Array<{
-    date: string
-    passRate: number
-    failRate: number
-    averageScore: number
-    totalAttempts: number
-  }>
-  retryPatterns?: {
-    averageRetries: number
-    retrySuccessRate: number
-    retryDistribution: Array<{
-      attemptNumber: number
-      count: number
-      successRate: number
-    }>
-  }
-  questionDifficultyHeatmap?: Array<{
-    questionId: number
-    questionText: string
-    successRate: number
-    totalAttempts: number
-    averageTimeSpent: number | null
-    courseTitle: string
-    quizTitle: string
-  }>
-  recommendations?: Array<{
-    type: 'question_review' | 'content_improvement' | 'time_adjustment' | 'difficulty_balance'
-    priority: 'high' | 'medium' | 'low'
-    title: string
-    description: string
-    actionItems: string[]
-    affectedQuestions?: number[]
-  }>
-}
 
 interface QuizPerformanceDashboardProps {
   data?: QuizAnalytics

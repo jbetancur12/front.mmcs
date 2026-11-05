@@ -52,6 +52,7 @@ import {
   WidgetErrorBoundary
 } from '../../../Components/lms/ErrorBoundary/DashboardErrorBoundaries'
 import { useErrorReporting } from '../../../services/errorReportingService'
+import type { ComprehensiveDashboard } from '../../../services/lmsService'
 import { MetricCardSkeleton } from '../../../Components/lms/LoadingStates/SkeletonComponents'
 import { MetricHelp, LMSMetricHelp } from '../../../Components/lms/Help/ContextualHelp'
 import { notify } from 'src/utils/notify'
@@ -122,10 +123,36 @@ const LmsAdmin: React.FC = () => {
   const recentCourses = coursesData?.courses || []
 
   // Extract data from comprehensive dashboard
-  const metrics = dashboardData?.metrics || {}
-  const courseMetrics = dashboardData?.courseMetrics || {}
-  const userAnalytics = dashboardData?.userAnalytics || {}
-  const quizMetrics = dashboardData?.quizAnalytics || {}
+  const metrics: ComprehensiveDashboard['metrics'] = dashboardData?.metrics ?? {
+    totalUsers: 0,
+    totalCourses: 0,
+    totalCertificates: 0,
+    completionRate: 0,
+    activeUsers: 0,
+    pendingAssignments: 0,
+    overdueTraining: 0
+  }
+  const courseMetrics: ComprehensiveDashboard['courseMetrics'] =
+    dashboardData?.courseMetrics ?? {
+      totalCourses: 0,
+      publishedCourses: 0,
+      draftCourses: 0,
+      averageCompletionRate: 0,
+      averageTimeSpent: 0,
+      topPerformingCourses: [],
+      underperformingCourses: []
+    }
+  const userAnalytics: ComprehensiveDashboard['userAnalytics'] =
+    dashboardData?.userAnalytics ?? {
+      totalUsers: 0,
+      internalUsers: 0,
+      clientUsers: 0,
+      activeUsers: 0,
+      completionRateByUserType: { internal: 0, client: 0 },
+      progressDistribution: { notStarted: 0, inProgress: 0, completed: 0 }
+    }
+  const quizMetrics: ComprehensiveDashboard['quizAnalytics'] =
+    dashboardData?.quizAnalytics ?? {}
   const currentUser = {
     id: $userStore.customer?.id || 1,
     email: $userStore.email || '',
