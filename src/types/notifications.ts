@@ -43,7 +43,11 @@ export interface NotificationWidgetProps {
 
 export interface SystemAlert {
   id: string
-  type: 'job_failure' | 'performance_issue' | 'connection_error' | 'storage_warning'
+  type:
+    | 'job_failure'
+    | 'performance_issue'
+    | 'connection_error'
+    | 'storage_warning'
   title: string
   description: string
   severity: NotificationSeverity
@@ -54,7 +58,11 @@ export interface SystemAlert {
 
 export interface TrainingAlert {
   id: string
-  type: 'mandatory_deadline' | 'low_completion' | 'certificate_expiry' | 'new_assignment'
+  type:
+    | 'mandatory_deadline'
+    | 'low_completion'
+    | 'certificate_expiry'
+    | 'new_assignment'
   title: string
   description: string
   severity: NotificationSeverity

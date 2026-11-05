@@ -64,7 +64,9 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
 const MAX_VISIBLE_SCREENS = 3
 
 /** Dónde se usa una capacidad en la plataforma: pantallas (URL del front) y acciones dentro de ellas. */
-export const ScreenInfo: React.FC<{ permissionKey: string }> = ({ permissionKey }) => {
+export const ScreenInfo: React.FC<{ permissionKey: string }> = ({
+  permissionKey
+}) => {
   const screens = PERMISSION_SCREENS[permissionKey] ?? []
   if (screens.length === 0) {
     return (
@@ -173,25 +175,25 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
   onToggleRole
 }) => {
   const [search, setSearch] = useState('')
-  const [menu, setMenu] = useState<{ anchor: HTMLElement; role: RbacRole } | null>(
-    null
-  )
+  const [menu, setMenu] = useState<{
+    anchor: HTMLElement
+    role: RbacRole
+  } | null>(null)
   const [moduleFilter, setModuleFilter] = useState<string | null>(null)
   // Roles a comparar: vacío = todos. "Solo diferencias" oculta lo que todos los roles mostrados tienen igual.
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([])
   const [onlyDifferences, setOnlyDifferences] = useState(false)
 
   const serverGrants = useMemo(
-    () =>
-      new Set(matrix.grants.map((g) => cellKey(g.roleId, g.permissionKey))),
+    () => new Set(matrix.grants.map((g) => cellKey(g.roleId, g.permissionKey))),
     [matrix.grants]
   )
   const grants = effectiveGrants ?? serverGrants
 
   const modules = useMemo(
     () =>
-      Array.from(new Set(matrix.permissions.map((p) => p.module))).sort((a, b) =>
-        moduleLabel(a).localeCompare(moduleLabel(b), 'es')
+      Array.from(new Set(matrix.permissions.map((p) => p.module))).sort(
+        (a, b) => moduleLabel(a).localeCompare(moduleLabel(b), 'es')
       ),
     [matrix.permissions]
   )
@@ -231,7 +233,15 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
         items: filtered.filter((p) => p.module === module)
       }))
       .filter((group) => group.items.length > 0)
-  }, [matrix.permissions, modules, moduleFilter, search, onlyDifferences, shownRoles, grants])
+  }, [
+    matrix.permissions,
+    modules,
+    moduleFilter,
+    search,
+    onlyDifferences,
+    shownRoles,
+    grants
+  ])
 
   const renderRoleHeader = (role: RbacRole) => (
     <TableCell
@@ -246,7 +256,14 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
     >
       <Tooltip title={role.description || role.name}>
         <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.5
+            }}
+          >
             <Typography variant='body2' fontWeight={600} noWrap>
               {roleDisplayName(role)}
             </Typography>
@@ -301,7 +318,9 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
             <TextField
               {...params}
               label='Roles a comparar'
-              placeholder={selectedRoleIds.length === 0 ? 'Todos los roles' : ''}
+              placeholder={
+                selectedRoleIds.length === 0 ? 'Todos los roles' : ''
+              }
             />
           )}
         />
@@ -356,7 +375,11 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
             onClick={() => setModuleFilter(null)}
             sx={
               moduleFilter === null
-                ? { bgcolor: TEAL, color: '#fff', '&:hover': { bgcolor: '#00897B' } }
+                ? {
+                    bgcolor: TEAL,
+                    color: '#fff',
+                    '&:hover': { bgcolor: '#00897B' }
+                  }
                 : undefined
             }
             variant={moduleFilter === null ? 'filled' : 'outlined'}
@@ -369,7 +392,11 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
               onClick={() => setModuleFilter(module)}
               sx={
                 moduleFilter === module
-                  ? { bgcolor: TEAL, color: '#fff', '&:hover': { bgcolor: '#00897B' } }
+                  ? {
+                      bgcolor: TEAL,
+                      color: '#fff',
+                      '&:hover': { bgcolor: '#00897B' }
+                    }
                   : undefined
               }
               variant={moduleFilter === module ? 'filled' : 'outlined'}
@@ -379,7 +406,11 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
       </Box>
 
       <TableContainer sx={{ maxHeight: '62vh' }}>
-        <Table stickyHeader size='small' aria-label='Matriz de capacidades por rol'>
+        <Table
+          stickyHeader
+          size='small'
+          aria-label='Matriz de capacidades por rol'
+        >
           <TableHead>
             <TableRow>
               <TableCell
@@ -401,7 +432,11 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
             {visibleGroups.length === 0 && (
               <TableRow>
                 <TableCell colSpan={shownRoles.length + 1}>
-                  <Typography color='text.secondary' sx={{ py: 3 }} align='center'>
+                  <Typography
+                    color='text.secondary'
+                    sx={{ py: 3 }}
+                    align='center'
+                  >
                     Ninguna capacidad coincide con la búsqueda.
                   </Typography>
                 </TableCell>
@@ -437,7 +472,9 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                         minWidth: FIRST_COL_WIDTH
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
                         <Typography variant='body2' sx={{ fontWeight: 600 }}>
                           {permissionPlainText(permission).name}
                         </Typography>
@@ -483,7 +520,8 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                     {shownRoles.map((role) => {
                       const key = cellKey(role.id, permission.key)
                       const checked = grants.has(key)
-                      const reason = lockedReason?.(role.id, permission.key) ?? null
+                      const reason =
+                        lockedReason?.(role.id, permission.key) ?? null
                       const disabled = !editable || Boolean(reason)
                       const changed = changedCells?.has(key) ?? false
                       const missing = checked
@@ -498,10 +536,15 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                           padding='checkbox'
                           sx={{
                             opacity: role.isActive ? 1 : 0.55,
-                            bgcolor: changed ? 'rgba(255,152,0,0.16)' : undefined
+                            bgcolor: changed
+                              ? 'rgba(255,152,0,0.16)'
+                              : undefined
                           }}
                         >
-                          <Tooltip title={reason ?? ''} disableHoverListener={!reason}>
+                          <Tooltip
+                            title={reason ?? ''}
+                            disableHoverListener={!reason}
+                          >
                             <span style={{ position: 'relative' }}>
                               {missing.length > 0 && (
                                 <Tooltip
@@ -524,7 +567,11 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                                 checked={checked}
                                 disabled={disabled}
                                 onChange={(e) =>
-                                  onToggle?.(role.id, permission.key, e.target.checked)
+                                  onToggle?.(
+                                    role.id,
+                                    permission.key,
+                                    e.target.checked
+                                  )
                                 }
                                 inputProps={{
                                   'aria-label': `${permission.key} para ${roleDisplayName(role)}`
@@ -581,7 +628,11 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
             )}
           </ListItemIcon>
           <ListItemText
-            secondary={menu?.role.isSystem ? 'Los roles de sistema no se desactivan' : undefined}
+            secondary={
+              menu?.role.isSystem
+                ? 'Los roles de sistema no se desactivan'
+                : undefined
+            }
           >
             {menu?.role.isActive ? 'Desactivar rol' : 'Activar rol'}
           </ListItemText>

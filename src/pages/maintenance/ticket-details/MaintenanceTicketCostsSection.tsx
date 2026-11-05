@@ -32,7 +32,10 @@ interface MaintenanceTicketCostsSectionProps {
 }
 
 /** Costos del servicio, tiempo de trabajo y cierre del ticket completado. */
-const MaintenanceTicketCostsSection = ({ ticket, details }: MaintenanceTicketCostsSectionProps) => {
+const MaintenanceTicketCostsSection = ({
+  ticket,
+  details
+}: MaintenanceTicketCostsSectionProps) => {
   const {
     isCustomerApprovalLocked,
     generateTechnicalReportMutation,
@@ -302,54 +305,71 @@ const MaintenanceTicketCostsSection = ({ ticket, details }: MaintenanceTicketCos
         </Paper>
       )}
 
-      {ticket.costs && ticket.costs.length === 0 && ticket.technicianWorkMinutes && ticket.status === MaintenanceStatus.COMPLETED && (
-        <Paper
-          sx={{
-            ...surfaceSx,
-            p: 3,
-            mb: 3,
-            '&:hover': {
-              borderColor: '#cbd5e1',
-              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
-            },
-            cursor: 'pointer'
-          }}
-          onClick={() => setBriefCostsDialogOpen(true)}
-        >
-          <Box display='flex' alignItems='center' justifyContent='space-between' gap={3}>
-            <Avatar
-              sx={{
-                backgroundColor: '#fef3c7',
-                color: '#92400e',
-                width: 48,
-                height: 48,
-                flexShrink: 0
-              }}
+      {ticket.costs &&
+        ticket.costs.length === 0 &&
+        ticket.technicianWorkMinutes &&
+        ticket.status === MaintenanceStatus.COMPLETED && (
+          <Paper
+            sx={{
+              ...surfaceSx,
+              p: 3,
+              mb: 3,
+              '&:hover': {
+                borderColor: '#cbd5e1',
+                boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+              },
+              cursor: 'pointer'
+            }}
+            onClick={() => setBriefCostsDialogOpen(true)}
+          >
+            <Box
+              display='flex'
+              alignItems='center'
+              justifyContent='space-between'
+              gap={3}
             >
-              <Schedule fontSize='medium' />
-            </Avatar>
-            <Box flexGrow={1} minWidth={0}>
-              <Typography variant='body1' sx={{ fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
-                Sin costos de materiales
-              </Typography>
-              <Typography variant='caption' color='text.secondary' lineHeight={1} sx={{ mt: 0.5, display: 'block' }}>
-                Tiempo técnico registrado: {formatWorkMinutes(ticket.technicianWorkMinutes)}
-              </Typography>
+              <Avatar
+                sx={{
+                  backgroundColor: '#fef3c7',
+                  color: '#92400e',
+                  width: 48,
+                  height: 48,
+                  flexShrink: 0
+                }}
+              >
+                <Schedule fontSize='medium' />
+              </Avatar>
+              <Box flexGrow={1} minWidth={0}>
+                <Typography
+                  variant='body1'
+                  sx={{ fontWeight: 700, color: '#0f172a', lineHeight: 1 }}
+                >
+                  Sin costos de materiales
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  lineHeight={1}
+                  sx={{ mt: 0.5, display: 'block' }}
+                >
+                  Tiempo técnico registrado:{' '}
+                  {formatWorkMinutes(ticket.technicianWorkMinutes)}
+                </Typography>
+              </Box>
+              <Chip
+                label='Solo tiempo técnico'
+                size='small'
+                sx={{
+                  backgroundColor: '#fef3c7',
+                  color: '#92400e',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  flexShrink: 0
+                }}
+              />
             </Box>
-            <Chip
-              label='Solo tiempo técnico'
-              size='small'
-              sx={{
-                backgroundColor: '#fef3c7',
-                color: '#92400e',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                flexShrink: 0
-              }}
-            />
-          </Box>
-        </Paper>
-      )}
+          </Paper>
+        )}
 
       {ticket.status === MaintenanceStatus.COMPLETED && (
         <Paper
@@ -414,9 +434,9 @@ const MaintenanceTicketCostsSection = ({ ticket, details }: MaintenanceTicketCos
               </Stack>
               {isCustomerApprovalLocked && (
                 <Alert severity='info' sx={{ mt: 1.5 }}>
-                  El cliente ya firmó la conformidad del servicio. El
-                  reporte técnico quedó bloqueado para proteger la
-                  trazabilidad documental.
+                  El cliente ya firmó la conformidad del servicio. El reporte
+                  técnico quedó bloqueado para proteger la trazabilidad
+                  documental.
                 </Alert>
               )}
             </Box>

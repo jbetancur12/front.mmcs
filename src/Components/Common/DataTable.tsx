@@ -101,7 +101,10 @@ function DataTable<TData extends Record<string, any>>({
           },
           muiTableBodyCellProps: {
             align: 'left',
-            sx: { backgroundColor: neutral.surface, boxShadow: `-1px 0 0 ${LINE}` }
+            sx: {
+              backgroundColor: neutral.surface,
+              boxShadow: `-1px 0 0 ${LINE}`
+            }
           }
         },
         ...props.displayColumnDefOptions

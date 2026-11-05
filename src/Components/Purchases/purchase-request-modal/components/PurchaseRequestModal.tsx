@@ -21,10 +21,7 @@ import { usePurchaseRequestForm } from '../hooks/usePurchaseRequestForm'
 import RequesterSection from './RequesterSection'
 import ItemsSection from './ItemsSection'
 import RequirementsSection from './RequirementsSection'
-import {
-  PURCHASE_TEAL,
-  PURCHASE_TEAL_HOVER
-} from '../../purchaseTableStyle'
+import { PURCHASE_TEAL, PURCHASE_TEAL_HOVER } from '../../purchaseTableStyle'
 
 const PurchaseRequestModal: React.FC<PurchaseRequestModalProps> = ({
   open,

@@ -21,8 +21,7 @@ export const useCreateRepository = () => {
   return useMutation(
     (payload: object) => axiosPrivate.post('/repositories', payload, {}),
     {
-      onSuccess: () =>
-        queryClient.invalidateQueries(REPOSITORY_QUERY_KEYS.all)
+      onSuccess: () => queryClient.invalidateQueries(REPOSITORY_QUERY_KEYS.all)
     }
   )
 }
@@ -33,8 +32,7 @@ export const useDeleteRepository = () => {
   return useMutation(
     (id: number | string) => axiosPrivate.delete(`/repositories/${id}`, {}),
     {
-      onSuccess: () =>
-        queryClient.invalidateQueries(REPOSITORY_QUERY_KEYS.all)
+      onSuccess: () => queryClient.invalidateQueries(REPOSITORY_QUERY_KEYS.all)
     }
   )
 }

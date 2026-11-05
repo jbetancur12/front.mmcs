@@ -43,7 +43,9 @@ describe('getRoleLabelEs', () => {
 
 describe('hasAnyRole', () => {
   it('true si algún rol del usuario está permitido', () => {
-    expect(hasAnyRole([ROLES.EMPLOYEE, ROLES.ADMIN], ROLE_GROUPS.ADMINS)).toBe(true)
+    expect(hasAnyRole([ROLES.EMPLOYEE, ROLES.ADMIN], ROLE_GROUPS.ADMINS)).toBe(
+      true
+    )
   })
 
   it('false si ninguno coincide', () => {

@@ -6,7 +6,9 @@ import { CalibrationServiceDetailDialogs } from './useCalibrationServiceDetailDi
 import { DetailTab } from './calibrationServiceDetailUtils'
 
 import { logger } from 'src/utils/logger'
-type CalibrationServiceMutations = ReturnType<typeof useCalibrationServiceMutations>
+type CalibrationServiceMutations = ReturnType<
+  typeof useCalibrationServiceMutations
+>
 
 interface CalibrationServiceAdjustmentActionsParams {
   service: CalibrationService
@@ -121,7 +123,12 @@ const useCalibrationServiceAdjustmentActions = ({
       setActiveTab('adjustments')
     } catch (adjustmentError) {
       logger.error(adjustmentError)
-      toast.error(getApiErrorMessage(adjustmentError, 'No pudimos guardar la revisión de la novedad.'))
+      toast.error(
+        getApiErrorMessage(
+          adjustmentError,
+          'No pudimos guardar la revisión de la novedad.'
+        )
+      )
     }
   }
 
@@ -152,7 +159,12 @@ const useCalibrationServiceAdjustmentActions = ({
       }
     } catch (sendError) {
       logger.error(sendError)
-      toast.error(getApiErrorMessage(sendError, 'No pudimos enviar las novedades al cliente.'))
+      toast.error(
+        getApiErrorMessage(
+          sendError,
+          'No pudimos enviar las novedades al cliente.'
+        )
+      )
     }
 
     setSelectedAdjustmentsForSend([])
@@ -229,7 +241,9 @@ const useCalibrationServiceAdjustmentActions = ({
       toast.success('Firma del cliente guardada.')
     } catch (error) {
       logger.error(error)
-      toast.error(getApiErrorMessage(error, 'No pudimos guardar la firma del cliente.'))
+      toast.error(
+        getApiErrorMessage(error, 'No pudimos guardar la firma del cliente.')
+      )
     }
   }
 

@@ -49,7 +49,11 @@ const MainChart = ({
   humidityAlarms
 }: MainChartProps) => {
   // Custom Tooltip
-  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label
+  }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       const date = new Date(label)
       return (

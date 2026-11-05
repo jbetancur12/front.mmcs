@@ -16,9 +16,13 @@ const user = (data: Record<string, unknown>) => data as unknown as UserData
 
 describe('normalizeLmsRoles', () => {
   it('unifica los alias de Training Manager en el nombre canónico (con espacio)', () => {
-    expect(normalizeLmsRoles(['training_manager'])).toEqual(['Training Manager'])
+    expect(normalizeLmsRoles(['training_manager'])).toEqual([
+      'Training Manager'
+    ])
     expect(normalizeLmsRoles(['lms_admin'])).toEqual(['Training Manager'])
-    expect(normalizeLmsRoles(['Training Manager'])).toEqual(['Training Manager'])
+    expect(normalizeLmsRoles(['Training Manager'])).toEqual([
+      'Training Manager'
+    ])
   })
 
   it('quita duplicados y valores vacíos, y conserva el resto', () => {
@@ -93,9 +97,9 @@ describe('getLmsExperienceRole', () => {
   })
 
   it('sin permisos de gestión: client para empresas, employee para el resto', () => {
-    expect(getLmsExperienceRole({ roles: [ROLES.USER], userType: 'client' })).toBe(
-      'client'
-    )
+    expect(
+      getLmsExperienceRole({ roles: [ROLES.USER], userType: 'client' })
+    ).toBe('client')
     expect(
       getLmsExperienceRole({ roles: [ROLES.EMPLOYEE], userType: 'internal' })
     ).toBe('employee')
@@ -143,10 +147,16 @@ describe('getPreferredPostLoginRoute', () => {
 
   it('un usuario solo-LMS va a su portal según el tipo de usuario', () => {
     expect(
-      getPreferredPostLoginRoute({ roles: [ROLES.LMS_ONLY], userType: 'client' })
+      getPreferredPostLoginRoute({
+        roles: [ROLES.LMS_ONLY],
+        userType: 'client'
+      })
     ).toBe('/lms/client')
     expect(
-      getPreferredPostLoginRoute({ roles: [ROLES.LMS_ONLY], userType: 'internal' })
+      getPreferredPostLoginRoute({
+        roles: [ROLES.LMS_ONLY],
+        userType: 'internal'
+      })
     ).toBe('/lms/employee')
     expect(getPreferredPostLoginRoute({ lmsOnly: true })).toBe('/lms/employee')
   })

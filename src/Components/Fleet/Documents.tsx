@@ -158,7 +158,12 @@ const Documents: React.FC = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/fleet')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver a flota
       </Button>
@@ -168,7 +173,16 @@ const Documents: React.FC = () => {
         icon={<Description />}
         actions={
           canUpload ? (
-            <Button variant='contained' startIcon={<CloudUpload />} onClick={() => handleOpen()} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<CloudUpload />}
+              onClick={() => handleOpen()}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Agregar documento
             </Button>
           ) : undefined
@@ -236,31 +250,35 @@ const Documents: React.FC = () => {
                       <Download />
                     </IconButton>
                   </Tooltip>
-{canManageDocuments && (
-<>
-                  <Divider orientation='vertical' flexItem />
-                  <Tooltip title='Editar'>
-                    <IconButton onClick={() => handleOpen(doc)}>
-                      <Edit />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title='Eliminar'>
-                    <IconButton
-                      color='error'
-                      onClick={() => {
-                        confirmDialog({ title: `¿ Esta seguro que desea eliminar el documento ?`, text: 'No podrá recuperar esta información una vez eliminada', confirmLabel: 'Si' }).then((result) => {
-                          /* Read more about isConfirmed, isDenied below */
-                          if (result.isConfirmed) {
-                            deleteDoc.mutate(doc.id!)
-                          }
-                        })
-                      }}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
-</>
-)}
+                  {canManageDocuments && (
+                    <>
+                      <Divider orientation='vertical' flexItem />
+                      <Tooltip title='Editar'>
+                        <IconButton onClick={() => handleOpen(doc)}>
+                          <Edit />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Eliminar'>
+                        <IconButton
+                          color='error'
+                          onClick={() => {
+                            confirmDialog({
+                              title: `¿ Esta seguro que desea eliminar el documento ?`,
+                              text: 'No podrá recuperar esta información una vez eliminada',
+                              confirmLabel: 'Si'
+                            }).then((result) => {
+                              /* Read more about isConfirmed, isDenied below */
+                              if (result.isConfirmed) {
+                                deleteDoc.mutate(doc.id!)
+                              }
+                            })
+                          }}
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  )}
                 </CardActions>
               </Card>
             </Grid>

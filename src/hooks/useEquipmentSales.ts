@@ -37,56 +37,124 @@ export interface EquipmentQuotationDecisionPayload {
 }
 
 const equipmentSalesApi = {
-  listQuotations: async (params?: Record<string, unknown>): Promise<EquipmentQuotationListResponse> => {
-    const { data } = await axiosPrivate.get<EquipmentQuotationListResponse>('/equipment-sales', { params })
+  listQuotations: async (
+    params?: Record<string, unknown>
+  ): Promise<EquipmentQuotationListResponse> => {
+    const { data } = await axiosPrivate.get<EquipmentQuotationListResponse>(
+      '/equipment-sales',
+      { params }
+    )
     return data
   },
-  getQuotationById: async (id: number | string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.get<EquipmentQuotation>(`/equipment-sales/${id}`)
+  getQuotationById: async (
+    id: number | string
+  ): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.get<EquipmentQuotation>(
+      `/equipment-sales/${id}`
+    )
     return data
   },
-  createQuotation: async (payload: EquipmentQuotationPayload): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>('/equipment-sales', payload)
+  createQuotation: async (
+    payload: EquipmentQuotationPayload
+  ): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      '/equipment-sales',
+      payload
+    )
     return data
   },
-  updateQuotation: async ({ id, payload }: { id: number | string; payload: Partial<EquipmentQuotationPayload> }): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.put<EquipmentQuotation>(`/equipment-sales/${id}`, payload)
+  updateQuotation: async ({
+    id,
+    payload
+  }: {
+    id: number | string
+    payload: Partial<EquipmentQuotationPayload>
+  }): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.put<EquipmentQuotation>(
+      `/equipment-sales/${id}`,
+      payload
+    )
     return data
   },
   requestApproval: async (id: number | string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/request-approval`)
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      `/equipment-sales/${id}/request-approval`
+    )
     return data
   },
-  approveQuotation: async ({ quotationId, ...body }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${quotationId}/approve`, body)
+  approveQuotation: async ({
+    quotationId,
+    ...body
+  }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      `/equipment-sales/${quotationId}/approve`,
+      body
+    )
     return data
   },
-  rejectQuotation: async ({ quotationId, ...body }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${quotationId}/reject`, body)
+  rejectQuotation: async ({
+    quotationId,
+    ...body
+  }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      `/equipment-sales/${quotationId}/reject`,
+      body
+    )
     return data
   },
-  requestChanges: async ({ quotationId, ...body }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${quotationId}/request-changes`, body)
+  requestChanges: async ({
+    quotationId,
+    ...body
+  }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      `/equipment-sales/${quotationId}/request-changes`,
+      body
+    )
     return data
   },
-  markAsReadyForInvoice: async (id: number | string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/ready-for-invoicing`)
+  markAsReadyForInvoice: async (
+    id: number | string
+  ): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      `/equipment-sales/${id}/ready-for-invoicing`
+    )
     return data
   },
-  invoiceQuotation: async (id: number | string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/invoice`)
+  invoiceQuotation: async (
+    id: number | string
+  ): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      `/equipment-sales/${id}/invoice`
+    )
     return data
   },
-  cancelQuotation: async (id: number | string, reason?: string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/cancel`, { reason })
+  cancelQuotation: async (
+    id: number | string,
+    reason?: string
+  ): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(
+      `/equipment-sales/${id}/cancel`,
+      { reason }
+    )
     return data
   },
-  generateQuotePdf: async (quotationId: number | string): Promise<EquipmentQuotationDocument> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotationDocument>(`/equipment-sales/${quotationId}/generate-pdf`)
+  generateQuotePdf: async (
+    quotationId: number | string
+  ): Promise<EquipmentQuotationDocument> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotationDocument>(
+      `/equipment-sales/${quotationId}/generate-pdf`
+    )
     return data
   },
-  getDocuments: async (quotationId: number | string): Promise<{ quotationId: number; documents: EquipmentQuotationDocument[] }> => {
-    const { data } = await axiosPrivate.get(`/equipment-sales/${quotationId}/documents`)
+  getDocuments: async (
+    quotationId: number | string
+  ): Promise<{
+    quotationId: number
+    documents: EquipmentQuotationDocument[]
+  }> => {
+    const { data } = await axiosPrivate.get(
+      `/equipment-sales/${quotationId}/documents`
+    )
     return data
   },
   uploadDocument: async ({
@@ -114,43 +182,93 @@ const equipmentSalesApi = {
     )
     return data
   },
-  downloadDocument: async ({ quotationId, documentId }: { quotationId: number | string; documentId: number | string }): Promise<Blob> => {
-    const { data } = await axiosPrivate.get(`/equipment-sales/${quotationId}/documents/${documentId}/download`, { responseType: 'blob' })
+  downloadDocument: async ({
+    quotationId,
+    documentId
+  }: {
+    quotationId: number | string
+    documentId: number | string
+  }): Promise<Blob> => {
+    const { data } = await axiosPrivate.get(
+      `/equipment-sales/${quotationId}/documents/${documentId}/download`,
+      { responseType: 'blob' }
+    )
     return data
   },
-  listProducts: async (params?: Record<string, unknown>): Promise<EquipmentProductListResponse> => {
-    const { data } = await axiosPrivate.get<EquipmentProductListResponse>('/equipment-sales/products', { params })
+  listProducts: async (
+    params?: Record<string, unknown>
+  ): Promise<EquipmentProductListResponse> => {
+    const { data } = await axiosPrivate.get<EquipmentProductListResponse>(
+      '/equipment-sales/products',
+      { params }
+    )
     return data
   },
   getProductById: async (id: number | string): Promise<EquipmentProduct> => {
-    const { data } = await axiosPrivate.get<EquipmentProduct>(`/equipment-sales/products/${id}`)
+    const { data } = await axiosPrivate.get<EquipmentProduct>(
+      `/equipment-sales/products/${id}`
+    )
     return data
   },
-  createProduct: async (payload: EquipmentProductPayload): Promise<EquipmentProduct> => {
-    const { data } = await axiosPrivate.post<EquipmentProduct>('/equipment-sales/products', payload)
+  createProduct: async (
+    payload: EquipmentProductPayload
+  ): Promise<EquipmentProduct> => {
+    const { data } = await axiosPrivate.post<EquipmentProduct>(
+      '/equipment-sales/products',
+      payload
+    )
     return data
   },
-  updateProduct: async ({ id, payload }: { id: number | string; payload: Partial<EquipmentProductPayload> }): Promise<EquipmentProduct> => {
-    const { data } = await axiosPrivate.put<EquipmentProduct>(`/equipment-sales/products/${id}`, payload)
+  updateProduct: async ({
+    id,
+    payload
+  }: {
+    id: number | string
+    payload: Partial<EquipmentProductPayload>
+  }): Promise<EquipmentProduct> => {
+    const { data } = await axiosPrivate.put<EquipmentProduct>(
+      `/equipment-sales/products/${id}`,
+      payload
+    )
     return data
   },
   deleteProduct: async (id: number | string): Promise<void> => {
     await axiosPrivate.delete(`/equipment-sales/products/${id}`)
   },
-  getQuoteTermsTemplate: async (): Promise<{ terms: Record<string, string>; updatedAt: string | null; updatedByName: string | null }> => {
-    const { data } = await axiosPrivate.get('/equipment-sales/config/quote-terms')
+  getQuoteTermsTemplate: async (): Promise<{
+    terms: Record<string, string>
+    updatedAt: string | null
+    updatedByName: string | null
+  }> => {
+    const { data } = await axiosPrivate.get(
+      '/equipment-sales/config/quote-terms'
+    )
     return data
   },
-  upsertQuoteTermsTemplate: async (terms: Record<string, string>): Promise<{ terms: Record<string, string>; updatedAt: string; updatedByName: string }> => {
-    const { data } = await axiosPrivate.put('/equipment-sales/config/quote-terms', { terms })
+  upsertQuoteTermsTemplate: async (
+    terms: Record<string, string>
+  ): Promise<{
+    terms: Record<string, string>
+    updatedAt: string
+    updatedByName: string
+  }> => {
+    const { data } = await axiosPrivate.put(
+      '/equipment-sales/config/quote-terms',
+      { terms }
+    )
     return data
   },
   getSequenceConfig: async (): Promise<EquipmentQuotationSequenceConfig> => {
     const { data } = await axiosPrivate.get('/equipment-sales/config/sequence')
     return data
   },
-  upsertSequenceConfig: async (values: { nextQuoteNumber: number }): Promise<EquipmentQuotationSequenceConfig> => {
-    const { data } = await axiosPrivate.put('/equipment-sales/config/sequence', values)
+  upsertSequenceConfig: async (values: {
+    nextQuoteNumber: number
+  }): Promise<EquipmentQuotationSequenceConfig> => {
+    const { data } = await axiosPrivate.put(
+      '/equipment-sales/config/sequence',
+      values
+    )
     return data
   }
 }
@@ -200,7 +318,9 @@ export const useEquipmentSequenceConfig = (enabled?: boolean) => {
   })
 }
 
-export const useEquipmentQuotationDocuments = (quotationId?: number | string | null) => {
+export const useEquipmentQuotationDocuments = (
+  quotationId?: number | string | null
+) => {
   return useQuery({
     queryKey: [EQUIPMENT_SALES_QUERY_KEYS.documents, quotationId],
     queryFn: () => equipmentSalesApi.getDocuments(quotationId!),
@@ -270,14 +390,20 @@ export const useEquipmentSalesMutations = () => {
   const generateQuotePdf = useMutation({
     mutationFn: equipmentSalesApi.generateQuotePdf,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.documents, String(variables)])
+      queryClient.invalidateQueries([
+        EQUIPMENT_SALES_QUERY_KEYS.documents,
+        String(variables)
+      ])
     }
   })
 
   const uploadDocument = useMutation({
     mutationFn: equipmentSalesApi.uploadDocument,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.documents, String(variables.quotationId)])
+      queryClient.invalidateQueries([
+        EQUIPMENT_SALES_QUERY_KEYS.documents,
+        String(variables.quotationId)
+      ])
     }
   })
 
@@ -287,27 +413,34 @@ export const useEquipmentSalesMutations = () => {
 
   const createProduct = useMutation({
     mutationFn: equipmentSalesApi.createProduct,
-    onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.products])
+    onSuccess: () =>
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.products])
   })
 
   const updateProduct = useMutation({
     mutationFn: equipmentSalesApi.updateProduct,
-    onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.products])
+    onSuccess: () =>
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.products])
   })
 
   const deleteProduct = useMutation({
     mutationFn: equipmentSalesApi.deleteProduct,
-    onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.products])
+    onSuccess: () =>
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.products])
   })
 
   const saveQuoteTermsTemplate = useMutation({
     mutationFn: equipmentSalesApi.upsertQuoteTermsTemplate,
-    onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.quoteTermsTemplate])
+    onSuccess: () =>
+      queryClient.invalidateQueries([
+        EQUIPMENT_SALES_QUERY_KEYS.quoteTermsTemplate
+      ])
   })
 
   const upsertSequenceConfig = useMutation({
     mutationFn: equipmentSalesApi.upsertSequenceConfig,
-    onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.sequenceConfig])
+    onSuccess: () =>
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.sequenceConfig])
   })
 
   return {
@@ -333,13 +466,16 @@ export const useEquipmentSalesMutations = () => {
 
 // --- Clientes del workspace de cotizaciones de equipos ---
 
-export const EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY = ['equipment-sales-customers'] as const
+export const EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY = [
+  'equipment-sales-customers'
+] as const
 
 export const useEquipmentSalesCustomers = (enabled: boolean) => {
   return useQuery({
     queryKey: EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY,
     queryFn: async () => {
-      const response = await axiosPrivate.get<EquipmentCustomerOption[]>('/customers')
+      const response =
+        await axiosPrivate.get<EquipmentCustomerOption[]>('/customers')
       return response.data
     },
     enabled,
@@ -354,26 +490,28 @@ export const useCreateEquipmentSalesCustomer = (
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (values: EquipmentSalesCustomerDialogValues) => {
-      const response = await axiosPrivate.post<{ customer: EquipmentCustomerOption }>(
-        '/customers',
-        {
-          ...values.customer,
-          direccion: values.customer.direccion || values.site.address || '',
-          ciudad: values.customer.ciudad || values.site.city || '',
-          departamento: values.customer.departamento || values.site.department || '',
-          email: values.customer.email || values.site.contactEmail || '',
-          telefono: values.customer.telefono || values.site.contactPhone || '',
-          pais: values.customer.pais || values.site.country || 'Colombia',
-          sites: [values.site]
-        }
-      )
+      const response = await axiosPrivate.post<{
+        customer: EquipmentCustomerOption
+      }>('/customers', {
+        ...values.customer,
+        direccion: values.customer.direccion || values.site.address || '',
+        ciudad: values.customer.ciudad || values.site.city || '',
+        departamento:
+          values.customer.departamento || values.site.department || '',
+        email: values.customer.email || values.site.contactEmail || '',
+        telefono: values.customer.telefono || values.site.contactPhone || '',
+        pais: values.customer.pais || values.site.country || 'Colombia',
+        sites: [values.site]
+      })
       return response.data.customer
     },
     onSuccess: (customer) => {
       queryClient.setQueryData<EquipmentCustomerOption[]>(
         EQUIPMENT_SALES_CUSTOMERS_QUERY_KEY,
         (previous = []) => {
-          const withoutDuplicate = previous.filter((item) => item.id !== customer.id)
+          const withoutDuplicate = previous.filter(
+            (item) => item.id !== customer.id
+          )
           return [...withoutDuplicate, customer].sort((left, right) =>
             left.nombre.localeCompare(right.nombre)
           )

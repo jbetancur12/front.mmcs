@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient, UseMutationOptions } from 'react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseMutationOptions
+} from 'react-query'
 import { useStore } from '@nanostores/react'
 import { lmsService } from 'src/services/lmsService'
 import { queryKeys } from 'src/config/queryClient'
@@ -211,7 +216,11 @@ export const useCreateCourse = (
  * Update a course
  */
 export const useUpdateCourse = (
-  options?: UseMutationOptions<Course, Error, { id: number; data: UpdateCourseRequest }>
+  options?: UseMutationOptions<
+    Course,
+    Error,
+    { id: number; data: UpdateCourseRequest }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -246,25 +255,22 @@ export const useDeleteCourse = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation(
-    (id: number) => lmsService.deleteCourse(id),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        // Invalidate courses list
-        queryClient.invalidateQueries(queryKeys.courses.lists())
+  return useMutation((id: number) => lmsService.deleteCourse(id), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      // Invalidate courses list
+      queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        notify.success('Curso eliminado exitosamente')
+      notify.success('Curso eliminado exitosamente')
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al eliminar curso', error.message)
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al eliminar curso', error.message)
 
-        options?.onError?.(error, variables, context)
-      }
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 /**
@@ -275,26 +281,23 @@ export const usePublishCourse = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation(
-    (id: number) => lmsService.publishCourse(id),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        // Invalidate specific course and lists
-        queryClient.invalidateQueries(queryKeys.courses.detail(variables))
-        queryClient.invalidateQueries(queryKeys.courses.lists())
+  return useMutation((id: number) => lmsService.publishCourse(id), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      // Invalidate specific course and lists
+      queryClient.invalidateQueries(queryKeys.courses.detail(variables))
+      queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        notify.success('Curso publicado exitosamente')
+      notify.success('Curso publicado exitosamente')
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al publicar curso', error.message)
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al publicar curso', error.message)
 
-        options?.onError?.(error, variables, context)
-      }
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 /**
@@ -305,26 +308,23 @@ export const useArchiveCourse = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation(
-    (id: number) => lmsService.archiveCourse(id),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        // Invalidate specific course and lists
-        queryClient.invalidateQueries(queryKeys.courses.detail(variables))
-        queryClient.invalidateQueries(queryKeys.courses.lists())
+  return useMutation((id: number) => lmsService.archiveCourse(id), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      // Invalidate specific course and lists
+      queryClient.invalidateQueries(queryKeys.courses.detail(variables))
+      queryClient.invalidateQueries(queryKeys.courses.lists())
 
-        notify.success('Curso archivado exitosamente')
+      notify.success('Curso archivado exitosamente')
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al archivar curso', error.message)
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al archivar curso', error.message)
 
-        options?.onError?.(error, variables, context)
-      }
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 /**
@@ -401,7 +401,11 @@ export const useCourseProgress = (
  * Update progress (mark lesson as completed)
  */
 export const useUpdateProgress = (
-  options?: UseMutationOptions<ProgressUpdateResult, Error, UpdateProgressRequest>
+  options?: UseMutationOptions<
+    ProgressUpdateResult,
+    Error,
+    UpdateProgressRequest
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -433,7 +437,11 @@ export const useUpdateProgress = (
  * Complete a lesson
  */
 export const useCompleteLesson = (
-  options?: UseMutationOptions<ProgressUpdateResult, Error, { lessonId: number; timeSpent?: number }>
+  options?: UseMutationOptions<
+    ProgressUpdateResult,
+    Error,
+    { lessonId: number; timeSpent?: number }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -470,15 +478,11 @@ export const useQuiz = (
   id: number,
   options?: QueryOptionsOf<typeof lmsService.getQuiz>
 ) => {
-  return useQuery(
-    queryKeys.quizzes.detail(id),
-    () => lmsService.getQuiz(id),
-    {
-      enabled: !!id,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      ...options
-    }
-  )
+  return useQuery(queryKeys.quizzes.detail(id), () => lmsService.getQuiz(id), {
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...options
+  })
 }
 
 /**
@@ -487,29 +491,30 @@ export const useQuiz = (
 export const useCreateQuiz = (
   options?: UseMutationOptions<Quiz, Error, CreateQuizRequest>
 ) => {
-  return useMutation(
-    (data: CreateQuizRequest) => lmsService.createQuiz(data),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        notify.success('Quiz creado exitosamente')
+  return useMutation((data: CreateQuizRequest) => lmsService.createQuiz(data), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      notify.success('Quiz creado exitosamente')
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al crear quiz', error.message)
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al crear quiz', error.message)
 
-        options?.onError?.(error, variables, context)
-      }
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 /**
  * Update a quiz
  */
 export const useUpdateQuiz = (
-  options?: UseMutationOptions<Quiz, Error, { id: number; data: Partial<CreateQuizRequest> }>
+  options?: UseMutationOptions<
+    Quiz,
+    Error,
+    { id: number; data: Partial<CreateQuizRequest> }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -540,29 +545,30 @@ export const useUpdateQuiz = (
 export const useDeleteQuiz = (
   options?: UseMutationOptions<void, Error, number>
 ) => {
-  return useMutation(
-    (id: number) => lmsService.deleteQuiz(id),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        notify.success('Quiz eliminado exitosamente')
+  return useMutation((id: number) => lmsService.deleteQuiz(id), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      notify.success('Quiz eliminado exitosamente')
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al eliminar quiz', error.message)
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al eliminar quiz', error.message)
 
-        options?.onError?.(error, variables, context)
-      }
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 /**
  * Submit quiz attempt
  */
 export const useSubmitQuiz = (
-  options?: UseMutationOptions<QuizSubmissionResult, Error, { quizId: number; data: SubmitQuizRequest }>
+  options?: UseMutationOptions<
+    QuizSubmissionResult,
+    Error,
+    { quizId: number; data: SubmitQuizRequest }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -573,14 +579,22 @@ export const useSubmitQuiz = (
       ...options,
       onSuccess: (data, variables, context) => {
         // Invalidate quiz attempts
-        queryClient.invalidateQueries(queryKeys.quizzes.attempts(variables.quizId))
+        queryClient.invalidateQueries(
+          queryKeys.quizzes.attempts(variables.quizId)
+        )
         queryClient.invalidateQueries(queryKeys.progress.all)
 
         const passed = data.results.passed
         if (passed) {
-          notify.success('¡Quiz aprobado!', `Puntuación: ${data.results.percentage}%`)
+          notify.success(
+            '¡Quiz aprobado!',
+            `Puntuación: ${data.results.percentage}%`
+          )
         } else {
-          notify.warning('Quiz no aprobado', `Puntuación: ${data.results.percentage}%`)
+          notify.warning(
+            'Quiz no aprobado',
+            `Puntuación: ${data.results.percentage}%`
+          )
         }
 
         options?.onSuccess?.(data, variables, context)
@@ -656,7 +670,11 @@ export const useCertificate = (
  * Generate certificate
  */
 export const useGenerateCertificate = (
-  options?: UseMutationOptions<Certificate, Error, { courseId: number; userId?: number }>
+  options?: UseMutationOptions<
+    Certificate,
+    Error,
+    { courseId: number; userId?: number }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -667,7 +685,9 @@ export const useGenerateCertificate = (
       ...options,
       onSuccess: (data, variables, context) => {
         // Invalidate certificates
-        queryClient.invalidateQueries(queryKeys.certificates.user(variables.userId))
+        queryClient.invalidateQueries(
+          queryKeys.certificates.user(variables.userId)
+        )
 
         notify.success('Certificado generado exitosamente')
 
@@ -716,7 +736,9 @@ export const useDownloadCertificate = (
   )
 }
 
-export const useCertificateTemplates = (options?: QueryOptionsOf<typeof lmsService.getCertificateTemplates>) => {
+export const useCertificateTemplates = (
+  options?: QueryOptionsOf<typeof lmsService.getCertificateTemplates>
+) => {
   return useQuery(
     queryKeys.certificates.templates(),
     () => lmsService.getCertificateTemplates(),
@@ -728,12 +750,17 @@ export const useCertificateTemplates = (options?: QueryOptionsOf<typeof lmsServi
 }
 
 export const useCreateCertificateTemplate = (
-  options?: UseMutationOptions<CertificateTemplate, Error, SaveCertificateTemplateRequest>
+  options?: UseMutationOptions<
+    CertificateTemplate,
+    Error,
+    SaveCertificateTemplateRequest
+  >
 ) => {
   const queryClient = useQueryClient()
 
   return useMutation(
-    (data: SaveCertificateTemplateRequest) => lmsService.createCertificateTemplate(data),
+    (data: SaveCertificateTemplateRequest) =>
+      lmsService.createCertificateTemplate(data),
     {
       ...options,
       onSuccess: (data, variables, context) => {
@@ -765,7 +792,9 @@ export const useUpdateCertificateTemplate = (
       ...options,
       onSuccess: (data, variables, context) => {
         queryClient.invalidateQueries(queryKeys.certificates.templates())
-        queryClient.invalidateQueries(queryKeys.certificates.templatePreview(variables.id))
+        queryClient.invalidateQueries(
+          queryKeys.certificates.templatePreview(variables.id)
+        )
         notify.success('Plantilla actualizada exitosamente')
         options?.onSuccess?.(data, variables, context)
       },
@@ -782,21 +811,18 @@ export const useDeleteCertificateTemplate = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation(
-    (id: number) => lmsService.deleteCertificateTemplate(id),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        queryClient.invalidateQueries(queryKeys.certificates.templates())
-        notify.success('Plantilla eliminada exitosamente')
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al eliminar plantilla', error.message)
-        options?.onError?.(error, variables, context)
-      }
+  return useMutation((id: number) => lmsService.deleteCertificateTemplate(id), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries(queryKeys.certificates.templates())
+      notify.success('Plantilla eliminada exitosamente')
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al eliminar plantilla', error.message)
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 export const usePreviewCertificateTemplate = (
@@ -857,7 +883,11 @@ export const useUserAssignments = (
  * Create assignment
  */
 export const useCreateAssignment = (
-  options?: UseMutationOptions<CreateAssignmentResult, Error, CreateAssignmentRequest>
+  options?: UseMutationOptions<
+    CreateAssignmentResult,
+    Error,
+    CreateAssignmentRequest
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -867,7 +897,9 @@ export const useCreateAssignment = (
       ...options,
       onSuccess: (data, variables, context) => {
         // Invalidate assignments
-        queryClient.invalidateQueries(queryKeys.assignments.course(variables.course_id))
+        queryClient.invalidateQueries(
+          queryKeys.assignments.course(variables.course_id)
+        )
         queryClient.invalidateQueries(queryKeys.assignments.all)
 
         notify.success('Asignación creada exitosamente')
@@ -887,7 +919,11 @@ export const useCreateAssignment = (
  * Update assignment
  */
 export const useUpdateAssignment = (
-  options?: UseMutationOptions<UpdateAssignmentResult, Error, { id: number; data: Partial<CreateAssignmentRequest> }>
+  options?: UseMutationOptions<
+    UpdateAssignmentResult,
+    Error,
+    { id: number; data: Partial<CreateAssignmentRequest> }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -921,25 +957,22 @@ export const useDeleteAssignment = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation(
-    (id: number) => lmsService.deleteAssignment(id),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        // Invalidate all assignments
-        queryClient.invalidateQueries(queryKeys.assignments.all)
+  return useMutation((id: number) => lmsService.deleteAssignment(id), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      // Invalidate all assignments
+      queryClient.invalidateQueries(queryKeys.assignments.all)
 
-        notify.success('Asignación eliminada exitosamente')
+      notify.success('Asignación eliminada exitosamente')
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al eliminar asignación', error.message)
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al eliminar asignación', error.message)
 
-        options?.onError?.(error, variables, context)
-      }
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 // ===========================
@@ -967,11 +1000,11 @@ export const useLmsAnalytics = (
  * Get comprehensive dashboard analytics with enhanced metrics
  */
 export const useComprehensiveDashboard = (
-  params?: { 
-    startDate?: string; 
-    endDate?: string; 
-    userType?: string;
-    courseStatus?: string;
+  params?: {
+    startDate?: string
+    endDate?: string
+    userType?: string
+    courseStatus?: string
   },
   options?: QueryOptionsOf<typeof lmsService.getComprehensiveDashboard>
 ) => {
@@ -991,11 +1024,11 @@ export const useComprehensiveDashboard = (
  */
 export const useQuizPerformanceAnalytics = (
   params?: {
-    courseId?: number;
-    quizId?: number;
-    startDate?: string;
-    endDate?: string;
-    includeQuestionAnalysis?: boolean;
+    courseId?: number
+    quizId?: number
+    startDate?: string
+    endDate?: string
+    includeQuestionAnalysis?: boolean
   },
   options?: QueryOptionsOf<typeof lmsService.getQuizPerformanceAnalytics>
 ) => {
@@ -1014,11 +1047,11 @@ export const useQuizPerformanceAnalytics = (
  */
 export const useMandatoryTrainingAnalytics = (
   params?: {
-    courseId?: number;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-    includeEscalation?: boolean;
+    courseId?: number
+    status?: string
+    startDate?: string
+    endDate?: string
+    includeEscalation?: boolean
   },
   options?: QueryOptionsOf<typeof lmsService.getMandatoryTrainingAnalytics>
 ) => {
@@ -1053,11 +1086,17 @@ export const useTriggerManualReminders = (
         // Invalidate related queries
         queryClient.invalidateQueries(['analytics', 'reminder-analytics'])
         queryClient.invalidateQueries(['analytics', 'pending-notifications'])
-        queryClient.invalidateQueries(['analytics', 'mandatory-training-analytics'])
+        queryClient.invalidateQueries([
+          'analytics',
+          'mandatory-training-analytics'
+        ])
         queryClient.invalidateQueries(['analytics', 'mandatory-training'])
         queryClient.invalidateQueries(queryKeys.assignments.all)
 
-        notify.success('Recordatorios enviados exitosamente', `${data.totalNotifications} notificaciones enviadas`)
+        notify.success(
+          'Recordatorios enviados exitosamente',
+          `${data.totalNotifications} notificaciones enviadas`
+        )
 
         options?.onSuccess?.(data, variables, context)
       },
@@ -1077,16 +1116,30 @@ export const useSetCourseCompletionDate = (
   options?: UseMutationOptions<
     CompletionMutationData,
     Error,
-    { completedAt: string; userId?: number; courseId?: number; items?: Array<{ userId: number; courseId: number }> }
+    {
+      completedAt: string
+      userId?: number
+      courseId?: number
+      items?: Array<{ userId: number; courseId: number }>
+    }
   >
 ) => {
   const queryClient = useQueryClient()
 
   return useMutation(
-    (data: { completedAt: string; userId?: number; courseId?: number; items?: Array<{ userId: number; courseId: number }> }) =>
+    (data: {
+      completedAt: string
+      userId?: number
+      courseId?: number
+      items?: Array<{ userId: number; courseId: number }>
+    }) =>
       data.items && data.items.length > 0
         ? lmsService.bulkSetCourseCompletionDates(data.completedAt, data.items)
-        : lmsService.setCourseCompletionDate(data.userId as number, data.courseId as number, data.completedAt),
+        : lmsService.setCourseCompletionDate(
+            data.userId as number,
+            data.courseId as number,
+            data.completedAt
+          ),
     {
       ...options,
       onSuccess: (data, variables, context) => {
@@ -1129,15 +1182,30 @@ export const useSetUserAssignmentDates = (
 
       switch (data.scope) {
         case 'clear':
-          return lmsService.clearUserAssignmentDates(data.userId as number, data.courseId)
+          return lmsService.clearUserAssignmentDates(
+            data.userId as number,
+            data.courseId
+          )
         case 'group':
-          return lmsService.updateAssignmentDates(data.assignmentId as number, dates)
+          return lmsService.updateAssignmentDates(
+            data.assignmentId as number,
+            dates
+          )
         case 'group-clear':
           return lmsService
             .clearCourseUserDates(data.courseId)
-            .then(() => lmsService.updateAssignmentDates(data.assignmentId as number, dates))
+            .then(() =>
+              lmsService.updateAssignmentDates(
+                data.assignmentId as number,
+                dates
+              )
+            )
         default:
-          return lmsService.setUserAssignmentDates(data.userId as number, data.courseId, dates)
+          return lmsService.setUserAssignmentDates(
+            data.userId as number,
+            data.courseId,
+            dates
+          )
       }
     },
     {
@@ -1181,12 +1249,12 @@ export const useResetUserCourseProgress = (
  */
 export const useAssignmentManagementAnalytics = (
   params?: {
-    role?: string;
-    department?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-    includeOverdue?: boolean;
+    role?: string
+    department?: string
+    status?: string
+    startDate?: string
+    endDate?: string
+    includeOverdue?: boolean
   },
   options?: QueryOptionsOf<typeof lmsService.getAssignmentManagementAnalytics>
 ) => {
@@ -1205,11 +1273,11 @@ export const useAssignmentManagementAnalytics = (
  */
 export const useMandatoryTrainingStatus = (
   params?: {
-    role?: string;
-    userId?: number;
-    includeCompleted?: boolean;
-    sortBy?: string;
-    sortOrder?: string;
+    role?: string
+    userId?: number
+    includeCompleted?: boolean
+    sortBy?: string
+    sortOrder?: string
   },
   options?: QueryOptionsOf<typeof lmsService.getMandatoryTrainingStatus>
 ) => {
@@ -1287,22 +1355,19 @@ export const useMarkNotificationAsRead = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation(
-    (id: string) => lmsService.markNotificationAsRead(id),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        // Invalidate notifications
-        queryClient.invalidateQueries(queryKeys.notifications.list())
+  return useMutation((id: string) => lmsService.markNotificationAsRead(id), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      // Invalidate notifications
+      queryClient.invalidateQueries(queryKeys.notifications.list())
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        logger.error('Error marking notification as read:', error)
-        options?.onError?.(error, variables, context)
-      }
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      logger.error('Error marking notification as read:', error)
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 /**
@@ -1313,25 +1378,22 @@ export const useMarkAllNotificationsAsRead = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation(
-    () => lmsService.markAllNotificationsAsRead(),
-    {
-      ...options,
-      onSuccess: (data, variables, context) => {
-        // Invalidate notifications
-        queryClient.invalidateQueries(queryKeys.notifications.list())
+  return useMutation(() => lmsService.markAllNotificationsAsRead(), {
+    ...options,
+    onSuccess: (data, variables, context) => {
+      // Invalidate notifications
+      queryClient.invalidateQueries(queryKeys.notifications.list())
 
-        notify.success('Todas las notificaciones marcadas como leídas')
+      notify.success('Todas las notificaciones marcadas como leídas')
 
-        options?.onSuccess?.(data, variables, context)
-      },
-      onError: (error, variables, context) => {
-        notify.error('Error al marcar notificaciones', error.message)
+      options?.onSuccess?.(data, variables, context)
+    },
+    onError: (error, variables, context) => {
+      notify.error('Error al marcar notificaciones', error.message)
 
-        options?.onError?.(error, variables, context)
-      }
+      options?.onError?.(error, variables, context)
     }
-  )
+  })
 }
 
 // ===========================
@@ -1348,24 +1410,46 @@ export const useTrainingPlans = (options?: PlanQueryOptions) =>
     ...options
   })
 
-export const useTrainingPlan = (id: number | null, options?: PlanQueryOptions) =>
-  useQuery(queryKeys.plans.detail(id ?? 0), () => lmsService.getTrainingPlan(id as number), {
-    enabled: Boolean(id),
-    staleTime: 30 * 1000,
-    ...options
-  })
+export const useTrainingPlan = (
+  id: number | null,
+  options?: PlanQueryOptions
+) =>
+  useQuery(
+    queryKeys.plans.detail(id ?? 0),
+    () => lmsService.getTrainingPlan(id as number),
+    {
+      enabled: Boolean(id),
+      staleTime: 30 * 1000,
+      ...options
+    }
+  )
 
-export const usePlanAssignments = (id: number | null, options?: PlanQueryOptions) =>
-  useQuery(queryKeys.plans.assignments(id ?? 0), () => lmsService.getPlanAssignments(id as number), {
-    enabled: Boolean(id),
-    ...options
-  })
+export const usePlanAssignments = (
+  id: number | null,
+  options?: PlanQueryOptions
+) =>
+  useQuery(
+    queryKeys.plans.assignments(id ?? 0),
+    () => lmsService.getPlanAssignments(id as number),
+    {
+      enabled: Boolean(id),
+      ...options
+    }
+  )
 
-export const usePlanProgress = (id: number | null, mandatoryOnly = true, options?: PlanQueryOptions) =>
-  useQuery(queryKeys.plans.progress(id ?? 0, mandatoryOnly), () => lmsService.getPlanProgress(id as number, mandatoryOnly), {
-    enabled: Boolean(id),
-    ...options
-  })
+export const usePlanProgress = (
+  id: number | null,
+  mandatoryOnly = true,
+  options?: PlanQueryOptions
+) =>
+  useQuery(
+    queryKeys.plans.progress(id ?? 0, mandatoryOnly),
+    () => lmsService.getPlanProgress(id as number, mandatoryOnly),
+    {
+      enabled: Boolean(id),
+      ...options
+    }
+  )
 
 /** Misma clave que la pantalla de Asignaciones para compartir caché. */
 export const useInternalUsers = (options?: PlanQueryOptions) =>
@@ -1392,8 +1476,16 @@ const useInvalidatePlans = () => {
 export const useSaveTrainingPlan = () => {
   const invalidate = useInvalidatePlans()
   return useMutation(
-    async ({ id, data }: { id?: number; data: SaveTrainingPlanRequest }): Promise<{ plan?: TrainingPlanDetail }> =>
-      id ? lmsService.updateTrainingPlan(id, data) : lmsService.createTrainingPlan(data),
+    async ({
+      id,
+      data
+    }: {
+      id?: number
+      data: SaveTrainingPlanRequest
+    }): Promise<{ plan?: TrainingPlanDetail }> =>
+      id
+        ? lmsService.updateTrainingPlan(id, data)
+        : lmsService.createTrainingPlan(data),
     { onSuccess: invalidate }
   )
 }
@@ -1401,7 +1493,8 @@ export const useSaveTrainingPlan = () => {
 export const useDeleteTrainingPlan = () => {
   const invalidate = useInvalidatePlans()
   return useMutation(
-    ({ id, cascade }: { id: number; cascade?: boolean }) => lmsService.deleteTrainingPlan(id, cascade),
+    ({ id, cascade }: { id: number; cascade?: boolean }) =>
+      lmsService.deleteTrainingPlan(id, cascade),
     { onSuccess: invalidate }
   )
 }
@@ -1409,35 +1502,61 @@ export const useDeleteTrainingPlan = () => {
 export const useAssignTrainingPlan = () => {
   const invalidate = useInvalidatePlans()
   return useMutation(
-    ({ id, data }: { id: number; data: PlanAssignmentInput }) => lmsService.assignTrainingPlan(id, data),
+    ({ id, data }: { id: number; data: PlanAssignmentInput }) =>
+      lmsService.assignTrainingPlan(id, data),
     { onSuccess: invalidate }
   )
 }
 
 export const useUnassignTrainingPlan = () => {
   const invalidate = useInvalidatePlans()
-  return useMutation((planAssignmentId: number) => lmsService.unassignTrainingPlan(planAssignmentId), {
-    onSuccess: invalidate
-  })
+  return useMutation(
+    (planAssignmentId: number) =>
+      lmsService.unassignTrainingPlan(planAssignmentId),
+    {
+      onSuccess: invalidate
+    }
+  )
 }
 
 /** Destinos de usuarios que se pueden unificar (consulta sin cambios). */
-export const useMergeablePlanAssignments = (planId: number | null, options?: PlanQueryOptions) =>
-  useQuery(queryKeys.plans.mergeable(planId ?? 0), () => lmsService.mergePlanAssignments(planId as number, true), {
-    enabled: Boolean(planId),
-    ...options
-  })
+export const useMergeablePlanAssignments = (
+  planId: number | null,
+  options?: PlanQueryOptions
+) =>
+  useQuery(
+    queryKeys.plans.mergeable(planId ?? 0),
+    () => lmsService.mergePlanAssignments(planId as number, true),
+    {
+      enabled: Boolean(planId),
+      ...options
+    }
+  )
 
 export const useMergePlanAssignments = () => {
   const invalidate = useInvalidatePlans()
-  return useMutation((planId: number) => lmsService.mergePlanAssignments(planId), { onSuccess: invalidate })
+  return useMutation(
+    (planId: number) => lmsService.mergePlanAssignments(planId),
+    { onSuccess: invalidate }
+  )
 }
 
 export const useUpdatePlanAssignmentUsers = () => {
   const invalidate = useInvalidatePlans()
   return useMutation(
-    ({ id, userIds, notify }: { id: number; userIds: number[]; notify: boolean }) =>
-      lmsService.updatePlanAssignmentUsers(id, { user_ids: userIds, send_notification: notify }),
+    ({
+      id,
+      userIds,
+      notify
+    }: {
+      id: number
+      userIds: number[]
+      notify: boolean
+    }) =>
+      lmsService.updatePlanAssignmentUsers(id, {
+        user_ids: userIds,
+        send_notification: notify
+      }),
     { onSuccess: invalidate }
   )
 }

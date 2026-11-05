@@ -124,7 +124,11 @@ const TripsTable = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<Trip>) => {
-      confirmDialog({ title: `¿Está seguro que desea eliminar el viaje?`, text: 'No podrá recuperar esta información una vez eliminada', confirmLabel: 'Sí' }).then((result) => {
+      confirmDialog({
+        title: `¿Está seguro que desea eliminar el viaje?`,
+        text: 'No podrá recuperar esta información una vez eliminada',
+        confirmLabel: 'Sí'
+      }).then((result) => {
         if (result.isConfirmed) {
           deleteTrip.mutate(row.getValue('id'))
         }
@@ -308,18 +312,18 @@ const TripsTable = () => {
                 mt: 2
               }}
             >
-{canManage && (
-              <Button
-                variant='contained'
-                onClick={handleCreateTrip}
-                sx={{
-                  fontWeight: 'bold',
-                  color: '#DCFCE7'
-                }}
-              >
-                Terminar Viaje
-              </Button>
-)}
+              {canManage && (
+                <Button
+                  variant='contained'
+                  onClick={handleCreateTrip}
+                  sx={{
+                    fontWeight: 'bold',
+                    color: '#DCFCE7'
+                  }}
+                >
+                  Terminar Viaje
+                </Button>
+              )}
             </Box>
           </CardContent>
         </Card>
@@ -357,13 +361,13 @@ const TripsTable = () => {
                 <Edit />
               </IconButton>
             </Tooltip> */}
-{canManage && (
-            <Tooltip arrow placement='right' title='Eliminar'>
-              <IconButton color='error' onClick={() => handleDeleteRow(row)}>
-                <Delete />
-              </IconButton>
-            </Tooltip>
-)}
+            {canManage && (
+              <Tooltip arrow placement='right' title='Eliminar'>
+                <IconButton color='error' onClick={() => handleDeleteRow(row)}>
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         )}
         renderTopToolbarCustomActions={() =>

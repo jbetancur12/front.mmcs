@@ -41,7 +41,10 @@ interface MaintenanceTicketHeaderProps {
 }
 
 /** Encabezado: migas, título, indicador de tiempo real, menú de PDFs y botones de edición. */
-const MaintenanceTicketHeader = ({ ticket, details }: MaintenanceTicketHeaderProps) => {
+const MaintenanceTicketHeader = ({
+  ticket,
+  details
+}: MaintenanceTicketHeaderProps) => {
   const {
     isMobile,
     canEditTicket,
@@ -193,9 +196,7 @@ const MaintenanceTicketHeader = ({ ticket, details }: MaintenanceTicketHeaderPro
               control={
                 <Switch
                   checked={realTimeUpdatesEnabled}
-                  onChange={(e) =>
-                    setRealTimeUpdatesEnabled(e.target.checked)
-                  }
+                  onChange={(e) => setRealTimeUpdatesEnabled(e.target.checked)}
                   size='small'
                 />
               }
@@ -546,8 +547,7 @@ const MaintenanceTicketHeader = ({ ticket, details }: MaintenanceTicketHeaderPro
               sx={{
                 minHeight: 48,
                 fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                background:
-                  'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+                background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
                 borderRadius: '12px',
                 boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
                 transition: 'all 0.2s ease-in-out',

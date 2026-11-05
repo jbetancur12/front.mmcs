@@ -40,7 +40,10 @@ const FleetRoutes = (role: string[]) => {
       <Route element={guard(PERMISSIONS.FLEET_VEHICLE_VIEW)}>
         <Route path='fleet' element={<Fleet />} />
         <Route path='fleet/:id/documents' element={<Documents />} />
-        <Route path='fleet/:id/documents/:docId' element={<DocumentViewPDF />} />
+        <Route
+          path='fleet/:id/documents/:docId'
+          element={<DocumentViewPDF />}
+        />
         <Route path='fleet/:id/data-sheet' element={<VehicleDataSheetPDF />} />
         <Route path='fleet/:id/inspections' element={<InspectionsTable />} />
       </Route>
@@ -54,7 +57,10 @@ const FleetRoutes = (role: string[]) => {
         <Route path='fleet/:id/trip/new' element={<NewTrip />} />
       </Route>
       <Route element={guard(PERMISSIONS.FLEET_MAINTENANCE_VIEW)}>
-        <Route path='fleet/:id/interventions' element={<MaintenanceRecords />} />
+        <Route
+          path='fleet/:id/interventions'
+          element={<MaintenanceRecords />}
+        />
       </Route>
     </>
   )

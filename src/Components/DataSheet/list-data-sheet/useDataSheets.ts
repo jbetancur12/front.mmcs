@@ -101,8 +101,7 @@ export const useDataSheetCounts = () => {
 export const useDataSheetMutations = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
-  const invalidate = () =>
-    queryClient.invalidateQueries(dataSheetKeys.all)
+  const invalidate = () => queryClient.invalidateQueries(dataSheetKeys.all)
   // Sin reintentos: el `retry: 1` global de mutaciones reenviaría POST/PUT/DELETE.
   const options = { onSuccess: invalidate, retry: 0 }
 
@@ -110,7 +109,10 @@ export const useDataSheetMutations = () => {
     AxiosResponse,
     unknown,
     { id: number; values: Record<string, unknown> }
-  >(({ id, values }) => axiosPrivate.put(`/dataSheet/${id}`, values, {}), options)
+  >(
+    ({ id, values }) => axiosPrivate.put(`/dataSheet/${id}`, values, {}),
+    options
+  )
 
   const deleteDataSheet = useMutation<AxiosResponse, unknown, number>(
     (id) => axiosPrivate.delete(`/dataSheet/${id}`),
@@ -121,33 +123,27 @@ export const useDataSheetMutations = () => {
     AxiosResponse,
     unknown,
     { id: number | undefined; image: File }
-  >(
-    ({ id, image }) => {
-      const formData = new FormData()
-      formData.append('picture', image)
-      return axiosPrivate.put(`/dataSheet/${id}/update-image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-    },
-    options
-  )
+  >(({ id, image }) => {
+    const formData = new FormData()
+    formData.append('picture', image)
+    return axiosPrivate.put(`/dataSheet/${id}/update-image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }, options)
 
   const uploadInvoice = useMutation<
     AxiosResponse,
     unknown,
     { id: number; pdfFile: File }
-  >(
-    ({ id, pdfFile }) => {
-      const formData = new FormData()
-      formData.append('invoice', pdfFile)
-      return axiosPrivate.put(`/dataSheet/${id}/update-invoice`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-    },
-    options
-  )
+  >(({ id, pdfFile }) => {
+    const formData = new FormData()
+    formData.append('invoice', pdfFile)
+    return axiosPrivate.put(`/dataSheet/${id}/update-invoice`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }, options)
 
   const createDataSheet = useMutation<AxiosResponse, unknown, FormData>(
     (formData) =>

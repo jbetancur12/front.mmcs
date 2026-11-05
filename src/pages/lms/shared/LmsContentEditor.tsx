@@ -105,9 +105,15 @@ interface ResourceDraftDialogState {
 
 interface LmsContentEditorProps {
   modules: ContentModuleDraft[]
-  onModulesChange: (modules: ContentModuleDraft[], options?: { markUnsaved?: boolean }) => void
+  onModulesChange: (
+    modules: ContentModuleDraft[],
+    options?: { markUnsaved?: boolean }
+  ) => void
   onModulesReorder?: (modules: ContentModuleDraft[]) => Promise<void> | void
-  onLessonsReorder?: (moduleId: string, lessons: ContentLessonDraft[]) => Promise<void> | void
+  onLessonsReorder?: (
+    moduleId: string,
+    lessons: ContentLessonDraft[]
+  ) => Promise<void> | void
   onSave?: () => void
   isLoading?: boolean
   hasUnsavedChanges?: boolean
@@ -197,39 +203,45 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ value, onChange }) => {
     }
   }, [value])
 
-  return <Box className="quill-editor-shell" ref={containerRef} />
+  return <Box className='quill-editor-shell' ref={containerRef} />
 }
 
-const lessonTypeMeta: Record<LessonDraftType, { label: string; helper: string; icon: React.ReactNode }> = {
+const lessonTypeMeta: Record<
+  LessonDraftType,
+  { label: string; helper: string; icon: React.ReactNode }
+> = {
   text: {
     label: 'Texto',
     helper: 'Úsalo para explicar conceptos, pasos o procedimientos.',
-    icon: <ArticleIcon fontSize="small" />
+    icon: <ArticleIcon fontSize='small' />
   },
   video: {
     label: 'Video',
     helper: 'Ideal para demostraciones o clases grabadas.',
-    icon: <VideoIcon fontSize="small" />
+    icon: <VideoIcon fontSize='small' />
   },
   quiz: {
     label: 'Quiz',
     helper: 'Valida aprendizaje y permite aprobar la sección.',
-    icon: <QuizIcon fontSize="small" />
+    icon: <QuizIcon fontSize='small' />
   }
 }
 
-const resourceTypeMeta: Record<LessonResourceType, { label: string; icon: React.ReactNode }> = {
+const resourceTypeMeta: Record<
+  LessonResourceType,
+  { label: string; icon: React.ReactNode }
+> = {
   pdf: {
     label: 'PDF',
-    icon: <PdfIcon fontSize="small" />
+    icon: <PdfIcon fontSize='small' />
   },
   document: {
     label: 'Documento',
-    icon: <ArticleIcon fontSize="small" />
+    icon: <ArticleIcon fontSize='small' />
   },
   link: {
     label: 'Enlace',
-    icon: <LinkIcon fontSize="small" />
+    icon: <LinkIcon fontSize='small' />
   }
 }
 
@@ -241,7 +253,11 @@ const pluralize = (count: number, singular: string, plural?: string) =>
 
 const isPersistedEntityId = (id: string) => /^\d+$/.test(id)
 
-const reorderItems = <T extends { order: number }>(items: T[], startIndex: number, endIndex: number) => {
+const reorderItems = <T extends { order: number }>(
+  items: T[],
+  startIndex: number,
+  endIndex: number
+) => {
   const nextItems = [...items]
   const [movedItem] = nextItems.splice(startIndex, 1)
 
@@ -266,8 +282,12 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   onDeleteResource,
   courseId
 }) => {
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(modules[0]?.id ?? null)
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(modules[0]?.lessons[0]?.id ?? null)
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
+    modules[0]?.id ?? null
+  )
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(
+    modules[0]?.lessons[0]?.id ?? null
+  )
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false)
   const [lessonDialogOpen, setLessonDialogOpen] = useState(false)
   const [moduleDraft, setModuleDraft] = useState({ title: '', description: '' })
@@ -277,20 +297,23 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     estimatedMinutes: 10,
     description: ''
   })
-  const [resourceDialog, setResourceDialog] = useState<ResourceDraftDialogState>({
-    open: false,
-    editingResourceId: null,
-    lessonId: null,
-    values: {
-      title: '',
-      description: '',
-      resourceType: 'pdf',
-      externalUrl: '',
-      localFile: null,
-      existingFileName: ''
-    }
-  })
-  const [quizEditorLessonId, setQuizEditorLessonId] = useState<string | null>(null)
+  const [resourceDialog, setResourceDialog] =
+    useState<ResourceDraftDialogState>({
+      open: false,
+      editingResourceId: null,
+      lessonId: null,
+      values: {
+        title: '',
+        description: '',
+        resourceType: 'pdf',
+        externalUrl: '',
+        localFile: null,
+        existingFileName: ''
+      }
+    })
+  const [quizEditorLessonId, setQuizEditorLessonId] = useState<string | null>(
+    null
+  )
   const [videoUploadState, setVideoUploadState] = useState<{
     lessonId: string | null
     isUploading: boolean
@@ -312,18 +335,25 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       return
     }
 
-    const selectedModuleExists = modules.some((module) => module.id === selectedModuleId)
+    const selectedModuleExists = modules.some(
+      (module) => module.id === selectedModuleId
+    )
     const nextModuleId = selectedModuleExists ? selectedModuleId : modules[0].id
     setSelectedModuleId(nextModuleId)
 
-    const nextModule = modules.find((module) => module.id === nextModuleId) ?? modules[0]
+    const nextModule =
+      modules.find((module) => module.id === nextModuleId) ?? modules[0]
     if (!nextModule.lessons.length) {
       setSelectedLessonId(null)
       return
     }
 
-    const selectedLessonExists = nextModule.lessons.some((lesson) => lesson.id === selectedLessonId)
-    setSelectedLessonId(selectedLessonExists ? selectedLessonId : nextModule.lessons[0].id)
+    const selectedLessonExists = nextModule.lessons.some(
+      (lesson) => lesson.id === selectedLessonId
+    )
+    setSelectedLessonId(
+      selectedLessonExists ? selectedLessonId : nextModule.lessons[0].id
+    )
   }, [modules, selectedLessonId, selectedModuleId])
 
   const selectedModule = useMemo(
@@ -332,12 +362,22 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   )
 
   const selectedLesson = useMemo(
-    () => selectedModule?.lessons.find((lesson) => lesson.id === selectedLessonId) ?? null,
+    () =>
+      selectedModule?.lessons.find(
+        (lesson) => lesson.id === selectedLessonId
+      ) ?? null,
     [selectedLessonId, selectedModule]
   )
 
-  const replaceModule = (moduleId: string, updater: (module: ContentModuleDraft) => ContentModuleDraft) => {
-    onModulesChange(modules.map((module) => (module.id === moduleId ? updater(module) : module)))
+  const replaceModule = (
+    moduleId: string,
+    updater: (module: ContentModuleDraft) => ContentModuleDraft
+  ) => {
+    onModulesChange(
+      modules.map((module) =>
+        module.id === moduleId ? updater(module) : module
+      )
+    )
   }
 
   const replaceLesson = (
@@ -347,11 +387,15 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   ) => {
     replaceModule(moduleId, (module) => ({
       ...module,
-      lessons: module.lessons.map((lesson) => (lesson.id === lessonId ? updater(lesson) : lesson))
+      lessons: module.lessons.map((lesson) =>
+        lesson.id === lessonId ? updater(lesson) : lesson
+      )
     }))
   }
 
-  const updateSelectedLesson = (updater: (lesson: ContentLessonDraft) => ContentLessonDraft) => {
+  const updateSelectedLesson = (
+    updater: (lesson: ContentLessonDraft) => ContentLessonDraft
+  ) => {
     if (!selectedModule || !selectedLesson) {
       return
     }
@@ -360,7 +404,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   }
 
   const isPersistedCourse = Boolean(courseId && /^\d+$/.test(courseId))
-  const isPersistedLesson = Boolean(selectedLesson && /^\d+$/.test(selectedLesson.id))
+  const isPersistedLesson = Boolean(
+    selectedLesson && /^\d+$/.test(selectedLesson.id)
+  )
   const canUploadLessonVideo = isPersistedCourse && isPersistedLesson
 
   const handleUploadLessonVideo = async (file: File | null) => {
@@ -369,7 +415,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     }
 
     if (!selectedLesson || !canUploadLessonVideo || !courseId) {
-      notify.info('Guarda el curso y la lección primero para subir el video al LMS.')
+      notify.info(
+        'Guarda el curso y la lección primero para subir el video al LMS.'
+      )
       return
     }
 
@@ -410,7 +458,10 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         : ''
       notify.info(`Video cargado correctamente en MinIO.${optimizationMessage}`)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No fue posible subir el video.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'No fue posible subir el video.'
       notify.error(message)
     } finally {
       setVideoUploadState({
@@ -481,7 +532,12 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       lessons: [...module.lessons, newLesson]
     }))
     setSelectedLessonId(newLesson.id)
-    setLessonDraft({ title: '', type: 'text', estimatedMinutes: 10, description: '' })
+    setLessonDraft({
+      title: '',
+      type: 'text',
+      estimatedMinutes: 10,
+      description: ''
+    })
     setLessonDialogOpen(false)
     notify.info('Lección creada. Completa ahora su contenido.')
   }
@@ -502,7 +558,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       return
     }
 
-    const startIndex = modules.findIndex((module) => module.id === draggedModuleId)
+    const startIndex = modules.findIndex(
+      (module) => module.id === draggedModuleId
+    )
     const endIndex = modules.findIndex((module) => module.id === targetModuleId)
 
     if (startIndex < 0 || endIndex < 0) {
@@ -511,11 +569,15 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
     const reorderedModules = reorderItems(modules, startIndex, endIndex)
     onModulesChange(reorderedModules, { markUnsaved: false })
-    const canPersistReorder = reorderedModules.every((module) => isPersistedEntityId(module.id))
+    const canPersistReorder = reorderedModules.every((module) =>
+      isPersistedEntityId(module.id)
+    )
 
     if (!canPersistReorder) {
       setSelectedModuleId(draggedModuleId)
-      notify.info('Orden de secciones actualizado. Guarda el contenido para persistir también las nuevas secciones.')
+      notify.info(
+        'Orden de secciones actualizado. Guarda el contenido para persistir también las nuevas secciones.'
+      )
       return
     }
 
@@ -523,25 +585,40 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       await onModulesReorder?.(reorderedModules)
       notify.info('Orden de secciones actualizado y guardado.')
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo guardar el nuevo orden de las secciones.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'No se pudo guardar el nuevo orden de las secciones.'
       notify.error(message)
     }
     setSelectedModuleId(draggedModuleId)
   }
 
   const handleLessonReorder = async (targetLessonId: string) => {
-    if (!selectedModule || !draggedLessonId || draggedLessonId === targetLessonId) {
+    if (
+      !selectedModule ||
+      !draggedLessonId ||
+      draggedLessonId === targetLessonId
+    ) {
       return
     }
 
-    const startIndex = selectedModule.lessons.findIndex((lesson) => lesson.id === draggedLessonId)
-    const endIndex = selectedModule.lessons.findIndex((lesson) => lesson.id === targetLessonId)
+    const startIndex = selectedModule.lessons.findIndex(
+      (lesson) => lesson.id === draggedLessonId
+    )
+    const endIndex = selectedModule.lessons.findIndex(
+      (lesson) => lesson.id === targetLessonId
+    )
 
     if (startIndex < 0 || endIndex < 0) {
       return
     }
 
-    const reorderedLessons = reorderItems(selectedModule.lessons, startIndex, endIndex)
+    const reorderedLessons = reorderItems(
+      selectedModule.lessons,
+      startIndex,
+      endIndex
+    )
 
     onModulesChange(
       modules.map((module) =>
@@ -551,12 +628,15 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       ),
       { markUnsaved: false }
     )
-    const canPersistReorder = isPersistedEntityId(selectedModule.id) &&
+    const canPersistReorder =
+      isPersistedEntityId(selectedModule.id) &&
       reorderedLessons.every((lesson) => isPersistedEntityId(lesson.id))
 
     if (!canPersistReorder) {
       setSelectedLessonId(draggedLessonId)
-      notify.info('Orden de lecciones actualizado. Guarda el contenido para persistir también las nuevas lecciones.')
+      notify.info(
+        'Orden de lecciones actualizado. Guarda el contenido para persistir también las nuevas lecciones.'
+      )
       return
     }
 
@@ -564,7 +644,10 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       await onLessonsReorder?.(selectedModule.id, reorderedLessons)
       notify.info('Orden de lecciones actualizado y guardado.')
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo guardar el nuevo orden de las lecciones.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'No se pudo guardar el nuevo orden de las lecciones.'
       notify.error(message)
     }
     setSelectedLessonId(draggedLessonId)
@@ -596,7 +679,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       return
     }
 
-    const resource = selectedLesson.content.resources.find((item) => item.id === resourceId)
+    const resource = selectedLesson.content.resources.find(
+      (item) => item.id === resourceId
+    )
     if (!resource) {
       return
     }
@@ -627,11 +712,15 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     const hasUploadedFile = Boolean(resourceDialog.values.localFile)
     const hasExistingStoredFile = Boolean(
       resourceDialog.editingResourceId &&
-      selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.objectKey
+        selectedLesson.content.resources.find(
+          (item) => item.id === resourceDialog.editingResourceId
+        )?.objectKey
     )
     const hasLegacyFileUrl = Boolean(
       resourceDialog.editingResourceId &&
-      selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.fileUrl
+        selectedLesson.content.resources.find(
+          (item) => item.id === resourceDialog.editingResourceId
+        )?.fileUrl
     )
 
     if (!normalizedTitle) {
@@ -644,7 +733,12 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       return
     }
 
-    if (!isLinkResource && !hasUploadedFile && !hasExistingStoredFile && !hasLegacyFileUrl) {
+    if (
+      !isLinkResource &&
+      !hasUploadedFile &&
+      !hasExistingStoredFile &&
+      !hasLegacyFileUrl
+    ) {
       notify.info('Sube un archivo para este recurso.')
       return
     }
@@ -654,20 +748,48 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       title: normalizedTitle,
       description: resourceDialog.values.description.trim(),
       resourceType: resourceDialog.values.resourceType,
-      fileUrl: isLinkResource ? undefined : selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.fileUrl,
-      externalUrl: isLinkResource ? normalizedExternalUrl || undefined : undefined,
-      bucketName: isLinkResource ? undefined : selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.bucketName,
-      objectKey: isLinkResource ? undefined : selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.objectKey,
-      mimeType: isLinkResource ? undefined : (resourceDialog.values.localFile?.type || selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.mimeType),
-      fileSize: isLinkResource ? undefined : (resourceDialog.values.localFile?.size || selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.fileSize),
+      fileUrl: isLinkResource
+        ? undefined
+        : selectedLesson.content.resources.find(
+            (item) => item.id === resourceDialog.editingResourceId
+          )?.fileUrl,
+      externalUrl: isLinkResource
+        ? normalizedExternalUrl || undefined
+        : undefined,
+      bucketName: isLinkResource
+        ? undefined
+        : selectedLesson.content.resources.find(
+            (item) => item.id === resourceDialog.editingResourceId
+          )?.bucketName,
+      objectKey: isLinkResource
+        ? undefined
+        : selectedLesson.content.resources.find(
+            (item) => item.id === resourceDialog.editingResourceId
+          )?.objectKey,
+      mimeType: isLinkResource
+        ? undefined
+        : resourceDialog.values.localFile?.type ||
+          selectedLesson.content.resources.find(
+            (item) => item.id === resourceDialog.editingResourceId
+          )?.mimeType,
+      fileSize: isLinkResource
+        ? undefined
+        : resourceDialog.values.localFile?.size ||
+          selectedLesson.content.resources.find(
+            (item) => item.id === resourceDialog.editingResourceId
+          )?.fileSize,
       originalFilename: isLinkResource
         ? undefined
-        : (resourceDialog.values.localFile?.name || selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.originalFilename),
+        : resourceDialog.values.localFile?.name ||
+          selectedLesson.content.resources.find(
+            (item) => item.id === resourceDialog.editingResourceId
+          )?.originalFilename,
       localFile: isLinkResource ? null : resourceDialog.values.localFile,
-      order:
-        resourceDialog.editingResourceId
-          ? selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.order || 1
-          : selectedLesson.content.resources.length + 1
+      order: resourceDialog.editingResourceId
+        ? selectedLesson.content.resources.find(
+            (item) => item.id === resourceDialog.editingResourceId
+          )?.order || 1
+        : selectedLesson.content.resources.length + 1
     }
 
     updateSelectedLesson((lesson) => ({
@@ -676,7 +798,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         ...lesson.content,
         resources: resourceDialog.editingResourceId
           ? lesson.content.resources.map((resource) =>
-              resource.id === resourceDialog.editingResourceId ? resourcePayload : resource
+              resource.id === resourceDialog.editingResourceId
+                ? resourcePayload
+                : resource
             )
           : [...lesson.content.resources, resourcePayload]
       }
@@ -706,36 +830,52 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
   const canOpenQuizBuilder = Boolean(
     selectedLesson &&
-    !selectedLesson.id.startsWith('temp_') &&
-    !selectedLesson.id.startsWith('lesson_')
+      !selectedLesson.id.startsWith('temp_') &&
+      !selectedLesson.id.startsWith('lesson_')
   )
 
   return (
     <Stack spacing={3}>
-
       <Stack spacing={3}>
-        <Card variant="outlined">
+        <Card variant='outlined'>
           <CardContent>
-            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2} sx={{ mb: 2 }}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              justifyContent='space-between'
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+              spacing={2}
+              sx={{ mb: 2 }}
+            >
               <Box>
-                <Typography variant="h6">Secciones del curso</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Organiza el curso por bloques temáticos o momentos del aprendizaje.
+                <Typography variant='h6'>Secciones del curso</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Organiza el curso por bloques temáticos o momentos del
+                  aprendizaje.
                 </Typography>
               </Box>
-              <Button size="small" startIcon={<AddIcon />} onClick={() => setModuleDialogOpen(true)}>
+              <Button
+                size='small'
+                startIcon={<AddIcon />}
+                onClick={() => setModuleDialogOpen(true)}
+              >
                 Agregar sección
               </Button>
             </Stack>
 
             {modules.length === 0 ? (
-              <Alert severity="info">Este curso aún no tiene secciones. Crea la primera para empezar.</Alert>
+              <Alert severity='info'>
+                Este curso aún no tiene secciones. Crea la primera para empezar.
+              </Alert>
             ) : (
               <Grid container spacing={2}>
                 {modules.map((module) => (
                   <Grid key={module.id} item xs={12} md={6} xl={4}>
                     <Paper
-                      variant={module.id === selectedModuleId ? 'elevation' : 'outlined'}
+                      variant={
+                        module.id === selectedModuleId
+                          ? 'elevation'
+                          : 'outlined'
+                      }
                       draggable
                       onDragStart={() => setDraggedModuleId(module.id)}
                       onDragEnd={() => setDraggedModuleId(null)}
@@ -746,36 +886,67 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                       }}
                       sx={{
                         p: 2,
-                        borderColor: module.id === selectedModuleId ? 'primary.main' : 'divider',
-                        cursor: draggedModuleId === module.id ? 'grabbing' : 'grab',
+                        borderColor:
+                          module.id === selectedModuleId
+                            ? 'primary.main'
+                            : 'divider',
+                        cursor:
+                          draggedModuleId === module.id ? 'grabbing' : 'grab',
                         opacity: draggedModuleId === module.id ? 0.7 : 1,
                         transition: 'border-color 0.2s ease, opacity 0.2s ease',
-                        borderStyle: draggedModuleId && draggedModuleId !== module.id ? 'dashed' : 'solid'
+                        borderStyle:
+                          draggedModuleId && draggedModuleId !== module.id
+                            ? 'dashed'
+                            : 'solid'
                       }}
                       onClick={() => setSelectedModuleId(module.id)}
                     >
-                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
-                        <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ minWidth: 0 }}>
-                          <DragIndicatorIcon fontSize="small" color="action" sx={{ mt: 0.25 }} />
-                          <SectionIcon color={module.id === selectedModuleId ? 'primary' : 'inherit'} />
+                      <Stack
+                        direction='row'
+                        justifyContent='space-between'
+                        alignItems='flex-start'
+                        spacing={1}
+                      >
+                        <Stack
+                          direction='row'
+                          spacing={1.5}
+                          alignItems='flex-start'
+                          sx={{ minWidth: 0 }}
+                        >
+                          <DragIndicatorIcon
+                            fontSize='small'
+                            color='action'
+                            sx={{ mt: 0.25 }}
+                          />
+                          <SectionIcon
+                            color={
+                              module.id === selectedModuleId
+                                ? 'primary'
+                                : 'inherit'
+                            }
+                          />
                           <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="subtitle2" noWrap>
+                            <Typography variant='subtitle2' noWrap>
                               {module.title}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {pluralize(module.lessons.length, 'lección', 'lecciones')}
+                            <Typography variant='body2' color='text.secondary'>
+                              {pluralize(
+                                module.lessons.length,
+                                'lección',
+                                'lecciones'
+                              )}
                             </Typography>
                           </Box>
                         </Stack>
                         <IconButton
-                          edge="end"
-                          size="small"
+                          edge='end'
+                          size='small'
                           onClick={(event) => {
                             event.stopPropagation()
                             handleDeleteModule(module.id)
                           }}
                         >
-                          <DeleteIcon fontSize="small" />
+                          <DeleteIcon fontSize='small' />
                         </IconButton>
                       </Stack>
                     </Paper>
@@ -786,20 +957,25 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
           </CardContent>
         </Card>
 
-        <Card variant="outlined">
+        <Card variant='outlined'>
           <CardContent>
             {selectedModule ? (
               <Stack spacing={3}>
                 <Box>
-                  <Typography variant="overline" color="primary">
+                  <Typography variant='overline' color='primary'>
                     Sección {selectedModule.order}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    Agrupa aquí las lecciones que pertenecen al mismo tema, unidad o momento del curso.
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mt: 0.5 }}
+                  >
+                    Agrupa aquí las lecciones que pertenecen al mismo tema,
+                    unidad o momento del curso.
                   </Typography>
                   <TextField
                     fullWidth
-                    label="Título de la sección"
+                    label='Título de la sección'
                     value={selectedModule.title}
                     onChange={(event) =>
                       replaceModule(selectedModule.id, (module) => ({
@@ -813,7 +989,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                     fullWidth
                     multiline
                     minRows={2}
-                    label="Descripción de la sección"
+                    label='Descripción de la sección'
                     value={selectedModule.description || ''}
                     onChange={(event) =>
                       replaceModule(selectedModule.id, (module) => ({
@@ -826,20 +1002,34 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
                 <Divider />
 
-                <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  justifyContent='space-between'
+                  alignItems={{ xs: 'flex-start', md: 'center' }}
+                  spacing={2}
+                >
                   <Box>
-                    <Typography variant="h6">Lecciones de la sección</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Puedes combinar texto, video y quiz dentro de la misma sección. Arrastra para reorganizar el orden.
+                    <Typography variant='h6'>
+                      Lecciones de la sección
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Puedes combinar texto, video y quiz dentro de la misma
+                      sección. Arrastra para reorganizar el orden.
                     </Typography>
                   </Box>
-                  <Button startIcon={<AddIcon />} onClick={() => setLessonDialogOpen(true)}>
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={() => setLessonDialogOpen(true)}
+                  >
                     Agregar lección
                   </Button>
                 </Stack>
 
                 {selectedModule.lessons.length === 0 ? (
-                  <Alert severity="info">Esta sección aún no tiene lecciones. Agrega la primera para editar contenido.</Alert>
+                  <Alert severity='info'>
+                    Esta sección aún no tiene lecciones. Agrega la primera para
+                    editar contenido.
+                  </Alert>
                 ) : (
                   <Grid container spacing={2}>
                     <Grid item xs={12} xl={4}>
@@ -847,7 +1037,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                         {selectedModule.lessons.map((lesson) => (
                           <Paper
                             key={lesson.id}
-                            variant={lesson.id === selectedLessonId ? 'elevation' : 'outlined'}
+                            variant={
+                              lesson.id === selectedLessonId
+                                ? 'elevation'
+                                : 'outlined'
+                            }
                             draggable
                             onDragStart={() => setDraggedLessonId(lesson.id)}
                             onDragEnd={() => setDraggedLessonId(null)}
@@ -858,30 +1052,47 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                             }}
                             sx={{
                               mb: 1,
-                              cursor: draggedLessonId === lesson.id ? 'grabbing' : 'grab',
+                              cursor:
+                                draggedLessonId === lesson.id
+                                  ? 'grabbing'
+                                  : 'grab',
                               opacity: draggedLessonId === lesson.id ? 0.7 : 1,
-                              transition: 'border-color 0.2s ease, opacity 0.2s ease',
-                              borderStyle: draggedLessonId && draggedLessonId !== lesson.id ? 'dashed' : 'solid'
+                              transition:
+                                'border-color 0.2s ease, opacity 0.2s ease',
+                              borderStyle:
+                                draggedLessonId && draggedLessonId !== lesson.id
+                                  ? 'dashed'
+                                  : 'solid'
                             }}
                           >
-                            <ListItemButton onClick={() => setSelectedLessonId(lesson.id)}>
+                            <ListItemButton
+                              onClick={() => setSelectedLessonId(lesson.id)}
+                            >
                               <ListItemIcon sx={{ minWidth: 30 }}>
-                                <DragIndicatorIcon fontSize="small" color="action" />
+                                <DragIndicatorIcon
+                                  fontSize='small'
+                                  color='action'
+                                />
                               </ListItemIcon>
-                              <ListItemIcon>{lessonTypeMeta[lesson.type].icon}</ListItemIcon>
+                              <ListItemIcon>
+                                {lessonTypeMeta[lesson.type].icon}
+                              </ListItemIcon>
                               <ListItemText
                                 primary={lesson.title}
                                 secondary={`${lessonTypeMeta[lesson.type].label} · ${lesson.estimatedMinutes} min`}
                               />
                               <IconButton
-                                edge="end"
-                                size="small"
+                                edge='end'
+                                size='small'
                                 onClick={(event) => {
                                   event.stopPropagation()
-                                  handleDeleteLesson(selectedModule.id, lesson.id)
+                                  handleDeleteLesson(
+                                    selectedModule.id,
+                                    lesson.id
+                                  )
                                 }}
                               >
-                                <DeleteIcon fontSize="small" />
+                                <DeleteIcon fontSize='small' />
                               </IconButton>
                             </ListItemButton>
                           </Paper>
@@ -892,349 +1103,654 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                     <Grid item xs={12} xl={8}>
                       {selectedLesson ? (
                         <Stack spacing={2}>
-                            <TextField
-                              fullWidth
-                              label="Título de la lección"
-                              value={selectedLesson.title}
-                              onChange={(event) =>
-                                updateSelectedLesson((lesson) => ({
-                                  ...lesson,
-                                  title: event.target.value
-                                }))
-                              }
-                            />
-                            <Grid container spacing={2}>
-                              <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                  <InputLabel id="lesson-type-label">Tipo de lección</InputLabel>
-                                  <Select
-                                    labelId="lesson-type-label"
-                                    label="Tipo de lección"
-                                    value={selectedLesson.type}
-                                    onChange={(event) =>
-                                      updateSelectedLesson((lesson) => ({
-                                        ...lesson,
-                                        type: event.target.value as LessonDraftType
-                                      }))
-                                    }
-                                  >
-                                    {Object.entries(lessonTypeMeta).map(([value, meta]) => (
-                                      <MenuItem key={value} value={value}>
-                                        {meta.label}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                </FormControl>
-                              </Grid>
-                              <Grid item xs={12} sm={6}>
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  label="Duración estimada (min)"
-                                  value={selectedLesson.estimatedMinutes}
+                          <TextField
+                            fullWidth
+                            label='Título de la lección'
+                            value={selectedLesson.title}
+                            onChange={(event) =>
+                              updateSelectedLesson((lesson) => ({
+                                ...lesson,
+                                title: event.target.value
+                              }))
+                            }
+                          />
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6}>
+                              <FormControl fullWidth>
+                                <InputLabel id='lesson-type-label'>
+                                  Tipo de lección
+                                </InputLabel>
+                                <Select
+                                  labelId='lesson-type-label'
+                                  label='Tipo de lección'
+                                  value={selectedLesson.type}
                                   onChange={(event) =>
                                     updateSelectedLesson((lesson) => ({
                                       ...lesson,
-                                      estimatedMinutes: Math.max(1, Number(event.target.value) || 1)
+                                      type: event.target
+                                        .value as LessonDraftType
                                     }))
                                   }
-                                />
-                              </Grid>
+                                >
+                                  {Object.entries(lessonTypeMeta).map(
+                                    ([value, meta]) => (
+                                      <MenuItem key={value} value={value}>
+                                        {meta.label}
+                                      </MenuItem>
+                                    )
+                                  )}
+                                </Select>
+                              </FormControl>
                             </Grid>
-
-                            <Alert severity="info">{lessonTypeMeta[selectedLesson.type].helper}</Alert>
-
-                            {selectedLesson.type === 'text' && (
-                              <QuillEditor
-                                value={selectedLesson.content.text || ''}
-                                onChange={(value) =>
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                fullWidth
+                                type='number'
+                                label='Duración estimada (min)'
+                                value={selectedLesson.estimatedMinutes}
+                                onChange={(event) =>
                                   updateSelectedLesson((lesson) => ({
                                     ...lesson,
-                                    content: { ...lesson.content, text: value }
+                                    estimatedMinutes: Math.max(
+                                      1,
+                                      Number(event.target.value) || 1
+                                    )
                                   }))
                                 }
                               />
-                            )}
+                            </Grid>
+                          </Grid>
 
-                            {selectedLesson.type === 'video' && (
-                              <Stack spacing={2}>
-                                <FormControl fullWidth>
-                                  <InputLabel id="video-source-label">Origen del video</InputLabel>
-                                  <Select
-                                    labelId="video-source-label"
-                                    label="Origen del video"
-                                    value={selectedLesson.content.videoSource || 'youtube'}
-                                    onChange={(event) =>
-                                      updateSelectedLesson((lesson) => ({
-                                        ...lesson,
-                                        content: {
-                                          ...lesson.content,
-                                          videoSource: event.target.value as 'youtube' | 'minio' | 'gdrive',
-                                          videoUrl:
-                                            (event.target.value === 'youtube' || event.target.value === 'gdrive') &&
-                                            (lesson.content.videoUrl || '').startsWith('course_')
-                                              ? ''
-                                              : lesson.content.videoUrl
-                                        }
-                                      }))
+                          <Alert severity='info'>
+                            {lessonTypeMeta[selectedLesson.type].helper}
+                          </Alert>
+
+                          {selectedLesson.type === 'text' && (
+                            <QuillEditor
+                              value={selectedLesson.content.text || ''}
+                              onChange={(value) =>
+                                updateSelectedLesson((lesson) => ({
+                                  ...lesson,
+                                  content: { ...lesson.content, text: value }
+                                }))
+                              }
+                            />
+                          )}
+
+                          {selectedLesson.type === 'video' && (
+                            <Stack spacing={2}>
+                              <FormControl fullWidth>
+                                <InputLabel id='video-source-label'>
+                                  Origen del video
+                                </InputLabel>
+                                <Select
+                                  labelId='video-source-label'
+                                  label='Origen del video'
+                                  value={
+                                    selectedLesson.content.videoSource ||
+                                    'youtube'
+                                  }
+                                  onChange={(event) =>
+                                    updateSelectedLesson((lesson) => ({
+                                      ...lesson,
+                                      content: {
+                                        ...lesson.content,
+                                        videoSource: event.target.value as
+                                          | 'youtube'
+                                          | 'minio'
+                                          | 'gdrive',
+                                        videoUrl:
+                                          (event.target.value === 'youtube' ||
+                                            event.target.value === 'gdrive') &&
+                                          (
+                                            lesson.content.videoUrl || ''
+                                          ).startsWith('course_')
+                                            ? ''
+                                            : lesson.content.videoUrl
+                                      }
+                                    }))
+                                  }
+                                >
+                                  <MenuItem value='youtube'>YouTube</MenuItem>
+                                  <MenuItem value='minio'>
+                                    Archivo alojado
+                                  </MenuItem>
+                                  <MenuItem value='gdrive'>
+                                    Google Drive
+                                  </MenuItem>
+                                </Select>
+                              </FormControl>
+
+                              {selectedLesson.content.videoSource ===
+                                'youtube' ||
+                              selectedLesson.content.videoSource ===
+                                'gdrive' ? (
+                                <TextField
+                                  fullWidth
+                                  label='URL del video'
+                                  placeholder={
+                                    selectedLesson.content.videoSource ===
+                                    'gdrive'
+                                      ? 'https://drive.google.com/file/d/.../preview'
+                                      : 'https://youtu.be/... o URL embebible'
+                                  }
+                                  value={selectedLesson.content.videoUrl || ''}
+                                  onChange={(event) =>
+                                    updateSelectedLesson((lesson) => ({
+                                      ...lesson,
+                                      content: {
+                                        ...lesson.content,
+                                        videoUrl: event.target.value
+                                      }
+                                    }))
+                                  }
+                                />
+                              ) : (
+                                <Stack spacing={1.5}>
+                                  <Alert
+                                    severity={
+                                      canUploadLessonVideo ? 'info' : 'warning'
                                     }
                                   >
-                                    <MenuItem value="youtube">YouTube</MenuItem>
-                                    <MenuItem value="minio">Archivo alojado</MenuItem>
-                                    <MenuItem value="gdrive">Google Drive</MenuItem>
-                                  </Select>
-                                </FormControl>
+                                    {canUploadLessonVideo
+                                      ? 'Sube el archivo del video y el LMS lo optimizará antes de almacenarlo en MinIO.'
+                                      : 'Guarda el curso y la lección primero para habilitar la carga del video alojado.'}
+                                  </Alert>
 
-                                {selectedLesson.content.videoSource === 'youtube' || selectedLesson.content.videoSource === 'gdrive' ? (
-                                  <TextField
-                                    fullWidth
-                                    label="URL del video"
-                                    placeholder={
-                                      selectedLesson.content.videoSource === 'gdrive'
-                                        ? 'https://drive.google.com/file/d/.../preview'
-                                        : 'https://youtu.be/... o URL embebible'
-                                    }
-                                    value={selectedLesson.content.videoUrl || ''}
-                                    onChange={(event) =>
-                                      updateSelectedLesson((lesson) => ({
-                                        ...lesson,
-                                        content: { ...lesson.content, videoUrl: event.target.value }
-                                      }))
-                                    }
-                                  />
-                                ) : (
-                                  <Stack spacing={1.5}>
-                                    <Alert severity={canUploadLessonVideo ? 'info' : 'warning'}>
-                                      {canUploadLessonVideo
-                                        ? 'Sube el archivo del video y el LMS lo optimizará antes de almacenarlo en MinIO.'
-                                        : 'Guarda el curso y la lección primero para habilitar la carga del video alojado.'}
-                                    </Alert>
+                                  <Stack
+                                    direction={{ xs: 'column', sm: 'row' }}
+                                    spacing={1.5}
+                                    alignItems={{ sm: 'center' }}
+                                  >
+                                    <Button
+                                      variant='outlined'
+                                      component='label'
+                                      startIcon={<UploadFileIcon />}
+                                      disabled={
+                                        !canUploadLessonVideo ||
+                                        videoUploadState.isUploading
+                                      }
+                                    >
+                                      {videoUploadState.isUploading &&
+                                      videoUploadState.lessonId ===
+                                        selectedLesson.id
+                                        ? 'Subiendo video...'
+                                        : selectedLesson.content.videoUrl
+                                          ? 'Reemplazar video'
+                                          : 'Subir video'}
+                                      <input
+                                        hidden
+                                        type='file'
+                                        accept='video/mp4,video/avi,video/mov,video/wmv,video/flv,video/webm,video/mkv'
+                                        onChange={(event) => {
+                                          const file =
+                                            event.target.files?.[0] || null
+                                          void handleUploadLessonVideo(file)
+                                          event.target.value = ''
+                                        }}
+                                      />
+                                    </Button>
+                                    {selectedLesson.content.videoUrl && (
+                                      <Chip
+                                        color='success'
+                                        variant='outlined'
+                                        label={
+                                          selectedLesson.content.videoUrl.startsWith(
+                                            'course_'
+                                          )
+                                            ? 'Video alojado en MinIO'
+                                            : 'Ruta de video configurada'
+                                        }
+                                      />
+                                    )}
+                                  </Stack>
 
-                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
-                                      <Button
-                                        variant="outlined"
-                                        component="label"
-                                        startIcon={<UploadFileIcon />}
-                                        disabled={!canUploadLessonVideo || videoUploadState.isUploading}
-                                      >
-                                        {videoUploadState.isUploading && videoUploadState.lessonId === selectedLesson.id
-                                          ? 'Subiendo video...'
-                                          : selectedLesson.content.videoUrl
-                                            ? 'Reemplazar video'
-                                            : 'Subir video'}
-                                        <input
-                                          hidden
-                                          type="file"
-                                          accept="video/mp4,video/avi,video/mov,video/wmv,video/flv,video/webm,video/mkv"
-                                          onChange={(event) => {
-                                            const file = event.target.files?.[0] || null
-                                            void handleUploadLessonVideo(file)
-                                            event.target.value = ''
-                                          }}
-                                        />
-                                      </Button>
-                                      {selectedLesson.content.videoUrl && (
-                                        <Chip
-                                          color="success"
-                                          variant="outlined"
-                                          label={
-                                            selectedLesson.content.videoUrl.startsWith('course_')
-                                              ? 'Video alojado en MinIO'
-                                              : 'Ruta de video configurada'
-                                          }
-                                        />
-                                      )}
-                                    </Stack>
-
-                                    {videoUploadState.isUploading && videoUploadState.lessonId === selectedLesson.id && (
+                                  {videoUploadState.isUploading &&
+                                    videoUploadState.lessonId ===
+                                      selectedLesson.id && (
                                       <Box>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-                                          {videoUploadState.fileName} · {videoUploadState.progress}%
+                                        <Typography
+                                          variant='body2'
+                                          color='text.secondary'
+                                          sx={{ mb: 0.75 }}
+                                        >
+                                          {videoUploadState.fileName} ·{' '}
+                                          {videoUploadState.progress}%
                                         </Typography>
-                                        <LinearProgress variant="determinate" value={videoUploadState.progress} />
+                                        <LinearProgress
+                                          variant='determinate'
+                                          value={videoUploadState.progress}
+                                        />
                                       </Box>
                                     )}
 
-                                    <TextField
-                                      fullWidth
-                                      label="Ruta interna del video"
-                                      value={selectedLesson.content.videoUrl || ''}
-                                      InputProps={{ readOnly: true }}
-                                      helperText="Esta ruta se genera automáticamente cuando cargas el archivo al LMS."
-                                    />
-                                  </Stack>
-                                )}
-                              </Stack>
-                            )}
-
-                            {selectedLesson.type === 'quiz' && (
-                              <Stack spacing={2}>
-                                <Alert severity={canOpenQuizBuilder ? 'info' : 'warning'}>
-                                  {canOpenQuizBuilder
-                                    ? 'Crea preguntas nuevas dentro del quiz y usa el banco solo si te aporta reutilización.'
-                                    : 'Guarda el curso primero para persistir esta lección y luego abrir el constructor del quiz.'}
-                                </Alert>
-                                <Button
-                                  variant="contained"
-                                  startIcon={<QuizIcon />}
-                                  onClick={() => setQuizEditorLessonId(selectedLesson.id)}
-                                  disabled={!canOpenQuizBuilder}
-                                >
-                                  {selectedLesson.content.quizId ? 'Editar quiz de la lección' : 'Crear quiz para esta lección'}
-                                </Button>
-                                {selectedLesson.content.quizId && (
-                                  <Chip label={`Quiz asociado #${selectedLesson.content.quizId}`} color="success" variant="outlined" />
-                                )}
-                              </Stack>
-                            )}
-
-                            <Divider />
-
-                            <Box>
-                              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                                <Box>
-                                  <Typography variant="subtitle1">Recursos de apoyo</Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Adjunta PDFs, documentos o enlaces para complementar esta lección.
-                                  </Typography>
-                                </Box>
-                                <Button size="small" startIcon={<AddIcon />} onClick={openCreateResourceDialog}>
-                                  Agregar recurso
-                                </Button>
-                              </Stack>
-
-                              {selectedLesson.content.resources.length === 0 ? (
-                                <Alert severity="info">Esta lección aún no tiene recursos.</Alert>
-                              ) : (
-                                <List disablePadding>
-                                  {selectedLesson.content.resources
-                                    .slice()
-                                    .sort((left, right) => left.order - right.order)
-                                    .map((resource) => (
-                                      <Paper key={resource.id} variant="outlined" sx={{ mb: 1 }}>
-                                        <ListItemButton onClick={() => openEditResourceDialog(resource.id)}>
-                                          <ListItemIcon>{resourceTypeMeta[resource.resourceType].icon}</ListItemIcon>
-                                            <ListItemText
-                                            primary={resource.title}
-                                            secondary={
-                                              resource.externalUrl ||
-                                              resource.originalFilename ||
-                                              resource.description ||
-                                              resourceTypeMeta[resource.resourceType].label
-                                            }
-                                          />
-                                          <Chip size="small" label={resourceTypeMeta[resource.resourceType].label} sx={{ mr: 1 }} />
-                                          <IconButton
-                                            edge="end"
-                                            size="small"
-                                            onClick={(event) => {
-                                              event.stopPropagation()
-                                              handleDeleteResource(resource.id)
-                                            }}
-                                          >
-                                            <DeleteIcon fontSize="small" />
-                                          </IconButton>
-                                        </ListItemButton>
-                                      </Paper>
-                                    ))}
-                                </List>
+                                  <TextField
+                                    fullWidth
+                                    label='Ruta interna del video'
+                                    value={
+                                      selectedLesson.content.videoUrl || ''
+                                    }
+                                    InputProps={{ readOnly: true }}
+                                    helperText='Esta ruta se genera automáticamente cuando cargas el archivo al LMS.'
+                                  />
+                                </Stack>
                               )}
-                            </Box>
-                          </Stack>
+                            </Stack>
+                          )}
+
+                          {selectedLesson.type === 'quiz' && (
+                            <Stack spacing={2}>
+                              <Alert
+                                severity={
+                                  canOpenQuizBuilder ? 'info' : 'warning'
+                                }
+                              >
+                                {canOpenQuizBuilder
+                                  ? 'Crea preguntas nuevas dentro del quiz y usa el banco solo si te aporta reutilización.'
+                                  : 'Guarda el curso primero para persistir esta lección y luego abrir el constructor del quiz.'}
+                              </Alert>
+                              <Button
+                                variant='contained'
+                                startIcon={<QuizIcon />}
+                                onClick={() =>
+                                  setQuizEditorLessonId(selectedLesson.id)
+                                }
+                                disabled={!canOpenQuizBuilder}
+                              >
+                                {selectedLesson.content.quizId
+                                  ? 'Editar quiz de la lección'
+                                  : 'Crear quiz para esta lección'}
+                              </Button>
+                              {selectedLesson.content.quizId && (
+                                <Chip
+                                  label={`Quiz asociado #${selectedLesson.content.quizId}`}
+                                  color='success'
+                                  variant='outlined'
+                                />
+                              )}
+                            </Stack>
+                          )}
+
+                          <Divider />
+
+                          <Box>
+                            <Stack
+                              direction='row'
+                              justifyContent='space-between'
+                              alignItems='center'
+                              sx={{ mb: 1 }}
+                            >
+                              <Box>
+                                <Typography variant='subtitle1'>
+                                  Recursos de apoyo
+                                </Typography>
+                                <Typography
+                                  variant='body2'
+                                  color='text.secondary'
+                                >
+                                  Adjunta PDFs, documentos o enlaces para
+                                  complementar esta lección.
+                                </Typography>
+                              </Box>
+                              <Button
+                                size='small'
+                                startIcon={<AddIcon />}
+                                onClick={openCreateResourceDialog}
+                              >
+                                Agregar recurso
+                              </Button>
+                            </Stack>
+
+                            {selectedLesson.content.resources.length === 0 ? (
+                              <Alert severity='info'>
+                                Esta lección aún no tiene recursos.
+                              </Alert>
+                            ) : (
+                              <List disablePadding>
+                                {selectedLesson.content.resources
+                                  .slice()
+                                  .sort(
+                                    (left, right) => left.order - right.order
+                                  )
+                                  .map((resource) => (
+                                    <Paper
+                                      key={resource.id}
+                                      variant='outlined'
+                                      sx={{ mb: 1 }}
+                                    >
+                                      <ListItemButton
+                                        onClick={() =>
+                                          openEditResourceDialog(resource.id)
+                                        }
+                                      >
+                                        <ListItemIcon>
+                                          {
+                                            resourceTypeMeta[
+                                              resource.resourceType
+                                            ].icon
+                                          }
+                                        </ListItemIcon>
+                                        <ListItemText
+                                          primary={resource.title}
+                                          secondary={
+                                            resource.externalUrl ||
+                                            resource.originalFilename ||
+                                            resource.description ||
+                                            resourceTypeMeta[
+                                              resource.resourceType
+                                            ].label
+                                          }
+                                        />
+                                        <Chip
+                                          size='small'
+                                          label={
+                                            resourceTypeMeta[
+                                              resource.resourceType
+                                            ].label
+                                          }
+                                          sx={{ mr: 1 }}
+                                        />
+                                        <IconButton
+                                          edge='end'
+                                          size='small'
+                                          onClick={(event) => {
+                                            event.stopPropagation()
+                                            handleDeleteResource(resource.id)
+                                          }}
+                                        >
+                                          <DeleteIcon fontSize='small' />
+                                        </IconButton>
+                                      </ListItemButton>
+                                    </Paper>
+                                  ))}
+                              </List>
+                            )}
+                          </Box>
+                        </Stack>
                       ) : (
-                        <Alert severity="info">Selecciona una lección para editar su contenido.</Alert>
+                        <Alert severity='info'>
+                          Selecciona una lección para editar su contenido.
+                        </Alert>
                       )}
                     </Grid>
                   </Grid>
                 )}
               </Stack>
             ) : (
-              <Alert severity="info">Selecciona una sección para editarla o crea la primera.</Alert>
+              <Alert severity='info'>
+                Selecciona una sección para editarla o crea la primera.
+              </Alert>
             )}
           </CardContent>
         </Card>
       </Stack>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Stack direction="row" spacing={1}>
-          <Chip label={pluralize(modules.length, 'sección', 'secciones')} color="primary" variant="outlined" />
-          <Chip label={pluralize(modules.reduce((total, module) => total + module.lessons.length, 0), 'lección', 'lecciones')} variant="outlined" />
-          <Chip label={pluralize(modules.reduce((total, module) => total + module.lessons.reduce((resourceTotal, lesson) => resourceTotal + lesson.content.resources.length, 0), 0), 'recurso')} variant="outlined" />
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Stack direction='row' spacing={1}>
+          <Chip
+            label={pluralize(modules.length, 'sección', 'secciones')}
+            color='primary'
+            variant='outlined'
+          />
+          <Chip
+            label={pluralize(
+              modules.reduce(
+                (total, module) => total + module.lessons.length,
+                0
+              ),
+              'lección',
+              'lecciones'
+            )}
+            variant='outlined'
+          />
+          <Chip
+            label={pluralize(
+              modules.reduce(
+                (total, module) =>
+                  total +
+                  module.lessons.reduce(
+                    (resourceTotal, lesson) =>
+                      resourceTotal + lesson.content.resources.length,
+                    0
+                  ),
+                0
+              ),
+              'recurso'
+            )}
+            variant='outlined'
+          />
         </Stack>
-        <Button variant="contained" onClick={onSave} disabled={isLoading || !hasUnsavedChanges}>
-          {isLoading ? 'Guardando cambios...' : hasUnsavedChanges ? 'Guardar cambios del contenido' : 'Sin cambios por guardar'}
+        <Button
+          variant='contained'
+          onClick={onSave}
+          disabled={isLoading || !hasUnsavedChanges}
+        >
+          {isLoading
+            ? 'Guardando cambios...'
+            : hasUnsavedChanges
+              ? 'Guardar cambios del contenido'
+              : 'Sin cambios por guardar'}
         </Button>
       </Box>
 
-      <Dialog open={moduleDialogOpen} onClose={() => setModuleDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={moduleDialogOpen}
+        onClose={() => setModuleDialogOpen(false)}
+        fullWidth
+        maxWidth='sm'
+      >
         <DialogTitle>Nueva sección</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <Alert severity="info">
-              Usa una sección para agrupar varias lecciones relacionadas dentro del mismo bloque del curso.
+            <Alert severity='info'>
+              Usa una sección para agrupar varias lecciones relacionadas dentro
+              del mismo bloque del curso.
             </Alert>
-            <TextField fullWidth label="Título de la sección" value={moduleDraft.title} onChange={(event) => setModuleDraft((current) => ({ ...current, title: event.target.value }))} />
-            <TextField fullWidth multiline minRows={3} label="Descripción" value={moduleDraft.description} onChange={(event) => setModuleDraft((current) => ({ ...current, description: event.target.value }))} />
+            <TextField
+              fullWidth
+              label='Título de la sección'
+              value={moduleDraft.title}
+              onChange={(event) =>
+                setModuleDraft((current) => ({
+                  ...current,
+                  title: event.target.value
+                }))
+              }
+            />
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              label='Descripción'
+              value={moduleDraft.description}
+              onChange={(event) =>
+                setModuleDraft((current) => ({
+                  ...current,
+                  description: event.target.value
+                }))
+              }
+            />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setModuleDialogOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={handleAddModule}>Crear sección</Button>
+          <Button variant='contained' onClick={handleAddModule}>
+            Crear sección
+          </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={lessonDialogOpen} onClose={() => setLessonDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={lessonDialogOpen}
+        onClose={() => setLessonDialogOpen(false)}
+        fullWidth
+        maxWidth='sm'
+      >
         <DialogTitle>Nueva lección</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <Alert severity="info">
-              Crea primero la lección y luego completa su contenido, recursos o quiz desde el editor principal.
+            <Alert severity='info'>
+              Crea primero la lección y luego completa su contenido, recursos o
+              quiz desde el editor principal.
             </Alert>
-            <TextField fullWidth label="Título de la lección" value={lessonDraft.title} onChange={(event) => setLessonDraft((current) => ({ ...current, title: event.target.value }))} />
+            <TextField
+              fullWidth
+              label='Título de la lección'
+              value={lessonDraft.title}
+              onChange={(event) =>
+                setLessonDraft((current) => ({
+                  ...current,
+                  title: event.target.value
+                }))
+              }
+            />
             <FormControl fullWidth>
-              <InputLabel id="new-lesson-type-label">Tipo</InputLabel>
-              <Select labelId="new-lesson-type-label" label="Tipo" value={lessonDraft.type} onChange={(event) => setLessonDraft((current) => ({ ...current, type: event.target.value as LessonDraftType }))}>
+              <InputLabel id='new-lesson-type-label'>Tipo</InputLabel>
+              <Select
+                labelId='new-lesson-type-label'
+                label='Tipo'
+                value={lessonDraft.type}
+                onChange={(event) =>
+                  setLessonDraft((current) => ({
+                    ...current,
+                    type: event.target.value as LessonDraftType
+                  }))
+                }
+              >
                 {Object.entries(lessonTypeMeta).map(([value, meta]) => (
-                  <MenuItem key={value} value={value}>{meta.label}</MenuItem>
+                  <MenuItem key={value} value={value}>
+                    {meta.label}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <TextField fullWidth type="number" label="Duración estimada (min)" helperText="Usa una estimación corta y realista para orientar al alumno." value={lessonDraft.estimatedMinutes} onChange={(event) => setLessonDraft((current) => ({ ...current, estimatedMinutes: Math.max(1, Number(event.target.value) || 1) }))} />
-            <TextField fullWidth multiline minRows={2} label="Descripción breve" value={lessonDraft.description} onChange={(event) => setLessonDraft((current) => ({ ...current, description: event.target.value }))} />
+            <TextField
+              fullWidth
+              type='number'
+              label='Duración estimada (min)'
+              helperText='Usa una estimación corta y realista para orientar al alumno.'
+              value={lessonDraft.estimatedMinutes}
+              onChange={(event) =>
+                setLessonDraft((current) => ({
+                  ...current,
+                  estimatedMinutes: Math.max(1, Number(event.target.value) || 1)
+                }))
+              }
+            />
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              label='Descripción breve'
+              value={lessonDraft.description}
+              onChange={(event) =>
+                setLessonDraft((current) => ({
+                  ...current,
+                  description: event.target.value
+                }))
+              }
+            />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setLessonDialogOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={handleAddLesson}>Crear lección</Button>
+          <Button variant='contained' onClick={handleAddLesson}>
+            Crear lección
+          </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={resourceDialog.open} onClose={() => setResourceDialog((current) => ({ ...current, open: false }))} fullWidth maxWidth="sm">
-        <DialogTitle>{resourceDialog.editingResourceId ? 'Editar recurso adjunto' : 'Nuevo recurso adjunto'}</DialogTitle>
+      <Dialog
+        open={resourceDialog.open}
+        onClose={() =>
+          setResourceDialog((current) => ({ ...current, open: false }))
+        }
+        fullWidth
+        maxWidth='sm'
+      >
+        <DialogTitle>
+          {resourceDialog.editingResourceId
+            ? 'Editar recurso adjunto'
+            : 'Nuevo recurso adjunto'}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <Alert severity="info">
-              Usa recursos para materiales de apoyo. El contenido principal debe vivir en la lección.
+            <Alert severity='info'>
+              Usa recursos para materiales de apoyo. El contenido principal debe
+              vivir en la lección.
             </Alert>
-            <TextField fullWidth label="Título" value={resourceDialog.values.title} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, title: event.target.value } }))} />
+            <TextField
+              fullWidth
+              label='Título'
+              value={resourceDialog.values.title}
+              onChange={(event) =>
+                setResourceDialog((current) => ({
+                  ...current,
+                  values: { ...current.values, title: event.target.value }
+                }))
+              }
+            />
             <FormControl fullWidth>
-              <InputLabel id="resource-type-label">Tipo de recurso</InputLabel>
-              <Select labelId="resource-type-label" label="Tipo de recurso" value={resourceDialog.values.resourceType} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, resourceType: event.target.value as LessonResourceType } }))}>
-                <MenuItem value="pdf">PDF</MenuItem>
-                <MenuItem value="document">Documento</MenuItem>
-                <MenuItem value="link">Enlace</MenuItem>
+              <InputLabel id='resource-type-label'>Tipo de recurso</InputLabel>
+              <Select
+                labelId='resource-type-label'
+                label='Tipo de recurso'
+                value={resourceDialog.values.resourceType}
+                onChange={(event) =>
+                  setResourceDialog((current) => ({
+                    ...current,
+                    values: {
+                      ...current.values,
+                      resourceType: event.target.value as LessonResourceType
+                    }
+                  }))
+                }
+              >
+                <MenuItem value='pdf'>PDF</MenuItem>
+                <MenuItem value='document'>Documento</MenuItem>
+                <MenuItem value='link'>Enlace</MenuItem>
               </Select>
             </FormControl>
             {resourceDialog.values.resourceType === 'link' ? (
-              <TextField fullWidth label="Enlace externo" placeholder="https://..." value={resourceDialog.values.externalUrl} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, externalUrl: event.target.value } }))} />
+              <TextField
+                fullWidth
+                label='Enlace externo'
+                placeholder='https://...'
+                value={resourceDialog.values.externalUrl}
+                onChange={(event) =>
+                  setResourceDialog((current) => ({
+                    ...current,
+                    values: {
+                      ...current.values,
+                      externalUrl: event.target.value
+                    }
+                  }))
+                }
+              />
             ) : (
               <Stack spacing={1}>
-                <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
-                  {resourceDialog.values.localFile ? 'Cambiar archivo' : 'Seleccionar archivo'}
+                <Button
+                  variant='outlined'
+                  component='label'
+                  startIcon={<UploadFileIcon />}
+                >
+                  {resourceDialog.values.localFile
+                    ? 'Cambiar archivo'
+                    : 'Seleccionar archivo'}
                   <input
                     hidden
-                    type="file"
-                    accept={resourceDialog.values.resourceType === 'pdf' ? '.pdf,application/pdf' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'}
+                    type='file'
+                    accept={
+                      resourceDialog.values.resourceType === 'pdf'
+                        ? '.pdf,application/pdf'
+                        : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0] || null
                       setResourceDialog((current) => ({
@@ -1242,32 +1758,63 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                         values: {
                           ...current.values,
                           localFile: file,
-                          existingFileName: file?.name || current.values.existingFileName
+                          existingFileName:
+                            file?.name || current.values.existingFileName
                         }
                       }))
                     }}
                   />
                 </Button>
-                {(resourceDialog.values.localFile || resourceDialog.values.existingFileName) && (
-                  <Alert severity="success">
-                    Archivo listo: {resourceDialog.values.localFile?.name || resourceDialog.values.existingFileName}
+                {(resourceDialog.values.localFile ||
+                  resourceDialog.values.existingFileName) && (
+                  <Alert severity='success'>
+                    Archivo listo:{' '}
+                    {resourceDialog.values.localFile?.name ||
+                      resourceDialog.values.existingFileName}
                   </Alert>
                 )}
               </Stack>
             )}
-            <TextField fullWidth multiline minRows={2} label="Descripción" value={resourceDialog.values.description} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, description: event.target.value } }))} />
-            <Alert severity="info">
-              Los PDFs y documentos se subirán al almacenamiento seguro del LMS. Usa enlace externo solo cuando el material viva fuera de la plataforma.
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              label='Descripción'
+              value={resourceDialog.values.description}
+              onChange={(event) =>
+                setResourceDialog((current) => ({
+                  ...current,
+                  values: { ...current.values, description: event.target.value }
+                }))
+              }
+            />
+            <Alert severity='info'>
+              Los PDFs y documentos se subirán al almacenamiento seguro del LMS.
+              Usa enlace externo solo cuando el material viva fuera de la
+              plataforma.
             </Alert>
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setResourceDialog((current) => ({ ...current, open: false }))}>Cancelar</Button>
-          <Button variant="contained" onClick={handleSaveResource}>Guardar recurso</Button>
+          <Button
+            onClick={() =>
+              setResourceDialog((current) => ({ ...current, open: false }))
+            }
+          >
+            Cancelar
+          </Button>
+          <Button variant='contained' onClick={handleSaveResource}>
+            Guardar recurso
+          </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={Boolean(quizEditorLessonId)} onClose={() => setQuizEditorLessonId(null)} fullWidth maxWidth="lg">
+      <Dialog
+        open={Boolean(quizEditorLessonId)}
+        onClose={() => setQuizEditorLessonId(null)}
+        fullWidth
+        maxWidth='lg'
+      >
         <DialogTitle>Constructor del quiz de la lección</DialogTitle>
         <DialogContent dividers>
           {quizEditorLessonId && courseId ? (
@@ -1285,14 +1832,15 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
               }}
             />
           ) : (
-            <Alert severity="warning">Guarda el curso primero para abrir el constructor del quiz.</Alert>
+            <Alert severity='warning'>
+              Guarda el curso primero para abrir el constructor del quiz.
+            </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setQuizEditorLessonId(null)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
-
     </Stack>
   )
 }

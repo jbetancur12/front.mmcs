@@ -96,9 +96,7 @@ const ActiveSessionsListDialog: React.FC<ActiveSessionsListDialogProps> = ({
           </IconButton>
         </DialogTitle>
         <DialogContent dividers sx={{ pt: 2.5 }}>
-          {isLoading && (
-            <SignalLoader size='small' />
-          )}
+          {isLoading && <SignalLoader size='small' />}
           {isError && (
             <Alert severity='error'>
               No se pudieron cargar las sesiones. Inténtalo de nuevo.

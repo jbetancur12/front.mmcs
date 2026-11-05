@@ -185,10 +185,7 @@ export const useTVDisplayDataWithWebSocket = () => {
           queryClient.invalidateQueries({ queryKey: ['tv-display-data'] })
           break
         default:
-          logger.log(
-            'Unknown TV Display WebSocket message type:',
-            message.type
-          )
+          logger.log('Unknown TV Display WebSocket message type:', message.type)
       }
     },
     [queryClient]

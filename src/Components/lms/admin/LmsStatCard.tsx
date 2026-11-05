@@ -112,7 +112,10 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
                 : '0 4px 12px rgba(17,24,39,0.08)'
             }
           : undefined,
-        '&:focus-visible': { outline: `3px solid ${brand.ink}`, outlineOffset: 2 },
+        '&:focus-visible': {
+          outline: `3px solid ${brand.ink}`,
+          outlineOffset: 2
+        },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
       }}
     >

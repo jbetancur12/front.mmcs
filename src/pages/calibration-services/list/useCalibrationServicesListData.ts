@@ -1,6 +1,10 @@
 import { useMemo } from 'react'
 import { CalibrationService } from '../../../types/calibrationService'
-import { FILTER_ALL, FILTER_UNASSIGNED, SLA_FILTER_ALERT } from './calibrationServicesListConstants'
+import {
+  FILTER_ALL,
+  FILTER_UNASSIGNED,
+  SLA_FILTER_ALERT
+} from './calibrationServicesListConstants'
 import { CalibrationServicesMetrologistOption } from './calibrationServicesListTypes'
 import {
   getKanbanColumnKey,
@@ -63,9 +67,7 @@ const useCalibrationServicesListData = ({
 
         accumulator.push({
           id: optionId,
-          label: email
-            ? `${name} · ${email}`
-            : name
+          label: email ? `${name} · ${email}` : name
         })
       })
 
@@ -89,7 +91,10 @@ const useCalibrationServicesListData = ({
       return false
     }
 
-    if (metrologistFilter === FILTER_UNASSIGNED && currentMetrologistNames.length > 0) {
+    if (
+      metrologistFilter === FILTER_UNASSIGNED &&
+      currentMetrologistNames.length > 0
+    ) {
       return false
     }
 
@@ -104,7 +109,12 @@ const useCalibrationServicesListData = ({
 
     if (showOnlyMyLoad) {
       const currentUserEmail = userEmail?.trim().toLowerCase()
-      if (!currentUserEmail || !currentMetrologistEmails.some(e => e.toLowerCase() === currentUserEmail)) {
+      if (
+        !currentUserEmail ||
+        !currentMetrologistEmails.some(
+          (e) => e.toLowerCase() === currentUserEmail
+        )
+      ) {
         return false
       }
     }
@@ -113,9 +123,17 @@ const useCalibrationServicesListData = ({
   })
 
   const counts = useMemo(() => {
-    let pendingApproval = 0, requestedChanges = 0, odsIssued = 0
-    let scheduled = 0, inExecution = 0, technicallyCompleted = 0, closed = 0
-    let readyToClose = 0, pendingDocumentControl = 0, readyForOds = 0, urgent = 0
+    let pendingApproval = 0,
+      requestedChanges = 0,
+      odsIssued = 0
+    let scheduled = 0,
+      inExecution = 0,
+      technicallyCompleted = 0,
+      closed = 0
+    let readyToClose = 0,
+      pendingDocumentControl = 0,
+      readyForOds = 0,
+      urgent = 0
 
     for (const service of visibleServices) {
       if (service.status === 'pending_approval') pendingApproval++
@@ -125,13 +143,36 @@ const useCalibrationServicesListData = ({
       if (service.status === 'technically_completed') technicallyCompleted++
       if (service.status === 'closed') closed++
       if (hasCustomerChangeRequest(service)) requestedChanges++
-      if (service.status === 'technically_completed' && service.slaIndicator?.activePhase === 'document_control_closed') readyToClose++
-      if (service.slaIndicator?.activePhase === 'document_control') pendingDocumentControl++
-      if (service.status === 'approved' && service.approvalStatus === 'approved' && !service.odsCode) readyForOds++
-      if (['yellow', 'red'].includes(service.slaIndicator?.color || 'gray')) urgent++
+      if (
+        service.status === 'technically_completed' &&
+        service.slaIndicator?.activePhase === 'document_control_closed'
+      )
+        readyToClose++
+      if (service.slaIndicator?.activePhase === 'document_control')
+        pendingDocumentControl++
+      if (
+        service.status === 'approved' &&
+        service.approvalStatus === 'approved' &&
+        !service.odsCode
+      )
+        readyForOds++
+      if (['yellow', 'red'].includes(service.slaIndicator?.color || 'gray'))
+        urgent++
     }
 
-    return { pendingApproval, requestedChanges, odsIssued, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent }
+    return {
+      pendingApproval,
+      requestedChanges,
+      odsIssued,
+      scheduled,
+      inExecution,
+      technicallyCompleted,
+      closed,
+      readyToClose,
+      pendingDocumentControl,
+      readyForOds,
+      urgent
+    }
   }, [visibleServices])
 
   const hasLocalFilters =
@@ -147,24 +188,24 @@ const useCalibrationServicesListData = ({
   )
 
   const kanbanServices = useMemo(() => {
-    const groupedServices = visibleServices.reduce<Record<string, CalibrationService[]>>(
-      (accumulator, service) => {
-        const columnKey = getKanbanColumnKey(service, isTechnicalOnlyView)
+    const groupedServices = visibleServices.reduce<
+      Record<string, CalibrationService[]>
+    >((accumulator, service) => {
+      const columnKey = getKanbanColumnKey(service, isTechnicalOnlyView)
 
-        if (!accumulator[columnKey]) {
-          accumulator[columnKey] = []
-        }
+      if (!accumulator[columnKey]) {
+        accumulator[columnKey] = []
+      }
 
-        accumulator[columnKey].push(service)
-        return accumulator
-      },
-      {}
-    )
+      accumulator[columnKey].push(service)
+      return accumulator
+    }, {})
 
     const columnsWithServices = kanbanColumns.map((column) => {
       const servicesForColumn = (groupedServices[column.key] || []).sort(
         (left, right) =>
-          new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+          new Date(right.updatedAt).getTime() -
+          new Date(left.updatedAt).getTime()
       )
 
       const urgentCount = servicesForColumn.filter((service) =>
@@ -175,7 +216,7 @@ const useCalibrationServicesListData = ({
       const myLoadCount = currentUserEmail
         ? servicesForColumn.filter((service) => {
             const emails = getMetrologistEmails(service)
-            return emails.some(e => e.toLowerCase() === currentUserEmail)
+            return emails.some((e) => e.toLowerCase() === currentUserEmail)
           }).length
         : 0
 
@@ -233,24 +274,24 @@ const useCalibrationServicesListData = ({
   ])
 
   const groupedListServices = useMemo(() => {
-    const grouped = visibleServices.reduce<Record<string, CalibrationService[]>>(
-      (acc, service) => {
-        const key = getKanbanColumnKey(service, isTechnicalOnlyView)
-        if (!acc[key]) acc[key] = []
-        acc[key].push(service)
-        return acc
-      },
-      {}
-    )
+    const grouped = visibleServices.reduce<
+      Record<string, CalibrationService[]>
+    >((acc, service) => {
+      const key = getKanbanColumnKey(service, isTechnicalOnlyView)
+      if (!acc[key]) acc[key] = []
+      acc[key].push(service)
+      return acc
+    }, {})
 
     return getKanbanColumns(isTechnicalOnlyView)
-      .map(col => ({
+      .map((col) => ({
         ...col,
         services: (grouped[col.key] || []).sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         )
       }))
-      .filter(col => col.services.length > 0)
+      .filter((col) => col.services.length > 0)
       .sort((a, b) => a.priority - b.priority)
   }, [visibleServices, isTechnicalOnlyView])
 
@@ -263,7 +304,7 @@ const useCalibrationServicesListData = ({
 
     return services.some((service) => {
       const emails = getMetrologistEmails(service)
-      return emails.some(e => e.toLowerCase() === currentUserEmail)
+      return emails.some((e) => e.toLowerCase() === currentUserEmail)
     })
   }, [userEmail, services])
 
@@ -276,7 +317,7 @@ const useCalibrationServicesListData = ({
 
     return services.filter((service) => {
       const emails = getMetrologistEmails(service)
-      return emails.some(e => e.toLowerCase() === currentUserEmail)
+      return emails.some((e) => e.toLowerCase() === currentUserEmail)
     }).length
   }, [userEmail, services])
 

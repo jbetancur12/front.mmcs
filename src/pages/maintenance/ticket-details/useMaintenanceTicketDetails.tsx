@@ -116,13 +116,8 @@ const useMaintenanceTicketDetails = () => {
     isCustomerApprovalLocked,
     showToast
   })
-  const {
-    editMode,
-    setEditMode,
-    editData,
-    setEditErrors,
-    validateEditData
-  } = editing
+  const { editMode, setEditMode, editData, setEditErrors, validateEditData } =
+    editing
 
   const { data: technicians } = useMaintenanceTechnicians(canManageTechnicians)
   const {
@@ -254,8 +249,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: unknown) {
       logger.error('Error updating ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al actualizar el ticket'
+        getApiErrorReason(error) || 'Error al actualizar el ticket'
       showToast(errorMessage, 'error')
     }
   }
@@ -354,8 +348,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al completar el ticket'
+        getApiErrorReason(error) || 'Error al completar el ticket'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -379,8 +372,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al completar el ticket'
+        getApiErrorReason(error) || 'Error al completar el ticket'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -449,8 +441,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: unknown) {
       logger.error('Error saving signatures:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al guardar las firmas'
+        getApiErrorReason(error) || 'Error al guardar las firmas'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -478,8 +469,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: unknown) {
       logger.error('Error revoking customer signature:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al revocar la firma del cliente'
+        getApiErrorReason(error) || 'Error al revocar la firma del cliente'
       showToast(errorMessage, 'error')
     }
   }
@@ -620,8 +610,7 @@ const useMaintenanceTicketDetails = () => {
     } catch (error: unknown) {
       logger.error('Error saving technical report:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al guardar el reporte técnico'
+        getApiErrorReason(error) || 'Error al guardar el reporte técnico'
       showToast(errorMessage, 'error')
       throw error
     }

@@ -16,12 +16,7 @@ import {
   AccordionSummary,
   AccordionDetails
 } from '@mui/material'
-import {
-  FilterList,
-  Clear,
-  ExpandMore,
-  Search
-} from '@mui/icons-material'
+import { FilterList, Clear, ExpandMore, Search } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import {
   MaintenanceFilters as IMaintenanceFilters,
@@ -273,7 +268,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             mb={1}
             flexWrap='wrap'
           >
-            <Typography variant='body2' sx={{ fontWeight: 600, color: '#334155' }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 600, color: '#334155' }}
+            >
               Filtros activos
             </Typography>
             {resultsCount !== undefined && (
@@ -287,13 +285,13 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               </Typography>
             )}
           </Box>
-          <Box display="flex" flexWrap="wrap" gap={1}>
+          <Box display='flex' flexWrap='wrap' gap={1}>
             {localFilters.search && (
               <Chip
                 label={`Búsqueda: ${localFilters.search}`}
                 onDelete={() => handleFilterChange('search', '')}
-                size="small"
-                variant="outlined"
+                size='small'
+                variant='outlined'
                 sx={{ backgroundColor: '#ffffff' }}
               />
             )}
@@ -301,8 +299,8 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               <Chip
                 label={`Prioridad: ${prioritySummary}`}
                 onDelete={() => handleFilterChange('priority', [])}
-                size="small"
-                variant="outlined"
+                size='small'
+                variant='outlined'
                 sx={{ backgroundColor: '#ffffff' }}
               />
             )}
@@ -310,8 +308,8 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               <Chip
                 label={`Estado: ${statusSummary}`}
                 onDelete={() => handleFilterChange('status', [])}
-                size="small"
-                variant="outlined"
+                size='small'
+                variant='outlined'
                 sx={{ backgroundColor: '#ffffff' }}
               />
             )}
@@ -369,7 +367,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
           }}
         >
           <Box>
-            <Typography variant='body2' sx={{ color: '#334155', fontWeight: 600 }}>
+            <Typography
+              variant='body2'
+              sx={{ color: '#334155', fontWeight: 600 }}
+            >
               Filtros avanzados
             </Typography>
             <Typography variant='caption' sx={{ color: '#64748b' }}>
@@ -398,10 +399,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                   )
                 }
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Técnico Asignado'
-                  />
+                  <TextField {...params} label='Técnico Asignado' />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
@@ -424,12 +422,11 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 size='small'
                 options={equipmentTypes}
                 value={localFilters.equipmentType || []}
-                onChange={(_, value) => handleFilterChange('equipmentType', value)}
+                onChange={(_, value) =>
+                  handleFilterChange('equipmentType', value)
+                }
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Tipo de Equipo'
-                  />
+                  <TextField {...params} label='Tipo de Equipo' />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
@@ -453,7 +450,9 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 id='filter-customer-email'
                 label='Email del Cliente'
                 value={localFilters.customerEmail || ''}
-                onChange={(e) => handleFilterChange('customerEmail', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange('customerEmail', e.target.value)
+                }
                 aria-label='Filtrar por email del cliente'
                 type='email'
               />
@@ -469,7 +468,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                     : null
                 }
                 onChange={(date) => {
-                  const dateRange = localFilters.dateRange ?? { from: '', to: '' }
+                  const dateRange = localFilters.dateRange ?? {
+                    from: '',
+                    to: ''
+                  }
                   handleFilterChange('dateRange', {
                     ...dateRange,
                     from: date ? date.toISOString() : ''
@@ -493,7 +495,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                     : null
                 }
                 onChange={(date) => {
-                  const dateRange = localFilters.dateRange ?? { from: '', to: '' }
+                  const dateRange = localFilters.dateRange ?? {
+                    from: '',
+                    to: ''
+                  }
                   handleFilterChange('dateRange', {
                     ...dateRange,
                     to: date ? date.toISOString() : ''

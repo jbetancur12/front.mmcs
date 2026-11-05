@@ -145,7 +145,9 @@ const toMap = (value?: readonly string[] | Record<string, string>) => {
  *
  * Devuelve `params` para la query y `tableProps` para esparcir en la tabla.
  */
-export const useServerTableState = (options: UseServerTableStateOptions = {}) => {
+export const useServerTableState = (
+  options: UseServerTableStateOptions = {}
+) => {
   const {
     sortableFields,
     exactFilters,
@@ -158,10 +160,12 @@ export const useServerTableState = (options: UseServerTableStateOptions = {}) =>
   const sortMap = useMemo(() => toMap(sortableFields), [sortableFields])
   const filterMap = useMemo(() => toMap(exactFilters), [exactFilters])
 
-  const [innerPagination, setInnerPagination] = useState<MRT_PaginationState>(
-    { pageIndex: 0, pageSize }
-  )
-  const [innerSorting, setInnerSorting] = useState<MRT_SortingState>(initialSorting)
+  const [innerPagination, setInnerPagination] = useState<MRT_PaginationState>({
+    pageIndex: 0,
+    pageSize
+  })
+  const [innerSorting, setInnerSorting] =
+    useState<MRT_SortingState>(initialSorting)
   const [innerColumnFilters, setInnerColumnFilters] =
     useState<MRT_ColumnFiltersState>([])
   const [globalFilter, setGlobalFilterState] = useState(initialGlobalFilter)

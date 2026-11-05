@@ -1,6 +1,7 @@
 # LMS Backend Specification
 
 ## 📋 Tabla de Contenidos
+
 - [Modelos de Base de Datos](#modelos-de-base-de-datos)
 - [Relaciones](#relaciones)
 - [Endpoints API](#endpoints-api)
@@ -12,6 +13,7 @@
 ## 🗄️ Modelos de Base de Datos
 
 ### 1. **courses** - Tabla principal de cursos
+
 ```sql
 CREATE TABLE courses (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -37,6 +39,7 @@ CREATE TABLE courses (
 ```
 
 ### 2. **course_units** - Unidades de contenido del curso
+
 ```sql
 CREATE TABLE course_units (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -54,6 +57,7 @@ CREATE TABLE course_units (
 ```
 
 ### 3. **unit_content** - Contenido específico de cada unidad
+
 ```sql
 CREATE TABLE unit_content (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -69,6 +73,7 @@ CREATE TABLE unit_content (
 ```
 
 ### 4. **quiz_questions** - Preguntas de quiz
+
 ```sql
 CREATE TABLE quiz_questions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -84,6 +89,7 @@ CREATE TABLE quiz_questions (
 ```
 
 ### 5. **question_options** - Opciones de respuesta
+
 ```sql
 CREATE TABLE question_options (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -97,6 +103,7 @@ CREATE TABLE question_options (
 ```
 
 ### 6. **user_course_enrollments** - Inscripciones de usuarios a cursos
+
 ```sql
 CREATE TABLE user_course_enrollments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -115,6 +122,7 @@ CREATE TABLE user_course_enrollments (
 ```
 
 ### 7. **user_unit_progress** - Progreso de usuarios en unidades
+
 ```sql
 CREATE TABLE user_unit_progress (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -134,6 +142,7 @@ CREATE TABLE user_unit_progress (
 ```
 
 ### 8. **user_quiz_answers** - Respuestas de usuarios en quizzes
+
 ```sql
 CREATE TABLE user_quiz_answers (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -149,6 +158,7 @@ CREATE TABLE user_quiz_answers (
 ```
 
 ### 9. **course_categories** - Categorías de cursos
+
 ```sql
 CREATE TABLE course_categories (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -162,6 +172,7 @@ CREATE TABLE course_categories (
 ```
 
 ### 10. **course_ratings** - Calificaciones de cursos
+
 ```sql
 CREATE TABLE course_ratings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -182,6 +193,7 @@ CREATE TABLE course_ratings (
 ## 🔗 Relaciones
 
 ### Relaciones Principales:
+
 - **users** → **courses** (1:N) - Un instructor puede crear múltiples cursos
 - **courses** → **course_units** (1:N) - Un curso tiene múltiples unidades
 - **course_units** → **unit_content** (1:1) - Cada unidad tiene un contenido específico
@@ -189,12 +201,14 @@ CREATE TABLE course_ratings (
 - **quiz_questions** → **question_options** (1:N) - Cada pregunta tiene múltiples opciones
 
 ### Relaciones de Usuario:
+
 - **users** → **user_course_enrollments** (1:N) - Un usuario puede estar inscrito en múltiples cursos
 - **users** → **user_unit_progress** (1:N) - Un usuario tiene progreso en múltiples unidades
 - **users** → **user_quiz_answers** (1:N) - Un usuario puede responder múltiples preguntas
 - **users** → **course_ratings** (1:N) - Un usuario puede calificar múltiples cursos
 
 ### Relaciones de Categorización:
+
 - **course_categories** → **courses** (1:N) - Una categoría puede tener múltiples cursos
 
 ---
@@ -202,6 +216,7 @@ CREATE TABLE course_ratings (
 ## 🌐 Endpoints API
 
 ### 🔐 Autenticación
+
 ```
 POST /api/auth/login
 POST /api/auth/logout
@@ -212,6 +227,7 @@ GET  /api/auth/me
 ### 📚 Gestión de Cursos
 
 #### **Cursos (Admin)**
+
 ```
 GET    /api/lms/admin/courses              # Listar todos los cursos
 POST   /api/lms/admin/courses              # Crear nuevo curso
@@ -222,6 +238,7 @@ GET    /api/lms/admin/courses/{id}/stats   # Estadísticas del curso
 ```
 
 #### **Cursos (Estudiantes)**
+
 ```
 GET    /api/lms/courses                    # Listar cursos disponibles
 GET    /api/lms/courses/{id}               # Obtener curso específico
@@ -230,6 +247,7 @@ GET    /api/lms/courses/{id}/progress      # Progreso del usuario en el curso
 ```
 
 #### **Contenido de Cursos**
+
 ```
 GET    /api/lms/admin/courses/{id}/units           # Listar unidades del curso
 POST   /api/lms/admin/courses/{id}/units           # Crear nueva unidad
@@ -239,6 +257,7 @@ POST   /api/lms/admin/courses/{id}/units/reorder   # Reordenar unidades
 ```
 
 #### **Contenido de Unidades**
+
 ```
 GET    /api/lms/admin/units/{unitId}/content      # Obtener contenido de unidad
 PUT    /api/lms/admin/units/{unitId}/content      # Actualizar contenido de unidad
@@ -246,6 +265,7 @@ POST   /api/lms/admin/units/{unitId}/content/video # Subir video
 ```
 
 #### **Quizzes**
+
 ```
 GET    /api/lms/admin/units/{unitId}/questions    # Listar preguntas del quiz
 POST   /api/lms/admin/units/{unitId}/questions    # Crear nueva pregunta
@@ -255,6 +275,7 @@ POST   /api/lms/admin/units/{unitId}/questions/reorder # Reordenar preguntas
 ```
 
 #### **Progreso de Usuarios**
+
 ```
 GET    /api/lms/user/progress                      # Progreso general del usuario
 GET    /api/lms/user/courses/{courseId}/progress   # Progreso en curso específico
@@ -264,6 +285,7 @@ GET    /api/lms/user/units/{unitId}/quiz/results  # Obtener resultados del quiz
 ```
 
 #### **Inscripciones**
+
 ```
 GET    /api/lms/user/enrollments                  # Cursos en los que está inscrito
 POST   /api/lms/user/enrollments                  # Inscribirse en curso
@@ -271,6 +293,7 @@ DELETE /api/lms/user/enrollments/{enrollmentId}   # Cancelar inscripción
 ```
 
 #### **Calificaciones y Reseñas**
+
 ```
 GET    /api/lms/courses/{id}/ratings              # Obtener calificaciones del curso
 POST   /api/lms/courses/{id}/ratings              # Calificar curso
@@ -279,6 +302,7 @@ DELETE /api/lms/courses/{id}/ratings              # Eliminar calificación
 ```
 
 #### **Categorías**
+
 ```
 GET    /api/lms/categories                        # Listar categorías
 POST   /api/lms/admin/categories                  # Crear categoría
@@ -287,6 +311,7 @@ DELETE /api/lms/admin/categories/{id}             # Eliminar categoría
 ```
 
 #### **Analíticas (Admin)**
+
 ```
 GET    /api/lms/admin/analytics/overview          # Resumen general
 GET    /api/lms/admin/analytics/courses           # Estadísticas de cursos
@@ -296,6 +321,7 @@ GET    /api/lms/admin/analytics/completions       # Estadísticas de completado
 ```
 
 #### **Gestión de Usuarios (Admin)**
+
 ```
 GET    /api/lms/admin/users                       # Listar usuarios
 GET    /api/lms/admin/users/{id}                  # Obtener usuario específico
@@ -309,30 +335,36 @@ GET    /api/lms/admin/users/{id}/progress         # Progreso de usuario específ
 ## 🔐 Autenticación y Autorización
 
 ### Roles de Usuario:
+
 - **admin**: Acceso completo a todas las funcionalidades
 - **employee**: Puede inscribirse en cursos para empleados
 - **client**: Puede inscribirse en cursos públicos
 
 ### Middleware de Autorización:
+
 ```javascript
 // Ejemplo de middleware
 const authorizeRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'No autenticado' });
+      return res.status(401).json({ error: 'No autenticado' })
     }
-    
+
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'No autorizado' });
+      return res.status(403).json({ error: 'No autorizado' })
     }
-    
-    next();
-  };
-};
+
+    next()
+  }
+}
 
 // Uso en rutas
-router.get('/admin/courses', authorizeRole(['admin']), getCourses);
-router.get('/courses', authorizeRole(['admin', 'employee', 'client']), getAvailableCourses);
+router.get('/admin/courses', authorizeRole(['admin']), getCourses)
+router.get(
+  '/courses',
+  authorizeRole(['admin', 'employee', 'client']),
+  getAvailableCourses
+)
 ```
 
 ---
@@ -340,6 +372,7 @@ router.get('/courses', authorizeRole(['admin', 'employee', 'client']), getAvaila
 ## 📊 Estructura de Respuestas
 
 ### Respuesta de Éxito:
+
 ```json
 {
   "success": true,
@@ -351,6 +384,7 @@ router.get('/courses', authorizeRole(['admin', 'employee', 'client']), getAvaila
 ```
 
 ### Respuesta de Error:
+
 ```json
 {
   "success": false,
@@ -365,6 +399,7 @@ router.get('/courses', authorizeRole(['admin', 'employee', 'client']), getAvaila
 ```
 
 ### Paginación:
+
 ```json
 {
   "success": true,
@@ -442,28 +477,33 @@ backend/
 ## 🚀 Implementación Recomendada
 
 ### 1. **Base de Datos**
+
 - Usar MySQL o PostgreSQL
 - Implementar migraciones para versionado de esquema
 - Crear índices para optimizar consultas frecuentes
 
 ### 2. **API REST**
+
 - Usar Express.js o Fastify
 - Implementar validación con Joi o Yup
 - Usar middleware para autenticación y autorización
 
 ### 3. **Seguridad**
+
 - Implementar rate limiting
 - Validar entrada de datos
 - Usar HTTPS en producción
 - Implementar CORS apropiadamente
 
 ### 4. **Performance**
+
 - Implementar caché con Redis
 - Optimizar consultas de base de datos
 - Usar paginación en listas grandes
 - Implementar lazy loading para contenido pesado
 
 ### 5. **Monitoreo**
+
 - Logging de errores
 - Métricas de performance
 - Monitoreo de base de datos
@@ -474,6 +514,7 @@ backend/
 ## 📝 Notas de Implementación
 
 ### Prioridades de Desarrollo:
+
 1. **Fase 1**: Modelos básicos y CRUD de cursos
 2. **Fase 2**: Sistema de unidades y contenido
 3. **Fase 3**: Sistema de quizzes
@@ -481,13 +522,15 @@ backend/
 5. **Fase 5**: Analíticas y reportes
 
 ### Consideraciones Técnicas:
+
 - Usar transacciones para operaciones complejas
 - Implementar soft deletes para datos importantes
 - Considerar escalabilidad desde el inicio
 - Documentar API con Swagger/OpenAPI
 
 ### Integración con Frontend:
+
 - Los endpoints deben coincidir con las llamadas del frontend
 - Implementar CORS para desarrollo local
 - Usar tokens JWT para autenticación
-- Mantener consistencia en formato de respuestas 
+- Mantener consistencia en formato de respuestas

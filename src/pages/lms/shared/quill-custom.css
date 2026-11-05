@@ -103,7 +103,8 @@
 }
 
 /* List styling */
-.ql-editor ul, .ql-editor ol {
+.ql-editor ul,
+.ql-editor ol {
   padding-left: 20px;
 }
 
@@ -132,7 +133,8 @@
   margin: 10px 0;
 }
 
-.ql-editor table td, .ql-editor table th {
+.ql-editor table td,
+.ql-editor table th {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
@@ -148,12 +150,12 @@
   .ql-toolbar {
     flex-wrap: wrap;
   }
-  
+
   .ql-toolbar .ql-formats {
     margin-right: 10px;
     margin-bottom: 5px;
   }
-  
+
   .ql-editor {
     min-height: 150px;
     font-size: 16px; /* Prevent zoom on iOS */

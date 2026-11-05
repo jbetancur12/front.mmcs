@@ -21,7 +21,7 @@ import {
 } from '@mui/icons-material'
 import { DeviceIot } from '../../types'
 import { AlarmSeverity } from '../constants'
-import {  formatDistanceToNow, parse } from 'date-fns'
+import { formatDistanceToNow, parse } from 'date-fns'
 import { getPowerSourceIcon, getStatusColor } from '../utils/common'
 import { es } from 'date-fns/locale'
 import useWebSocket from '@utils/use-websockets'
@@ -73,13 +73,16 @@ const DeviceListItem = ({
       case 'pwr':
         return currentSensorData.pwr?.v ? `${currentSensorData.pwr.v}V` : 'N/A'
       case 'ts':
-          if (!currentSensorData.ts || isNaN(new Date(currentSensorData.ts).getTime())) {
-            return 'N/A'; // Validación extra
-          }
-          return new Date(Number(currentSensorData.ts)).toLocaleString('es-ES'); // Ajustar formato
-        default:
-          return 'N/A';
-    
+        if (
+          !currentSensorData.ts ||
+          isNaN(new Date(currentSensorData.ts).getTime())
+        ) {
+          return 'N/A' // Validación extra
+        }
+        return new Date(Number(currentSensorData.ts)).toLocaleString('es-ES') // Ajustar formato
+      default:
+        return 'N/A'
+
         return 'N/A'
     }
   }
@@ -126,13 +129,12 @@ const DeviceListItem = ({
   }
 
   const raw = getValue('ts') // "14/4/2025, 20:55:55"
-  
+
   const parsedDate = parse(raw, 'd/M/yyyy, HH:mm:ss', new Date())
   const lastUpdateTime = formatDistanceToNow(parsedDate, {
     addSuffix: true,
     locale: es
   })
- 
 
   return (
     <ListItemButton
@@ -287,13 +289,11 @@ const DeviceListItem = ({
             <Chip
               label={hasActiveAlarms ? 'ALARMA' : device.status}
               size='small'
-              color={
-                getStatusColor(
-                  device.status,
-                  hasActiveAlarms,
-                  highestSeverity
-                ) 
-              }
+              color={getStatusColor(
+                device.status,
+                hasActiveAlarms,
+                highestSeverity
+              )}
               icon={hasActiveAlarms ? <Warning fontSize='small' /> : undefined}
               sx={
                 hasActiveAlarms
@@ -371,9 +371,7 @@ const DeviceListItem = ({
                     fontSize: 16,
                     color:
                       hasActiveAlarms &&
-                      activeAlarms.some(
-                        (alarm) => alarm.metric === 'humidity'
-                      )
+                      activeAlarms.some((alarm) => alarm.metric === 'humidity')
                         ? 'error.main'
                         : 'inherit'
                   }}
@@ -383,16 +381,12 @@ const DeviceListItem = ({
                   sx={{
                     color:
                       hasActiveAlarms &&
-                      activeAlarms.some(
-                        (alarm) => alarm.metric === 'humidity'
-                      )
+                      activeAlarms.some((alarm) => alarm.metric === 'humidity')
                         ? 'error.main'
                         : 'text.secondary',
                     fontWeight:
                       hasActiveAlarms &&
-                      activeAlarms.some(
-                        (alarm) => alarm.metric === 'humidity'
-                      )
+                      activeAlarms.some((alarm) => alarm.metric === 'humidity')
                         ? 'bold'
                         : 'normal',
                     fontSize: '0.875rem'
@@ -435,8 +429,7 @@ const DeviceListItem = ({
                   component='span'
                   sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
                 >
-                  Última actualización:{' '}
-                  { lastUpdateTime   || '---'}
+                  Última actualización: {lastUpdateTime || '---'}
                 </Box>
                 {getPowerSourceIcon(device)}
                 {onViewDetails && (

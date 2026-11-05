@@ -87,25 +87,27 @@ const SORTABLE = new Set<string>(DATASHEET_SORTABLE_FIELDS)
 const FILTERABLE = new Set<string>(DATASHEET_EXACT_FILTERS)
 
 // Filtros de columna que el backend aplica como igualdad exacta.
-const exactFilterProps: Record<string, Partial<MRT_ColumnDef<DataSheetData>>> =
-  {
-    status: {
-      filterVariant: 'select',
-      filterSelectOptions: [
-        { text: 'Disponible', value: 'available' },
-        { text: 'Ocupado', value: 'busy' }
-      ]
-    },
-    serviceType: {
-      filterVariant: 'select',
-      filterSelectOptions: createServiceTypeOptions
-    },
-    equipmentStatus: {
-      muiTableHeadCellFilterTextFieldProps: {
-        placeholder: 'Valor exacto'
-      }
+const exactFilterProps: Record<
+  string,
+  Partial<MRT_ColumnDef<DataSheetData>>
+> = {
+  status: {
+    filterVariant: 'select',
+    filterSelectOptions: [
+      { text: 'Disponible', value: 'available' },
+      { text: 'Ocupado', value: 'busy' }
+    ]
+  },
+  serviceType: {
+    filterVariant: 'select',
+    filterSelectOptions: createServiceTypeOptions
+  },
+  equipmentStatus: {
+    muiTableHeadCellFilterTextFieldProps: {
+      placeholder: 'Valor exacto'
     }
   }
+}
 
 /**
  * La tabla se pagina en el servidor: solo se ordena por las columnas que

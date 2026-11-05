@@ -112,9 +112,14 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
     void load()
   }, [token])
 
-  const setDecisionFor = (adjustmentId: number, decision: 'approved' | 'rejected' | 'changes_requested') => {
+  const setDecisionFor = (
+    adjustmentId: number,
+    decision: 'approved' | 'rejected' | 'changes_requested'
+  ) => {
     setDecisions((prev) =>
-      prev.map((d) => (d.adjustmentId === adjustmentId ? { ...d, decision } : d))
+      prev.map((d) =>
+        d.adjustmentId === adjustmentId ? { ...d, decision } : d
+      )
     )
   }
 
@@ -130,7 +135,11 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
       const response = await axiosPublic.post<{
         success: boolean
         message: string
-        results: Array<{ adjustmentId: number; success: boolean; status?: string }>
+        results: Array<{
+          adjustmentId: number
+          success: boolean
+          status?: string
+        }>
       }>('/calibration-services/public/adjustments/batch-respond', {
         token,
         decisions,
@@ -175,8 +184,8 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
               Respuesta de novedades de calibración
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
-              Aquí puedes aprobar, rechazar o pedir ajuste sobre las novedades reportadas
-              para tu servicio.
+              Aquí puedes aprobar, rechazar o pedir ajuste sobre las novedades
+              reportadas para tu servicio.
             </Typography>
           </Box>
 
@@ -188,15 +197,22 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
             <Alert severity='error'>{error}</Alert>
           ) : data ? (
             <>
-              {successMessage ? <Alert severity='success'>{successMessage}</Alert> : null}
+              {successMessage ? (
+                <Alert severity='success'>{successMessage}</Alert>
+              ) : null}
 
               <Paper variant='outlined' sx={{ p: 3, borderRadius: 3 }}>
                 <Typography variant='subtitle1' fontWeight={800}>
                   {data.serviceCode}
                   {data.quoteCode ? ` · ${data.quoteCode}` : ''}
                 </Typography>
-                <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-                  {data.adjustments.length} novedad(es) pendiente(s) de tu validación.
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mt: 1 }}
+                >
+                  {data.adjustments.length} novedad(es) pendiente(s) de tu
+                  validación.
                 </Typography>
               </Paper>
 
@@ -242,23 +258,45 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
                             sx={{ p: 2, borderRadius: 2 }}
                           >
                             <Stack spacing={1.5}>
-                              <Stack direction='row' spacing={1} alignItems='center'>
-                                <Typography variant='body2' fontWeight={700} color='primary.main'>
+                              <Stack
+                                direction='row'
+                                spacing={1}
+                                alignItems='center'
+                              >
+                                <Typography
+                                  variant='body2'
+                                  fontWeight={700}
+                                  color='primary.main'
+                                >
                                   {adjustment.itemName}
                                 </Typography>
-                                <Typography variant='caption' color='text.secondary'>
-                                  · {TYPE_LABELS[adjustment.changeType] || adjustment.changeType}
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                >
+                                  ·{' '}
+                                  {TYPE_LABELS[adjustment.changeType] ||
+                                    adjustment.changeType}
                                 </Typography>
                               </Stack>
-                              <Typography variant='caption' color='text.secondary'>
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Cotizado: {adjustment.quotedQuantity} · Real:{' '}
                                 {adjustment.actualQuantity} · Diferencia:{' '}
                                 {adjustment.differenceQuantity}
                               </Typography>
-                              <Typography variant='caption' color='text.secondary'>
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Valor:{' '}
                                 {currencyFormatter.format(
-                                  toNumber(adjustment.approvedTotal ?? adjustment.approvedSubtotal)
+                                  toNumber(
+                                    adjustment.approvedTotal ??
+                                      adjustment.approvedSubtotal
+                                  )
                                 )}
                               </Typography>
                               <TextField
@@ -270,12 +308,19 @@ const CalibrationServiceAdjustmentBatchResponsePage = () => {
                                 onChange={(event) =>
                                   setDecisionFor(
                                     adjustment.adjustmentId,
-                                    event.target.value as 'approved' | 'rejected' | 'changes_requested'
+                                    event.target.value as
+                                      | 'approved'
+                                      | 'rejected'
+                                      | 'changes_requested'
                                   )
                                 }
                               >
-                                <MenuItem value='approved'>Apruebo la novedad</MenuItem>
-                                <MenuItem value='rejected'>No apruebo la novedad</MenuItem>
+                                <MenuItem value='approved'>
+                                  Apruebo la novedad
+                                </MenuItem>
+                                <MenuItem value='rejected'>
+                                  No apruebo la novedad
+                                </MenuItem>
                                 <MenuItem value='changes_requested'>
                                   Solicito ajuste o aclaración
                                 </MenuItem>

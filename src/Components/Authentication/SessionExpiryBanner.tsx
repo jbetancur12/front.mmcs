@@ -27,9 +27,7 @@ const formatTimeLeft = (secondsLeft: number) => {
     const minutes = Math.floor(secondsLeft / 60)
     const seconds = secondsLeft % 60
 
-    return seconds > 0
-      ? `${minutes} min ${seconds} s`
-      : `${minutes} min`
+    return seconds > 0 ? `${minutes} min ${seconds} s` : `${minutes} min`
   }
 
   return `${secondsLeft} s`
@@ -150,7 +148,9 @@ const SessionExpiryBanner = ({
     !finalWarningDismissed
 
   const showBanner =
-    !!secondsLeft && !!warningKey && (!dismissedKey || dismissedKey !== warningKey)
+    !!secondsLeft &&
+    !!warningKey &&
+    (!dismissedKey || dismissedKey !== warningKey)
 
   if (!warningKey) {
     return null

@@ -12,10 +12,7 @@ import {
 import { Add, DeleteOutline } from '@mui/icons-material'
 import { PurchaseRequestItem } from 'src/pages/Purchases/Types'
 import { ItemsSectionProps } from '../types/PurchaseRequestTypes'
-import {
-  PURCHASE_TEAL,
-  PURCHASE_TEAL_HOVER
-} from '../../purchaseTableStyle'
+import { PURCHASE_TEAL, PURCHASE_TEAL_HOVER } from '../../purchaseTableStyle'
 
 const ItemsSection: React.FC<ItemsSectionProps> = ({
   formData,

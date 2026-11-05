@@ -7,7 +7,9 @@ export interface AsyncSelectOption {
   [extra: string]: unknown
 }
 
-interface AsyncSelectFieldProps<T extends { value: string | number; label: string }> {
+interface AsyncSelectFieldProps<
+  T extends { value: string | number; label: string }
+> {
   label: string
   value: T | null
   onChange: (option: T | null) => void

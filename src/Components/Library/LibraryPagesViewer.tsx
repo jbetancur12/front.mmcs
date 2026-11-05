@@ -9,10 +9,7 @@ import SignalLoader from 'src/Components/Common/SignalLoader'
 import EmptyState from 'src/Components/Common/EmptyState'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
-import {
-  LibraryDocument,
-  LibraryPreview
-} from './Library.types'
+import { LibraryDocument, LibraryPreview } from './Library.types'
 
 const POLL_MS = 2000
 const MAX_POLLS = 30
@@ -207,7 +204,9 @@ const LibraryPagesViewer: React.FC<LibraryPagesViewerProps> = ({
   }
 
   if (!preview || preview.status !== 'ready' || !preview.pageCount) {
-    return <SignalLoader message='Preparando la vista del documento' size='large' />
+    return (
+      <SignalLoader message='Preparando la vista del documento' size='large' />
+    )
   }
 
   return (
@@ -235,9 +234,13 @@ const LibraryPagesViewer: React.FC<LibraryPagesViewerProps> = ({
           bgcolor: 'grey.50'
         }}
       >
-        <Typography variant='caption' color='text.secondary' sx={{ flexGrow: 1 }}>
-          {preview.pageCount}{' '}
-          {preview.pageCount === 1 ? 'página' : 'páginas'} · solo lectura
+        <Typography
+          variant='caption'
+          color='text.secondary'
+          sx={{ flexGrow: 1 }}
+        >
+          {preview.pageCount} {preview.pageCount === 1 ? 'página' : 'páginas'} ·
+          solo lectura
         </Typography>
         <Tooltip title='Alejar'>
           <span>
@@ -245,13 +248,18 @@ const LibraryPagesViewer: React.FC<LibraryPagesViewerProps> = ({
               size='small'
               aria-label='Alejar'
               disabled={zoom <= MIN_ZOOM}
-              onClick={() => setZoom((value) => Math.max(MIN_ZOOM, value - ZOOM_STEP))}
+              onClick={() =>
+                setZoom((value) => Math.max(MIN_ZOOM, value - ZOOM_STEP))
+              }
             >
               <RemoveRounded fontSize='small' />
             </IconButton>
           </span>
         </Tooltip>
-        <Typography variant='caption' sx={{ minWidth: 40, textAlign: 'center' }}>
+        <Typography
+          variant='caption'
+          sx={{ minWidth: 40, textAlign: 'center' }}
+        >
           {Math.round(zoom * 100)}%
         </Typography>
         <Tooltip title='Acercar'>
@@ -260,7 +268,9 @@ const LibraryPagesViewer: React.FC<LibraryPagesViewerProps> = ({
               size='small'
               aria-label='Acercar'
               disabled={zoom >= MAX_ZOOM}
-              onClick={() => setZoom((value) => Math.min(MAX_ZOOM, value + ZOOM_STEP))}
+              onClick={() =>
+                setZoom((value) => Math.min(MAX_ZOOM, value + ZOOM_STEP))
+              }
             >
               <AddRounded fontSize='small' />
             </IconButton>

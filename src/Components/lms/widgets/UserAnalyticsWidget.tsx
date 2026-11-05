@@ -86,7 +86,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
     return (
       <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.error}` }}>
         <CardContent sx={{ p: 3 }}>
-          <Typography variant="body2" color={colors.error}>
+          <Typography variant='body2' color={colors.error}>
             Error al cargar la analítica de usuarios
           </Typography>
         </CardContent>
@@ -117,60 +117,75 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
     }
   }
 
-  const engagementRate = (data.totalUsers || 0) > 0 ? 
-    Math.round(((data.activeUsers || 0) / (data.totalUsers || 1)) * 100) : 0
+  const engagementRate =
+    (data.totalUsers || 0) > 0
+      ? Math.round(((data.activeUsers || 0) / (data.totalUsers || 1)) * 100)
+      : 0
 
-  const totalProgress = (data.progressDistribution?.notStarted || 0) + 
-                       (data.progressDistribution?.inProgress || 0) + 
-                       (data.progressDistribution?.completed || 0)
+  const totalProgress =
+    (data.progressDistribution?.notStarted || 0) +
+    (data.progressDistribution?.inProgress || 0) +
+    (data.progressDistribution?.completed || 0)
 
   return (
-    <Card sx={{
-      borderRadius: '16px',
-      border: `1px solid ${colors.gray[200]}`,
-      transition: 'all 0.3s ease-in-out',
-      '&:hover': {
-        borderColor: colors.info,
-        boxShadow: `0 8px 25px rgba(59, 130, 246, 0.15)`,
-        transform: 'translateY(-2px)'
-      }
-    }}>
+    <Card
+      sx={{
+        borderRadius: '16px',
+        border: `1px solid ${colors.gray[200]}`,
+        transition: 'all 0.3s ease-in-out',
+        '&:hover': {
+          borderColor: colors.info,
+          boxShadow: `0 8px 25px rgba(59, 130, 246, 0.15)`,
+          transform: 'translateY(-2px)'
+        }
+      }}
+    >
       <CardContent sx={{ p: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Avatar sx={{
-            bgcolor: '#eff6ff',
-            color: colors.info,
-            mr: 2,
-            width: 48,
-            height: 48
-          }}>
+          <Avatar
+            sx={{
+              bgcolor: '#eff6ff',
+              color: colors.info,
+              mr: 2,
+              width: 48,
+              height: 48
+            }}
+          >
             <PeopleIcon />
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: colors.gray[800] }}>
+            <Typography
+              variant='h6'
+              sx={{ fontWeight: 700, color: colors.gray[800] }}
+            >
               {getScopeLabel()}
             </Typography>
-            <Typography variant="body2" color={colors.gray[500]}>
+            <Typography variant='body2' color={colors.gray[500]}>
               {getScopeDescription()}
             </Typography>
             {scope !== 'admin' && (
               <Box sx={{ mt: 0.5 }}>
-                <Typography variant="caption" sx={{
-                  bgcolor: '#eff6ff',
-                  color: colors.info,
-                  px: 1,
-                  py: 0.25,
-                  borderRadius: 1,
-                  fontSize: '0.7rem'
-                }}>
-                  {scope === 'training_manager' ? 'Vista Gestor' : 'Vista Acotada'}
+                <Typography
+                  variant='caption'
+                  sx={{
+                    bgcolor: '#eff6ff',
+                    color: colors.info,
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: 1,
+                    fontSize: '0.7rem'
+                  }}
+                >
+                  {scope === 'training_manager'
+                    ? 'Vista Gestor'
+                    : 'Vista Acotada'}
                 </Typography>
               </Box>
             )}
           </Box>
-          <Tooltip title="Ver detalles completos">
-            <IconButton onClick={onViewDetails} size="small">
+          <Tooltip title='Ver detalles completos'>
+            <IconButton onClick={onViewDetails} size='small'>
               <AssessmentIcon />
             </IconButton>
           </Tooltip>
@@ -179,31 +194,61 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
         {/* Main Stats */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={4}>
-            <Box sx={{ textAlign: 'center', p: 2, bgcolor: colors.gray[50], borderRadius: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: colors.gray[800] }}>
+            <Box
+              sx={{
+                textAlign: 'center',
+                p: 2,
+                bgcolor: colors.gray[50],
+                borderRadius: 2
+              }}
+            >
+              <Typography
+                variant='h4'
+                sx={{ fontWeight: 700, color: colors.gray[800] }}
+              >
                 {data.totalUsers || 0}
               </Typography>
-              <Typography variant="body2" color={colors.gray[500]}>
+              <Typography variant='body2' color={colors.gray[500]}>
                 Total
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={4}>
-            <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#eff6ff', borderRadius: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: colors.info }}>
+            <Box
+              sx={{
+                textAlign: 'center',
+                p: 2,
+                bgcolor: '#eff6ff',
+                borderRadius: 2
+              }}
+            >
+              <Typography
+                variant='h4'
+                sx={{ fontWeight: 700, color: colors.info }}
+              >
                 {data.activeUsers || 0}
               </Typography>
-              <Typography variant="body2" color={colors.info}>
+              <Typography variant='body2' color={colors.info}>
                 Activos
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={4}>
-            <Box sx={{ textAlign: 'center', p: 2, bgcolor: colors.primaryLight, borderRadius: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: colors.primary }}>
+            <Box
+              sx={{
+                textAlign: 'center',
+                p: 2,
+                bgcolor: colors.primaryLight,
+                borderRadius: 2
+              }}
+            >
+              <Typography
+                variant='h4'
+                sx={{ fontWeight: 700, color: colors.primary }}
+              >
                 {engagementRate}%
               </Typography>
-              <Typography variant="body2" color={colors.primary}>
+              <Typography variant='body2' color={colors.primary}>
                 Engagement
               </Typography>
             </Box>
@@ -212,10 +257,13 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
 
         {/* User Type Breakdown */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[700], mb: 2 }}>
+          <Typography
+            variant='body2'
+            sx={{ fontWeight: 600, color: colors.gray[700], mb: 2 }}
+          >
             Segmentación por Tipo
           </Typography>
-          
+
           {/* Internal Users */}
           <Box
             sx={{
@@ -234,20 +282,34 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
             }}
             onClick={() => onUserTypeClick?.('internal')}
           >
-            <Avatar sx={{ bgcolor: colors.primary, mr: 2, width: 32, height: 32 }}>
+            <Avatar
+              sx={{ bgcolor: colors.primary, mr: 2, width: 32, height: 32 }}
+            >
               <PersonOutlineIcon sx={{ fontSize: 18 }} />
             </Avatar>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[800] }}>
+              <Typography
+                variant='body2'
+                sx={{ fontWeight: 600, color: colors.gray[800] }}
+              >
                 Usuarios Internos
               </Typography>
-              <Typography variant="caption" color={colors.gray[500]}>
-                {data.internalUsers || 0} usuarios • {data.completionRateByUserType?.internal || 0}% completado
+              <Typography variant='caption' color={colors.gray[500]}>
+                {data.internalUsers || 0} usuarios •{' '}
+                {data.completionRateByUserType?.internal || 0}% completado
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: colors.primary }}>
-                {(data.totalUsers || 0) > 0 ? Math.round(((data.internalUsers || 0) / (data.totalUsers || 1)) * 100) : 0}%
+              <Typography
+                variant='body2'
+                sx={{ fontWeight: 700, color: colors.primary }}
+              >
+                {(data.totalUsers || 0) > 0
+                  ? Math.round(
+                      ((data.internalUsers || 0) / (data.totalUsers || 1)) * 100
+                    )
+                  : 0}
+                %
               </Typography>
             </Box>
           </Box>
@@ -273,16 +335,28 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
               <BusinessIcon sx={{ fontSize: 18 }} />
             </Avatar>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[800] }}>
+              <Typography
+                variant='body2'
+                sx={{ fontWeight: 600, color: colors.gray[800] }}
+              >
                 Usuarios Cliente
               </Typography>
-              <Typography variant="caption" color={colors.gray[500]}>
-                {data.clientUsers || 0} usuarios • {data.completionRateByUserType?.client || 0}% completado
+              <Typography variant='caption' color={colors.gray[500]}>
+                {data.clientUsers || 0} usuarios •{' '}
+                {data.completionRateByUserType?.client || 0}% completado
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: colors.info }}>
-                {(data.totalUsers || 0) > 0 ? Math.round(((data.clientUsers || 0) / (data.totalUsers || 1)) * 100) : 0}%
+              <Typography
+                variant='body2'
+                sx={{ fontWeight: 700, color: colors.info }}
+              >
+                {(data.totalUsers || 0) > 0
+                  ? Math.round(
+                      ((data.clientUsers || 0) / (data.totalUsers || 1)) * 100
+                    )
+                  : 0}
+                %
               </Typography>
             </Box>
           </Box>
@@ -292,23 +366,42 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
 
         {/* Progress Distribution */}
         <Box>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[700], mb: 2 }}>
+          <Typography
+            variant='body2'
+            sx={{ fontWeight: 600, color: colors.gray[700], mb: 2 }}
+          >
             Distribución de Progreso
           </Typography>
-          
+
           {/* Progress Bars */}
           <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color={colors.gray[500]}>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+            >
+              <Typography variant='caption' color={colors.gray[500]}>
                 Completados
               </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {data.progressDistribution?.completed || 0} ({totalProgress > 0 ? Math.round(((data.progressDistribution?.completed || 0) / totalProgress) * 100) : 0}%)
+              <Typography variant='caption' sx={{ fontWeight: 600 }}>
+                {data.progressDistribution?.completed || 0} (
+                {totalProgress > 0
+                  ? Math.round(
+                      ((data.progressDistribution?.completed || 0) /
+                        totalProgress) *
+                        100
+                    )
+                  : 0}
+                %)
               </Typography>
             </Box>
             <LinearProgress
-              variant="determinate"
-              value={totalProgress > 0 ? ((data.progressDistribution?.completed || 0) / totalProgress) * 100 : 0}
+              variant='determinate'
+              value={
+                totalProgress > 0
+                  ? ((data.progressDistribution?.completed || 0) /
+                      totalProgress) *
+                    100
+                  : 0
+              }
               sx={{
                 height: 6,
                 borderRadius: 3,
@@ -322,17 +415,33 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
           </Box>
 
           <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color={colors.gray[500]}>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+            >
+              <Typography variant='caption' color={colors.gray[500]}>
                 En Progreso
               </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {data.progressDistribution?.inProgress || 0} ({totalProgress > 0 ? Math.round(((data.progressDistribution?.inProgress || 0) / totalProgress) * 100) : 0}%)
+              <Typography variant='caption' sx={{ fontWeight: 600 }}>
+                {data.progressDistribution?.inProgress || 0} (
+                {totalProgress > 0
+                  ? Math.round(
+                      ((data.progressDistribution?.inProgress || 0) /
+                        totalProgress) *
+                        100
+                    )
+                  : 0}
+                %)
               </Typography>
             </Box>
             <LinearProgress
-              variant="determinate"
-              value={totalProgress > 0 ? ((data.progressDistribution?.inProgress || 0) / totalProgress) * 100 : 0}
+              variant='determinate'
+              value={
+                totalProgress > 0
+                  ? ((data.progressDistribution?.inProgress || 0) /
+                      totalProgress) *
+                    100
+                  : 0
+              }
               sx={{
                 height: 6,
                 borderRadius: 3,
@@ -346,17 +455,33 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
           </Box>
 
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color={colors.gray[500]}>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+            >
+              <Typography variant='caption' color={colors.gray[500]}>
                 Sin Comenzar
               </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {data.progressDistribution?.notStarted || 0} ({totalProgress > 0 ? Math.round(((data.progressDistribution?.notStarted || 0) / totalProgress) * 100) : 0}%)
+              <Typography variant='caption' sx={{ fontWeight: 600 }}>
+                {data.progressDistribution?.notStarted || 0} (
+                {totalProgress > 0
+                  ? Math.round(
+                      ((data.progressDistribution?.notStarted || 0) /
+                        totalProgress) *
+                        100
+                    )
+                  : 0}
+                %)
               </Typography>
             </Box>
             <LinearProgress
-              variant="determinate"
-              value={totalProgress > 0 ? ((data.progressDistribution?.notStarted || 0) / totalProgress) * 100 : 0}
+              variant='determinate'
+              value={
+                totalProgress > 0
+                  ? ((data.progressDistribution?.notStarted || 0) /
+                      totalProgress) *
+                    100
+                  : 0
+              }
               sx={{
                 height: 6,
                 borderRadius: 3,
@@ -371,26 +496,42 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
         </Box>
 
         {/* Summary Stats */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-around', 
-          mt: 3, 
-          pt: 2, 
-          borderTop: `1px solid ${colors.gray[200]}` 
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-around',
+            mt: 3,
+            pt: 2,
+            borderTop: `1px solid ${colors.gray[200]}`
+          }}
+        >
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ fontWeight: 700, color: colors.gray[800] }}>
-              {Math.round(((data.completionRateByUserType?.internal || 0) + (data.completionRateByUserType?.client || 0)) / 2)}%
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 700, color: colors.gray[800] }}
+            >
+              {Math.round(
+                ((data.completionRateByUserType?.internal || 0) +
+                  (data.completionRateByUserType?.client || 0)) /
+                  2
+              )}
+              %
             </Typography>
-            <Typography variant="caption" color={colors.gray[500]}>
+            <Typography variant='caption' color={colors.gray[500]}>
               Promedio Global
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ fontWeight: 700, color: colors.info }}>
-              {Math.round(((data.activeUsers || 0) / (data.totalUsers || 1)) * 100)}%
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 700, color: colors.info }}
+            >
+              {Math.round(
+                ((data.activeUsers || 0) / (data.totalUsers || 1)) * 100
+              )}
+              %
             </Typography>
-            <Typography variant="caption" color={colors.gray[500]}>
+            <Typography variant='caption' color={colors.gray[500]}>
               Tasa Actividad
             </Typography>
           </Box>

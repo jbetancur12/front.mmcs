@@ -69,7 +69,9 @@ const formatLastAccess = (lastAccessedAt?: string | null) => {
   })
 }
 
-const getNextLessonLabel = (course: Course & { learningContinuity?: Course['learningContinuity'] }) => {
+const getNextLessonLabel = (
+  course: Course & { learningContinuity?: Course['learningContinuity'] }
+) => {
   const nextLesson = course.learningContinuity?.nextLesson
   if (!nextLesson) return null
 
@@ -138,19 +140,32 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
         nextLessonLabel: getNextLessonLabel(course),
-        lastAccessLabel: formatLastAccess(course.learningContinuity?.lastAccessedAt)
+        lastAccessLabel: formatLastAccess(
+          course.learningContinuity?.lastAccessedAt
+        )
       }
     })
 
     // Calcular estadísticas
     const totalCourses = enrichedCourses.length
-    const completedCourses = enrichedCourses.filter(c => c.progress === 100).length
-    const inProgressCourses = enrichedCourses.filter(c => c.progress > 0 && c.progress < 100).length
-    const totalProgress = enrichedCourses.reduce((sum, c) => sum + c.progress, 0)
-    const averageProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
+    const completedCourses = enrichedCourses.filter(
+      (c) => c.progress === 100
+    ).length
+    const inProgressCourses = enrichedCourses.filter(
+      (c) => c.progress > 0 && c.progress < 100
+    ).length
+    const totalProgress = enrichedCourses.reduce(
+      (sum, c) => sum + c.progress,
+      0
+    )
+    const averageProgress =
+      totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
 
     // Extraer categorías únicas
-    const uniqueCategories: string[] = ['Todos', ...Array.from(new Set(enrichedCourses.map(c => c.category)))]
+    const uniqueCategories: string[] = [
+      'Todos',
+      ...Array.from(new Set(enrichedCourses.map((c) => c.category)))
+    ]
 
     return {
       availableCourses: enrichedCourses,
@@ -161,7 +176,10 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         averageProgress,
         certificatesEarned: userCertificates.length,
         totalHoursLearned: Math.round(
-          enrichedCourses.reduce((sum, course) => sum + getCourseTimeSpentMinutes(course), 0) / 60
+          enrichedCourses.reduce(
+            (sum, course) => sum + getCourseTimeSpentMinutes(course),
+            0
+          ) / 60
         )
       },
       categories: uniqueCategories
@@ -173,14 +191,17 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     let filtered = availableCourses
 
     if (selectedCategory !== 'Todos') {
-      filtered = filtered.filter(course => course.category === selectedCategory)
+      filtered = filtered.filter(
+        (course) => course.category === selectedCategory
+      )
     }
 
     if (searchTerm) {
-      filtered = filtered.filter(course =>
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (course) =>
+          course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -199,7 +220,15 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
   // Loading state
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: 'grey.50',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <Box sx={{ textAlign: 'center' }}>
           <SignalLoader message='Cargando cursos disponibles...' />
         </Box>
@@ -210,16 +239,26 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
   // Error state
   if (error) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: 'grey.50',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <Box sx={{ textAlign: 'center', maxWidth: 500 }}>
           <ErrorIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-          <Typography variant="h5" color="error" gutterBottom>
+          <Typography variant='h5' color='error' gutterBottom>
             Error al cargar los cursos
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            {error instanceof Error ? error.message : 'No se pudieron cargar los cursos disponibles'}
+          <Typography variant='body1' color='text.secondary' sx={{ mb: 3 }}>
+            {error instanceof Error
+              ? error.message
+              : 'No se pudieron cargar los cursos disponibles'}
           </Typography>
-          <Button variant="contained" onClick={() => window.location.reload()}>
+          <Button variant='contained' onClick={() => window.location.reload()}>
             Reintentar
           </Button>
         </Box>
@@ -233,11 +272,24 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}
       >
         <LmsPageHeader
-          title={`Hola, ${String(currentUser.name || '').split(' ')[0].charAt(0).toUpperCase() + String(currentUser.name || '').split(' ')[0].slice(1).toLowerCase()}`}
+          title={`Hola, ${
+            String(currentUser.name || '')
+              .split(' ')[0]
+              .charAt(0)
+              .toUpperCase() +
+            String(currentUser.name || '')
+              .split(' ')[0]
+              .slice(1)
+              .toLowerCase()
+          }`}
           subtitle='Tus cursos y los de tu empresa, en un solo lugar'
           icon={<SchoolIcon />}
           actions={
-            <Button variant='outlined' startIcon={<NotificationsNoneIcon />} onClick={() => setActiveTab(3)}>
+            <Button
+              variant='outlined'
+              startIcon={<NotificationsNoneIcon />}
+              onClick={() => setActiveTab(3)}
+            >
               Notificaciones
             </Button>
           }
@@ -297,136 +349,193 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
           <Tab label='Mis Certificados' />
         </Tabs>
 
-        {activeTab === 0 && (() => {
-          const pending = availableCourses.filter((course) => course.progress < 100)
-          const hero = [...pending].sort((left, right) => right.progress - left.progress)[0]
-          const others = pending.filter((course) => !hero || course.id !== hero.id)
-          const heroTone = hero ? getCourseTone(hero) : null
-          return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {hero && heroTone && (
-                <Card
-                  variant='outlined'
-                  sx={(theme) => ({
-                    borderRadius: 3,
-                    p: { xs: 2, sm: 3 },
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 3,
-                    flexWrap: 'wrap',
-                    bgcolor: alpha(theme.palette[heroTone.color].main, 0.08),
-                    borderColor: alpha(theme.palette[heroTone.color].main, 0.35)
-                  })}
-                >
-                  <Box sx={{ position: 'relative', width: 88, height: 88, flex: 'none' }}>
-                    <CircularProgress
-                      variant='determinate'
-                      value={100}
-                      size={88}
-                      thickness={4}
-                      sx={{ position: 'absolute', color: 'action.hover' }}
-                    />
-                    <CircularProgress
-                      variant='determinate'
-                      value={hero.progress || 0}
-                      size={88}
-                      thickness={4}
-                      color={heroTone.color}
-                      sx={{ position: 'absolute' }}
-                    />
+        {activeTab === 0 &&
+          (() => {
+            const pending = availableCourses.filter(
+              (course) => course.progress < 100
+            )
+            const hero = [...pending].sort(
+              (left, right) => right.progress - left.progress
+            )[0]
+            const others = pending.filter(
+              (course) => !hero || course.id !== hero.id
+            )
+            const heroTone = hero ? getCourseTone(hero) : null
+            return (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {hero && heroTone && (
+                  <Card
+                    variant='outlined'
+                    sx={(theme) => ({
+                      borderRadius: 3,
+                      p: { xs: 2, sm: 3 },
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 3,
+                      flexWrap: 'wrap',
+                      bgcolor: alpha(theme.palette[heroTone.color].main, 0.08),
+                      borderColor: alpha(
+                        theme.palette[heroTone.color].main,
+                        0.35
+                      )
+                    })}
+                  >
                     <Box
                       sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: `${heroTone.color}.main`
+                        position: 'relative',
+                        width: 88,
+                        height: 88,
+                        flex: 'none'
                       }}
                     >
-                      {hero.progress > 0 ? (
-                        <Typography variant='h6'>{hero.progress}%</Typography>
-                      ) : (
-                        React.cloneElement(heroTone.icon, { sx: { fontSize: 38 } })
-                      )}
+                      <CircularProgress
+                        variant='determinate'
+                        value={100}
+                        size={88}
+                        thickness={4}
+                        sx={{ position: 'absolute', color: 'action.hover' }}
+                      />
+                      <CircularProgress
+                        variant='determinate'
+                        value={hero.progress || 0}
+                        size={88}
+                        thickness={4}
+                        color={heroTone.color}
+                        sx={{ position: 'absolute' }}
+                      />
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: `${heroTone.color}.main`
+                        }}
+                      >
+                        {hero.progress > 0 ? (
+                          <Typography variant='h6'>{hero.progress}%</Typography>
+                        ) : (
+                          React.cloneElement(heroTone.icon, {
+                            sx: { fontSize: 38 }
+                          })
+                        )}
+                      </Box>
                     </Box>
+                    <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
+                      <Typography variant='overline' color='text.secondary'>
+                        {hero.progress > 0
+                          ? 'Continúa donde quedaste'
+                          : 'Te recomendamos empezar'}
+                      </Typography>
+                      <Typography
+                        variant='h5'
+                        sx={{ fontWeight: 600, lineHeight: 1.25 }}
+                      >
+                        {hero.title}
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mt: 0.5 }}
+                      >
+                        {hero.completedLessons}/{hero.totalLessons} lecciones
+                        {hero.nextLessonLabel
+                          ? ` · Sigue: ${hero.nextLessonLabel}`
+                          : ''}
+                      </Typography>
+                    </Box>
+                    <Button
+                      size='large'
+                      variant='contained'
+                      startIcon={<PlayArrowIcon />}
+                      onClick={() => handleCourseClick(hero.id)}
+                    >
+                      {hero.progress > 0 ? 'Continuar' : 'Comenzar'}
+                    </Button>
+                  </Card>
+                )}
+
+                {others.length > 0 && (
+                  <Box>
+                    <Typography variant='h6' sx={{ mb: 2 }}>
+                      Disponibles para ti ({others.length})
+                    </Typography>
+                    <LmsCourseGrid
+                      courses={others}
+                      onOpen={handleCourseClick}
+                    />
                   </Box>
-                  <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
-                    <Typography variant='overline' color='text.secondary'>
-                      {hero.progress > 0 ? 'Continúa donde quedaste' : 'Te recomendamos empezar'}
-                    </Typography>
-                    <Typography variant='h5' sx={{ fontWeight: 600, lineHeight: 1.25 }}>
-                      {hero.title}
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
-                      {hero.completedLessons}/{hero.totalLessons} lecciones
-                      {hero.nextLessonLabel ? ` · Sigue: ${hero.nextLessonLabel}` : ''}
-                    </Typography>
-                  </Box>
-                  <Button
-                    size='large'
-                    variant='contained'
-                    startIcon={<PlayArrowIcon />}
-                    onClick={() => handleCourseClick(hero.id)}
+                )}
+
+                {availableCourses.length === 0 && (
+                  <Card
+                    variant='outlined'
+                    sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}
                   >
-                    {hero.progress > 0 ? 'Continuar' : 'Comenzar'}
-                  </Button>
-                </Card>
-              )}
+                    <BookOpenIcon
+                      sx={{ fontSize: 56, color: 'info.main', mb: 1 }}
+                    />
+                    <Typography variant='h6'>
+                      Aún no hay cursos para tu empresa
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ maxWidth: 480, mx: 'auto' }}
+                    >
+                      Cuando Metromedics publique cursos para tu empresa
+                      aparecerán aquí. Si esperabas alguno, escribe a tu
+                      contacto en Metromedics para confirmarlo.
+                    </Typography>
+                  </Card>
+                )}
 
-              {others.length > 0 && (
-                <Box>
-                  <Typography variant='h6' sx={{ mb: 2 }}>
-                    Disponibles para ti ({others.length})
-                  </Typography>
-                  <LmsCourseGrid courses={others} onOpen={handleCourseClick} />
-                </Box>
-              )}
-
-              {availableCourses.length === 0 && (
-                <Card variant='outlined' sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
-                  <BookOpenIcon sx={{ fontSize: 56, color: 'info.main', mb: 1 }} />
-                  <Typography variant='h6'>Aún no hay cursos para tu empresa</Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ maxWidth: 480, mx: 'auto' }}>
-                    Cuando Metromedics publique cursos para tu empresa aparecerán aquí. Si esperabas
-                    alguno, escribe a tu contacto en Metromedics para confirmarlo.
-                  </Typography>
-                </Card>
-              )}
-
-              {availableCourses.length > 0 && pending.length === 0 && (
-                <Card variant='outlined' sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
-                  <AwardIcon sx={{ fontSize: 56, color: 'success.main', mb: 1 }} />
-                  <Typography variant='h6'>Completaste todos tus cursos</Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    Puedes repasar cualquiera desde Mis Cursos o descargar tus certificados.
-                  </Typography>
-                  <Button variant='outlined' onClick={() => setActiveTab(1)}>
-                    Ver mis cursos
-                  </Button>
-                </Card>
-              )}
-            </Box>
-          )
-        })()}
+                {availableCourses.length > 0 && pending.length === 0 && (
+                  <Card
+                    variant='outlined'
+                    sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}
+                  >
+                    <AwardIcon
+                      sx={{ fontSize: 56, color: 'success.main', mb: 1 }}
+                    />
+                    <Typography variant='h6'>
+                      Completaste todos tus cursos
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 2 }}
+                    >
+                      Puedes repasar cualquiera desde Mis Cursos o descargar tus
+                      certificados.
+                    </Typography>
+                    <Button variant='outlined' onClick={() => setActiveTab(1)}>
+                      Ver mis cursos
+                    </Button>
+                  </Card>
+                )}
+              </Box>
+            )
+          })()}
 
         {activeTab === 1 && (
           <Box>
             {/* Barra de búsqueda y filtros */}
             <Box sx={{ mb: 3 }}>
-              <Grid container spacing={2} alignItems="center">
+              <Grid container spacing={2} alignItems='center'>
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    placeholder="Buscar cursos..."
+                    placeholder='Buscar cursos...'
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     InputProps={{
                       startAdornment: (
-                        <InputAdornment position="start">
+                        <InputAdornment position='start'>
                           <SearchIcon />
                         </InputAdornment>
-                      ),
+                      )
                     }}
                   />
                 </Grid>
@@ -435,7 +544,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                     <InputLabel>Categoría</InputLabel>
                     <Select
                       value={selectedCategory}
-                      label="Categoría"
+                      label='Categoría'
                       onChange={(e) => setSelectedCategory(e.target.value)}
                     >
                       {categories.map((category) => (
@@ -447,7 +556,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12} md={3}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant='body2' color='text.secondary'>
                     {filteredCourses.length} cursos encontrados
                   </Typography>
                 </Grid>
@@ -456,13 +565,16 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
             {/* Lista de cursos */}
             {filteredCourses.length > 0 ? (
-              <LmsCourseGrid courses={filteredCourses} onOpen={handleCourseClick} />
+              <LmsCourseGrid
+                courses={filteredCourses}
+                onOpen={handleCourseClick}
+              />
             ) : (
               <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                <Typography variant='h6' color='text.secondary' sx={{ mb: 1 }}>
                   No se encontraron cursos
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Intenta con otros términos de búsqueda o cambia la categoría
                 </Typography>
               </Box>
@@ -472,10 +584,15 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
         {activeTab === 2 && (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant='h6'>
-                Mis Certificados
-              </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 3
+              }}
+            >
+              <Typography variant='h6'>Mis Certificados</Typography>
               <Typography variant='body2' color='text.secondary'>
                 {stats.certificatesEarned} certificados obtenidos
               </Typography>
@@ -484,60 +601,88 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
             {userCertificates.length > 0 ? (
               <Grid container spacing={3}>
                 {userCertificates.map((certificate: Certificate) => (
-                    <Grid item xs={12} md={6} lg={4} key={certificate.id}>
-                      <Card variant='outlined'>
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Avatar sx={{ bgcolor: 'success.main', mr: 2 }}>
-                              <AwardIcon />
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant='h6' component='div'>
-                                {certificate.courseTitle}
-                              </Typography>
-                              <Typography variant='body2' color='text.secondary'>
-                                Emitido {new Date(certificate.issuedAt || certificate.issued_at || '').toLocaleDateString('es-ES')}
-                              </Typography>
-                            </Box>
+                  <Grid item xs={12} md={6} lg={4} key={certificate.id}>
+                    <Card variant='outlined'>
+                      <CardContent>
+                        <Box
+                          sx={{ display: 'flex', alignItems: 'center', mb: 2 }}
+                        >
+                          <Avatar sx={{ bgcolor: 'success.main', mr: 2 }}>
+                            <AwardIcon />
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant='h6' component='div'>
+                              {certificate.courseTitle}
+                            </Typography>
+                            <Typography variant='body2' color='text.secondary'>
+                              Emitido{' '}
+                              {new Date(
+                                certificate.issuedAt ||
+                                  certificate.issued_at ||
+                                  ''
+                              ).toLocaleDateString('es-ES')}
+                            </Typography>
                           </Box>
+                        </Box>
 
-                          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                            Certificado N°: {certificate.certificateNumber || certificate.certificate_number}
-                          </Typography>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ mb: 2 }}
+                        >
+                          Certificado N°:{' '}
+                          {certificate.certificateNumber ||
+                            certificate.certificate_number}
+                        </Typography>
 
-                          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                            <Chip
-                              label='Certificado'
-                              size="small"
-                              color="success"
-                            />
-                          </Box>
+                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                          <Chip
+                            label='Certificado'
+                            size='small'
+                            color='success'
+                          />
+                        </Box>
 
-                          <Button
-                            variant='outlined'
-                            size="small"
-                            fullWidth
-                            startIcon={<AwardIcon />}
-                            onClick={() => navigate(`/lms/certificate/${certificate.id}`)}
-                          >
-                            Ver Certificado
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
+                        <Button
+                          variant='outlined'
+                          size='small'
+                          fullWidth
+                          startIcon={<AwardIcon />}
+                          onClick={() =>
+                            navigate(`/lms/certificate/${certificate.id}`)
+                          }
+                        >
+                          Ver Certificado
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
               </Grid>
             ) : (
               <Box sx={{ textAlign: 'center', py: 4 }}>
-                <AwardIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                <AwardIcon
+                  sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+                />
+                <Typography variant='h6' color='text.secondary' sx={{ mb: 1 }}>
                   Aún no tienes certificados
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 2 }}
+                >
                   Completa cursos para obtener certificados
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <Button variant="contained" onClick={() => setActiveTab(1)}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 1,
+                    flexWrap: 'wrap'
+                  }}
+                >
+                  <Button variant='contained' onClick={() => setActiveTab(1)}>
                     Ver mis cursos
                   </Button>
                 </Box>
@@ -548,10 +693,9 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
         {activeTab === 3 && (
           <Box>
-            <LmsNotificationCenter userRole="client" userId={currentUser.id} />
+            <LmsNotificationCenter userRole='client' userId={currentUser.id} />
           </Box>
         )}
-
       </Box>
     </Box>
   )

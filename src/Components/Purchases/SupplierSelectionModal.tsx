@@ -98,25 +98,28 @@ const SupplierSelectionModal = ({
 
         // Reconstruir selections, scores, y whichAnswers a partir de existingSelectionData.details
         // Asumiendo que existingSelectionData.details es Array<SelectionSupplierDetail>
-        ;(existingSelectionData.details || []).forEach((detail: SelectionSupplierDetail) => {
-          const criterion = criteria.find(
-            (c) => c.id === detail.selectionSupplierSubItemId
-          )
-          if (criterion) {
-            if (!newSelections[criterion.category]) {
-              newSelections[criterion.category] = []
-            }
-            newSelections[criterion.category].push(criterion.id)
+        ;(existingSelectionData.details || []).forEach(
+          (detail: SelectionSupplierDetail) => {
+            const criterion = criteria.find(
+              (c) => c.id === detail.selectionSupplierSubItemId
+            )
+            if (criterion) {
+              if (!newSelections[criterion.category]) {
+                newSelections[criterion.category] = []
+              }
+              newSelections[criterion.category].push(criterion.id)
 
-            if (detail.which) {
-              newWhichAnswers[criterion.id] = detail.which
+              if (detail.which) {
+                newWhichAnswers[criterion.id] = detail.which
+              }
+              // Sumar al score de la categoría y al total
+              newScores[criterion.category] =
+                (newScores[criterion.category] || 0) +
+                (criterion.baseScore || 0)
+              newTotalScore += criterion.baseScore || 0
             }
-            // Sumar al score de la categoría y al total
-            newScores[criterion.category] =
-              (newScores[criterion.category] || 0) + (criterion.baseScore || 0)
-            newTotalScore += criterion.baseScore || 0
           }
-        })
+        )
 
         setFormState({
           supplierData: {
@@ -348,13 +351,13 @@ const SupplierSelectionModal = ({
       } else {
         const finalDecision = payload.evaluationData.finalDecision
         if (
-        finalDecision === 'APPROVED' ||
-        finalDecision === 'APPROVED WITH RESERVE'
-      ) {
-        notify.success('Proveedor aprobado')
-      } else {
-        notify.error('Proveedor no aprobado')
-      }
+          finalDecision === 'APPROVED' ||
+          finalDecision === 'APPROVED WITH RESERVE'
+        ) {
+          notify.success('Proveedor aprobado')
+        } else {
+          notify.error('Proveedor no aprobado')
+        }
       }
       setFormState(initialFormState)
       onSuccess()

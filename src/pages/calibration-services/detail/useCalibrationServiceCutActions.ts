@@ -7,7 +7,9 @@ import { CalibrationServiceDetailDialogs } from './useCalibrationServiceDetailDi
 import { DetailTab } from './calibrationServiceDetailUtils'
 
 import { logger } from 'src/utils/logger'
-type CalibrationServiceMutations = ReturnType<typeof useCalibrationServiceMutations>
+type CalibrationServiceMutations = ReturnType<
+  typeof useCalibrationServiceMutations
+>
 
 interface CalibrationServiceCutActionsParams {
   service: CalibrationService
@@ -147,7 +149,12 @@ const useCalibrationServiceCutActions = ({
       setActiveTab('cuts')
     } catch (cutError) {
       logger.error(cutError)
-      toast.error(getApiErrorMessage(cutError, 'No pudimos registrar la facturación del corte.'))
+      toast.error(
+        getApiErrorMessage(
+          cutError,
+          'No pudimos registrar la facturación del corte.'
+        )
+      )
     }
   }
 
@@ -166,7 +173,9 @@ const useCalibrationServiceCutActions = ({
       setActiveTab('cuts')
     } catch (cutError) {
       logger.error(cutError)
-      toast.error(getApiErrorMessage(cutError, 'No pudimos registrar el pago del corte.'))
+      toast.error(
+        getApiErrorMessage(cutError, 'No pudimos registrar el pago del corte.')
+      )
     }
   }
 
@@ -233,7 +242,12 @@ const useCalibrationServiceCutActions = ({
       setActiveTab('cuts')
     } catch (cutError) {
       logger.error(cutError)
-      toast.error(getApiErrorMessage(cutError, 'No pudimos actualizar el control documental del corte.'))
+      toast.error(
+        getApiErrorMessage(
+          cutError,
+          'No pudimos actualizar el control documental del corte.'
+        )
+      )
     }
   }
 

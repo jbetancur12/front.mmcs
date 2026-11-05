@@ -28,10 +28,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close' // Icono para cerrar el modal
 import { PictureAsPdf } from '@mui/icons-material'
 import { format } from 'date-fns'
-import {
-  PURCHASE_TEAL,
-  PURCHASE_TEAL_HOVER
-} from './purchaseTableStyle'
+import { PURCHASE_TEAL, PURCHASE_TEAL_HOVER } from './purchaseTableStyle'
 
 const tealButton = {
   bgcolor: PURCHASE_TEAL,
@@ -226,8 +223,8 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
       formData.append('purchaseRequestCode', purchaseRequest.purchaseCode || '')
       formData.append('supplierName', supplierName || 'Desconocido')
       for (const [key, value] of formData.entries()) {
-  logger.log(key, value);
-}
+        logger.log(key, value)
+      }
 
       return axiosPrivate.post('/purchaseQuotations', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -372,7 +369,10 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
     },
     {
       onSuccess: () => {
-        notify.success('Proveedores Asociados', 'Los nuevos proveedores se han vinculado a los ítems de la solicitud.')
+        notify.success(
+          'Proveedores Asociados',
+          'Los nuevos proveedores se han vinculado a los ítems de la solicitud.'
+        )
         commonMutationOptions.onSuccessInvalidatePR() // Esto refrescará purchaseRequest y el useEffect actualizará displayedSuppliers
       },
       onError: (error) => {
@@ -398,7 +398,13 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
   }
 
   const handleAcceptQuotation = async (supplierId: string) => {
-    const result = await confirmDialog({ title: '¿Estás seguro?', text: '¿Deseas aceptar esta cotización?', confirmLabel: 'Sí, aceptar', cancelLabel: 'Cancelar', tone: 'danger' })
+    const result = await confirmDialog({
+      title: '¿Estás seguro?',
+      text: '¿Deseas aceptar esta cotización?',
+      confirmLabel: 'Sí, aceptar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    })
     if (result.isConfirmed) acceptQuotationMutation.mutate(supplierId)
   }
 
@@ -576,10 +582,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
 
           return (
             <React.Fragment key={supplier.id}>
-              <Paper
-                variant='outlined'
-                sx={{ mb: 2, p: 2, borderRadius: 2 }}
-              >
+              <Paper variant='outlined' sx={{ mb: 2, p: 2, borderRadius: 2 }}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -610,7 +613,12 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                       size='small'
                     />
                   ) : existingQuotation ? (
-                    <Chip label='Subida' color='info' variant='outlined' size='small' />
+                    <Chip
+                      label='Subida'
+                      color='info'
+                      variant='outlined'
+                      size='small'
+                    />
                   ) : (
                     <Chip
                       label='Pendiente'
@@ -669,7 +677,9 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                       size='small'
                       sx={{ color: PURCHASE_TEAL, borderColor: PURCHASE_TEAL }}
                     >
-                      {currentActionState.pdfUrl ? 'Ocultar PDF' : 'Ver cotización'}
+                      {currentActionState.pdfUrl
+                        ? 'Ocultar PDF'
+                        : 'Ver cotización'}
                     </Button>
                   )}
                   {existingQuotation && !existingQuotation.accepted && (
@@ -706,20 +716,19 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                       size='small'
                       startIcon={<CloudUpload />}
                       disabled={
-                        currentActionState.uploading ||
-                        uploadMutation.isLoading
+                        currentActionState.uploading || uploadMutation.isLoading
                       }
                       sx={{
                         textTransform: 'none',
                         ...(existingQuotation
                           ? { color: 'text.secondary' }
                           : {
-                            color: PURCHASE_TEAL,
-                            borderColor: PURCHASE_TEAL,
-                            minHeight: 40,
-                            flexGrow: 1,
-                            justifyContent: 'flex-start'
-                          })
+                              color: PURCHASE_TEAL,
+                              borderColor: PURCHASE_TEAL,
+                              minHeight: 40,
+                              flexGrow: 1,
+                              justifyContent: 'flex-start'
+                            })
                       }}
                     >
                       <Box
@@ -753,8 +762,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                       size='small'
                       onClick={() => handleUpload(supplierIdStr)}
                       disabled={
-                        currentActionState.uploading ||
-                        uploadMutation.isLoading
+                        currentActionState.uploading || uploadMutation.isLoading
                       }
                       startIcon={
                         currentActionState.uploading ? (
@@ -765,7 +773,9 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                       }
                       sx={tealButton}
                     >
-                      {existingQuotation ? 'Subir reemplazo' : 'Subir cotización'}
+                      {existingQuotation
+                        ? 'Subir reemplazo'
+                        : 'Subir cotización'}
                     </Button>
                   )}
                 </Box>

@@ -11,6 +11,7 @@
 **Decisión**: ✅ **Usar LmsQuizManagement.tsx existente (Opción 1)**
 
 El componente `LmsQuizManagement.tsx` ya existe y es mucho más completo que la integración inicial realizada en `LmsContentEditor.tsx`. Incluye:
+
 - Sistema de tabs profesional (4 pestañas)
 - Banco de preguntas centralizado con reutilización
 - Analíticas completas con métricas
@@ -28,8 +29,10 @@ El componente `LmsQuizManagement.tsx` ya existe y es mucho más completo que la 
 ### Sistema de TABS (4 pestañas)
 
 #### 1️⃣ TAB: Configuración
+
 **Campos de configuración general**:
-- ✅ Título del Quiz * (required)
+
+- ✅ Título del Quiz \* (required)
 - ✅ Instrucciones (multiline, con helper text)
 - ✅ Porcentaje de Aprobación (%) - default: 70
 - ✅ Intentos Máximos - default: 3
@@ -37,6 +40,7 @@ El componente `LmsQuizManagement.tsx` ya existe y es mucho más completo que la 
 - ✅ Límite de Tiempo (minutos) - opcional
 
 **Opciones Avanzadas**:
+
 - ✅ Mostrar respuestas correctas (checkbox)
 - ✅ Aleatorizar preguntas (checkbox)
 - ✅ Mezclar opciones de respuesta (checkbox)
@@ -44,29 +48,35 @@ El componente `LmsQuizManagement.tsx` ya existe y es mucho más completo que la 
 - ✅ Mostrar barra de progreso (checkbox) - **No estaba en integración inicial**
 
 **Resumen del Quiz** (calculado automáticamente):
+
 - Preguntas: 0
 - Puntos totales: 0
 - Puntos para aprobar: 0
 - Botón "Guardar Quiz"
 
 **Sección de Preguntas**:
+
 - Título: "Preguntas del Quiz (0)"
 - Botón "Agregar desde Banco"
 - Alert cuando no hay preguntas
 
 #### 2️⃣ TAB: Banco de Preguntas
+
 **Funcionalidades del Banco**:
 
 **Búsqueda y Filtros**:
+
 - 🔍 Búsqueda de preguntas (textbox)
 - 🏷️ Filtro por Categoría (dropdown)
 - 📊 Filtro por Dificultad (dropdown: easy/medium/hard)
 
 **Botón de creación**:
+
 - ➕ "Nueva Pregunta" - abre dialog
 
 **Lista de Preguntas** (con datos mock):
 Cada pregunta muestra:
+
 - ☑️ Checkbox para selección múltiple
 - 🏷️ **Tipo de pregunta**: single-choice / multiple-choice / true-false
 - 🎯 **Puntos**: "1 pts", "2 pts", etc.
@@ -79,7 +89,9 @@ Cada pregunta muestra:
 - 🗑️ Botón Eliminar
 
 **Ejemplo de preguntas mock**:
+
 1. "¿Cuál es la capital de Francia?"
+
    - Tipo: single-choice
    - Puntos: 1 pts
    - Dificultad: easy
@@ -95,7 +107,8 @@ Cada pregunta muestra:
 
 **Dialog "Nueva Pregunta"**:
 Campos del formulario:
-- 📝 Pregunta * (required, multiline)
+
+- 📝 Pregunta \* (required, multiline)
 - 🎯 Tipo de pregunta (dropdown: Selección Única / Selección Múltiple / Verdadero/Falso)
 - 💯 Puntos (number, default: 1)
 - 📊 **Dificultad** (dropdown: Fácil/Medio/Difícil) - **Campo adicional**
@@ -105,13 +118,17 @@ Campos del formulario:
 - 💡 Explicación (opcional, multiline, con helper text)
 
 #### 3️⃣ TAB: Vista Previa
+
 **Funcionalidad**:
+
 - 👁️ Botón "Iniciar Vista Previa"
 - Alert cuando no hay preguntas
 - Permite visualizar el quiz como lo verían los estudiantes
 
 #### 4️⃣ TAB: Analíticas
+
 **Métricas Principales** (4 cards):
+
 1. **Total de Intentos**: 45
 2. **Puntuación Promedio**: 78.5
 3. **Tasa de Aprobación**: 82.2%
@@ -119,6 +136,7 @@ Campos del formulario:
 
 **Tabla "Análisis por Pregunta"**:
 Columnas:
+
 - Pregunta (nombre/número)
 - Respuestas Correctas (número)
 - Total Respuestas (número)
@@ -127,6 +145,7 @@ Columnas:
 - Dificultad
 
 Ejemplo de datos:
+
 - Pregunta 1: 38/45 correctas, 84.4%, 2.3s
 - Pregunta 2: 29/45 correctas, 64.4%, 4.7s
 
@@ -142,28 +161,34 @@ Ejemplo de datos:
 **5 Categorías de Reglas**:
 
 #### 1. Structure (Estructura)
+
 - ✅ **quiz-title**: Título mínimo 5 caracteres (ERROR)
 - ⚠️ **quiz-instructions**: Instrucciones recomendadas (WARNING)
 - ✅ **minimum-questions**: Mínimo 3 preguntas (ERROR)
 - ⚠️ **passing-percentage**: Porcentaje entre 60-80% (WARNING)
 
 #### 2. Content (Contenido)
+
 - ✅ **question-content**: Todas las preguntas con texto (ERROR)
 - ✅ **question-options**: Mínimo 2 opciones por pregunta (ERROR)
 - ✅ **correct-answers**: Respuestas correctas definidas (ERROR)
 
 #### 3. Accessibility (Accesibilidad)
+
 - Reglas para asegurar accesibilidad del quiz
 
 #### 4. Performance (Rendimiento)
+
 - Reglas para optimizar tiempos de carga
 
 #### 5. Security (Seguridad)
+
 - Reglas para prevenir trampas
 
 ### Reporte de Validación
 
 **Interface ValidationReport**:
+
 ```typescript
 interface ValidationReport {
   quizId: number
@@ -183,6 +208,7 @@ interface ValidationReport {
 ```
 
 **Cada regla incluye**:
+
 - `passed`: boolean
 - `message`: string descriptivo
 - `details`: array de detalles
@@ -193,10 +219,12 @@ interface ValidationReport {
 ## ❌ Integración Inicial (LmsContentEditor + LmsQuizEditor)
 
 **Ubicación**:
+
 - `front.mmcs/src/pages/lms/shared/LmsContentEditor.tsx`
 - `front.mmcs/src/pages/lms/admin/LmsQuizEditor.tsx`
 
 ### Lo que SÍ tiene:
+
 - ✅ Configuración básica del quiz
 - ✅ Título del Quiz
 - ✅ Instrucciones (opcional)
@@ -214,6 +242,7 @@ interface ValidationReport {
 - ✅ Lista de preguntas creadas
 
 ### Lo que NO tiene:
+
 - ❌ Banco de preguntas centralizado
 - ❌ Reutilización de preguntas entre quizzes
 - ❌ Categorías de preguntas
@@ -235,24 +264,24 @@ interface ValidationReport {
 
 ## 📊 Tabla Comparativa
 
-| Característica | LmsQuizManagement | Integración Inicial |
-|---|---|---|
-| **Configuración del Quiz** | ✅ | ✅ |
-| **Crear Preguntas** | ✅ | ✅ |
-| **Banco de Preguntas** | ✅ | ❌ |
-| **Reutilización de Preguntas** | ✅ | ❌ |
-| **Categorías** | ✅ | ❌ |
-| **Tags** | ✅ | ❌ |
-| **Dificultad (easy/medium/hard)** | ✅ | ❌ |
-| **Estadísticas de Uso** | ✅ | ❌ |
-| **Tasa de Éxito** | ✅ | ❌ |
-| **Vista Previa** | ✅ | ❌ |
-| **Analíticas** | ✅ | ❌ |
-| **Validación Automática** | ✅ (LmsQuizValidator) | ❌ |
-| **Filtros y Búsqueda** | ✅ | ❌ |
-| **Sistema de Tabs** | ✅ (4 tabs) | ❌ |
-| **Permitir Revisar** | ✅ | ❌ |
-| **Barra de Progreso** | ✅ | ❌ |
+| Característica                    | LmsQuizManagement     | Integración Inicial |
+| --------------------------------- | --------------------- | ------------------- |
+| **Configuración del Quiz**        | ✅                    | ✅                  |
+| **Crear Preguntas**               | ✅                    | ✅                  |
+| **Banco de Preguntas**            | ✅                    | ❌                  |
+| **Reutilización de Preguntas**    | ✅                    | ❌                  |
+| **Categorías**                    | ✅                    | ❌                  |
+| **Tags**                          | ✅                    | ❌                  |
+| **Dificultad (easy/medium/hard)** | ✅                    | ❌                  |
+| **Estadísticas de Uso**           | ✅                    | ❌                  |
+| **Tasa de Éxito**                 | ✅                    | ❌                  |
+| **Vista Previa**                  | ✅                    | ❌                  |
+| **Analíticas**                    | ✅                    | ❌                  |
+| **Validación Automática**         | ✅ (LmsQuizValidator) | ❌                  |
+| **Filtros y Búsqueda**            | ✅                    | ❌                  |
+| **Sistema de Tabs**               | ✅ (4 tabs)           | ❌                  |
+| **Permitir Revisar**              | ✅                    | ❌                  |
+| **Barra de Progreso**             | ✅                    | ❌                  |
 
 **Resultado**: LmsQuizManagement tiene **8 características adicionales críticas**
 
@@ -261,6 +290,7 @@ interface ValidationReport {
 ## 📁 Componentes Relacionados
 
 ### Archivos del Sistema de Quiz
+
 ```
 front.mmcs/src/pages/lms/admin/
 ├── LmsQuizManagement.tsx      ⭐ COMPONENTE PRINCIPAL
@@ -277,6 +307,7 @@ front.mmcs/src/Components/lms/widgets/
 ```
 
 ### Rutas Registradas
+
 ```typescript
 // LmsRoutes.tsx (líneas 28-31)
 const LmsQuizManagement = lazy(() => import('../pages/lms/admin/LmsQuizManagement'))
@@ -298,6 +329,7 @@ const LmsQuizValidator = lazy(() => import('../pages/lms/admin/LmsQuizValidator'
 ### ¿Por qué Opción 1?
 
 **Ventajas**:
+
 1. ✅ **Ya está implementado** - 100% funcional con datos mock
 2. ✅ **Más completo** - 8+ características adicionales
 3. ✅ **Mejor arquitectura** - Sistema de tabs, separación de responsabilidades
@@ -308,6 +340,7 @@ const LmsQuizValidator = lazy(() => import('../pages/lms/admin/LmsQuizValidator'
 8. ✅ **Menor esfuerzo** - Solo necesitamos integrar, no reconstruir
 
 **Desventajas**:
+
 1. ⚠️ Necesita integración con el editor de contenido de cursos
 2. ⚠️ Datos actualmente mock, necesita conexión con backend
 
@@ -316,29 +349,35 @@ const LmsQuizValidator = lazy(() => import('../pages/lms/admin/LmsQuizValidator'
 ## 📝 Plan de Implementación (Opción 1)
 
 ### Fase 1: Integración en Editor de Contenido
+
 **Objetivo**: Permitir crear/editar quizzes desde el editor de contenido de cursos
 
 **Tareas**:
+
 1. ✅ Agregar botón "Editar Quiz" en módulos tipo quiz de `LmsContentEditor`
 2. ✅ Abrir `LmsQuizManagement` en modal o nueva página
 3. ✅ Pasar `courseId` y `moduleId` como parámetros
 4. ✅ Sincronizar quiz guardado con el módulo del curso
 
 **Archivos a modificar**:
+
 - `LmsContentEditor.tsx` - Agregar botón de edición
 - `LmsQuizManagement.tsx` - Aceptar parámetros externos
 - `LmsCourseContentEditor.tsx` - Manejar navegación
 
 ### Fase 2: Conexión con Backend API
+
 **Objetivo**: Reemplazar datos mock con llamadas reales al backend
 
 **Endpoints necesarios** (ya existen en `api.mmcs/routes/lms/content.routes.js`):
+
 - ✅ `GET /lms/content/modules/:moduleId/lessons` - Obtener lecciones
 - ✅ `POST /lms/content/modules/:moduleId/lessons` - Crear lección
 - ✅ `PUT /lms/content/lessons/:lessonId` - Actualizar lección
 - ✅ `DELETE /lms/content/lessons/:lessonId` - Eliminar lección
 
 **Nuevos endpoints a crear**:
+
 - `POST /lms/quizzes` - Crear quiz
 - `GET /lms/quizzes/:quizId` - Obtener quiz
 - `PUT /lms/quizzes/:quizId` - Actualizar quiz
@@ -350,14 +389,17 @@ const LmsQuizValidator = lazy(() => import('../pages/lms/admin/LmsQuizValidator'
 - `GET /lms/quizzes/:quizId/analytics` - Obtener analíticas
 
 **Archivos a modificar**:
+
 - `front.mmcs/src/services/lmsService.ts` - Agregar funciones de quiz
 - `LmsQuizManagement.tsx` - Usar React Query para datos
 - Backend: Crear `QuizController.js` y rutas
 
 ### Fase 3: Migración de Datos
+
 **Objetivo**: Migrar quizzes creados con integración inicial
 
 **Tareas**:
+
 1. Identificar módulos tipo "quiz" existentes
 2. Extraer datos de configuración y preguntas
 3. Crear quizzes en el nuevo sistema
@@ -371,6 +413,7 @@ const LmsQuizValidator = lazy(() => import('../pages/lms/admin/LmsQuizValidator'
 ### Interfaces TypeScript
 
 **Actualizar** `ContentModule` en `LmsContentEditor.tsx`:
+
 ```typescript
 interface ContentModule {
   id: string
@@ -395,6 +438,7 @@ interface ContentModule {
 ### Modelos de Base de Datos
 
 **Quiz** (modelo ya existe):
+
 ```javascript
 // api.mmcs/models/lms/lmsQuiz.cjs
 {
@@ -417,6 +461,7 @@ interface ContentModule {
 ```
 
 **QuizQuestion** (modelo ya existe):
+
 ```javascript
 // api.mmcs/models/lms/lmsQuizQuestion.cjs
 {
@@ -449,6 +494,7 @@ interface ContentModule {
 ## ⏭️ Próximos Pasos
 
 **Inmediatos**:
+
 1. ✅ Revisar este documento con el equipo
 2. ⬜ Crear branch para integración: `feature/integrate-quiz-management`
 3. ⬜ Fase 1: Integrar LmsQuizManagement en editor de contenido
@@ -459,6 +505,7 @@ interface ContentModule {
 8. ⬜ Documentar para usuarios
 
 **Opcional (mejoras futuras)**:
+
 - Importar/exportar quizzes
 - Duplicar quizzes
 - Versioning de quizzes
@@ -470,6 +517,7 @@ interface ContentModule {
 ## 📚 Referencias
 
 **Archivos clave**:
+
 - `front.mmcs/src/pages/lms/admin/LmsQuizManagement.tsx`
 - `front.mmcs/src/pages/lms/admin/LmsQuizValidator.tsx`
 - `front.mmcs/src/pages/lms/admin/LmsQuizEditor.tsx`
@@ -479,6 +527,7 @@ interface ContentModule {
 - `api.mmcs/models/lms/lmsQuizQuestion.cjs`
 
 **Rutas activas**:
+
 - `/lms/admin/quiz-management` - Gestión principal
 - `/lms/admin/question-bank` - Banco de preguntas
 - `/lms/admin/quiz-analytics` - Analíticas

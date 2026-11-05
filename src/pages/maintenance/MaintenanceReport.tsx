@@ -19,7 +19,12 @@ import {
   Chip,
   Divider
 } from '@mui/material'
-import { Build, CheckCircle, Send, Error as ErrorIcon } from '@mui/icons-material'
+import {
+  Build,
+  CheckCircle,
+  Send,
+  Error as ErrorIcon
+} from '@mui/icons-material'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import {

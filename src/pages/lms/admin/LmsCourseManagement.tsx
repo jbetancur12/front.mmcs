@@ -38,7 +38,7 @@ import {
   Analytics as AnalyticsIcon,
   Publish as PublishIcon,
   Archive as ArchiveIcon,
-  School as SchoolIcon,
+  School as SchoolIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { useLmsUserOptions } from 'src/hooks/lms/useLmsUserOptions'
@@ -121,30 +121,48 @@ interface CourseAssignment {
   assigned_at: string
 }
 
-const STATUS_FILTERS: Array<{ value: 'all' | Course['status']; label: string }> = [
+const STATUS_FILTERS: Array<{
+  value: 'all' | Course['status']
+  label: string
+}> = [
   { value: 'all', label: 'Todos' },
   { value: 'published', label: 'Publicados' },
   { value: 'draft', label: 'Borradores' },
   { value: 'archived', label: 'Archivados' }
 ]
 
-const getDerivedCourseDuration = (course?: Pick<Course, 'estimated_duration_minutes' | 'modules'> | null) => {
+const getDerivedCourseDuration = (
+  course?: Pick<Course, 'estimated_duration_minutes' | 'modules'> | null
+) => {
   if (!course) {
     return 0
   }
 
-  if (Number.isFinite(course.estimated_duration_minutes) && course.estimated_duration_minutes > 0) {
+  if (
+    Number.isFinite(course.estimated_duration_minutes) &&
+    course.estimated_duration_minutes > 0
+  ) {
     return course.estimated_duration_minutes
   }
 
-  const totalMinutes = (course.modules || []).reduce((courseMinutes, module) => {
-    const moduleMinutes = (module.lessons || []).reduce((lessonMinutes, lesson) => {
-      const estimatedMinutes = lesson.estimated_minutes ?? lesson.duration_minutes ?? 0
-      return lessonMinutes + (Number.isFinite(estimatedMinutes) ? estimatedMinutes : 0)
-    }, 0)
+  const totalMinutes = (course.modules || []).reduce(
+    (courseMinutes, module) => {
+      const moduleMinutes = (module.lessons || []).reduce(
+        (lessonMinutes, lesson) => {
+          const estimatedMinutes =
+            lesson.estimated_minutes ?? lesson.duration_minutes ?? 0
+          return (
+            lessonMinutes +
+            (Number.isFinite(estimatedMinutes) ? estimatedMinutes : 0)
+          )
+        },
+        0
+      )
 
-    return courseMinutes + moduleMinutes
-  }, 0)
+      return courseMinutes + moduleMinutes
+    },
+    0
+  )
 
   return totalMinutes > 0 ? totalMinutes : 0
 }
@@ -201,17 +219,20 @@ const audienceOptions = [
   {
     value: 'internal' as const,
     label: 'Empleados internos',
-    helper: 'Solo aparecerá para usuarios internos y podrá usarse en asignaciones obligatorias.'
+    helper:
+      'Solo aparecerá para usuarios internos y podrá usarse en asignaciones obligatorias.'
   },
   {
     value: 'client' as const,
     label: 'Clientes',
-    helper: 'Solo aparecerá para usuarios cliente. Hoy funciona como catálogo, no como asignación obligatoria.'
+    helper:
+      'Solo aparecerá para usuarios cliente. Hoy funciona como catálogo, no como asignación obligatoria.'
   },
   {
     value: 'both' as const,
     label: 'Ambos',
-    helper: 'El curso estará disponible para internos y clientes; las asignaciones obligatorias siguen aplicando solo a internos.'
+    helper:
+      'El curso estará disponible para internos y clientes; las asignaciones obligatorias siguen aplicando solo a internos.'
   }
 ]
 
@@ -231,21 +252,24 @@ const LmsCourseManagement: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | Course['status']>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | Course['status']>(
+    'all'
+  )
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 400)
     return () => clearTimeout(timer)
   }, [searchInput])
   const [formErrors, setFormErrors] = useState<CourseFormErrors>({})
-  const [courseActionDialog, setCourseActionDialog] = useState<CourseActionDialogState>({
-    open: false,
-    title: '',
-    description: '',
-    confirmLabel: 'Confirmar',
-    tone: 'primary',
-    onConfirm: null
-  })
+  const [courseActionDialog, setCourseActionDialog] =
+    useState<CourseActionDialogState>({
+      open: false,
+      title: '',
+      description: '',
+      confirmLabel: 'Confirmar',
+      tone: 'primary',
+      onConfirm: null
+    })
   const [formData, setFormData] = useState<CreateCourseData>({
     title: '',
     description: '',
@@ -273,7 +297,12 @@ const LmsCourseManagement: React.FC = () => {
   const customerOptions = optionsData?.customers || []
 
   // Query para obtener cursos
-  const { data: coursesResponse, isLoading, isFetching, error } = useQuery<{courses: Course[], total: number}>(
+  const {
+    data: coursesResponse,
+    isLoading,
+    isFetching,
+    error
+  } = useQuery<{ courses: Course[]; total: number }>(
     ['lms-courses', page, rowsPerPage, search, statusFilter],
     async () => {
       const response = await axiosPrivate.get('/lms/courses', {
@@ -290,7 +319,11 @@ const LmsCourseManagement: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: unknown) => {
-        notify.error('Error al cargar los cursos: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
+        notify.error(
+          'Error al cargar los cursos: ' +
+            (getApiErrorReason(error) ||
+              (error instanceof Error ? error.message : ''))
+        )
       }
     }
   )
@@ -315,12 +348,18 @@ const LmsCourseManagement: React.FC = () => {
           certificate_duration_text: courseData.certificate_duration_text,
           show_duration_on_certificate: courseData.show_duration_on_certificate,
           certificate_template_id: courseData.certificate_template_id || null,
-          certificate_signer_left_name: courseData.certificate_signer_left_name || '',
-          certificate_signer_left_role: courseData.certificate_signer_left_role || '',
-          certificate_signer_left_signature: courseData.certificate_signer_left_signature || null,
-          certificate_signer_right_name: courseData.certificate_signer_right_name || '',
-          certificate_signer_right_role: courseData.certificate_signer_right_role || '',
-          certificate_signer_right_signature: courseData.certificate_signer_right_signature || null
+          certificate_signer_left_name:
+            courseData.certificate_signer_left_name || '',
+          certificate_signer_left_role:
+            courseData.certificate_signer_left_role || '',
+          certificate_signer_left_signature:
+            courseData.certificate_signer_left_signature || null,
+          certificate_signer_right_name:
+            courseData.certificate_signer_right_name || '',
+          certificate_signer_right_role:
+            courseData.certificate_signer_right_role || '',
+          certificate_signer_right_signature:
+            courseData.certificate_signer_right_signature || null
         }
         return axiosPrivate.put(`/lms/courses/${courseData.id}`, updateData)
       } else {
@@ -332,10 +371,18 @@ const LmsCourseManagement: React.FC = () => {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-courses'])
         handleCloseDialog()
-        notify.success(editingCourse ? 'Curso actualizado exitosamente' : 'Curso creado exitosamente')
+        notify.success(
+          editingCourse
+            ? 'Curso actualizado exitosamente'
+            : 'Curso creado exitosamente'
+        )
       },
       onError: (error: unknown) => {
-        notify.error('Error al guardar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
+        notify.error(
+          'Error al guardar curso: ' +
+            (getApiErrorReason(error) ||
+              (error instanceof Error ? error.message : ''))
+        )
       }
     }
   )
@@ -351,7 +398,11 @@ const LmsCourseManagement: React.FC = () => {
         notify.success('Curso eliminado exitosamente')
       },
       onError: (error: unknown) => {
-        notify.error('Error al eliminar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
+        notify.error(
+          'Error al eliminar curso: ' +
+            (getApiErrorReason(error) ||
+              (error instanceof Error ? error.message : ''))
+        )
       }
     }
   )
@@ -367,7 +418,11 @@ const LmsCourseManagement: React.FC = () => {
         notify.success('Curso publicado exitosamente')
       },
       onError: (error: unknown) => {
-        notify.error('Error al publicar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
+        notify.error(
+          'Error al publicar curso: ' +
+            (getApiErrorReason(error) ||
+              (error instanceof Error ? error.message : ''))
+        )
       }
     }
   )
@@ -383,7 +438,11 @@ const LmsCourseManagement: React.FC = () => {
         notify.success('Curso archivado exitosamente')
       },
       onError: (error: unknown) => {
-        notify.error('Error al archivar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
+        notify.error(
+          'Error al archivar curso: ' +
+            (getApiErrorReason(error) ||
+              (error instanceof Error ? error.message : ''))
+        )
       }
     }
   )
@@ -396,19 +455,27 @@ const LmsCourseManagement: React.FC = () => {
         description: course.description,
         audience: course.audience,
         all_clients: course.all_clients ?? true,
-        target_customer_ids: (course.targetCustomers || []).map((customer) => customer.id),
+        target_customer_ids: (course.targetCustomers || []).map(
+          (customer) => customer.id
+        ),
         is_mandatory: course.is_mandatory,
         has_certificate: course.has_certificate,
         estimated_duration_minutes: getDerivedCourseDuration(course),
         certificate_duration_text: course.certificate_duration_text || '',
-        show_duration_on_certificate: Boolean(course.show_duration_on_certificate),
+        show_duration_on_certificate: Boolean(
+          course.show_duration_on_certificate
+        ),
         certificate_template_id: course.certificate_template_id || '',
         certificate_signer_left_name: course.certificate_signer_left_name || '',
         certificate_signer_left_role: course.certificate_signer_left_role || '',
-        certificate_signer_left_signature: course.certificate_signer_left_signature || '',
-        certificate_signer_right_name: course.certificate_signer_right_name || '',
-        certificate_signer_right_role: course.certificate_signer_right_role || '',
-        certificate_signer_right_signature: course.certificate_signer_right_signature || ''
+        certificate_signer_left_signature:
+          course.certificate_signer_left_signature || '',
+        certificate_signer_right_name:
+          course.certificate_signer_right_name || '',
+        certificate_signer_right_role:
+          course.certificate_signer_right_role || '',
+        certificate_signer_right_signature:
+          course.certificate_signer_right_signature || ''
       })
     } else {
       setEditingCourse(null)
@@ -465,28 +532,45 @@ const LmsCourseManagement: React.FC = () => {
     const trimmedDescription = formData.description.trim()
 
     if (trimmedTitle.length < 5) {
-      nextErrors.title = 'Usa un título más descriptivo, de al menos 5 caracteres.'
+      nextErrors.title =
+        'Usa un título más descriptivo, de al menos 5 caracteres.'
     }
 
     if (trimmedDescription.length < 20) {
-      nextErrors.description = 'Describe el objetivo del curso con al menos 20 caracteres.'
+      nextErrors.description =
+        'Describe el objetivo del curso con al menos 20 caracteres.'
     }
 
-    if (!Number.isFinite(formData.estimated_duration_minutes) || formData.estimated_duration_minutes < 1) {
-      nextErrors.estimated_duration_minutes = 'La duración debe ser de al menos 1 minuto.'
+    if (
+      !Number.isFinite(formData.estimated_duration_minutes) ||
+      formData.estimated_duration_minutes < 1
+    ) {
+      nextErrors.estimated_duration_minutes =
+        'La duración debe ser de al menos 1 minuto.'
     }
 
-    const includesClientAudience = formData.audience === 'client' || formData.audience === 'both'
-    if (includesClientAudience && !formData.all_clients && formData.target_customer_ids.length === 0) {
-      nextErrors.target_customer_ids = 'Selecciona al menos una empresa o marca el curso para todos los clientes.'
+    const includesClientAudience =
+      formData.audience === 'client' || formData.audience === 'both'
+    if (
+      includesClientAudience &&
+      !formData.all_clients &&
+      formData.target_customer_ids.length === 0
+    ) {
+      nextErrors.target_customer_ids =
+        'Selecciona al menos una empresa o marca el curso para todos los clientes.'
     }
 
-    if (formData.show_duration_on_certificate && formData.certificate_duration_text.trim().length > 120) {
-      nextErrors.certificate_duration_text = 'Usa un texto corto, de máximo 120 caracteres.'
+    if (
+      formData.show_duration_on_certificate &&
+      formData.certificate_duration_text.trim().length > 120
+    ) {
+      nextErrors.certificate_duration_text =
+        'Usa un texto corto, de máximo 120 caracteres.'
     }
 
     if (formData.has_certificate && !formData.certificate_template_id) {
-      nextErrors.certificate_template_id = 'Selecciona la plantilla que emitirá este curso.'
+      nextErrors.certificate_template_id =
+        'Selecciona la plantilla que emitirá este curso.'
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -499,19 +583,30 @@ const LmsCourseManagement: React.FC = () => {
       ...formData,
       title: trimmedTitle,
       description: trimmedDescription,
-      is_mandatory: formData.audience === 'client' ? false : formData.is_mandatory,
+      is_mandatory:
+        formData.audience === 'client' ? false : formData.is_mandatory,
       all_clients: includesClientAudience ? formData.all_clients : true,
-      target_customer_ids: includesClientAudience && !formData.all_clients ? formData.target_customer_ids : [],
+      target_customer_ids:
+        includesClientAudience && !formData.all_clients
+          ? formData.target_customer_ids
+          : [],
       certificate_duration_text: formData.certificate_duration_text.trim(),
-      certificate_template_id: formData.has_certificate && formData.certificate_template_id
-        ? Number(formData.certificate_template_id)
-        : null,
-      certificate_signer_left_name: formData.certificate_signer_left_name.trim(),
-      certificate_signer_left_role: formData.certificate_signer_left_role.trim(),
-      certificate_signer_left_signature: formData.certificate_signer_left_signature || null,
-      certificate_signer_right_name: formData.certificate_signer_right_name.trim(),
-      certificate_signer_right_role: formData.certificate_signer_right_role.trim(),
-      certificate_signer_right_signature: formData.certificate_signer_right_signature || null,
+      certificate_template_id:
+        formData.has_certificate && formData.certificate_template_id
+          ? Number(formData.certificate_template_id)
+          : null,
+      certificate_signer_left_name:
+        formData.certificate_signer_left_name.trim(),
+      certificate_signer_left_role:
+        formData.certificate_signer_left_role.trim(),
+      certificate_signer_left_signature:
+        formData.certificate_signer_left_signature || null,
+      certificate_signer_right_name:
+        formData.certificate_signer_right_name.trim(),
+      certificate_signer_right_role:
+        formData.certificate_signer_right_role.trim(),
+      certificate_signer_right_signature:
+        formData.certificate_signer_right_signature || null,
       show_duration_on_certificate: formData.has_certificate
         ? formData.show_duration_on_certificate
         : false
@@ -578,7 +673,10 @@ const LmsCourseManagement: React.FC = () => {
     handleCloseCourseActionDialog()
   }
 
-  const handleInputChange = (field: keyof CreateCourseData, value: CreateCourseData[keyof CreateCourseData]) => {
+  const handleInputChange = (
+    field: keyof CreateCourseData,
+    value: CreateCourseData[keyof CreateCourseData]
+  ) => {
     setFormData((prev) => {
       const nextFormData = {
         ...prev,
@@ -665,16 +763,22 @@ const LmsCourseManagement: React.FC = () => {
     return `${mins}m`
   }
 
-  const selectedAudienceOption = audienceOptions.find(option => option.value === formData.audience)
-  const includesClientAudience = formData.audience === 'client' || formData.audience === 'both'
+  const selectedAudienceOption = audienceOptions.find(
+    (option) => option.value === formData.audience
+  )
+  const includesClientAudience =
+    formData.audience === 'client' || formData.audience === 'both'
   const selectedCustomerNames = customerOptions
     .filter((customer) => formData.target_customer_ids.includes(customer.id))
     .map((customer) => customer.name)
-  const isSaveDisabled = saveCourseMutation.isLoading
-    || formData.title.trim().length === 0
-    || formData.description.trim().length === 0
-    || formData.estimated_duration_minutes < 1
-    || (includesClientAudience && !formData.all_clients && formData.target_customer_ids.length === 0)
+  const isSaveDisabled =
+    saveCourseMutation.isLoading ||
+    formData.title.trim().length === 0 ||
+    formData.description.trim().length === 0 ||
+    formData.estimated_duration_minutes < 1 ||
+    (includesClientAudience &&
+      !formData.all_clients &&
+      formData.target_customer_ids.length === 0)
 
   const columns = useMemo<MRT_ColumnDef<Course>[]>(
     () => [
@@ -693,14 +797,24 @@ const LmsCourseManagement: React.FC = () => {
                 variant='caption'
                 color='text.secondary'
                 title={course.description}
-                sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}
               >
                 {course.description}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                {course.is_mandatory && <Chip label='Obligatorio' color='error' size='small' />}
-                {course.has_certificate && <Chip label='Con certificado' color='info' size='small' />}
-                {(course.audience === 'client' || course.audience === 'both') && (
+                {course.is_mandatory && (
+                  <Chip label='Obligatorio' color='error' size='small' />
+                )}
+                {course.has_certificate && (
+                  <Chip label='Con certificado' color='info' size='small' />
+                )}
+                {(course.audience === 'client' ||
+                  course.audience === 'both') && (
                   <Chip
                     label={
                       course.all_clients === false
@@ -732,9 +846,15 @@ const LmsCourseManagement: React.FC = () => {
         id: 'duracion',
         header: 'Duración',
         size: 90,
-        Cell: ({ row }) => formatDuration(getDerivedCourseDuration(row.original))
+        Cell: ({ row }) =>
+          formatDuration(getDerivedCourseDuration(row.original))
       },
-      { id: 'modulos', header: 'Módulos', size: 90, Cell: ({ row }) => row.original._count?.modules || 0 },
+      {
+        id: 'modulos',
+        header: 'Módulos',
+        size: 90,
+        Cell: ({ row }) => row.original._count?.modules || 0
+      },
       {
         id: 'progreso',
         header: 'Usuarios',
@@ -754,7 +874,7 @@ const LmsCourseManagement: React.FC = () => {
         )
       }
     ],
-     
+
     []
   )
 
@@ -777,7 +897,7 @@ const LmsCourseManagement: React.FC = () => {
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">
+        <Alert severity='error'>
           Error al cargar los cursos. Por favor, intenta nuevamente.
         </Alert>
       </Box>
@@ -791,7 +911,11 @@ const LmsCourseManagement: React.FC = () => {
         subtitle='Crea, publica y asigna los cursos del LMS'
         icon={<SchoolIcon />}
         actions={
-          <Button variant='contained' startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+          <Button
+            variant='contained'
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
             Crear Curso
           </Button>
         }
@@ -823,7 +947,10 @@ const LmsCourseManagement: React.FC = () => {
           manualFiltering
           rowCount={totalCourses}
           onPaginationChange={(updater) => {
-            const next = typeof updater === 'function' ? updater({ pageIndex: page, pageSize: rowsPerPage }) : updater
+            const next =
+              typeof updater === 'function'
+                ? updater({ pageIndex: page, pageSize: rowsPerPage })
+                : updater
             if (next.pageSize !== rowsPerPage) setRowsPerPage(next.pageSize)
             setPage(next.pageIndex)
           }}
@@ -848,104 +975,120 @@ const LmsCourseManagement: React.FC = () => {
           }}
           enableRowActions
           positionActionsColumn='last'
-          displayColumnDefOptions={{ 'mrt-row-actions': { header: 'Acciones', size: 300 } }}
+          displayColumnDefOptions={{
+            'mrt-row-actions': { header: 'Acciones', size: 300 }
+          }}
           renderRowActions={({ row }) => {
             const course = row.original
             return (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap' }}>
-                      <Tooltip title="Editar curso">
-                        <IconButton
-                          size='small'
-                          onClick={() => handleOpenDialog(course)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Editar contenido">
-                        <IconButton
-                          size='small'
-                          color='primary'
-                          onClick={() => handleEditContent(course.id)}
-                        >
-                          <EditContentIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Vista previa">
-                        <IconButton
-                          size='small'
-                          color='info'
-                          onClick={() => handlePreviewCourse(course.id)}
-                        >
-                          <PreviewIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Asignar curso">
-                        <span>
-                          <IconButton
-                            size='small'
-                            color='secondary'
-                            disabled={!canManageAssignments(course)}
-                            onClick={() => handleAssignCourse(course.id)}
-                          >
-                            <AssignIcon />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                      <Tooltip title="Ver analíticas">
-                        <IconButton
-                          size='small'
-                          color='success'
-                          onClick={() => handleViewAnalytics(course.id)}
-                        >
-                          <AnalyticsIcon />
-                        </IconButton>
-                      </Tooltip>
+                <Tooltip title='Editar curso'>
+                  <IconButton
+                    size='small'
+                    onClick={() => handleOpenDialog(course)}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Editar contenido'>
+                  <IconButton
+                    size='small'
+                    color='primary'
+                    onClick={() => handleEditContent(course.id)}
+                  >
+                    <EditContentIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Vista previa'>
+                  <IconButton
+                    size='small'
+                    color='info'
+                    onClick={() => handlePreviewCourse(course.id)}
+                  >
+                    <PreviewIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Asignar curso'>
+                  <span>
+                    <IconButton
+                      size='small'
+                      color='secondary'
+                      disabled={!canManageAssignments(course)}
+                      onClick={() => handleAssignCourse(course.id)}
+                    >
+                      <AssignIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title='Ver analíticas'>
+                  <IconButton
+                    size='small'
+                    color='success'
+                    onClick={() => handleViewAnalytics(course.id)}
+                  >
+                    <AnalyticsIcon />
+                  </IconButton>
+                </Tooltip>
 
-                      {/* Botón de Publicar - solo para cursos en draft o archived */}
-                      {(course.status === 'draft' || course.status === 'archived') && (
-                        <Tooltip title={course.status === 'draft' ? 'Publicar curso' : 'Desarchive y publicar'}>
-                          <IconButton
-                            size='small'
-                            sx={{ color: '#2e7d32' }}
-                            onClick={() => handlePublishCourse(course.id)}
-                          >
-                            <PublishIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )}
+                {/* Botón de Publicar - solo para cursos en draft o archived */}
+                {(course.status === 'draft' ||
+                  course.status === 'archived') && (
+                  <Tooltip
+                    title={
+                      course.status === 'draft'
+                        ? 'Publicar curso'
+                        : 'Desarchive y publicar'
+                    }
+                  >
+                    <IconButton
+                      size='small'
+                      sx={{ color: '#2e7d32' }}
+                      onClick={() => handlePublishCourse(course.id)}
+                    >
+                      <PublishIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
 
-                      {/* Botón de Archivar - solo para cursos publicados */}
-                      {course.status === 'published' && (
-                        <Tooltip title="Archivar curso">
-                          <IconButton
-                            size='small'
-                            sx={{ color: '#ed6c02' }}
-                            onClick={() => handleArchiveCourse(course.id)}
-                          >
-                            <ArchiveIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )}
+                {/* Botón de Archivar - solo para cursos publicados */}
+                {course.status === 'published' && (
+                  <Tooltip title='Archivar curso'>
+                    <IconButton
+                      size='small'
+                      sx={{ color: '#ed6c02' }}
+                      onClick={() => handleArchiveCourse(course.id)}
+                    >
+                      <ArchiveIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
 
-                      <Tooltip title="Eliminar curso">
-                        <IconButton
-                          size='small'
-                          color='error'
-                          onClick={() => handleDelete(course.id)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                <Tooltip title='Eliminar curso'>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    onClick={() => handleDelete(course.id)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
               </Box>
             )
           }}
           renderEmptyRowsFallback={() => (
             <Box sx={{ py: 8, textAlign: 'center' }}>
               <Typography color='text.secondary'>
-                {searchInput || statusFilter !== 'all' ? 'Ningún curso coincide con la búsqueda' : 'No hay cursos disponibles'}
+                {searchInput || statusFilter !== 'all'
+                  ? 'Ningún curso coincide con la búsqueda'
+                  : 'No hay cursos disponibles'}
               </Typography>
               {!searchInput && statusFilter === 'all' && (
-                <Button variant='contained' startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ mt: 2 }}>
+                <Button
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  onClick={() => handleOpenDialog()}
+                  sx={{ mt: 2 }}
+                >
                   Crear primer curso
                 </Button>
               )}
@@ -953,15 +1096,24 @@ const LmsCourseManagement: React.FC = () => {
           )}
           muiTableProps={{
             sx: {
-              '& .MuiTableHead-root .MuiTableCell-root': { backgroundColor: '#f5f5f5', fontWeight: 600 },
-              '& .MuiTableBody-root .MuiTableRow-root:hover': { backgroundColor: 'rgba(0, 191, 165, 0.04)' }
+              '& .MuiTableHead-root .MuiTableCell-root': {
+                backgroundColor: '#f5f5f5',
+                fontWeight: 600
+              },
+              '& .MuiTableBody-root .MuiTableRow-root:hover': {
+                backgroundColor: 'rgba(0, 191, 165, 0.04)'
+              }
             }
           }}
           muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
           muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
           muiTablePaginationProps={{ rowsPerPageOptions: [5, 10, 25, 50] }}
           enablePinning
-          initialState={{ density: 'comfortable', showGlobalFilter: true, columnPinning: { right: ['mrt-row-actions'] } }}
+          initialState={{
+            density: 'comfortable',
+            showGlobalFilter: true,
+            columnPinning: { right: ['mrt-row-actions'] }
+          }}
         />
       </Paper>
 
@@ -979,7 +1131,9 @@ const LmsCourseManagement: React.FC = () => {
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <Alert severity='info'>
-                Completa primero la ficha base del curso. Luego podrás editar contenido, publicar y configurar asignaciones si la audiencia incluye usuarios internos.
+                Completa primero la ficha base del curso. Luego podrás editar
+                contenido, publicar y configurar asignaciones si la audiencia
+                incluye usuarios internos.
               </Alert>
             </Grid>
             <Grid item xs={12}>
@@ -989,7 +1143,10 @@ const LmsCourseManagement: React.FC = () => {
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 error={Boolean(formErrors.title)}
-                helperText={formErrors.title || 'Debe ayudar a identificar el curso en catálogo, reportes y certificados.'}
+                helperText={
+                  formErrors.title ||
+                  'Debe ayudar a identificar el curso en catálogo, reportes y certificados.'
+                }
                 required
               />
             </Grid>
@@ -1004,7 +1161,10 @@ const LmsCourseManagement: React.FC = () => {
                   handleInputChange('description', e.target.value)
                 }
                 error={Boolean(formErrors.description)}
-                helperText={formErrors.description || 'Explica qué aprenderá la persona y cuándo conviene asignar o recomendar este curso.'}
+                helperText={
+                  formErrors.description ||
+                  'Explica qué aprenderá la persona y cuándo conviene asignar o recomendar este curso.'
+                }
                 required
               />
             </Grid>
@@ -1014,7 +1174,9 @@ const LmsCourseManagement: React.FC = () => {
                 <Select
                   value={formData.audience}
                   label='Audiencia'
-                  onChange={(e) => handleInputChange('audience', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('audience', e.target.value)
+                  }
                 >
                   {audienceOptions.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -1031,10 +1193,16 @@ const LmsCourseManagement: React.FC = () => {
                 label='Duración estimada (minutos)'
                 value={formData.estimated_duration_minutes}
                 onChange={(e) =>
-                  handleInputChange('estimated_duration_minutes', parseInt(e.target.value) || 0)
+                  handleInputChange(
+                    'estimated_duration_minutes',
+                    parseInt(e.target.value) || 0
+                  )
                 }
                 error={Boolean(formErrors.estimated_duration_minutes)}
-                helperText={formErrors.estimated_duration_minutes || 'La duración alimenta catálogo, analíticas y expectativas del estudiante.'}
+                helperText={
+                  formErrors.estimated_duration_minutes ||
+                  'La duración alimenta catálogo, analíticas y expectativas del estudiante.'
+                }
                 required
                 inputProps={{ min: 1 }}
               />
@@ -1044,14 +1212,32 @@ const LmsCourseManagement: React.FC = () => {
                     key={preset.value}
                     label={preset.label}
                     clickable
-                    color={formData.estimated_duration_minutes === preset.value ? 'primary' : 'default'}
-                    variant={formData.estimated_duration_minutes === preset.value ? 'filled' : 'outlined'}
-                    onClick={() => handleInputChange('estimated_duration_minutes', preset.value)}
+                    color={
+                      formData.estimated_duration_minutes === preset.value
+                        ? 'primary'
+                        : 'default'
+                    }
+                    variant={
+                      formData.estimated_duration_minutes === preset.value
+                        ? 'filled'
+                        : 'outlined'
+                    }
+                    onClick={() =>
+                      handleInputChange(
+                        'estimated_duration_minutes',
+                        preset.value
+                      )
+                    }
                   />
                 ))}
               </Box>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>
-                Usa un preset rápido o ajusta minutos exactos si el curso requiere una duración especial.
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mt: 1 }}
+              >
+                Usa un preset rápido o ajusta minutos exactos si el curso
+                requiere una duración especial.
               </Typography>
             </Grid>
             <Grid item xs={12}>
@@ -1059,18 +1245,21 @@ const LmsCourseManagement: React.FC = () => {
                 fullWidth
                 label='Texto para duración en certificado'
                 value={formData.certificate_duration_text}
-                onChange={(e) => handleInputChange('certificate_duration_text', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('certificate_duration_text', e.target.value)
+                }
                 error={Boolean(formErrors.certificate_duration_text)}
                 helperText={
-                  formErrors.certificate_duration_text
-                    || 'Ejemplo: 40 horas, 16 horas intensivas o 3 jornadas. Si lo dejas vacío, usaremos la duración calculada.'
+                  formErrors.certificate_duration_text ||
+                  'Ejemplo: 40 horas, 16 horas intensivas o 3 jornadas. Si lo dejas vacío, usaremos la duración calculada.'
                 }
                 disabled={!formData.has_certificate}
               />
             </Grid>
             <Grid item xs={12}>
               <Alert severity='info'>
-                <strong>{selectedAudienceOption?.label}:</strong> {selectedAudienceOption?.helper}
+                <strong>{selectedAudienceOption?.label}:</strong>{' '}
+                {selectedAudienceOption?.helper}
               </Alert>
             </Grid>
             {includesClientAudience && (
@@ -1080,17 +1269,28 @@ const LmsCourseManagement: React.FC = () => {
                     control={
                       <Switch
                         checked={formData.all_clients}
-                        onChange={(e) => handleInputChange('all_clients', e.target.checked)}
+                        onChange={(e) =>
+                          handleInputChange('all_clients', e.target.checked)
+                        }
                       />
                     }
                     label='Disponible para todos los clientes'
                   />
-                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                    Desactívalo si el curso solo debe aparecer para ciertas empresas cliente.
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ display: 'block', mt: 0.5 }}
+                  >
+                    Desactívalo si el curso solo debe aparecer para ciertas
+                    empresas cliente.
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={Boolean(formErrors.target_customer_ids)} disabled={formData.all_clients}>
+                  <FormControl
+                    fullWidth
+                    error={Boolean(formErrors.target_customer_ids)}
+                    disabled={formData.all_clients}
+                  >
                     <InputLabel>Empresas habilitadas</InputLabel>
                     <Select
                       multiple
@@ -1098,34 +1298,52 @@ const LmsCourseManagement: React.FC = () => {
                       onChange={(event) =>
                         handleInputChange(
                           'target_customer_ids',
-                          (event.target.value as Array<string | number>).map((value) => Number(value))
+                          (event.target.value as Array<string | number>).map(
+                            (value) => Number(value)
+                          )
                         )
                       }
                       input={<OutlinedInput label='Empresas habilitadas' />}
                       renderValue={(selected) => {
                         const selectedIds = selected as number[]
                         const labels = customerOptions
-                          .filter((customer) => selectedIds.includes(customer.id))
+                          .filter((customer) =>
+                            selectedIds.includes(customer.id)
+                          )
                           .map((customer) => customer.name)
                         return labels.join(', ')
                       }}
                     >
                       {customerOptions.map((customer) => (
                         <MenuItem key={customer.id} value={customer.id}>
-                          <Checkbox checked={formData.target_customer_ids.includes(customer.id)} />
+                          <Checkbox
+                            checked={formData.target_customer_ids.includes(
+                              customer.id
+                            )}
+                          />
                           <ListItemText primary={customer.name} />
                         </MenuItem>
                       ))}
                     </Select>
-                    <Typography variant='caption' color={formErrors.target_customer_ids ? 'error' : 'text.secondary'} sx={{ mt: 0.75 }}>
-                      {formErrors.target_customer_ids || 'Selecciona una o varias empresas cuando el curso no deba aparecer para todos los clientes.'}
+                    <Typography
+                      variant='caption'
+                      color={
+                        formErrors.target_customer_ids
+                          ? 'error'
+                          : 'text.secondary'
+                      }
+                      sx={{ mt: 0.75 }}
+                    >
+                      {formErrors.target_customer_ids ||
+                        'Selecciona una o varias empresas cuando el curso no deba aparecer para todos los clientes.'}
                     </Typography>
                   </FormControl>
                 </Grid>
                 {!formData.all_clients && selectedCustomerNames.length > 0 && (
                   <Grid item xs={12}>
                     <Alert severity='success'>
-                      El curso quedará visible para: <strong>{selectedCustomerNames.join(', ')}</strong>.
+                      El curso quedará visible para:{' '}
+                      <strong>{selectedCustomerNames.join(', ')}</strong>.
                     </Alert>
                   </Grid>
                 )}
@@ -1144,8 +1362,13 @@ const LmsCourseManagement: React.FC = () => {
                 }
                 label='Curso obligatorio'
               />
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                Úsalo cuando el curso deba entrar al flujo de asignaciones y recordatorios para usuarios internos.
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mt: 0.5 }}
+              >
+                Úsalo cuando el curso deba entrar al flujo de asignaciones y
+                recordatorios para usuarios internos.
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -1160,8 +1383,13 @@ const LmsCourseManagement: React.FC = () => {
                 }
                 label='Genera certificado'
               />
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                Actívalo si al completar el curso se debe emitir un certificado descargable.
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mt: 0.5 }}
+              >
+                Actívalo si al completar el curso se debe emitir un certificado
+                descargable.
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -1170,25 +1398,41 @@ const LmsCourseManagement: React.FC = () => {
                   <Switch
                     checked={formData.show_duration_on_certificate}
                     onChange={(e) =>
-                      handleInputChange('show_duration_on_certificate', e.target.checked)
+                      handleInputChange(
+                        'show_duration_on_certificate',
+                        e.target.checked
+                      )
                     }
                     disabled={!formData.has_certificate}
                   />
                 }
                 label='Mostrar duración en certificado'
               />
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                Cuando esté activo, el certificado mostrará el texto anterior o, si está vacío, la duración calculada del curso.
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mt: 0.5 }}
+              >
+                Cuando esté activo, el certificado mostrará el texto anterior o,
+                si está vacío, la duración calculada del curso.
               </Typography>
             </Grid>
             {formData.has_certificate && (
               <Grid item xs={12}>
-                <FormControl fullWidth error={Boolean(formErrors.certificate_template_id)}>
+                <FormControl
+                  fullWidth
+                  error={Boolean(formErrors.certificate_template_id)}
+                >
                   <InputLabel>Plantilla del certificado</InputLabel>
                   <Select
                     value={formData.certificate_template_id}
                     label='Plantilla del certificado'
-                    onChange={(e) => handleInputChange('certificate_template_id', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'certificate_template_id',
+                        e.target.value
+                      )
+                    }
                   >
                     <MenuItem value=''>
                       <em>Selecciona una plantilla</em>
@@ -1196,12 +1440,23 @@ const LmsCourseManagement: React.FC = () => {
                     {certificateTemplates.map((template) => (
                       <MenuItem key={template.id} value={template.id}>
                         {template.name}
-                        {template.isDefault || template.is_default ? ' (Por defecto)' : ''}
+                        {template.isDefault || template.is_default
+                          ? ' (Por defecto)'
+                          : ''}
                       </MenuItem>
                     ))}
                   </Select>
-                  <Typography variant='caption' color={formErrors.certificate_template_id ? 'error' : 'text.secondary'} sx={{ mt: 0.75 }}>
-                    {formErrors.certificate_template_id || 'Cada curso puede apuntar a una plantilla distinta, sin depender de una sola global.'}
+                  <Typography
+                    variant='caption'
+                    color={
+                      formErrors.certificate_template_id
+                        ? 'error'
+                        : 'text.secondary'
+                    }
+                    sx={{ mt: 0.75 }}
+                  >
+                    {formErrors.certificate_template_id ||
+                      'Cada curso puede apuntar a una plantilla distinta, sin depender de una sola global.'}
                   </Typography>
                 </FormControl>
               </Grid>
@@ -1210,18 +1465,32 @@ const LmsCourseManagement: React.FC = () => {
               <>
                 <Grid item xs={12}>
                   <Alert severity='info'>
-                    Los firmantes quedan guardados en el curso. Así puedes reutilizar la misma plantilla en varios cursos, pero cambiar personas, cargos y firmas según cada capacitación.
+                    Los firmantes quedan guardados en el curso. Así puedes
+                    reutilizar la misma plantilla en varios cursos, pero cambiar
+                    personas, cargos y firmas según cada capacitación.
                   </Alert>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Paper variant='outlined' sx={{ p: 2.5, height: '100%' }}>
-                    <Typography variant='h6' sx={{ mb: 1 }}>Firma izquierda</Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                      Úsala para instructor, facilitador o responsable académico.
+                    <Typography variant='h6' sx={{ mb: 1 }}>
+                      Firma izquierda
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 2 }}
+                    >
+                      Úsala para instructor, facilitador o responsable
+                      académico.
                     </Typography>
                     <SignaturePad
                       value={formData.certificate_signer_left_signature}
-                      onChange={(nextValue) => handleInputChange('certificate_signer_left_signature', nextValue || '')}
+                      onChange={(nextValue) =>
+                        handleInputChange(
+                          'certificate_signer_left_signature',
+                          nextValue || ''
+                        )
+                      }
                       label='Firma izquierda'
                       helperText='Puedes dibujarla o subir una imagen.'
                       height={150}
@@ -1232,7 +1501,12 @@ const LmsCourseManagement: React.FC = () => {
                           fullWidth
                           label='Nombre firmante izquierda'
                           value={formData.certificate_signer_left_name}
-                          onChange={(e) => handleInputChange('certificate_signer_left_name', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              'certificate_signer_left_name',
+                              e.target.value
+                            )
+                          }
                         />
                       </Grid>
                       <Grid item xs={12}>
@@ -1240,7 +1514,12 @@ const LmsCourseManagement: React.FC = () => {
                           fullWidth
                           label='Cargo firmante izquierda'
                           value={formData.certificate_signer_left_role}
-                          onChange={(e) => handleInputChange('certificate_signer_left_role', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              'certificate_signer_left_role',
+                              e.target.value
+                            )
+                          }
                         />
                       </Grid>
                     </Grid>
@@ -1248,13 +1527,24 @@ const LmsCourseManagement: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Paper variant='outlined' sx={{ p: 2.5, height: '100%' }}>
-                    <Typography variant='h6' sx={{ mb: 1 }}>Firma derecha</Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    <Typography variant='h6' sx={{ mb: 1 }}>
+                      Firma derecha
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 2 }}
+                    >
                       Úsala para director técnico, gerente o aprobador final.
                     </Typography>
                     <SignaturePad
                       value={formData.certificate_signer_right_signature}
-                      onChange={(nextValue) => handleInputChange('certificate_signer_right_signature', nextValue || '')}
+                      onChange={(nextValue) =>
+                        handleInputChange(
+                          'certificate_signer_right_signature',
+                          nextValue || ''
+                        )
+                      }
                       label='Firma derecha'
                       helperText='Puedes dibujarla o subir una imagen.'
                       height={150}
@@ -1265,7 +1555,12 @@ const LmsCourseManagement: React.FC = () => {
                           fullWidth
                           label='Nombre firmante derecha'
                           value={formData.certificate_signer_right_name}
-                          onChange={(e) => handleInputChange('certificate_signer_right_name', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              'certificate_signer_right_name',
+                              e.target.value
+                            )
+                          }
                         />
                       </Grid>
                       <Grid item xs={12}>
@@ -1273,7 +1568,12 @@ const LmsCourseManagement: React.FC = () => {
                           fullWidth
                           label='Cargo firmante derecha'
                           value={formData.certificate_signer_right_role}
-                          onChange={(e) => handleInputChange('certificate_signer_right_role', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              'certificate_signer_right_role',
+                              e.target.value
+                            )
+                          }
                         />
                       </Grid>
                     </Grid>
@@ -1284,21 +1584,28 @@ const LmsCourseManagement: React.FC = () => {
             {formData.audience === 'client' && formData.is_mandatory && (
               <Grid item xs={12}>
                 <Alert severity='warning'>
-                  Los cursos solo para clientes se manejan hoy como catálogo. Aunque puedas marcarlo como obligatorio, el flujo activo de asignaciones y recordatorios se usa para audiencias internas.
+                  Los cursos solo para clientes se manejan hoy como catálogo.
+                  Aunque puedas marcarlo como obligatorio, el flujo activo de
+                  asignaciones y recordatorios se usa para audiencias internas.
                 </Alert>
               </Grid>
             )}
             {includesClientAudience && (
               <Grid item xs={12}>
                 <Alert severity='info'>
-                  Para usuarios cliente el curso queda disponible en catálogo. Ahora puedes dejarlo abierto para todas las empresas o limitarlo a compañías específicas.
+                  Para usuarios cliente el curso queda disponible en catálogo.
+                  Ahora puedes dejarlo abierto para todas las empresas o
+                  limitarlo a compañías específicas.
                 </Alert>
               </Grid>
             )}
             {formData.has_certificate && (
               <Grid item xs={12}>
                 <Alert severity='success'>
-                  Este curso podrá emitir certificados cuando el participante complete el contenido requerido y apruebe los quizzes asociados. También podrás decidir si la duración aparece o no en el documento.
+                  Este curso podrá emitir certificados cuando el participante
+                  complete el contenido requerido y apruebe los quizzes
+                  asociados. También podrás decidir si la duración aparece o no
+                  en el documento.
                 </Alert>
               </Grid>
             )}
@@ -1348,7 +1655,6 @@ const LmsCourseManagement: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
     </Box>
   )
 }

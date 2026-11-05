@@ -123,8 +123,7 @@ const MaintenanceBilling: React.FC = () => {
     },
     onError: (error: unknown) => {
       notify.error(
-        getApiErrorReason(error) ||
-          'Error al actualizar estado de facturación'
+        getApiErrorReason(error) || 'Error al actualizar estado de facturación'
       )
     }
   })
@@ -204,7 +203,9 @@ const MaintenanceBilling: React.FC = () => {
         size: 170,
         Cell: ({ row }) => (
           <Box sx={{ maxWidth: 160, overflowWrap: 'anywhere' }}>
-            <Typography variant='body2'>{row.original.equipmentType}</Typography>
+            <Typography variant='body2'>
+              {row.original.equipmentType}
+            </Typography>
             <Typography variant='caption' color='text.secondary'>
               {row.original.equipmentBrand} {row.original.equipmentModel}
             </Typography>
@@ -236,7 +237,11 @@ const MaintenanceBilling: React.FC = () => {
           }
           if (ticket.technicianWorkMinutes) {
             return (
-              <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ fontStyle: 'italic' }}
+              >
                 Solo tiempo técnico
               </Typography>
             )
@@ -254,13 +259,25 @@ const MaintenanceBilling: React.FC = () => {
         size: 170,
         Cell: ({ row }) =>
           row.original.isInvoiced ? (
-            <Chip label='Facturado' color='success' size='small' variant='outlined' icon={<CheckCircle />} />
+            <Chip
+              label='Facturado'
+              color='success'
+              size='small'
+              variant='outlined'
+              icon={<CheckCircle />}
+            />
           ) : (
-            <Chip label='Sin facturar' color='error' size='small' variant='outlined' icon={<Cancel />} />
+            <Chip
+              label='Sin facturar'
+              color='error'
+              size='small'
+              variant='outlined'
+              icon={<Cancel />}
+            />
           )
       }
     ],
-     
+
     []
   )
 
@@ -283,15 +300,32 @@ const MaintenanceBilling: React.FC = () => {
       {data && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard label='Total Tickets' value={data.summary.totalTickets} icon={<Receipt />} tone='blue' />
+            <LmsStatCard
+              label='Total Tickets'
+              value={data.summary.totalTickets}
+              icon={<Receipt />}
+              tone='blue'
+            />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard label='Monto Total' value={formatCurrency(data.summary.totalAmount)} icon={<AttachMoney />} tone='green' compact />
+            <LmsStatCard
+              label='Monto Total'
+              value={formatCurrency(data.summary.totalAmount)}
+              icon={<AttachMoney />}
+              tone='green'
+              compact
+            />
           </Grid>
           <Grid item xs={12} sm={4}>
             <LmsStatCard
               label='Filtro Activo'
-              value={filter === 'not_invoiced' ? 'Sin Facturar' : filter === 'invoiced' ? 'Facturados' : 'Todos'}
+              value={
+                filter === 'not_invoiced'
+                  ? 'Sin Facturar'
+                  : filter === 'invoiced'
+                    ? 'Facturados'
+                    : 'Todos'
+              }
               icon={<Warning />}
               tone='orange'
               compact
@@ -394,12 +428,22 @@ const MaintenanceBilling: React.FC = () => {
           renderRowActions={({ row }) => {
             const ticket = row.original
             return (
-              <Tooltip title={ticket.isInvoiced ? 'Marcar como no facturado' : 'Marcar como facturado'}>
+              <Tooltip
+                title={
+                  ticket.isInvoiced
+                    ? 'Marcar como no facturado'
+                    : 'Marcar como facturado'
+                }
+              >
                 <span>
                   <IconButton
                     size='small'
-                    onClick={() => handleToggleInvoice(ticket.id, ticket.isInvoiced)}
-                    disabled={toggleInvoiceMutation.isLoading || !canPerformActions}
+                    onClick={() =>
+                      handleToggleInvoice(ticket.id, ticket.isInvoiced)
+                    }
+                    disabled={
+                      toggleInvoiceMutation.isLoading || !canPerformActions
+                    }
                     sx={{ color: ticket.isInvoiced ? 'error.main' : '#00BFA5' }}
                   >
                     {ticket.isInvoiced ? <Cancel /> : <CheckCircle />}
@@ -410,18 +454,10 @@ const MaintenanceBilling: React.FC = () => {
           }}
           renderDetailPanel={({ row }) => (
             <Box sx={{ py: 3, px: 2 }}>
-              <Typography
-                variant='h6'
-                gutterBottom
-                fontWeight={600}
-              >
+              <Typography variant='h6' gutterBottom fontWeight={600}>
                 Desglose de Costos
               </Typography>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                sx={{ mb: 1 }}
-              >
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
                 Tiempo técnico registrado:{' '}
                 <strong>
                   {formatWorkMinutes(row.original.technicianWorkMinutes)}
@@ -430,75 +466,69 @@ const MaintenanceBilling: React.FC = () => {
               <Divider sx={{ mb: 2 }} />
               {row.original.costs.length === 0 ? (
                 <Alert severity='info' sx={{ mb: 2 }}>
-                  Sin costos de materiales — Este servicio no registró costos de materiales. El tiempo técnico registrado queda como referencia para la facturación externa.
+                  Sin costos de materiales — Este servicio no registró costos de
+                  materiales. El tiempo técnico registrado queda como referencia
+                  para la facturación externa.
                 </Alert>
               ) : (
                 <>
-              <Grid container spacing={2}>
-                {row.original.costs.map((cost) => (
-                  <Grid item xs={12} sm={6} md={4} key={cost.id}>
-                    <Paper
-                      elevation={1}
-                      sx={{
-                        p: 2,
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      <Typography
-                        variant='subtitle2'
-                        fontWeight={700}
-                        gutterBottom
-                      >
-                        {cost.name}
-                      </Typography>
-                      {cost.description && (
-                        <Typography
-                          variant='caption'
-                          color='text.secondary'
-                          display='block'
-                          sx={{ mb: 1 }}
+                  <Grid container spacing={2}>
+                    {row.original.costs.map((cost) => (
+                      <Grid item xs={12} sm={6} md={4} key={cost.id}>
+                        <Paper
+                          elevation={1}
+                          sx={{
+                            p: 2,
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px'
+                          }}
                         >
-                          {cost.description}
-                        </Typography>
-                      )}
-                      <Typography
-                        variant='h6'
-                        fontWeight={700}
-                        color='#10b981'
-                      >
-                        {formatCurrency(cost.amount)}
-                      </Typography>
-                    </Paper>
+                          <Typography
+                            variant='subtitle2'
+                            fontWeight={700}
+                            gutterBottom
+                          >
+                            {cost.name}
+                          </Typography>
+                          {cost.description && (
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                              display='block'
+                              sx={{ mb: 1 }}
+                            >
+                              {cost.description}
+                            </Typography>
+                          )}
+                          <Typography
+                            variant='h6'
+                            fontWeight={700}
+                            color='#10b981'
+                          >
+                            {formatCurrency(cost.amount)}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    ))}
                   </Grid>
-                ))}
-              </Grid>
-              <Box
-                sx={{
-                  mt: 3,
-                  p: 2,
-                  backgroundColor: '#10b981',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <Typography
-                  variant='h6'
-                  fontWeight={700}
-                  color='white'
-                >
-                  Total
-                </Typography>
-                <Typography
-                  variant='h5'
-                  fontWeight={700}
-                  color='white'
-                >
-                  {formatCurrency(row.original.totalCost)}
-                </Typography>
-              </Box>
+                  <Box
+                    sx={{
+                      mt: 3,
+                      p: 2,
+                      backgroundColor: '#10b981',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Typography variant='h6' fontWeight={700} color='white'>
+                      Total
+                    </Typography>
+                    <Typography variant='h5' fontWeight={700} color='white'>
+                      {formatCurrency(row.original.totalCost)}
+                    </Typography>
+                  </Box>
                 </>
               )}
             </Box>
@@ -510,10 +540,10 @@ const MaintenanceBilling: React.FC = () => {
               </Typography>
               <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
                 {filter === 'not_invoiced'
-            ? 'No hay tickets pendientes de facturar'
-            : filter === 'invoiced'
-              ? 'No hay tickets facturados'
-              : 'No hay tickets completados'}
+                  ? 'No hay tickets pendientes de facturar'
+                  : filter === 'invoiced'
+                    ? 'No hay tickets facturados'
+                    : 'No hay tickets completados'}
               </Typography>
             </Box>
           )}

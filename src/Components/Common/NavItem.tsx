@@ -75,7 +75,8 @@ const NavItem: React.FC<NavItemProps> = ({
         color: active ? TEAL_INK : nested ? neutral.textBody : neutral.textBody,
         bgcolor: active && (!isGroup || minimized) ? TEAL_SOFT : 'transparent',
         '&:hover': {
-          bgcolor: active && (!isGroup || minimized) ? TEAL_SOFT : neutral.surfaceHead,
+          bgcolor:
+            active && (!isGroup || minimized) ? TEAL_SOFT : neutral.surfaceHead,
           color: active ? TEAL_INK : neutral.text
         },
         '&.Mui-focusVisible': {

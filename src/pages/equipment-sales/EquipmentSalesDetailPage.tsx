@@ -164,7 +164,11 @@ const EquipmentSalesDetailPage = () => {
   )
 
   const handleRequestApproval = async () => {
-    const result = await confirmDialog({ title: '¿Marcar la cotización como enviada al cliente?', confirmLabel: 'Sí, marcar como enviada', cancelLabel: 'Cancelar' })
+    const result = await confirmDialog({
+      title: '¿Marcar la cotización como enviada al cliente?',
+      confirmLabel: 'Sí, marcar como enviada',
+      cancelLabel: 'Cancelar'
+    })
     if (!result.isConfirmed || !quotation) return
     try {
       await mutations.requestApproval.mutateAsync(quotation.id)
@@ -318,7 +322,11 @@ const EquipmentSalesDetailPage = () => {
   }
 
   const handleReadyForInvoice = async () => {
-    const result = await confirmDialog({ title: '¿Marcar esta cotización como lista para facturar?', confirmLabel: 'Sí, continuar', cancelLabel: 'Cancelar' })
+    const result = await confirmDialog({
+      title: '¿Marcar esta cotización como lista para facturar?',
+      confirmLabel: 'Sí, continuar',
+      cancelLabel: 'Cancelar'
+    })
     if (!result.isConfirmed || !quotation) return
     try {
       await mutations.readyForInvoice.mutateAsync(quotation.id)
@@ -330,7 +338,11 @@ const EquipmentSalesDetailPage = () => {
   }
 
   const handleInvoice = async () => {
-    const result = await confirmDialog({ title: '¿Marcar esta cotización como facturada?', confirmLabel: 'Sí, facturar', cancelLabel: 'Cancelar' })
+    const result = await confirmDialog({
+      title: '¿Marcar esta cotización como facturada?',
+      confirmLabel: 'Sí, facturar',
+      cancelLabel: 'Cancelar'
+    })
     if (!result.isConfirmed || !quotation) return
     try {
       await mutations.invoiceQuotation.mutateAsync(quotation.id)
@@ -406,7 +418,6 @@ const EquipmentSalesDetailPage = () => {
         backgroundColor: '#f8fafb'
       }}
     >
-
       {/* ── Header banner ── */}
       <Box
         sx={{

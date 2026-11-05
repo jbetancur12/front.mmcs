@@ -1,6 +1,8 @@
 import type { CourseAudience } from 'src/services/lmsService'
 
-export const normalizeCourseAudience = (audience?: string | null): CourseAudience => {
+export const normalizeCourseAudience = (
+  audience?: string | null
+): CourseAudience => {
   switch (audience) {
     case 'internal':
     case 'client':
@@ -26,7 +28,9 @@ export const getCourseAudienceLabel = (audience?: string | null): string => {
   }
 }
 
-export const getLearningVisibilityLabel = (userType: 'internal' | 'client'): string => {
+export const getLearningVisibilityLabel = (
+  userType: 'internal' | 'client'
+): string => {
   return userType === 'client'
     ? 'Cursos para clientes y compartidos'
     : 'Cursos internos y compartidos'

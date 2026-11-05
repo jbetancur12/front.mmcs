@@ -67,12 +67,20 @@ const deleteUser = async (userId: number): Promise<void> => {
 const handleQueryError = (error: unknown): boolean => {
   if (error instanceof AxiosError) {
     // Don't retry on client errors (4xx) except for timeout
-    if (error.response?.status && error.response.status >= 400 && error.response.status < 500) {
+    if (
+      error.response?.status &&
+      error.response.status >= 400 &&
+      error.response.status < 500
+    ) {
       // El 408 (timeout) es transitorio y se reintenta; el 429 pide esperar, no reintentar
       return error.response.status === 408
     }
     // Retry on network errors and server errors (5xx)
-    return error.code === 'NETWORK_ERROR' || !error.response || (error.response.status >= 500)
+    return (
+      error.code === 'NETWORK_ERROR' ||
+      !error.response ||
+      error.response.status >= 500
+    )
   }
   // Retry on unknown errors
   return true
@@ -99,7 +107,7 @@ export const useUsers = () => {
     retryDelay: getRetryDelay,
     // Enable background refetching
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: true
   })
 }
 
@@ -121,10 +129,13 @@ export const useUserMutations = () => {
   const createUserMutation = useMutation(createUser, {
     onSuccess: (newUser) => {
       // Optimistic update: Add the new user to the cache immediately
-      queryClient.setQueryData([QUERY_KEYS.USERS], (oldData: UserData[] | undefined) => {
-        if (!oldData) return [newUser]
-        return [...oldData, newUser]
-      })
+      queryClient.setQueryData(
+        [QUERY_KEYS.USERS],
+        (oldData: UserData[] | undefined) => {
+          if (!oldData) return [newUser]
+          return [...oldData, newUser]
+        }
+      )
 
       // Also invalidate to ensure fresh data from server
       queryClient.invalidateQueries([QUERY_KEYS.USERS])
@@ -138,7 +149,7 @@ export const useUserMutations = () => {
       if (failureCount >= 3) return false
       return handleQueryError(error)
     },
-    retryDelay: getRetryDelay,
+    retryDelay: getRetryDelay
   })
 
   const updateUserMutation = useMutation(updateUser, {
@@ -147,17 +158,20 @@ export const useUserMutations = () => {
       await queryClient.cancelQueries([QUERY_KEYS.USERS])
 
       // Snapshot the previous value
-      const previousUsers = queryClient.getQueryData<UserData[]>([QUERY_KEYS.USERS])
+      const previousUsers = queryClient.getQueryData<UserData[]>([
+        QUERY_KEYS.USERS
+      ])
 
       // Optimistically update to the new value
-      queryClient.setQueryData([QUERY_KEYS.USERS], (oldData: UserData[] | undefined) => {
-        if (!oldData) return []
-        return oldData.map(user =>
-          user.id === updatedUser.id
-            ? { ...user, ...updatedUser }
-            : user
-        )
-      })
+      queryClient.setQueryData(
+        [QUERY_KEYS.USERS],
+        (oldData: UserData[] | undefined) => {
+          if (!oldData) return []
+          return oldData.map((user) =>
+            user.id === updatedUser.id ? { ...user, ...updatedUser } : user
+          )
+        }
+      )
 
       // Return a context object with the snapshotted value
       return { previousUsers }
@@ -178,7 +192,7 @@ export const useUserMutations = () => {
       if (failureCount >= 3) return false
       return handleQueryError(error)
     },
-    retryDelay: getRetryDelay,
+    retryDelay: getRetryDelay
   })
 
   const deleteUserMutation = useMutation(deleteUser, {
@@ -187,13 +201,18 @@ export const useUserMutations = () => {
       await queryClient.cancelQueries([QUERY_KEYS.USERS])
 
       // Snapshot the previous value
-      const previousUsers = queryClient.getQueryData<UserData[]>([QUERY_KEYS.USERS])
+      const previousUsers = queryClient.getQueryData<UserData[]>([
+        QUERY_KEYS.USERS
+      ])
 
       // Optimistically remove the user from the cache
-      queryClient.setQueryData([QUERY_KEYS.USERS], (oldData: UserData[] | undefined) => {
-        if (!oldData) return []
-        return oldData.filter(user => user.id !== userId)
-      })
+      queryClient.setQueryData(
+        [QUERY_KEYS.USERS],
+        (oldData: UserData[] | undefined) => {
+          if (!oldData) return []
+          return oldData.filter((user) => user.id !== userId)
+        }
+      )
 
       // Return a context object with the snapshotted value
       return { previousUsers }
@@ -214,13 +233,13 @@ export const useUserMutations = () => {
       if (failureCount >= 3) return false
       return handleQueryError(error)
     },
-    retryDelay: getRetryDelay,
+    retryDelay: getRetryDelay
   })
 
   return {
     createUser: createUserMutation,
     updateUser: updateUserMutation,
-    deleteUser: deleteUserMutation,
+    deleteUser: deleteUserMutation
   }
 }
 
@@ -311,16 +330,21 @@ export const useCustomerUsers = <T extends UserWithRol = UserWithRol>(
   )
 }
 
-const invalidateUserLists = (queryClient: ReturnType<typeof useQueryClient>) => {
+const invalidateUserLists = (
+  queryClient: ReturnType<typeof useQueryClient>
+) => {
   queryClient.invalidateQueries(usersKeys.all)
   queryClient.invalidateQueries({
     predicate: (query) =>
-      query.queryKey[0] === customersKeys.all[0] && query.queryKey[3] === 'users'
+      query.queryKey[0] === customersKeys.all[0] &&
+      query.queryKey[3] === 'users'
   })
 }
 
 /** POST /auth/register */
-export const useRegisterUser = <T extends object = Record<string, unknown>>() => {
+export const useRegisterUser = <
+  T extends object = Record<string, unknown>
+>() => {
   const axiosPrivate = useAxiosPrivateHook()
   const queryClient = useQueryClient()
   return useMutation<AxiosResponse, unknown, T>(
@@ -330,13 +354,19 @@ export const useRegisterUser = <T extends object = Record<string, unknown>>() =>
 }
 
 /** PUT /users/:id */
-export const useUpdateUserById = <T extends object = Record<string, unknown>>() => {
+export const useUpdateUserById = <
+  T extends object = Record<string, unknown>
+>() => {
   const axiosPrivate = useAxiosPrivateHook()
   const queryClient = useQueryClient()
-  return useMutation<AxiosResponse, unknown, { id: number | string; values: T }>(
-    ({ id, values }) => axiosPrivate.put(`/users/${id}`, values, {}),
-    { retry: false, onSuccess: () => invalidateUserLists(queryClient) }
-  )
+  return useMutation<
+    AxiosResponse,
+    unknown,
+    { id: number | string; values: T }
+  >(({ id, values }) => axiosPrivate.put(`/users/${id}`, values, {}), {
+    retry: false,
+    onSuccess: () => invalidateUserLists(queryClient)
+  })
 }
 
 /** DELETE /users/:id */

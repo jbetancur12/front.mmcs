@@ -81,7 +81,7 @@ export interface Course {
   stats?: CourseStats
   assignments?: CourseAssignment[]
   userProgress?: UserProgress[]
-  user_deadline?: string  // Deadline específico del usuario (calculado por el backend)
+  user_deadline?: string // Deadline específico del usuario (calculado por el backend)
   learningContinuity?: null | {
     lastAccessedAt: string | null
     completedAt?: string | null
@@ -158,7 +158,7 @@ export interface CourseLesson {
   estimated_minutes?: number
   order_index: number
   is_mandatory: boolean
-  quiz?: Quiz  // Quiz asociado a la lección (si type es 'quiz')
+  quiz?: Quiz // Quiz asociado a la lección (si type es 'quiz')
   resources?: LessonResource[]
   created_at: string
   updated_at: string
@@ -574,7 +574,9 @@ const getUiNotificationActionLabel = (
     case 'certificate_earned':
       return 'Ver certificado'
     case 'course_completed':
-      return notification.data?.hasCertificate ? 'Abrir certificados' : 'Ver curso'
+      return notification.data?.hasCertificate
+        ? 'Abrir certificados'
+        : 'Ver curso'
     case 'course_assigned':
     case 'mandatory_reminder':
     case 'deadline_reminder':
@@ -592,7 +594,9 @@ const normalizeUiNotification = (
   title: notification.title,
   message: notification.message,
   severity: getUiNotificationSeverity(notification),
-  timestamp: notification.createdAt ? new Date(notification.createdAt) : new Date(),
+  timestamp: notification.createdAt
+    ? new Date(notification.createdAt)
+    : new Date(),
   read: Boolean(notification.readAt),
   actionUrl: notification.actionUrl || undefined,
   actionLabel: getUiNotificationActionLabel(notification),
@@ -812,7 +816,11 @@ export interface TrainingPlanSummary {
   assignment_count: number
 }
 
-export interface TrainingPlanDetail extends Omit<TrainingPlanSummary, 'own_course_count' | 'include_count' | 'included_by_count'> {
+export interface TrainingPlanDetail
+  extends Omit<
+    TrainingPlanSummary,
+    'own_course_count' | 'include_count' | 'included_by_count'
+  > {
   courses: PlanCourseItem[]
   includes: PlanRef[]
   included_by: PlanRef[]
@@ -825,7 +833,11 @@ export interface SaveTrainingPlanRequest {
   name?: string
   description?: string | null
   is_active?: boolean
-  courses?: Array<{ course_id: number; position?: number; deadline_days?: number | null }>
+  courses?: Array<{
+    course_id: number
+    position?: number
+    deadline_days?: number | null
+  }>
   include_plan_ids?: number[]
   notify?: boolean
 }
@@ -888,7 +900,10 @@ export interface PlanAssignmentPreview {
   deadline_days: number | null
   courses: PlanAssignmentPreviewCourse[]
   summary: { total: number; create: number; reuse: number; skip: number }
-  affected_users: { count: number; users: Array<{ id: number; nombre: string; email: string }> }
+  affected_users: {
+    count: number
+    users: Array<{ id: number; nombre: string; email: string }>
+  }
   already_assigned: boolean
   /** Usuarios concretos con el mismo plazo: se suman a este destino en vez de crear otro. */
   merge_into?: {
@@ -939,7 +954,12 @@ export interface PlanAssignmentRow {
   target: PlanTarget
   course_count: number
   origin_count: number
-  stats: { users: number; completed_users: number; users_with_overdue: number; avg_progress: number }
+  stats: {
+    users: number
+    completed_users: number
+    users_with_overdue: number
+    avg_progress: number
+  }
 }
 
 export interface DeadlineSource {
@@ -989,7 +1009,12 @@ export interface MyPlansResponse {
   unique_courses: PlanProgressSummary & { courses?: MyPlanCourse[] }
 }
 
-export type PlanComplianceStatus = 'completed' | 'overdue' | 'in_progress' | 'not_started' | 'no_courses'
+export type PlanComplianceStatus =
+  | 'completed'
+  | 'overdue'
+  | 'in_progress'
+  | 'not_started'
+  | 'no_courses'
 
 /** Destino por el que una persona recibe el plan (directo o por un plan que lo incluye). */
 export interface PlanProgressDestination {
@@ -1012,7 +1037,8 @@ export interface PlanUserCourseProgress {
   last_activity: string | null
 }
 
-export interface PlanUserProgress extends Omit<PlanProgressSummary, 'next_deadline_source'> {
+export interface PlanUserProgress
+  extends Omit<PlanProgressSummary, 'next_deadline_source'> {
   user_id: number
   nombre: string
   email: string
@@ -1028,7 +1054,12 @@ export interface PlanProgressResponse {
   mandatory_only: boolean
   total_courses: number
   excluded_courses: number
-  courses: Array<{ course_id: number; title: string; source_plan_name: string | null; inherited: boolean }>
+  courses: Array<{
+    course_id: number
+    title: string
+    source_plan_name: string | null
+    inherited: boolean
+  }>
   destinations: PlanProgressDestination[]
   summary: {
     users: number
@@ -1111,7 +1142,11 @@ export interface AssignmentReminderSummary {
   lastReminderType: string | null
 }
 
-export type MandatoryTrainingStatus = 'pending' | 'in_progress' | 'completed' | 'overdue'
+export type MandatoryTrainingStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'completed'
+  | 'overdue'
 
 /** Un usuario en un curso obligatorio (analytics/assignments/mandatory). */
 export interface MandatoryTrainingRecord {
@@ -1301,7 +1336,11 @@ export interface QuizPerformanceAnalytics {
   }
   questionDifficultyHeatmap?: QuizQuestionPerformance[]
   recommendations?: Array<{
-    type: 'question_review' | 'content_improvement' | 'time_adjustment' | 'difficulty_balance'
+    type:
+      | 'question_review'
+      | 'content_improvement'
+      | 'time_adjustment'
+      | 'difficulty_balance'
     priority: 'high' | 'medium' | 'low'
     title: string
     description: string
@@ -1468,7 +1507,11 @@ export interface AssignmentManagementAnalytics {
     recommendations: string[]
   }>
   trends: {
-    assignmentTrends: Array<{ period: string; assignments: number; completed: number }>
+    assignmentTrends: Array<{
+      period: string
+      assignments: number
+      completed: number
+    }>
     completionTrends: Array<{ period: string; completionRate: number }>
     complianceTrends: Array<{ period: string; complianceRate: number }>
   }
@@ -1616,8 +1659,12 @@ class LMSService {
   /**
    * Get all courses (Admin/Training Manager)
    */
-  async getCourses(params?: CourseQueryParams): Promise<{ courses: Course[]; total: number }> {
-    const response = await axiosPrivate.get(`${this.baseURL}/courses`, { params })
+  async getCourses(
+    params?: CourseQueryParams
+  ): Promise<{ courses: Course[]; total: number }> {
+    const response = await axiosPrivate.get(`${this.baseURL}/courses`, {
+      params
+    })
     return response.data
   }
 
@@ -1633,7 +1680,9 @@ class LMSService {
    * Get current user's LMS permissions and type context
    */
   async getMyPermissions(): Promise<LmsPermissions> {
-    const response = await axiosPrivate.get(`${this.baseURL}/training-manager/my-permissions`)
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/training-manager/my-permissions`
+    )
     return this.unwrapResponse<LmsPermissions>(response.data)
   }
 
@@ -1649,7 +1698,9 @@ class LMSService {
    * Get course preview (no auth required)
    */
   async getCoursePreview(id: number): Promise<Course> {
-    const response = await axiosPublic.get(`${this.baseURL}/courses/preview/${id}`)
+    const response = await axiosPublic.get(
+      `${this.baseURL}/courses/preview/${id}`
+    )
     return this.unwrapResponse<Course>(response.data, 'course')
   }
 
@@ -1665,7 +1716,10 @@ class LMSService {
    * Update a course
    */
   async updateCourse(id: number, data: UpdateCourseRequest): Promise<Course> {
-    const response = await axiosPrivate.put(`${this.baseURL}/courses/${id}`, data)
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/courses/${id}`,
+      data
+    )
     return this.unwrapResponse<Course>(response.data, 'course')
   }
 
@@ -1680,7 +1734,9 @@ class LMSService {
    * Publish a course
    */
   async publishCourse(id: number): Promise<Course> {
-    const response = await axiosPrivate.post(`${this.baseURL}/courses/${id}/publish`)
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/courses/${id}/publish`
+    )
     return this.unwrapResponse<Course>(response.data, 'course')
   }
 
@@ -1688,7 +1744,9 @@ class LMSService {
    * Archive a course
    */
   async archiveCourse(id: number): Promise<Course> {
-    const response = await axiosPrivate.post(`${this.baseURL}/courses/${id}/archive`)
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/courses/${id}/archive`
+    )
     return this.unwrapResponse<Course>(response.data, 'course')
   }
 
@@ -1696,9 +1754,12 @@ class LMSService {
    * Duplicate a course
    */
   async duplicateCourse(id: number, newTitle?: string): Promise<Course> {
-    const response = await axiosPrivate.post(`${this.baseURL}/courses/${id}/duplicate`, {
-      title: newTitle
-    })
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/courses/${id}/duplicate`,
+      {
+        title: newTitle
+      }
+    )
     return this.unwrapResponse<Course>(response.data, 'course')
   }
 
@@ -1706,7 +1767,9 @@ class LMSService {
    * Get course statistics
    */
   async getCourseStats(id: number): Promise<CourseStats> {
-    const response = await axiosPrivate.get(`${this.baseURL}/courses/${id}/stats`)
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/courses/${id}/stats`
+    )
     return this.unwrapResponse<CourseStats>(response.data, 'stats')
   }
 
@@ -1728,8 +1791,14 @@ class LMSService {
   /**
    * Update a module
    */
-  async updateModule(id: number, data: Partial<CreateModuleRequest>): Promise<CourseModule> {
-    const response = await axiosPrivate.put(`${this.baseURL}/content/modules/${id}`, data)
+  async updateModule(
+    id: number,
+    data: Partial<CreateModuleRequest>
+  ): Promise<CourseModule> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/content/modules/${id}`,
+      data
+    )
     return this.unwrapResponse<CourseModule>(response.data, 'module')
   }
 
@@ -1754,8 +1823,14 @@ class LMSService {
   /**
    * Update a lesson
    */
-  async updateLesson(id: number, data: Partial<CreateLessonRequest>): Promise<CourseLesson> {
-    const response = await axiosPrivate.put(`${this.baseURL}/content/lessons/${id}`, data)
+  async updateLesson(
+    id: number,
+    data: Partial<CreateLessonRequest>
+  ): Promise<CourseLesson> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/content/lessons/${id}`,
+      data
+    )
     return this.unwrapResponse<CourseLesson>(response.data, 'lesson')
   }
 
@@ -1773,7 +1848,10 @@ class LMSService {
   /**
    * Get user progress for a course
    */
-  async getCourseProgress(courseId: number, userId?: number): Promise<CourseProgressResponse> {
+  async getCourseProgress(
+    courseId: number,
+    userId?: number
+  ): Promise<CourseProgressResponse> {
     const url = userId
       ? `${this.baseURL}/progress/users/${userId}/courses/${courseId}`
       : `${this.baseURL}/progress/courses/${courseId}`
@@ -1795,7 +1873,9 @@ class LMSService {
   /**
    * Update progress (mark lesson as completed)
    */
-  async updateProgress(data: UpdateProgressRequest): Promise<ProgressUpdateResult> {
+  async updateProgress(
+    data: UpdateProgressRequest
+  ): Promise<ProgressUpdateResult> {
     const response = await axiosPrivate.post(`${this.baseURL}/progress`, {
       lessonId: data.lessonId,
       action: data.action,
@@ -1808,7 +1888,10 @@ class LMSService {
   /**
    * Complete a lesson
    */
-  async completeLesson(lessonId: number, timeSpent?: number): Promise<ProgressUpdateResult> {
+  async completeLesson(
+    lessonId: number,
+    timeSpent?: number
+  ): Promise<ProgressUpdateResult> {
     return this.updateProgress({
       lessonId,
       action: 'complete',
@@ -1846,8 +1929,14 @@ class LMSService {
   /**
    * Update a quiz
    */
-  async updateQuiz(id: number, data: Partial<CreateQuizRequest>): Promise<Quiz> {
-    const response = await axiosPrivate.put(`${this.baseURL}/quizzes/${id}`, data)
+  async updateQuiz(
+    id: number,
+    data: Partial<CreateQuizRequest>
+  ): Promise<Quiz> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/quizzes/${id}`,
+      data
+    )
     return response.data.quiz || response.data
   }
 
@@ -1861,17 +1950,28 @@ class LMSService {
   /**
    * Submit quiz attempt
    */
-  async submitQuiz(quizId: number, data: SubmitQuizRequest): Promise<QuizSubmissionResult> {
-    const response = await axiosPrivate.post(`${this.baseURL}/quizzes/${quizId}/attempt`, data)
+  async submitQuiz(
+    quizId: number,
+    data: SubmitQuizRequest
+  ): Promise<QuizSubmissionResult> {
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/quizzes/${quizId}/attempt`,
+      data
+    )
     return this.unwrapResponse<QuizSubmissionResult>(response.data)
   }
 
   /**
    * Get quiz attempts for a user
    */
-  async getQuizAttempts(quizId: number, userId?: number): Promise<QuizAttempt[]> {
+  async getQuizAttempts(
+    quizId: number,
+    userId?: number
+  ): Promise<QuizAttempt[]> {
     if (userId) {
-      throw new Error('La API LMS actual solo expone intentos del usuario autenticado')
+      throw new Error(
+        'La API LMS actual solo expone intentos del usuario autenticado'
+      )
     }
 
     const url = `${this.baseURL}/quizzes/${quizId}/attempts`
@@ -1898,16 +1998,23 @@ class LMSService {
    * Get certificate by ID
    */
   async getCertificate(id: number): Promise<Certificate> {
-    const response = await axiosPrivate.get(`${this.baseURL}/certificates/${id}`)
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/certificates/${id}`
+    )
     return this.unwrapResponse<Certificate>(response.data, 'certificate')
   }
 
   /**
    * Generate certificate for a course
    */
-  async generateCertificate(courseId: number, userId?: number): Promise<Certificate> {
+  async generateCertificate(
+    courseId: number,
+    userId?: number
+  ): Promise<Certificate> {
     if (!userId) {
-      throw new Error('userId es requerido para generar un certificado manualmente')
+      throw new Error(
+        'userId es requerido para generar un certificado manualmente'
+      )
     }
 
     const response = await axiosPrivate.post(
@@ -1932,12 +2039,21 @@ class LMSService {
   /**
    * Verify certificate by certificate number
    */
-  async verifyCertificate(certificateNumber: string): Promise<{ isValid: boolean; certificate?: Certificate; error?: string }> {
+  async verifyCertificate(
+    certificateNumber: string
+  ): Promise<{ isValid: boolean; certificate?: Certificate; error?: string }> {
     try {
-      const response = await axiosPublic.get(`${this.baseURL}/certificates/verify/${certificateNumber}`)
+      const response = await axiosPublic.get(
+        `${this.baseURL}/certificates/verify/${certificateNumber}`
+      )
       return {
-        isValid: response.data.data?.valid ?? response.data.valid ?? response.data.success ?? response.data.isValid,
-        certificate: response.data.data?.certificate || response.data.certificate
+        isValid:
+          response.data.data?.valid ??
+          response.data.valid ??
+          response.data.success ??
+          response.data.isValid,
+        certificate:
+          response.data.data?.certificate || response.data.certificate
       }
     } catch (error: unknown) {
       return {
@@ -1948,20 +2064,25 @@ class LMSService {
   }
 
   async getCertificateTemplates(): Promise<CertificateTemplate[]> {
-    const response = await axiosPrivate.get(`${this.baseURL}/certificates/templates`)
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/certificates/templates`
+    )
     return this.unwrapResponse<CertificateTemplate[]>(response.data)
   }
 
   async createCertificateTemplate(
     data: SaveCertificateTemplateRequest
   ): Promise<CertificateTemplate> {
-    const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates`, {
-      name: data.name,
-      templateHtml: data.templateHtml,
-      templateCss: data.templateCss,
-      variables: data.variables,
-      isDefault: data.isDefault ?? false
-    })
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/certificates/templates`,
+      {
+        name: data.name,
+        templateHtml: data.templateHtml,
+        templateCss: data.templateCss,
+        variables: data.variables,
+        isDefault: data.isDefault ?? false
+      }
+    )
     return this.unwrapResponse<CertificateTemplate>(response.data)
   }
 
@@ -1969,13 +2090,16 @@ class LMSService {
     id: number,
     data: SaveCertificateTemplateRequest
   ): Promise<CertificateTemplate> {
-    const response = await axiosPrivate.put(`${this.baseURL}/certificates/templates/${id}`, {
-      name: data.name,
-      templateHtml: data.templateHtml,
-      templateCss: data.templateCss,
-      variables: data.variables,
-      isDefault: data.isDefault ?? false
-    })
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/certificates/templates/${id}`,
+      {
+        name: data.name,
+        templateHtml: data.templateHtml,
+        templateCss: data.templateCss,
+        variables: data.variables,
+        isDefault: data.isDefault ?? false
+      }
+    )
     return this.unwrapResponse<CertificateTemplate>(response.data)
   }
 
@@ -1987,20 +2111,32 @@ class LMSService {
     id: number,
     data?: CertificateTemplatePreviewRequest
   ): Promise<CertificateTemplatePreviewResponse> {
-    const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates/${id}/preview`, data || {})
-    return this.unwrapResponse<CertificateTemplatePreviewResponse>(response.data)
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/certificates/templates/${id}/preview`,
+      data || {}
+    )
+    return this.unwrapResponse<CertificateTemplatePreviewResponse>(
+      response.data
+    )
   }
 
-  async validateCertificateTemplate(data: SaveCertificateTemplateRequest): Promise<{
+  async validateCertificateTemplate(
+    data: SaveCertificateTemplateRequest
+  ): Promise<{
     isValid: boolean
     errors: string[]
   }> {
-    const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates/validate`, {
-      templateHtml: data.templateHtml,
-      templateCss: data.templateCss,
-      variables: data.variables
-    })
-    return this.unwrapResponse<{ isValid: boolean; errors: string[] }>(response.data)
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/certificates/templates/validate`,
+      {
+        templateHtml: data.templateHtml,
+        templateCss: data.templateCss,
+        variables: data.variables
+      }
+    )
+    return this.unwrapResponse<{ isValid: boolean; errors: string[] }>(
+      response.data
+    )
   }
 
   // ===========================
@@ -2010,8 +2146,12 @@ class LMSService {
   /**
    * Get course assignments
    */
-  async getCourseAssignments(courseId: number): Promise<CourseAssignmentsResponse> {
-    const response = await axiosPrivate.get(`${this.baseURL}/assignments/courses/${courseId}/assignments`)
+  async getCourseAssignments(
+    courseId: number
+  ): Promise<CourseAssignmentsResponse> {
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/assignments/courses/${courseId}/assignments`
+    )
     return this.unwrapResponse<CourseAssignmentsResponse>(response.data)
   }
 
@@ -2034,18 +2174,23 @@ class LMSService {
    * Get mandatory assignments for current user
    */
   async getMandatoryAssignments(): Promise<MandatoryAssignmentsResponse> {
-    const response = await axiosPrivate.get(`${this.baseURL}/assignments/my-mandatory-courses`, {
-      params: {
-        includeExpired: true
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/assignments/my-mandatory-courses`,
+      {
+        params: {
+          includeExpired: true
+        }
       }
-    })
+    )
     return this.unwrapResponse<MandatoryAssignmentsResponse>(response.data)
   }
 
   /**
    * Create assignment
    */
-  async createAssignment(data: CreateAssignmentRequest): Promise<CreateAssignmentResult> {
+  async createAssignment(
+    data: CreateAssignmentRequest
+  ): Promise<CreateAssignmentResult> {
     const response = await axiosPrivate.post(
       `${this.baseURL}/assignments/courses/${data.course_id}/assign`,
       {
@@ -2064,7 +2209,10 @@ class LMSService {
     id: number,
     data: Partial<CreateAssignmentRequest>
   ): Promise<UpdateAssignmentResult> {
-    const response = await axiosPrivate.put(`${this.baseURL}/assignments/assignments/${id}`, data)
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/assignments/assignments/${id}`,
+      data
+    )
     return this.unwrapResponse<UpdateAssignmentResult>(response.data)
   }
 
@@ -2082,8 +2230,14 @@ class LMSService {
   /**
    * Get LMS analytics dashboard data
    */
-  async getAnalytics(params?: { startDate?: string; endDate?: string }): Promise<AnalyticsData> {
-    const response = await axiosPrivate.get(`${this.baseURL}/analytics/dashboard`, { params })
+  async getAnalytics(params?: {
+    startDate?: string
+    endDate?: string
+  }): Promise<AnalyticsData> {
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/analytics/dashboard`,
+      { params }
+    )
     return response.data.analytics || response.data
   }
 
@@ -2091,7 +2245,9 @@ class LMSService {
    * Get course analytics
    */
   async getCourseAnalytics(courseId: number): Promise<CourseAnalyticsResponse> {
-    const response = await axiosPrivate.get(`${this.baseURL}/analytics/course/${courseId}`)
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/analytics/course/${courseId}`
+    )
     return response.data.analytics || response.data
   }
 
@@ -2109,13 +2265,16 @@ class LMSService {
   /**
    * Get comprehensive dashboard analytics
    */
-  async getComprehensiveDashboard(params?: { 
-    startDate?: string; 
-    endDate?: string; 
-    userType?: string;
-    courseStatus?: string;
+  async getComprehensiveDashboard(params?: {
+    startDate?: string
+    endDate?: string
+    userType?: string
+    courseStatus?: string
   }): Promise<ComprehensiveDashboard> {
-    const response = await axiosPrivate.get(`${this.baseURL}/analytics/dashboard`, { params })
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/analytics/dashboard`,
+      { params }
+    )
     return response.data.data
   }
 
@@ -2123,13 +2282,16 @@ class LMSService {
    * Get quiz performance analytics
    */
   async getQuizPerformanceAnalytics(params?: {
-    courseId?: number;
-    quizId?: number;
-    startDate?: string;
-    endDate?: string;
-    includeQuestionAnalysis?: boolean;
+    courseId?: number
+    quizId?: number
+    startDate?: string
+    endDate?: string
+    includeQuestionAnalysis?: boolean
   }): Promise<QuizPerformanceAnalytics> {
-    const response = await axiosPrivate.get(`${this.baseURL}/analytics/quizzes/performance`, { params })
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/analytics/quizzes/performance`,
+      { params }
+    )
     return response.data.data
   }
 
@@ -2137,14 +2299,17 @@ class LMSService {
    * Get assignment management analytics
    */
   async getAssignmentManagementAnalytics(params?: {
-    role?: string;
-    department?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-    includeOverdue?: boolean;
+    role?: string
+    department?: string
+    status?: string
+    startDate?: string
+    endDate?: string
+    includeOverdue?: boolean
   }): Promise<AssignmentManagementAnalytics> {
-    const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/management`, { params })
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/analytics/assignments/management`,
+      { params }
+    )
     return response.data.data
   }
 
@@ -2152,13 +2317,16 @@ class LMSService {
    * Get mandatory training status
    */
   async getMandatoryTrainingStatus(params?: {
-    role?: string;
-    userId?: number;
-    includeCompleted?: boolean;
-    sortBy?: string;
-    sortOrder?: string;
+    role?: string
+    userId?: number
+    includeCompleted?: boolean
+    sortBy?: string
+    sortOrder?: string
   }): Promise<MandatoryTrainingStatusResponse> {
-    const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/mandatory`, { params })
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/analytics/assignments/mandatory`,
+      { params }
+    )
     return response.data.data
   }
 
@@ -2166,13 +2334,16 @@ class LMSService {
    * Get mandatory training analytics with enhanced tracking
    */
   async getMandatoryTrainingAnalytics(params?: {
-    courseId?: number;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-    includeEscalation?: boolean;
+    courseId?: number
+    status?: string
+    startDate?: string
+    endDate?: string
+    includeEscalation?: boolean
   }): Promise<MandatoryTrainingAnalytics> {
-    const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/mandatory-training`, { params })
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/analytics/assignments/mandatory-training`,
+      { params }
+    )
     return response.data.data
   }
 
@@ -2180,17 +2351,24 @@ class LMSService {
    * Trigger manual reminders for assignments
    */
   async triggerManualReminders(data: {
-    assignmentIds: number[];
-    customMessage?: string;
+    assignmentIds: number[]
+    customMessage?: string
   }): Promise<ManualReminderResult> {
-    const response = await axiosPrivate.post(`${this.baseURL}/analytics/reminders/trigger-manual`, data)
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/analytics/reminders/trigger-manual`,
+      data
+    )
     return response.data.data
   }
 
   /**
    * Override the completion date of a course for a single user (admin/compliance)
    */
-  async setCourseCompletionDate(userId: number, courseId: number, completedAt: string): Promise<CourseCompletionOverride> {
+  async setCourseCompletionDate(
+    userId: number,
+    courseId: number,
+    completedAt: string
+  ): Promise<CourseCompletionOverride> {
     const response = await axiosPrivate.put(
       `${this.baseURL}/progress/users/${userId}/courses/${courseId}/completed-at`,
       { completedAt }
@@ -2230,7 +2408,10 @@ class LMSService {
   /**
    * Reset per-user assignment dates so the user inherits the group values
    */
-  async clearUserAssignmentDates(userId: number, courseId: number): Promise<void> {
+  async clearUserAssignmentDates(
+    userId: number,
+    courseId: number
+  ): Promise<void> {
     await axiosPrivate.delete(
       `${this.baseURL}/assignments/user-dates/${userId}/courses/${courseId}`
     )
@@ -2263,7 +2444,10 @@ class LMSService {
   /**
    * Reset a user's progress for a course (admin). Keeps issued certificates.
    */
-  async resetUserCourseProgress(userId: number, courseId: number): Promise<void> {
+  async resetUserCourseProgress(
+    userId: number,
+    courseId: number
+  ): Promise<void> {
     await axiosPrivate.delete(
       `${this.baseURL}/progress/users/${userId}/courses/${courseId}/reset`
     )
@@ -2272,7 +2456,10 @@ class LMSService {
   /**
    * Admin review of another user's course progress (lessons + quizzes with answers).
    */
-  async getCourseReviewForAdmin(userId: number, courseId: number): Promise<CourseReviewResponse> {
+  async getCourseReviewForAdmin(
+    userId: number,
+    courseId: number
+  ): Promise<CourseReviewResponse> {
     const response = await axiosPrivate.get(
       `${this.baseURL}/progress/admin/users/${userId}/courses/${courseId}/review`
     )
@@ -2282,8 +2469,14 @@ class LMSService {
   /**
    * Search issued certificates (admin). Includes hidden-by-reset ones.
    */
-  async searchAdminCertificates(params: { q?: string; courseId?: number }): Promise<AdminCertificateSearchResult[]> {
-    const response = await axiosPrivate.get(`${this.baseURL}/certificates/admin/search`, { params })
+  async searchAdminCertificates(params: {
+    q?: string
+    courseId?: number
+  }): Promise<AdminCertificateSearchResult[]> {
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/certificates/admin/search`,
+      { params }
+    )
     return response.data?.data || []
   }
 
@@ -2295,25 +2488,28 @@ class LMSService {
    * Get user notifications with filtering and pagination
    */
   async getNotifications(params?: {
-    limit?: number;
-    severity?: string;
-    unreadOnly?: boolean;
-    type?: string;
+    limit?: number
+    severity?: string
+    unreadOnly?: boolean
+    type?: string
   }): Promise<{
-    notifications: UiNotification[];
+    notifications: UiNotification[]
     summary: {
-      total: number;
-      unread: number;
-      actionRequired: number;
-    };
+      total: number
+      unread: number
+      actionRequired: number
+    }
   }> {
-    const response = await axiosPrivate.get(`${this.baseURL}/notifications`, { params })
+    const response = await axiosPrivate.get(`${this.baseURL}/notifications`, {
+      params
+    })
     const payload = response.data?.data || {}
     const notifications = Array.isArray(payload.notifications)
       ? payload.notifications.map(normalizeUiNotification)
       : []
     const unread = Number(
-      payload.unreadCount ?? notifications.filter((item: UiNotification) => !item.read).length
+      payload.unreadCount ??
+        notifications.filter((item: UiNotification) => !item.read).length
     )
 
     return {
@@ -2354,14 +2550,17 @@ class LMSService {
    * Create a new notification (for testing or manual creation)
    */
   async createNotification(data: {
-    title: string;
-    message: string;
-    severity: 'critical' | 'warning' | 'info' | 'system';
-    actionUrl?: string;
-    actionLabel?: string;
-    metadata?: Record<string, unknown>;
+    title: string
+    message: string
+    severity: 'critical' | 'warning' | 'info' | 'system'
+    actionUrl?: string
+    actionLabel?: string
+    metadata?: Record<string, unknown>
   }): Promise<LmsNotificationRecord> {
-    const response = await axiosPrivate.post(`${this.baseURL}/notifications`, data)
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/notifications`,
+      data
+    )
     return response.data
   }
 
@@ -2376,11 +2575,14 @@ class LMSService {
    * Get system alerts
    */
   async getSystemAlerts(params?: {
-    resolved?: boolean;
-    severity?: string;
-    type?: string;
+    resolved?: boolean
+    severity?: string
+    type?: string
   }): Promise<LmsNotificationRecord[]> {
-    const response = await axiosPrivate.get(`${this.baseURL}/notifications/system-alerts`, { params })
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/notifications/system-alerts`,
+      { params }
+    )
     return response.data.alerts || response.data
   }
 
@@ -2388,12 +2590,15 @@ class LMSService {
    * Get training alerts
    */
   async getTrainingAlerts(params?: {
-    type?: string;
-    severity?: string;
-    userId?: number;
-    courseId?: number;
+    type?: string
+    severity?: string
+    userId?: number
+    courseId?: number
   }): Promise<LmsNotificationRecord[]> {
-    const response = await axiosPrivate.get(`${this.baseURL}/notifications/training-alerts`, { params })
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/notifications/training-alerts`,
+      { params }
+    )
     return response.data.alerts || response.data
   }
 
@@ -2401,7 +2606,9 @@ class LMSService {
    * Resolve a system alert
    */
   async resolveSystemAlert(alertId: string): Promise<void> {
-    await axiosPrivate.patch(`${this.baseURL}/notifications/system-alerts/${alertId}/resolve`)
+    await axiosPrivate.patch(
+      `${this.baseURL}/notifications/system-alerts/${alertId}/resolve`
+    )
   }
 
   // ===========================
@@ -2418,12 +2625,16 @@ class LMSService {
     const formData = new FormData()
     formData.append('video', file)
 
-    const response = await axiosPrivate.post(`${this.baseURL}/uploads/videos`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      onUploadProgress: onProgress
-    })
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/uploads/videos`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: onProgress
+      }
+    )
 
     return response.data
   }
@@ -2474,12 +2685,16 @@ class LMSService {
     const formData = new FormData()
     formData.append('image', file)
 
-    const response = await axiosPrivate.post(`${this.baseURL}/uploads/image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      onUploadProgress: onProgress
-    })
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/uploads/image`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: onProgress
+      }
+    )
 
     return response.data
   }
@@ -2494,12 +2709,16 @@ class LMSService {
     const formData = new FormData()
     formData.append('document', file)
 
-    const response = await axiosPrivate.post(`${this.baseURL}/uploads/document`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      onUploadProgress: onProgress
-    })
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/uploads/document`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: onProgress
+      }
+    )
 
     return response.data
   }
@@ -2510,7 +2729,8 @@ class LMSService {
 
   async getTrainingPlans(): Promise<TrainingPlanSummary[]> {
     const response = await axiosPrivate.get(`${this.baseURL}/plans`)
-    return this.unwrapResponse<{ plans: TrainingPlanSummary[] }>(response.data).plans
+    return this.unwrapResponse<{ plans: TrainingPlanSummary[] }>(response.data)
+      .plans
   }
 
   async getTrainingPlan(id: number): Promise<TrainingPlanDetail> {
@@ -2518,16 +2738,26 @@ class LMSService {
     return this.unwrapResponse<TrainingPlanDetail>(response.data)
   }
 
-  async createTrainingPlan(data: SaveTrainingPlanRequest): Promise<{ plan: TrainingPlanDetail; warnings: PlanWarning[] }> {
+  async createTrainingPlan(
+    data: SaveTrainingPlanRequest
+  ): Promise<{ plan: TrainingPlanDetail; warnings: PlanWarning[] }> {
     const response = await axiosPrivate.post(`${this.baseURL}/plans`, data)
     return this.unwrapResponse(response.data)
   }
 
   /** Con dryRun devuelve solo el impacto sobre las asignaciones (HU-4). */
-  async updateTrainingPlan(id: number, data: SaveTrainingPlanRequest, dryRun = false): Promise<UpdateTrainingPlanResult> {
-    const response = await axiosPrivate.put(`${this.baseURL}/plans/${id}`, data, {
-      params: dryRun ? { dryRun: true } : undefined
-    })
+  async updateTrainingPlan(
+    id: number,
+    data: SaveTrainingPlanRequest,
+    dryRun = false
+  ): Promise<UpdateTrainingPlanResult> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/plans/${id}`,
+      data,
+      {
+        params: dryRun ? { dryRun: true } : undefined
+      }
+    )
     return this.unwrapResponse<UpdateTrainingPlanResult>(response.data)
   }
 
@@ -2537,30 +2767,55 @@ class LMSService {
     })
   }
 
-  async previewPlanAssignment(id: number, data: PlanAssignmentInput): Promise<PlanAssignmentPreview> {
-    const response = await axiosPrivate.post(`${this.baseURL}/plans/${id}/assign/preview`, data)
+  async previewPlanAssignment(
+    id: number,
+    data: PlanAssignmentInput
+  ): Promise<PlanAssignmentPreview> {
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/plans/${id}/assign/preview`,
+      data
+    )
     return this.unwrapResponse<PlanAssignmentPreview>(response.data)
   }
 
-  async assignTrainingPlan(id: number, data: PlanAssignmentInput): Promise<PlanAssignmentResult> {
-    const response = await axiosPrivate.post(`${this.baseURL}/plans/${id}/assign`, data)
+  async assignTrainingPlan(
+    id: number,
+    data: PlanAssignmentInput
+  ): Promise<PlanAssignmentResult> {
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/plans/${id}/assign`,
+      data
+    )
     return this.unwrapResponse<PlanAssignmentResult>(response.data)
   }
 
   async getPlanAssignments(id: number): Promise<PlanAssignmentRow[]> {
-    const response = await axiosPrivate.get(`${this.baseURL}/plans/${id}/assignments`)
-    return this.unwrapResponse<{ assignments: PlanAssignmentRow[] }>(response.data).assignments
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/plans/${id}/assignments`
+    )
+    return this.unwrapResponse<{ assignments: PlanAssignmentRow[] }>(
+      response.data
+    ).assignments
   }
 
   async unassignTrainingPlan(planAssignmentId: number): Promise<void> {
-    await axiosPrivate.delete(`${this.baseURL}/plans/assignments/${planAssignmentId}`)
+    await axiosPrivate.delete(
+      `${this.baseURL}/plans/assignments/${planAssignmentId}`
+    )
   }
 
   /** Unifica los destinos de usuarios con el mismo plazo; con dryRun solo los lista. */
-  async mergePlanAssignments(planId: number, dryRun = false): Promise<PlanMergeResult> {
-    const response = await axiosPrivate.post(`${this.baseURL}/plans/${planId}/merge-assignments`, null, {
-      params: dryRun ? { dryRun: true } : undefined
-    })
+  async mergePlanAssignments(
+    planId: number,
+    dryRun = false
+  ): Promise<PlanMergeResult> {
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/plans/${planId}/merge-assignments`,
+      null,
+      {
+        params: dryRun ? { dryRun: true } : undefined
+      }
+    )
     return this.unwrapResponse<PlanMergeResult>(response.data)
   }
 
@@ -2568,21 +2823,36 @@ class LMSService {
   async updatePlanAssignmentUsers(
     planAssignmentId: number,
     data: { user_ids: number[]; send_notification?: boolean }
-  ): Promise<{ added_user_ids: number[]; removed_user_ids: number[]; notifications_sent: number }> {
-    const response = await axiosPrivate.put(`${this.baseURL}/plans/assignments/${planAssignmentId}/users`, data)
+  ): Promise<{
+    added_user_ids: number[]
+    removed_user_ids: number[]
+    notifications_sent: number
+  }> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/plans/assignments/${planAssignmentId}/users`,
+      data
+    )
     return this.unwrapResponse(response.data)
   }
 
   /** HU-7: por defecto solo cursos obligatorios. */
-  async getPlanProgress(id: number, mandatoryOnly = true): Promise<PlanProgressResponse> {
-    const response = await axiosPrivate.get(`${this.baseURL}/plans/${id}/progress`, {
-      params: mandatoryOnly ? undefined : { mandatoryOnly: false }
-    })
+  async getPlanProgress(
+    id: number,
+    mandatoryOnly = true
+  ): Promise<PlanProgressResponse> {
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/plans/${id}/progress`,
+      {
+        params: mandatoryOnly ? undefined : { mandatoryOnly: false }
+      }
+    )
     return this.unwrapResponse<PlanProgressResponse>(response.data)
   }
 
   /** Empleados internos activos (selector de destino por usuario). */
-  async getInternalUsers(): Promise<Array<{ id: number; name: string; email: string }>> {
+  async getInternalUsers(): Promise<
+    Array<{ id: number; name: string; email: string }>
+  > {
     const response = await axiosPrivate.get(`${this.baseURL}/users`, {
       params: { userType: 'internal', active: true, limit: 1000 }
     })

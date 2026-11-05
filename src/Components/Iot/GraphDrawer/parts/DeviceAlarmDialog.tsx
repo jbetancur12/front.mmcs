@@ -169,7 +169,10 @@ const DeviceAlarmDialog: React.FC<DeviceAlarmDialogProps> = ({
       invalidateQueries()
       onClose()
     } catch (error: unknown) {
-      notify.error('Error', getApiErrorReason(error) ?? 'Error al crear la alarma')
+      notify.error(
+        'Error',
+        getApiErrorReason(error) ?? 'Error al crear la alarma'
+      )
     }
   }
 
@@ -183,7 +186,10 @@ const DeviceAlarmDialog: React.FC<DeviceAlarmDialogProps> = ({
       invalidateQueries()
       onClose()
     } catch (error: unknown) {
-      notify.error('Error', getApiErrorReason(error) ?? 'Error al actualizar la alarma')
+      notify.error(
+        'Error',
+        getApiErrorReason(error) ?? 'Error al actualizar la alarma'
+      )
     }
   }
 

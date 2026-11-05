@@ -82,7 +82,9 @@ export const useToggleCustomerModule = (
                       ...module.customerModules,
                       isActive,
                       updatedAt: new Date().toISOString(),
-                      updater: updaterName ? { id: 0, nombre: updaterName } : null
+                      updater: updaterName
+                        ? { id: 0, nombre: updaterName }
+                        : null
                     }
                   }
                 : module

@@ -9,12 +9,8 @@ import { logger } from 'src/utils/logger'
  * del paso a react-query.
  */
 export const useDataSheetActions = () => {
-  const {
-    updateDataSheet,
-    deleteDataSheet,
-    uploadImage,
-    uploadInvoice
-  } = useDataSheetMutations()
+  const { updateDataSheet, deleteDataSheet, uploadImage, uploadInvoice } =
+    useDataSheetMutations()
   const downloadInvoice = useDownloadInvoice()
 
   const saveDataSheet = async (

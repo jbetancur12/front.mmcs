@@ -1,14 +1,5 @@
-import {
-  Paper,
-  Typography,
-  Box,
-  TextField,
-  Chip
-} from '@mui/material'
-import {
-  Schedule,
-  CalendarToday
-} from '@mui/icons-material'
+import { Paper, Typography, Box, TextField, Chip } from '@mui/material'
+import { Schedule, CalendarToday } from '@mui/icons-material'
 import {
   MaintenanceTicket,
   MaintenanceStatus
@@ -22,13 +13,11 @@ interface MaintenanceTicketScheduleCardProps {
 }
 
 /** Programación del servicio. */
-const MaintenanceTicketScheduleCard = ({ ticket, details }: MaintenanceTicketScheduleCardProps) => {
-  const {
-    editMode,
-    editData,
-    setEditData,
-    editErrors
-  } = details
+const MaintenanceTicketScheduleCard = ({
+  ticket,
+  details
+}: MaintenanceTicketScheduleCardProps) => {
+  const { editMode, editData, setEditData, editErrors } = details
 
   return (
     <>
@@ -53,8 +42,7 @@ const MaintenanceTicketScheduleCard = ({ ticket, details }: MaintenanceTicketSch
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              background:
-                'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+              background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -83,9 +71,7 @@ const MaintenanceTicketScheduleCard = ({ ticket, details }: MaintenanceTicketSch
             type='datetime-local'
             value={
               editData.scheduledDate
-                ? new Date(editData.scheduledDate)
-                    .toISOString()
-                    .slice(0, 16)
+                ? new Date(editData.scheduledDate).toISOString().slice(0, 16)
                 : ''
             }
             onChange={(e) =>
@@ -98,8 +84,7 @@ const MaintenanceTicketScheduleCard = ({ ticket, details }: MaintenanceTicketSch
             }
             InputLabelProps={{ shrink: true }}
             helperText={
-              editErrors.scheduledDate ||
-              'Seleccione fecha y hora del servicio'
+              editErrors.scheduledDate || 'Seleccione fecha y hora del servicio'
             }
             error={!!editErrors.scheduledDate}
             aria-label='Seleccionar fecha y hora programada del servicio'

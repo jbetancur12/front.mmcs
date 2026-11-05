@@ -181,7 +181,8 @@ export const hasActiveFilters = (tableState: TableStateLike): boolean => {
   } = tableState
 
   // Check if there are column filters
-  const hasColumnFilters = Array.isArray(columnFilters) && columnFilters.length > 0
+  const hasColumnFilters =
+    Array.isArray(columnFilters) && columnFilters.length > 0
 
   // Check if there's active sorting
   const hasSorting = Array.isArray(sorting) && sorting.length > 0
@@ -238,7 +239,9 @@ export const getFilterSummary = (tableState: TableStateLike): string[] => {
   if (Array.isArray(columnFilters) && columnFilters.length > 0) {
     columnFilters.forEach((filter: MRT_ColumnFiltersState[number]) => {
       if (filter.id && filter.value) {
-        const value = Array.isArray(filter.value) ? filter.value.join(', ') : String(filter.value)
+        const value = Array.isArray(filter.value)
+          ? filter.value.join(', ')
+          : String(filter.value)
         summary.push(`${filter.id}: ${value}`)
       }
     })
@@ -265,7 +268,9 @@ export const getFilterSummary = (tableState: TableStateLike): string[] => {
 /**
  * Reset table state to default values
  */
-export const getDefaultTableState = (config: ModuleTableConfig): Partial<TableState> => {
+export const getDefaultTableState = (
+  config: ModuleTableConfig
+): Partial<TableState> => {
   return {
     columnFilters: [],
     sorting: [],

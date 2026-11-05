@@ -80,7 +80,10 @@ import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcut
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
-import type { CompletionCost, CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
+import type {
+  CompletionCost,
+  CompletionPhotoInput
+} from '../../Components/Maintenance/CompletionCostsDialog'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -402,8 +405,7 @@ const MaintenanceDashboard: React.FC = () => {
     } catch (error: unknown) {
       logger.error('Error updating ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al actualizar el ticket'
+        getApiErrorReason(error) || 'Error al actualizar el ticket'
       showToast(errorMessage, 'error')
     }
   }
@@ -505,8 +507,7 @@ const MaintenanceDashboard: React.FC = () => {
     } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al completar el ticket'
+        getApiErrorReason(error) || 'Error al completar el ticket'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -546,8 +547,7 @@ const MaintenanceDashboard: React.FC = () => {
     } catch (error: unknown) {
       logger.error('Error saving technical report:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al guardar el reporte técnico'
+        getApiErrorReason(error) || 'Error al guardar el reporte técnico'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -585,8 +585,7 @@ const MaintenanceDashboard: React.FC = () => {
     } catch (error: unknown) {
       logger.error('Error deleting ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al eliminar el ticket'
+        getApiErrorReason(error) || 'Error al eliminar el ticket'
       showToast(errorMessage, 'error')
     }
   }
@@ -605,12 +604,18 @@ const MaintenanceDashboard: React.FC = () => {
         actions={
           <Box display='flex' gap={1} flexWrap='wrap' alignItems='center'>
             <Tooltip title='Actualizar datos'>
-              <IconButton onClick={handleRefresh} aria-label='Actualizar datos del dashboard'>
+              <IconButton
+                onClick={handleRefresh}
+                aria-label='Actualizar datos del dashboard'
+              >
                 <Refresh />
               </IconButton>
             </Tooltip>
             <Tooltip title='Atajos de teclado (Shift + ?)'>
-              <IconButton onClick={() => setShortcutsHelpOpen(true)} aria-label='Mostrar atajos de teclado'>
+              <IconButton
+                onClick={() => setShortcutsHelpOpen(true)}
+                aria-label='Mostrar atajos de teclado'
+              >
                 <Help />
               </IconButton>
             </Tooltip>
@@ -621,7 +626,11 @@ const MaintenanceDashboard: React.FC = () => {
               aria-label={showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
               aria-expanded={showFilters}
               aria-controls='maintenance-filters-section'
-              sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               {isMobile ? <FilterList /> : 'Filtros'}
             </Button>
@@ -629,7 +638,11 @@ const MaintenanceDashboard: React.FC = () => {
               variant='outlined'
               startIcon={!isMobile && <Assessment />}
               href='/maintenance/analytics'
-              sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               {isMobile ? <Assessment /> : 'Analíticas'}
             </Button>
@@ -638,7 +651,11 @@ const MaintenanceDashboard: React.FC = () => {
                 variant='contained'
                 startIcon={!isMobile && <Add />}
                 href='/maintenance/report'
-                sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+                sx={{
+                  bgcolor: '#00BFA5',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#00ACC1' }
+                }}
               >
                 {isMobile ? <Add /> : 'Nueva Solicitud'}
               </Button>
@@ -648,24 +665,53 @@ const MaintenanceDashboard: React.FC = () => {
       />
 
       {/* Stats Cards */}
-      <Grid container spacing={3} mb={3} role='region' aria-label='Estadísticas del dashboard'>
+      <Grid
+        container
+        spacing={3}
+        mb={3}
+        role='region'
+        aria-label='Estadísticas del dashboard'
+      >
         {statsLoading ? (
           <>
-            <Grid item xs={12}><StatCardSkeleton /></Grid>
+            <Grid item xs={12}>
+              <StatCardSkeleton />
+            </Grid>
           </>
         ) : (
           <>
             <Grid item xs={6} md={3}>
-              <LmsStatCard label='Total Tickets' value={stats?.metrics?.totalTickets || 0} icon={<Assignment />} tone='teal' />
+              <LmsStatCard
+                label='Total Tickets'
+                value={stats?.metrics?.totalTickets || 0}
+                icon={<Assignment />}
+                tone='teal'
+              />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard label='Pendientes' value={stats?.metrics?.pendingTickets || 0} icon={<Build />} tone='orange' />
+              <LmsStatCard
+                label='Pendientes'
+                value={stats?.metrics?.pendingTickets || 0}
+                icon={<Build />}
+                tone='orange'
+              />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard label='Completados' value={stats?.metrics?.completedTickets || 0} icon={<CheckCircle />} tone='green' />
+              <LmsStatCard
+                label='Completados'
+                value={stats?.metrics?.completedTickets || 0}
+                icon={<CheckCircle />}
+                tone='green'
+              />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard label='Tiempo Promedio' value={avgResolutionTimeDisplay} caption='Promedio de cierre' icon={<TrendingUp />} tone='blue' />
+              <LmsStatCard
+                label='Tiempo Promedio'
+                value={avgResolutionTimeDisplay}
+                caption='Promedio de cierre'
+                icon={<TrendingUp />}
+                tone='blue'
+              />
             </Grid>
           </>
         )}
@@ -1565,7 +1611,6 @@ const MaintenanceDashboard: React.FC = () => {
           updateTechnicianMutation.isLoading
         }
       />
-
 
       {/* Keyboard Shortcuts Help Modal */}
       <KeyboardShortcutsHelp

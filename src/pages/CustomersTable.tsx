@@ -147,7 +147,10 @@ const CustomersTable: React.FC = () => {
     if (!result.isConfirmed) return
 
     try {
-      busyDialog.show('Eliminando...', 'Por favor espera mientras se elimina el cliente')
+      busyDialog.show(
+        'Eliminando...',
+        'Por favor espera mientras se elimina el cliente'
+      )
 
       const response = await deleteCustomer.mutateAsync(customer.id as number)
 

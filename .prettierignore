@@ -2,3 +2,10 @@ node_modules
 public
 build
 dist
+
+# Archivos generados por scripts (gen-*.mjs / update-version.js):
+# se regeneran, no se formatean a mano.
+src/constants/permissions.ts
+src/constants/permissionScreens.ts
+src/constants/passwordPolicy.ts
+src/constants/version.ts

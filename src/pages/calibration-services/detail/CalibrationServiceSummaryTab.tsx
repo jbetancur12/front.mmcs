@@ -1,11 +1,12 @@
-import {
-  Alert,
-  IconButton,
-  Stack
-} from '@mui/material'
+import { Alert, IconButton, Stack } from '@mui/material'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { CalibrationService } from '../../../types/calibrationService'
-import { ClampedText, DetailCell, DetailField, DetailSection } from '../CalibrationServiceDetailBlocks'
+import {
+  ClampedText,
+  DetailCell,
+  DetailField,
+  DetailSection
+} from '../CalibrationServiceDetailBlocks'
 import { formatDateValue } from './calibrationServiceDetailUtils'
 import {
   CalibrationServiceDetailPermissions,
@@ -27,10 +28,7 @@ const CalibrationServiceSummaryTab = ({
   data,
   dialogs
 }: CalibrationServiceSummaryTabProps) => {
-  const {
-    isTechnicalOnlyView,
-    canEditExecutionCustomer
-  } = permissions
+  const { isTechnicalOnlyView, canEditExecutionCustomer } = permissions
   const {
     approvalNotes,
     customerResponseType,
@@ -56,30 +54,30 @@ const CalibrationServiceSummaryTab = ({
     <>
       {service.status === 'cancelled' ? (
         <Alert severity='error' sx={{ mb: 2 }}>
-          Este servicio fue <strong>cancelado formalmente</strong> y
-          quedó fuera del flujo operativo.
+          Este servicio fue <strong>cancelado formalmente</strong> y quedó fuera
+          del flujo operativo.
         </Alert>
       ) : null}
       {service.isPaused ? (
         <Alert severity='warning' sx={{ mb: 2 }}>
-          El servicio se encuentra <strong>pausado</strong>. Antes de
-          continuar con ejecución, cortes, facturación o control
-          documental debes reanudarlo.
+          El servicio se encuentra <strong>pausado</strong>. Antes de continuar
+          con ejecución, cortes, facturación o control documental debes
+          reanudarlo.
         </Alert>
       ) : null}
-      {!isTechnicalOnlyView &&
-      customerResponseType === 'changes_requested' ? (
+      {!isTechnicalOnlyView && customerResponseType === 'changes_requested' ? (
         <Alert severity='warning' sx={{ mb: 2 }}>
-          El cliente pidió modificar la cotización. El servicio volvió
-          a edición para ajustar la propuesta y reenviarla sin perder
-          la trazabilidad.
+          El cliente pidió modificar la cotización. El servicio volvió a edición
+          para ajustar la propuesta y reenviarla sin perder la trazabilidad.
         </Alert>
       ) : null}
       <DetailSection title='Cliente y contacto'>
         {!isTechnicalOnlyView ? (
           <>
             <DetailCell>
-              <DetailField label='Cliente de la oferta'>{commercialCustomerName}</DetailField>
+              <DetailField label='Cliente de la oferta'>
+                {commercialCustomerName}
+              </DetailField>
             </DetailCell>
             <DetailCell>
               <Stack direction='row' alignItems='flex-start' spacing={1}>
@@ -107,50 +105,72 @@ const CalibrationServiceSummaryTab = ({
             {hasDifferentExecutionCustomer ? (
               <>
                 <DetailCell>
-                  <DetailField label='Cliente de ejecución'>{executionCustomerName}</DetailField>
+                  <DetailField label='Cliente de ejecución'>
+                    {executionCustomerName}
+                  </DetailField>
                 </DetailCell>
                 <DetailCell>
-                  <DetailField label='Sede o referencia de ejecución'>{executionSiteName}</DetailField>
+                  <DetailField label='Sede o referencia de ejecución'>
+                    {executionSiteName}
+                  </DetailField>
                 </DetailCell>
               </>
             ) : null}
           </>
         ) : null}
         <DetailCell>
-          <DetailField label='Contacto'>{service.contactName || 'Sin contacto'}</DetailField>
-        </DetailCell>
-        <DetailCell>
-          <DetailField label='Sede'>
-            {service.customerSite || service.executionSiteName || 'Sin sede definida'}
+          <DetailField label='Contacto'>
+            {service.contactName || 'Sin contacto'}
           </DetailField>
         </DetailCell>
         <DetailCell>
-          <DetailField label='Correo'>{service.contactEmail || 'Sin registrar'}</DetailField>
+          <DetailField label='Sede'>
+            {service.customerSite ||
+              service.executionSiteName ||
+              'Sin sede definida'}
+          </DetailField>
         </DetailCell>
         <DetailCell>
-          <DetailField label='Teléfono'>{service.contactPhone || 'Sin registrar'}</DetailField>
+          <DetailField label='Correo'>
+            {service.contactEmail || 'Sin registrar'}
+          </DetailField>
+        </DetailCell>
+        <DetailCell>
+          <DetailField label='Teléfono'>
+            {service.contactPhone || 'Sin registrar'}
+          </DetailField>
         </DetailCell>
       </DetailSection>
 
       <DetailSection title='Solicitud'>
         {!isTechnicalOnlyView ? (
           <DetailCell>
-            <DetailField label='Canal de solicitud'>{service.requestChannel || 'Sin definir'}</DetailField>
+            <DetailField label='Canal de solicitud'>
+              {service.requestChannel || 'Sin definir'}
+            </DetailField>
           </DetailCell>
         ) : null}
         <DetailCell>
-          <DetailField label='Fecha de creación'>{formatDateValue(service.createdAt)}</DetailField>
+          <DetailField label='Fecha de creación'>
+            {formatDateValue(service.createdAt)}
+          </DetailField>
         </DetailCell>
         {!isTechnicalOnlyView ? (
           <DetailCell>
-            <DetailField label='Forma de pago'>{service.paymentMethod || 'Sin definir'}</DetailField>
+            <DetailField label='Forma de pago'>
+              {service.paymentMethod || 'Sin definir'}
+            </DetailField>
           </DetailCell>
         ) : null}
         <DetailCell>
-          <DetailField label='Código ODS'>{service.odsCode || 'ODS pendiente'}</DetailField>
+          <DetailField label='Código ODS'>
+            {service.odsCode || 'ODS pendiente'}
+          </DetailField>
         </DetailCell>
         <DetailCell>
-          <DetailField label='Fecha de emisión de la ODS'>{formatDateValue(service.odsGeneratedAt)}</DetailField>
+          <DetailField label='Fecha de emisión de la ODS'>
+            {formatDateValue(service.odsGeneratedAt)}
+          </DetailField>
         </DetailCell>
       </DetailSection>
 
@@ -159,27 +179,40 @@ const CalibrationServiceSummaryTab = ({
         customerResponseType === 'changes_requested') ? (
         <DetailSection title='Respuesta del cliente'>
           <DetailCell>
-            <DetailField label='Medio de respuesta'>{service.approvalChannel || 'Sin registrar'}</DetailField>
+            <DetailField label='Medio de respuesta'>
+              {service.approvalChannel || 'Sin registrar'}
+            </DetailField>
           </DetailCell>
           <DetailCell>
-            <DetailField label='Contacto de referencia'>{service.approvalReference || 'Sin registrar'}</DetailField>
+            <DetailField label='Contacto de referencia'>
+              {service.approvalReference || 'Sin registrar'}
+            </DetailField>
           </DetailCell>
           <DetailCell>
-            <DetailField label='Fecha'>{formatDateValue(service.approvedAt || service.rejectedAt)}</DetailField>
+            <DetailField label='Fecha'>
+              {formatDateValue(service.approvedAt || service.rejectedAt)}
+            </DetailField>
           </DetailCell>
           {service.rejectionReason ? (
             <DetailCell full>
-              <DetailField label='Motivo de rechazo'>{service.rejectionReason}</DetailField>
+              <DetailField label='Motivo de rechazo'>
+                {service.rejectionReason}
+              </DetailField>
             </DetailCell>
           ) : null}
-          {customerResponseType === 'changes_requested' && latestChangeRequestReason ? (
+          {customerResponseType === 'changes_requested' &&
+          latestChangeRequestReason ? (
             <DetailCell full>
-              <DetailField label='Solicitud de modificación'>{latestChangeRequestReason}</DetailField>
+              <DetailField label='Solicitud de modificación'>
+                {latestChangeRequestReason}
+              </DetailField>
             </DetailCell>
           ) : null}
           {approvalNotes ? (
             <DetailCell full>
-              <DetailField label='Observación de la respuesta'>{approvalNotes}</DetailField>
+              <DetailField label='Observación de la respuesta'>
+                {approvalNotes}
+              </DetailField>
             </DetailCell>
           ) : null}
         </DetailSection>
@@ -197,18 +230,28 @@ const CalibrationServiceSummaryTab = ({
         <DetailSection title='Datos de la ODS'>
           <DetailCell>
             <DetailField label='Programada para'>
-              {formatDateValue(typeof odsDetails?.scheduledFor === 'string' ? odsDetails.scheduledFor : null)}
+              {formatDateValue(
+                typeof odsDetails?.scheduledFor === 'string'
+                  ? odsDetails.scheduledFor
+                  : null
+              )}
             </DetailField>
           </DetailCell>
           <DetailCell>
-            <DetailField label='Franja'>{odsScheduleWindow || 'Sin registrar'}</DetailField>
+            <DetailField label='Franja'>
+              {odsScheduleWindow || 'Sin registrar'}
+            </DetailField>
           </DetailCell>
           <DetailCell>
-            <DetailField label='Firmante'>{odsSignerName || 'Sin registrar'}</DetailField>
+            <DetailField label='Firmante'>
+              {odsSignerName || 'Sin registrar'}
+            </DetailField>
           </DetailCell>
           <DetailCell>
             <DetailField label='Referencia externa'>
-              {typeof odsDetails?.externalReference === 'string' ? odsDetails.externalReference : 'Sin registrar'}
+              {typeof odsDetails?.externalReference === 'string'
+                ? odsDetails.externalReference
+                : 'Sin registrar'}
             </DetailField>
           </DetailCell>
           {odsCustomerAgreements ? (

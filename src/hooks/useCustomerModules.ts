@@ -15,7 +15,11 @@ export const useCustomerModulesMatrix = (enabled = true) =>
   useQuery<CustomerModulesMatrix>(
     customerModulesKeys.matrix,
     async () =>
-      (await axiosPrivate.get<CustomerModulesMatrix>('/customers/modules-matrix')).data,
+      (
+        await axiosPrivate.get<CustomerModulesMatrix>(
+          '/customers/modules-matrix'
+        )
+      ).data,
     { enabled, staleTime: 0, refetchOnWindowFocus: true }
   )
 
@@ -32,31 +36,41 @@ export const useSetCustomersModule = () => {
     { previous?: CustomerModulesMatrix }
   >(
     async (input) =>
-      (await axiosPrivate.put<BulkCustomerModulesResult>('/customers/modules/bulk', input)).data,
+      (
+        await axiosPrivate.put<BulkCustomerModulesResult>(
+          '/customers/modules/bulk',
+          input
+        )
+      ).data,
     {
       onMutate: async ({ customerIds, moduleId, isActive }) => {
         await queryClient.cancelQueries(customerModulesKeys.matrix)
-        const previous = queryClient.getQueryData<CustomerModulesMatrix>(customerModulesKeys.matrix)
+        const previous = queryClient.getQueryData<CustomerModulesMatrix>(
+          customerModulesKeys.matrix
+        )
         if (previous) {
           const ids = new Set(customerIds)
-          queryClient.setQueryData<CustomerModulesMatrix>(customerModulesKeys.matrix, {
-            ...previous,
-            customers: previous.customers.map((c) =>
-              ids.has(c.id)
-                ? {
-                    ...c,
-                    modules: {
-                      ...c.modules,
-                      [moduleId]: {
-                        updatedAt: new Date().toISOString(),
-                        updatedBy: c.modules[moduleId]?.updatedBy ?? null,
-                        isActive
+          queryClient.setQueryData<CustomerModulesMatrix>(
+            customerModulesKeys.matrix,
+            {
+              ...previous,
+              customers: previous.customers.map((c) =>
+                ids.has(c.id)
+                  ? {
+                      ...c,
+                      modules: {
+                        ...c.modules,
+                        [moduleId]: {
+                          updatedAt: new Date().toISOString(),
+                          updatedBy: c.modules[moduleId]?.updatedBy ?? null,
+                          isActive
+                        }
                       }
                     }
-                  }
-                : c
-            )
-          })
+                  : c
+              )
+            }
+          )
         }
         return { previous }
       },

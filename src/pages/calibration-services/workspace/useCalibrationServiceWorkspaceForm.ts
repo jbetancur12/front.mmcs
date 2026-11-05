@@ -33,13 +33,21 @@ import { CalibrationServiceWorkspaceData } from './useCalibrationServiceWorkspac
  * Estado editable del formulario de cotización: se hidrata desde el servicio (edición)
  * o desde la plantilla de términos (nuevo), y expone los manejadores de campos e ítems.
  */
-const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceData) => {
-  const { service, isEditing, quoteTermsTemplate, isTemplateFresh, customerOptions } = data
+const useCalibrationServiceWorkspaceForm = (
+  data: CalibrationServiceWorkspaceData
+) => {
+  const {
+    service,
+    isEditing,
+    quoteTermsTemplate,
+    isTemplateFresh,
+    customerOptions
+  } = data
   const queryClient = useQueryClient()
   const [formState, setFormState] = useState<FormState>(() => {
-    const cached = queryClient.getQueryData<{ terms: CalibrationServiceQuoteTerms }>(
-      [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']
-    )
+    const cached = queryClient.getQueryData<{
+      terms: CalibrationServiceQuoteTerms
+    }>([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'])
     if (cached?.terms) {
       return {
         ...createInitialFormState(),
@@ -49,7 +57,9 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
     }
     return createInitialFormState()
   })
-  const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
+  const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(
+    null
+  )
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const templateHydratedRef = useRef(false)
@@ -67,7 +77,13 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
 
   useEffect(() => {
     // Solo la respuesta pedida en este montaje: el caché puede traer una plantilla vieja
-    if (isEditing || templateHydratedRef.current || !isTemplateFresh || !quoteTermsTemplate?.terms) return
+    if (
+      isEditing ||
+      templateHydratedRef.current ||
+      !isTemplateFresh ||
+      !quoteTermsTemplate?.terms
+    )
+      return
 
     templateHydratedRef.current = true
     setFormState((previous) => ({
@@ -80,10 +96,14 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
   }, [isEditing, isTemplateFresh, quoteTermsTemplate?.terms])
 
   const selectedCustomer =
-    customerOptions.find((customer) => customer.id === formState.customerId) || null
+    customerOptions.find((customer) => customer.id === formState.customerId) ||
+    null
   const customerSites = getCustomerSiteOptions(selectedCustomer)
 
-  const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
+  const setField = <K extends keyof FormState>(
+    field: K,
+    value: FormState[K]
+  ) => {
     setFormState((previous) => ({ ...previous, [field]: value }))
   }
 
@@ -101,7 +121,11 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
     }))
   }
 
-  const setItemField = (localId: string, field: keyof FormItem, value: string | number | null) => {
+  const setItemField = (
+    localId: string,
+    field: keyof FormItem,
+    value: string | number | null
+  ) => {
     setFormState((previous) => ({
       ...previous,
       items: previous.items.map((item) =>
@@ -110,7 +134,11 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
     }))
   }
 
-  const setItemOtherField = (localId: string, field: string, value: unknown) => {
+  const setItemOtherField = (
+    localId: string,
+    field: string,
+    value: unknown
+  ) => {
     setFormState((previous) => ({
       ...previous,
       items: previous.items.map((item) =>
@@ -151,7 +179,8 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
           notes: '',
           sortOrder: previous.items.length + index,
           otherFields: {
-            catalogPriceSource: picked.catalogPriceSource || SUGGESTED_CATALOG_PRICE_SOURCE,
+            catalogPriceSource:
+              picked.catalogPriceSource || SUGGESTED_CATALOG_PRICE_SOURCE,
             hasCalibrationPoints: false
           }
         }))
@@ -188,8 +217,7 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
               instrumentName: product?.name || candidate.instrumentName,
               intervalText: product?.intervalText || candidate.intervalText,
               serviceType: firstVariantServiceType || candidate.serviceType,
-              unitPrice:
-                selectedUnitPrice ?? candidate.unitPrice,
+              unitPrice: selectedUnitPrice ?? candidate.unitPrice,
               otherFields: {
                 ...(candidate.otherFields || {}),
                 catalogPriceSource
@@ -227,7 +255,9 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
     }))
   }
 
-  const handleCustomerChange = (customer: CalibrationServiceCustomer | null) => {
+  const handleCustomerChange = (
+    customer: CalibrationServiceCustomer | null
+  ) => {
     const firstSite = getCustomerSiteOptions(customer)[0]
 
     setFormState((previous) => ({
@@ -237,24 +267,52 @@ const useCalibrationServiceWorkspaceForm = (data: CalibrationServiceWorkspaceDat
         previous.scopeType === 'site'
           ? firstSite?.name || previous.customerSite
           : previous.customerSite,
-      contactEmail: firstSite?.contactEmail || customer?.email || previous.contactEmail || '',
-      contactPhone: firstSite?.contactPhone || customer?.telefono || previous.contactPhone || '',
+      contactEmail:
+        firstSite?.contactEmail ||
+        customer?.email ||
+        previous.contactEmail ||
+        '',
+      contactPhone:
+        firstSite?.contactPhone ||
+        customer?.telefono ||
+        previous.contactPhone ||
+        '',
       city: firstSite?.city || customer?.ciudad || previous.city || '',
-      department: firstSite?.department || customer?.departamento || previous.department || '',
-      address: firstSite?.address || customer?.direccion || previous.address || ''
+      department:
+        firstSite?.department ||
+        customer?.departamento ||
+        previous.department ||
+        '',
+      address:
+        firstSite?.address || customer?.direccion || previous.address || ''
     }))
   }
 
-  const handleCustomerSiteChange = (site: CalibrationServiceCustomerSite | null) => {
+  const handleCustomerSiteChange = (
+    site: CalibrationServiceCustomerSite | null
+  ) => {
     setFormState((previous) => ({
       ...previous,
       customerSite: site?.name || '',
       contactName: site?.contactName || previous.contactName || '',
-      contactEmail: site?.contactEmail || previous.contactEmail || selectedCustomer?.email || '',
-      contactPhone: site?.contactPhone || previous.contactPhone || selectedCustomer?.telefono || '',
+      contactEmail:
+        site?.contactEmail ||
+        previous.contactEmail ||
+        selectedCustomer?.email ||
+        '',
+      contactPhone:
+        site?.contactPhone ||
+        previous.contactPhone ||
+        selectedCustomer?.telefono ||
+        '',
       city: site?.city || previous.city || selectedCustomer?.ciudad || '',
-      department: site?.department || previous.department || selectedCustomer?.departamento || '',
-      address: site?.address || previous.address || selectedCustomer?.direccion || ''
+      department:
+        site?.department ||
+        previous.department ||
+        selectedCustomer?.departamento ||
+        '',
+      address:
+        site?.address || previous.address || selectedCustomer?.direccion || ''
     }))
   }
 

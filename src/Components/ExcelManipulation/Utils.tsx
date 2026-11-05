@@ -9,7 +9,12 @@ export {
 /** Estilos compartidos de los selectores con búsqueda. */
 export const styles = (error: boolean): StylesConfig => ({
   container: (provided) =>
-    ({ ...provided, width: '100%', marginRight: 10, height: 50 }) as CSSObjectWithLabel,
+    ({
+      ...provided,
+      width: '100%',
+      marginRight: 10,
+      height: 50
+    }) as CSSObjectWithLabel,
   control: (provided) =>
     ({
       ...provided,

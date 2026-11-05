@@ -142,8 +142,8 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
               Respuesta de novedad de calibración
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
-              Aquí puedes aprobar, rechazar o pedir ajuste sobre la novedad reportada
-              para tu servicio.
+              Aquí puedes aprobar, rechazar o pedir ajuste sobre la novedad
+              reportada para tu servicio.
             </Typography>
           </Box>
 
@@ -155,7 +155,9 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
             <Alert severity='error'>{error}</Alert>
           ) : data ? (
             <>
-              {successMessage ? <Alert severity='success'>{successMessage}</Alert> : null}
+              {successMessage ? (
+                <Alert severity='success'>{successMessage}</Alert>
+              ) : null}
 
               <Paper variant='outlined' sx={{ p: 3, borderRadius: 3 }}>
                 <Stack spacing={1.5}>
@@ -171,7 +173,8 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Cantidad cotizada: {data.quotedQuantity} · Cantidad real:{' '}
-                    {data.actualQuantity} · Diferencia: {data.differenceQuantity}
+                    {data.actualQuantity} · Diferencia:{' '}
+                    {data.differenceQuantity}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Valor propuesto:{' '}
@@ -184,7 +187,8 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
 
               {!data.canRespond ? (
                 <Alert severity='info'>
-                  Esta novedad ya no admite una nueva respuesta desde este enlace.
+                  Esta novedad ya no admite una nueva respuesta desde este
+                  enlace.
                 </Alert>
               ) : (
                 <Box component='form' onSubmit={handleSubmit}>
@@ -210,7 +214,9 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
                       }
                     >
                       <MenuItem value='approved'>Apruebo la novedad</MenuItem>
-                      <MenuItem value='rejected'>No apruebo la novedad</MenuItem>
+                      <MenuItem value='rejected'>
+                        No apruebo la novedad
+                      </MenuItem>
                       <MenuItem value='changes_requested'>
                         Solicito ajuste o aclaración
                       </MenuItem>
@@ -224,7 +230,11 @@ const CalibrationServiceAdjustmentCustomerResponsePage = () => {
                       onChange={(event) => setNotes(event.target.value)}
                     />
                     <Stack direction='row' justifyContent='flex-end'>
-                      <Button type='submit' variant='contained' disabled={isSubmitting}>
+                      <Button
+                        type='submit'
+                        variant='contained'
+                        disabled={isSubmitting}
+                      >
                         Enviar respuesta
                       </Button>
                     </Stack>

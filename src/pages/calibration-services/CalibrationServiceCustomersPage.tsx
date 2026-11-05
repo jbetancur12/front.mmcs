@@ -69,7 +69,9 @@ const CalibrationServiceCustomersPage = () => {
   const queryClient = useQueryClient()
   const canManageCustomers = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
   const [search, setSearch] = useState('')
-  const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
+  const [customerDialogMode, setCustomerDialogMode] = useState<
+    'customer' | 'site' | null
+  >(null)
   const [isEditingCustomer, setIsEditingCustomer] = useState(false)
   const [selectedCustomer, setSelectedCustomer] =
     useState<CalibrationServiceCustomer | null>(null)
@@ -77,7 +79,9 @@ const CalibrationServiceCustomersPage = () => {
     useState<CalibrationServiceCustomerSite | null>(null)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_PAGE_SIZE)
-  const [expandedCustomers, setExpandedCustomers] = useState<Set<number>>(new Set())
+  const [expandedCustomers, setExpandedCustomers] = useState<Set<number>>(
+    new Set()
+  )
   const deferredSearch = useDeferredValue(search)
 
   useEffect(() => {
@@ -87,14 +91,17 @@ const CalibrationServiceCustomersPage = () => {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: [...customerQueryKey, page, rowsPerPage, deferredSearch],
     queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationCustomersResponse>('/customers', {
-        params: {
-          scope: 'calibration',
-          page: page + 1,
-          limit: rowsPerPage,
-          q: deferredSearch.trim() || undefined
+      const response = await axiosPrivate.get<CalibrationCustomersResponse>(
+        '/customers',
+        {
+          params: {
+            scope: 'calibration',
+            page: page + 1,
+            limit: rowsPerPage,
+            q: deferredSearch.trim() || undefined
+          }
         }
-      })
+      )
       return response.data
     },
     keepPreviousData: true,
@@ -105,19 +112,19 @@ const CalibrationServiceCustomersPage = () => {
 
   const createCustomerMutation = useMutation({
     mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
-      const response = await axiosPrivate.post<{ customer: CalibrationServiceCustomer }>(
-        '/customers',
-        {
-          ...values.customer,
-          direccion: values.customer.direccion || values.site.address || '',
-          ciudad: values.customer.ciudad || values.site.city || '',
-          departamento: values.customer.departamento || values.site.department || '',
-          email: values.customer.email || values.site.contactEmail || '',
-          telefono: values.customer.telefono || values.site.contactPhone || '',
-          pais: values.customer.pais || values.site.country || 'Colombia',
-          sites: [values.site]
-        }
-      )
+      const response = await axiosPrivate.post<{
+        customer: CalibrationServiceCustomer
+      }>('/customers', {
+        ...values.customer,
+        direccion: values.customer.direccion || values.site.address || '',
+        ciudad: values.customer.ciudad || values.site.city || '',
+        departamento:
+          values.customer.departamento || values.site.department || '',
+        email: values.customer.email || values.site.contactEmail || '',
+        telefono: values.customer.telefono || values.site.contactPhone || '',
+        pais: values.customer.pais || values.site.country || 'Colombia',
+        sites: [values.site]
+      })
       return response.data.customer
     },
     onSuccess: () => {
@@ -149,7 +156,8 @@ const CalibrationServiceCustomersPage = () => {
 
   const createCustomerSiteMutation = useMutation({
     mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
-      if (!selectedCustomer?.id) throw new Error('Selecciona un cliente antes de crear una sede.')
+      if (!selectedCustomer?.id)
+        throw new Error('Selecciona un cliente antes de crear una sede.')
       const response = await axiosPrivate.post<CalibrationServiceCustomer>(
         `/customers/${selectedCustomer.id}/sedes`,
         values.site
@@ -166,10 +174,16 @@ const CalibrationServiceCustomersPage = () => {
 
   const updateCustomerSiteMutation = useMutation({
     mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
-      if (!selectedCustomer?.id || !selectedSite) throw new Error('Selecciona una sede antes de editarla.')
+      if (!selectedCustomer?.id || !selectedSite)
+        throw new Error('Selecciona una sede antes de editarla.')
       const response = await axiosPrivate.put<CalibrationServiceCustomer>(
         `/customers/${selectedCustomer.id}/sedes`,
-        { ...values.site, siteId: selectedSite.id, oldSede: selectedSite.name, newSede: values.site.name }
+        {
+          ...values.site,
+          siteId: selectedSite.id,
+          oldSede: selectedSite.name,
+          newSede: values.site.name
+        }
       )
       return response.data
     },
@@ -183,8 +197,12 @@ const CalibrationServiceCustomersPage = () => {
   })
 
   const updateCertificateProfileMutation = useMutation({
-    mutationFn: async ({ customerId, certificateProfileEnabled }: {
-      customerId: number; certificateProfileEnabled: boolean
+    mutationFn: async ({
+      customerId,
+      certificateProfileEnabled
+    }: {
+      customerId: number
+      certificateProfileEnabled: boolean
     }) => {
       const response = await axiosPrivate.patch<CalibrationServiceCustomer>(
         `/customers/${customerId}/certificate-profile`,
@@ -194,9 +212,11 @@ const CalibrationServiceCustomersPage = () => {
     },
     onSuccess: (customer) => {
       queryClient.invalidateQueries(customerQueryKey)
-      toast.success(customer.certificateProfileEnabled
-        ? 'Cliente habilitado para certificados.'
-        : 'Cliente oculto de la vista de certificados.')
+      toast.success(
+        customer.certificateProfileEnabled
+          ? 'Cliente habilitado para certificados.'
+          : 'Cliente oculto de la vista de certificados.'
+      )
     }
   })
 
@@ -205,7 +225,12 @@ const CalibrationServiceCustomersPage = () => {
 
   if (isLoading) {
     return (
-      <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='55vh'
+      >
         <SignalLoader />
       </Box>
     )
@@ -224,11 +249,15 @@ const CalibrationServiceCustomersPage = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-
       <Button
         startIcon={<ArrowBackOutlinedIcon />}
         onClick={() => navigate('/calibration-services')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver a servicios
       </Button>
@@ -242,8 +271,16 @@ const CalibrationServiceCustomersPage = () => {
             <Button
               variant='contained'
               startIcon={<AddBusinessOutlinedIcon />}
-              onClick={() => { setIsEditingCustomer(false); setSelectedCustomer(null); setCustomerDialogMode('customer') }}
-              sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+              onClick={() => {
+                setIsEditingCustomer(false)
+                setSelectedCustomer(null)
+                setCustomerDialogMode('customer')
+              }}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
             >
               Crear cliente
             </Button>
@@ -253,20 +290,41 @@ const CalibrationServiceCustomersPage = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Total clientes' value={totalItems} icon={<GroupsOutlinedIcon />} tone='teal' />
+          <LmsStatCard
+            label='Total clientes'
+            value={totalItems}
+            icon={<GroupsOutlinedIcon />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Visibles para certificados' value={certificateEnabledCount} icon={<VisibilityOutlinedIcon />} tone='green' />
+          <LmsStatCard
+            label='Visibles para certificados'
+            value={certificateEnabledCount}
+            icon={<VisibilityOutlinedIcon />}
+            tone='green'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Solo comerciales' value={commercialOnlyCount} icon={<VisibilityOffOutlinedIcon />} tone='orange' />
+          <LmsStatCard
+            label='Solo comerciales'
+            value={commercialOnlyCount}
+            icon={<VisibilityOffOutlinedIcon />}
+            tone='orange'
+          />
         </Grid>
       </Grid>
 
       {/* ── Search bar ── */}
-      <Paper elevation={0} sx={{
-        borderRadius: '12px', mb: 2.5, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden',
-      }}>
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: '12px',
+          mb: 2.5,
+          border: '1px solid rgba(0,0,0,0.06)',
+          overflow: 'hidden'
+        }}
+      >
         <Box sx={{ p: 2 }}>
           <TextField
             fullWidth
@@ -277,12 +335,17 @@ const CalibrationServiceCustomersPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position='start'>
-                  <SearchOutlinedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                  <SearchOutlinedIcon
+                    sx={{ color: 'text.secondary', fontSize: 20 }}
+                  />
                 </InputAdornment>
               )
             }}
             sx={{
-              '& .MuiOutlinedInput-root': { borderRadius: '10px', backgroundColor: '#fff' }
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '10px',
+                backgroundColor: '#fff'
+              }
             }}
           />
         </Box>
@@ -295,67 +358,141 @@ const CalibrationServiceCustomersPage = () => {
             key={customer.id}
             elevation={0}
             sx={{
-              borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)',
+              borderRadius: '14px',
+              border: '1px solid rgba(0,0,0,0.06)',
               background: '#fff',
               overflow: 'hidden',
               transition: 'box-shadow 0.2s, border-color 0.2s',
-              '&:hover': { borderColor: 'rgba(16,185,129,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.04)' }
+              '&:hover': {
+                borderColor: 'rgba(16,185,129,0.2)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+              }
             }}
           >
             <Box sx={{ p: { xs: 2, md: 2.5 } }}>
               {/* Customer header row */}
-              <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
-                <Stack direction='row' alignItems='center' spacing={2} sx={{ minWidth: 0, flex: 1 }}>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                justifyContent='space-between'
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                spacing={2}
+              >
+                <Stack
+                  direction='row'
+                  alignItems='center'
+                  spacing={2}
+                  sx={{ minWidth: 0, flex: 1 }}
+                >
                   <Box
                     sx={{
-                      width: 40, height: 40, borderRadius: '10px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      backgroundColor: 'rgba(16,185,129,0.08)', color: '#059669', flexShrink: 0
+                      width: 40,
+                      height: 40,
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(16,185,129,0.08)',
+                      color: '#059669',
+                      flexShrink: 0
                     }}
                   >
                     <BusinessOutlinedIcon sx={{ fontSize: 20 }} />
                   </Box>
                   <Box sx={{ minWidth: 0 }}>
-                    <Stack direction='row' alignItems='center' spacing={1} flexWrap='wrap'>
-                      <Typography variant='h6' fontWeight={800} sx={{ fontSize: '1rem', lineHeight: 1.3 }} noWrap>
+                    <Stack
+                      direction='row'
+                      alignItems='center'
+                      spacing={1}
+                      flexWrap='wrap'
+                    >
+                      <Typography
+                        variant='h6'
+                        fontWeight={800}
+                        sx={{ fontSize: '1rem', lineHeight: 1.3 }}
+                        noWrap
+                      >
                         {customer.nombre}
                       </Typography>
                       <Chip
                         size='small'
-                        color={customer.certificateProfileEnabled ? 'success' : 'default'}
-                        label={customer.certificateProfileEnabled ? 'Visible en certificados' : 'Solo calibración'}
+                        color={
+                          customer.certificateProfileEnabled
+                            ? 'success'
+                            : 'default'
+                        }
+                        label={
+                          customer.certificateProfileEnabled
+                            ? 'Visible en certificados'
+                            : 'Solo calibración'
+                        }
                         sx={{
                           height: 22,
                           borderRadius: '6px',
-                          '& .MuiChip-label': { fontSize: '0.7rem', fontWeight: 600, px: 0.8 }
+                          '& .MuiChip-label': {
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            px: 0.8
+                          }
                         }}
                       />
                     </Stack>
-                    <Stack direction='row' spacing={1.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
-                      <Typography variant='caption' color='text.secondary' noWrap>
+                    <Stack
+                      direction='row'
+                      spacing={1.5}
+                      sx={{ mt: 0.5, flexWrap: 'wrap' }}
+                    >
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        noWrap
+                      >
                         NIT: {customer.identificacion || 'Sin NIT'}
                       </Typography>
-                      <Typography variant='caption' color='text.secondary' noWrap>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        noWrap
+                      >
                         {customer.email || 'Sin correo'}
                       </Typography>
-                      <Typography variant='caption' color='text.secondary' noWrap>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        noWrap
+                      >
                         {customer.telefono || 'Sin teléfono'}
                       </Typography>
                     </Stack>
-                    <Typography variant='caption' color='text.secondary' display='block' sx={{ mt: 0.25 }}>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      display='block'
+                      sx={{ mt: 0.25 }}
+                    >
                       {customer.ciudad || 'Sin ciudad'}
-                      {customer.departamento ? `, ${customer.departamento}` : ''} · {getCustomerSiteCount(customer)} sede(s)
+                      {customer.departamento
+                        ? `, ${customer.departamento}`
+                        : ''}{' '}
+                      · {getCustomerSiteCount(customer)} sede(s)
                     </Typography>
                   </Box>
                 </Stack>
 
-                <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
+                <Stack
+                  direction='row'
+                  spacing={1}
+                  alignItems='center'
+                  flexWrap='wrap'
+                >
                   <FormControlLabel
                     control={
                       <Switch
                         size='small'
                         checked={Boolean(customer.certificateProfileEnabled)}
-                        disabled={!canManageCustomers || updateCertificateProfileMutation.isLoading}
+                        disabled={
+                          !canManageCustomers ||
+                          updateCertificateProfileMutation.isLoading
+                        }
                         onChange={(event) =>
                           updateCertificateProfileMutation.mutate({
                             customerId: customer.id,
@@ -364,20 +501,46 @@ const CalibrationServiceCustomersPage = () => {
                         }
                       />
                     }
-                    label={<Typography variant='caption' fontWeight={600}>Certificados</Typography>}
+                    label={
+                      <Typography variant='caption' fontWeight={600}>
+                        Certificados
+                      </Typography>
+                    }
                     sx={{ mr: 0 }}
                   />
                   {canManageCustomers ? (
                     <Stack direction='row' spacing={1} flexWrap='wrap'>
-                      <Button size='small' variant='outlined' startIcon={<EditOutlinedIcon />}
-                        sx={{ borderRadius: '8px', textTransform: 'none', fontSize: '0.8rem' }}
-                        onClick={() => { setIsEditingCustomer(true); setSelectedCustomer(customer); setCustomerDialogMode('customer') }}
+                      <Button
+                        size='small'
+                        variant='outlined'
+                        startIcon={<EditOutlinedIcon />}
+                        sx={{
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          fontSize: '0.8rem'
+                        }}
+                        onClick={() => {
+                          setIsEditingCustomer(true)
+                          setSelectedCustomer(customer)
+                          setCustomerDialogMode('customer')
+                        }}
                       >
                         Editar cliente
                       </Button>
-                      <Button size='small' variant='outlined' startIcon={<PlaceOutlinedIcon />}
-                        sx={{ borderRadius: '8px', textTransform: 'none', fontSize: '0.8rem' }}
-                        onClick={() => { setIsEditingCustomer(false); setSelectedCustomer(customer); setCustomerDialogMode('site') }}
+                      <Button
+                        size='small'
+                        variant='outlined'
+                        startIcon={<PlaceOutlinedIcon />}
+                        sx={{
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          fontSize: '0.8rem'
+                        }}
+                        onClick={() => {
+                          setIsEditingCustomer(false)
+                          setSelectedCustomer(customer)
+                          setCustomerDialogMode('site')
+                        }}
                       >
                         Nueva sede
                       </Button>
@@ -390,8 +553,20 @@ const CalibrationServiceCustomersPage = () => {
               {customer.sites?.length ? (
                 <>
                   <Divider
-                    sx={{ my: 2, cursor: 'pointer', '&::before': { borderColor: expandedCustomers.has(customer.id) ? 'rgba(16,185,129,0.3)' : undefined },
-                    '&::after': { borderColor: expandedCustomers.has(customer.id) ? 'rgba(16,185,129,0.3)' : undefined } }}
+                    sx={{
+                      my: 2,
+                      cursor: 'pointer',
+                      '&::before': {
+                        borderColor: expandedCustomers.has(customer.id)
+                          ? 'rgba(16,185,129,0.3)'
+                          : undefined
+                      },
+                      '&::after': {
+                        borderColor: expandedCustomers.has(customer.id)
+                          ? 'rgba(16,185,129,0.3)'
+                          : undefined
+                      }
+                    }}
                     onClick={() => {
                       setExpandedCustomers((prev) => {
                         const next = new Set(prev)
@@ -401,47 +576,109 @@ const CalibrationServiceCustomersPage = () => {
                       })
                     }}
                   >
-                    <Stack direction='row' alignItems='center' spacing={0.5}
-                      sx={{ cursor: 'pointer', color: 'text.secondary', userSelect: 'none' }}
+                    <Stack
+                      direction='row'
+                      alignItems='center'
+                      spacing={0.5}
+                      sx={{
+                        cursor: 'pointer',
+                        color: 'text.secondary',
+                        userSelect: 'none'
+                      }}
                     >
-                      <Typography variant='caption' fontWeight={600} sx={{ fontSize: '0.75rem' }}>
-                        {customer.sites.length} sede{customer.sites.length !== 1 ? 's' : ''}
+                      <Typography
+                        variant='caption'
+                        fontWeight={600}
+                        sx={{ fontSize: '0.75rem' }}
+                      >
+                        {customer.sites.length} sede
+                        {customer.sites.length !== 1 ? 's' : ''}
                       </Typography>
-                      {expandedCustomers.has(customer.id) ? <ExpandLessOutlinedIcon sx={{ fontSize: 16 }} /> : <ExpandMoreOutlinedIcon sx={{ fontSize: 16 }} />}
+                      {expandedCustomers.has(customer.id) ? (
+                        <ExpandLessOutlinedIcon sx={{ fontSize: 16 }} />
+                      ) : (
+                        <ExpandMoreOutlinedIcon sx={{ fontSize: 16 }} />
+                      )}
                     </Stack>
                   </Divider>
                   <Collapse in={expandedCustomers.has(customer.id)}>
                     <Grid container spacing={1.5}>
-                    {customer.sites.map((site: CalibrationServiceCustomerSite) => (
-                      <Grid item xs={12} md={6} key={site.id || site.name}>
-                        <Box sx={{
-                          backgroundColor: '#f8fafb', borderRadius: '10px', p: 1.5,
-                          border: '1px solid', borderColor: 'rgba(0,0,0,0.05)',
-                          transition: 'background-color 0.15s',
-                          '&:hover': { backgroundColor: '#f1f5f9' }
-                        }}>
-                          <Stack direction='row' justifyContent='space-between' spacing={1} sx={{ mb: 0.5 }}>
-                            <Typography variant='body2' fontWeight={700} sx={{ fontSize: '0.85rem' }}>{site.name}</Typography>
-                            {canManageCustomers ? (
-                              <IconButton size='small' sx={{ width: 28, height: 28 }}
-                                onClick={() => { setSelectedCustomer(customer); setSelectedSite(site); setCustomerDialogMode('site') }}
+                      {customer.sites.map(
+                        (site: CalibrationServiceCustomerSite) => (
+                          <Grid item xs={12} md={6} key={site.id || site.name}>
+                            <Box
+                              sx={{
+                                backgroundColor: '#f8fafb',
+                                borderRadius: '10px',
+                                p: 1.5,
+                                border: '1px solid',
+                                borderColor: 'rgba(0,0,0,0.05)',
+                                transition: 'background-color 0.15s',
+                                '&:hover': { backgroundColor: '#f1f5f9' }
+                              }}
+                            >
+                              <Stack
+                                direction='row'
+                                justifyContent='space-between'
+                                spacing={1}
+                                sx={{ mb: 0.5 }}
                               >
-                                <EditOutlinedIcon sx={{ fontSize: 16 }} />
-                              </IconButton>
-                            ) : null}
-                          </Stack>
-                          <Typography variant='caption' color='text.secondary' display='block'>
-                            {[site.address, site.city, site.department].filter(Boolean).join(' · ') || 'Sin dirección detallada'}
-                          </Typography>
-                          {[site.contactName, site.contactEmail, site.contactPhone].some(Boolean) ? (
-                            <Typography variant='caption' color='text.secondary' display='block' sx={{ mt: 0.25 }}>
-                              Contacto: {[site.contactName, site.contactEmail, site.contactPhone].filter(Boolean).join(' · ')}
-                            </Typography>
-                          ) : null}
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
+                                <Typography
+                                  variant='body2'
+                                  fontWeight={700}
+                                  sx={{ fontSize: '0.85rem' }}
+                                >
+                                  {site.name}
+                                </Typography>
+                                {canManageCustomers ? (
+                                  <IconButton
+                                    size='small'
+                                    sx={{ width: 28, height: 28 }}
+                                    onClick={() => {
+                                      setSelectedCustomer(customer)
+                                      setSelectedSite(site)
+                                      setCustomerDialogMode('site')
+                                    }}
+                                  >
+                                    <EditOutlinedIcon sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                ) : null}
+                              </Stack>
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                                display='block'
+                              >
+                                {[site.address, site.city, site.department]
+                                  .filter(Boolean)
+                                  .join(' · ') || 'Sin dirección detallada'}
+                              </Typography>
+                              {[
+                                site.contactName,
+                                site.contactEmail,
+                                site.contactPhone
+                              ].some(Boolean) ? (
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                  display='block'
+                                  sx={{ mt: 0.25 }}
+                                >
+                                  Contacto:{' '}
+                                  {[
+                                    site.contactName,
+                                    site.contactEmail,
+                                    site.contactPhone
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                                </Typography>
+                              ) : null}
+                            </Box>
+                          </Grid>
+                        )
+                      )}
+                    </Grid>
                   </Collapse>
                 </>
               ) : null}
@@ -450,12 +687,24 @@ const CalibrationServiceCustomersPage = () => {
         ))}
 
         {!customers.length ? (
-          <Paper elevation={0} sx={{
-            p: 4, textAlign: 'center', borderRadius: '12px',
-            border: '1px dashed', borderColor: 'divider',
-          }}>
-            <BusinessOutlinedIcon sx={{ fontSize: 48, color: '#d1d5db', mb: 1.5 }} />
-            <Typography variant='body1' fontWeight={600} sx={{ color: '#6b7280', mb: 0.5 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              borderRadius: '12px',
+              border: '1px dashed',
+              borderColor: 'divider'
+            }}
+          >
+            <BusinessOutlinedIcon
+              sx={{ fontSize: 48, color: '#d1d5db', mb: 1.5 }}
+            />
+            <Typography
+              variant='body1'
+              fontWeight={600}
+              sx={{ color: '#6b7280', mb: 0.5 }}
+            >
               {search.trim() ? 'Sin resultados' : 'Aún no hay clientes'}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
@@ -468,19 +717,29 @@ const CalibrationServiceCustomersPage = () => {
       </Stack>
 
       {/* ── Pagination ── */}
-      <Paper elevation={0} sx={{
-        mt: 2.5, borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)',
-      }}>
+      <Paper
+        elevation={0}
+        sx={{
+          mt: 2.5,
+          borderRadius: '12px',
+          border: '1px solid rgba(0,0,0,0.06)'
+        }}
+      >
         <TablePagination
           component='div'
           count={totalItems}
           page={page}
           onPageChange={(_, nextPage) => setPage(nextPage)}
           rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(event) => { setRowsPerPage(Number.parseInt(event.target.value, 10)); setPage(0) }}
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(Number.parseInt(event.target.value, 10))
+            setPage(0)
+          }}
           rowsPerPageOptions={[10, 25, 50]}
           labelRowsPerPage='Clientes por página'
-          labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`
+          }
         />
       </Paper>
 
@@ -489,11 +748,24 @@ const CalibrationServiceCustomersPage = () => {
         mode={customerDialogMode || 'customer'}
         customer={isEditingCustomer ? selectedCustomer : null}
         site={selectedSite}
-        isSubmitting={createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading || updateCustomerSiteMutation.isLoading || updateCustomerMutation.isLoading}
-        onClose={() => { setCustomerDialogMode(null); setSelectedCustomer(null); setSelectedSite(null); setIsEditingCustomer(false) }}
+        isSubmitting={
+          createCustomerMutation.isLoading ||
+          createCustomerSiteMutation.isLoading ||
+          updateCustomerSiteMutation.isLoading ||
+          updateCustomerMutation.isLoading
+        }
+        onClose={() => {
+          setCustomerDialogMode(null)
+          setSelectedCustomer(null)
+          setSelectedSite(null)
+          setIsEditingCustomer(false)
+        }}
         onSubmit={(values) => {
           if (customerDialogMode === 'site') {
-            if (selectedSite) { updateCustomerSiteMutation.mutate(values); return }
+            if (selectedSite) {
+              updateCustomerSiteMutation.mutate(values)
+              return
+            }
             createCustomerSiteMutation.mutate(values)
             return
           }

@@ -82,7 +82,11 @@ const FormPage: React.FC<FormPageProps> = ({
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>{notices}</Box>
-      <Button onClick={onCancel} disabled={loading} sx={{ color: neutral.textBody }}>
+      <Button
+        onClick={onCancel}
+        disabled={loading}
+        sx={{ color: neutral.textBody }}
+      >
         Cancelar
       </Button>
       <Button

@@ -187,7 +187,11 @@ const CalibrationServiceCutDocumentControlDialog = ({
               setUploadedCertificates(expectedCertificates)
               setReviewedCertificates(expectedCertificates)
             }}
-            sx={{ textTransform: 'none', color: '#00695C', borderColor: '#00BFA5' }}
+            sx={{
+              textTransform: 'none',
+              color: '#00695C',
+              borderColor: '#00BFA5'
+            }}
           >
             Todos emitidos y revisados ({expectedCertificates})
           </Button>
@@ -200,7 +204,11 @@ const CalibrationServiceCutDocumentControlDialog = ({
               setReviewedCertificates(expectedCertificates)
               setSentCertificates(expectedCertificates)
             }}
-            sx={{ textTransform: 'none', color: '#00695C', borderColor: '#00BFA5' }}
+            sx={{
+              textTransform: 'none',
+              color: '#00695C',
+              borderColor: '#00BFA5'
+            }}
           >
             Todos enviados ({expectedCertificates})
           </Button>

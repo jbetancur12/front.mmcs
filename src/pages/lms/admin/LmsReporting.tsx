@@ -42,7 +42,12 @@ import { notify } from 'src/utils/notify'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 import { headerText } from 'src/utils/responseHeaders'
-type ReportType = 'user_progress' | 'course_analytics' | 'compliance' | 'quiz_performance' | 'custom'
+type ReportType =
+  | 'user_progress'
+  | 'course_analytics'
+  | 'compliance'
+  | 'quiz_performance'
+  | 'custom'
 type ReportFormat = 'csv' | 'pdf' | 'xlsx'
 type ReportFrequency = 'daily' | 'weekly' | 'monthly'
 
@@ -93,10 +98,38 @@ interface ReportingMetadata {
 }
 
 const templateColumnsPresets: Record<ReportType, string[]> = {
-  user_progress: ['usuario', 'email', 'rol', 'cursosInscritos', 'cursosCompletados', 'porcentajeProgreso'],
-  course_analytics: ['curso', 'categoria', 'inscritos', 'completados', 'porcentajeCompletacion', 'estado'],
-  compliance: ['rol', 'usuario', 'cursoObligatorio', 'estado', 'fechaLimite', 'fechaCompletado'],
-  quiz_performance: ['curso', 'usuario', 'intentoNumero', 'porcentaje', 'aprobado', 'fechaIntento'],
+  user_progress: [
+    'usuario',
+    'email',
+    'rol',
+    'cursosInscritos',
+    'cursosCompletados',
+    'porcentajeProgreso'
+  ],
+  course_analytics: [
+    'curso',
+    'categoria',
+    'inscritos',
+    'completados',
+    'porcentajeCompletacion',
+    'estado'
+  ],
+  compliance: [
+    'rol',
+    'usuario',
+    'cursoObligatorio',
+    'estado',
+    'fechaLimite',
+    'fechaCompletado'
+  ],
+  quiz_performance: [
+    'curso',
+    'usuario',
+    'intentoNumero',
+    'porcentaje',
+    'aprobado',
+    'fechaIntento'
+  ],
   custom: []
 }
 
@@ -108,7 +141,11 @@ const reportTypeLabels: Record<ReportType, string> = {
   custom: 'Personalizado'
 }
 
-const reportTypeOptions: Array<{ value: ReportType; label: string; helper: string }> = [
+const reportTypeOptions: Array<{
+  value: ReportType
+  label: string
+  helper: string
+}> = [
   {
     value: 'user_progress',
     label: reportTypeLabels.user_progress,
@@ -117,7 +154,8 @@ const reportTypeOptions: Array<{ value: ReportType; label: string; helper: strin
   {
     value: 'course_analytics',
     label: reportTypeLabels.course_analytics,
-    helper: 'Sirve para comparar cursos por inscritos, completados y tasa de cierre.'
+    helper:
+      'Sirve para comparar cursos por inscritos, completados y tasa de cierre.'
   },
   {
     value: 'compliance',
@@ -132,7 +170,8 @@ const reportTypeOptions: Array<{ value: ReportType; label: string; helper: strin
   {
     value: 'custom',
     label: reportTypeLabels.custom,
-    helper: 'Déjalo para casos puntuales donde ninguna plantilla estándar cubra la necesidad.'
+    helper:
+      'Déjalo para casos puntuales donde ninguna plantilla estándar cubra la necesidad.'
   }
 ]
 
@@ -161,9 +200,9 @@ const emptyScheduleForm = {
 }
 
 const getApiMessage = (error: unknown, fallback: string) =>
-  getApiErrorReason(error)
-  || (error instanceof Error ? error.message : null)
-  || fallback
+  getApiErrorReason(error) ||
+  (error instanceof Error ? error.message : null) ||
+  fallback
 
 const getReportStatusLabel = (status: GeneratedReport['status']) => {
   if (status === 'completed') return 'Completado'
@@ -178,8 +217,11 @@ const LmsReporting: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0)
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<ReportTemplate | null>(null)
-  const [editingSchedule, setEditingSchedule] = useState<ScheduledReport | null>(null)
+  const [editingTemplate, setEditingTemplate] = useState<ReportTemplate | null>(
+    null
+  )
+  const [editingSchedule, setEditingSchedule] =
+    useState<ScheduledReport | null>(null)
   const [templateForm, setTemplateForm] = useState(emptyTemplateForm)
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm)
   const [customColumnInput, setCustomColumnInput] = useState('')
@@ -192,10 +234,12 @@ const LmsReporting: React.FC = () => {
   })
 
   const metadata = metadataQuery.data
-  const availableColumns = metadata?.byType?.[templateForm.type]?.recommended
-    || metadata?.byType?.[templateForm.type]?.supported
-    || templateColumnsPresets[templateForm.type]
-  const availableCustomColumns = metadata?.custom?.supported || knownCustomColumns
+  const availableColumns =
+    metadata?.byType?.[templateForm.type]?.recommended ||
+    metadata?.byType?.[templateForm.type]?.supported ||
+    templateColumnsPresets[templateForm.type]
+  const availableCustomColumns =
+    metadata?.custom?.supported || knownCustomColumns
 
   const templatesQuery = useQuery(['lms-reporting', 'templates'], async () => {
     const response = await axiosPrivate.get('/lms/reporting/templates')
@@ -209,10 +253,13 @@ const LmsReporting: React.FC = () => {
     return response.data.data as GeneratedReport[]
   })
 
-  const scheduledReportsQuery = useQuery(['lms-reporting', 'scheduled'], async () => {
-    const response = await axiosPrivate.get('/lms/reporting/scheduled')
-    return response.data.data as ScheduledReport[]
-  })
+  const scheduledReportsQuery = useQuery(
+    ['lms-reporting', 'scheduled'],
+    async () => {
+      const response = await axiosPrivate.get('/lms/reporting/scheduled')
+      return response.data.data as ScheduledReport[]
+    }
+  )
 
   const invalidateReporting = () => {
     queryClient.invalidateQueries(['lms-reporting', 'templates'])
@@ -233,11 +280,17 @@ const LmsReporting: React.FC = () => {
       }
 
       if (editingTemplate) {
-        const response = await axiosPrivate.put(`/lms/reporting/templates/${editingTemplate.id}`, payload)
+        const response = await axiosPrivate.put(
+          `/lms/reporting/templates/${editingTemplate.id}`,
+          payload
+        )
         return response.data.data
       }
 
-      const response = await axiosPrivate.post('/lms/reporting/templates', payload)
+      const response = await axiosPrivate.post(
+        '/lms/reporting/templates',
+        payload
+      )
       return response.data.data
     },
     {
@@ -247,12 +300,18 @@ const LmsReporting: React.FC = () => {
         setEditingTemplate(null)
         setTemplateForm(emptyTemplateForm)
         setCustomColumnInput('')
-        notify.success(editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada', editingTemplate
+        notify.success(
+          editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada',
+          editingTemplate
             ? 'La plantilla quedó lista para seguir generando o programando reportes.'
-            : 'La plantilla ya puede usarse para generar o programar reportes.')
+            : 'La plantilla ya puede usarse para generar o programar reportes.'
+        )
       },
       onError: (error: unknown) => {
-        notify.error('Error al guardar plantilla', getApiMessage(error, 'No se pudo guardar la plantilla.'))
+        notify.error(
+          'Error al guardar plantilla',
+          getApiMessage(error, 'No se pudo guardar la plantilla.')
+        )
       }
     }
   )
@@ -262,16 +321,28 @@ const LmsReporting: React.FC = () => {
     {
       onSuccess: () => {
         invalidateReporting()
-        notify.success('Plantilla eliminada', 'La plantilla ya no aparecerá en generación ni programación.')
+        notify.success(
+          'Plantilla eliminada',
+          'La plantilla ya no aparecerá en generación ni programación.'
+        )
       },
       onError: (error: unknown) => {
-        notify.error('Error al eliminar plantilla', getApiMessage(error, 'No se pudo eliminar la plantilla.'))
+        notify.error(
+          'Error al eliminar plantilla',
+          getApiMessage(error, 'No se pudo eliminar la plantilla.')
+        )
       }
     }
   )
 
   const generateReportMutation = useMutation(
-    async ({ templateId, format }: { templateId: number; format: ReportFormat }) => {
+    async ({
+      templateId,
+      format
+    }: {
+      templateId: number
+      format: ReportFormat
+    }) => {
       const response = await axiosPrivate.post('/lms/reporting/generate', {
         templateId,
         format,
@@ -282,10 +353,16 @@ const LmsReporting: React.FC = () => {
     {
       onSuccess: () => {
         invalidateReporting()
-        notify.success('Reporte generado', 'Quedó registrado en reportes recientes y podrás descargarlo cuando termine.')
+        notify.success(
+          'Reporte generado',
+          'Quedó registrado en reportes recientes y podrás descargarlo cuando termine.'
+        )
       },
       onError: (error: unknown) => {
-        notify.error('Error al generar reporte', getApiMessage(error, 'No se pudo generar el reporte.'))
+        notify.error(
+          'Error al generar reporte',
+          getApiMessage(error, 'No se pudo generar el reporte.')
+        )
       }
     }
   )
@@ -303,11 +380,17 @@ const LmsReporting: React.FC = () => {
       }
 
       if (editingSchedule) {
-        const response = await axiosPrivate.put(`/lms/reporting/scheduled/${editingSchedule.id}`, payload)
+        const response = await axiosPrivate.put(
+          `/lms/reporting/scheduled/${editingSchedule.id}`,
+          payload
+        )
         return response.data.data
       }
 
-      const response = await axiosPrivate.post('/lms/reporting/schedule', payload)
+      const response = await axiosPrivate.post(
+        '/lms/reporting/schedule',
+        payload
+      )
       return response.data.data
     },
     {
@@ -317,12 +400,18 @@ const LmsReporting: React.FC = () => {
         setEditingSchedule(null)
         setScheduleForm(emptyScheduleForm)
         setRecipientInput('')
-        notify.success(editingSchedule ? 'Programación actualizada' : 'Reporte programado', editingSchedule
+        notify.success(
+          editingSchedule ? 'Programación actualizada' : 'Reporte programado',
+          editingSchedule
             ? 'La programación quedó ajustada con los nuevos datos.'
-            : 'La programación quedó activa para futuros envíos.')
+            : 'La programación quedó activa para futuros envíos.'
+        )
       },
       onError: (error: unknown) => {
-        notify.error('Error al guardar programación', getApiMessage(error, 'No se pudo guardar la programación.'))
+        notify.error(
+          'Error al guardar programación',
+          getApiMessage(error, 'No se pudo guardar la programación.')
+        )
       }
     }
   )
@@ -332,10 +421,16 @@ const LmsReporting: React.FC = () => {
     {
       onSuccess: () => {
         invalidateReporting()
-        notify.success('Programación eliminada', 'Ese envío ya no se ejecutará automáticamente.')
+        notify.success(
+          'Programación eliminada',
+          'Ese envío ya no se ejecutará automáticamente.'
+        )
       },
       onError: (error: unknown) => {
-        notify.error('Error al eliminar programación', getApiMessage(error, 'No se pudo eliminar la programación.'))
+        notify.error(
+          'Error al eliminar programación',
+          getApiMessage(error, 'No se pudo eliminar la programación.')
+        )
       }
     }
   )
@@ -343,7 +438,8 @@ const LmsReporting: React.FC = () => {
   const templates = templatesQuery.data || []
   const recentReports = recentReportsQuery.data || []
   const scheduledReports = scheduledReportsQuery.data || []
-  const complianceTemplate = templates.find((template) => template.type === 'compliance') || null
+  const complianceTemplate =
+    templates.find((template) => template.type === 'compliance') || null
 
   const summary = useMemo(
     () => ({
@@ -434,7 +530,9 @@ const LmsReporting: React.FC = () => {
 
     setScheduleForm((prev) => ({
       ...prev,
-      recipients: Array.from(new Set([...prev.recipients, ...incomingRecipients]))
+      recipients: Array.from(
+        new Set([...prev.recipients, ...incomingRecipients])
+      )
     }))
     setRecipientInput('')
   }
@@ -480,9 +578,12 @@ const LmsReporting: React.FC = () => {
 
   const handleDownloadReport = async (report: GeneratedReport) => {
     try {
-      const response = await axiosPrivate.get(`/lms/reporting/download/${report.id}`, {
-        responseType: 'blob'
-      })
+      const response = await axiosPrivate.get(
+        `/lms/reporting/download/${report.id}`,
+        {
+          responseType: 'blob'
+        }
+      )
 
       const blob = new Blob([response.data], {
         type:
@@ -499,7 +600,10 @@ const LmsReporting: React.FC = () => {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (error: unknown) {
-      notify.error('Error al descargar reporte', getApiMessage(error, 'No se pudo descargar el reporte.'))
+      notify.error(
+        'Error al descargar reporte',
+        getApiMessage(error, 'No se pudo descargar el reporte.')
+      )
     }
   }
 
@@ -511,7 +615,10 @@ const LmsReporting: React.FC = () => {
           subtitle='Crea plantillas, programa reportes y descarga los que ya se generaron'
           icon={<SummarizeIcon />}
           actions={
-            <Button variant='outlined' onClick={() => navigate('/lms/admin/analytics')}>
+            <Button
+              variant='outlined'
+              onClick={() => navigate('/lms/admin/analytics')}
+            >
               Ver analíticas
             </Button>
           }
@@ -571,10 +678,15 @@ const LmsReporting: React.FC = () => {
           {reportingTabGuidance[activeTab]}
         </Alert>
 
-          {activeTab === 0 && (
+        {activeTab === 0 && (
           <Card>
             <CardContent>
-              <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 2 }}>
+              <Stack
+                direction='row'
+                justifyContent='space-between'
+                alignItems='center'
+                sx={{ mb: 2 }}
+              >
                 <Typography variant='h6'>Plantillas Reales</Typography>
                 <Stack direction='row' spacing={1}>
                   {complianceTemplate && (
@@ -600,25 +712,41 @@ const LmsReporting: React.FC = () => {
                       Crear cumplimiento
                     </Button>
                   )}
-                  <Button startIcon={<AddIcon />} variant='contained' onClick={handleCreateTemplate}>
+                  <Button
+                    startIcon={<AddIcon />}
+                    variant='contained'
+                    onClick={handleCreateTemplate}
+                  >
                     Nueva plantilla
                   </Button>
                 </Stack>
               </Stack>
               {templates.length === 0 ? (
-                <Alert severity='warning'>Aún no tienes plantillas de reportes creadas.</Alert>
+                <Alert severity='warning'>
+                  Aún no tienes plantillas de reportes creadas.
+                </Alert>
               ) : (
                 <List>
                   {templates.map((template) => (
                     <ListItem
                       key={template.id}
                       secondaryAction={
-                        <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                        <Stack
+                          direction='row'
+                          spacing={1}
+                          flexWrap='wrap'
+                          useFlexGap
+                        >
                           <Button
                             size='small'
                             variant='outlined'
                             startIcon={<GenerateIcon />}
-                            onClick={() => generateReportMutation.mutate({ templateId: template.id, format: 'csv' })}
+                            onClick={() =>
+                              generateReportMutation.mutate({
+                                templateId: template.id,
+                                format: 'csv'
+                              })
+                            }
                           >
                             Generar
                           </Button>
@@ -626,14 +754,24 @@ const LmsReporting: React.FC = () => {
                             size='small'
                             variant='outlined'
                             startIcon={<ScheduleIcon />}
-                            onClick={() => handleCreateScheduleFromTemplate(template)}
+                            onClick={() =>
+                              handleCreateScheduleFromTemplate(template)
+                            }
                           >
                             Programar
                           </Button>
-                          <IconButton onClick={() => handleEditTemplate(template)} title='Editar plantilla'>
+                          <IconButton
+                            onClick={() => handleEditTemplate(template)}
+                            title='Editar plantilla'
+                          >
                             <EditIcon />
                           </IconButton>
-                          <IconButton onClick={() => deleteTemplateMutation.mutate(template.id)} title='Eliminar plantilla'>
+                          <IconButton
+                            onClick={() =>
+                              deleteTemplateMutation.mutate(template.id)
+                            }
+                            title='Eliminar plantilla'
+                          >
                             <DeleteIcon />
                           </IconButton>
                         </Stack>
@@ -642,7 +780,13 @@ const LmsReporting: React.FC = () => {
                       <ListItemText
                         primary={template.name}
                         secondary={
-                          <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap sx={{ mt: 0.5 }}>
+                          <Stack
+                            direction='row'
+                            spacing={1}
+                            flexWrap='wrap'
+                            useFlexGap
+                            sx={{ mt: 0.5 }}
+                          >
                             <Chip
                               icon={<SummarizeIcon />}
                               label={reportTypeLabels[template.type]}
@@ -672,7 +816,12 @@ const LmsReporting: React.FC = () => {
         {activeTab === 1 && (
           <Card>
             <CardContent>
-              <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 2 }}>
+              <Stack
+                direction='row'
+                justifyContent='space-between'
+                alignItems='center'
+                sx={{ mb: 2 }}
+              >
                 <Typography variant='h6'>Programaciones Activas</Typography>
                 <Button
                   startIcon={<ScheduleIcon />}
@@ -685,17 +834,22 @@ const LmsReporting: React.FC = () => {
               </Stack>
               {templates.length === 0 && (
                 <Alert severity='warning' sx={{ mb: 2 }}>
-                  Primero necesitas al menos una plantilla real para programar reportes.
+                  Primero necesitas al menos una plantilla real para programar
+                  reportes.
                 </Alert>
               )}
               {scheduledReports.length === 0 ? (
                 <Stack spacing={2}>
-                  <Alert severity='info'>No hay reportes programados activos.</Alert>
+                  <Alert severity='info'>
+                    No hay reportes programados activos.
+                  </Alert>
                   {templates.length > 0 && (
                     <Button
                       variant='outlined'
                       startIcon={<ScheduleIcon />}
-                      onClick={() => handleCreateScheduleFromTemplate(templates[0])}
+                      onClick={() =>
+                        handleCreateScheduleFromTemplate(templates[0])
+                      }
                       sx={{ alignSelf: 'flex-start' }}
                     >
                       Programar desde la primera plantilla disponible
@@ -709,10 +863,16 @@ const LmsReporting: React.FC = () => {
                       key={schedule.id}
                       secondaryAction={
                         <Stack direction='row' spacing={1}>
-                          <IconButton onClick={() => handleEditSchedule(schedule)}>
+                          <IconButton
+                            onClick={() => handleEditSchedule(schedule)}
+                          >
                             <EditIcon />
                           </IconButton>
-                          <IconButton onClick={() => deleteScheduleMutation.mutate(schedule.id)}>
+                          <IconButton
+                            onClick={() =>
+                              deleteScheduleMutation.mutate(schedule.id)
+                            }
+                          >
                             <DeleteIcon />
                           </IconButton>
                         </Stack>
@@ -721,12 +881,36 @@ const LmsReporting: React.FC = () => {
                       <ListItemText
                         primary={schedule.name}
                         secondary={
-                          <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap sx={{ mt: 0.5 }}>
-                            <Chip label={schedule.template?.name || `Template ${schedule.template_id}`} size='small' />
-                            <Chip label={schedule.frequency} size='small' variant='outlined' />
-                            <Chip label={`${schedule.time.slice(0, 5)} · ${schedule.format.toUpperCase()}`} size='small' variant='outlined' />
+                          <Stack
+                            direction='row'
+                            spacing={1}
+                            flexWrap='wrap'
+                            useFlexGap
+                            sx={{ mt: 0.5 }}
+                          >
+                            <Chip
+                              label={
+                                schedule.template?.name ||
+                                `Template ${schedule.template_id}`
+                              }
+                              size='small'
+                            />
+                            <Chip
+                              label={schedule.frequency}
+                              size='small'
+                              variant='outlined'
+                            />
+                            <Chip
+                              label={`${schedule.time.slice(0, 5)} · ${schedule.format.toUpperCase()}`}
+                              size='small'
+                              variant='outlined'
+                            />
                             {schedule.next_run && (
-                              <Chip label={`Siguiente: ${new Date(schedule.next_run).toLocaleString()}`} size='small' variant='outlined' />
+                              <Chip
+                                label={`Siguiente: ${new Date(schedule.next_run).toLocaleString()}`}
+                                size='small'
+                                variant='outlined'
+                              />
                             )}
                           </Stack>
                         }
@@ -756,7 +940,9 @@ const LmsReporting: React.FC = () => {
                       key={report.id}
                       secondaryAction={
                         report.status === 'completed' ? (
-                          <IconButton onClick={() => handleDownloadReport(report)}>
+                          <IconButton
+                            onClick={() => handleDownloadReport(report)}
+                          >
                             <DownloadIcon />
                           </IconButton>
                         ) : undefined
@@ -765,12 +951,39 @@ const LmsReporting: React.FC = () => {
                       <ListItemText
                         primary={report.name}
                         secondary={
-                          <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap sx={{ mt: 0.5 }}>
-                            <Chip label={report.template?.name || 'Sin plantilla'} size='small' />
-                            <Chip label={report.format.toUpperCase()} size='small' variant='outlined' />
-                            <Chip label={getReportStatusLabel(report.status)} size='small' color={report.status === 'completed' ? 'success' : report.status === 'failed' ? 'error' : 'warning'} />
+                          <Stack
+                            direction='row'
+                            spacing={1}
+                            flexWrap='wrap'
+                            useFlexGap
+                            sx={{ mt: 0.5 }}
+                          >
+                            <Chip
+                              label={report.template?.name || 'Sin plantilla'}
+                              size='small'
+                            />
+                            <Chip
+                              label={report.format.toUpperCase()}
+                              size='small'
+                              variant='outlined'
+                            />
+                            <Chip
+                              label={getReportStatusLabel(report.status)}
+                              size='small'
+                              color={
+                                report.status === 'completed'
+                                  ? 'success'
+                                  : report.status === 'failed'
+                                    ? 'error'
+                                    : 'warning'
+                              }
+                            />
                             {report.record_count !== undefined && (
-                              <Chip label={`${report.record_count} registros`} size='small' variant='outlined' />
+                              <Chip
+                                label={`${report.record_count} registros`}
+                                size='small'
+                                variant='outlined'
+                              />
                             )}
                             {report.completed_at && (
                               <Chip
@@ -791,20 +1004,37 @@ const LmsReporting: React.FC = () => {
         )}
       </Stack>
 
-      <Dialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>{editingTemplate ? 'Editar plantilla' : 'Nueva plantilla'}</DialogTitle>
+      <Dialog
+        open={templateDialogOpen}
+        onClose={() => setTemplateDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>
+          {editingTemplate ? 'Editar plantilla' : 'Nueva plantilla'}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               label='Nombre'
               value={templateForm.name}
-              onChange={(event) => setTemplateForm((prev) => ({ ...prev, name: event.target.value }))}
+              onChange={(event) =>
+                setTemplateForm((prev) => ({
+                  ...prev,
+                  name: event.target.value
+                }))
+              }
               fullWidth
             />
             <TextField
               label='Descripción'
               value={templateForm.description}
-              onChange={(event) => setTemplateForm((prev) => ({ ...prev, description: event.target.value }))}
+              onChange={(event) =>
+                setTemplateForm((prev) => ({
+                  ...prev,
+                  description: event.target.value
+                }))
+              }
               multiline
               minRows={2}
               fullWidth
@@ -814,15 +1044,15 @@ const LmsReporting: React.FC = () => {
               <Select
                 label='Tipo'
                 value={templateForm.type}
-                  onChange={(event) => {
-                    const nextType = event.target.value as ReportType
-                    setTemplateForm((prev) => ({
-                      ...prev,
-                      type: nextType,
-                      columns: [...templateColumnsPresets[nextType]]
-                    }))
-                  }}
-                >
+                onChange={(event) => {
+                  const nextType = event.target.value as ReportType
+                  setTemplateForm((prev) => ({
+                    ...prev,
+                    type: nextType,
+                    columns: [...templateColumnsPresets[nextType]]
+                  }))
+                }}
+              >
                 {reportTypeOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     <Box>
@@ -838,81 +1068,28 @@ const LmsReporting: React.FC = () => {
               </Select>
             </FormControl>
             <Alert severity={isCustomTemplate ? 'warning' : 'info'}>
-              {reportTypeOptions.find((option) => option.value === templateForm.type)?.helper}
+              {
+                reportTypeOptions.find(
+                  (option) => option.value === templateForm.type
+                )?.helper
+              }
             </Alert>
-              {isCustomTemplate ? (
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                      Columnas conocidas
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                      Puedes seleccionar columnas conocidas del LMS y, si hace falta, agregar extras manualmente.
-                    </Typography>
-                    <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
-                      {availableCustomColumns.map((column) => {
-                        const selected = templateForm.columns.includes(column)
-                        return (
-                          <Chip
-                            key={column}
-                            label={column}
-                            clickable
-                            color={selected ? 'primary' : 'default'}
-                            variant={selected ? 'filled' : 'outlined'}
-                            onClick={() => toggleTemplateColumn(column)}
-                          />
-                        )
-                      })}
-                    </Stack>
-                  </Box>
-
-                  <Box>
-                    <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                      Columnas extra
-                    </Typography>
-                    <TextField
-                      label='Agregar columnas manuales'
-                      helperText='Escribe columnas extra separadas por coma y luego agrégalas.'
-                      value={customColumnInput}
-                      onChange={(event) => setCustomColumnInput(event.target.value)}
-                      fullWidth
-                    />
-                    <Button sx={{ mt: 1.5 }} variant='outlined' onClick={addCustomColumns} disabled={!customColumnInput.trim()}>
-                      Agregar columnas manuales
-                    </Button>
-                  </Box>
-
-                  <Box>
-                    <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                      Selección actual
-                    </Typography>
-                    {templateForm.columns.length === 0 ? (
-                      <Alert severity='warning'>Todavía no has seleccionado columnas para este reporte.</Alert>
-                    ) : (
-                      <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
-                        {templateForm.columns.map((column) => (
-                          <Chip
-                            key={column}
-                            label={column}
-                            onDelete={() => removeTemplateColumn(column)}
-                            color='primary'
-                            variant='outlined'
-                          />
-                        ))}
-                      </Stack>
-                    )}
-                  </Box>
-                </Stack>
-              ) : (
+            {isCustomTemplate ? (
+              <Stack spacing={2}>
                 <Box>
                   <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                    Columnas disponibles
+                    Columnas conocidas
                   </Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    Selecciona las columnas que quieres incluir. Ya no necesitas escribir los nombres manualmente.
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mb: 2 }}
+                  >
+                    Puedes seleccionar columnas conocidas del LMS y, si hace
+                    falta, agregar extras manualmente.
                   </Typography>
                   <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
-                    {availableColumns.map((column) => {
+                    {availableCustomColumns.map((column) => {
                       const selected = templateForm.columns.includes(column)
                       return (
                         <Chip
@@ -926,23 +1103,118 @@ const LmsReporting: React.FC = () => {
                       )
                     })}
                   </Stack>
-                  <Typography variant='caption' color='text.secondary' sx={{ mt: 1.5, display: 'block' }}>
-                    {templateForm.columns.length} columna(s) seleccionada(s)
-                  </Typography>
                 </Box>
-              )}
-            </Stack>
-          </DialogContent>
+
+                <Box>
+                  <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                    Columnas extra
+                  </Typography>
+                  <TextField
+                    label='Agregar columnas manuales'
+                    helperText='Escribe columnas extra separadas por coma y luego agrégalas.'
+                    value={customColumnInput}
+                    onChange={(event) =>
+                      setCustomColumnInput(event.target.value)
+                    }
+                    fullWidth
+                  />
+                  <Button
+                    sx={{ mt: 1.5 }}
+                    variant='outlined'
+                    onClick={addCustomColumns}
+                    disabled={!customColumnInput.trim()}
+                  >
+                    Agregar columnas manuales
+                  </Button>
+                </Box>
+
+                <Box>
+                  <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                    Selección actual
+                  </Typography>
+                  {templateForm.columns.length === 0 ? (
+                    <Alert severity='warning'>
+                      Todavía no has seleccionado columnas para este reporte.
+                    </Alert>
+                  ) : (
+                    <Stack
+                      direction='row'
+                      spacing={1}
+                      flexWrap='wrap'
+                      useFlexGap
+                    >
+                      {templateForm.columns.map((column) => (
+                        <Chip
+                          key={column}
+                          label={column}
+                          onDelete={() => removeTemplateColumn(column)}
+                          color='primary'
+                          variant='outlined'
+                        />
+                      ))}
+                    </Stack>
+                  )}
+                </Box>
+              </Stack>
+            ) : (
+              <Box>
+                <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                  Columnas disponibles
+                </Typography>
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 2 }}
+                >
+                  Selecciona las columnas que quieres incluir. Ya no necesitas
+                  escribir los nombres manualmente.
+                </Typography>
+                <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                  {availableColumns.map((column) => {
+                    const selected = templateForm.columns.includes(column)
+                    return (
+                      <Chip
+                        key={column}
+                        label={column}
+                        clickable
+                        color={selected ? 'primary' : 'default'}
+                        variant={selected ? 'filled' : 'outlined'}
+                        onClick={() => toggleTemplateColumn(column)}
+                      />
+                    )
+                  })}
+                </Stack>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ mt: 1.5, display: 'block' }}
+                >
+                  {templateForm.columns.length} columna(s) seleccionada(s)
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+        </DialogContent>
         <DialogActions>
           <Button onClick={() => setTemplateDialogOpen(false)}>Cancelar</Button>
-          <Button variant='contained' onClick={() => saveTemplateMutation.mutate()}>
+          <Button
+            variant='contained'
+            onClick={() => saveTemplateMutation.mutate()}
+          >
             Guardar
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>{editingSchedule ? 'Editar programación' : 'Programar reporte'}</DialogTitle>
+      <Dialog
+        open={scheduleDialogOpen}
+        onClose={() => setScheduleDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>
+          {editingSchedule ? 'Editar programación' : 'Programar reporte'}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <FormControl fullWidth>
@@ -950,7 +1222,12 @@ const LmsReporting: React.FC = () => {
               <Select
                 label='Plantilla'
                 value={scheduleForm.templateId}
-                onChange={(event) => setScheduleForm((prev) => ({ ...prev, templateId: event.target.value }))}
+                onChange={(event) =>
+                  setScheduleForm((prev) => ({
+                    ...prev,
+                    templateId: event.target.value
+                  }))
+                }
               >
                 {templates.map((template) => (
                   <MenuItem key={template.id} value={String(template.id)}>
@@ -962,7 +1239,12 @@ const LmsReporting: React.FC = () => {
             <TextField
               label='Nombre de la programación'
               value={scheduleForm.name}
-              onChange={(event) => setScheduleForm((prev) => ({ ...prev, name: event.target.value }))}
+              onChange={(event) =>
+                setScheduleForm((prev) => ({
+                  ...prev,
+                  name: event.target.value
+                }))
+              }
               fullWidth
             />
             <Grid container spacing={2}>
@@ -972,7 +1254,12 @@ const LmsReporting: React.FC = () => {
                   <Select
                     label='Frecuencia'
                     value={scheduleForm.frequency}
-                    onChange={(event) => setScheduleForm((prev) => ({ ...prev, frequency: event.target.value as ReportFrequency }))}
+                    onChange={(event) =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        frequency: event.target.value as ReportFrequency
+                      }))
+                    }
                   >
                     <MenuItem value='daily'>Diario</MenuItem>
                     <MenuItem value='weekly'>Semanal</MenuItem>
@@ -985,7 +1272,12 @@ const LmsReporting: React.FC = () => {
                   label='Hora'
                   type='time'
                   value={scheduleForm.time}
-                  onChange={(event) => setScheduleForm((prev) => ({ ...prev, time: event.target.value }))}
+                  onChange={(event) =>
+                    setScheduleForm((prev) => ({
+                      ...prev,
+                      time: event.target.value
+                    }))
+                  }
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                 />
@@ -996,7 +1288,12 @@ const LmsReporting: React.FC = () => {
                   <Select
                     label='Formato'
                     value={scheduleForm.format}
-                    onChange={(event) => setScheduleForm((prev) => ({ ...prev, format: event.target.value as ReportFormat }))}
+                    onChange={(event) =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        format: event.target.value as ReportFormat
+                      }))
+                    }
                   >
                     <MenuItem value='csv'>CSV</MenuItem>
                     <MenuItem value='pdf'>PDF</MenuItem>
@@ -1013,7 +1310,12 @@ const LmsReporting: React.FC = () => {
                 onChange={(event) => setRecipientInput(event.target.value)}
                 fullWidth
               />
-              <Button sx={{ mt: 1.5 }} variant='outlined' onClick={addRecipients} disabled={!recipientInput.trim()}>
+              <Button
+                sx={{ mt: 1.5 }}
+                variant='outlined'
+                onClick={addRecipients}
+                disabled={!recipientInput.trim()}
+              >
                 Agregar destinatarios
               </Button>
             </Box>
@@ -1022,7 +1324,10 @@ const LmsReporting: React.FC = () => {
                 Destinatarios actuales
               </Typography>
               {scheduleForm.recipients.length === 0 ? (
-                <Alert severity='warning'>Debes agregar al menos un destinatario para programar el reporte.</Alert>
+                <Alert severity='warning'>
+                  Debes agregar al menos un destinatario para programar el
+                  reporte.
+                </Alert>
               ) : (
                 <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
                   {scheduleForm.recipients.map((recipient) => (
@@ -1041,7 +1346,10 @@ const LmsReporting: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setScheduleDialogOpen(false)}>Cancelar</Button>
-          <Button variant='contained' onClick={() => saveScheduleMutation.mutate()}>
+          <Button
+            variant='contained'
+            onClick={() => saveScheduleMutation.mutate()}
+          >
             Guardar
           </Button>
         </DialogActions>

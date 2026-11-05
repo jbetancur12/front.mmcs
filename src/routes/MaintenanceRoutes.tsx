@@ -62,7 +62,10 @@ const MaintenanceRoutes = (role: string[]) => {
           />
         }
       >
-        <Route path='maintenance/analytics' element={<MaintenanceAnalytics />} />
+        <Route
+          path='maintenance/analytics'
+          element={<MaintenanceAnalytics />}
+        />
       </Route>
       {/* Gestión de técnicos */}
       <Route

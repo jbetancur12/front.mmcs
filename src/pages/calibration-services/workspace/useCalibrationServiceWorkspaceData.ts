@@ -23,11 +23,10 @@ const useCalibrationServiceWorkspaceData = () => {
   const canCreateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
   const canUpdateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_UPDATE)
   const canAccessWorkspace = isEditing ? canUpdateService : canCreateService
-  const {
-    data: sequenceConfig,
-    isLoading: isLoadingSequenceConfig
-  } = useCalibrationServiceSequenceConfig(canAccessWorkspace)
-  const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
+  const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
+    useCalibrationServiceSequenceConfig(canAccessWorkspace)
+  const { data: service, isLoading: isLoadingService } =
+    useCalibrationService(serviceId)
   const { data: quoteTermsTemplate, isFetchedAfterMount: isTemplateFresh } =
     useCalibrationServiceQuoteTermsTemplate(
       canAccessWorkspace && !isEditing,
@@ -54,9 +53,8 @@ const useCalibrationServiceWorkspaceData = () => {
         : []
   const productFallbackOptions = (service?.items || [])
     .map((item) => item.product)
-    .filter(
-      (product): product is CalibrationServiceProductSummary =>
-        Boolean(product?.id)
+    .filter((product): product is CalibrationServiceProductSummary =>
+      Boolean(product?.id)
     )
     .filter(
       (product, index, array) =>
@@ -78,7 +76,9 @@ const useCalibrationServiceWorkspaceData = () => {
       : null
   ].filter(Boolean) as string[]
   const requestEvidenceDocuments =
-    service?.documents?.filter((document) => document.documentType === 'request_evidence') || []
+    service?.documents?.filter(
+      (document) => document.documentType === 'request_evidence'
+    ) || []
   const hasCustomerChangeRequest =
     service?.otherFields?.customerResponseType === 'changes_requested'
   const latestChangeRequest =
@@ -87,10 +87,12 @@ const useCalibrationServiceWorkspaceData = () => {
     !Array.isArray(service.otherFields.latestChangeRequest)
       ? (service.otherFields.latestChangeRequest as Record<string, unknown>)
       : null
-  const canEdit =
-    canAccessWorkspace &&
-    (!service || service.status === 'draft')
-  const isPageLoading = isLoadingService || isLoadingCustomers || isLoadingProducts || isLoadingSequenceConfig
+  const canEdit = canAccessWorkspace && (!service || service.status === 'draft')
+  const isPageLoading =
+    isLoadingService ||
+    isLoadingCustomers ||
+    isLoadingProducts ||
+    isLoadingSequenceConfig
 
   return {
     serviceId,

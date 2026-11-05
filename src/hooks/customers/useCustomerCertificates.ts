@@ -19,7 +19,8 @@ export const customerCertificatesKeys = {
   byHeadquarter: (
     id: string | number | undefined,
     params: CustomerCertificatesParams
-  ) => [...customerCertificatesKeys.byCustomer(id), 'headquarter', params] as const
+  ) =>
+    [...customerCertificatesKeys.byCustomer(id), 'headquarter', params] as const
 }
 
 export const useCustomerCertificatesByHeadquarter = <T = unknown>(

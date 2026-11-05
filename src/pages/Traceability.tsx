@@ -200,7 +200,6 @@ const Traceability: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-
       <LmsPageHeader
         title='Trazabilidades'
         subtitle='Documentos de trazabilidad de los patrones y equipos'

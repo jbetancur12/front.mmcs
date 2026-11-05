@@ -49,8 +49,9 @@ const useCalibrationServiceDetailDialogs = () => {
     selectedAdjustmentsForCustomerResponse,
     setSelectedAdjustmentsForCustomerResponse
   ] = useState<CalibrationServiceAdjustment[]>([])
-  const [selectedAdjustmentsForSend, setSelectedAdjustmentsForSend] =
-    useState<CalibrationServiceAdjustment[]>([])
+  const [selectedAdjustmentsForSend, setSelectedAdjustmentsForSend] = useState<
+    CalibrationServiceAdjustment[]
+  >([])
   const [sendAdjustmentPreview, setSendAdjustmentPreview] =
     useState<CalibrationServiceSendPreviewResult | null>(null)
 

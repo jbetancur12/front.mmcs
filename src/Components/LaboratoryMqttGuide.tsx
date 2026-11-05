@@ -135,10 +135,15 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
           p: 2,
           textAlign: 'left',
           '&:hover': { bgcolor: '#fafafa' },
-          '&.Mui-focusVisible': { outline: '3px solid #00897B', outlineOffset: -3 }
+          '&.Mui-focusVisible': {
+            outline: '3px solid #00897B',
+            outlineOffset: -3
+          }
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}
+        >
           <Box
             sx={{
               width: 40,
@@ -163,7 +168,15 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#4b5563', flexShrink: 0 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            color: '#4b5563',
+            flexShrink: 0
+          }}
+        >
           <Typography
             variant='body2'
             fontWeight={600}
@@ -197,7 +210,10 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
               label='nombre del sensor'
               size='small'
             />
-            <ArrowForward sx={{ color: '#00897B', fontSize: 20 }} aria-label='entonces' />
+            <ArrowForward
+              sx={{ color: '#00897B', fontSize: 20 }}
+              aria-label='entonces'
+            />
             <Typography variant='body2'>el dispositivo envía</Typography>
             <CodeSnippet
               value={content.relationExample.expectedPayload}
@@ -240,7 +256,11 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
                 ))}
               </Box>
               <Box sx={{ mt: 2 }}>
-                <Typography variant='body2' color='text.secondary' sx={{ mb: 0.75 }}>
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 0.75 }}
+                >
                   Publica en el topic
                 </Typography>
                 <CodeSnippet value={content.topic} label='topic' />
@@ -251,7 +271,11 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
               <SubTitle>Formato del mensaje</SubTitle>
               <CodeSnippet value={content.payload} label='formato' />
 
-              <Typography variant='body2' color='text.secondary' sx={{ mt: 2, mb: 0.75 }}>
+              <Typography
+                variant='body2'
+                color='text.secondary'
+                sx={{ mt: 2, mb: 0.75 }}
+              >
                 Ejemplos válidos
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -265,7 +289,10 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
                 ))}
               </Box>
 
-              <Box component='ul' sx={{ listStyle: 'none', p: 0, mt: 2, mb: 0 }}>
+              <Box
+                component='ul'
+                sx={{ listStyle: 'none', p: 0, mt: 2, mb: 0 }}
+              >
                 {content.rules.map((rule) => (
                   <Box
                     component='li'
@@ -297,11 +324,19 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
           >
             <InfoOutlined aria-hidden sx={{ color: '#b45309', mt: 0.25 }} />
             <Box>
-              <Typography variant='body2' fontWeight={700} sx={{ color: '#92400e' }}>
+              <Typography
+                variant='body2'
+                fontWeight={700}
+                sx={{ color: '#92400e' }}
+              >
                 {content.warning}
               </Typography>
               {content.notes.map((note) => (
-                <Typography key={note} variant='body2' sx={{ color: '#92400e', mt: 0.5 }}>
+                <Typography
+                  key={note}
+                  variant='body2'
+                  sx={{ color: '#92400e', mt: 0.5 }}
+                >
                   {note}
                 </Typography>
               ))}

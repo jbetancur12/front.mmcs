@@ -18,7 +18,7 @@ export const MODULE_AUDIENCE = {
   purchases: 'internal',
   quality: 'internal',
   lms: 'both',
-  tecnovigilancia: 'client',
+  tecnovigilancia: 'client'
 } as const
 
 export type ModuleName = keyof typeof MODULE_AUDIENCE
@@ -37,7 +37,9 @@ export const isCoreModule = (moduleName?: string): boolean =>
   !moduleName || getModuleAudience(moduleName) === undefined
 
 // Match case-insensitive: el sidebar tiene variantes legacy ('Fleet', 'Iot')
-export const getModuleAudience = (moduleName?: string): Audience | undefined => {
+export const getModuleAudience = (
+  moduleName?: string
+): Audience | undefined => {
   if (!moduleName) return undefined
   const key = moduleName.toLowerCase() as ModuleName
   return MODULE_AUDIENCE[key]

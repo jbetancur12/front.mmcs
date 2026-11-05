@@ -26,7 +26,9 @@ import { getOperationsSummary } from '../calibrationServiceOtherFields'
  * totales con novedades aprobadas, documentos agrupados y valores iniciales de
  * los diálogos. Es una función pura: solo depende del servicio.
  */
-export const getCalibrationServiceDetailData = (service: CalibrationService) => {
+export const getCalibrationServiceDetailData = (
+  service: CalibrationService
+) => {
   const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
   const customerResponseType = getCustomerResponseType(service.otherFields)
   const latestChangeRequest = getLatestChangeRequest(service.otherFields)
@@ -75,14 +77,15 @@ export const getCalibrationServiceDetailData = (service: CalibrationService) => 
   })()
   const operationsAssignedMetrologistNames = (() => {
     const raw = operationsDetails.assignedMetrologists
-    if (Array.isArray(raw) && raw.length > 0) return raw.map((m) => m.name).join(', ')
+    if (Array.isArray(raw) && raw.length > 0)
+      return raw.map((m) => m.name).join(', ')
     const legacyName = operationsDetails.assignedMetrologistName
     return legacyName || ''
   })()
   const operationsResponsibleName: string =
     typeof operationsDetails.operationalResponsibleName === 'string'
       ? operationsDetails.operationalResponsibleName
-      : (operationsAssignedMetrologistNames || '')
+      : operationsAssignedMetrologistNames || ''
   const operationsResponsibleRole =
     typeof operationsDetails?.operationalResponsibleRole === 'string'
       ? operationsDetails.operationalResponsibleRole
@@ -359,7 +362,10 @@ export const getCalibrationServiceDetailData = (service: CalibrationService) => 
     : 0
   const discountedSubtotal = subtotal - discountAmount
   const effectiveTaxRate = subtotal > 0 ? baseTaxTotalValue / subtotal : 0
-  const taxTotal = effectiveTaxRate > 0 ? discountedSubtotal * effectiveTaxRate : baseTaxTotalValue
+  const taxTotal =
+    effectiveTaxRate > 0
+      ? discountedSubtotal * effectiveTaxRate
+      : baseTaxTotalValue
   const grandTotal = discountedSubtotal + taxTotal
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)

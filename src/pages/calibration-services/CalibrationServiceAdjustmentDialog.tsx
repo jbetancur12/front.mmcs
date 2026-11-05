@@ -70,21 +70,25 @@ const CalibrationServiceAdjustmentDialog = ({
   onSubmit
 }: CalibrationServiceAdjustmentDialogProps) => {
   const itemsWithAdjustment = useMemo(
-    () => new Set(
-      (service.adjustments || [])
-        .filter((adj) => adj.status !== 'rejected' && adj.serviceItemId != null)
-        .map((adj) => adj.serviceItemId)
-    ),
+    () =>
+      new Set(
+        (service.adjustments || [])
+          .filter(
+            (adj) => adj.status !== 'rejected' && adj.serviceItemId != null
+          )
+          .map((adj) => adj.serviceItemId)
+      ),
     [service.adjustments]
   )
 
   const blockedCount = useMemo(
-    () => (service.items || []).filter(
-      (item) =>
-        (item.otherFields?.operationalStatus === 'completed' ||
-         item.otherFields?.operationalStatus === 'in_progress') &&
-        itemsWithAdjustment.has(item.id)
-    ).length,
+    () =>
+      (service.items || []).filter(
+        (item) =>
+          (item.otherFields?.operationalStatus === 'completed' ||
+            item.otherFields?.operationalStatus === 'in_progress') &&
+          itemsWithAdjustment.has(item.id)
+      ).length,
     [service.items, itemsWithAdjustment]
   )
 
@@ -93,7 +97,7 @@ const CalibrationServiceAdjustmentDialog = ({
       (service.items || []).filter(
         (item) =>
           (item.otherFields?.operationalStatus === 'completed' ||
-           item.otherFields?.operationalStatus === 'in_progress') &&
+            item.otherFields?.operationalStatus === 'in_progress') &&
           !itemsWithAdjustment.has(item.id)
       ),
     [service.items, itemsWithAdjustment]
@@ -200,14 +204,24 @@ const CalibrationServiceAdjustmentDialog = ({
       const actual = Number(item.actualQuantity)
       if (Number.isNaN(actual)) continue
       if (isQuantityMore && actual <= item.quotedQuantity) {
-        errors.push(`${item.itemName}: Cant. real (${actual}) debe ser MAYOR que cotizada (${item.quotedQuantity})`)
+        errors.push(
+          `${item.itemName}: Cant. real (${actual}) debe ser MAYOR que cotizada (${item.quotedQuantity})`
+        )
       }
       if (isQuantityLess && actual >= item.quotedQuantity) {
-        errors.push(`${item.itemName}: Cant. real (${actual}) debe ser MENOR que cotizada (${item.quotedQuantity})`)
+        errors.push(
+          `${item.itemName}: Cant. real (${actual}) debe ser MENOR que cotizada (${item.quotedQuantity})`
+        )
       }
     }
     return errors
-  }, [selectedBatchItems, isQuantityMore, isQuantityLess, isExtraItem, isNotReceived])
+  }, [
+    selectedBatchItems,
+    isQuantityMore,
+    isQuantityLess,
+    isExtraItem,
+    isNotReceived
+  ])
 
   const canSubmit =
     description.trim().length >= 5 &&
@@ -240,8 +254,8 @@ const CalibrationServiceAdjustmentDialog = ({
             ? { ...item, selected: checked }
             : item
         )
-    )
-  }
+      )
+    }
 
   const handleSelectedItemActualQuantity =
     (serviceItemIdValue: number) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -435,9 +449,7 @@ const CalibrationServiceAdjustmentDialog = ({
                       <TableHead>
                         <TableRow>
                           <TableCell padding='checkbox' sx={{ width: 48 }} />
-                          <TableCell sx={{ fontWeight: 600 }}>
-                            Ítem
-                          </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>Ítem</TableCell>
                           <TableCell sx={{ fontWeight: 600 }} width={80}>
                             Cotizado
                           </TableCell>
@@ -484,7 +496,10 @@ const CalibrationServiceAdjustmentDialog = ({
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography variant='body2' color='text.secondary'>
+                              <Typography
+                                variant='body2'
+                                color='text.secondary'
+                              >
                                 {item.quotedQuantity}
                               </Typography>
                             </TableCell>
@@ -516,8 +531,15 @@ const CalibrationServiceAdjustmentDialog = ({
                         ))}
                         {paginatedItems.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={4} align='center' sx={{ py: 4 }}>
-                              <Typography variant='body2' color='text.secondary'>
+                            <TableCell
+                              colSpan={4}
+                              align='center'
+                              sx={{ py: 4 }}
+                            >
+                              <Typography
+                                variant='body2'
+                                color='text.secondary'
+                              >
                                 {searchQuery.trim()
                                   ? 'Ningún ítem coincide con la búsqueda.'
                                   : 'No hay ítems completados disponibles.'}
@@ -541,12 +563,17 @@ const CalibrationServiceAdjustmentDialog = ({
                   />
                   {blockedCount > 0 ? (
                     <Alert severity='info' sx={{ mt: 1 }}>
-                      {blockedCount} ítem(s) ya tienen novedad registrada y no aparecen
-                      en la lista. Solo se permite una novedad por ítem.
+                      {blockedCount} ítem(s) ya tienen novedad registrada y no
+                      aparecen en la lista. Solo se permite una novedad por
+                      ítem.
                     </Alert>
                   ) : null}
                   {selectedBatchItems.length > 0 && (
-                    <Typography variant='caption' color='primary' sx={{ pl: 0.5 }}>
+                    <Typography
+                      variant='caption'
+                      color='primary'
+                      sx={{ pl: 0.5 }}
+                    >
                       {selectedBatchItems.length} ítem
                       {selectedBatchItems.length !== 1 ? 's' : ''} seleccionado
                       {selectedBatchItems.length !== 1 ? 's' : ''}
@@ -557,8 +584,8 @@ const CalibrationServiceAdjustmentDialog = ({
             ) : (
               <Grid item xs={12}>
                 <Typography variant='body2' color='text.secondary'>
-                  No hay ítems completados disponibles para relacionar con
-                  una novedad.
+                  No hay ítems completados disponibles para relacionar con una
+                  novedad.
                 </Typography>
               </Grid>
             )}

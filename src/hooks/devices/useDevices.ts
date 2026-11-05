@@ -104,7 +104,8 @@ export const useCreateDevice = () => {
   const axiosPrivate = useAxiosPrivate()
   const invalidate = useInvalidateDevices()
   return useMutation(
-    (payload: Record<string, unknown>) => axiosPrivate.post('/devices', payload, {}),
+    (payload: Record<string, unknown>) =>
+      axiosPrivate.post('/devices', payload, {}),
     { onSuccess: () => invalidate() }
   )
 }
@@ -113,8 +114,13 @@ export const useUpdateDevice = () => {
   const axiosPrivate = useAxiosPrivate()
   const invalidate = useInvalidateDevices()
   return useMutation(
-    ({ id, payload }: { id: number | string; payload: Record<string, unknown> }) =>
-      axiosPrivate.put(`/devices/${id}`, payload, {}),
+    ({
+      id,
+      payload
+    }: {
+      id: number | string
+      payload: Record<string, unknown>
+    }) => axiosPrivate.put(`/devices/${id}`, payload, {}),
     { onSuccess: () => invalidate() }
   )
 }

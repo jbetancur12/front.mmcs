@@ -101,15 +101,24 @@ const MaintenanceTicketDetails: React.FC = () => {
             <MaintenanceTicketCustomerCard ticket={ticket} details={details} />
             <MaintenanceTicketEquipmentCard ticket={ticket} details={details} />
             <MaintenanceTicketIssueCard ticket={ticket} />
-            <MaintenanceTicketActivitySections ticket={ticket} details={details} />
+            <MaintenanceTicketActivitySections
+              ticket={ticket}
+              details={details}
+            />
           </Grid>
 
           {/* Sidebar */}
           <Grid item xs={12} lg={4}>
-            <MaintenanceTicketTechnicianCard ticket={ticket} details={details} />
+            <MaintenanceTicketTechnicianCard
+              ticket={ticket}
+              details={details}
+            />
             <MaintenanceTicketScheduleCard ticket={ticket} details={details} />
             <MaintenanceTicketCostsSection ticket={ticket} details={details} />
-            <MaintenanceTicketSignaturesCard ticket={ticket} details={details} />
+            <MaintenanceTicketSignaturesCard
+              ticket={ticket}
+              details={details}
+            />
             <MaintenanceTicketSatisfactionCard ticket={ticket} />
             <MaintenanceTicketQuickActions ticket={ticket} details={details} />
           </Grid>

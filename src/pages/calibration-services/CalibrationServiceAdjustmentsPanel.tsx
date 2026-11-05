@@ -217,80 +217,96 @@ const CalibrationServiceAdjustmentsPanel = ({
         <Stack spacing={2}>
           {adjustments.map((adjustment) => {
             const otherFields = getAdjustmentOtherFields(adjustment)
-                            const supportChannel = getTextField(
-                              otherFields,
-                              'supportChannel'
-                            )
-                            const supportReference = getTextField(
-                              otherFields,
-                              'supportReference'
-                            )
-                            const hasContractModification =
-                              otherFields.contractModificationRequired !== false
-                            const hasTechnicalApproval =
-                              otherFields.technicalDecision === 'approved'
-                            const canRunTechnicalReview =
-                              canTechnicalReview &&
-                              [
-                                'reported',
-                                'customer_changes_requested',
-                                'customer_rejected'
-                              ].includes(adjustment.status) &&
-                              !hasTechnicalApproval
-                            const canRunCommercialReview =
-                              canCommercialReview &&
-                              adjustment.status === 'reported' &&
-                              hasTechnicalApproval
+            const supportChannel = getTextField(otherFields, 'supportChannel')
+            const supportReference = getTextField(
+              otherFields,
+              'supportReference'
+            )
+            const hasContractModification =
+              otherFields.contractModificationRequired !== false
+            const hasTechnicalApproval =
+              otherFields.technicalDecision === 'approved'
+            const canRunTechnicalReview =
+              canTechnicalReview &&
+              [
+                'reported',
+                'customer_changes_requested',
+                'customer_rejected'
+              ].includes(adjustment.status) &&
+              !hasTechnicalApproval
+            const canRunCommercialReview =
+              canCommercialReview &&
+              adjustment.status === 'reported' &&
+              hasTechnicalApproval
 
             return (
-              <Paper key={adjustment.id} variant='outlined' sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent='space-between' spacing={1.5} sx={{ mb: 2 }}>
+              <Paper
+                key={adjustment.id}
+                variant='outlined'
+                sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}
+              >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent='space-between'
+                  spacing={1.5}
+                  sx={{ mb: 2 }}
+                >
                   <Box>
                     <Typography variant='caption' color='text.secondary'>
-                      {CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS[
+                      {
+                        CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS[
                           adjustment.changeType
-                        ]}
+                        ]
+                      }
                     </Typography>
-                    <Typography fontWeight={700}>{adjustment.itemName}</Typography>
+                    <Typography fontWeight={700}>
+                      {adjustment.itemName}
+                    </Typography>
                   </Box>
                   <Box>
                     <Stack spacing={0.5}>
-                        <Box>
-                          <Chip
-                            size='small'
-                            color={
-                              CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS[
-                                adjustment.status
-                              ]
-                            }
-                            label={
-                              CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[
-                                adjustment.status
-                              ]
-                            }
-                          />
-                        </Box>
-                        {[
-                          'reported',
-                          'pending_customer_approval',
-                          'customer_changes_requested'
-                        ].includes(adjustment.status) ? (
-                          <Typography variant='caption' color='text.secondary'>
-                            Aún no modifica el servicio formal.
-                          </Typography>
-                        ) : null}
-                      </Stack>
+                      <Box>
+                        <Chip
+                          size='small'
+                          color={
+                            CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS[
+                              adjustment.status
+                            ]
+                          }
+                          label={
+                            CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[
+                              adjustment.status
+                            ]
+                          }
+                        />
+                      </Box>
+                      {[
+                        'reported',
+                        'pending_customer_approval',
+                        'customer_changes_requested'
+                      ].includes(adjustment.status) ? (
+                        <Typography variant='caption' color='text.secondary'>
+                          Aún no modifica el servicio formal.
+                        </Typography>
+                      ) : null}
+                    </Stack>
                   </Box>
                 </Stack>
                 <Grid container spacing={2}>
                   <Grid item xs={4} md={2}>
-                    <DetailField label='Cotizado'>{adjustment.quotedQuantity}</DetailField>
+                    <DetailField label='Cotizado'>
+                      {adjustment.quotedQuantity}
+                    </DetailField>
                   </Grid>
                   <Grid item xs={4} md={2}>
-                    <DetailField label='Real'>{adjustment.actualQuantity}</DetailField>
+                    <DetailField label='Real'>
+                      {adjustment.actualQuantity}
+                    </DetailField>
                   </Grid>
                   <Grid item xs={4} md={2}>
-                    <DetailField label='Diferencia'>{adjustment.differenceQuantity}</DetailField>
+                    <DetailField label='Diferencia'>
+                      {adjustment.differenceQuantity}
+                    </DetailField>
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <DetailField label='Desviación'>
@@ -336,16 +352,20 @@ const CalibrationServiceAdjustmentsPanel = ({
                     </DetailField>
                   </Grid>
                   <Grid item xs={6} md={3}>
-                    <DetailField label='Ajuste comercial'>{adjustment.requiresCommercialAdjustment ? 'Sí' : 'No'}</DetailField>
+                    <DetailField label='Ajuste comercial'>
+                      {adjustment.requiresCommercialAdjustment ? 'Sí' : 'No'}
+                    </DetailField>
                   </Grid>
                   {!hideFinancialInfo ? (
                     <Grid item xs={6} md={3}>
-                      <DetailField label='Impacto aprobado'>{adjustment.approvedTotal !== null &&
+                      <DetailField label='Impacto aprobado'>
+                        {adjustment.approvedTotal !== null &&
                         adjustment.approvedTotal !== undefined
                           ? currencyFormatter.format(
                               toNumber(adjustment.approvedTotal)
                             )
-                          : 'Pendiente'}</DetailField>
+                          : 'Pendiente'}
+                      </DetailField>
                     </Grid>
                   ) : null}
                   <Grid item xs={12} md={6}>
@@ -371,8 +391,15 @@ const CalibrationServiceAdjustmentsPanel = ({
                               onReview(
                                 adjustments.filter(
                                   (a) =>
-                                    ['reported', 'customer_changes_requested', 'customer_rejected'].includes(a.status) &&
-                                    !(getAdjustmentOtherFields(a).technicalDecision === 'approved')
+                                    [
+                                      'reported',
+                                      'customer_changes_requested',
+                                      'customer_rejected'
+                                    ].includes(a.status) &&
+                                    !(
+                                      getAdjustmentOtherFields(a)
+                                        .technicalDecision === 'approved'
+                                    )
                                 ),
                                 'technical'
                               )
@@ -391,7 +418,8 @@ const CalibrationServiceAdjustmentsPanel = ({
                                 adjustments.filter(
                                   (a) =>
                                     a.status === 'reported' &&
-                                    getAdjustmentOtherFields(a).technicalDecision === 'approved'
+                                    getAdjustmentOtherFields(a)
+                                      .technicalDecision === 'approved'
                                 ),
                                 'commercial'
                               )
@@ -411,11 +439,15 @@ const CalibrationServiceAdjustmentsPanel = ({
                             variant='outlined'
                             onClick={() =>
                               onReview(
-                                adjustments.filter(
-                                  (a) =>
-                                    ['customer_changes_requested', 'customer_rejected'].includes(a.status)
+                                adjustments.filter((a) =>
+                                  [
+                                    'customer_changes_requested',
+                                    'customer_rejected'
+                                  ].includes(a.status)
                                 ),
-                                hasTechnicalApproval ? 'commercial' : 'technical'
+                                hasTechnicalApproval
+                                  ? 'commercial'
+                                  : 'technical'
                               )
                             }
                             disabled={isBusy}
@@ -432,7 +464,8 @@ const CalibrationServiceAdjustmentsPanel = ({
                             onClick={() =>
                               onSendToCustomer(
                                 adjustments.filter(
-                                  (a) => a.status === 'pending_customer_approval'
+                                  (a) =>
+                                    a.status === 'pending_customer_approval'
                                 )
                               )
                             }
@@ -450,7 +483,8 @@ const CalibrationServiceAdjustmentsPanel = ({
                             onClick={() =>
                               onRegisterCustomerResponse(
                                 adjustments.filter(
-                                  (a) => a.status === 'pending_customer_approval'
+                                  (a) =>
+                                    a.status === 'pending_customer_approval'
                                 )
                               )
                             }

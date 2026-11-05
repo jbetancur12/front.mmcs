@@ -199,9 +199,7 @@ export const CreateFileModal = ({
       let errorMessage = 'Error desconocido al crear el certificado'
 
       if (axios.isAxiosError(error)) {
-        errorMessage =
-          getApiErrorReason(error) ||
-          error.message
+        errorMessage = getApiErrorReason(error) || error.message
 
         // Archivo duplicado (409)
         if (error.response && error.response.status === 409) {

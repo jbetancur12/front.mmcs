@@ -81,15 +81,14 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const isTechnicalReview = reviewStage === 'technical'
 
   // ── Common fields (persist across items) ──
-  const [commonContractModification, setCommonContractModification] = useState(true)
+  const [commonContractModification, setCommonContractModification] =
+    useState(true)
   const [commonSupportChannel, setCommonSupportChannel] = useState('whatsapp')
   const [commonSupportReference, setCommonSupportReference] = useState('')
-  const [commonTechnicalReviewerRole, setCommonTechnicalReviewerRole] = useState(
-    'Director técnico / Coordinador / Calidad'
-  )
-  const [commonTechnicalSignatureData, setCommonTechnicalSignatureData] = useState<
-    string | null
-  >(null)
+  const [commonTechnicalReviewerRole, setCommonTechnicalReviewerRole] =
+    useState('Director técnico / Coordinador / Calidad')
+  const [commonTechnicalSignatureData, setCommonTechnicalSignatureData] =
+    useState<string | null>(null)
 
   // ── Per-item fields (reset on navigation) ──
   const [decision, setDecision] =
@@ -104,7 +103,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [approvedUnitPrice, setApprovedUnitPrice] = useState('')
   const [approvedTaxRate, setApprovedTaxRate] = useState('')
   const [useQuotedPrice, setUseQuotedPrice] = useState(false)
-  const [customerApprovalRequired, setCustomerApprovalRequired] = useState(false)
+  const [customerApprovalRequired, setCustomerApprovalRequired] =
+    useState(false)
 
   // Reset per-item fields on navigation
   useEffect(() => {
@@ -179,8 +179,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
         : true
     )
     setCommonSupportChannel(
-      first.otherFields &&
-        typeof first.otherFields.supportChannel === 'string'
+      first.otherFields && typeof first.otherFields.supportChannel === 'string'
         ? first.otherFields.supportChannel
         : 'whatsapp'
     )
@@ -255,12 +254,9 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const approvedSubtotal = pricedQuantity * approvedUnitPriceNumber
   const approvedTaxTotal = approvedSubtotal * (approvedTaxRateNumber / 100)
   const approvedTotal = approvedSubtotal + approvedTaxTotal
-  const signedSubtotal =
-    isCreditType ? -approvedSubtotal : approvedSubtotal
-  const signedTaxTotal =
-    isCreditType ? -approvedTaxTotal : approvedTaxTotal
-  const signedTotal =
-    isCreditType ? -approvedTotal : approvedTotal
+  const signedSubtotal = isCreditType ? -approvedSubtotal : approvedSubtotal
+  const signedTaxTotal = isCreditType ? -approvedTaxTotal : approvedTaxTotal
+  const signedTotal = isCreditType ? -approvedTotal : approvedTotal
   const canSubmit =
     (!commonContractModification || Boolean(commonSupportChannel)) &&
     (isTechnicalReview ||
@@ -283,7 +279,9 @@ const CalibrationServiceAdjustmentReviewDialog = ({
           technicalReviewerRole: commonTechnicalReviewerRole.trim() || null,
           technicalSignatureData: commonTechnicalSignatureData,
           contractModificationRequired: commonContractModification,
-          supportChannel: commonContractModification ? commonSupportChannel : null,
+          supportChannel: commonContractModification
+            ? commonSupportChannel
+            : null,
           supportReference: commonSupportReference.trim() || null,
           supportNotifiedAt: new Date().toISOString()
         })
@@ -292,7 +290,9 @@ const CalibrationServiceAdjustmentReviewDialog = ({
           reviewStage,
           decision,
           contractModificationRequired: commonContractModification,
-          supportChannel: commonContractModification ? commonSupportChannel : null,
+          supportChannel: commonContractModification
+            ? commonSupportChannel
+            : null,
           supportReference: commonSupportReference.trim() || null,
           supportNotifiedAt: new Date().toISOString(),
           commercialNotes: commercialNotes.trim() || null,
@@ -327,7 +327,11 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
       <DialogTitle>
-        <Stack direction='row' justifyContent='space-between' alignItems='center'>
+        <Stack
+          direction='row'
+          justifyContent='space-between'
+          alignItems='center'
+        >
           <span>
             {isTechnicalReview
               ? 'Revisión técnica de novedades'
@@ -355,7 +359,11 @@ const CalibrationServiceAdjustmentReviewDialog = ({
           >
             <Typography variant='subtitle2' fontWeight={800}>
               Datos comunes de la revisión
-              <Typography variant='caption' color='text.secondary' sx={{ ml: 1 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ ml: 1 }}
+              >
                 (se aplican a todas las novedades)
               </Typography>
             </Typography>
@@ -431,7 +439,9 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                     fullWidth
                     label='Aviso inmediato'
                     value={commonSupportChannel}
-                    onChange={(event) => setCommonSupportChannel(event.target.value)}
+                    onChange={(event) =>
+                      setCommonSupportChannel(event.target.value)
+                    }
                     helperText='Llamada, correo o WhatsApp de soporte a oficina.'
                   >
                     <MenuItem value='whatsapp'>WhatsApp</MenuItem>
@@ -480,18 +490,30 @@ const CalibrationServiceAdjustmentReviewDialog = ({
               }}
               spacing={1}
             >
-              <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
-                <Typography variant='body1' fontWeight={700} color='primary.main'>
+              <Stack
+                direction='row'
+                spacing={1}
+                alignItems='center'
+                flexWrap='wrap'
+              >
+                <Typography
+                  variant='body1'
+                  fontWeight={700}
+                  color='primary.main'
+                >
                   {adjustment?.itemName || 'Sin ítem'}
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>
-                  · {({
-                      quantity_less: 'Cant. menor',
-                      quantity_more: 'Cant. mayor',
-                      extra_item: 'Item adicional',
-                      not_received: 'No recibido',
-                      scope_change: 'Cambio alcance'
-                    }[adjustment?.changeType || ''] || adjustment?.changeType || '')}
+                  ·{' '}
+                  {{
+                    quantity_less: 'Cant. menor',
+                    quantity_more: 'Cant. mayor',
+                    extra_item: 'Item adicional',
+                    not_received: 'No recibido',
+                    scope_change: 'Cambio alcance'
+                  }[adjustment?.changeType || ''] ||
+                    adjustment?.changeType ||
+                    ''}
                 </Typography>
               </Stack>
               <Stack direction='row' spacing={2} flexWrap='wrap'>
@@ -507,7 +529,11 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                     component='span'
                     variant='caption'
                     fontWeight={700}
-                    color={(adjustment?.differenceQuantity || 0) > 0 ? 'warning.main' : 'text.primary'}
+                    color={
+                      (adjustment?.differenceQuantity || 0) > 0
+                        ? 'warning.main'
+                        : 'text.primary'
+                    }
                   >
                     {adjustment?.differenceQuantity != null
                       ? `${adjustment.differenceQuantity > 0 ? '+' : ''}${adjustment.differenceQuantity}`
@@ -598,7 +624,9 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                         fullWidth
                         label='Notas de valoración'
                         value={pricingNotes}
-                        onChange={(event) => setPricingNotes(event.target.value)}
+                        onChange={(event) =>
+                          setPricingNotes(event.target.value)
+                        }
                         multiline
                         minRows={2}
                       />
@@ -616,7 +644,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                         label='Esta novedad requiere validación del cliente/calidad antes de aplicarse'
                       />
                     </Grid>
-                    {hasQuotedItemPrice && (isQuantityMore || isQuantityLess) ? (
+                    {hasQuotedItemPrice &&
+                    (isQuantityMore || isQuantityLess) ? (
                       <Grid item xs={12}>
                         <FormControlLabel
                           control={

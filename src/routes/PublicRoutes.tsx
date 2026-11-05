@@ -29,7 +29,9 @@ const CalibrationServiceAdjustmentBatchResponsePage = lazy(
 )
 const CalibrationServiceRemoteSignaturePage = lazy(
   () =>
-    import('../pages/calibration-services/CalibrationServiceRemoteSignaturePage')
+    import(
+      '../pages/calibration-services/CalibrationServiceRemoteSignaturePage'
+    )
 )
 
 const LoadingFallback = () => <SignalLoader size='large' fullPage />

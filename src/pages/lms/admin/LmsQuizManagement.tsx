@@ -72,9 +72,9 @@ import { logger } from 'src/utils/logger'
 interface QuizQuestion {
   id: number
   question: string
-  type: 'single' | 'multiple' | 'boolean'  // Backend types
+  type: 'single' | 'multiple' | 'boolean' // Backend types
   options: string[]
-  correct_answers: number[]  // Always array for consistency
+  correct_answers: number[] // Always array for consistency
   explanation?: string
   points: number
   difficulty?: 'easy' | 'medium' | 'hard'
@@ -96,10 +96,10 @@ interface QuizConfiguration {
   showCorrectAnswers: boolean
   randomizeQuestions: boolean
   shuffleAnswers: boolean
-  hasTimeLimit: boolean  // Frontend flag
+  hasTimeLimit: boolean // Frontend flag
   timeLimitMinutes: number | null
-  allowReview: boolean  // Frontend only (not in backend)
-  showProgressBar: boolean  // Frontend only (not in backend)
+  allowReview: boolean // Frontend only (not in backend)
+  showProgressBar: boolean // Frontend only (not in backend)
   questions: QuizQuestion[]
 }
 
@@ -113,7 +113,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props
   return (
     <div
-      role="tabpanel"
+      role='tabpanel'
       hidden={value !== index}
       id={`quiz-tabpanel-${index}`}
       aria-labelledby={`quiz-tab-${index}`}
@@ -140,7 +140,13 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   initialQuizId,
   onQuizSaved
 }) => {
-  const questionCategorySuggestions = ['Seguridad', 'Calidad', 'Cumplimiento', 'Inducción', 'Evaluación técnica']
+  const questionCategorySuggestions = [
+    'Seguridad',
+    'Calidad',
+    'Cumplimiento',
+    'Inducción',
+    'Evaluación técnica'
+  ]
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
@@ -164,8 +170,12 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
   const [questionBank, setQuestionBank] = useState<QuizQuestion[]>([])
   const [openQuestionDialog, setOpenQuestionDialog] = useState(false)
-  const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null)
-  const [questionEditorMode, setQuestionEditorMode] = useState<'quiz' | 'bank'>('quiz')
+  const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(
+    null
+  )
+  const [questionEditorMode, setQuestionEditorMode] = useState<'quiz' | 'bank'>(
+    'quiz'
+  )
   const [saveQuestionToBank, setSaveQuestionToBank] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
@@ -219,7 +229,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           timeLimitMinutes: quiz.time_limit_minutes,
           allowReview: true,
           showProgressBar: true,
-          questions: quiz.questions.map(q => ({
+          questions: quiz.questions.map((q) => ({
             id: q.id,
             type: q.type,
             question: q.question,
@@ -248,7 +258,8 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     {
       enabled: !!initialQuizId && activeTab === 3,
       retry: (failureCount, error) =>
-        (error as AxiosError | undefined)?.response?.status !== 429 && failureCount < 1,
+        (error as AxiosError | undefined)?.response?.status !== 429 &&
+        failureCount < 1,
       refetchInterval: 30000, // Refresh every 30 seconds when on analytics tab
       onError: (error: unknown) => {
         logger.error('❌ Error loading quiz stats:', error)
@@ -265,11 +276,15 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           throw new Error('Lesson ID is required')
         }
 
-        const lessonsResponse = await axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
+        const lessonsResponse = await axiosPrivate.get(
+          `/lms/content/modules/${moduleId}/lessons`
+        )
         const lessons = lessonsResponse.data.data || lessonsResponse.data || []
 
         if (lessons.length === 0) {
-          throw new Error('Este módulo no tiene lecciones. Por favor, crea una lección primero.')
+          throw new Error(
+            'Este módulo no tiene lecciones. Por favor, crea una lección primero.'
+          )
         }
 
         targetLessonId = lessons[0].id
@@ -321,7 +336,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       if (filterCategory) params.append('category', filterCategory)
       if (searchTerm) params.append('search', searchTerm)
 
-      const response = await axiosPrivate.get(`/lms/question-bank?${params.toString()}`)
+      const response = await axiosPrivate.get(
+        `/lms/question-bank?${params.toString()}`
+      )
       return response.data
     },
     {
@@ -346,7 +363,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     }
   }, [questionBankData])
 
-   useEffect(() => {
+  useEffect(() => {
     if (!loadedQuiz) return
 
     const quiz = loadedQuiz
@@ -386,7 +403,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       questionData: Partial<QuizQuestion>
       addToQuiz?: boolean
     }) => {
-      const response = await axiosPrivate.post('/lms/question-bank', questionData)
+      const response = await axiosPrivate.post(
+        '/lms/question-bank',
+        questionData
+      )
       return response.data
     },
     {
@@ -395,7 +415,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         const createdQuestion = data.data
 
         if (variables.addToQuiz && createdQuestion) {
-          setQuizConfig(prev => ({
+          setQuizConfig((prev) => ({
             ...prev,
             questions: [
               ...prev.questions,
@@ -417,9 +437,12 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           }))
         }
 
-        appNotify.success('Éxito', variables.addToQuiz
+        appNotify.success(
+          'Éxito',
+          variables.addToQuiz
             ? 'Pregunta creada y agregada al quiz'
-            : 'Pregunta creada en el banco exitosamente')
+            : 'Pregunta creada en el banco exitosamente'
+        )
         queryClient.invalidateQueries(['questionBank'])
         // Close modal and reset form after successful creation
         setQuestionEditorMode('quiz')
@@ -429,14 +452,25 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: unknown) => {
         logger.error('❌ Error creating question:', error)
-        appNotify.error('Error', getApiErrorReason(error) || 'Error al crear la pregunta')
+        appNotify.error(
+          'Error',
+          getApiErrorReason(error) || 'Error al crear la pregunta'
+        )
       }
     }
   )
 
   // Update question mutation
   const updateQuestionMutation = useMutation(
-    async ({ id, data, updateQuiz }: { id: number; data: Partial<QuizQuestion>; updateQuiz?: { isInQuiz: boolean; updatedQuestion: QuizQuestion } }) => {
+    async ({
+      id,
+      data,
+      updateQuiz
+    }: {
+      id: number
+      data: Partial<QuizQuestion>
+      updateQuiz?: { isInQuiz: boolean; updatedQuestion: QuizQuestion }
+    }) => {
       const response = await axiosPrivate.put(`/lms/question-bank/${id}`, data)
       return { response: response.data, updateQuiz }
     },
@@ -448,9 +482,13 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
         // Update quiz questions if this question is in the quiz
         if (updateQuiz?.isInQuiz && updateQuiz.updatedQuestion) {
-          setQuizConfig(prev => ({
+          setQuizConfig((prev) => ({
             ...prev,
-            questions: prev.questions.map(q => q.id === updateQuiz.updatedQuestion.id ? updateQuiz.updatedQuestion : q)
+            questions: prev.questions.map((q) =>
+              q.id === updateQuiz.updatedQuestion.id
+                ? updateQuiz.updatedQuestion
+                : q
+            )
           }))
         }
 
@@ -461,7 +499,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: unknown) => {
         logger.error('❌ Error updating question:', error)
-        appNotify.error('Error', getApiErrorReason(error) || 'Error al actualizar la pregunta')
+        appNotify.error(
+          'Error',
+          getApiErrorReason(error) || 'Error al actualizar la pregunta'
+        )
       }
     }
   )
@@ -480,7 +521,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       },
       onError: (error: unknown) => {
         logger.error('❌ Error deleting question:', error)
-        appNotify.error('Error', getApiErrorReason(error) || 'Error al eliminar la pregunta')
+        appNotify.error(
+          'Error',
+          getApiErrorReason(error) || 'Error al eliminar la pregunta'
+        )
       }
     }
   )
@@ -493,13 +537,13 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     field: keyof QuizConfiguration,
     value: QuizConfiguration[keyof QuizConfiguration]
   ) => {
-    setQuizConfig(prev => ({ ...prev, [field]: value }))
+    setQuizConfig((prev) => ({ ...prev, [field]: value }))
   }
 
   const buildQuestionPayload = () => ({
     question: newQuestion.question?.trim() || '',
     type: newQuestion.type || 'single',
-    options: newQuestion.options?.filter(opt => opt.trim() !== '') || [],
+    options: newQuestion.options?.filter((opt) => opt.trim() !== '') || [],
     correct_answers: newQuestion.correct_answers || [0],
     explanation: newQuestion.explanation,
     points: newQuestion.points || 1,
@@ -508,7 +552,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     tags: newQuestion.tags || []
   })
 
-  const createLocalQuizQuestion = (questionData: ReturnType<typeof buildQuestionPayload>): QuizQuestion => ({
+  const createLocalQuizQuestion = (
+    questionData: ReturnType<typeof buildQuestionPayload>
+  ): QuizQuestion => ({
     id: -Date.now(),
     ...questionData,
     source: 'quiz'
@@ -536,7 +582,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     const questionData = buildQuestionPayload()
 
     if (questionEditorMode === 'quiz' && !saveQuestionToBank) {
-      setQuizConfig(prev => ({
+      setQuizConfig((prev) => ({
         ...prev,
         questions: [...prev.questions, createLocalQuizQuestion(questionData)]
       }))
@@ -552,7 +598,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     })
   }
 
-  const handleEditQuestion = (question: QuizQuestion, mode: 'quiz' | 'bank' = 'quiz') => {
+  const handleEditQuestion = (
+    question: QuizQuestion,
+    mode: 'quiz' | 'bank' = 'quiz'
+  ) => {
     setEditingQuestion(question)
     setQuestionEditorMode(mode)
     setSaveQuestionToBank(mode === 'bank' || Boolean(question.bankQuestionId))
@@ -576,8 +625,11 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     const questionData = {
       ...buildQuestionPayload(),
       type: newQuestion.type || editingQuestion.type,
-      options: newQuestion.options?.filter(opt => opt.trim() !== '') || editingQuestion.options,
-      correct_answers: newQuestion.correct_answers || editingQuestion.correct_answers,
+      options:
+        newQuestion.options?.filter((opt) => opt.trim() !== '') ||
+        editingQuestion.options,
+      correct_answers:
+        newQuestion.correct_answers || editingQuestion.correct_answers,
       points: newQuestion.points || editingQuestion.points,
       difficulty: newQuestion.difficulty || editingQuestion.difficulty,
       category: newQuestion.category || editingQuestion.category,
@@ -591,9 +643,11 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         source: 'quiz'
       }
 
-      setQuizConfig(prev => ({
+      setQuizConfig((prev) => ({
         ...prev,
-        questions: prev.questions.map(q => q.id === editingQuestion.id ? updatedQuestion : q)
+        questions: prev.questions.map((q) =>
+          q.id === editingQuestion.id ? updatedQuestion : q
+        )
       }))
       appNotify.success('Éxito', 'Pregunta del quiz actualizada')
       setEditingQuestion(null)
@@ -605,7 +659,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     }
 
     // Check if this question is in the quiz
-    const isInQuiz = quizConfig.questions.some(q => q.id === editingQuestion.id)
+    const isInQuiz = quizConfig.questions.some(
+      (q) => q.id === editingQuestion.id
+    )
     const updatedQuestion: QuizQuestion = {
       ...editingQuestion,
       ...questionData,
@@ -630,16 +686,16 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       await deleteQuestionMutation.mutateAsync(questionId)
 
       // Also remove from quiz if present
-      setQuizConfig(prev => ({
+      setQuizConfig((prev) => ({
         ...prev,
-        questions: prev.questions.filter(q => q.id !== questionId)
+        questions: prev.questions.filter((q) => q.id !== questionId)
       }))
     }
   }
 
   const handleAddQuestionsToQuiz = () => {
     const questionsToAdd = questionBank
-      .filter(q => selectedQuestions.includes(q.id))
+      .filter((q) => selectedQuestions.includes(q.id))
       .map((question, index) => ({
         ...question,
         id: -(Date.now() + index),
@@ -647,11 +703,16 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         bankQuestionId: question.id
       }))
 
-    setQuizConfig(prev => ({
+    setQuizConfig((prev) => ({
       ...prev,
       questions: [
         ...prev.questions,
-        ...questionsToAdd.filter(q => !prev.questions.find(existing => existing.bankQuestionId === q.bankQuestionId))
+        ...questionsToAdd.filter(
+          (q) =>
+            !prev.questions.find(
+              (existing) => existing.bankQuestionId === q.bankQuestionId
+            )
+        )
       ]
     }))
     setSelectedQuestions([])
@@ -659,9 +720,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   }
 
   const handleRemoveQuestionFromQuiz = (questionId: number) => {
-    setQuizConfig(prev => ({
+    setQuizConfig((prev) => ({
       ...prev,
-      questions: prev.questions.filter(q => q.id !== questionId)
+      questions: prev.questions.filter((q) => q.id !== questionId)
     }))
   }
 
@@ -680,47 +741,64 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   }
 
   const getFilteredQuestions = () => {
-    return questionBank.filter(question => {
-      const matchesSearch = question.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           question.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           question.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      const matchesCategory = !filterCategory || question.category === filterCategory
-      const matchesDifficulty = !filterDifficulty || question.difficulty === filterDifficulty
-      
+    return questionBank.filter((question) => {
+      const matchesSearch =
+        question.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        question.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        question.tags?.some((tag) =>
+          tag.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      const matchesCategory =
+        !filterCategory || question.category === filterCategory
+      const matchesDifficulty =
+        !filterDifficulty || question.difficulty === filterDifficulty
+
       return matchesSearch && matchesCategory && matchesDifficulty
     })
   }
 
   const getQuestionTypeIcon = (type: string) => {
     switch (type) {
-      case 'true-false': return <ToggleIcon />
-      case 'single-choice': return <RadioIcon />
-      case 'multiple-choice': return <CheckboxIcon />
-      default: return <HelpIcon />
+      case 'true-false':
+        return <ToggleIcon />
+      case 'single-choice':
+        return <RadioIcon />
+      case 'multiple-choice':
+        return <CheckboxIcon />
+      default:
+        return <HelpIcon />
     }
   }
 
   const getDifficultyColor = (difficulty?: string): ChipProps['color'] => {
     switch (difficulty) {
-      case 'easy': return 'success'
-      case 'medium': return 'warning'
-      case 'hard': return 'error'
-      default: return 'default'
+      case 'easy':
+        return 'success'
+      case 'medium':
+        return 'warning'
+      case 'hard':
+        return 'error'
+      default:
+        return 'default'
     }
   }
 
   const validateQuizConfig = () => {
     const errors: string[] = []
-    
+
     if (!quizConfig.title.trim()) errors.push('El título es requerido')
-    if (quizConfig.questions.length === 0) errors.push('Debe agregar al menos una pregunta')
-    if (quizConfig.passingPercentage < 1 || quizConfig.passingPercentage > 100) {
+    if (quizConfig.questions.length === 0)
+      errors.push('Debe agregar al menos una pregunta')
+    if (
+      quizConfig.passingPercentage < 1 ||
+      quizConfig.passingPercentage > 100
+    ) {
       errors.push('El porcentaje de aprobación debe estar entre 1 y 100')
     }
     if (quizConfig.maxAttempts < 1 || quizConfig.maxAttempts > 10) {
       errors.push('Los intentos máximos deben estar entre 1 y 10')
     }
-    
+
     return errors
   }
 
@@ -730,7 +808,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
   const quizValidationErrors = validateQuizConfig()
   const totalPoints = quizConfig.questions.reduce((sum, q) => sum + q.points, 0)
-  const pointsToPass = Math.ceil((totalPoints * quizConfig.passingPercentage) / 100)
+  const pointsToPass = Math.ceil(
+    (totalPoints * quizConfig.passingPercentage) / 100
+  )
   const hasBasicSetup = Boolean(quizConfig.title.trim())
   const hasQuestions = quizConfig.questions.length > 0
   const canPreviewQuiz = hasBasicSetup && hasQuestions
@@ -772,7 +852,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   ]
 
   const firstIncompleteStep = guidedSteps.find((step) => !step.complete)
-  const activeGuidedStep = firstIncompleteStep ? guidedSteps.indexOf(firstIncompleteStep) : guidedSteps.length - 1
+  const activeGuidedStep = firstIncompleteStep
+    ? guidedSteps.indexOf(firstIncompleteStep)
+    : guidedSteps.length - 1
 
   const handleSaveQuiz = () => {
     if (quizValidationErrors.length > 0) {
@@ -781,7 +863,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     }
 
     if (quizConfig.questions.length === 0) {
-      notify.error('Debes agregar al menos una pregunta al quiz antes de guardar')
+      notify.error(
+        'Debes agregar al menos una pregunta al quiz antes de guardar'
+      )
       return
     }
 
@@ -794,7 +878,14 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   // ============================================================================
   if (isLoadingQuiz) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 8 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          p: 8
+        }}
+      >
         <SignalLoader message='Cargando quiz...' />
       </Box>
     )
@@ -809,15 +900,28 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           subtitle='Evaluaciones de las lecciones de cada curso'
           icon={<Quiz />}
         />
-        <Card variant='outlined' sx={{ maxWidth: 560, mx: 'auto', mt: 3, borderRadius: 3, textAlign: 'center' }}>
+        <Card
+          variant='outlined'
+          sx={{
+            maxWidth: 560,
+            mx: 'auto',
+            mt: 3,
+            borderRadius: 3,
+            textAlign: 'center'
+          }}
+        >
           <CardContent sx={{ p: 4 }}>
             <Typography variant='h5' sx={{ fontWeight: 600, mb: 1 }}>
               Los quizzes se editan desde cada curso
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-              Abre el contenido de un curso, elige una lección de tipo quiz y configura aquí sus preguntas.
+              Abre el contenido de un curso, elige una lección de tipo quiz y
+              configura aquí sus preguntas.
             </Typography>
-            <Button variant='contained' onClick={() => navigate('/lms/admin/courses')}>
+            <Button
+              variant='contained'
+              onClick={() => navigate('/lms/admin/courses')}
+            >
               Ir a gestión de cursos
             </Button>
           </CardContent>
@@ -830,38 +934,64 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     <Box sx={{ width: '100%' }}>
       {/* Error Messages */}
       {Boolean(quizLoadError) && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity='error' sx={{ mb: 2 }}>
           Error al cargar el quiz. Por favor, inténtalo de nuevo.
         </Alert>
       )}
 
       {saveQuizMutation.isError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Error al guardar el quiz: {getApiErrorReason(saveQuizMutation.error) || 'Error desconocido'}
+        <Alert severity='error' sx={{ mb: 2 }}>
+          Error al guardar el quiz:{' '}
+          {getApiErrorReason(saveQuizMutation.error) || 'Error desconocido'}
         </Alert>
       )}
 
       {saveQuizMutation.isSuccess && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+        <Alert severity='success' sx={{ mb: 2 }}>
           ✅ Quiz guardado exitosamente
         </Alert>
       )}
 
-      <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+      <Card
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
         <CardContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 2,
+                flexWrap: 'wrap'
+              }}
+            >
               <Box>
-                <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                <Typography variant='h5' sx={{ fontWeight: 700, mb: 0.5 }}>
                   Constructor de Quiz
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Sigue este flujo: configura, agrega preguntas, prueba la experiencia y luego guarda para medir resultados.
+                <Typography variant='body2' color='text.secondary'>
+                  Sigue este flujo: configura, agrega preguntas, prueba la
+                  experiencia y luego guarda para medir resultados.
                 </Typography>
               </Box>
               <Chip
-                color={quizValidationErrors.length === 0 && hasQuestions ? 'success' : 'warning'}
-                icon={quizValidationErrors.length === 0 && hasQuestions ? <CheckCircleIcon /> : <WarningIcon />}
+                color={
+                  quizValidationErrors.length === 0 && hasQuestions
+                    ? 'success'
+                    : 'warning'
+                }
+                icon={
+                  quizValidationErrors.length === 0 && hasQuestions ? (
+                    <CheckCircleIcon />
+                  ) : (
+                    <WarningIcon />
+                  )
+                }
                 label={
                   quizValidationErrors.length === 0 && hasQuestions
                     ? 'Listo para guardar'
@@ -882,31 +1012,57 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               {guidedSteps.map((step, index) => (
                 <Grid item xs={12} md={6} key={step.label}>
                   <Paper
-                    variant="outlined"
+                    variant='outlined'
                     sx={{
                       p: 2,
                       borderRadius: 2,
                       height: '100%',
-                      borderColor: index === activeGuidedStep ? 'primary.main' : 'divider',
+                      borderColor:
+                        index === activeGuidedStep ? 'primary.main' : 'divider',
                       bgcolor: step.complete ? 'success.50' : 'background.paper'
                     }}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 2,
+                        mb: 1
+                      }}
+                    >
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
                         {step.label}
                       </Typography>
                       <Chip
-                        size="small"
-                        color={step.complete ? 'success' : index === activeGuidedStep ? 'primary' : 'default'}
-                        label={step.complete ? 'Hecho' : index === activeGuidedStep ? 'Siguiente' : 'Pendiente'}
+                        size='small'
+                        color={
+                          step.complete
+                            ? 'success'
+                            : index === activeGuidedStep
+                              ? 'primary'
+                              : 'default'
+                        }
+                        label={
+                          step.complete
+                            ? 'Hecho'
+                            : index === activeGuidedStep
+                              ? 'Siguiente'
+                              : 'Pendiente'
+                        }
                       />
                     </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 2 }}
+                    >
                       {step.description}
                     </Typography>
                     <Button
-                      size="small"
-                      variant={index === activeGuidedStep ? 'contained' : 'outlined'}
+                      size='small'
+                      variant={
+                        index === activeGuidedStep ? 'contained' : 'outlined'
+                      }
                       onClick={() => setActiveTab(step.tab)}
                     >
                       Ir a este paso
@@ -915,17 +1071,16 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 </Grid>
               ))}
             </Grid>
-
           </Stack>
         </CardContent>
       </Card>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={handleTabChange}>
-          <Tab label="Configuración" icon={<AssessmentIcon />} />
-          <Tab label="Preguntas" icon={<QuestionIcon />} />
-          <Tab label="Vista Previa" icon={<PreviewIcon />} />
-          <Tab label="Analíticas" icon={<AnalyticsIcon />} />
+          <Tab label='Configuración' icon={<AssessmentIcon />} />
+          <Tab label='Preguntas' icon={<QuestionIcon />} />
+          <Tab label='Vista Previa' icon={<PreviewIcon />} />
+          <Tab label='Analíticas' icon={<AnalyticsIcon />} />
         </Tabs>
       </Box>
 
@@ -935,167 +1090,226 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           <Grid item xs={12} md={8}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Configuración General del Quiz
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Paso 1 de 4. Define las reglas mínimas para que el quiz quede claro y evaluable.
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 2 }}
+                >
+                  Paso 1 de 4. Define las reglas mínimas para que el quiz quede
+                  claro y evaluable.
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Título del Quiz"
+                      label='Título del Quiz'
                       value={quizConfig.title}
-                      onChange={(e) => handleQuizConfigChange('title', e.target.value)}
+                      onChange={(e) =>
+                        handleQuizConfigChange('title', e.target.value)
+                      }
                       required
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
                       multiline
                       rows={3}
-                      label="Instrucciones"
+                      label='Instrucciones'
                       value={quizConfig.instructions}
-                      onChange={(e) => handleQuizConfigChange('instructions', e.target.value)}
-                      helperText="Instrucciones que verán los estudiantes antes de comenzar"
+                      onChange={(e) =>
+                        handleQuizConfigChange('instructions', e.target.value)
+                      }
+                      helperText='Instrucciones que verán los estudiantes antes de comenzar'
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      type="number"
-                      label="Porcentaje de Aprobación (%)"
+                      type='number'
+                      label='Porcentaje de Aprobación (%)'
                       value={quizConfig.passingPercentage}
-                      onChange={(e) => handleQuizConfigChange('passingPercentage', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleQuizConfigChange(
+                          'passingPercentage',
+                          parseInt(e.target.value)
+                        )
+                      }
                       inputProps={{ min: 1, max: 100 }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      type="number"
-                      label="Intentos Máximos"
+                      type='number'
+                      label='Intentos Máximos'
                       value={quizConfig.maxAttempts}
-                      onChange={(e) => handleQuizConfigChange('maxAttempts', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleQuizConfigChange(
+                          'maxAttempts',
+                          parseInt(e.target.value)
+                        )
+                      }
                       inputProps={{ min: 1, max: 10 }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      type="number"
-                      label="Tiempo de Espera (minutos)"
+                      type='number'
+                      label='Tiempo de Espera (minutos)'
                       value={quizConfig.cooldownMinutes}
-                      onChange={(e) => handleQuizConfigChange('cooldownMinutes', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleQuizConfigChange(
+                          'cooldownMinutes',
+                          parseInt(e.target.value)
+                        )
+                      }
                       inputProps={{ min: 0 }}
-                      helperText="Tiempo de espera entre intentos"
+                      helperText='Tiempo de espera entre intentos'
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      type="number"
-                      label="Límite de Tiempo (minutos)"
+                      type='number'
+                      label='Límite de Tiempo (minutos)'
                       value={quizConfig.timeLimitMinutes || ''}
-                      onChange={(e) => handleQuizConfigChange('timeLimitMinutes', e.target.value ? parseInt(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        handleQuizConfigChange(
+                          'timeLimitMinutes',
+                          e.target.value ? parseInt(e.target.value) : undefined
+                        )
+                      }
                       inputProps={{ min: 1 }}
-                      helperText="Opcional - Dejar vacío para sin límite"
+                      helperText='Opcional - Dejar vacío para sin límite'
                     />
                   </Grid>
                 </Grid>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} md={4}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Opciones Avanzadas
                 </Typography>
-                
+
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={quizConfig.showCorrectAnswers}
-                        onChange={(e) => handleQuizConfigChange('showCorrectAnswers', e.target.checked)}
+                        onChange={(e) =>
+                          handleQuizConfigChange(
+                            'showCorrectAnswers',
+                            e.target.checked
+                          )
+                        }
                       />
                     }
-                    label="Mostrar respuestas correctas"
+                    label='Mostrar respuestas correctas'
                   />
-                  
+
                   <FormControlLabel
                     control={
                       <Switch
                         checked={quizConfig.randomizeQuestions}
-                        onChange={(e) => handleQuizConfigChange('randomizeQuestions', e.target.checked)}
+                        onChange={(e) =>
+                          handleQuizConfigChange(
+                            'randomizeQuestions',
+                            e.target.checked
+                          )
+                        }
                       />
                     }
-                    label="Aleatorizar preguntas"
+                    label='Aleatorizar preguntas'
                   />
-                  
+
                   <FormControlLabel
                     control={
                       <Switch
                         checked={quizConfig.shuffleAnswers}
-                        onChange={(e) => handleQuizConfigChange('shuffleAnswers', e.target.checked)}
+                        onChange={(e) =>
+                          handleQuizConfigChange(
+                            'shuffleAnswers',
+                            e.target.checked
+                          )
+                        }
                       />
                     }
-                    label="Mezclar opciones de respuesta"
+                    label='Mezclar opciones de respuesta'
                   />
-                  
+
                   <FormControlLabel
                     control={
                       <Switch
                         checked={quizConfig.allowReview}
-                        onChange={(e) => handleQuizConfigChange('allowReview', e.target.checked)}
+                        onChange={(e) =>
+                          handleQuizConfigChange(
+                            'allowReview',
+                            e.target.checked
+                          )
+                        }
                       />
                     }
-                    label="Permitir revisar respuestas"
+                    label='Permitir revisar respuestas'
                   />
-                  
+
                   <FormControlLabel
                     control={
                       <Switch
                         checked={quizConfig.showProgressBar}
-                        onChange={(e) => handleQuizConfigChange('showProgressBar', e.target.checked)}
+                        onChange={(e) =>
+                          handleQuizConfigChange(
+                            'showProgressBar',
+                            e.target.checked
+                          )
+                        }
                       />
                     }
-                    label="Mostrar barra de progreso"
+                    label='Mostrar barra de progreso'
                   />
                 </Box>
               </CardContent>
             </Card>
-            
+
             <Card sx={{ mt: 2 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Resumen del Quiz
                 </Typography>
 
-                <Alert severity={quizValidationErrors.length === 0 ? 'success' : 'warning'} sx={{ mb: 2 }}>
+                <Alert
+                  severity={
+                    quizValidationErrors.length === 0 ? 'success' : 'warning'
+                  }
+                  sx={{ mb: 2 }}
+                >
                   {quizValidationErrors.length === 0
                     ? 'La configuración actual es válida.'
                     : `Faltan ${quizValidationErrors.length} ajuste(s) para poder guardar.`}
                 </Alert>
-                
+
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Preguntas:</strong> {quizConfig.questions.length}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Puntos totales:</strong> {totalPoints}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Puntos para aprobar:</strong> {pointsToPass}
                   </Typography>
                 </Box>
@@ -1105,46 +1319,70 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                     <Divider sx={{ my: 2 }} />
                     <Stack spacing={1}>
                       {quizValidationErrors.map((error) => (
-                        <Typography key={error} variant="body2" color="warning.main">
+                        <Typography
+                          key={error}
+                          variant='body2'
+                          color='warning.main'
+                        >
                           • {error}
                         </Typography>
                       ))}
                     </Stack>
                   </>
                 )}
-                
+
                 <Button
                   fullWidth
-                  variant="contained"
-                  startIcon={saveQuizMutation.isLoading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                  variant='contained'
+                  startIcon={
+                    saveQuizMutation.isLoading ? (
+                      <CircularProgress size={20} color='inherit' />
+                    ) : (
+                      <SaveIcon />
+                    )
+                  }
                   onClick={handleSaveQuiz}
                   sx={{ mt: 2 }}
-                  disabled={quizValidationErrors.length > 0 || saveQuizMutation.isLoading}
+                  disabled={
+                    quizValidationErrors.length > 0 ||
+                    saveQuizMutation.isLoading
+                  }
                 >
-                  {saveQuizMutation.isLoading ? 'Guardando...' : (initialQuizId ? 'Actualizar Quiz' : 'Guardar Quiz')}
+                  {saveQuizMutation.isLoading
+                    ? 'Guardando...'
+                    : initialQuizId
+                      ? 'Actualizar Quiz'
+                      : 'Guardar Quiz'}
                 </Button>
               </CardContent>
             </Card>
           </Grid>
-          
+
           {/* Current Quiz Questions */}
           <Grid item xs={12}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 2
+                  }}
+                >
+                  <Typography variant='h6'>
                     Preguntas del Quiz ({quizConfig.questions.length})
                   </Typography>
                   <Stack direction='row' spacing={1}>
                     <Button
-                      variant="contained"
+                      variant='contained'
                       startIcon={<AddIcon />}
                       onClick={openNewQuizQuestionDialog}
                     >
                       Nueva pregunta
                     </Button>
                     <Button
-                      variant="outlined"
+                      variant='outlined'
                       startIcon={<QuestionIcon />}
                       onClick={() => setActiveTab(1)}
                     >
@@ -1152,55 +1390,102 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                     </Button>
                   </Stack>
                 </Box>
-                
+
                 {quizConfig.questions.length === 0 ? (
-                  <Alert severity="info">
-                    Este quiz todavía no tiene preguntas. Lo más rápido es crear una aquí misma. El banco queda disponible si quieres reutilizar preguntas existentes.
+                  <Alert severity='info'>
+                    Este quiz todavía no tiene preguntas. Lo más rápido es crear
+                    una aquí misma. El banco queda disponible si quieres
+                    reutilizar preguntas existentes.
                   </Alert>
                 ) : (
                   <List>
                     {quizConfig.questions.map((question, index) => (
                       <Card key={question.id} sx={{ mb: 2 }}>
                         <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: 2
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                minWidth: 120
+                              }}
+                            >
                               <DragIcon sx={{ color: 'text.disabled' }} />
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Pregunta {index + 1}
                               </Typography>
                             </Box>
-                            
+
                             <Box sx={{ flex: 1 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  mb: 1
+                                }}
+                              >
                                 {getQuestionTypeIcon(question.type)}
-                                <Chip label={question.type} size="small" color="primary" />
-                                <Chip label={`${question.points} pts`} size="small" variant="outlined" />
+                                <Chip
+                                  label={question.type}
+                                  size='small'
+                                  color='primary'
+                                />
+                                <Chip
+                                  label={`${question.points} pts`}
+                                  size='small'
+                                  variant='outlined'
+                                />
                                 {question.difficulty && (
-                                  <Chip 
-                                    label={question.difficulty} 
-                                    size="small" 
-                                    color={getDifficultyColor(question.difficulty)}
+                                  <Chip
+                                    label={question.difficulty}
+                                    size='small'
+                                    color={getDifficultyColor(
+                                      question.difficulty
+                                    )}
                                   />
                                 )}
                               </Box>
-                              
-                              <Typography variant="body1" sx={{ mb: 1 }}>
+
+                              <Typography variant='body1' sx={{ mb: 1 }}>
                                 {question.question}
                               </Typography>
-                              
+
                               {question.category && (
-                                <Chip label={question.category} size="small" variant="outlined" sx={{ mr: 1 }} />
+                                <Chip
+                                  label={question.category}
+                                  size='small'
+                                  variant='outlined'
+                                  sx={{ mr: 1 }}
+                                />
                               )}
                             </Box>
-                            
+
                             <Box sx={{ display: 'flex', gap: 1 }}>
-                              <IconButton size="small" onClick={() => handleEditQuestion(question, 'quiz')}>
+                              <IconButton
+                                size='small'
+                                onClick={() =>
+                                  handleEditQuestion(question, 'quiz')
+                                }
+                              >
                                 <EditIcon />
                               </IconButton>
-                              <IconButton 
-                                size="small" 
-                                color="error" 
-                                onClick={() => handleRemoveQuestionFromQuiz(question.id)}
+                              <IconButton
+                                size='small'
+                                color='error'
+                                onClick={() =>
+                                  handleRemoveQuestionFromQuiz(question.id)
+                                }
                               >
                                 <DeleteIcon />
                               </IconButton>
@@ -1223,18 +1508,27 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           <Grid item xs={12}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-                  <Typography variant="h6">Preguntas del Quiz</Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2,
+                    flexWrap: 'wrap',
+                    mb: 2
+                  }}
+                >
+                  <Typography variant='h6'>Preguntas del Quiz</Typography>
                   <Stack direction='row' spacing={1}>
                     <Button
-                      variant="contained"
+                      variant='contained'
                       startIcon={<AddIcon />}
                       onClick={openNewQuizQuestionDialog}
                     >
                       Nueva pregunta para este quiz
                     </Button>
                     <Button
-                      variant="outlined"
+                      variant='outlined'
                       startIcon={<QuestionIcon />}
                       onClick={openBankQuestionDialog}
                     >
@@ -1242,73 +1536,93 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                     </Button>
                   </Stack>
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Paso 2 de 4. Crea primero las preguntas propias de este quiz. Si ya tienes preguntas reutilizables, puedes agregarlas desde el banco en la parte inferior.
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 2 }}
+                >
+                  Paso 2 de 4. Crea primero las preguntas propias de este quiz.
+                  Si ya tienes preguntas reutilizables, puedes agregarlas desde
+                  el banco en la parte inferior.
                 </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  El banco de preguntas es opcional. Úsalo cuando quieras reutilizar preguntas en varios quizzes; no hace falta alimentarlo para poder crear uno nuevo.
+                <Alert severity='info' sx={{ mb: 2 }}>
+                  El banco de preguntas es opcional. Úsalo cuando quieras
+                  reutilizar preguntas en varios quizzes; no hace falta
+                  alimentarlo para poder crear uno nuevo.
                 </Alert>
 
                 <Divider sx={{ my: 3 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 1 }}>
                   Reutilizar desde el banco de preguntas
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Selecciona preguntas existentes y agrégalas al quiz como copia editable. Cambiarlas aquí no modifica el banco global.
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 2 }}
+                >
+                  Selecciona preguntas existentes y agrégalas al quiz como copia
+                  editable. Cambiarlas aquí no modifica el banco global.
                 </Typography>
-                
+
                 {/* Filters */}
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                   <Grid item xs={12} sm={4}>
                     <TextField
                       fullWidth
-                      label="Buscar preguntas"
+                      label='Buscar preguntas'
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      size="small"
+                      size='small'
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <FormControl fullWidth size="small">
+                    <FormControl fullWidth size='small'>
                       <InputLabel>Categoría</InputLabel>
                       <Select
                         value={filterCategory}
-                        label="Categoría"
+                        label='Categoría'
                         onChange={(e) => setFilterCategory(e.target.value)}
                       >
-                        <MenuItem value="">Todas</MenuItem>
-                        <MenuItem value="Geografía">Geografía</MenuItem>
-                        <MenuItem value="Programación">Programación</MenuItem>
-                        <MenuItem value="Historia">Historia</MenuItem>
+                        <MenuItem value=''>Todas</MenuItem>
+                        <MenuItem value='Geografía'>Geografía</MenuItem>
+                        <MenuItem value='Programación'>Programación</MenuItem>
+                        <MenuItem value='Historia'>Historia</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <FormControl fullWidth size="small">
+                    <FormControl fullWidth size='small'>
                       <InputLabel>Dificultad</InputLabel>
                       <Select
                         value={filterDifficulty}
-                        label="Dificultad"
+                        label='Dificultad'
                         onChange={(e) => setFilterDifficulty(e.target.value)}
                       >
-                        <MenuItem value="">Todas</MenuItem>
-                        <MenuItem value="easy">Fácil</MenuItem>
-                        <MenuItem value="medium">Medio</MenuItem>
-                        <MenuItem value="hard">Difícil</MenuItem>
+                        <MenuItem value=''>Todas</MenuItem>
+                        <MenuItem value='easy'>Fácil</MenuItem>
+                        <MenuItem value='medium'>Medio</MenuItem>
+                        <MenuItem value='hard'>Difícil</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
                 </Grid>
-                
+
                 {selectedQuestions.length > 0 && (
                   <Box sx={{ mb: 2 }}>
-                    <Alert severity="info" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Alert
+                      severity='info'
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                    >
                       <Typography>
                         {selectedQuestions.length} pregunta(s) seleccionada(s)
                       </Typography>
                       <Button
-                        variant="contained"
-                        size="small"
+                        variant='contained'
+                        size='small'
                         onClick={handleAddQuestionsToQuiz}
                       >
                         Agregar al Quiz
@@ -1316,74 +1630,130 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                     </Alert>
                   </Box>
                 )}
-                
+
                 {/* Question List */}
                 <List>
                   {getFilteredQuestions().map((question) => (
                     <Card key={question.id} sx={{ mb: 2 }}>
                       <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 2
+                          }}
+                        >
                           <FormControlLabel
                             control={
                               <Switch
-                                checked={selectedQuestions.includes(question.id)}
+                                checked={selectedQuestions.includes(
+                                  question.id
+                                )}
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    setSelectedQuestions(prev => [...prev, question.id])
+                                    setSelectedQuestions((prev) => [
+                                      ...prev,
+                                      question.id
+                                    ])
                                   } else {
-                                    setSelectedQuestions(prev => prev.filter(id => id !== question.id))
+                                    setSelectedQuestions((prev) =>
+                                      prev.filter((id) => id !== question.id)
+                                    )
                                   }
                                 }}
                               />
                             }
-                            label=""
+                            label=''
                           />
-                          
+
                           <Box sx={{ flex: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                mb: 1
+                              }}
+                            >
                               {getQuestionTypeIcon(question.type)}
-                              <Chip label={question.type} size="small" color="primary" />
-                              <Chip label={`${question.points} pts`} size="small" variant="outlined" />
+                              <Chip
+                                label={question.type}
+                                size='small'
+                                color='primary'
+                              />
+                              <Chip
+                                label={`${question.points} pts`}
+                                size='small'
+                                variant='outlined'
+                              />
                               {question.difficulty && (
-                                <Chip 
-                                  label={question.difficulty} 
-                                  size="small" 
-                                  color={getDifficultyColor(question.difficulty)}
+                                <Chip
+                                  label={question.difficulty}
+                                  size='small'
+                                  color={getDifficultyColor(
+                                    question.difficulty
+                                  )}
                                 />
                               )}
                               {question.usageCount !== undefined && (
-                                <Chip label={`Usado ${question.usageCount} veces`} size="small" variant="outlined" />
+                                <Chip
+                                  label={`Usado ${question.usageCount} veces`}
+                                  size='small'
+                                  variant='outlined'
+                                />
                               )}
                               {question.successRate !== undefined && (
-                                <Chip 
-                                  label={`${question.successRate}% éxito`} 
-                                  size="small" 
-                                  color={question.successRate >= 70 ? 'success' : question.successRate >= 50 ? 'warning' : 'error'}
+                                <Chip
+                                  label={`${question.successRate}% éxito`}
+                                  size='small'
+                                  color={
+                                    question.successRate >= 70
+                                      ? 'success'
+                                      : question.successRate >= 50
+                                        ? 'warning'
+                                        : 'error'
+                                  }
                                 />
                               )}
                             </Box>
-                            
-                            <Typography variant="body1" sx={{ mb: 1 }}>
+
+                            <Typography variant='body1' sx={{ mb: 1 }}>
                               {question.question}
                             </Typography>
-                            
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+
+                            <Box
+                              sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}
+                            >
                               {question.category && (
-                                <Chip label={question.category} size="small" variant="outlined" />
+                                <Chip
+                                  label={question.category}
+                                  size='small'
+                                  variant='outlined'
+                                />
                               )}
                               {question.tags?.map((tag, index) => (
-                                <Chip key={index} label={tag} size="small" variant="outlined" />
+                                <Chip
+                                  key={index}
+                                  label={tag}
+                                  size='small'
+                                  variant='outlined'
+                                />
                               ))}
                             </Box>
                           </Box>
-                          
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton size="small" onClick={() => handleEditQuestion(question, 'bank')}>
-                                <EditIcon />
-                              </IconButton>
-                            <IconButton 
-                              size="small" 
-                              color="error" 
+
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <IconButton
+                              size='small'
+                              onClick={() =>
+                                handleEditQuestion(question, 'bank')
+                              }
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              size='small'
+                              color='error'
                               onClick={() => handleDeleteQuestion(question.id)}
                             >
                               <DeleteIcon />
@@ -1404,86 +1774,108 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       <TabPanel value={activeTab} index={2}>
         <Card>
           <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Vista Previa del Quiz</Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2
+              }}
+            >
+              <Typography variant='h6'>Vista Previa del Quiz</Typography>
               <Button
-                variant="outlined"
+                variant='outlined'
                 startIcon={<PreviewIcon />}
                 onClick={() => setPreviewMode(!previewMode)}
               >
                 {previewMode ? 'Salir de Vista Previa' : 'Iniciar Vista Previa'}
               </Button>
             </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Paso 3 de 4. Usa esta vista para validar el orden, las preguntas y la dificultad antes de guardar.
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+              Paso 3 de 4. Usa esta vista para validar el orden, las preguntas y
+              la dificultad antes de guardar.
             </Typography>
-            
+
             {quizConfig.questions.length === 0 ? (
-              <Alert severity="warning">
+              <Alert severity='warning'>
                 No hay preguntas en el quiz para mostrar la vista previa.
               </Alert>
             ) : previewMode ? (
               <LmsQuizComponent
-                questions={quizConfig.questions.map(q => ({
+                questions={quizConfig.questions.map((q) => ({
                   ...q,
-                  type: q.type === 'single' ? 'single-choice' : q.type === 'multiple' ? 'multiple-choice' : 'true-false',
-                  correctAnswer: q.type === 'single' || q.type === 'boolean' ? q.correct_answers[0] : q.correct_answers
+                  type:
+                    q.type === 'single'
+                      ? 'single-choice'
+                      : q.type === 'multiple'
+                        ? 'multiple-choice'
+                        : 'true-false',
+                  correctAnswer:
+                    q.type === 'single' || q.type === 'boolean'
+                      ? q.correct_answers[0]
+                      : q.correct_answers
                 }))}
                 isPreview={true}
                 onComplete={(score, totalPoints) => {
-                  notify.info(`Vista previa completada: ${score}/${totalPoints} puntos (${Math.round((score/totalPoints)*100)}%)`)
+                  notify.info(
+                    `Vista previa completada: ${score}/${totalPoints} puntos (${Math.round((score / totalPoints) * 100)}%)`
+                  )
                   setPreviewMode(false)
                 }}
               />
             ) : (
               <Box>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   {quizConfig.title || 'Quiz sin título'}
                 </Typography>
-                
+
                 {quizConfig.instructions && (
-                  <Typography variant="body1" sx={{ mb: 2 }}>
+                  <Typography variant='body1' sx={{ mb: 2 }}>
                     {quizConfig.instructions}
                   </Typography>
                 )}
-                
+
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={12} sm={6} md={3}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="primary">
+                      <Typography variant='h4' color='primary'>
                         {quizConfig.questions.length}
                       </Typography>
-                      <Typography variant="body2">Preguntas</Typography>
+                      <Typography variant='body2'>Preguntas</Typography>
                     </Paper>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="primary">
-                        {quizConfig.questions.reduce((sum, q) => sum + q.points, 0)}
+                      <Typography variant='h4' color='primary'>
+                        {quizConfig.questions.reduce(
+                          (sum, q) => sum + q.points,
+                          0
+                        )}
                       </Typography>
-                      <Typography variant="body2">Puntos Totales</Typography>
+                      <Typography variant='body2'>Puntos Totales</Typography>
                     </Paper>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="primary">
+                      <Typography variant='h4' color='primary'>
                         {quizConfig.passingPercentage}%
                       </Typography>
-                      <Typography variant="body2">Para Aprobar</Typography>
+                      <Typography variant='body2'>Para Aprobar</Typography>
                     </Paper>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="primary">
+                      <Typography variant='h4' color='primary'>
                         {quizConfig.maxAttempts}
                       </Typography>
-                      <Typography variant="body2">Intentos Máx.</Typography>
+                      <Typography variant='body2'>Intentos Máx.</Typography>
                     </Paper>
                   </Grid>
                 </Grid>
-                
-                <Alert severity="info">
-                  Haz clic en "Iniciar Vista Previa" para probar el quiz como lo verían los estudiantes.
+
+                <Alert severity='info'>
+                  Haz clic en "Iniciar Vista Previa" para probar el quiz como lo
+                  verían los estudiantes.
                 </Alert>
               </Box>
             )}
@@ -1495,19 +1887,21 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       <TabPanel value={activeTab} index={3}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               Analíticas del Quiz
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Paso 4 de 4. Esta pestaña muestra resultados reales una vez que el quiz ya fue guardado y usado por estudiantes.
+            <Typography variant='body2' color='text.secondary'>
+              Paso 4 de 4. Esta pestaña muestra resultados reales una vez que el
+              quiz ya fue guardado y usado por estudiantes.
             </Typography>
           </Grid>
 
           {/* No quiz saved yet */}
           {!initialQuizId && (
             <Grid item xs={12}>
-              <Alert severity="info">
-                Debes guardar el quiz primero para ver las analíticas de intentos
+              <Alert severity='info'>
+                Debes guardar el quiz primero para ver las analíticas de
+                intentos
               </Alert>
             </Grid>
           )}
@@ -1524,8 +1918,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           {/* Error loading stats */}
           {Boolean(statsLoadError) && (
             <Grid item xs={12}>
-              <Alert severity="warning">
-                No se pudieron cargar las estadísticas. Puede que aún no haya intentos registrados.
+              <Alert severity='warning'>
+                No se pudieron cargar las estadísticas. Puede que aún no haya
+                intentos registrados.
               </Alert>
             </Grid>
           )}
@@ -1537,10 +1932,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="primary">
+                    <Typography variant='h4' color='primary'>
                       {quizStats.totalAttempts}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Total de Intentos
                     </Typography>
                   </CardContent>
@@ -1550,10 +1945,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="success.main">
+                    <Typography variant='h4' color='success.main'>
                       {quizStats.averageScore}%
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Puntuación Promedio
                     </Typography>
                   </CardContent>
@@ -1563,10 +1958,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="info.main">
+                    <Typography variant='h4' color='info.main'>
                       {quizStats.passRate}%
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Tasa de Aprobación
                     </Typography>
                   </CardContent>
@@ -1576,10 +1971,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="warning.main">
+                    <Typography variant='h4' color='warning.main'>
                       {quizStats.averageTimeMinutes.toFixed(1)}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Tiempo Promedio (min)
                     </Typography>
                   </CardContent>
@@ -1590,10 +1985,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <Grid item xs={12} sm={6}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="secondary">
+                    <Typography variant='h4' color='secondary'>
                       {quizStats.uniqueUsers}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Usuarios Únicos
                     </Typography>
                   </CardContent>
@@ -1603,15 +1998,29 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <Grid item xs={12} sm={6}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color={quizStats.suspiciousAttempts > 0 ? "error" : "success.main"}>
+                    <Typography
+                      variant='h4'
+                      color={
+                        quizStats.suspiciousAttempts > 0
+                          ? 'error'
+                          : 'success.main'
+                      }
+                    >
                       {quizStats.suspiciousAttempts}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Intentos Sospechosos
                     </Typography>
                     {quizStats.suspiciousAttempts > 0 && (
-                      <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                        <WarningIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                      <Typography
+                        variant='caption'
+                        color='error'
+                        sx={{ mt: 1, display: 'block' }}
+                      >
+                        <WarningIcon
+                          fontSize='small'
+                          sx={{ verticalAlign: 'middle', mr: 0.5 }}
+                        />
                         Completados demasiado rápido
                       </Typography>
                     )}
@@ -1622,8 +2031,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               {/* No attempts yet */}
               {quizStats.totalAttempts === 0 && (
                 <Grid item xs={12}>
-                  <Alert severity="info">
-                    Aún no hay intentos registrados para este quiz. Las estadísticas aparecerán cuando los usuarios comiencen a tomar el quiz.
+                  <Alert severity='info'>
+                    Aún no hay intentos registrados para este quiz. Las
+                    estadísticas aparecerán cuando los usuarios comiencen a
+                    tomar el quiz.
                   </Alert>
                 </Grid>
               )}
@@ -1642,7 +2053,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           setSaveQuestionToBank(false)
           resetQuestionForm()
         }}
-        maxWidth="md"
+        maxWidth='md'
         fullWidth
       >
         <DialogTitle>
@@ -1658,14 +2069,17 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               {!editingQuestion && questionEditorMode === 'quiz' && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Esta pregunta se agregará directamente al quiz. Si quieres reutilizarla más adelante, también puedes guardarla en el banco.
+                <Alert severity='info' sx={{ mb: 2 }}>
+                  Esta pregunta se agregará directamente al quiz. Si quieres
+                  reutilizarla más adelante, también puedes guardarla en el
+                  banco.
                 </Alert>
               )}
 
               {!editingQuestion && questionEditorMode === 'bank' && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Esta pantalla crea una pregunta reusable en el banco global para futuros quizzes.
+                <Alert severity='info' sx={{ mb: 2 }}>
+                  Esta pantalla crea una pregunta reusable en el banco global
+                  para futuros quizzes.
                 </Alert>
               )}
 
@@ -1673,69 +2087,92 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 fullWidth
                 multiline
                 rows={3}
-                label="Pregunta"
+                label='Pregunta'
                 value={newQuestion.question || ''}
-                onChange={(e) => setNewQuestion(prev => ({ ...prev, question: e.target.value }))}
+                onChange={(e) =>
+                  setNewQuestion((prev) => ({
+                    ...prev,
+                    question: e.target.value
+                  }))
+                }
                 required
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Tipo de pregunta</InputLabel>
                 <Select
                   value={newQuestion.type || 'single'}
-                  label="Tipo de pregunta"
+                  label='Tipo de pregunta'
                   onChange={(e) => {
-                    const type = e.target.value as 'single' | 'multiple' | 'boolean'
-                    setNewQuestion(prev => ({
+                    const type = e.target.value as
+                      | 'single'
+                      | 'multiple'
+                      | 'boolean'
+                    setNewQuestion((prev) => ({
                       ...prev,
                       type,
-                      options: type === 'boolean' ? ['Falso', 'Verdadero'] : ['', '', '', ''],
+                      options:
+                        type === 'boolean'
+                          ? ['Falso', 'Verdadero']
+                          : ['', '', '', ''],
                       correct_answers: type === 'multiple' ? [] : [0]
                     }))
                   }}
                 >
-                  <MenuItem value="boolean">Verdadero/Falso</MenuItem>
-                  <MenuItem value="single">Selección Única</MenuItem>
-                  <MenuItem value="multiple">Selección Múltiple</MenuItem>
+                  <MenuItem value='boolean'>Verdadero/Falso</MenuItem>
+                  <MenuItem value='single'>Selección Única</MenuItem>
+                  <MenuItem value='multiple'>Selección Múltiple</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                type="number"
-                label="Puntos"
+                type='number'
+                label='Puntos'
                 value={newQuestion.points || 1}
-                onChange={(e) => setNewQuestion(prev => ({ ...prev, points: parseInt(e.target.value) || 1 }))}
+                onChange={(e) =>
+                  setNewQuestion((prev) => ({
+                    ...prev,
+                    points: parseInt(e.target.value) || 1
+                  }))
+                }
                 inputProps={{ min: 1, max: 10 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Dificultad</InputLabel>
                 <Select
                   value={newQuestion.difficulty || 'medium'}
-                  label="Dificultad"
-                  onChange={(e) => setNewQuestion(prev => ({ ...prev, difficulty: e.target.value as 'easy' | 'medium' | 'hard' }))}
+                  label='Dificultad'
+                  onChange={(e) =>
+                    setNewQuestion((prev) => ({
+                      ...prev,
+                      difficulty: e.target.value as 'easy' | 'medium' | 'hard'
+                    }))
+                  }
                 >
-                  <MenuItem value="easy">Fácil</MenuItem>
-                  <MenuItem value="medium">Medio</MenuItem>
-                  <MenuItem value="hard">Difícil</MenuItem>
+                  <MenuItem value='easy'>Fácil</MenuItem>
+                  <MenuItem value='medium'>Medio</MenuItem>
+                  <MenuItem value='hard'>Difícil</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Categoría</InputLabel>
                 <Select
                   value={newQuestion.category || ''}
-                  label="Categoría"
-                  onChange={(e) => applyQuestionCategorySuggestion(e.target.value)}
+                  label='Categoría'
+                  onChange={(e) =>
+                    applyQuestionCategorySuggestion(e.target.value)
+                  }
                 >
                   <MenuItem value=''>
                     <em>Sin categoría</em>
@@ -1748,52 +2185,69 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 </Select>
               </FormControl>
             </Grid>
-            
+
             {newQuestion.type !== 'boolean' && (
               <Grid item xs={12}>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Completa primero las opciones que realmente usarás. Las vacías no se enviarán al backend.
+                <Alert severity='info' sx={{ mb: 2 }}>
+                  Completa primero las opciones que realmente usarás. Las vacías
+                  no se enviarán al backend.
                 </Alert>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography variant='subtitle2' gutterBottom>
                   Opciones:
                 </Typography>
-                {(newQuestion.options || ['', '', '', '']).map((option, index) => (
-                  <TextField
-                    key={index}
-                    fullWidth
-                    label={`Opción ${index + 1}`}
-                    value={option}
-                    onChange={(e) => {
-                      const newOptions = [...(newQuestion.options || ['', '', '', ''])]
-                      newOptions[index] = e.target.value
-                      setNewQuestion(prev => ({ ...prev, options: newOptions }))
-                    }}
-                    sx={{ mb: 1 }}
-                  />
-                ))}
+                {(newQuestion.options || ['', '', '', '']).map(
+                  (option, index) => (
+                    <TextField
+                      key={index}
+                      fullWidth
+                      label={`Opción ${index + 1}`}
+                      value={option}
+                      onChange={(e) => {
+                        const newOptions = [
+                          ...(newQuestion.options || ['', '', '', ''])
+                        ]
+                        newOptions[index] = e.target.value
+                        setNewQuestion((prev) => ({
+                          ...prev,
+                          options: newOptions
+                        }))
+                      }}
+                      sx={{ mb: 1 }}
+                    />
+                  )
+                )}
               </Grid>
             )}
 
             {/* Correct Answer Selection */}
             <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
+              <Typography
+                variant='subtitle2'
+                gutterBottom
+                sx={{ color: 'primary.main', fontWeight: 600 }}
+              >
                 Respuesta(s) Correcta(s):
               </Typography>
 
               {newQuestion.type === 'boolean' && (
                 <RadioGroup
                   value={newQuestion.correct_answers?.[0] ?? 0}
-                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correct_answers: [parseInt(e.target.value)] }))}
+                  onChange={(e) =>
+                    setNewQuestion((prev) => ({
+                      ...prev,
+                      correct_answers: [parseInt(e.target.value)]
+                    }))
+                  }
                 >
                   <FormControlLabel
                     value={0}
                     control={<Radio />}
-                    label="Falso"
+                    label='Falso'
                   />
                   <FormControlLabel
                     value={1}
                     control={<Radio />}
-                    label="Verdadero"
+                    label='Verdadero'
                   />
                 </RadioGroup>
               )}
@@ -1801,49 +2255,67 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               {newQuestion.type === 'single' && (
                 <RadioGroup
                   value={newQuestion.correct_answers?.[0] ?? 0}
-                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correct_answers: [parseInt(e.target.value)] }))}
+                  onChange={(e) =>
+                    setNewQuestion((prev) => ({
+                      ...prev,
+                      correct_answers: [parseInt(e.target.value)]
+                    }))
+                  }
                 >
-                  {(newQuestion.options || ['', '', '', '']).map((option, index) => (
-                    <FormControlLabel
-                      key={index}
-                      value={index}
-                      control={<Radio />}
-                      label={option || `Opción ${index + 1}`}
-                      disabled={!option?.trim()}
-                    />
-                  ))}
+                  {(newQuestion.options || ['', '', '', '']).map(
+                    (option, index) => (
+                      <FormControlLabel
+                        key={index}
+                        value={index}
+                        control={<Radio />}
+                        label={option || `Opción ${index + 1}`}
+                        disabled={!option?.trim()}
+                      />
+                    )
+                  )}
                 </RadioGroup>
               )}
 
               {newQuestion.type === 'multiple' && (
                 <Box>
-                  {(newQuestion.options || ['', '', '', '']).map((option, index) => (
-                    <FormControlLabel
-                      key={index}
-                      control={
-                        <Checkbox
-                          checked={newQuestion.correct_answers?.includes(index) || false}
-                          onChange={(e) => {
-                            const currentCorrect = newQuestion.correct_answers || []
-                            const newCorrect = e.target.checked
-                              ? [...currentCorrect, index]
-                              : currentCorrect.filter(i => i !== index)
-                            setNewQuestion(prev => ({ ...prev, correct_answers: newCorrect }))
-                          }}
-                          disabled={!option?.trim()}
-                        />
-                      }
-                      label={option || `Opción ${index + 1}`}
-                    />
-                  ))}
+                  {(newQuestion.options || ['', '', '', '']).map(
+                    (option, index) => (
+                      <FormControlLabel
+                        key={index}
+                        control={
+                          <Checkbox
+                            checked={
+                              newQuestion.correct_answers?.includes(index) ||
+                              false
+                            }
+                            onChange={(e) => {
+                              const currentCorrect =
+                                newQuestion.correct_answers || []
+                              const newCorrect = e.target.checked
+                                ? [...currentCorrect, index]
+                                : currentCorrect.filter((i) => i !== index)
+                              setNewQuestion((prev) => ({
+                                ...prev,
+                                correct_answers: newCorrect
+                              }))
+                            }}
+                            disabled={!option?.trim()}
+                          />
+                        }
+                        label={option || `Opción ${index + 1}`}
+                      />
+                    )
+                  )}
                 </Box>
               )}
 
-              {newQuestion.type === 'multiple' && (!newQuestion.correct_answers || newQuestion.correct_answers.length === 0) && (
-                <Alert severity="warning" sx={{ mt: 1 }}>
-                  Debe seleccionar al menos una respuesta correcta
-                </Alert>
-              )}
+              {newQuestion.type === 'multiple' &&
+                (!newQuestion.correct_answers ||
+                  newQuestion.correct_answers.length === 0) && (
+                  <Alert severity='warning' sx={{ mt: 1 }}>
+                    Debe seleccionar al menos una respuesta correcta
+                  </Alert>
+                )}
             </Grid>
 
             <Grid item xs={12}>
@@ -1851,10 +2323,15 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 fullWidth
                 multiline
                 rows={2}
-                label="Explicación (opcional)"
+                label='Explicación (opcional)'
                 value={newQuestion.explanation || ''}
-                onChange={(e) => setNewQuestion(prev => ({ ...prev, explanation: e.target.value }))}
-                helperText="Explicación que se mostrará después de responder"
+                onChange={(e) =>
+                  setNewQuestion((prev) => ({
+                    ...prev,
+                    explanation: e.target.value
+                  }))
+                }
+                helperText='Explicación que se mostrará después de responder'
               />
             </Grid>
 
@@ -1867,7 +2344,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                       onChange={(e) => setSaveQuestionToBank(e.target.checked)}
                     />
                   }
-                  label="Guardar también esta pregunta en el banco para reutilizarla después"
+                  label='Guardar también esta pregunta en el banco para reutilizarla después'
                 />
               </Grid>
             )}
@@ -1887,7 +2364,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           </Button>
           <Button
             onClick={editingQuestion ? handleUpdateQuestion : handleAddQuestion}
-            variant="contained"
+            variant='contained'
             disabled={!newQuestion.question?.trim()}
           >
             {editingQuestion

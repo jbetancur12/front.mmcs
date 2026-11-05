@@ -127,7 +127,10 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
         '&:hover': disabled
           ? undefined
           : { borderColor: brand.hover, bgcolor: brand.soft },
-        '&:focus-visible': { outline: `2px solid ${brand.main}`, outlineOffset: 2 },
+        '&:focus-visible': {
+          outline: `2px solid ${brand.main}`,
+          outlineOffset: 2
+        },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
       }}
     >
@@ -178,7 +181,10 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
       ) : (
         <>
           <CloudUploadOutlinedIcon
-            sx={{ fontSize: 36, color: isDragOver ? brand.main : neutral.textMuted }}
+            sx={{
+              fontSize: 36,
+              color: isDragOver ? brand.main : neutral.textMuted
+            }}
           />
           <Typography
             variant='body2'

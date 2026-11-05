@@ -18,7 +18,7 @@ export const transformDevice = (device: DeviceIotRaw): DeviceIot => {
       t: device.lastTemperature ?? ''
     },
     src: device.src === 'bat' ? 'bat' : 'main',
-    deviceIotConfigs: (device.deviceIotConfigs) || [],
+    deviceIotConfigs: device.deviceIotConfigs || [],
     isInAlarm: device.isInAlarm || false,
     alarms: device.alarms ?? [],
     location: device.location ?? ''

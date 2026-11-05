@@ -115,7 +115,10 @@ const CustomersManagement: React.FC = () => {
           queryKey: ['/devicesIot/customer', selectedClient.id]
         })
       }
-      notify.success('Dispositivo actualizado', 'El dispositivo se ha asignado correctamente')
+      notify.success(
+        'Dispositivo actualizado',
+        'El dispositivo se ha asignado correctamente'
+      )
     },
     onError: (error) => {
       logger.error('Error al actualizar el cliente del dispositivo:', error)
@@ -151,7 +154,14 @@ const CustomersManagement: React.FC = () => {
         icon={<BusinessIcon />}
         actions={
           <Link to='/iot/map'>
-            <Button variant='outlined' sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Volver al mapa
             </Button>
           </Link>
@@ -160,7 +170,12 @@ const CustomersManagement: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Clientes con IoT' value={clients?.length ?? 0} icon={<BusinessIcon />} tone='teal' />
+          <LmsStatCard
+            label='Clientes con IoT'
+            value={clients?.length ?? 0}
+            icon={<BusinessIcon />}
+            tone='teal'
+          />
         </Grid>
       </Grid>
 

@@ -13,7 +13,10 @@ import { useQueryClient } from 'react-query'
 import { modulesKeys, useModules } from 'src/hooks/modules/useModules'
 import { notify } from 'src/utils/notify'
 
-const AUDIENCE_LABELS: Record<ModuleAudience, { label: string; color: 'default' | 'primary' | 'success' }> = {
+const AUDIENCE_LABELS: Record<
+  ModuleAudience,
+  { label: string; color: 'default' | 'primary' | 'success' }
+> = {
   internal: { label: 'Interno', color: 'default' },
   client: { label: 'Clientes', color: 'primary' },
   both: { label: 'Ambos', color: 'success' }
@@ -39,7 +42,16 @@ const ModulesView = () => {
       flex: 1,
       renderCell: ({ value }) => {
         const audience = AUDIENCE_LABELS[value as ModuleAudience]
-        return audience ? <Chip size='small' variant='outlined' color={audience.color} label={audience.label} /> : '—'
+        return audience ? (
+          <Chip
+            size='small'
+            variant='outlined'
+            color={audience.color}
+            label={audience.label}
+          />
+        ) : (
+          '—'
+        )
       }
     }
   ]
@@ -54,10 +66,31 @@ const ModulesView = () => {
     <Box>
       <Grid container spacing={3} sx={{ mb: 3 }} alignItems='center'>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Módulos' value={modules.length} icon={<Apps />} tone='teal' />
+          <LmsStatCard
+            variant='quiet'
+            label='Módulos'
+            value={modules.length}
+            icon={<Apps />}
+            tone='teal'
+          />
         </Grid>
-        <Grid item xs={12} sm={8} sx={{ display: 'flex', justifyContent: { sm: 'flex-end' } }}>
-          <Button variant='contained' startIcon={<Add />} onClick={() => setOpenModal(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', textTransform: 'none', '&:hover': { bgcolor: '#00ACC1' } }}>
+        <Grid
+          item
+          xs={12}
+          sm={8}
+          sx={{ display: 'flex', justifyContent: { sm: 'flex-end' } }}
+        >
+          <Button
+            variant='contained'
+            startIcon={<Add />}
+            onClick={() => setOpenModal(true)}
+            sx={{
+              bgcolor: '#00BFA5',
+              whiteSpace: 'nowrap',
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#00ACC1' }
+            }}
+          >
             Crear módulo
           </Button>
         </Grid>
@@ -82,8 +115,13 @@ const ModulesView = () => {
             autoHeight
             sx={{
               border: 0,
-              '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5', fontWeight: 600 },
-              '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(0, 191, 165, 0.04)' }
+              '& .MuiDataGrid-columnHeaders': {
+                backgroundColor: '#f5f5f5',
+                fontWeight: 600
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'rgba(0, 191, 165, 0.04)'
+              }
             }}
           />
         </Paper>

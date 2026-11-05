@@ -76,7 +76,14 @@ const CalibrationServicesGroupedList = ({
             ? 'Agrupado por etapa'
             : 'Sin agrupar · más recientes primero'
         }
-        sx={{ m: 0, '& .MuiFormControlLabel-label': { fontSize: '0.875rem', color: '#374151', fontWeight: 600 } }}
+        sx={{
+          m: 0,
+          '& .MuiFormControlLabel-label': {
+            fontSize: '0.875rem',
+            color: '#374151',
+            fontWeight: 600
+          }
+        }}
         control={
           <Switch
             size='small'

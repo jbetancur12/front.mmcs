@@ -149,14 +149,17 @@ const MaintenanceTechnicians: React.FC = () => {
         resetForm()
         setDialogOpen(false)
         setEditingTechnician(null)
-        notify.success(editingTechnician
+        notify.success(
+          editingTechnician
             ? 'Técnico actualizado exitosamente.'
-            : 'Técnico creado exitosamente.')
+            : 'Técnico creado exitosamente.'
+        )
         refetch()
       } catch (error: unknown) {
         logger.error('Error saving technician:', error)
-        notify.error(getApiErrorReason(error) ||
-            'No se pudo guardar el técnico.')
+        notify.error(
+          getApiErrorReason(error) || 'No se pudo guardar el técnico.'
+        )
       }
     }
   })
@@ -217,8 +220,7 @@ const MaintenanceTechnicians: React.FC = () => {
       refetch()
     } catch (error: unknown) {
       logger.error('Error deleting technician:', error)
-      const message =
-        getApiErrorReason(error) || 'Error al eliminar el técnico'
+      const message = getApiErrorReason(error) || 'Error al eliminar el técnico'
       setDeleteError(message)
     }
   }
@@ -259,7 +261,16 @@ const MaintenanceTechnicians: React.FC = () => {
         size: 240,
         Cell: ({ row }) => (
           <Box display='flex' alignItems='center' gap={1.5}>
-            <Avatar sx={{ bgcolor: '#00BFA5', color: '#fff', fontWeight: 600, width: 36, height: 36, fontSize: 14 }}>
+            <Avatar
+              sx={{
+                bgcolor: '#00BFA5',
+                color: '#fff',
+                fontWeight: 600,
+                width: 36,
+                height: 36,
+                fontSize: 14
+              }}
+            >
               {getInitials(row.original.name)}
             </Avatar>
             <Box>
@@ -291,12 +302,23 @@ const MaintenanceTechnicians: React.FC = () => {
         id: 'specialization',
         header: 'Especialización',
         size: 220,
-        accessorFn: (t) => `${t.specialization ?? ''} ${t.certifications ?? ''}`,
+        accessorFn: (t) =>
+          `${t.specialization ?? ''} ${t.certifications ?? ''}`,
         Cell: ({ row }) => (
           <Box>
-            <Chip size='small' variant='outlined' label={row.original.specialization || 'No especificado'} sx={{ maxWidth: 200 }} />
+            <Chip
+              size='small'
+              variant='outlined'
+              label={row.original.specialization || 'No especificado'}
+              sx={{ maxWidth: 200 }}
+            />
             {row.original.certifications && (
-              <Typography variant='caption' color='text.secondary' display='block' sx={{ mt: 0.5 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                display='block'
+                sx={{ mt: 0.5 }}
+              >
                 Cert: {row.original.certifications}
               </Typography>
             )}
@@ -313,7 +335,13 @@ const MaintenanceTechnicians: React.FC = () => {
             size='small'
             variant='outlined'
             label={getStatusLabel(row.original.status)}
-            color={row.original.status === 'active' ? 'success' : row.original.status === 'inactive' ? 'error' : 'warning'}
+            color={
+              row.original.status === 'active'
+                ? 'success'
+                : row.original.status === 'inactive'
+                  ? 'error'
+                  : 'warning'
+            }
           />
         )
       },
@@ -337,8 +365,15 @@ const MaintenanceTechnicians: React.FC = () => {
         size: 190,
         Cell: ({ row }) => (
           <Box display='flex' alignItems='center' gap={0.5}>
-            <Rating value={row.original.rating || 0} readOnly size='small' precision={0.1} />
-            <Typography variant='caption'>({row.original.rating?.toFixed(1) || 0})</Typography>
+            <Rating
+              value={row.original.rating || 0}
+              readOnly
+              size='small'
+              precision={0.1}
+            />
+            <Typography variant='caption'>
+              ({row.original.rating?.toFixed(1) || 0})
+            </Typography>
           </Box>
         )
       },
@@ -353,7 +388,11 @@ const MaintenanceTechnicians: React.FC = () => {
               {row.original.workload}/{row.original.maxWorkload}
             </Typography>
             {row.original.metrics && (
-              <Typography variant='caption' display='block' color='text.secondary'>
+              <Typography
+                variant='caption'
+                display='block'
+                color='text.secondary'
+              >
                 {row.original.metrics.workloadPercentage}% utilización
               </Typography>
             )}
@@ -361,7 +400,7 @@ const MaintenanceTechnicians: React.FC = () => {
         )
       }
     ],
-     
+
     []
   )
 
@@ -372,7 +411,16 @@ const MaintenanceTechnicians: React.FC = () => {
         subtitle='Administración del equipo de mantenimiento'
         icon={<People />}
         actions={
-          <Button variant='contained' startIcon={<Add />} onClick={() => setDialogOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+          <Button
+            variant='contained'
+            startIcon={<Add />}
+            onClick={() => setDialogOpen(true)}
+            sx={{
+              bgcolor: '#00BFA5',
+              whiteSpace: 'nowrap',
+              '&:hover': { bgcolor: '#00ACC1' }
+            }}
+          >
             Agregar Técnico
           </Button>
         }
@@ -380,12 +428,20 @@ const MaintenanceTechnicians: React.FC = () => {
 
       <Grid container spacing={3} mb={3}>
         <Grid item xs={6} md={3}>
-          <LmsStatCard label='Total Técnicos' value={technicians?.length || 0} icon={<People />} tone='teal' />
+          <LmsStatCard
+            label='Total Técnicos'
+            value={technicians?.length || 0}
+            icon={<People />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={6} md={3}>
           <LmsStatCard
             label='Disponibles'
-            value={technicians?.filter((t) => t.status === 'active' && t.isAvailable).length || 0}
+            value={
+              technicians?.filter((t) => t.status === 'active' && t.isAvailable)
+                .length || 0
+            }
             icon={<CheckCircle />}
             tone='green'
           />
@@ -393,7 +449,11 @@ const MaintenanceTechnicians: React.FC = () => {
         <Grid item xs={6} md={3}>
           <LmsStatCard
             label='No Disponibles'
-            value={technicians?.filter((t) => t.status === 'active' && !t.isAvailable).length || 0}
+            value={
+              technicians?.filter(
+                (t) => t.status === 'active' && !t.isAvailable
+              ).length || 0
+            }
             icon={<Work />}
             tone='orange'
           />
@@ -401,9 +461,14 @@ const MaintenanceTechnicians: React.FC = () => {
         <Grid item xs={6} md={3}>
           <LmsStatCard
             label='Rating Promedio'
-            value={technicians && technicians.length > 0
-              ? (technicians.reduce((acc, t) => acc + (t.rating || 0), 0) / technicians.length).toFixed(1)
-              : '0.0'}
+            value={
+              technicians && technicians.length > 0
+                ? (
+                    technicians.reduce((acc, t) => acc + (t.rating || 0), 0) /
+                    technicians.length
+                  ).toFixed(1)
+                : '0.0'
+            }
             icon={<Star />}
             tone='blue'
           />
@@ -419,28 +484,50 @@ const MaintenanceTechnicians: React.FC = () => {
           state={{ isLoading }}
           getRowId={(row, index) => String(row.id ?? `skeleton-${index}`)}
           enablePinning
-          initialState={{ columnPinning: { right: ['mrt-row-actions'] }, density: 'comfortable' }}
+          initialState={{
+            columnPinning: { right: ['mrt-row-actions'] },
+            density: 'comfortable'
+          }}
           enableRowActions
-          displayColumnDefOptions={{ 'mrt-row-actions': { header: 'Acciones', size: 150 } }}
+          displayColumnDefOptions={{
+            'mrt-row-actions': { header: 'Acciones', size: 150 }
+          }}
           renderRowActions={({ row }) => {
             const technician = row.original
             return (
               <Box display='flex' gap={0.5}>
                 <Tooltip title='Editar'>
-                  <IconButton size='small' color='primary' onClick={() => handleEdit(technician)}>
+                  <IconButton
+                    size='small'
+                    color='primary'
+                    onClick={() => handleEdit(technician)}
+                  >
                     <Edit />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={technician.status === 'active' ? 'Desactivar' : 'Reactivar'}>
+                <Tooltip
+                  title={
+                    technician.status === 'active' ? 'Desactivar' : 'Reactivar'
+                  }
+                >
                   <IconButton
                     size='small'
                     onClick={() => {
                       setTechnicianToToggle(technician)
                       setStatusConfirmDialogOpen(true)
                     }}
-                    sx={{ color: technician.status === 'active' ? 'warning.main' : '#00BFA5' }}
+                    sx={{
+                      color:
+                        technician.status === 'active'
+                          ? 'warning.main'
+                          : '#00BFA5'
+                    }}
                   >
-                    {technician.status === 'active' ? <PowerSettingsNew /> : <RestoreFromTrash />}
+                    {technician.status === 'active' ? (
+                      <PowerSettingsNew />
+                    ) : (
+                      <RestoreFromTrash />
+                    )}
                   </IconButton>
                 </Tooltip>
                 <Tooltip title='Eliminar'>
@@ -792,7 +879,6 @@ const MaintenanceTechnicians: React.FC = () => {
           )}
         </DialogActions>
       </Dialog>
-
     </Container>
   )
 }

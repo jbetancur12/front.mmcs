@@ -1,4 +1,8 @@
-import { getApiErrorPayload, getApiErrorReason, parseApiError } from 'src/utils/apiError'
+import {
+  getApiErrorPayload,
+  getApiErrorReason,
+  parseApiError
+} from 'src/utils/apiError'
 import React, { useEffect, useState } from 'react'
 import { Alert, Button, MenuItem, TextField, Typography } from '@mui/material'
 import { UploadFile } from '@mui/icons-material'
@@ -212,7 +216,9 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
                       .value()
 
                     if (field === 'calibrationDate') {
-                      return XlsxPopulate.numberToDate(Number(rawValue)).toISOString()
+                      return XlsxPopulate.numberToDate(
+                        Number(rawValue)
+                      ).toISOString()
                     }
 
                     return String(rawValue ?? '')
@@ -230,7 +236,10 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
                   ]
 
                   const info = fields.reduce<CertificateTemplateData>(
-                    (acc, field) => ({ ...acc, [field]: getValueFromCell(openedWorkbook, field) }),
+                    (acc, field) => ({
+                      ...acc,
+                      [field]: getValueFromCell(openedWorkbook, field)
+                    }),
                     { ...cerTemplate }
                   )
 
@@ -315,11 +324,16 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     }
   }
 
-  const fetchCustomer = async (name: string): Promise<CustomerSearchResult[]> => {
+  const fetchCustomer = async (
+    name: string
+  ): Promise<CustomerSearchResult[]> => {
     try {
-      const response = await axiosPrivate.get<CustomerSearchResult[]>(`/customers`, {
-        params: { q: name }
-      })
+      const response = await axiosPrivate.get<CustomerSearchResult[]>(
+        `/customers`,
+        {
+          params: { q: name }
+        }
+      )
       const customers = response.data
 
       return customers
@@ -331,9 +345,12 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
   const fetchDevice = async (name: string): Promise<DeviceSearchResult[]> => {
     try {
-      const response = await axiosPrivate.get<DeviceSearchResult[]>(`/devices`, {
-        params: { q: name }
-      })
+      const response = await axiosPrivate.get<DeviceSearchResult[]>(
+        `/devices`,
+        {
+          params: { q: name }
+        }
+      )
       const devices = response.data
       return devices
     } catch (error) {
@@ -466,7 +483,10 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             <div>
               <ul>
                 <li>Serie: {String(getApiErrorPayload(error).serial ?? '')}</li>
-                <li>Activo fijo: {String(getApiErrorPayload(error).activoFijo ?? '')}</li>
+                <li>
+                  Activo fijo:{' '}
+                  {String(getApiErrorPayload(error).activoFijo ?? '')}
+                </li>
               </ul>
               <p>¿Qué deseas hacer con el archivo?</p>
             </div>
@@ -765,7 +785,9 @@ const mapDevices = (option: DeviceSearchResult): DeviceOption => ({
   certificateTemplate: option.certificateTemplate
 })
 
-const mapCustomers = (option: CustomerSearchResult): ResourceCustomerOption => ({
+const mapCustomers = (
+  option: CustomerSearchResult
+): ResourceCustomerOption => ({
   value: option.id,
   label: option.nombre,
   sedes: option.sede

@@ -21,10 +21,16 @@ export const limitArraySize = (arra: StoreOption[], newItem: StoreOption) => {
   certificateTypeStore.set(pushLimited(arra, newItem))
 }
 
-export const limitArraySizeDevice = (arra: StoreOption[], newItem: StoreOption) => {
+export const limitArraySizeDevice = (
+  arra: StoreOption[],
+  newItem: StoreOption
+) => {
   deviceStore.set(pushLimited(arra, newItem))
 }
 
-export const limitArraySizeCustomer = (arra: StoreOption[], newItem: StoreOption) => {
+export const limitArraySizeCustomer = (
+  arra: StoreOption[],
+  newItem: StoreOption
+) => {
   customerStore.set(pushLimited(arra, newItem))
 }

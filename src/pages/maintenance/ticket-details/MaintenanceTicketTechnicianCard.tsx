@@ -14,11 +14,7 @@ import {
   AlertTitle,
   LinearProgress
 } from '@mui/material'
-import {
-  Assignment,
-  Person,
-  Star
-} from '@mui/icons-material'
+import { Assignment, Person, Star } from '@mui/icons-material'
 import {
   MaintenanceTicket,
   MaintenanceStatus
@@ -31,14 +27,11 @@ interface MaintenanceTicketTechnicianCardProps {
 }
 
 /** Técnico asignado y su asignación en modo edición. */
-const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketTechnicianCardProps) => {
-  const {
-    isTechnician,
-    technicians,
-    editMode,
-    editData,
-    setEditData
-  } = details
+const MaintenanceTicketTechnicianCard = ({
+  ticket,
+  details
+}: MaintenanceTicketTechnicianCardProps) => {
+  const { isTechnician, technicians, editMode, editData, setEditData } = details
 
   return (
     <>
@@ -63,8 +56,7 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              background:
-                'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+              background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -141,8 +133,7 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
                     })
                     .map((technician) => {
                       const utilizationPct =
-                        (technician.workload / technician.maxWorkload) *
-                        100
+                        (technician.workload / technician.maxWorkload) * 100
                       const isFull =
                         technician.workload >= technician.maxWorkload
                       const isNearFull = utilizationPct >= 80
@@ -184,10 +175,7 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
                               </Avatar>
 
                               <Box flex={1}>
-                                <Typography
-                                  variant='body2'
-                                  fontWeight='medium'
-                                >
+                                <Typography variant='body2' fontWeight='medium'>
                                   {technician.name}
                                 </Typography>
                                 <Typography
@@ -198,11 +186,7 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
                                 </Typography>
                               </Box>
 
-                              <Box
-                                display='flex'
-                                gap={0.5}
-                                alignItems='center'
-                              >
+                              <Box display='flex' gap={0.5} alignItems='center'>
                                 <Chip
                                   size='small'
                                   label={`${technician.workload}/${technician.maxWorkload}`}
@@ -261,16 +245,14 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
                 if (utilizationPct >= 80 && utilizationPct < 100) {
                   return (
                     <Alert severity='warning' sx={{ mt: 2 }}>
-                      <AlertTitle>
-                        Técnico casi en capacidad máxima
-                      </AlertTitle>
+                      <AlertTitle>Técnico casi en capacidad máxima</AlertTitle>
                       <Typography variant='body2'>
                         <strong>{selectedTech.name}</strong> tiene{' '}
                         <strong>{selectedTech.workload}</strong> de{' '}
-                        <strong>{selectedTech.maxWorkload}</strong>{' '}
-                        tickets asignados ({utilizationPct.toFixed(0)}%
-                        utilización). Considere asignar a un técnico con
-                        menos carga de trabajo.
+                        <strong>{selectedTech.maxWorkload}</strong> tickets
+                        asignados ({utilizationPct.toFixed(0)}% utilización).
+                        Considere asignar a un técnico con menos carga de
+                        trabajo.
                       </Typography>
                     </Alert>
                   )
@@ -281,8 +263,8 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
                     <Alert severity='error' sx={{ mt: 2 }}>
                       <AlertTitle>Técnico en capacidad máxima</AlertTitle>
                       <Typography variant='body2'>
-                        <strong>{selectedTech.name}</strong> ha alcanzado
-                        su capacidad máxima ({selectedTech.workload}/
+                        <strong>{selectedTech.name}</strong> ha alcanzado su
+                        capacidad máxima ({selectedTech.workload}/
                         {selectedTech.maxWorkload} tickets). Por favor
                         seleccione otro técnico disponible.
                       </Typography>
@@ -332,8 +314,7 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
                 <Box display='flex' alignItems='center' gap={0.5}>
                   <Star color='warning' fontSize='small' />
                   <Typography variant='body2' fontWeight='medium'>
-                    {ticket.assignedTechnician.rating?.toFixed(1) ||
-                      '0.0'}
+                    {ticket.assignedTechnician.rating?.toFixed(1) || '0.0'}
                   </Typography>
                 </Box>
               </Grid>
@@ -350,11 +331,7 @@ const MaintenanceTicketTechnicianCard = ({ ticket, details }: MaintenanceTicketT
 
             {ticket.assignedTechnician.specialization && (
               <Box mt={2}>
-                <Typography
-                  variant='body2'
-                  color='text.secondary'
-                  gutterBottom
-                >
+                <Typography variant='body2' color='text.secondary' gutterBottom>
                   Especialidad
                 </Typography>
                 <Box display='flex' flexWrap='wrap' gap={0.5}>

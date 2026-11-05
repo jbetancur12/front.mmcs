@@ -9,7 +9,10 @@ export const EQUIPMENT_QUOTE_TERM_KEYS = [
 
 export type EquipmentQuoteTermKey = (typeof EQUIPMENT_QUOTE_TERM_KEYS)[number]
 
-export const EQUIPMENT_QUOTE_TERM_LABELS: Record<EquipmentQuoteTermKey, string> = {
+export const EQUIPMENT_QUOTE_TERM_LABELS: Record<
+  EquipmentQuoteTermKey,
+  string
+> = {
   commercialComments: 'Comentarios comerciales',
   generalConditions: 'Condiciones generales',
   paymentConditions: 'Condiciones de pago',

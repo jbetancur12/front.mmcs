@@ -12,13 +12,17 @@ vi.mock('./notify', () => ({ notify: { info: mockInfo } }))
 
 import { formatSessionUser, syncUserAccess } from './syncUserAccess'
 
-const usuario = (data: Record<string, unknown>) =>
-  data as unknown as UserData
+const usuario = (data: Record<string, unknown>) => data as unknown as UserData
 
 beforeEach(() => {
   vi.clearAllMocks()
   userStore.set(
-    usuario({ nombre: 'Ana', email: 'ana@example.com', rol: ['admin'], permissions: ['a', 'b'] })
+    usuario({
+      nombre: 'Ana',
+      email: 'ana@example.com',
+      rol: ['admin'],
+      permissions: ['a', 'b']
+    })
   )
 })
 
@@ -56,7 +60,9 @@ describe('formatSessionUser', () => {
   it('lmsOnly siempre es booleano y el resto de campos se conserva', () => {
     expect(formatSessionUser({}).lmsOnly).toBe(false)
     expect(formatSessionUser({ lmsOnly: 1 }).lmsOnly).toBe(true)
-    expect(formatSessionUser({ nombre: 'Ana', userType: 'client' })).toMatchObject({
+    expect(
+      formatSessionUser({ nombre: 'Ana', userType: 'client' })
+    ).toMatchObject({
       nombre: 'Ana',
       userType: 'client'
     })
@@ -66,7 +72,12 @@ describe('formatSessionUser', () => {
 describe('syncUserAccess', () => {
   it('guarda en el store lo que devuelve /auth/validateToken', async () => {
     mockGet.mockResolvedValue({
-      data: { nombre: 'Ana', email: 'ana@example.com', rol: ['admin'], permissions: ['a', 'b'] }
+      data: {
+        nombre: 'Ana',
+        email: 'ana@example.com',
+        rol: ['admin'],
+        permissions: ['a', 'b']
+      }
     })
     await syncUserAccess()
     expect(userStore.get().rol).toEqual(['admin'])
@@ -75,7 +86,11 @@ describe('syncUserAccess', () => {
 
   it('avisa si los permisos cambiaron', async () => {
     mockGet.mockResolvedValue({
-      data: { email: 'ana@example.com', rol: ['admin'], permissions: ['a', 'b', 'c'] }
+      data: {
+        email: 'ana@example.com',
+        rol: ['admin'],
+        permissions: ['a', 'b', 'c']
+      }
     })
     await syncUserAccess()
     expect(mockInfo).toHaveBeenCalledWith('Tus permisos se actualizaron')
@@ -91,14 +106,20 @@ describe('syncUserAccess', () => {
 
   it('no avisa si todo es igual, aunque el orden cambie', async () => {
     mockGet.mockResolvedValue({
-      data: { email: 'ana@example.com', rol: ['admin'], permissions: ['b', 'a'] }
+      data: {
+        email: 'ana@example.com',
+        rol: ['admin'],
+        permissions: ['b', 'a']
+      }
     })
     await syncUserAccess()
     expect(mockInfo).not.toHaveBeenCalled()
   })
 
   it('no avisa si todavía no había un usuario cargado (primer ingreso)', async () => {
-    userStore.set(usuario({ nombre: '', email: '', rol: [''], permissions: [] }))
+    userStore.set(
+      usuario({ nombre: '', email: '', rol: [''], permissions: [] })
+    )
     mockGet.mockResolvedValue({
       data: { email: 'ana@example.com', rol: ['admin'], permissions: ['x'] }
     })
@@ -116,7 +137,11 @@ describe('syncUserAccess', () => {
 
   it('varias llamadas a la vez comparten una sola petición', async () => {
     mockGet.mockResolvedValue({
-      data: { email: 'ana@example.com', rol: ['admin'], permissions: ['a', 'b'] }
+      data: {
+        email: 'ana@example.com',
+        rol: ['admin'],
+        permissions: ['a', 'b']
+      }
     })
     await Promise.all([syncUserAccess(), syncUserAccess(), syncUserAccess()])
     expect(mockGet).toHaveBeenCalledTimes(1)
@@ -124,7 +149,11 @@ describe('syncUserAccess', () => {
 
   it('al terminar, una llamada nueva hace otra petición', async () => {
     mockGet.mockResolvedValue({
-      data: { email: 'ana@example.com', rol: ['admin'], permissions: ['a', 'b'] }
+      data: {
+        email: 'ana@example.com',
+        rol: ['admin'],
+        permissions: ['a', 'b']
+      }
     })
     await syncUserAccess()
     await syncUserAccess()

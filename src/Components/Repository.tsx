@@ -181,7 +181,7 @@ const Repository = () => {
             duration: 4000,
             position: 'top-center'
           })
-          } else {
+        } else {
           toast.error('Error al eliminar archivo', {
             duration: 4000,
             position: 'top-center'
@@ -237,11 +237,11 @@ const Repository = () => {
               <Button onClick={(e) => handleClick(e, row.original.path)}>
                 <Visibility />
               </Button>
-{canManage && (
-              <Button onClick={() => handleDelete(row.original.id)}>
-                <Delete />
-              </Button>
-)}
+              {canManage && (
+                <Button onClick={() => handleDelete(row.original.id)}>
+                  <Delete />
+                </Button>
+              )}
             </Box>
           )
         }}

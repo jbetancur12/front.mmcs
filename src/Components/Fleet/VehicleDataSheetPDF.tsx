@@ -3,16 +3,9 @@ import { Suspense, lazy, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ArrowBack } from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Stack,
-  Typography
-} from '@mui/material'
+import { Box, Button, Stack, Typography } from '@mui/material'
 
-const VehicleDataSheetPreview = lazy(
-  () => import('./VehicleDataSheetPreview')
-)
+const VehicleDataSheetPreview = lazy(() => import('./VehicleDataSheetPreview'))
 
 const VehicleDataSheetPDF = () => {
   const { state } = useLocation()
@@ -80,7 +73,8 @@ const VehicleDataSheetPDF = () => {
           py={10}
         >
           <Typography variant='h6' gutterBottom>
-            La vista previa de la hoja de vida del vehiculo se carga bajo demanda.
+            La vista previa de la hoja de vida del vehiculo se carga bajo
+            demanda.
           </Typography>
           <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
             El detalle principal ya esta disponible y el render PDF pesado solo

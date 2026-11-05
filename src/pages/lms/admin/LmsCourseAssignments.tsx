@@ -100,23 +100,21 @@ const LmsCourseAssignments: React.FC = () => {
   )
 
   // Query para obtener asignaciones del curso
-  const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<CourseAssignment[]>(
-    ['lms-course-assignments', courseId],
-    async () => {
-      const response = await axiosPrivate.get(`/lms/assignments/courses/${courseId}/assignments`)
-      const data = response.data.data as CourseAssignmentsResponse
-      return data.assignments || []
-    }
-  )
+  const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<
+    CourseAssignment[]
+  >(['lms-course-assignments', courseId], async () => {
+    const response = await axiosPrivate.get(
+      `/lms/assignments/courses/${courseId}/assignments`
+    )
+    const data = response.data.data as CourseAssignmentsResponse
+    return data.assignments || []
+  })
 
   // Query para obtener roles disponibles
-  const { data: roles = [] } = useQuery<Role[]>(
-    'roles',
-    async () => {
-      const response = await axiosPrivate.get('/roles')
-      return response.data
-    }
-  )
+  const { data: roles = [] } = useQuery<Role[]>('roles', async () => {
+    const response = await axiosPrivate.get('/roles')
+    return response.data
+  })
 
   // Mutación para crear asignación
   const createAssignmentMutation = useMutation(
@@ -125,7 +123,10 @@ const LmsCourseAssignments: React.FC = () => {
       role?: string
       deadline?: string
     }) => {
-      return axiosPrivate.post(`/lms/assignments/courses/${courseId}/assign`, assignmentData)
+      return axiosPrivate.post(
+        `/lms/assignments/courses/${courseId}/assign`,
+        assignmentData
+      )
     },
     {
       onSuccess: () => {
@@ -134,7 +135,11 @@ const LmsCourseAssignments: React.FC = () => {
         notify.success('Asignación creada exitosamente')
       },
       onError: (error: unknown) => {
-        notify.error('Error al crear asignación: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
+        notify.error(
+          'Error al crear asignación: ' +
+            (getApiErrorReason(error) ||
+              (error instanceof Error ? error.message : ''))
+        )
       }
     }
   )
@@ -150,7 +155,11 @@ const LmsCourseAssignments: React.FC = () => {
         notify.success('Asignación eliminada exitosamente')
       },
       onError: (error: unknown) => {
-        notify.error('Error al eliminar asignación: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
+        notify.error(
+          'Error al eliminar asignación: ' +
+            (getApiErrorReason(error) ||
+              (error instanceof Error ? error.message : ''))
+        )
       }
     }
   )
@@ -174,9 +183,9 @@ const LmsCourseAssignments: React.FC = () => {
   }
 
   const handleRoleToggle = (roleName: string) => {
-    setSelectedRoles(prev => 
+    setSelectedRoles((prev) =>
       prev.includes(roleName)
-        ? prev.filter(r => r !== roleName)
+        ? prev.filter((r) => r !== roleName)
         : [...prev, roleName]
     )
   }
@@ -213,7 +222,14 @@ const LmsCourseAssignments: React.FC = () => {
 
   if (courseLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '50vh'
+        }}
+      >
         <SignalLoader message='Cargando curso...' />
       </Box>
     )
@@ -222,9 +238,7 @@ const LmsCourseAssignments: React.FC = () => {
   if (!course) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">
-          Curso no encontrado
-        </Alert>
+        <Alert severity='error'>Curso no encontrado</Alert>
       </Box>
     )
   }
@@ -237,8 +251,9 @@ const LmsCourseAssignments: React.FC = () => {
   return (
     <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       {!assignmentsSupported && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          Los cursos para clientes funcionan por catálogo. Las asignaciones y fechas límite del LMS solo aplican a usuarios internos.
+        <Alert severity='info' sx={{ mb: 3 }}>
+          Los cursos para clientes funcionan por catálogo. Las asignaciones y
+          fechas límite del LMS solo aplican a usuarios internos.
         </Alert>
       )}
 
@@ -249,7 +264,11 @@ const LmsCourseAssignments: React.FC = () => {
         icon={<AssignmentIcon />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={() => navigate('/lms/admin/courses')}>
+            <Button
+              variant='outlined'
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/lms/admin/courses')}
+            >
               Cursos
             </Button>
             <Button
@@ -268,33 +287,31 @@ const LmsCourseAssignments: React.FC = () => {
         {/* Información del curso */}
         <Grid item xs={12} md={4}>
           <Card>
-            <CardHeader title="Información del Curso" />
+            <CardHeader title='Información del Curso' />
             <CardContent>
               <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary">
+                <Typography variant='subtitle2' color='text.secondary'>
                   Descripción
                 </Typography>
-                <Typography variant="body2">
-                  {course.description}
-                </Typography>
+                <Typography variant='body2'>{course.description}</Typography>
               </Box>
               <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary">
+                <Typography variant='subtitle2' color='text.secondary'>
                   Audiencia
                 </Typography>
-                <Chip 
+                <Chip
                   label={getCourseAudienceLabel(course.audience)}
-                  size="small"
+                  size='small'
                 />
               </Box>
               <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary">
+                <Typography variant='subtitle2' color='text.secondary'>
                   Tipo
                 </Typography>
-                <Chip 
+                <Chip
                   label={course.is_mandatory ? 'Obligatorio' : 'Opcional'}
                   color={course.is_mandatory ? 'error' : 'default'}
-                  size="small"
+                  size='small'
                 />
               </Box>
             </CardContent>
@@ -302,15 +319,13 @@ const LmsCourseAssignments: React.FC = () => {
 
           {/* Estadísticas */}
           <Card sx={{ mt: 2 }}>
-            <CardHeader title="Estadísticas" />
+            <CardHeader title='Estadísticas' />
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <AssignmentIcon sx={{ mr: 1, color: 'primary.main' }} />
                 <Box>
-                  <Typography variant="h6">
-                    {assignments.length}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='h6'>{assignments.length}</Typography>
+                  <Typography variant='caption' color='text.secondary'>
                     Asignaciones activas
                   </Typography>
                 </Box>
@@ -318,10 +333,8 @@ const LmsCourseAssignments: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <PersonIcon sx={{ mr: 1, color: 'success.main' }} />
                 <Box>
-                  <Typography variant="h6">
-                    {estimatedAssignedUsers}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='h6'>{estimatedAssignedUsers}</Typography>
+                  <Typography variant='caption' color='text.secondary'>
                     Usuarios alcanzados
                   </Typography>
                 </Box>
@@ -333,17 +346,21 @@ const LmsCourseAssignments: React.FC = () => {
         {/* Lista de asignaciones */}
         <Grid item xs={12} md={8}>
           <Card>
-            <CardHeader title="Asignaciones Activas" />
+            <CardHeader title='Asignaciones Activas' />
             <CardContent>
               {assignmentsLoading ? (
                 <SignalLoader message='Cargando asignaciones...' />
               ) : assignments.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <AssignmentIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-                  <Typography color="text.secondary" gutterBottom>
-                    {assignmentsSupported ? 'No hay asignaciones configuradas' : 'Este curso no usa asignaciones'}
+                  <AssignmentIcon
+                    sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }}
+                  />
+                  <Typography color='text.secondary' gutterBottom>
+                    {assignmentsSupported
+                      ? 'No hay asignaciones configuradas'
+                      : 'Este curso no usa asignaciones'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='caption' color='text.secondary'>
                     {assignmentsSupported
                       ? 'Crea una asignación para definir vencimientos y obligatoriedad para usuarios internos'
                       : 'Los usuarios cliente acceden a estos cursos por catálogo según la audiencia'}
@@ -368,15 +385,19 @@ const LmsCourseAssignments: React.FC = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               {assignment.all_employees ? (
                                 <>
-                                  <GroupIcon sx={{ mr: 1, color: 'primary.main' }} />
-                                  <Typography variant="body2">
+                                  <GroupIcon
+                                    sx={{ mr: 1, color: 'primary.main' }}
+                                  />
+                                  <Typography variant='body2'>
                                     Todos los empleados
                                   </Typography>
                                 </>
                               ) : (
                                 <>
-                                  <PersonIcon sx={{ mr: 1, color: 'secondary.main' }} />
-                                  <Typography variant="body2">
+                                  <PersonIcon
+                                    sx={{ mr: 1, color: 'secondary.main' }}
+                                  />
+                                  <Typography variant='body2'>
                                     Por rol
                                   </Typography>
                                 </>
@@ -385,35 +406,55 @@ const LmsCourseAssignments: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             {assignment.all_employees ? (
-                              <Chip label="Todos" color="primary" size="small" />
+                              <Chip
+                                label='Todos'
+                                color='primary'
+                                size='small'
+                              />
                             ) : (
-                              <Chip label={assignment.role || 'Rol específico'} size="small" />
+                              <Chip
+                                label={assignment.role || 'Rol específico'}
+                                size='small'
+                              />
                             )}
                           </TableCell>
                           <TableCell>
                             {assignment.deadline ? (
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <ScheduleIcon sx={{ mr: 1, fontSize: 16, color: 'warning.main' }} />
-                                <Typography variant="caption">
+                              <Box
+                                sx={{ display: 'flex', alignItems: 'center' }}
+                              >
+                                <ScheduleIcon
+                                  sx={{
+                                    mr: 1,
+                                    fontSize: 16,
+                                    color: 'warning.main'
+                                  }}
+                                />
+                                <Typography variant='caption'>
                                   {formatDate(assignment.deadline)}
                                 </Typography>
                               </Box>
                             ) : (
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Sin fecha límite
                               </Typography>
                             )}
                           </TableCell>
                           <TableCell>
-                            <Typography variant="caption">
+                            <Typography variant='caption'>
                               {formatDate(assignment.created_at)}
                             </Typography>
                           </TableCell>
                           <TableCell>
                             <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteAssignment(assignment.id)}
+                              size='small'
+                              color='error'
+                              onClick={() =>
+                                handleDeleteAssignment(assignment.id)
+                              }
                             >
                               <DeleteIcon />
                             </IconButton>
@@ -430,10 +471,14 @@ const LmsCourseAssignments: React.FC = () => {
           {/* Lista de usuarios asignados */}
           {estimatedAssignedUsers > 0 && (
             <Card sx={{ mt: 2 }}>
-              <CardHeader title={`Usuarios Alcanzados (${estimatedAssignedUsers})`} />
+              <CardHeader
+                title={`Usuarios Alcanzados (${estimatedAssignedUsers})`}
+              />
               <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  El backend activo expone el conteo de usuarios impactados por cada asignación, pero no la lista nominal. Este resumen refleja ese alcance agregado.
+                <Typography variant='body2' color='text.secondary'>
+                  El backend activo expone el conteo de usuarios impactados por
+                  cada asignación, pero no la lista nominal. Este resumen
+                  refleja ese alcance agregado.
                 </Typography>
               </CardContent>
             </Card>
@@ -445,7 +490,7 @@ const LmsCourseAssignments: React.FC = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth="sm"
+        maxWidth='sm'
         fullWidth
       >
         <DialogTitle>Nueva Asignación de Curso</DialogTitle>
@@ -458,12 +503,12 @@ const LmsCourseAssignments: React.FC = () => {
                   onChange={(e) => setAssignToAll(e.target.checked)}
                 />
               }
-              label="Asignar a todos los empleados"
+              label='Asignar a todos los empleados'
             />
-            
+
             {!assignToAll && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography variant='subtitle2' gutterBottom>
                   Seleccionar roles:
                 </Typography>
                 <List dense>
@@ -471,7 +516,7 @@ const LmsCourseAssignments: React.FC = () => {
                     <ListItem key={role.id} dense>
                       <ListItemIcon>
                         <Checkbox
-                          edge="start"
+                          edge='start'
                           checked={selectedRoles.includes(role.name)}
                           onChange={() => handleRoleToggle(role.name)}
                         />
@@ -488,7 +533,7 @@ const LmsCourseAssignments: React.FC = () => {
 
             <Box sx={{ mt: 3 }}>
               <DateTimePicker
-                label="Fecha límite (opcional)"
+                label='Fecha límite (opcional)'
                 value={deadline}
                 onChange={(newValue) => setDeadline(newValue)}
                 slotProps={{
@@ -504,14 +549,19 @@ const LmsCourseAssignments: React.FC = () => {
           <Button onClick={handleCloseDialog}>Cancelar</Button>
           <Button
             onClick={handleSubmit}
-            variant="contained"
-            disabled={!assignmentsSupported || createAssignmentMutation.isLoading || (!assignToAll && selectedRoles.length === 0)}
+            variant='contained'
+            disabled={
+              !assignmentsSupported ||
+              createAssignmentMutation.isLoading ||
+              (!assignToAll && selectedRoles.length === 0)
+            }
           >
-            {createAssignmentMutation.isLoading ? 'Creando...' : 'Crear Asignación'}
+            {createAssignmentMutation.isLoading
+              ? 'Creando...'
+              : 'Crear Asignación'}
           </Button>
         </DialogActions>
       </Dialog>
-
     </Box>
   )
 }

@@ -39,7 +39,9 @@ import {
   Flag as FlagIcon,
   Warning as WarningIcon
 } from '@mui/icons-material'
-import LmsStatCard, { type LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
+import LmsStatCard, {
+  type LmsStatTone
+} from 'src/Components/lms/admin/LmsStatCard'
 
 interface QuizQuestion {
   id: number
@@ -104,7 +106,9 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
   const [startTime, setStartTime] = useState<Date | null>(null)
   const [showReviewDialog, setShowReviewDialog] = useState(false)
-  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set())
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(
+    new Set()
+  )
   const [currentAttempt, setCurrentAttempt] = useState<QuizAttempt | null>(null)
   const [canStartQuiz, setCanStartQuiz] = useState(true)
   const [cooldownEndTime, setCooldownEndTime] = useState<Date | null>(null)
@@ -126,8 +130,10 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     if (!isPreview && userAttempts.length > 0) {
       const lastAttempt = userAttempts[userAttempts.length - 1]
       const lastAttemptTime = new Date(lastAttempt.startedAt)
-      const cooldownEnd = new Date(lastAttemptTime.getTime() + quizConfig.cooldownMinutes * 60000)
-      
+      const cooldownEnd = new Date(
+        lastAttemptTime.getTime() + quizConfig.cooldownMinutes * 60000
+      )
+
       if (userAttempts.length >= quizConfig.maxAttempts) {
         setCanStartQuiz(false)
       } else if (quizConfig.cooldownMinutes > 0 && new Date() < cooldownEnd) {
@@ -141,32 +147,40 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     if (quizConfig.randomizeQuestions) {
       questions = questions.sort(() => Math.random() - 0.5)
     }
-    
+
     // Shuffle answers if needed
     if (quizConfig.shuffleAnswers) {
-      questions = questions.map(q => {
+      questions = questions.map((q) => {
         if (q.type === 'true-false') return q
-        
+
         const shuffledOptions = [...q.options]
         const originalIndices = shuffledOptions.map((_, index) => index)
-        
+
         // Fisher-Yates shuffle
         for (let i = shuffledOptions.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1))
-          ;[shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]]
-          ;[originalIndices[i], originalIndices[j]] = [originalIndices[j], originalIndices[i]]
+          ;[shuffledOptions[i], shuffledOptions[j]] = [
+            shuffledOptions[j],
+            shuffledOptions[i]
+          ]
+          ;[originalIndices[i], originalIndices[j]] = [
+            originalIndices[j],
+            originalIndices[i]
+          ]
         }
-        
+
         // Update correct answers based on new positions
         let newCorrectAnswer: number | number[]
         if (Array.isArray(q.correctAnswer)) {
-          newCorrectAnswer = q.correctAnswer.map(oldIndex => 
-            originalIndices.findIndex(newIndex => newIndex === oldIndex)
+          newCorrectAnswer = q.correctAnswer.map((oldIndex) =>
+            originalIndices.findIndex((newIndex) => newIndex === oldIndex)
           )
         } else {
-          newCorrectAnswer = originalIndices.findIndex(newIndex => newIndex === q.correctAnswer)
+          newCorrectAnswer = originalIndices.findIndex(
+            (newIndex) => newIndex === q.correctAnswer
+          )
         }
-        
+
         return {
           ...q,
           options: shuffledOptions,
@@ -175,7 +189,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
         }
       })
     }
-    
+
     setShuffledQuestions(questions)
     setUserAnswers(new Array(questions.length).fill(undefined))
   }, [quizConfig, userAttempts, isPreview])
@@ -184,7 +198,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
   useEffect(() => {
     if (startTime && quizConfig.timeLimitMinutes && timeRemaining !== null) {
       const timer = setInterval(() => {
-        setTimeRemaining(prev => {
+        setTimeRemaining((prev) => {
           if (prev === null || prev <= 0) {
             handleTimeUp()
             return 0
@@ -214,11 +228,11 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
   const handleStartQuiz = () => {
     setShowInstructions(false)
     setStartTime(new Date())
-    
+
     if (quizConfig.timeLimitMinutes) {
       setTimeRemaining(quizConfig.timeLimitMinutes * 60)
     }
-    
+
     const attempt: QuizAttempt = {
       attemptNumber: userAttempts.length + 1,
       startedAt: new Date(),
@@ -238,7 +252,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     const newAnswers = [...userAnswers]
     newAnswers[currentQuestionIndex] = value
     setUserAnswers(newAnswers)
-    
+
     // Auto-save progress
     if (onSaveProgress) {
       onSaveProgress(newAnswers)
@@ -276,14 +290,16 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       setShowReviewDialog(true)
       return
     }
-    
+
     finishQuiz()
   }
 
   const finishQuiz = () => {
     const endTime = new Date()
-    const timeSpent = startTime ? Math.round((endTime.getTime() - startTime.getTime()) / 1000) : 0
-    
+    const timeSpent = startTime
+      ? Math.round((endTime.getTime() - startTime.getTime()) / 1000)
+      : 0
+
     // Calculate score
     let totalScore = 0
     let totalPossiblePoints = 0
@@ -294,8 +310,12 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       const userAnswer = userAnswers[index]
       if (userAnswer !== undefined) {
         if (question.type === 'multiple-choice') {
-          const userArray = Array.isArray(userAnswer) ? userAnswer : [userAnswer]
-          const correctArray = Array.isArray(question.correctAnswer) ? question.correctAnswer : [question.correctAnswer]
+          const userArray = Array.isArray(userAnswer)
+            ? userAnswer
+            : [userAnswer]
+          const correctArray = Array.isArray(question.correctAnswer)
+            ? question.correctAnswer
+            : [question.correctAnswer]
 
           if (
             userArray.length === correctArray.length &&
@@ -311,7 +331,8 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       }
     })
 
-    const passed = (totalScore / totalPossiblePoints) * 100 >= quizConfig.passingPercentage
+    const passed =
+      (totalScore / totalPossiblePoints) * 100 >= quizConfig.passingPercentage
 
     const submissionAnswers = userAnswers.map((answer, index) => {
       const question = shuffledQuestions[index]
@@ -328,7 +349,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
       return toOriginalIndex(answer)
     })
-    
+
     const completedAttempt: QuizAttempt = {
       ...currentAttempt!,
       answers: submissionAnswers,
@@ -356,7 +377,9 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
     if (question.type === 'multiple-choice') {
       const userArray = Array.isArray(userAnswer) ? userAnswer : [userAnswer]
-      const correctArray = Array.isArray(question.correctAnswer) ? question.correctAnswer : [question.correctAnswer]
+      const correctArray = Array.isArray(question.correctAnswer)
+        ? question.correctAnswer
+        : [question.correctAnswer]
       return (
         userArray.length === correctArray.length &&
         userArray.every((answer) => correctArray.includes(answer))
@@ -368,10 +391,14 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
   const getQuestionTypeLabel = (type: string) => {
     switch (type) {
-      case 'true-false': return 'Verdadero o Falso'
-      case 'single-choice': return 'Selección Única'
-      case 'multiple-choice': return 'Selección Múltiple'
-      default: return 'Pregunta'
+      case 'true-false':
+        return 'Verdadero o Falso'
+      case 'single-choice':
+        return 'Selección Única'
+      case 'multiple-choice':
+        return 'Selección Múltiple'
+      default:
+        return 'Pregunta'
     }
   }
 
@@ -382,24 +409,29 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
   }
 
   const getAnsweredCount = () => {
-    return userAnswers.filter(answer => answer !== undefined).length
+    return userAnswers.filter((answer) => answer !== undefined).length
   }
 
   // Show cooldown message
   if (!canStartQuiz && cooldownEndTime) {
-    const remainingTime = Math.max(0, Math.ceil((cooldownEndTime.getTime() - new Date().getTime()) / 1000))
+    const remainingTime = Math.max(
+      0,
+      Math.ceil((cooldownEndTime.getTime() - new Date().getTime()) / 1000)
+    )
     return (
       <Card>
         <CardContent sx={{ textAlign: 'center', py: 4 }}>
           <TimerIcon sx={{ fontSize: 60, color: 'warning.main', mb: 2 }} />
-          <Typography variant="h5" gutterBottom>
+          <Typography variant='h5' gutterBottom>
             Tiempo de Espera
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Debes esperar {formatTime(remainingTime)} antes de poder intentar el quiz nuevamente.
+          <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
+            Debes esperar {formatTime(remainingTime)} antes de poder intentar el
+            quiz nuevamente.
           </Typography>
-          <Alert severity="info">
-            Tiempo de espera configurado: {quizConfig.cooldownMinutes} minutos entre intentos
+          <Alert severity='info'>
+            Tiempo de espera configurado: {quizConfig.cooldownMinutes} minutos
+            entre intentos
           </Alert>
         </CardContent>
       </Card>
@@ -412,13 +444,14 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       <Card>
         <CardContent sx={{ textAlign: 'center', py: 4 }}>
           <WarningIcon sx={{ fontSize: 60, color: 'error.main', mb: 2 }} />
-          <Typography variant="h5" gutterBottom>
+          <Typography variant='h5' gutterBottom>
             Intentos Agotados
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Has alcanzado el número máximo de intentos permitidos para este quiz.
+          <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
+            Has alcanzado el número máximo de intentos permitidos para este
+            quiz.
           </Typography>
-          <Alert severity="error">
+          <Alert severity='error'>
             Intentos realizados: {userAttempts.length}/{quizConfig.maxAttempts}
           </Alert>
         </CardContent>
@@ -432,17 +465,17 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       <Card>
         <CardContent>
           {!hideTitle && (
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+            <Typography variant='h4' gutterBottom sx={{ fontWeight: 700 }}>
               {quizConfig.title}
             </Typography>
           )}
-          
+
           {quizConfig.instructions && (
-            <Typography variant="body1" sx={{ mb: 3 }}>
+            <Typography variant='body1' sx={{ mb: 3 }}>
               {quizConfig.instructions}
             </Typography>
           )}
-          
+
           <Box
             sx={{
               display: 'grid',
@@ -453,31 +486,76 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
           >
             {(
               [
-                { label: 'Preguntas', value: String(shuffledQuestions.length), tone: 'blue', icon: <HelpOutlineIcon /> },
-                { label: 'Puntos totales', value: String(shuffledQuestions.reduce((sum, q) => sum + q.points, 0)), tone: 'teal', icon: <TrophyIcon /> },
-                { label: 'Para aprobar', value: `${quizConfig.passingPercentage}%`, tone: 'green', icon: <CheckCircleOutlineIcon /> },
-                { label: 'Intentos restantes', value: String(quizConfig.maxAttempts - userAttempts.length), tone: 'orange', icon: <ReplayIcon /> },
+                {
+                  label: 'Preguntas',
+                  value: String(shuffledQuestions.length),
+                  tone: 'blue',
+                  icon: <HelpOutlineIcon />
+                },
+                {
+                  label: 'Puntos totales',
+                  value: String(
+                    shuffledQuestions.reduce((sum, q) => sum + q.points, 0)
+                  ),
+                  tone: 'teal',
+                  icon: <TrophyIcon />
+                },
+                {
+                  label: 'Para aprobar',
+                  value: `${quizConfig.passingPercentage}%`,
+                  tone: 'green',
+                  icon: <CheckCircleOutlineIcon />
+                },
+                {
+                  label: 'Intentos restantes',
+                  value: String(quizConfig.maxAttempts - userAttempts.length),
+                  tone: 'orange',
+                  icon: <ReplayIcon />
+                },
                 ...(quizConfig.timeLimitMinutes
-                  ? [{ label: 'Tiempo límite', value: `${quizConfig.timeLimitMinutes} min`, tone: 'red', icon: <TimerOutlinedIcon /> }]
+                  ? [
+                      {
+                        label: 'Tiempo límite',
+                        value: `${quizConfig.timeLimitMinutes} min`,
+                        tone: 'red',
+                        icon: <TimerOutlinedIcon />
+                      }
+                    ]
                   : [])
-              ] as Array<{ label: string; value: string; tone: LmsStatTone; icon: React.ReactElement }>
+              ] as Array<{
+                label: string
+                value: string
+                tone: LmsStatTone
+                icon: React.ReactElement
+              }>
             ).map((item) => (
-              <LmsStatCard key={item.label} label={item.label} value={item.value} tone={item.tone} icon={item.icon} />
+              <LmsStatCard
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                tone={item.tone}
+                icon={item.icon}
+              />
             ))}
           </Box>
 
           {userAttempts.length > 0 && (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant='h6' gutterBottom>
                 Intentos Anteriores
               </Typography>
 
               {/* Best attempt summary */}
               {(() => {
                 const bestAttempt = userAttempts.reduce((best, current) =>
-                  (current.score! / current.totalPoints!) > (best.score! / best.totalPoints!) ? current : best
+                  current.score! / current.totalPoints! >
+                  best.score! / best.totalPoints!
+                    ? current
+                    : best
                 )
-                const bestPercentage = Math.round((bestAttempt.score! / bestAttempt.totalPoints!) * 100)
+                const bestPercentage = Math.round(
+                  (bestAttempt.score! / bestAttempt.totalPoints!) * 100
+                )
 
                 return (
                   <Paper
@@ -485,73 +563,113 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                     sx={{
                       p: 3,
                       mb: 2,
-                      backgroundColor: bestAttempt.passed ? '#e8f5e9' : '#fff3e0',
+                      backgroundColor: bestAttempt.passed
+                        ? '#e8f5e9'
+                        : '#fff3e0',
                       border: 2,
-                      borderColor: bestAttempt.passed ? 'success.main' : 'warning.main'
+                      borderColor: bestAttempt.passed
+                        ? 'success.main'
+                        : 'warning.main'
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        mb: 2
+                      }}
+                    >
                       {bestAttempt.passed ? (
-                        <CheckIcon sx={{ fontSize: 40, color: 'success.main' }} />
+                        <CheckIcon
+                          sx={{ fontSize: 40, color: 'success.main' }}
+                        />
                       ) : (
-                        <WarningIcon sx={{ fontSize: 40, color: 'warning.main' }} />
+                        <WarningIcon
+                          sx={{ fontSize: 40, color: 'warning.main' }}
+                        />
                       )}
                       <Box>
-                        <Typography variant="h5" fontWeight="bold">
-                          {bestAttempt.passed ? '¡Quiz Aprobado!' : 'Quiz No Aprobado'}
+                        <Typography variant='h5' fontWeight='bold'>
+                          {bestAttempt.passed
+                            ? '¡Quiz Aprobado!'
+                            : 'Quiz No Aprobado'}
                         </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                          Mejor resultado: {bestAttempt.score}/{bestAttempt.totalPoints} puntos ({bestPercentage}%)
+                        <Typography variant='body1' color='text.secondary'>
+                          Mejor resultado: {bestAttempt.score}/
+                          {bestAttempt.totalPoints} puntos ({bestPercentage}%)
                         </Typography>
                       </Box>
                     </Box>
 
                     {bestAttempt.passed && (
-                      <Alert severity="success" sx={{ mb: 1 }}>
-                        Has completado este quiz exitosamente. Puedes volver a intentarlo para mejorar tu puntuación.
+                      <Alert severity='success' sx={{ mb: 1 }}>
+                        Has completado este quiz exitosamente. Puedes volver a
+                        intentarlo para mejorar tu puntuación.
                       </Alert>
                     )}
 
-                    {!bestAttempt.passed && quizConfig.maxAttempts - userAttempts.length > 0 && (
-                      <Alert severity="info">
-                        Tienes {quizConfig.maxAttempts - userAttempts.length} intentos restantes. ¡Sigue intentando!
-                      </Alert>
-                    )}
+                    {!bestAttempt.passed &&
+                      quizConfig.maxAttempts - userAttempts.length > 0 && (
+                        <Alert severity='info'>
+                          Tienes {quizConfig.maxAttempts - userAttempts.length}{' '}
+                          intentos restantes. ¡Sigue intentando!
+                        </Alert>
+                      )}
                   </Paper>
                 )
               })()}
 
               {/* All attempts list */}
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
-                Historial de {userAttempts.length} intento{userAttempts.length > 1 ? 's' : ''}:
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+                sx={{ mt: 2 }}
+              >
+                Historial de {userAttempts.length} intento
+                {userAttempts.length > 1 ? 's' : ''}:
               </Typography>
-              {userAttempts.slice().reverse().map((attempt, index) => (
-                <Alert
-                  key={index}
-                  severity={attempt.passed ? 'success' : 'error'}
-                  sx={{ mb: 1 }}
-                  icon={attempt.passed ? <CheckIcon /> : <CancelIcon />}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box>
-                      <strong>Intento #{attempt.attemptNumber}</strong>: {attempt.score}/{attempt.totalPoints} puntos
-                      ({Math.round((attempt.score! / attempt.totalPoints!) * 100)}%)
+              {userAttempts
+                .slice()
+                .reverse()
+                .map((attempt, index) => (
+                  <Alert
+                    key={index}
+                    severity={attempt.passed ? 'success' : 'error'}
+                    sx={{ mb: 1 }}
+                    icon={attempt.passed ? <CheckIcon /> : <CancelIcon />}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Box>
+                        <strong>Intento #{attempt.attemptNumber}</strong>:{' '}
+                        {attempt.score}/{attempt.totalPoints} puntos (
+                        {Math.round(
+                          (attempt.score! / attempt.totalPoints!) * 100
+                        )}
+                        %)
+                      </Box>
+                      <Chip
+                        label={attempt.passed ? 'Aprobado' : 'No aprobado'}
+                        color={attempt.passed ? 'success' : 'error'}
+                        size='small'
+                      />
                     </Box>
-                    <Chip
-                      label={attempt.passed ? 'Aprobado' : 'No aprobado'}
-                      color={attempt.passed ? 'success' : 'error'}
-                      size="small"
-                    />
-                  </Box>
-                </Alert>
-              ))}
+                  </Alert>
+                ))}
             </Box>
           )}
-          
+
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
             <Button
-              variant="contained"
-              size="large"
+              variant='contained'
+              size='large'
               onClick={handleStartQuiz}
               disabled={!canStartQuiz}
               color={userAttempts.length > 0 ? 'primary' : 'primary'}
@@ -561,21 +679,24 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
           </Box>
 
           {!canStartQuiz && userAttempts.length >= quizConfig.maxAttempts && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              Has alcanzado el número máximo de intentos ({quizConfig.maxAttempts}) para este quiz.
+            <Alert severity='warning' sx={{ mt: 2 }}>
+              Has alcanzado el número máximo de intentos (
+              {quizConfig.maxAttempts}) para este quiz.
             </Alert>
           )}
 
           {!canStartQuiz && cooldownEndTime && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              Debes esperar hasta {cooldownEndTime.toLocaleTimeString()} para poder reintentar este quiz.
+            <Alert severity='info' sx={{ mt: 2 }}>
+              Debes esperar hasta {cooldownEndTime.toLocaleTimeString()} para
+              poder reintentar este quiz.
             </Alert>
           )}
-          
+
           {isPreview && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2">
-                <strong>Modo Preview:</strong> Este es un modo de prueba. Los resultados no se guardarán.
+            <Alert severity='info' sx={{ mt: 2 }}>
+              <Typography variant='body2'>
+                <strong>Modo Preview:</strong> Este es un modo de prueba. Los
+                resultados no se guardarán.
               </Typography>
             </Alert>
           )}
@@ -586,17 +707,28 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
   // Show results
   if (showResults && currentAttempt) {
-    const achievedPercentage = Math.round((currentAttempt.score! / currentAttempt.totalPoints!) * 100)
-    const attemptsRemaining = Math.max(0, quizConfig.maxAttempts - userAttempts.length - 1)
+    const achievedPercentage = Math.round(
+      (currentAttempt.score! / currentAttempt.totalPoints!) * 100
+    )
+    const attemptsRemaining = Math.max(
+      0,
+      quizConfig.maxAttempts - userAttempts.length - 1
+    )
 
     return (
       <Card>
         <CardContent>
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-            Resultados del Quiz · {currentAttempt.passed ? '¡Aprobado!' : 'No aprobado'}
+          <Typography variant='h5' sx={{ fontWeight: 700, mb: 2 }}>
+            Resultados del Quiz ·{' '}
+            {currentAttempt.passed ? '¡Aprobado!' : 'No aprobado'}
           </Typography>
           <Box
-            sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 2, mb: 3 }}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+              gap: 2,
+              mb: 3
+            }}
           >
             <LmsStatCard
               label='Resultado'
@@ -618,16 +750,21 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
             />
           </Box>
 
-          <Alert severity={currentAttempt.passed ? 'success' : 'warning'} sx={{ mb: 3 }}>
-            <Typography variant="body2">
+          <Alert
+            severity={currentAttempt.passed ? 'success' : 'warning'}
+            sx={{ mb: 3 }}
+          >
+            <Typography variant='body2'>
               {currentAttempt.passed ? (
                 <>
-                  Superaste el puntaje mínimo de <strong>{quizConfig.passingPercentage}%</strong>.
-                  Vuelve a la lección para continuar con el siguiente paso del curso.
+                  Superaste el puntaje mínimo de{' '}
+                  <strong>{quizConfig.passingPercentage}%</strong>. Vuelve a la
+                  lección para continuar con el siguiente paso del curso.
                 </>
               ) : (
                 <>
-                  Necesitas <strong>{quizConfig.passingPercentage}%</strong> para aprobar.
+                  Necesitas <strong>{quizConfig.passingPercentage}%</strong>{' '}
+                  para aprobar.
                   {attemptsRemaining > 0
                     ? ` Todavía puedes reintentar ${attemptsRemaining} vez${attemptsRemaining === 1 ? '' : 'es'}.`
                     : ' Ya no quedan más intentos disponibles en este quiz.'}
@@ -639,26 +776,45 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
           {quizConfig.showCorrectAnswers && (
             <>
               <Divider sx={{ my: 2 }} />
-              <Typography variant="h6" gutterBottom>
+              <Typography variant='h6' gutterBottom>
                 Revisión de Respuestas
               </Typography>
-              
+
               {shuffledQuestions.map((question, index) => {
                 const isCorrect = isAnswerCorrect(index)
                 const userAnswer = userAnswers[index]
 
                 return (
                   <Box key={question.id} sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Typography variant="h6">Pregunta {index + 1}:</Typography>
-                      <Chip label={getQuestionTypeLabel(question.type)} size="small" color="primary" variant="outlined" />
-                      {isCorrect !== null && (
-                        isCorrect ? <CheckIcon color="success" /> : <CancelIcon color="error" />
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1
+                      }}
+                    >
+                      <Typography variant='h6'>
+                        Pregunta {index + 1}:
+                      </Typography>
+                      <Chip
+                        label={getQuestionTypeLabel(question.type)}
+                        size='small'
+                        color='primary'
+                        variant='outlined'
+                      />
+                      {isCorrect !== null &&
+                        (isCorrect ? (
+                          <CheckIcon color='success' />
+                        ) : (
+                          <CancelIcon color='error' />
+                        ))}
+                      {flaggedQuestions.has(index) && (
+                        <FlagIcon color='warning' />
                       )}
-                      {flaggedQuestions.has(index) && <FlagIcon color="warning" />}
                     </Box>
 
-                    <Typography variant="body1" sx={{ mb: 2 }}>
+                    <Typography variant='body1' sx={{ mb: 2 }}>
                       {question.question}
                     </Typography>
 
@@ -668,13 +824,20 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                         let isCorrectOption = false
 
                         if (question.type === 'multiple-choice') {
-                          const userArray = Array.isArray(userAnswer) ? userAnswer : []
-                          const correctArray = Array.isArray(question.correctAnswer) ? question.correctAnswer : []
+                          const userArray = Array.isArray(userAnswer)
+                            ? userAnswer
+                            : []
+                          const correctArray = Array.isArray(
+                            question.correctAnswer
+                          )
+                            ? question.correctAnswer
+                            : []
                           isSelected = userArray.includes(optionIndex)
                           isCorrectOption = correctArray.includes(optionIndex)
                         } else {
                           isSelected = userAnswer === optionIndex
-                          isCorrectOption = question.correctAnswer === optionIndex
+                          isCorrectOption =
+                            question.correctAnswer === optionIndex
                         }
 
                         return (
@@ -687,8 +850,12 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                               p: 1,
                               borderRadius: 1,
                               backgroundColor: isSelected
-                                ? isCorrectOption ? 'success.light' : 'error.light'
-                                : isCorrectOption ? 'success.light' : 'transparent'
+                                ? isCorrectOption
+                                  ? 'success.light'
+                                  : 'error.light'
+                                : isCorrectOption
+                                  ? 'success.light'
+                                  : 'transparent'
                             }}
                           >
                             {question.type === 'multiple-choice' ? (
@@ -705,11 +872,15 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                               />
                             )}
                             <Typography
-                              variant="body2"
+                              variant='body2'
                               sx={{
                                 color: isSelected
-                                  ? isCorrectOption ? 'success.dark' : 'error.dark'
-                                  : isCorrectOption ? 'success.dark' : 'text.primary'
+                                  ? isCorrectOption
+                                    ? 'success.dark'
+                                    : 'error.dark'
+                                  : isCorrectOption
+                                    ? 'success.dark'
+                                    : 'text.primary'
                               }}
                             >
                               {option}
@@ -720,8 +891,8 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                     </Box>
 
                     {question.explanation && (
-                      <Alert severity="info" sx={{ mt: 1 }}>
-                        <Typography variant="body2">
+                      <Alert severity='info' sx={{ mt: 1 }}>
+                        <Typography variant='body2'>
                           <strong>Explicación:</strong> {question.explanation}
                         </Typography>
                       </Alert>
@@ -739,7 +910,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
   const currentQuestion = shuffledQuestions[currentQuestionIndex]
   if (!currentQuestion) {
     return (
-      <Alert severity="error">
+      <Alert severity='error'>
         No hay preguntas disponibles para este quiz.
       </Alert>
     )
@@ -750,33 +921,39 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       {/* Header with timer and progress */}
       <Card sx={{ mb: 2 }}>
         <CardContent sx={{ py: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">
-              {quizConfig.title}
-            </Typography>
-            
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <Typography variant='h6'>{quizConfig.title}</Typography>
+
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {timeRemaining !== null && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TimerIcon color={timeRemaining < 300 ? 'error' : 'primary'} />
-                  <Typography 
-                    variant="h6" 
+                  <TimerIcon
+                    color={timeRemaining < 300 ? 'error' : 'primary'}
+                  />
+                  <Typography
+                    variant='h6'
                     color={timeRemaining < 300 ? 'error.main' : 'primary.main'}
                   >
                     {formatTime(timeRemaining)}
                   </Typography>
                 </Box>
               )}
-              
-              <Typography variant="body2" color="text.secondary">
+
+              <Typography variant='body2' color='text.secondary'>
                 {getAnsweredCount()}/{shuffledQuestions.length} respondidas
               </Typography>
             </Box>
           </Box>
-          
+
           {quizConfig.showProgressBar && (
             <LinearProgress
-              variant="determinate"
+              variant='determinate'
               value={(getAnsweredCount() / shuffledQuestions.length) * 100}
               sx={{ mt: 1 }}
             />
@@ -789,14 +966,22 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
         <CardContent sx={{ py: 2 }}>
           {/* Mobile: Compact navigation */}
           <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Pregunta {currentQuestionIndex + 1} de {shuffledQuestions.length}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 1
+              }}
+            >
+              <Typography variant='body2' color='text.secondary'>
+                Pregunta {currentQuestionIndex + 1} de{' '}
+                {shuffledQuestions.length}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
-                  size="small"
-                  variant="outlined"
+                  size='small'
+                  variant='outlined'
                   onClick={() => setShowReviewDialog(true)}
                 >
                   Ver Todas
@@ -804,8 +989,10 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
               </Box>
             </Box>
             <LinearProgress
-              variant="determinate"
-              value={((currentQuestionIndex + 1) / shuffledQuestions.length) * 100}
+              variant='determinate'
+              value={
+                ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100
+              }
               sx={{ height: 6, borderRadius: 3 }}
             />
           </Box>
@@ -818,14 +1005,14 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                   <StepButton onClick={() => handleGoToQuestion(index)}>
                     <Box sx={{ position: 'relative' }}>
                       {flaggedQuestions.has(index) && (
-                        <FlagIcon 
-                          sx={{ 
-                            position: 'absolute', 
-                            top: -8, 
-                            right: -8, 
-                            fontSize: 16, 
-                            color: 'warning.main' 
-                          }} 
+                        <FlagIcon
+                          sx={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            fontSize: 16,
+                            color: 'warning.main'
+                          }}
                         />
                       )}
                     </Box>
@@ -840,26 +1027,53 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       {/* Main question card */}
       <Card>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3
+            }}
+          >
+            <Typography variant='h6'>
               Pregunta {currentQuestionIndex + 1} de {shuffledQuestions.length}
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Chip label={getQuestionTypeLabel(currentQuestion.type)} color="primary" size="small" />
-              <Chip label={`${currentQuestion.points} pts`} variant="outlined" size="small" />
-              <Tooltip title={flaggedQuestions.has(currentQuestionIndex) ? "Quitar marca" : "Marcar para revisar"}>
-                <IconButton size="small" onClick={handleFlagQuestion}>
-                  <FlagIcon color={flaggedQuestions.has(currentQuestionIndex) ? 'warning' : 'disabled'} />
+              <Chip
+                label={getQuestionTypeLabel(currentQuestion.type)}
+                color='primary'
+                size='small'
+              />
+              <Chip
+                label={`${currentQuestion.points} pts`}
+                variant='outlined'
+                size='small'
+              />
+              <Tooltip
+                title={
+                  flaggedQuestions.has(currentQuestionIndex)
+                    ? 'Quitar marca'
+                    : 'Marcar para revisar'
+                }
+              >
+                <IconButton size='small' onClick={handleFlagQuestion}>
+                  <FlagIcon
+                    color={
+                      flaggedQuestions.has(currentQuestionIndex)
+                        ? 'warning'
+                        : 'disabled'
+                    }
+                  />
                 </IconButton>
               </Tooltip>
             </Box>
           </Box>
 
-          <Typography variant="h6" sx={{ mb: 3 }}>
+          <Typography variant='h6' sx={{ mb: 3 }}>
             {currentQuestion.question}
           </Typography>
 
-          <FormControl component="fieldset" sx={{ width: '100%' }}>
+          <FormControl component='fieldset' sx={{ width: '100%' }}>
             {currentQuestion.type === 'multiple-choice' ? (
               <Box>
                 {currentQuestion.options.map((option, index) => (
@@ -869,18 +1083,24 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                       <Checkbox
                         checked={
                           Array.isArray(userAnswers[currentQuestionIndex])
-                            ? (userAnswers[currentQuestionIndex] as number[]).includes(index)
+                            ? (
+                                userAnswers[currentQuestionIndex] as number[]
+                              ).includes(index)
                             : false
                         }
                         onChange={(e) => {
-                          const currentAnswers = Array.isArray(userAnswers[currentQuestionIndex])
+                          const currentAnswers = Array.isArray(
+                            userAnswers[currentQuestionIndex]
+                          )
                             ? (userAnswers[currentQuestionIndex] as number[])
                             : []
 
                           if (e.target.checked) {
                             handleAnswerChange([...currentAnswers, index])
                           } else {
-                            handleAnswerChange(currentAnswers.filter((i) => i !== index))
+                            handleAnswerChange(
+                              currentAnswers.filter((i) => i !== index)
+                            )
                           }
                         }}
                       />
@@ -932,16 +1152,18 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
             )}
           </FormControl>
 
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            mt: 3,
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 3,
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2
+            }}
+          >
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<PrevIcon />}
               onClick={handlePreviousQuestion}
               disabled={currentQuestionIndex === 0}
@@ -950,11 +1172,17 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
               Anterior
             </Button>
 
-            <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                width: { xs: '100%', sm: 'auto' }
+              }}
+            >
               {currentQuestionIndex === shuffledQuestions.length - 1 ? (
                 <Button
-                  variant="contained"
-                  color="success"
+                  variant='contained'
+                  color='success'
                   onClick={() => handleSubmitQuiz()}
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
@@ -962,7 +1190,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                 </Button>
               ) : (
                 <Button
-                  variant="contained"
+                  variant='contained'
                   endIcon={<NextIcon />}
                   onClick={handleNextQuestion}
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
@@ -974,9 +1202,10 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
           </Box>
 
           {isPreview && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2">
-                <strong>Modo Preview:</strong> Este es un modo de prueba. Los resultados no se guardarán.
+            <Alert severity='info' sx={{ mt: 2 }}>
+              <Typography variant='body2'>
+                <strong>Modo Preview:</strong> Este es un modo de prueba. Los
+                resultados no se guardarán.
               </Typography>
             </Alert>
           )}
@@ -984,40 +1213,57 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
       </Card>
 
       {/* Review Dialog */}
-      <Dialog open={showReviewDialog} onClose={() => setShowReviewDialog(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={showReviewDialog}
+        onClose={() => setShowReviewDialog(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Revisar Respuestas</DialogTitle>
         <DialogContent>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Revisa tus respuestas antes de enviar el quiz. Las preguntas sin responder aparecen marcadas.
+          <Typography variant='body1' sx={{ mb: 2 }}>
+            Revisa tus respuestas antes de enviar el quiz. Las preguntas sin
+            responder aparecen marcadas.
           </Typography>
-          
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 1 }}>
+
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
+              gap: 1
+            }}
+          >
             {shuffledQuestions.map((_, index) => (
               <Button
                 key={index}
-                variant={userAnswers[index] !== undefined ? 'contained' : 'outlined'}
+                variant={
+                  userAnswers[index] !== undefined ? 'contained' : 'outlined'
+                }
                 color={flaggedQuestions.has(index) ? 'warning' : 'primary'}
-                size="small"
+                size='small'
                 onClick={() => {
                   setCurrentQuestionIndex(index)
                   setShowReviewDialog(false)
                 }}
               >
                 {index + 1}
-                {flaggedQuestions.has(index) && <FlagIcon sx={{ ml: 0.5, fontSize: 16 }} />}
+                {flaggedQuestions.has(index) && (
+                  <FlagIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                )}
               </Button>
             ))}
           </Box>
-          
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Preguntas sin responder: {shuffledQuestions.length - getAnsweredCount()}
+
+          <Alert severity='warning' sx={{ mt: 2 }}>
+            Preguntas sin responder:{' '}
+            {shuffledQuestions.length - getAnsweredCount()}
           </Alert>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowReviewDialog(false)}>
             Continuar Editando
           </Button>
-          <Button onClick={finishQuiz} variant="contained" color="success">
+          <Button onClick={finishQuiz} variant='contained' color='success'>
             Enviar Quiz Final
           </Button>
         </DialogActions>

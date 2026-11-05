@@ -18,7 +18,12 @@ export const deviceColumns: MRT_ColumnDef<DeviceIot>[] = [
     header: 'Estado',
     Cell: ({ cell }) =>
       cell.getValue<string>() === 'online' ? (
-        <Chip label='En línea' size='small' color='success' variant='outlined' />
+        <Chip
+          label='En línea'
+          size='small'
+          color='success'
+          variant='outlined'
+        />
       ) : (
         <Chip label='Offline' size='small' variant='outlined' />
       )

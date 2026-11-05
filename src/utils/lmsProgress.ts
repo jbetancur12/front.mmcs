@@ -29,9 +29,12 @@ export const getCourseCompletedLessons = (course: Course): number => {
     return 0
   }
 
-  const lessonProgressEntries = progressEntries.filter((entry) => entry.lesson_id !== undefined)
+  const lessonProgressEntries = progressEntries.filter(
+    (entry) => entry.lesson_id !== undefined
+  )
   if (lessonProgressEntries.length > 0) {
-    return lessonProgressEntries.filter((entry) => entry.status === 'completed').length
+    return lessonProgressEntries.filter((entry) => entry.status === 'completed')
+      .length
   }
 
   return progressEntries[0]?.completed_lessons?.length || 0
@@ -45,7 +48,9 @@ export const getCourseProgressPercentage = (course: Course): number => {
     return 0
   }
 
-  const lessonProgressEntries = progressEntries.filter((entry) => entry.lesson_id !== undefined)
+  const lessonProgressEntries = progressEntries.filter(
+    (entry) => entry.lesson_id !== undefined
+  )
   if (lessonProgressEntries.length > 0) {
     return Math.round((getCourseCompletedLessons(course) / totalLessons) * 100)
   }

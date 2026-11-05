@@ -1,9 +1,4 @@
-import {
-  Paper,
-  Typography,
-  Box,
-  Chip
-} from '@mui/material'
+import { Paper, Typography, Box, Chip } from '@mui/material'
 import { Star } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
@@ -13,7 +8,9 @@ interface MaintenanceTicketSatisfactionCardProps {
 }
 
 /** Calificación de satisfacción del cliente. */
-const MaintenanceTicketSatisfactionCard = ({ ticket }: MaintenanceTicketSatisfactionCardProps) => {
+const MaintenanceTicketSatisfactionCard = ({
+  ticket
+}: MaintenanceTicketSatisfactionCardProps) => {
   return (
     <>
       {/* Customer Satisfaction */}
@@ -51,11 +48,7 @@ const MaintenanceTicketSatisfactionCard = ({ ticket }: MaintenanceTicketSatisfac
           </Box>
 
           <Box textAlign='center' py={2}>
-            <Typography
-              variant='h4'
-              color='warning.main'
-              fontWeight='bold'
-            >
+            <Typography variant='h4' color='warning.main' fontWeight='bold'>
               {ticket.customerSatisfaction?.toFixed(1) || '0.0'}
             </Typography>
             <Typography variant='body2' color='text.secondary'>

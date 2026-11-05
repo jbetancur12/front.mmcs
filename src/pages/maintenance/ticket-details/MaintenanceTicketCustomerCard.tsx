@@ -24,13 +24,11 @@ interface MaintenanceTicketCustomerCardProps {
 }
 
 /** Datos del cliente y del contacto. */
-const MaintenanceTicketCustomerCard = ({ ticket, details }: MaintenanceTicketCustomerCardProps) => {
-  const {
-    editMode,
-    editData,
-    setEditData,
-    editErrors
-  } = details
+const MaintenanceTicketCustomerCard = ({
+  ticket,
+  details
+}: MaintenanceTicketCustomerCardProps) => {
+  const { editMode, editData, setEditData, editErrors } = details
 
   return (
     <>
@@ -131,9 +129,7 @@ const MaintenanceTicketCustomerCard = ({ ticket, details }: MaintenanceTicketCus
                 Teléfono
               </Typography>
             </Box>
-            <Typography variant='body1'>
-              {ticket.customerPhone}
-            </Typography>
+            <Typography variant='body1'>{ticket.customerPhone}</Typography>
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -214,11 +210,7 @@ const MaintenanceTicketCustomerCard = ({ ticket, details }: MaintenanceTicketCus
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Typography
-              variant='body2'
-              color='text.secondary'
-              gutterBottom
-            >
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               Condición inicial del equipo
             </Typography>
             {editMode ? (
@@ -251,11 +243,7 @@ const MaintenanceTicketCustomerCard = ({ ticket, details }: MaintenanceTicketCus
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Typography
-              variant='body2'
-              color='text.secondary'
-              gutterBottom
-            >
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               Accesorios disponibles
             </Typography>
             {editMode ? (

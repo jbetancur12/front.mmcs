@@ -153,7 +153,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
         }}
       >
         <Box sx={{ px: 2, py: 1.5 }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 700, color: neutral.text }}>
+          <Typography
+            sx={{ fontSize: 14, fontWeight: 700, color: neutral.text }}
+          >
             {displayName}
           </Typography>
           <Typography sx={{ fontSize: 13, color: neutral.textBody }}>
@@ -222,7 +224,13 @@ const UserMenu: React.FC<UserMenuProps> = ({
           <Divider key='version-divider' />,
           <Typography
             key='version'
-            sx={{ px: 2, pt: 1, pb: 0.5, fontSize: 12, color: neutral.textBody }}
+            sx={{
+              px: 2,
+              pt: 1,
+              pb: 0.5,
+              fontSize: 12,
+              color: neutral.textBody
+            }}
           >
             {versionLabel}
           </Typography>

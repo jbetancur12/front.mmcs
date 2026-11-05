@@ -1,5 +1,9 @@
 import React, { useMemo, useState } from 'react'
-import { type MRT_Cell, type MRT_ColumnDef, type MRT_Row } from 'material-react-table'
+import {
+  type MRT_Cell,
+  type MRT_ColumnDef,
+  type MRT_Row
+} from 'material-react-table'
 import {
   Box,
   Button,

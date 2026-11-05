@@ -19,7 +19,10 @@ import {
   Paper,
   InputAdornment
 } from '@mui/material'
-import { Search as SearchIcon, WorkspacePremium as WorkspacePremiumIcon } from '@mui/icons-material'
+import {
+  Search as SearchIcon,
+  WorkspacePremium as WorkspacePremiumIcon
+} from '@mui/icons-material'
 import { useQuery } from 'react-query'
 import { useNavigate } from 'react-router-dom'
 import { lmsService } from 'src/services/lmsService'
@@ -43,16 +46,23 @@ const LmsIssuedCertificates = () => {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [courseId, setCourseId] = useState<number | ''>('')
-  const [submitted, setSubmitted] = useState<{ q: string; courseId?: number }>({ q: '' })
+  const [submitted, setSubmitted] = useState<{ q: string; courseId?: number }>({
+    q: ''
+  })
 
-  const { data: coursesData } = useQuery(['lms-courses-certificate-filter'], () =>
-    lmsService.getCourses({ limit: 200 })
+  const { data: coursesData } = useQuery(
+    ['lms-courses-certificate-filter'],
+    () => lmsService.getCourses({ limit: 200 })
   )
   const courses = coursesData?.courses || []
 
   const { data: certificates = [], isLoading } = useQuery<AdminCertificate[]>(
     ['lms-admin-certificates', submitted.q, submitted.courseId],
-    () => lmsService.searchAdminCertificates({ q: submitted.q || undefined, courseId: submitted.courseId }),
+    () =>
+      lmsService.searchAdminCertificates({
+        q: submitted.q || undefined,
+        courseId: submitted.courseId
+      }),
     { keepPreviousData: true }
   )
 
@@ -74,15 +84,15 @@ const LmsIssuedCertificates = () => {
 
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <TextField
-          label="Buscar"
-          placeholder="Código, nombre o correo"
+          label='Buscar'
+          placeholder='Código, nombre o correo'
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           sx={{ minWidth: 320 }}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start">
+              <InputAdornment position='start'>
                 <SearchIcon />
               </InputAdornment>
             )
@@ -91,11 +101,13 @@ const LmsIssuedCertificates = () => {
         <FormControl sx={{ minWidth: 260 }}>
           <InputLabel>Curso</InputLabel>
           <Select
-            label="Curso"
+            label='Curso'
             value={courseId}
-            onChange={(e) => setCourseId(e.target.value === '' ? '' : Number(e.target.value))}
+            onChange={(e) =>
+              setCourseId(e.target.value === '' ? '' : Number(e.target.value))
+            }
           >
-            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value=''>Todos</MenuItem>
             {courses.map((course) => (
               <MenuItem key={course.id} value={course.id}>
                 {course.title}
@@ -103,12 +115,16 @@ const LmsIssuedCertificates = () => {
             ))}
           </Select>
         </FormControl>
-        <Button variant="contained" onClick={handleSearch} sx={{ alignSelf: 'center' }}>
+        <Button
+          variant='contained'
+          onClick={handleSearch}
+          sx={{ alignSelf: 'center' }}
+        >
           Buscar
         </Button>
       </Box>
 
-      <Paper variant="outlined">
+      <Paper variant='outlined'>
         <TableContainer>
           <Table>
             <TableHead>
@@ -125,51 +141,74 @@ const LmsIssuedCertificates = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={7} align='center' sx={{ py: 6 }}>
                     <SignalLoader />
                   </TableCell>
                 </TableRow>
               ) : certificates.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                    <Typography color="text.secondary">Sin resultados</Typography>
+                  <TableCell colSpan={7} align='center' sx={{ py: 6 }}>
+                    <Typography color='text.secondary'>
+                      Sin resultados
+                    </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 certificates.map((cert) => (
                   <TableRow key={cert.id}>
                     <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
+                      <Typography variant='body2' fontWeight='medium'>
                         {cert.userName}
                       </Typography>
-                      {cert.currentUserName && cert.currentUserName !== cert.userName && (
-                        <Typography variant="caption" color="text.secondary">
-                          Cuenta actual: {cert.currentUserName}
-                        </Typography>
-                      )}
+                      {cert.currentUserName &&
+                        cert.currentUserName !== cert.userName && (
+                          <Typography variant='caption' color='text.secondary'>
+                            Cuenta actual: {cert.currentUserName}
+                          </Typography>
+                        )}
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{cert.userEmail || '—'}</Typography>
+                      <Typography variant='body2'>
+                        {cert.userEmail || '—'}
+                      </Typography>
                     </TableCell>
                     <TableCell>{cert.courseTitle || '—'}</TableCell>
                     <TableCell>
-                      {cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString('es-ES') : '—'}
+                      {cert.issuedAt
+                        ? new Date(cert.issuedAt).toLocaleDateString('es-ES')
+                        : '—'}
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">{cert.certificateNumber}</Typography>
+                      <Typography variant='caption'>
+                        {cert.certificateNumber}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       {cert.hiddenByReset ? (
-                        <Chip label="Oculto (reinicio)" size="small" color="warning" variant="outlined" />
+                        <Chip
+                          label='Oculto (reinicio)'
+                          size='small'
+                          color='warning'
+                          variant='outlined'
+                        />
                       ) : (
-                        <Chip label="Vigente" size="small" color="success" variant="outlined" />
+                        <Chip
+                          label='Vigente'
+                          size='small'
+                          color='success'
+                          variant='outlined'
+                        />
                       )}
                     </TableCell>
                     <TableCell>
                       <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => navigate(`/lms/certificates/verify/${cert.certificateNumber}`)}
+                        size='small'
+                        variant='outlined'
+                        onClick={() =>
+                          navigate(
+                            `/lms/certificates/verify/${cert.certificateNumber}`
+                          )
+                        }
                       >
                         Ver
                       </Button>

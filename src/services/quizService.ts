@@ -122,10 +122,13 @@ export interface QuizAttemptResult {
     passed: boolean
     percentage: number
     timeSpentMinutes: number
-    correctAnswers: Record<number, {
-      correct_answers: number[]
-      explanation: string | null
-    }> | null
+    correctAnswers: Record<
+      number,
+      {
+        correct_answers: number[]
+        explanation: string | null
+      }
+    > | null
   }
 }
 
@@ -217,7 +220,10 @@ class QuizService {
    */
   async createQuiz(lessonId: number, quizData: CreateQuizDTO): Promise<Quiz> {
     try {
-      const response = await axiosPrivate.post(`${API_BASE}/lessons/${lessonId}/quiz`, quizData)
+      const response = await axiosPrivate.post(
+        `${API_BASE}/lessons/${lessonId}/quiz`,
+        quizData
+      )
       return response.data.data
     } catch (error: unknown) {
       logger.error('Error creating quiz:', error)
@@ -322,10 +328,13 @@ class QuizService {
     timeSpentSeconds: number
   ): Promise<QuizAttemptResult> {
     try {
-      const response = await axiosPrivate.post(`${API_BASE}/${quizId}/attempt`, {
-        answers,
-        timeSpent: timeSpentSeconds
-      })
+      const response = await axiosPrivate.post(
+        `${API_BASE}/${quizId}/attempt`,
+        {
+          answers,
+          timeSpent: timeSpentSeconds
+        }
+      )
       return response.data.data
     } catch (error: unknown) {
       logger.error('Error submitting quiz attempt:', error)
@@ -351,9 +360,14 @@ class QuizService {
    * Get specific quiz attempt details
    * GET /api/lms/quizzes/:quizId/attempts/:attemptId
    */
-  async getQuizAttemptDetails(quizId: number, attemptId: number): Promise<unknown> {
+  async getQuizAttemptDetails(
+    quizId: number,
+    attemptId: number
+  ): Promise<unknown> {
     try {
-      const response = await axiosPrivate.get(`${API_BASE}/${quizId}/attempts/${attemptId}`)
+      const response = await axiosPrivate.get(
+        `${API_BASE}/${quizId}/attempts/${attemptId}`
+      )
       return response.data.data
     } catch (error: unknown) {
       logger.error('Error fetching quiz attempt details:', error)
@@ -371,7 +385,9 @@ class QuizService {
    */
   async getQuizStatistics(quizId: number): Promise<QuizStatistics> {
     try {
-      const response = await axiosPrivate.get(`${API_BASE}/${quizId}/statistics`)
+      const response = await axiosPrivate.get(
+        `${API_BASE}/${quizId}/statistics`
+      )
       return response.data.data
     } catch (error: unknown) {
       logger.error('Error fetching quiz statistics:', error)
@@ -401,7 +417,9 @@ class QuizService {
    * Validate quiz configuration without saving
    * POST /api/lms/quizzes/validate-config
    */
-  async validateQuizConfig(quizData: CreateQuizDTO): Promise<QuizValidationResult> {
+  async validateQuizConfig(
+    quizData: CreateQuizDTO
+  ): Promise<QuizValidationResult> {
     try {
       await axiosPrivate.post(`${API_BASE}/validate-config`, quizData)
       return {
@@ -438,7 +456,9 @@ class QuizService {
     const parsed = parseApiError(error)
 
     if (isAxiosError(error) && error.response) {
-      const err = new Error(parsed.message ?? 'Error en la operación') as Error & {
+      const err = new Error(
+        parsed.message ?? 'Error en la operación'
+      ) as Error & {
         code: string
         details?: unknown
       }
@@ -449,10 +469,14 @@ class QuizService {
     }
 
     if (isAxiosError(error) && error.request) {
-      return new Error('No se pudo conectar con el servidor. Verifica tu conexión.')
+      return new Error(
+        'No se pudo conectar con el servidor. Verifica tu conexión.'
+      )
     }
 
-    return new Error(error instanceof Error ? error.message : 'Error desconocido')
+    return new Error(
+      error instanceof Error ? error.message : 'Error desconocido'
+    )
   }
 
   /**
@@ -487,7 +511,7 @@ class QuizService {
       shuffleAnswers: quiz.shuffle_answers,
       hasTimeLimit: quiz.time_limit_minutes !== null,
       timeLimitMinutes: quiz.time_limit_minutes,
-      questions: quiz.questions.map(q => ({
+      questions: quiz.questions.map((q) => ({
         id: q.id,
         type: q.type,
         question: q.question,
@@ -515,8 +539,12 @@ class QuizService {
       show_correct_answers: quizConfig.showCorrectAnswers,
       randomize_questions: quizConfig.randomizeQuestions,
       shuffle_answers: quizConfig.shuffleAnswers,
-      time_limit_minutes: quizConfig.hasTimeLimit ? quizConfig.timeLimitMinutes : null,
-      questions: questions.map((q, index) => this.mapQuestionToDTO(q, index + 1))
+      time_limit_minutes: quizConfig.hasTimeLimit
+        ? quizConfig.timeLimitMinutes
+        : null,
+      questions: questions.map((q, index) =>
+        this.mapQuestionToDTO(q, index + 1)
+      )
     }
   }
 }

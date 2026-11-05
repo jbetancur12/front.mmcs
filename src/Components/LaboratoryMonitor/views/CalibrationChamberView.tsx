@@ -11,7 +11,7 @@ import {
   Container,
   Grid,
   Alert,
-  Paper,
+  Paper
 } from '@mui/material'
 import EmptyState from 'src/Components/Common/EmptyState'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
@@ -91,7 +91,6 @@ const CalibrationChamberView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingChamber, setEditingChamber] = useState<Chamber | null>(null)
 
-
   // Estados para manejar IDs activos para mutaciones específicas (para los Record<string, boolean>)
   const [activePatternForSensorAddition, setActivePatternForSensorAddition] =
     useState<string | number | null>(null)
@@ -161,7 +160,9 @@ const CalibrationChamberView: React.FC = () => {
         handleClosePatternConfigModal()
       },
       onError: (error: Error) => {
-        notify.error(getApiErrorMessage(error, 'Error al guardar configuración.'))
+        notify.error(
+          getApiErrorMessage(error, 'Error al guardar configuración.')
+        )
       }
     }
   )
@@ -188,7 +189,9 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: (updatedChamber) => {
         queryClient.invalidateQueries(chambersQueryKey)
-        notify.success(`Cámara "${updatedChamber.name}" actualizada a "${updatedChamber.status}".`)
+        notify.success(
+          `Cámara "${updatedChamber.name}" actualizada a "${updatedChamber.status}".`
+        )
       },
       onError: (error: Error) => {
         notify.error(getApiErrorMessage(error, 'Error al actualizar estado.'))
@@ -299,7 +302,10 @@ const CalibrationChamberView: React.FC = () => {
         appNotify.success('¡Eliminado!', 'El sensor ha sido eliminado.')
       },
       onError: (error: Error) => {
-        appNotify.error('Error al eliminar sensor', getApiErrorMessage(error, 'No se pudo eliminar el sensor.'))
+        appNotify.error(
+          'Error al eliminar sensor',
+          getApiErrorMessage(error, 'No se pudo eliminar el sensor.')
+        )
       },
       onSettled: () => {
         setActiveSensorForDeletion(null)
@@ -369,7 +375,13 @@ const CalibrationChamberView: React.FC = () => {
 
   const handleStopCalibration = (chamberIdToStop: string | number) => {
     // Al detener, el backend borra todas las lecturas de calibración de la cámara
-    confirmDialog({ title: '¿Detener la calibración?', text: 'Se borrarán las lecturas de calibración registradas en esta cámara. No podrás recuperarlas.', confirmLabel: 'Sí, detener', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
+    confirmDialog({
+      title: '¿Detener la calibración?',
+      text: 'Se borrarán las lecturas de calibración registradas en esta cámara. No podrás recuperarlas.',
+      confirmLabel: 'Sí, detener',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    }).then((result) => {
       if (result.isConfirmed) {
         updateChamberStatusMutation.mutate({
           chamberId: chamberIdToStop,
@@ -387,7 +399,13 @@ const CalibrationChamberView: React.FC = () => {
     await createPatternMutation.mutateAsync({ chamberId, patternName })
   }
   const handleDeletePattern = (patternId: string | number) => {
-    confirmDialog({ title: '¿Eliminar este patrón?', text: 'Se eliminarán también todos sus sensores y lecturas. No podrás revertirlo.', confirmLabel: 'Sí, ¡eliminar!', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
+    confirmDialog({
+      title: '¿Eliminar este patrón?',
+      text: 'Se eliminarán también todos sus sensores y lecturas. No podrás revertirlo.',
+      confirmLabel: 'Sí, ¡eliminar!',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    }).then((result) => {
       if (result.isConfirmed) {
         deletePatternMutation.mutate(patternId)
       }
@@ -400,7 +418,13 @@ const CalibrationChamberView: React.FC = () => {
     await createSensorMutation.mutateAsync({ patternId, sensorData })
   }
   const handleDeleteSensorFromPattern = (sensorId: string | number) => {
-    confirmDialog({ title: '¿Estás seguro de eliminar este sensor?', text: 'Esta acción no se puede revertir.', confirmLabel: 'Sí, ¡eliminar!', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
+    confirmDialog({
+      title: '¿Estás seguro de eliminar este sensor?',
+      text: 'Esta acción no se puede revertir.',
+      confirmLabel: 'Sí, ¡eliminar!',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    }).then((result) => {
       // Si el usuario confirma la acción
       if (result.isConfirmed) {
         // Llamar a la mutación para eliminar el sensor
@@ -419,7 +443,13 @@ const CalibrationChamberView: React.FC = () => {
   }
 
   const handleDeleteChamber = (chamberId: string | number) => {
-    confirmDialog({ title: '¿Estás seguro?', text: '¡Esta acción eliminará la cámara y todos sus patrones y sensores asociados! No podrás revertirlo.', confirmLabel: 'Sí, ¡eliminar!', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
+    confirmDialog({
+      title: '¿Estás seguro?',
+      text: '¡Esta acción eliminará la cámara y todos sus patrones y sensores asociados! No podrás revertirlo.',
+      confirmLabel: 'Sí, ¡eliminar!',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    }).then((result) => {
       if (result.isConfirmed) {
         deleteChamberMutation.mutate(chamberId)
       }
@@ -531,7 +561,8 @@ const CalibrationChamberView: React.FC = () => {
         <Grid item xs={12}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard variant='quiet'
+              <LmsStatCard
+                variant='quiet'
                 label='Cámaras'
                 value={chambers.length}
                 icon={<AcUnit />}
@@ -539,7 +570,8 @@ const CalibrationChamberView: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard variant='quiet'
+              <LmsStatCard
+                variant='quiet'
                 label='En calibración'
                 value={
                   chambers.filter(
@@ -551,7 +583,8 @@ const CalibrationChamberView: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard variant='quiet'
+              <LmsStatCard
+                variant='quiet'
                 label='En reposo'
                 value={
                   chambers.filter(
@@ -678,7 +711,6 @@ const CalibrationChamberView: React.FC = () => {
           isLoading={updatePatternConfigMutation.isLoading}
         />
       )}
-
     </Container>
   )
 }

@@ -43,9 +43,7 @@ export const HeadquartersTab = ({
 )
 
 export const ScheduleTab = ({ id }: { id?: string }) => (
-  <Box>
-    {id && <CalibrationTimeline customerId={id} />}
-  </Box>
+  <Box>{id && <CalibrationTimeline customerId={id} />}</Box>
 )
 
 export const UsersTab = ({

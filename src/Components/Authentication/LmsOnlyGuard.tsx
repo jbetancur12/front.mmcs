@@ -5,7 +5,9 @@ import { userStore } from '../../store/userStore'
 
 const LMS_ALLOWED_PREFIXES = ['/lms']
 
-const LmsOnlyGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const LmsOnlyGuard: React.FC<{ children: React.ReactNode }> = ({
+  children
+}) => {
   const location = useLocation()
   const $userStore = useStore(userStore)
 

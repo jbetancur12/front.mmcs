@@ -155,13 +155,12 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
       }
 
       if (Object.keys(newPreviews).length > 0) {
-        setImagePreviews(prev => ({ ...prev, ...newPreviews }))
+        setImagePreviews((prev) => ({ ...prev, ...newPreviews }))
       }
     }
 
     generatePreviews()
   }, [files, imagePreviews, getFilePreviewUrl])
-
 
   const formatFileSize = (bytes: number | undefined | null) => {
     if (bytes === undefined || bytes === null) return 'Tamaño no disponible'
@@ -224,7 +223,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             justifyContent: 'center',
             gap: 1,
             borderRadius: '12px 12px 0 0',
-            background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(103, 58, 183, 0.18) 100%)'
+            background:
+              'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(103, 58, 183, 0.18) 100%)'
           }}
         >
           <VideoFile sx={{ fontSize: 42, color: '#7b1fa2' }} />
@@ -297,8 +297,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
         onDragLeave={handleDragLeave}
         onKeyDown={handleKeyDown}
         tabIndex={disabled || uploading ? -1 : 0}
-        role="button"
-        aria-label="Área de carga de archivos. Presiona Enter o Espacio para seleccionar archivos"
+        role='button'
+        aria-label='Área de carga de archivos. Presiona Enter o Espacio para seleccionar archivos'
         sx={{
           border: '2px dashed',
           borderColor: dragActive || isDragActive ? '#86c88a' : '#cbd5e1',
@@ -318,7 +318,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
         }}
       >
         <CardContent sx={{ textAlign: 'center', py: 4 }}>
-          <input {...getInputProps()} aria-hidden="true" />
+          <input {...getInputProps()} aria-hidden='true' />
           <Box
             sx={{
               backgroundColor: disabled || uploading ? '#f1f5f9' : '#e8f7ef',
@@ -351,17 +351,17 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               ? 'Suelta los archivos aquí'
               : 'Arrastra archivos aquí o haz clic para seleccionar'}
           </Typography>
-          <Typography 
-            variant='body2' 
+          <Typography
+            variant='body2'
             color='text.secondary'
             sx={{ fontWeight: 500 }}
           >
             Máximo {maxFiles} archivos, {maxSizeInMB}MB cada uno
           </Typography>
-          <Typography 
-            variant='caption' 
+          <Typography
+            variant='caption'
             color='text.secondary'
-            sx={{ 
+            sx={{
               mt: 1,
               backgroundColor: '#f1f5f9',
               borderRadius: '12px',
@@ -376,15 +376,15 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
 
       {/* Upload Progress */}
       {uploading && (
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
             mt: 2,
             p: 2,
             ...surfaceSx
           }}
         >
-          <Typography 
-            variant='body2' 
+          <Typography
+            variant='body2'
             gutterBottom
             sx={{
               color: '#0f172a',
@@ -393,8 +393,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           >
             Subiendo archivos... {uploadProgress}%
           </Typography>
-          <LinearProgress 
-            variant='determinate' 
+          <LinearProgress
+            variant='determinate'
             value={uploadProgress}
             sx={{
               height: 8,
@@ -411,14 +411,14 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
 
       {/* Error Display */}
       {error && (
-        <Alert 
-          severity='error' 
-          sx={{ 
+        <Alert
+          severity='error'
+          sx={{
             mt: 2,
             backgroundColor: '#ffffff',
             borderRadius: '12px',
             border: '1px solid rgba(244, 67, 54, 0.2)'
-          }} 
+          }}
           onClose={() => setError(null)}
         >
           {error}
@@ -428,8 +428,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
       {/* File List */}
       {files.length > 0 && (
         <Box sx={{ mt: 3 }}>
-          <Typography 
-            variant='subtitle2' 
+          <Typography
+            variant='subtitle2'
             gutterBottom
             sx={{
               fontWeight: 600,
@@ -444,7 +444,9 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               <Grid item xs={12} sm={6} md={4} key={file.id}>
                 <Card
                   sx={{
-                    backgroundColor: failedFiles.has(file.id) ? '#fff7f7' : '#ffffff',
+                    backgroundColor: failedFiles.has(file.id)
+                      ? '#fff7f7'
+                      : '#ffffff',
                     borderRadius: '12px',
                     boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
                     border: failedFiles.has(file.id)
@@ -452,7 +454,9 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                       : '1px solid #e5e7eb',
                     transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                     '&:hover': {
-                      borderColor: failedFiles.has(file.id) ? '#fca5a5' : '#cbd5e1',
+                      borderColor: failedFiles.has(file.id)
+                        ? '#fca5a5'
+                        : '#cbd5e1',
                       boxShadow: failedFiles.has(file.id)
                         ? '0 4px 12px rgba(244, 67, 54, 0.12)'
                         : '0 4px 12px rgba(15, 23, 42, 0.08)'
@@ -471,7 +475,9 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
-                          color: failedFiles.has(file.id) ? 'error.main' : 'inherit'
+                          color: failedFiles.has(file.id)
+                            ? 'error.main'
+                            : 'inherit'
                         }}
                       >
                         {file.originalName ||

@@ -77,9 +77,9 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
             >
               <ErrorIcon sx={{ fontSize: 40, color: '#dc2626' }} />
             </Box>
-            <Typography 
-              variant='h5' 
-              gutterBottom 
+            <Typography
+              variant='h5'
+              gutterBottom
               sx={{
                 color: '#f44336',
                 fontWeight: 700
@@ -87,9 +87,9 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
             >
               Error en el Módulo de Mantenimiento
             </Typography>
-            <Typography 
-              variant='body1' 
-              color='text.secondary' 
+            <Typography
+              variant='body1'
+              color='text.secondary'
               paragraph
               sx={{ fontWeight: 500 }}
             >
@@ -98,10 +98,10 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
             </Typography>
 
             {this.state.error && (
-              <Alert 
-                severity='error' 
-                sx={{ 
-                  mb: 2, 
+              <Alert
+                severity='error'
+                sx={{
+                  mb: 2,
                   textAlign: 'left',
                   background: 'rgba(244, 67, 54, 0.05)',
                   borderRadius: '12px',
@@ -111,8 +111,8 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 <Typography
                   variant='body2'
                   component='pre'
-                  sx={{ 
-                    fontFamily: 'monospace', 
+                  sx={{
+                    fontFamily: 'monospace',
                     fontSize: '0.75rem',
                     color: '#d32f2f'
                   }}

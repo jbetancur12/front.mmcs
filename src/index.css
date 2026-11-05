@@ -12,9 +12,15 @@
 }
 
 @keyframes alarm-blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .alarm-dot {
@@ -22,8 +28,13 @@
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .leaflet-marker-icon {
@@ -32,8 +43,13 @@
 
 /* Animación de parpadeo */
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .blinking {
@@ -53,7 +69,11 @@
   margin-top: 5px;
   text-align: center;
   border-radius: 15px;
-  font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+  font:
+    12px 'Helvetica Neue',
+    Arial,
+    Helvetica,
+    sans-serif;
   font-weight: bold;
 }
 
@@ -88,9 +108,16 @@
 
 /* Agrega estos estilos globalmente o en tu archivo CSS principal */
 @keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; background-color: #ff4444; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+    background-color: #ff4444;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .custom-cluster {
@@ -103,9 +130,15 @@
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Mobile menu animations */
@@ -137,8 +170,8 @@
   --lms-secondary-foreground: #0d4a5e;
   --lms-sidebar: #0b1724;
   --lms-sidebar-foreground: #e2e8f0;
-  --lms-sidebar-accent: rgba(13,110,138,0.18);
-  --lms-sidebar-border: rgba(255,255,255,0.08);
+  --lms-sidebar-accent: rgba(13, 110, 138, 0.18);
+  --lms-sidebar-border: rgba(255, 255, 255, 0.08);
   --lms-muted: #f0eeea;
   --lms-muted-foreground: #6b6b72;
   --lms-background: #f8f7f4;
@@ -148,11 +181,11 @@
   --lms-warning-bg: #fff8ec;
   --lms-warning-border: #f5d580;
   --lms-warning-accent: #e6a817;
-  --lms-progress-track: rgba(255,255,255,0.08);
+  --lms-progress-track: rgba(255, 255, 255, 0.08);
   --lms-progress-fill: #0d8aaa;
   --lms-completed: #4dc8e0;
   --lms-active-text: #f0f4f8;
   --lms-lesson-title: #c8d8e8;
-  --lms-badge-bg: rgba(13,110,138,0.3);
+  --lms-badge-bg: rgba(13, 110, 138, 0.3);
   --lms-badge-text: #7dd3e8;
 }

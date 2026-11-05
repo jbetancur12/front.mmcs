@@ -91,7 +91,9 @@ const slaPhaseRows: SlaPhaseRow[] = [
 
 const normalizeValue = (value: unknown, fallback: number) => {
   const parsedValue = Number(value)
-  return Number.isFinite(parsedValue) ? Math.max(Math.trunc(parsedValue), 0) : fallback
+  return Number.isFinite(parsedValue)
+    ? Math.max(Math.trunc(parsedValue), 0)
+    : fallback
 }
 
 const buildInitialValues = (
@@ -105,7 +107,10 @@ const buildInitialValues = (
         DEFAULT_SLA_CONFIG[row.warningKey]
       ),
       [row.targetKey]: Math.max(
-        normalizeValue(config?.[row.targetKey], DEFAULT_SLA_CONFIG[row.targetKey]),
+        normalizeValue(
+          config?.[row.targetKey],
+          DEFAULT_SLA_CONFIG[row.targetKey]
+        ),
         1
       )
     }),
@@ -137,7 +142,12 @@ const CalibrationServiceSlaConfigDialog = ({
         const warning = Number(values[row.warningKey])
         const target = Number(values[row.targetKey])
 
-        return !Number.isFinite(warning) || !Number.isFinite(target) || target < 1 || warning > target
+        return (
+          !Number.isFinite(warning) ||
+          !Number.isFinite(target) ||
+          target < 1 ||
+          warning > target
+        )
       }),
     [values]
   )
@@ -165,95 +175,164 @@ const CalibrationServiceSlaConfigDialog = ({
       submitDisabled={hasInvalidValues}
       maxWidth='md'
     >
-        <Stack spacing={2}>
-          <Alert severity='info' sx={{ alignItems: 'center' }}>
-            Los días se cuentan en días hábiles desde el inicio de cada fase. Solo admin y super admin
-            pueden cambiarlos; los demás roles los consultan en la guía.
+      <Stack spacing={2}>
+        <Alert severity='info' sx={{ alignItems: 'center' }}>
+          Los días se cuentan en días hábiles desde el inicio de cada fase. Solo
+          admin y super admin pueden cambiarlos; los demás roles los consultan
+          en la guía.
+        </Alert>
+
+        {config?.updatedAt || config?.updatedByName ? (
+          <Typography variant='caption' color='text.secondary'>
+            Última actualización:{' '}
+            {config.updatedAt
+              ? new Date(config.updatedAt).toLocaleString('es-CO')
+              : 'N/A'}
+            {config.updatedByName ? ` por ${config.updatedByName}` : ''}
+          </Typography>
+        ) : null}
+
+        <Box sx={{ overflowX: 'auto' }}>
+          <Table size='small' sx={{ minWidth: 640 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Fase</TableCell>
+                <TableCell>Empieza cuando</TableCell>
+                <TableCell width={170}>
+                  <Box
+                    component='span'
+                    sx={{
+                      display: 'inline-block',
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: '#f59e0b',
+                      mr: 0.75
+                    }}
+                  />
+                  Amarillo desde el día
+                </TableCell>
+                <TableCell width={170}>
+                  <Box
+                    component='span'
+                    sx={{
+                      display: 'inline-block',
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: '#ef4444',
+                      mr: 0.75
+                    }}
+                  />
+                  Rojo después del día
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {slaPhaseRows.map((row) => {
+                const warning = Number(values[row.warningKey])
+                const target = Number(values[row.targetKey])
+                const warningInvalid = warning > target
+                const targetInvalid = target < 1
+                const greenEnd = Math.max(warning - 1, 0)
+
+                return (
+                  <TableRow key={row.label} hover>
+                    <TableCell>
+                      <Typography fontWeight={600}>{row.label}</Typography>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: 'block' }}
+                      >
+                        <Box
+                          component='span'
+                          sx={{ color: '#00897B', fontWeight: 600 }}
+                        >
+                          Verde
+                        </Box>{' '}
+                        hasta el día {greenEnd},{' '}
+                        <Box
+                          component='span'
+                          sx={{ color: '#b45309', fontWeight: 600 }}
+                        >
+                          amarillo
+                        </Box>{' '}
+                        del {warning} al {target},{' '}
+                        <Box
+                          component='span'
+                          sx={{ color: '#dc2626', fontWeight: 600 }}
+                        >
+                          rojo
+                        </Box>{' '}
+                        desde el {target + 1}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{row.startsAt}</TableCell>
+                    <TableCell>
+                      <TextField
+                        fullWidth
+                        size='small'
+                        type='number'
+                        value={values[row.warningKey]}
+                        onChange={(event) =>
+                          updateValue(row.warningKey, event.target.value)
+                        }
+                        disabled={isLoading}
+                        error={warningInvalid}
+                        inputProps={{
+                          min: 0,
+                          step: 1,
+                          'aria-label': `Amarillo desde, ${row.label}`
+                        }}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position='end'>días</InputAdornment>
+                          )
+                        }}
+                        helperText={
+                          warningInvalid ? 'No puede pasar el rojo' : ' '
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        fullWidth
+                        size='small'
+                        type='number'
+                        value={values[row.targetKey]}
+                        onChange={(event) =>
+                          updateValue(row.targetKey, event.target.value)
+                        }
+                        disabled={isLoading}
+                        error={targetInvalid || warningInvalid}
+                        inputProps={{
+                          min: 1,
+                          step: 1,
+                          'aria-label': `Rojo después del día, ${row.label}`
+                        }}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position='end'>días</InputAdornment>
+                          )
+                        }}
+                        helperText={targetInvalid ? 'Mínimo 1 día' : ' '}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </Box>
+
+        {hasInvalidValues ? (
+          <Alert severity='warning'>
+            Revisa los valores: el rojo debe empezar mínimo en 1 día hábil y no
+            puede ser menor que el día en que empieza el amarillo.
           </Alert>
-
-          {config?.updatedAt || config?.updatedByName ? (
-            <Typography variant='caption' color='text.secondary'>
-              Última actualización:{' '}
-              {config.updatedAt ? new Date(config.updatedAt).toLocaleString('es-CO') : 'N/A'}
-              {config.updatedByName ? ` por ${config.updatedByName}` : ''}
-            </Typography>
-          ) : null}
-
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size='small' sx={{ minWidth: 640 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Fase</TableCell>
-                  <TableCell>Empieza cuando</TableCell>
-                  <TableCell width={170}>
-                    <Box component='span' sx={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', bgcolor: '#f59e0b', mr: 0.75 }} />Amarillo desde el día
-                  </TableCell>
-                  <TableCell width={170}>
-                    <Box component='span' sx={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', bgcolor: '#ef4444', mr: 0.75 }} />Rojo después del día
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {slaPhaseRows.map((row) => {
-                  const warning = Number(values[row.warningKey])
-                  const target = Number(values[row.targetKey])
-                  const warningInvalid = warning > target
-                  const targetInvalid = target < 1
-                  const greenEnd = Math.max(warning - 1, 0)
-
-                  return (
-                    <TableRow key={row.label} hover>
-                      <TableCell>
-                        <Typography fontWeight={600}>{row.label}</Typography>
-                        <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
-                          <Box component='span' sx={{ color: '#00897B', fontWeight: 600 }}>Verde</Box> hasta el día {greenEnd},{' '}
-                          <Box component='span' sx={{ color: '#b45309', fontWeight: 600 }}>amarillo</Box> del {warning} al {target},{' '}
-                          <Box component='span' sx={{ color: '#dc2626', fontWeight: 600 }}>rojo</Box> desde el {target + 1}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{row.startsAt}</TableCell>
-                      <TableCell>
-                        <TextField
-                          fullWidth
-                          size='small'
-                          type='number'
-                          value={values[row.warningKey]}
-                          onChange={(event) => updateValue(row.warningKey, event.target.value)}
-                          disabled={isLoading}
-                          error={warningInvalid}
-                          inputProps={{ min: 0, step: 1, 'aria-label': `Amarillo desde, ${row.label}` }}
-                          InputProps={{ endAdornment: <InputAdornment position='end'>días</InputAdornment> }}
-                          helperText={warningInvalid ? 'No puede pasar el rojo' : ' '}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          fullWidth
-                          size='small'
-                          type='number'
-                          value={values[row.targetKey]}
-                          onChange={(event) => updateValue(row.targetKey, event.target.value)}
-                          disabled={isLoading}
-                          error={targetInvalid || warningInvalid}
-                          inputProps={{ min: 1, step: 1, 'aria-label': `Rojo después del día, ${row.label}` }}
-                          InputProps={{ endAdornment: <InputAdornment position='end'>días</InputAdornment> }}
-                          helperText={targetInvalid ? 'Mínimo 1 día' : ' '}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </Box>
-
-          {hasInvalidValues ? (
-            <Alert severity='warning'>
-              Revisa los valores: el rojo debe empezar mínimo en 1 día hábil y no puede ser menor
-              que el día en que empieza el amarillo.
-            </Alert>
-          ) : null}
-        </Stack>
+        ) : null}
+      </Stack>
     </FormDialog>
   )
 }

@@ -23,7 +23,10 @@ import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-const PRIORITY_COLORS: Record<string, 'error' | 'warning' | 'info' | 'default'> = {
+const PRIORITY_COLORS: Record<
+  string,
+  'error' | 'warning' | 'info' | 'default'
+> = {
   urgent: 'error',
   high: 'warning',
   normal: 'info',
@@ -78,13 +81,22 @@ const NotificationBell = () => {
       <IconButton
         onClick={handleClick}
         size='small'
-        sx={{ color: open ? '#059669' : 'text.secondary', position: 'relative' }}
+        sx={{
+          color: open ? '#059669' : 'text.secondary',
+          position: 'relative'
+        }}
       >
         <Badge
           badgeContent={unreadCount}
           color='error'
           max={99}
-          sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', minWidth: 16, height: 16 } }}
+          sx={{
+            '& .MuiBadge-badge': {
+              fontSize: '0.65rem',
+              minWidth: 16,
+              height: 16
+            }
+          }}
         >
           <NotificationsOutlinedIcon />
         </Badge>
@@ -112,12 +124,26 @@ const NotificationBell = () => {
             direction='row'
             justifyContent='space-between'
             alignItems='center'
-            sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}
+            sx={{
+              px: 2,
+              py: 1.5,
+              borderBottom: '1px solid',
+              borderColor: 'divider'
+            }}
           >
-            <Typography variant='subtitle2' fontWeight={700}>Notificaciones</Typography>
+            <Typography variant='subtitle2' fontWeight={700}>
+              Notificaciones
+            </Typography>
             {unreadCount > 0 ? (
-              <Chip size='small' label={`${unreadCount} sin leer`} color='error' variant='outlined'
-                sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.6 } }}
+              <Chip
+                size='small'
+                label={`${unreadCount} sin leer`}
+                color='error'
+                variant='outlined'
+                sx={{
+                  height: 22,
+                  '& .MuiChip-label': { fontSize: '0.7rem', px: 0.6 }
+                }}
               />
             ) : null}
           </Stack>
@@ -130,37 +156,69 @@ const NotificationBell = () => {
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     sx={{
-                      px: 2, py: 1.5,
-                      borderBottom: '1px solid', borderColor: 'divider',
+                      px: 2,
+                      py: 1.5,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
                       '&:hover': { backgroundColor: 'rgba(16,185,129,0.04)' }
                     }}
                   >
                     <ListItemText
                       primary={
                         <Stack direction='row' alignItems='center' spacing={1}>
-                          <Typography variant='body2' fontWeight={600} sx={{ fontSize: '0.82rem' }}>
+                          <Typography
+                            variant='body2'
+                            fontWeight={600}
+                            sx={{ fontSize: '0.82rem' }}
+                          >
                             {notification.title}
                           </Typography>
                           <Chip
                             size='small'
-                            label={NOTIFICATION_TYPE_LABELS[notification.type] || notification.type}
-                            color={PRIORITY_COLORS[notification.priority] || 'default'}
+                            label={
+                              NOTIFICATION_TYPE_LABELS[notification.type] ||
+                              notification.type
+                            }
+                            color={
+                              PRIORITY_COLORS[notification.priority] ||
+                              'default'
+                            }
                             variant='outlined'
-                            sx={{ height: 18, '& .MuiChip-label': { fontSize: '0.6rem', px: 0.5 } }}
+                            sx={{
+                              height: 18,
+                              '& .MuiChip-label': {
+                                fontSize: '0.6rem',
+                                px: 0.5
+                              }
+                            }}
                           />
                         </Stack>
                       }
                       secondary={
-                        <Typography variant='caption' color='text.secondary' sx={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          mt: 0.25
-                        }}>
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          sx={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            mt: 0.25
+                          }}
+                        >
                           {notification.message}
-                          <Box component='span' sx={{ display: 'block', mt: 0.25, color: 'text.disabled' }}>
-                            {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: es })}
+                          <Box
+                            component='span'
+                            sx={{
+                              display: 'block',
+                              mt: 0.25,
+                              color: 'text.disabled'
+                            }}
+                          >
+                            {formatDistanceToNow(
+                              new Date(notification.createdAt),
+                              { addSuffix: true, locale: es }
+                            )}
                           </Box>
                         </Typography>
                       }
@@ -170,15 +228,20 @@ const NotificationBell = () => {
               </List>
             ) : (
               <Box sx={{ p: 3, textAlign: 'center' }}>
-                <NotificationsOutlinedIcon sx={{ fontSize: 32, color: '#d1d5db', mb: 1 }} />
-                <Typography variant='body2' color='text.secondary'>Sin notificaciones</Typography>
+                <NotificationsOutlinedIcon
+                  sx={{ fontSize: 32, color: '#d1d5db', mb: 1 }}
+                />
+                <Typography variant='body2' color='text.secondary'>
+                  Sin notificaciones
+                </Typography>
               </Box>
             )}
-            <Box
-              sx={{ borderTop: '1px solid', borderColor: 'divider' }}
-            >
+            <Box sx={{ borderTop: '1px solid', borderColor: 'divider' }}>
               <ListItemButton
-                onClick={() => { navigate('/calibration-services/notifications'); handleClose() }}
+                onClick={() => {
+                  navigate('/calibration-services/notifications')
+                  handleClose()
+                }}
                 sx={{ justifyContent: 'center', py: 1 }}
               >
                 <Typography variant='caption' fontWeight={600} color='primary'>

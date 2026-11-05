@@ -108,7 +108,13 @@ describe('getRoleBasedNavigation', () => {
   })
 
   it('admin y Training Manager ven los cinco ítems', () => {
-    const ids = ['courses', 'assignments', 'analytics', 'reports', 'certificates']
+    const ids = [
+      'courses',
+      'assignments',
+      'analytics',
+      'reports',
+      'certificates'
+    ]
     expect(getRoleBasedNavigation('admin').map((i) => i.id)).toEqual(ids)
     expect(getRoleBasedNavigation('training_manager').map((i) => i.id)).toEqual(
       ids

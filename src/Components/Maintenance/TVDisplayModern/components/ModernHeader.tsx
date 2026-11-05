@@ -81,7 +81,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
               fontSize: '2rem'
             }}
           >
-            <Box component="span" sx={{ color: modernColors.primary }}>
+            <Box component='span' sx={{ color: modernColors.primary }}>
               {companyName.slice(0, 5)}
             </Box>
             {companyName.slice(5)}

@@ -53,7 +53,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       fullWidth
       PaperProps={{ sx: { borderRadius: 4 } }}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pt: 3 }}>
+      <DialogTitle
+        sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pt: 3 }}
+      >
         <Box
           sx={{
             width: 40,
@@ -78,14 +80,20 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-        <Button onClick={onClose} disabled={loading} sx={{ textTransform: 'none' }}>
+        <Button
+          onClick={onClose}
+          disabled={loading}
+          sx={{ textTransform: 'none' }}
+        >
           {cancelLabel}
         </Button>
         <Button
           variant='contained'
           onClick={onConfirm}
           disabled={loading}
-          startIcon={loading ? <CircularProgress size={16} color='inherit' /> : undefined}
+          startIcon={
+            loading ? <CircularProgress size={16} color='inherit' /> : undefined
+          }
           sx={{
             textTransform: 'none',
             fontWeight: 600,

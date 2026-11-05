@@ -77,7 +77,9 @@ const SERVICE_SCOPE_OPTIONS = [
   { value: 'AC', label: 'AC' }
 ]
 
-const createEmptyItem = (rowNumber: number): CalibrationServiceLogisticsControlItem => ({
+const createEmptyItem = (
+  rowNumber: number
+): CalibrationServiceLogisticsControlItem => ({
   rowNumber,
   equipmentName: '',
   brand: '',
@@ -144,10 +146,7 @@ const CalibrationServiceLogisticsControlDialog = ({
     }
 
   const handleItemChange =
-    (
-      index: number,
-      field: keyof CalibrationServiceLogisticsControlItem
-    ) =>
+    (index: number, field: keyof CalibrationServiceLogisticsControlItem) =>
     (event: ChangeEvent<HTMLInputElement>) => {
       setValues((current) => ({
         ...current,
@@ -160,7 +159,7 @@ const CalibrationServiceLogisticsControlDialog = ({
                   field === 'physicalInspectionOut' ||
                   field === 'operationalInspectionIn' ||
                   field === 'operationalInspectionOut'
-                    ? (event.target.value || null)
+                    ? event.target.value || null
                     : event.target.value
               }
             : item
@@ -192,12 +191,19 @@ const CalibrationServiceLogisticsControlDialog = ({
   }
 
   const [deviceQuery, setDeviceQuery] = useState('')
-  const { options: deviceOptions, loading: deviceLoading } = useCalibrationDeviceSearch(deviceQuery)
+  const { options: deviceOptions, loading: deviceLoading } =
+    useCalibrationDeviceSearch(deviceQuery)
 
   const handleAddRowWithDevice = (device: { id: number; name: string }) => {
     setValues((current) => ({
       ...current,
-      items: [...current.items, { ...createEmptyItem(current.items.length + 1), equipmentName: device.name }]
+      items: [
+        ...current.items,
+        {
+          ...createEmptyItem(current.items.length + 1),
+          equipmentName: device.name
+        }
+      ]
     }))
   }
 
@@ -232,7 +238,9 @@ const CalibrationServiceLogisticsControlDialog = ({
         }
       }}
     >
-      <DialogTitle sx={{ pb: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <DialogTitle
+        sx={{ pb: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}
+      >
         <Box
           sx={{
             display: 'flex',
@@ -248,13 +256,17 @@ const CalibrationServiceLogisticsControlDialog = ({
           Control de ingreso y entrega
         </Typography>
       </DialogTitle>
-      
+
       <DialogContent dividers sx={{ p: { xs: 2, md: 4 } }}>
         <Stack spacing={4}>
-          <Alert severity='info' icon={<FactCheckOutlinedIcon />} sx={{ borderRadius: 2 }}>
+          <Alert
+            severity='info'
+            icon={<FactCheckOutlinedIcon />}
+            sx={{ borderRadius: 2 }}
+          >
             Diligencia el formato formal de recepción y entrega para{' '}
-            <strong>{serviceCode}</strong>. El contenido se usará para el PDF oficial
-            de logística.
+            <strong>{serviceCode}</strong>. El contenido se usará para el PDF
+            oficial de logística.
           </Alert>
 
           <Paper {...sectionPaperProps}>
@@ -283,14 +295,19 @@ const CalibrationServiceLogisticsControlDialog = ({
           </Paper>
 
           <Paper {...sectionPaperProps}>
-            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+            <Stack
+              direction='row'
+              alignItems='center'
+              spacing={1}
+              sx={{ mb: 2 }}
+            >
               <PersonOutlineOutlinedIcon color='action' />
               <Typography {...sectionTitleProps}>
                 Información de quien solicita calibración
               </Typography>
             </Stack>
             <Divider sx={{ mb: 3 }} />
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <TextField
@@ -380,11 +397,27 @@ const CalibrationServiceLogisticsControlDialog = ({
                 handleAddRowWithDevice(option)
               }}
               renderInput={(params) => (
-                <TextField {...params} label='Buscar equipo del catálogo para agregar' placeholder='Escribe nombre del equipo...'
+                <TextField
+                  {...params}
+                  label='Buscar equipo del catálogo para agregar'
+                  placeholder='Escribe nombre del equipo...'
                   InputProps={{
                     ...params.InputProps,
-                    startAdornment: <SearchOutlinedIcon fontSize='small' sx={{ mr: 0.5, color: 'text.secondary' }} />,
-                    endAdornment: <>{deviceLoading ? <CircularProgress size={20} /> : params.InputProps.endAdornment}</>
+                    startAdornment: (
+                      <SearchOutlinedIcon
+                        fontSize='small'
+                        sx={{ mr: 0.5, color: 'text.secondary' }}
+                      />
+                    ),
+                    endAdornment: (
+                      <>
+                        {deviceLoading ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          params.InputProps.endAdornment
+                        )}
+                      </>
+                    )
                   }}
                 />
               )}
@@ -395,25 +428,126 @@ const CalibrationServiceLogisticsControlDialog = ({
               <Table size='small' sx={{ minWidth: 1800 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', width: 50 }}>#</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 250 }}>Equipo / instrumento</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Marca</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Modelo</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Serial</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Activo fijo / inventario</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Ubicación</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Servicio</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Fís. ingreso</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Fís. entrega</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Oper. ingreso</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Oper. entrega</TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        width: 50
+                      }}
+                    >
+                      #
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 250
+                      }}
+                    >
+                      Equipo / instrumento
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 150
+                      }}
+                    >
+                      Marca
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 150
+                      }}
+                    >
+                      Modelo
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 150
+                      }}
+                    >
+                      Serial
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 150
+                      }}
+                    >
+                      Activo fijo / inventario
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 150
+                      }}
+                    >
+                      Ubicación
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 100
+                      }}
+                    >
+                      Servicio
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 100
+                      }}
+                    >
+                      Fís. ingreso
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 100
+                      }}
+                    >
+                      Fís. entrega
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 100
+                      }}
+                    >
+                      Oper. ingreso
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        minWidth: 100
+                      }}
+                    >
+                      Oper. entrega
+                    </TableCell>
                     <TableCell sx={{ width: 50 }} />
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {values.items.map((item, index) => (
-                    <TableRow key={`${item.serviceItemId || 'manual'}-${index}`} hover>
-                      <TableCell sx={{ color: 'text.secondary' }}>{item.rowNumber}</TableCell>
+                    <TableRow
+                      key={`${item.serviceItemId || 'manual'}-${index}`}
+                      hover
+                    >
+                      <TableCell sx={{ color: 'text.secondary' }}>
+                        {item.rowNumber}
+                      </TableCell>
                       <TableCell>
                         <TextField
                           fullWidth
@@ -504,7 +638,7 @@ const CalibrationServiceLogisticsControlDialog = ({
                       <TableCell>
                         <IconButton
                           size='small'
-                          color="error"
+                          color='error'
                           onClick={() => handleRemoveRow(index)}
                           disabled={values.items.length <= 1}
                         >
@@ -516,13 +650,23 @@ const CalibrationServiceLogisticsControlDialog = ({
                 </TableBody>
               </Table>
             </TableContainer>
-            <Typography variant='caption' color='text.secondary' sx={{ mt: 2, display: 'block' }}>
-              B: Buen estado · M: Mal estado · NA: No aplica · SI: Sin información.
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ mt: 2, display: 'block' }}
+            >
+              B: Buen estado · M: Mal estado · NA: No aplica · SI: Sin
+              información.
             </Typography>
           </Paper>
 
           <Paper {...sectionPaperProps}>
-            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+            <Stack
+              direction='row'
+              alignItems='center'
+              spacing={1}
+              sx={{ mb: 2 }}
+            >
               <FactCheckOutlinedIcon color='action' />
               <Typography {...sectionTitleProps}>
                 Validaciones y observaciones
@@ -598,7 +742,9 @@ const CalibrationServiceLogisticsControlDialog = ({
                   fullWidth
                   label='Entrega certificado de calibración'
                   value={toBooleanString(values.calibrationCertificateIncluded)}
-                  onChange={handleBooleanChange('calibrationCertificateIncluded')}
+                  onChange={handleBooleanChange(
+                    'calibrationCertificateIncluded'
+                  )}
                 >
                   {YES_NO_OPTIONS.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -642,9 +788,16 @@ const CalibrationServiceLogisticsControlDialog = ({
 
           {serviceId ? (
             <Paper {...sectionPaperProps}>
-              <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+              <Stack
+                direction='row'
+                alignItems='center'
+                spacing={1}
+                sx={{ mb: 2 }}
+              >
                 <SwapHorizOutlinedIcon color='action' />
-                <Typography {...sectionTitleProps}>Equipos de préstamo</Typography>
+                <Typography {...sectionTitleProps}>
+                  Equipos de préstamo
+                </Typography>
               </Stack>
               <Divider sx={{ mb: 2 }} />
               <CalibrationServiceLoanEquipmentSection serviceId={serviceId} />
@@ -652,7 +805,12 @@ const CalibrationServiceLogisticsControlDialog = ({
           ) : null}
 
           <Paper {...sectionPaperProps}>
-            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+            <Stack
+              direction='row'
+              alignItems='center'
+              spacing={1}
+              sx={{ mb: 2 }}
+            >
               <LocalShippingOutlinedIcon color='action' />
               <Typography {...sectionTitleProps}>
                 Recibido, enviado y firmas
@@ -776,8 +934,15 @@ const CalibrationServiceLogisticsControlDialog = ({
           </Paper>
         </Stack>
       </DialogContent>
-      
-      <DialogActions sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider' }}>
+
+      <DialogActions
+        sx={{
+          p: { xs: 2, md: 3 },
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
         <Button
           variant='outlined'
           color='inherit'
@@ -802,6 +967,5 @@ const CalibrationServiceLogisticsControlDialog = ({
     </Dialog>
   )
 }
-
 
 export default CalibrationServiceLogisticsControlDialog

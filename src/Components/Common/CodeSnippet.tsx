@@ -50,7 +50,8 @@ const CodeSnippet: React.FC<CodeSnippetProps> = ({
       <Box
         component='code'
         sx={{
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+          fontFamily:
+            'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
           fontSize: size === 'small' ? '0.8125rem' : '0.875rem',
           color: '#1f2937',
           overflowWrap: 'anywhere'
@@ -72,7 +73,17 @@ const CodeSnippet: React.FC<CodeSnippetProps> = ({
           )}
         </IconButton>
       </Tooltip>
-      <Box component='span' role='status' sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
+      <Box
+        component='span'
+        role='status'
+        sx={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          overflow: 'hidden',
+          clip: 'rect(0 0 0 0)'
+        }}
+      >
         {copied ? 'Copiado' : ''}
       </Box>
     </Box>

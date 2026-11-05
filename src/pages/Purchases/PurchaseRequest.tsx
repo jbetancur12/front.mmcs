@@ -214,7 +214,10 @@ const PurchaseRequest: React.FC = () => {
     if (initialId) {
       try {
         await setInitialId.mutateAsync(initialId)
-        notify.success('¡Configurado!', 'El número inicial ha sido establecido.')
+        notify.success(
+          '¡Configurado!',
+          'El número inicial ha sido establecido.'
+        )
         // La mutación invalida 'purchaseRequests' para refrescar el count
         // Abre el modal para crear la solicitud
         setModalOpen(true)
@@ -480,7 +483,8 @@ const PurchaseRequest: React.FC = () => {
         stats={
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={6} md={3}>
-              <LmsStatCard variant='quiet'
+              <LmsStatCard
+                variant='quiet'
                 label='Todas'
                 value={totalRecords}
                 icon={<ListAlt />}
@@ -490,7 +494,8 @@ const PurchaseRequest: React.FC = () => {
               />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard variant='quiet'
+              <LmsStatCard
+                variant='quiet'
                 label='Pendientes de aprobar'
                 value={counts.pending}
                 icon={<AccessTime />}
@@ -500,7 +505,8 @@ const PurchaseRequest: React.FC = () => {
               />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard variant='quiet'
+              <LmsStatCard
+                variant='quiet'
                 label='Por generar orden'
                 value={counts.toOrder}
                 icon={<ShoppingCartCheckout />}
@@ -510,7 +516,8 @@ const PurchaseRequest: React.FC = () => {
               />
             </Grid>
             <Grid item xs={6} md={3}>
-              <LmsStatCard variant='quiet'
+              <LmsStatCard
+                variant='quiet'
                 label='Sin orden hace más de 7 días'
                 value={counts.late}
                 icon={<ErrorOutline />}
@@ -576,11 +583,11 @@ const PurchaseRequest: React.FC = () => {
           muiTableBodyRowProps={({ row }) =>
             isLate(row.original)
               ? {
-                sx: {
-                  backgroundColor: 'rgba(255, 193, 7, 0.15)',
-                  '&:hover': { backgroundColor: 'rgba(255, 193, 7, 0.25)' }
+                  sx: {
+                    backgroundColor: 'rgba(255, 193, 7, 0.15)',
+                    '&:hover': { backgroundColor: 'rgba(255, 193, 7, 0.25)' }
+                  }
                 }
-              }
               : {}
           }
           renderTopToolbarCustomActions={() => (

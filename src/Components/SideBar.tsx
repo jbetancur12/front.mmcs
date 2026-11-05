@@ -102,7 +102,7 @@ const entryForPath = (pathname: string, entries: CommandEntry[]) =>
     )
     .sort((a, b) => b.path.length - a.path.length)[0]
 
-const getLinkToCustomer =(to: string, $userStore: UserData) => {
+const getLinkToCustomer = (to: string, $userStore: UserData) => {
   if (!$userStore.customer) {
     return '/' // Ruta predeterminada para usuarios sin cliente
   } else {
@@ -828,36 +828,38 @@ const SideBar = ({
         : section?.title
     }
 
-    const fromMenu = items.filter(canSeeItem).flatMap((item): CommandEntry[] => {
-      if (item.type === 'link' && item.to) {
-        const path = toRoutePath(item.to)
-        return [
-          {
-            id: path,
-            label: item.label ?? '',
-            path,
+    const fromMenu = items
+      .filter(canSeeItem)
+      .flatMap((item): CommandEntry[] => {
+        if (item.type === 'link' && item.to) {
+          const path = toRoutePath(item.to)
+          return [
+            {
+              id: path,
+              label: item.label ?? '',
+              path,
+              hint: sectionTitle(item),
+              icon: item.icon
+            }
+          ]
+        }
+
+        const roles = rolesFor(item)
+        return (item.menuItems ?? [])
+          .filter((menuItem: SearchableMenuItem) =>
+            menuItem.permission
+              ? hasPermission($userStore.permissions, menuItem.permission)
+              : (menuItem.roles ?? []).some((role) => roles.includes(role))
+          )
+          .map((menuItem: SearchableMenuItem) => ({
+            id: toRoutePath(menuItem.url),
+            label: menuItem.label,
+            path: toRoutePath(menuItem.url),
+            parents: [item.buttonText ?? ''],
             hint: sectionTitle(item),
             icon: item.icon
-          }
-        ]
-      }
-
-      const roles = rolesFor(item)
-      return (item.menuItems ?? [])
-        .filter((menuItem: SearchableMenuItem) =>
-          menuItem.permission
-            ? hasPermission($userStore.permissions, menuItem.permission)
-            : (menuItem.roles ?? []).some((role) => roles.includes(role))
-        )
-        .map((menuItem: SearchableMenuItem) => ({
-          id: toRoutePath(menuItem.url),
-          label: menuItem.label,
-          path: toRoutePath(menuItem.url),
-          parents: [item.buttonText ?? ''],
-          hint: sectionTitle(item),
-          icon: item.icon
-        }))
-    })
+          }))
+      })
 
     // Pantallas con ruta pero sin ítem de menú (ver quickSearchPages).
     const known = new Set(fromMenu.map((entry) => entry.id))
@@ -993,7 +995,9 @@ const SideBar = ({
       {/* En móvil no hay nada que minimizar: el pie solo existe en escritorio. */}
       <div className='hidden lg:block flex-shrink-0 border-t border-gray-200 px-3 py-2'>
         {isLmsRoute && !minimized && !isLmsHintDismissed && (
-          <div className={`mb-3 flex items-start gap-2 rounded-lg bg-[${brand.soft}] p-3`}>
+          <div
+            className={`mb-3 flex items-start gap-2 rounded-lg bg-[${brand.soft}] p-3`}
+          >
             <p className={`flex-1 text-xs leading-5 text-[${brand.ink}]`}>
               <span className='block font-semibold'>
                 Gana espacio en Academia

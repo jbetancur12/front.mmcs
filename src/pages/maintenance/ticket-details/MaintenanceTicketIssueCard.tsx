@@ -1,8 +1,4 @@
-import {
-  Paper,
-  Typography,
-  Box
-} from '@mui/material'
+import { Paper, Typography, Box } from '@mui/material'
 import { Description } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
@@ -12,7 +8,9 @@ interface MaintenanceTicketIssueCardProps {
 }
 
 /** Descripción de la falla reportada. */
-const MaintenanceTicketIssueCard = ({ ticket }: MaintenanceTicketIssueCardProps) => {
+const MaintenanceTicketIssueCard = ({
+  ticket
+}: MaintenanceTicketIssueCardProps) => {
   return (
     <>
       {/* Issue Description */}

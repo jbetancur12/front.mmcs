@@ -36,28 +36,27 @@ export const HistoryTab = ({
   isLoading,
   error
 }: HistoryTabProps) => {
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
 
   const handleCustomDateSelect = (date: Date | null) => {
-    if (!date) return;
-    
+    if (!date) return
+
     // Calcular rango de 24 horas (de 00:00 a 23:59)
-    const startDate = new Date(date);
-    startDate.setHours(0, 0, 0, 0);
-    
-    
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(date)
+    startDate.setHours(0, 0, 0, 0)
+
+    const endDate = new Date(date)
+    endDate.setHours(23, 59, 59, 999)
 
     onSelectRange({
       label: 'Personalizado',
       isCustom: true,
       startDate,
       endDate
-    });
-    
-    setDatePickerOpen(false);
-  };
+    })
+
+    setDatePickerOpen(false)
+  }
 
   return (
     <>
@@ -65,15 +64,15 @@ export const HistoryTab = ({
         selectedRange={selectedRange}
         onSelect={(range) => {
           if (range.isCustom) {
-            setDatePickerOpen(true);
+            setDatePickerOpen(true)
           } else {
-            onSelectRange(range);
+            onSelectRange(range)
           }
         }}
         options={RANGE_OPTIONS}
       />
 
-{datePickerOpen && (
+      {datePickerOpen && (
         <DatePicker
           open
           value={null}

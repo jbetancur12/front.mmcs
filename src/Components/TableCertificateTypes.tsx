@@ -297,26 +297,26 @@ const Table: React.FC = () => {
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip arrow placement='top' title='Editar'>
-            <IconButton
-            size='small'
-            aria-label='Editar'
-            sx={{ color: '#2563eb' }}
-            onClick={() => table.setEditingRow(row)}
-            >
-            <EditOutlined fontSize='small' />
-            </IconButton>
-          </Tooltip>
-          <Tooltip arrow placement='top' title='Eliminar'>
-            <IconButton
-            size='small'
-            color='error'
-            aria-label='Eliminar'
-            onClick={() => handleDeleteRow(row)}
-            >
-            <DeleteOutline fontSize='small' />
-            </IconButton>
-          </Tooltip>
+            <Tooltip arrow placement='top' title='Editar'>
+              <IconButton
+                size='small'
+                aria-label='Editar'
+                sx={{ color: '#2563eb' }}
+                onClick={() => table.setEditingRow(row)}
+              >
+                <EditOutlined fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip arrow placement='top' title='Eliminar'>
+              <IconButton
+                size='small'
+                color='error'
+                aria-label='Eliminar'
+                onClick={() => handleDeleteRow(row)}
+              >
+                <DeleteOutline fontSize='small' />
+              </IconButton>
+            </Tooltip>
           </Box>
         )}
       />

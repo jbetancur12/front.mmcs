@@ -98,7 +98,11 @@ const FormDialog: React.FC<FormDialogProps> = ({
     </DialogContent>
     <DialogActions sx={{ p: '16px 24px' }}>
       {extraActions ? <Box sx={{ mr: 'auto' }}>{extraActions}</Box> : null}
-      <Button onClick={onClose} disabled={loading} sx={{ color: neutral.textBody }}>
+      <Button
+        onClick={onClose}
+        disabled={loading}
+        sx={{ color: neutral.textBody }}
+      >
         {cancelLabel}
       </Button>
       <Button

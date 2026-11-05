@@ -171,11 +171,20 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   }
 
   const handleDelete = async (id: number) => {
-    const result = await confirmDialog({ title: '¿Está seguro de eliminar este reporte?', text: 'Esta acción no se puede deshacer.', confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
+    const result = await confirmDialog({
+      title: '¿Está seguro de eliminar este reporte?',
+      text: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    })
     if (!result.isConfirmed) return
     try {
       await deleteReport.mutateAsync(id)
-      await appNotify.success('¡Eliminado!', 'El reporte fue eliminado correctamente.')
+      await appNotify.success(
+        '¡Eliminado!',
+        'El reporte fue eliminado correctamente.'
+      )
     } catch (err) {
       notify.error('Error al eliminar el reporte')
     }
@@ -238,7 +247,9 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         enableColumnFilter: false,
         Cell: ({ cell }: { cell: MRT_Cell<NonConformWorkReport> }) => {
           const value = cell.getValue<string>()
-          return <span>{value ? format(new Date(value), 'dd/MM/yyyy') : ''}</span>
+          return (
+            <span>{value ? format(new Date(value), 'dd/MM/yyyy') : ''}</span>
+          )
         }
       },
       {

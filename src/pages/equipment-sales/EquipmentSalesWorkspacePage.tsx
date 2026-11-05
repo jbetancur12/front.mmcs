@@ -830,7 +830,6 @@ const EquipmentSalesWorkspacePage = () => {
         backgroundColor: '#f8fafb'
       }}
     >
-
       <Button
         startIcon={<ArrowBackOutlinedIcon />}
         onClick={() =>

@@ -48,9 +48,8 @@ const InterventionTypes = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [currentType, setCurrentType] = useState<InterventionType | null>(null)
 
-  const { data: interventionTypes = [] } = useQuery(
-    'interventionType',
-    () => fetchInterventionTypes(axiosPrivate)
+  const { data: interventionTypes = [] } = useQuery('interventionType', () =>
+    fetchInterventionTypes(axiosPrivate)
   )
 
   const createOrUpdateInterventionType = useMutation(
@@ -62,13 +61,17 @@ const InterventionTypes = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('interventionType')
-        notify.success(currentType
+        notify.success(
+          currentType
             ? 'Tipo de Intervención Actualizado Exitosamente!'
-            : 'Tipo de Intervención Creado Exitosamente!')
+            : 'Tipo de Intervención Creado Exitosamente!'
+        )
         setModalOpen(false)
       },
       onError: (error: unknown) => {
-        notify.error(`Error: ${getApiErrorReason(error) || (error instanceof Error ? error.message : '')}`)
+        notify.error(
+          `Error: ${getApiErrorReason(error) || (error instanceof Error ? error.message : '')}`
+        )
       }
     }
   )
@@ -85,13 +88,21 @@ const InterventionTypes = () => {
         notify.success('Tipo de Intervención Eliminado Exitosamente!')
       },
       onError: (error: unknown) => {
-        notify.error(`Error: ${getApiErrorReason(error) || (error instanceof Error ? error.message : '')}`)
+        notify.error(
+          `Error: ${getApiErrorReason(error) || (error instanceof Error ? error.message : '')}`
+        )
       }
     }
   )
 
   const handleDelete = async (id: number) => {
-    const result = await confirmDialog({ title: '¿Eliminar Tipo de Intervención?', text: 'Esta acción no se puede deshacer', confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
+    const result = await confirmDialog({
+      title: '¿Eliminar Tipo de Intervención?',
+      text: 'Esta acción no se puede deshacer',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    })
 
     if (result.isConfirmed) {
       deleteInterventionType.mutate(id)
@@ -158,7 +169,12 @@ const InterventionTypes = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate(-1)}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver
       </Button>
@@ -169,7 +185,16 @@ const InterventionTypes = () => {
         icon={<Build />}
         actions={
           canManage ? (
-            <Button variant='contained' startIcon={<Add />} onClick={handleAddNew} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={handleAddNew}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Agregar nuevo
             </Button>
           ) : undefined
@@ -195,19 +220,19 @@ const InterventionTypes = () => {
                   Requiere Recordatorio: {type.requiresReminder ? 'Sí' : 'No'}
                 </Typography>
               </CardContent>
-{canManage && (
-              <CardActions>
-                <IconButton onClick={() => handleEdit(type.id as number)}>
-                  <Edit />
-                </IconButton>
-                <IconButton
-                  color='error'
-                  onClick={() => handleDelete(type.id as number)}
-                >
-                  <Delete />
-                </IconButton>
-              </CardActions>
-)}
+              {canManage && (
+                <CardActions>
+                  <IconButton onClick={() => handleEdit(type.id as number)}>
+                    <Edit />
+                  </IconButton>
+                  <IconButton
+                    color='error'
+                    onClick={() => handleDelete(type.id as number)}
+                  >
+                    <Delete />
+                  </IconButton>
+                </CardActions>
+              )}
             </Card>
           </Grid>
         ))}

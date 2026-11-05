@@ -1,15 +1,6 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
-import {
-  Paper,
-  Typography,
-  Box,
-  IconButton,
-  Collapse
-} from '@mui/material'
-import {
-  ExpandMore,
-  ExpandLess
-} from '@mui/icons-material'
+import { Paper, Typography, Box, IconButton, Collapse } from '@mui/material'
+import { ExpandMore, ExpandLess } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import MaintenanceCommentsList from '../../../Components/Maintenance/MaintenanceCommentsList'
 import MaintenanceFileUpload from '../../../Components/Maintenance/MaintenanceFileUpload'
@@ -23,7 +14,10 @@ interface MaintenanceTicketActivitySectionsProps {
 }
 
 /** Historial, comentarios y archivos del ticket (secciones plegables). */
-const MaintenanceTicketActivitySections = ({ ticket, details }: MaintenanceTicketActivitySectionsProps) => {
+const MaintenanceTicketActivitySections = ({
+  ticket,
+  details
+}: MaintenanceTicketActivitySectionsProps) => {
   const {
     $userStore,
     currentUserRole,
@@ -65,10 +59,7 @@ const MaintenanceTicketActivitySections = ({ ticket, details }: MaintenanceTicke
           alignItems='center'
           mb={2}
         >
-          <Typography
-            variant='h6'
-            sx={{ color: '#0f172a', fontWeight: 600 }}
-          >
+          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
             Historial del Ticket
           </Typography>
           <IconButton
@@ -117,10 +108,7 @@ const MaintenanceTicketActivitySections = ({ ticket, details }: MaintenanceTicke
           alignItems='center'
           mb={2}
         >
-          <Typography
-            variant='h6'
-            sx={{ color: '#0f172a', fontWeight: 600 }}
-          >
+          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
             Comentarios
           </Typography>
           <IconButton
@@ -165,18 +153,13 @@ const MaintenanceTicketActivitySections = ({ ticket, details }: MaintenanceTicke
           alignItems='center'
           mb={2}
         >
-          <Typography
-            variant='h6'
-            sx={{ color: '#0f172a', fontWeight: 600 }}
-          >
+          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
             Archivos Adjuntos
           </Typography>
           <IconButton
             onClick={() => setShowFiles(!showFiles)}
             sx={{ color: '#475569' }}
-            aria-label={
-              showFiles ? 'Ocultar archivos' : 'Mostrar archivos'
-            }
+            aria-label={showFiles ? 'Ocultar archivos' : 'Mostrar archivos'}
             aria-expanded={showFiles}
             aria-controls='files-section'
           >

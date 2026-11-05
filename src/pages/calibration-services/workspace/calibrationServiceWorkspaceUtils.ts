@@ -28,7 +28,10 @@ export const stripHtml = (value?: string | null) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-export const getQueryErrorMessage = (error: unknown, fallbackMessage: string) => {
+export const getQueryErrorMessage = (
+  error: unknown,
+  fallbackMessage: string
+) => {
   if (error instanceof Error && error.message) {
     return `${fallbackMessage} ${error.message}`
   }
@@ -87,7 +90,8 @@ export const createInitialFormState = (): FormState => ({
 })
 
 export const getItemTotals = (item: CalibrationServiceItemPayload) => {
-  const subtotal = Math.max(Number(item.quantity) || 0, 0) * toNumber(item.unitPrice)
+  const subtotal =
+    Math.max(Number(item.quantity) || 0, 0) * toNumber(item.unitPrice)
   const taxTotal = subtotal * (toNumber(item.taxRate) / 100)
   return { subtotal, taxTotal, total: subtotal + taxTotal }
 }
@@ -129,7 +133,10 @@ export const getCustomerSiteOptions = (
 export const getSiteDisplayLabel = (site: CalibrationServiceCustomerSite) =>
   [site.name, site.city, site.department].filter(Boolean).join(' · ')
 
-export const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'): CalibrationServicePayload => ({
+export const buildPayload = (
+  formState: FormState,
+  status: 'draft' | 'pending_approval'
+): CalibrationServicePayload => ({
   customerId: formState.customerId ?? null,
   scopeType: formState.scopeType ?? 'general',
   customerSite: formState.customerSite?.trim() || null,
@@ -140,7 +147,9 @@ export const buildPayload = (formState: FormState, status: 'draft' | 'pending_ap
   approvalReference: formState.approvalReference?.trim() || null,
   validityDays: formState.validityDays ? Number(formState.validityDays) : null,
   hasDiscount: Boolean(formState.hasDiscount),
-  discountType: formState.hasDiscount ? formState.discountType || 'fixed' : null,
+  discountType: formState.hasDiscount
+    ? formState.discountType || 'fixed'
+    : null,
   discountValue: formState.hasDiscount ? toNumber(formState.discountValue) : 0,
   paymentMethod: formState.paymentMethod?.trim() || null,
   instrumentDeliveryTime: formState.instrumentDeliveryTime?.trim() || null,
@@ -183,7 +192,9 @@ export const buildPayload = (formState: FormState, status: 'draft' | 'pending_ap
 })
 
 /** Estado del formulario a partir de un servicio guardado (edición). */
-export const mapServiceToFormState = (service: CalibrationService): FormState => ({
+export const mapServiceToFormState = (
+  service: CalibrationService
+): FormState => ({
   customerId: service.customerId ?? null,
   scopeType: service.scopeType ?? 'general',
   customerSite: service.customerSite || '',
@@ -234,7 +245,9 @@ export const mapServiceToFormState = (service: CalibrationService): FormState =>
     otherFields: {
       catalogPriceSource:
         typeof item.otherFields?.catalogPriceSource === 'string' &&
-        ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(item.otherFields.catalogPriceSource)
+        ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(
+          item.otherFields.catalogPriceSource
+        )
           ? item.otherFields.catalogPriceSource
           : 'medicalPrice',
       ...(item.otherFields || {})

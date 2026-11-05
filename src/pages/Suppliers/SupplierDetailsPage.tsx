@@ -269,7 +269,10 @@ const SupplierDetailsPage: React.FC = () => {
 
       const maxSizeInBytes = 10 * 1024 * 1024 // 10MB
       if (file.size > maxSizeInBytes) {
-        notify.error('Archivo Demasiado Grande', `El archivo seleccionado excede el tamaño máximo permitido de 10MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
+        notify.error(
+          'Archivo Demasiado Grande',
+          `El archivo seleccionado excede el tamaño máximo permitido de 10MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`
+        )
         event.target.value = '' // Limpiar el input
         setFilesToUpload((prevFiles) =>
           prevFiles.map((doc) =>
@@ -315,7 +318,10 @@ const SupplierDetailsPage: React.FC = () => {
     },
     {
       onSuccess: (_, variables) => {
-        notify.success('Éxito', `Documento '${variables.documentTypeLabel}' subido correctamente.`)
+        notify.success(
+          'Éxito',
+          `Documento '${variables.documentTypeLabel}' subido correctamente.`
+        )
         queryClient.invalidateQueries(supplierKeys.details(supplierId)) // Invalidate para refrescar
         setFilesToUpload((prevFiles) =>
           prevFiles.map((doc) =>
@@ -381,7 +387,10 @@ const SupplierDetailsPage: React.FC = () => {
 
   const handleEvaluationSuccess = () => {
     handleCloseEvaluationModal()
-    notify.success('Evaluación Guardada', 'La evaluación del proveedor ha sido guardada con éxito.')
+    notify.success(
+      'Evaluación Guardada',
+      'La evaluación del proveedor ha sido guardada con éxito.'
+    )
     // Opcional: Invalidar queries si esta página muestra una lista de evaluaciones o un resumen
     queryClient.invalidateQueries(['supplierEvaluations', supplierId])
     // queryClient.invalidateQueries(['supplierDetails', supplierId]); // Si la evaluación afecta detalles del proveedor
@@ -434,7 +443,10 @@ const SupplierDetailsPage: React.FC = () => {
           }
         }, 500)
       } else {
-        notify.warning('Error', 'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.')
+        notify.warning(
+          'Error',
+          'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.'
+        )
       }
     } catch (error) {
       // En TypeScript, 'error' aquí es de tipo 'unknown' por defecto
@@ -560,7 +572,9 @@ const SupplierDetailsPage: React.FC = () => {
               variant='contained'
               color='primary'
               startIcon={<Edit />}
-              onClick={() => navigate(`/purchases/suppliers/edit/${supplierId}`)} // Ajusta la ruta de edición
+              onClick={() =>
+                navigate(`/purchases/suppliers/edit/${supplierId}`)
+              } // Ajusta la ruta de edición
             >
               Editar Proveedor
             </Button>

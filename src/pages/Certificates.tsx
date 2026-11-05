@@ -2,14 +2,7 @@ import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useNavigate, useParams } from 'react-router-dom'
 import React, { useState } from 'react'
 import { useQueryClient } from 'react-query'
-import {
-  Box,
-  Button,
-  Container,
-  Grid,
-  Paper,
-  Typography
-} from '@mui/material'
+import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material'
 import {
   ArrowBack,
   CheckCircle,

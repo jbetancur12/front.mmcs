@@ -18,10 +18,7 @@ import {
 } from '../../../types/maintenance'
 import MaintenanceStatusBadge from '../../../Components/Maintenance/MaintenanceStatusBadge'
 import MaintenancePriorityBadge from '../../../Components/Maintenance/MaintenancePriorityBadge'
-import {
-  formatDate,
-  surfaceSx
-} from './maintenanceTicketDetailUtils'
+import { formatDate, surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
 
 interface MaintenanceTicketStatusCardProps {
@@ -30,14 +27,11 @@ interface MaintenanceTicketStatusCardProps {
 }
 
 /** Estado, prioridad y facturación del ticket (editables en modo edición). */
-const MaintenanceTicketStatusCard = ({ ticket, details }: MaintenanceTicketStatusCardProps) => {
-  const {
-    isMobile,
-    isTechnician,
-    editMode,
-    editData,
-    setEditData
-  } = details
+const MaintenanceTicketStatusCard = ({
+  ticket,
+  details
+}: MaintenanceTicketStatusCardProps) => {
+  const { isMobile, isTechnician, editMode, editData, setEditData } = details
 
   return (
     <Paper
@@ -81,8 +75,7 @@ const MaintenanceTicketStatusCard = ({ ticket, details }: MaintenanceTicketStatu
             >
               <InputLabel id='detail-status-label'>
                 Estado{' '}
-                {ticket.status === MaintenanceStatus.COMPLETED &&
-                  '(Bloqueado)'}
+                {ticket.status === MaintenanceStatus.COMPLETED && '(Bloqueado)'}
               </InputLabel>
               <Select
                 labelId='detail-status-label'
@@ -116,10 +109,7 @@ const MaintenanceTicketStatusCard = ({ ticket, details }: MaintenanceTicketStatu
               >
                 {Object.values(MaintenanceStatus).map((status) => (
                   <MenuItem key={status} value={status}>
-                    <MaintenanceStatusBadge
-                      status={status}
-                      size='small'
-                    />
+                    <MaintenanceStatusBadge status={status} size='small' />
                   </MenuItem>
                 ))}
               </Select>
@@ -127,8 +117,7 @@ const MaintenanceTicketStatusCard = ({ ticket, details }: MaintenanceTicketStatu
                 <FormHelperText>
                   <Box display='flex' alignItems='center' gap={0.5}>
                     <Lock fontSize='small' />
-                    Este ticket está completado y no puede cambiar de
-                    estado
+                    Este ticket está completado y no puede cambiar de estado
                   </Box>
                 </FormHelperText>
               )}

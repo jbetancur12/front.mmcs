@@ -30,7 +30,7 @@ const loadState = (): ImpersonationState => {
       return {
         isImpersonating: true,
         impersonator: JSON.parse(impersonatorData),
-        targetUser: JSON.parse(targetData),
+        targetUser: JSON.parse(targetData)
       }
     }
   } catch {
@@ -70,23 +70,32 @@ export const useImpersonation = () => {
       const { token, user, impersonator } = response.data
 
       localStorage.setItem('accessToken', token)
-      localStorage.setItem('user', JSON.stringify({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        rol: user.rol,
-        userType: user.userType,
-        customerId: user.customerId,
-      }))
-      localStorage.setItem(STORAGE_KEY_IMPERSONATOR, JSON.stringify(impersonator))
-      localStorage.setItem(STORAGE_KEY_TARGET, JSON.stringify({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        roles: user.rol,
-        customerId: user.customerId,
-        userType: user.userType,
-      }))
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          rol: user.rol,
+          userType: user.userType,
+          customerId: user.customerId
+        })
+      )
+      localStorage.setItem(
+        STORAGE_KEY_IMPERSONATOR,
+        JSON.stringify(impersonator)
+      )
+      localStorage.setItem(
+        STORAGE_KEY_TARGET,
+        JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          roles: user.rol,
+          customerId: user.customerId,
+          userType: user.userType
+        })
+      )
 
       toast.success(`Ahora operas como ${user.name}`, { id: 'impersonation' })
 
@@ -94,12 +103,18 @@ export const useImpersonation = () => {
         isImpersonating: true,
         impersonator,
         targetUser: {
-          id: user.id, name: user.name, email: user.email,
-          roles: user.rol, customerId: user.customerId, userType: user.userType,
-        },
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          roles: user.rol,
+          customerId: user.customerId,
+          userType: user.userType
+        }
       })
 
-      setTimeout(() => { window.location.href = '/' }, 500)
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 500)
     } catch (error) {
       toast.error('No se pudo suplantar al usuario.', { id: 'impersonation' })
       logger.error('Error starting impersonation:', error)
@@ -114,13 +129,16 @@ export const useImpersonation = () => {
       const { token, user } = response.data
 
       localStorage.setItem('accessToken', token)
-      localStorage.setItem('user', JSON.stringify({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        rol: user.rol,
-        userType: user.userType,
-      }))
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          rol: user.rol,
+          userType: user.userType
+        })
+      )
       localStorage.removeItem(STORAGE_KEY_IMPERSONATOR)
       localStorage.removeItem(STORAGE_KEY_TARGET)
 
@@ -129,10 +147,12 @@ export const useImpersonation = () => {
       setState({
         isImpersonating: false,
         impersonator: null,
-        targetUser: null,
+        targetUser: null
       })
 
-      setTimeout(() => { window.location.href = '/' }, 500)
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 500)
     } catch (error) {
       logger.error('Error stopping impersonation:', error)
       // Aunque falle, limpiar estado local para desbloquear la UI
@@ -141,9 +161,11 @@ export const useImpersonation = () => {
       setState({
         isImpersonating: false,
         impersonator: null,
-        targetUser: null,
+        targetUser: null
       })
-      setTimeout(() => { window.location.href = '/' }, 300)
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 300)
     }
   }, [])
 
@@ -154,6 +176,6 @@ export const useImpersonation = () => {
     searchUsers,
     startImpersonation,
     stopImpersonation,
-    clearSearch: () => setCandidates([]),
+    clearSearch: () => setCandidates([])
   }
 }

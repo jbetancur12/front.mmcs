@@ -47,10 +47,17 @@ const CalibrationServiceItemsTab = ({
           }}
         >
           <Table size='small'>
-            <TableHead sx={{ bgcolor: '#f5f5f5', '& .MuiTableCell-root': { fontWeight: 600 } }}>
+            <TableHead
+              sx={{
+                bgcolor: '#f5f5f5',
+                '& .MuiTableCell-root': { fontWeight: 600 }
+              }}
+            >
               <TableRow>
                 <TableCell>Ítem</TableCell>
-                {showInstrumentColumn ? <TableCell>Instrumento</TableCell> : null}
+                {showInstrumentColumn ? (
+                  <TableCell>Instrumento</TableCell>
+                ) : null}
                 <TableCell>Tipo servicio</TableCell>
                 <TableCell align='right'>Cantidad</TableCell>
                 {!hideFinancialInfo ? (
@@ -66,13 +73,14 @@ const CalibrationServiceItemsTab = ({
             </TableHead>
             <TableBody>
               {service.items.map((item) => {
-                const effectiveQuantity =
-                  getEffectiveServiceItemQuantity(service, item)
+                const effectiveQuantity = getEffectiveServiceItemQuantity(
+                  service,
+                  item
+                )
                 const approvedFinancialImpact =
                   getApprovedFinancialImpactForItem(service, item.id)
                 const effectiveSubtotal =
-                  toNumber(item.subtotal) +
-                  approvedFinancialImpact.subtotal
+                  toNumber(item.subtotal) + approvedFinancialImpact.subtotal
                 const effectiveTotal =
                   toNumber(item.total) + approvedFinancialImpact.total
                 const hasQuantityAdjustment =
@@ -80,35 +88,37 @@ const CalibrationServiceItemsTab = ({
                 const isAdjustmentItem = Boolean(
                   item.otherFields?.isAdditionalExecutionItem
                 )
-                const pricingAdjustments =
-                  getApprovedPricingAdjustmentsForItem(
-                    service,
-                    item.id
-                  )
+                const pricingAdjustments = getApprovedPricingAdjustmentsForItem(
+                  service,
+                  item.id
+                )
 
                 return (
                   <TableRow key={item.id}>
                     <TableCell>
                       <Stack spacing={0.5}>
-                        <Typography variant='body2'>
-                          {item.itemName}
-                        </Typography>
+                        <Typography variant='body2'>{item.itemName}</Typography>
                         {item.otherFields?.hasCalibrationPoints !== false ? (
-                          <Typography variant='caption' sx={{ color: '#9ca3af', display: 'block' }}>
+                          <Typography
+                            variant='caption'
+                            sx={{ color: '#9ca3af', display: 'block' }}
+                          >
                             {[
-                              item.otherFields?.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',
-                              item.otherFields?.measurementRange ? `Rango medición: ${item.otherFields.measurementRange}` : ''
-                            ].filter(Boolean).join(' · ')}
+                              item.otherFields?.calibrationPointCount
+                                ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}`
+                                : '',
+                              item.otherFields?.measurementRange
+                                ? `Rango medición: ${item.otherFields.measurementRange}`
+                                : ''
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
                           </Typography>
                         ) : null}
                         {hasQuantityAdjustment ||
                         approvedFinancialImpact.hasImpact ||
                         isAdjustmentItem ? (
-                          <Stack
-                            direction='row'
-                            spacing={0.5}
-                            flexWrap='wrap'
-                          >
+                          <Stack direction='row' spacing={0.5} flexWrap='wrap'>
                             {hasQuantityAdjustment ||
                             approvedFinancialImpact.hasImpact ? (
                               <Chip
@@ -129,9 +139,7 @@ const CalibrationServiceItemsTab = ({
                       </Stack>
                     </TableCell>
                     {showInstrumentColumn ? (
-                      <TableCell>
-                        {item.instrumentName || 'N/A'}
-                      </TableCell>
+                      <TableCell>{item.instrumentName || 'N/A'}</TableCell>
                     ) : null}
                     <TableCell>{item.serviceType || 'N/A'}</TableCell>
                     <TableCell align='right'>
@@ -140,10 +148,7 @@ const CalibrationServiceItemsTab = ({
                           {effectiveQuantity}
                         </Typography>
                         {hasQuantityAdjustment ? (
-                          <Typography
-                            variant='caption'
-                            color='text.secondary'
-                          >
+                          <Typography variant='caption' color='text.secondary'>
                             Cotizado: {item.quantity}
                           </Typography>
                         ) : null}
@@ -153,26 +158,16 @@ const CalibrationServiceItemsTab = ({
                       <TableCell align='right'>
                         <Stack spacing={0.5} alignItems='flex-end'>
                           <Typography variant='body2'>
-                            {currencyFormatter.format(
-                              toNumber(item.unitPrice)
-                            )}
+                            {currencyFormatter.format(toNumber(item.unitPrice))}
                           </Typography>
-                          <Typography
-                            variant='caption'
-                            color='text.secondary'
-                          >
+                          <Typography variant='caption' color='text.secondary'>
                             Cotizado original
                           </Typography>
                           {pricingAdjustments.map((adjustment) => (
                             <Box key={adjustment.id}>
-                              <Typography
-                                variant='body2'
-                                color='success.main'
-                              >
+                              <Typography variant='body2' color='success.main'>
                                 {currencyFormatter.format(
-                                  toNumber(
-                                    adjustment.approvedUnitPrice
-                                  )
+                                  toNumber(adjustment.approvedUnitPrice)
                                 )}
                               </Typography>
                               <Typography
@@ -180,9 +175,7 @@ const CalibrationServiceItemsTab = ({
                                 color='text.secondary'
                               >
                                 Novedad:{' '}
-                                {adjustment.differenceQuantity > 0
-                                  ? '+'
-                                  : ''}
+                                {adjustment.differenceQuantity > 0 ? '+' : ''}
                                 {adjustment.differenceQuantity} und.
                               </Typography>
                             </Box>
@@ -194,9 +187,7 @@ const CalibrationServiceItemsTab = ({
                       <TableCell align='right'>
                         <Stack spacing={0.5} alignItems='flex-end'>
                           <Typography variant='body2'>
-                            {currencyFormatter.format(
-                              effectiveSubtotal
-                            )}
+                            {currencyFormatter.format(effectiveSubtotal)}
                           </Typography>
                           {pricingAdjustments.length ? (
                             <Typography
@@ -221,9 +212,7 @@ const CalibrationServiceItemsTab = ({
           </Table>
         </Box>
       ) : (
-        <Alert severity='info'>
-          Este servicio aún no tiene ítems.
-        </Alert>
+        <Alert severity='info'>Este servicio aún no tiene ítems.</Alert>
       )}
     </>
   )

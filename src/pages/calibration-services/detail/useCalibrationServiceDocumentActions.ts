@@ -7,7 +7,9 @@ import { getApiErrorMessage } from '../../../utils/apiError'
 import { useCalibrationServiceMutations } from '../../../hooks/useCalibrationServices'
 
 import { logger } from 'src/utils/logger'
-type CalibrationServiceMutations = ReturnType<typeof useCalibrationServiceMutations>
+type CalibrationServiceMutations = ReturnType<
+  typeof useCalibrationServiceMutations
+>
 
 interface CalibrationServiceDocumentActionsParams {
   service: CalibrationService
@@ -49,7 +51,9 @@ const useCalibrationServiceDocumentActions = ({
       window.URL.revokeObjectURL(objectUrl)
     } catch (downloadError) {
       logger.error(downloadError)
-      toast.error(getApiErrorMessage(downloadError, 'No pudimos descargar el documento.'))
+      toast.error(
+        getApiErrorMessage(downloadError, 'No pudimos descargar el documento.')
+      )
     }
   }
 
@@ -65,7 +69,9 @@ const useCalibrationServiceDocumentActions = ({
       )
     } catch (pdfError) {
       logger.error(pdfError)
-      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar la cotización PDF.'))
+      toast.error(
+        getApiErrorMessage(pdfError, 'No pudimos generar la cotización PDF.')
+      )
     }
   }
 
@@ -81,7 +87,9 @@ const useCalibrationServiceDocumentActions = ({
       )
     } catch (pdfError) {
       logger.error(pdfError)
-      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar la ODS PDF.'))
+      toast.error(
+        getApiErrorMessage(pdfError, 'No pudimos generar la ODS PDF.')
+      )
     }
   }
 
@@ -101,7 +109,12 @@ const useCalibrationServiceDocumentActions = ({
       )
     } catch (pdfError) {
       logger.error(pdfError)
-      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar el anexo PDF de la novedad.'))
+      toast.error(
+        getApiErrorMessage(
+          pdfError,
+          'No pudimos generar el anexo PDF de la novedad.'
+        )
+      )
     }
   }
 
@@ -118,7 +131,12 @@ const useCalibrationServiceDocumentActions = ({
       )
     } catch (pdfError) {
       logger.error(pdfError)
-      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar el anexo de avance técnico.'))
+      toast.error(
+        getApiErrorMessage(
+          pdfError,
+          'No pudimos generar el anexo de avance técnico.'
+        )
+      )
     }
   }
 
@@ -135,7 +153,12 @@ const useCalibrationServiceDocumentActions = ({
       )
     } catch (pdfError) {
       logger.error(pdfError)
-      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar el consolidado PDF de novedades.'))
+      toast.error(
+        getApiErrorMessage(
+          pdfError,
+          'No pudimos generar el consolidado PDF de novedades.'
+        )
+      )
     }
   }
 
@@ -165,7 +188,9 @@ const useCalibrationServiceDocumentActions = ({
       toast.success('El documento quedó cargado al servicio.')
     } catch (uploadError) {
       logger.error(uploadError)
-      toast.error(getApiErrorMessage(uploadError, 'No pudimos cargar el documento.'))
+      toast.error(
+        getApiErrorMessage(uploadError, 'No pudimos cargar el documento.')
+      )
       throw uploadError
     }
   }

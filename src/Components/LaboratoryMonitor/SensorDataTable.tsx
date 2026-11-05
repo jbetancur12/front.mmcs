@@ -46,7 +46,12 @@ export const SensorDataTable: React.FC<SensorDataTableProps> = ({
       variant='outlined'
       sx={{ maxHeight: 300, borderColor: '#e5e7eb', borderRadius: '8px' }}
     >
-      <Table stickyHeader size='small' sx={{ '& td, & th': { whiteSpace: 'nowrap' } }} aria-label='tabla de datos del sensor'>
+      <Table
+        stickyHeader
+        size='small'
+        sx={{ '& td, & th': { whiteSpace: 'nowrap' } }}
+        aria-label='tabla de datos del sensor'
+      >
         <TableHead>
           <TableRow sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}>
             <TableCell>Hora</TableCell>
@@ -72,12 +77,18 @@ export const SensorDataTable: React.FC<SensorDataTableProps> = ({
                     {formatDate(row.timestamp)}
                   </TableCell>
                   {sensorType.includes('temperature') && (
-                    <TableCell align='right' sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                    <TableCell
+                      align='right'
+                      sx={{ fontVariantNumeric: 'tabular-nums' }}
+                    >
                       {row.temperature?.toFixed(2) ?? 'N/A'}
                     </TableCell>
                   )}
                   {sensorType.includes('humidity') && (
-                    <TableCell align='right' sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                    <TableCell
+                      align='right'
+                      sx={{ fontVariantNumeric: 'tabular-nums' }}
+                    >
                       {row.humidity?.toFixed(2) ?? 'N/A'}
                     </TableCell>
                   )}

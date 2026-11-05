@@ -86,8 +86,12 @@ const Library: React.FC = () => {
   const [history, setHistory] = useState<LibraryDocument | null>(null)
   const [deleting, setDeleting] = useState<LibraryDocument | null>(null)
 
-  const { data: documents = [], isLoading, isError, refetch } =
-    useLibraryDocuments(category)
+  const {
+    data: documents = [],
+    isLoading,
+    isError,
+    refetch
+  } = useLibraryDocuments(category)
   const save = useSaveLibraryDocument()
   const remove = useDeleteLibraryDocument()
 
@@ -319,7 +323,10 @@ const Library: React.FC = () => {
         onClose={() => setDialog(null)}
         onSubmit={handleSubmit}
       />
-      <LibraryViewerDialog document={viewing} onClose={() => setViewing(null)} />
+      <LibraryViewerDialog
+        document={viewing}
+        onClose={() => setViewing(null)}
+      />
       <LibraryHistoryDialog
         document={history}
         onClose={() => setHistory(null)}

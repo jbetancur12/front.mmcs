@@ -117,11 +117,15 @@ const formatStateValue = (value?: string | null) => {
   }
 
   if (value in CALIBRATION_SERVICE_APPROVAL_LABELS) {
-    return CALIBRATION_SERVICE_APPROVAL_LABELS[value as CalibrationServiceApprovalStatus]
+    return CALIBRATION_SERVICE_APPROVAL_LABELS[
+      value as CalibrationServiceApprovalStatus
+    ]
   }
 
   if (value in CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS) {
-    return CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[value as CalibrationServiceAdjustmentStatus]
+    return CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[
+      value as CalibrationServiceAdjustmentStatus
+    ]
   }
 
   return value
@@ -173,7 +177,11 @@ const CalibrationServiceTimeline = ({
                 px: 1
               }}
             >
-              <Typography variant='caption' color='text.secondary' fontWeight={600}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                fontWeight={600}
+              >
                 {formatDateTime(event.occurredAt)}
               </Typography>
             </TimelineOppositeContent>
@@ -210,7 +218,8 @@ const CalibrationServiceTimeline = ({
                     label={CALIBRATION_SERVICE_EVENT_LABELS[event.eventType]}
                   />
                   <Typography variant='caption' color='text.secondary'>
-                    {formatActorType(event.performedByType)} · {event.performedByName}
+                    {formatActorType(event.performedByType)} ·{' '}
+                    {event.performedByName}
                   </Typography>
                 </Stack>
 

@@ -30,7 +30,8 @@ const DataSheetDetail: React.FC = () => {
             La vista previa de la hoja de vida se carga bajo demanda.
           </Typography>
           <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-            El detalle del equipo ya esta disponible y el render PDF solo se monta cuando lo solicitas.
+            El detalle del equipo ya esta disponible y el render PDF solo se
+            monta cuando lo solicitas.
           </Typography>
           <Button variant='contained' onClick={() => setShowPreview(true)}>
             Ver PDF

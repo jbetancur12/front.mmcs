@@ -51,16 +51,19 @@ export const showServerErrorAlert = async () => {
 // Enhanced error handler that determines the appropriate alert based on error type
 export const handleErrorWithAlert = async (error: unknown): Promise<string> => {
   let errorMessage = 'Error desconocido'
-  
+
   if (error instanceof Error) {
     // Handle Axios errors
     if ('isAxiosError' in error && error.isAxiosError) {
       const axiosError = error as AxiosError
-      
+
       if (axiosError.code === 'NETWORK_ERROR' || !axiosError.response) {
         await showNetworkErrorAlert()
         return 'Error de conexión. Verifique su conexión a internet.'
-      } else if (axiosError.code === 'ECONNABORTED' || axiosError.message?.includes('timeout')) {
+      } else if (
+        axiosError.code === 'ECONNABORTED' ||
+        axiosError.message?.includes('timeout')
+      ) {
         await showTimeoutAlert()
         return 'Tiempo de espera agotado. Intente nuevamente.'
       } else if (axiosError.response?.status === 400) {

@@ -30,7 +30,10 @@ const PDFViewer = ({
   disableContextMenu?: boolean
 }) => {
   const axiosPrivate = useAxiosPrivate()
-  const pdfUrl = useMemo(() => path ? buildMinioObjectUrl(bucket, path) : '', [bucket, path])
+  const pdfUrl = useMemo(
+    () => (path ? buildMinioObjectUrl(bucket, path) : ''),
+    [bucket, path]
+  )
   const [viewerUrl, setViewerUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -60,7 +63,7 @@ const PDFViewer = ({
         const response = await axiosPrivate.get(
           downloadUrl || `/files/download/${path}`,
           {
-          responseType: 'blob'
+            responseType: 'blob'
           }
         )
         const objectUrl = URL.createObjectURL(
@@ -126,7 +129,9 @@ const PDFViewer = ({
           textAlign: 'center'
         }}
       >
-        <Typography color='text.secondary'>{error || 'No se pudo cargar el documento PDF.'}</Typography>
+        <Typography color='text.secondary'>
+          {error || 'No se pudo cargar el documento PDF.'}
+        </Typography>
       </Box>
     )
   }
@@ -166,7 +171,10 @@ const PDFViewer = ({
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PictureAsPdf sx={{ color: '#d32f2f' }} />
-            <Typography variant='body2' sx={{ fontWeight: 600, color: '#424242' }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 600, color: '#424242' }}
+            >
               Vista previa del documento
             </Typography>
           </Box>
@@ -265,27 +273,27 @@ const PDFViewer = ({
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
           bgcolor: 'white'
         }}
-        >
-          {watermarkText && (
-            <Box
-              aria-hidden='true'
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                pointerEvents: 'none',
-                zIndex: 1,
-                opacity: 0.18,
-                backgroundImage: `repeating-linear-gradient(-28deg, transparent 0 110px, rgba(0,0,0,0.02) 110px 220px), url("data:image/svg+xml,${encodeURIComponent(
-                  `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='260' viewBox='0 0 420 260'><g transform='rotate(-24 210 130)'><text x='36' y='130' fill='%23000' fill-opacity='1' font-family='Arial, sans-serif' font-size='26' font-weight='700'>${watermarkText}</text></g></svg>`
-                )}")`,
-                backgroundRepeat: 'repeat',
-                userSelect: 'none'
-              }}
-            />
-          )}
-          <object
-            data={embeddedViewerUrl}
-            type='application/pdf'
+      >
+        {watermarkText && (
+          <Box
+            aria-hidden='true'
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.18,
+              backgroundImage: `repeating-linear-gradient(-28deg, transparent 0 110px, rgba(0,0,0,0.02) 110px 220px), url("data:image/svg+xml,${encodeURIComponent(
+                `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='260' viewBox='0 0 420 260'><g transform='rotate(-24 210 130)'><text x='36' y='130' fill='%23000' fill-opacity='1' font-family='Arial, sans-serif' font-size='26' font-weight='700'>${watermarkText}</text></g></svg>`
+              )}")`,
+              backgroundRepeat: 'repeat',
+              userSelect: 'none'
+            }}
+          />
+        )}
+        <object
+          data={embeddedViewerUrl}
+          type='application/pdf'
           width='100%'
           height={viewerHeight}
           aria-label='Vista previa del PDF'

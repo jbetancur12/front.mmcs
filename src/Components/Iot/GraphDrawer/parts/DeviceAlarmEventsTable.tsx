@@ -187,9 +187,7 @@ const DeviceAlarmEventsTable: React.FC<DeviceAlarmEventsTableProps> = ({
                       critical: 'Crítica'
                     }[event.severity] || event.severity
                   }
-                  color={
-                    SEVERITY_COLORS[event.severity] || 'default'
-                  }
+                  color={SEVERITY_COLORS[event.severity] || 'default'}
                 />
               </TableCell>
               <TableCell>{getEventDescription(event)}</TableCell>

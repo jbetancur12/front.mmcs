@@ -150,7 +150,8 @@ const flowStages: readonly FlowStage[] = [
   },
   {
     title: 'Cierre final',
-    detail: 'El servicio se cierra solo cuando todo está facturado, pagado y enviado'
+    detail:
+      'El servicio se cierra solo cuando todo está facturado, pagado y enviado'
   }
 ] as const
 
@@ -212,7 +213,8 @@ const permissionRows = [
     permissions: [PERMISSIONS.CALIBRATION_SERVICE_INVOICING]
   },
   {
-    action: 'Control documental (corte de contado: solo con el pago registrado)',
+    action:
+      'Control documental (corte de contado: solo con el pago registrado)',
     permissions: [PERMISSIONS.CALIBRATION_SERVICE_DOCUMENT_CONTROL]
   },
   {
@@ -300,63 +302,102 @@ const buildSlaRows = (config?: CalibrationServiceSlaConfig) => [
   {
     phase: 'ODS a programación',
     startsAt: 'Emisión de ODS',
-    expectedAction: 'Programar fecha compromiso, fecha programada y responsable.',
-    alertAt: formatBusinessDays(getSlaValue(config, 'programmingWarningBusinessDays')),
-    overdueAfter: formatBusinessDays(getSlaValue(config, 'programmingTargetBusinessDays'))
+    expectedAction:
+      'Programar fecha compromiso, fecha programada y responsable.',
+    alertAt: formatBusinessDays(
+      getSlaValue(config, 'programmingWarningBusinessDays')
+    ),
+    overdueAfter: formatBusinessDays(
+      getSlaValue(config, 'programmingTargetBusinessDays')
+    )
   },
   {
     phase: 'Programación a ejecución',
     startsAt: 'Fecha programada o programación registrada',
     expectedAction: 'Iniciar la ejecución técnica del servicio.',
-    alertAt: formatBusinessDays(getSlaValue(config, 'executionWarningBusinessDays')),
-    overdueAfter: formatBusinessDays(getSlaValue(config, 'executionTargetBusinessDays'))
+    alertAt: formatBusinessDays(
+      getSlaValue(config, 'executionWarningBusinessDays')
+    ),
+    overdueAfter: formatBusinessDays(
+      getSlaValue(config, 'executionTargetBusinessDays')
+    )
   },
   {
     phase: 'Ejecución finalizada a corte',
     startsAt: 'Finalización técnica',
-    expectedAction: 'Crear corte parcial o final con las cantidades completadas.',
-    alertAt: formatBusinessDays(getSlaValue(config, 'adminClosureWarningBusinessDays')),
-    overdueAfter: formatBusinessDays(getSlaValue(config, 'adminClosureTargetBusinessDays'))
+    expectedAction:
+      'Crear corte parcial o final con las cantidades completadas.',
+    alertAt: formatBusinessDays(
+      getSlaValue(config, 'adminClosureWarningBusinessDays')
+    ),
+    overdueAfter: formatBusinessDays(
+      getSlaValue(config, 'adminClosureTargetBusinessDays')
+    )
   },
   {
     phase: 'Corte a facturación',
     startsAt: 'Corte listo para facturación',
     expectedAction: 'Registrar factura, fecha y soporte si aplica.',
-    alertAt: formatBusinessDays(getSlaValue(config, 'invoicingWarningBusinessDays')),
-    overdueAfter: formatBusinessDays(getSlaValue(config, 'invoicingTargetBusinessDays'))
+    alertAt: formatBusinessDays(
+      getSlaValue(config, 'invoicingWarningBusinessDays')
+    ),
+    overdueAfter: formatBusinessDays(
+      getSlaValue(config, 'invoicingTargetBusinessDays')
+    )
   },
   {
     phase: 'Facturación a control documental',
     startsAt: 'Corte facturado',
-    expectedAction: 'Cargar, revisar y enviar certificados/evidencias documentales (en contado, después del pago).',
-    alertAt: formatBusinessDays(getSlaValue(config, 'documentControlWarningBusinessDays')),
-    overdueAfter: formatBusinessDays(getSlaValue(config, 'documentControlTargetBusinessDays'))
+    expectedAction:
+      'Cargar, revisar y enviar certificados/evidencias documentales (en contado, después del pago).',
+    alertAt: formatBusinessDays(
+      getSlaValue(config, 'documentControlWarningBusinessDays')
+    ),
+    overdueAfter: formatBusinessDays(
+      getSlaValue(config, 'documentControlTargetBusinessDays')
+    )
   },
   {
     phase: 'Control documental a cierre final',
     startsAt: 'Certificados enviados',
-    expectedAction: 'El servicio se cierra solo cuando todo está facturado, pagado y enviado; si falta algo, se puede cerrar a mano.',
-    alertAt: formatBusinessDays(getSlaValue(config, 'finalCloseWarningBusinessDays')),
-    overdueAfter: formatBusinessDays(getSlaValue(config, 'finalCloseTargetBusinessDays'))
+    expectedAction:
+      'El servicio se cierra solo cuando todo está facturado, pagado y enviado; si falta algo, se puede cerrar a mano.',
+    alertAt: formatBusinessDays(
+      getSlaValue(config, 'finalCloseWarningBusinessDays')
+    ),
+    overdueAfter: formatBusinessDays(
+      getSlaValue(config, 'finalCloseTargetBusinessDays')
+    )
   }
 ]
 
 const renderRoleChips = (roles: readonly string[]) => (
   <Stack direction='row' spacing={0.75} useFlexGap flexWrap='wrap'>
     {roles.map((role) => (
-      <Chip key={role} size='small' variant='outlined' label={getRoleLabelEs(role)} />
+      <Chip
+        key={role}
+        size='small'
+        variant='outlined'
+        label={getRoleLabelEs(role)}
+      />
     ))}
   </Stack>
 )
 
-const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePanelProps) => {
-  const [activeStageAnchor, setActiveStageAnchor] = useState<HTMLElement | null>(null)
+const CalibrationServiceGuidePanel = ({
+  slaConfig
+}: CalibrationServiceGuidePanelProps) => {
+  const [activeStageAnchor, setActiveStageAnchor] =
+    useState<HTMLElement | null>(null)
   const [activeStage, setActiveStage] = useState<FlowStage | null>(null)
   const slaRows = buildSlaRows(slaConfig)
   const { data: stepRoles, isLoading: loadingStepRoles } =
     useCalibrationServiceStepRoles()
 
-  const handleOpenStageBranches = (event: MouseEvent<HTMLElement>, stage: FlowStage) => {
+  const handleOpenStageBranches = (
+    event: MouseEvent<HTMLElement>,
+    stage: FlowStage
+  ) => {
     if (!stage.branches?.length) {
       return
     }
@@ -371,7 +412,10 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
     setActiveStage(stage)
   }
 
-  const handleStageKeyDown = (event: KeyboardEvent<HTMLElement>, stage: FlowStage) => {
+  const handleStageKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    stage: FlowStage
+  ) => {
     if (!stage.branches?.length) {
       return
     }
@@ -395,8 +439,8 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
   return (
     <Stack spacing={3}>
       <Alert severity='info' icon={<InfoOutlinedIcon fontSize='inherit' />}>
-        Esta guía resume el flujo del módulo, las siglas que ves en pantalla y qué
-        rol puede ejecutar cada acción.
+        Esta guía resume el flujo del módulo, las siglas que ves en pantalla y
+        qué rol puede ejecutar cada acción.
       </Alert>
 
       <Card sx={{ borderRadius: 3 }}>
@@ -452,11 +496,15 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
                     onKeyDown={(event) => handleStageKeyDown(event, stage)}
                     sx={{
                       border: '1px solid',
-                      borderColor: stage.branches?.length ? 'primary.light' : 'divider',
+                      borderColor: stage.branches?.length
+                        ? 'primary.light'
+                        : 'divider',
                       borderRadius: 2,
                       px: 1.5,
                       py: 1.25,
-                      backgroundColor: stage.branches?.length ? '#f4fbf7' : '#f8fbf9',
+                      backgroundColor: stage.branches?.length
+                        ? '#f4fbf7'
+                        : '#f8fbf9',
                       cursor: stage.branches?.length ? 'pointer' : 'default',
                       transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                       '&:hover': stage.branches?.length
@@ -469,14 +517,20 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
                     tabIndex={stage.branches?.length ? 0 : -1}
                   >
                     <Stack spacing={0.75}>
-                      <Stack direction='row' justifyContent='space-between' spacing={1}>
+                      <Stack
+                        direction='row'
+                        justifyContent='space-between'
+                        spacing={1}
+                      >
                         <Typography fontWeight={700} variant='body2'>
                           {index + 1}. {stage.title}
                         </Typography>
                         {stage.branches?.length ? (
                           <Chip
                             size='small'
-                            icon={<AltRouteOutlinedIcon sx={{ fontSize: 14 }} />}
+                            icon={
+                              <AltRouteOutlinedIcon sx={{ fontSize: 14 }} />
+                            }
                             label='Ver rutas'
                             color='primary'
                             variant='outlined'
@@ -485,7 +539,11 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
                         ) : null}
                       </Stack>
                       {stage.branches?.length ? (
-                        <Typography variant='caption' color='primary.main' fontWeight={600}>
+                        <Typography
+                          variant='caption'
+                          color='primary.main'
+                          fontWeight={600}
+                        >
                           Haz clic para ver decisiones y desvíos.
                         </Typography>
                       ) : null}
@@ -525,7 +583,8 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
                 {activeStage?.title}: decisiones y desvíos
               </Typography>
               <Typography variant='caption' color='text.secondary'>
-                Antes de seguir a la siguiente fase, revisa qué caminos alternos puede tomar esta etapa.
+                Antes de seguir a la siguiente fase, revisa qué caminos alternos
+                puede tomar esta etapa.
               </Typography>
               {activeStage?.branches?.map((branch) => {
                 const toneStyle = branchToneStyles[branch.tone]
@@ -567,24 +626,33 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
               Lectura rápida
             </Typography>
             <Stack direction='row' spacing={1} alignItems='center'>
-              <CheckCircleOutlineOutlinedIcon color='success' fontSize='small' />
+              <CheckCircleOutlineOutlinedIcon
+                color='success'
+                fontSize='small'
+              />
               <Typography variant='body2'>
-                Finalizar ejecución no reemplaza el corte. Después del cierre técnico
-                siempre debes formalizar al menos un corte final.
+                Finalizar ejecución no reemplaza el corte. Después del cierre
+                técnico siempre debes formalizar al menos un corte final.
               </Typography>
             </Stack>
             <Stack direction='row' spacing={1} alignItems='center'>
-              <CheckCircleOutlineOutlinedIcon color='success' fontSize='small' />
+              <CheckCircleOutlineOutlinedIcon
+                color='success'
+                fontSize='small'
+              />
               <Typography variant='body2'>
-                Las novedades se registran para reflejar lo realmente ejecutado sin
-                reescribir la cotización original ni la ODS base.
+                Las novedades se registran para reflejar lo realmente ejecutado
+                sin reescribir la cotización original ni la ODS base.
               </Typography>
             </Stack>
             <Stack direction='row' spacing={1} alignItems='center'>
-              <CheckCircleOutlineOutlinedIcon color='success' fontSize='small' />
+              <CheckCircleOutlineOutlinedIcon
+                color='success'
+                fontSize='small'
+              />
               <Typography variant='body2'>
-                El cierre final solo ocurre cuando el flujo técnico, administrativo y
-                documental ya quedó completo.
+                El cierre final solo ocurre cuando el flujo técnico,
+                administrativo y documental ya quedó completo.
               </Typography>
             </Stack>
           </Stack>
@@ -604,18 +672,30 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
               </Typography>
               <List dense disablePadding>
                 {commercialBranchRows.map((row, index) => (
-                  <ListItem key={row.title} disableGutters sx={{ alignItems: 'flex-start', py: 0.5 }}>
+                  <ListItem
+                    key={row.title}
+                    disableGutters
+                    sx={{ alignItems: 'flex-start', py: 0.5 }}
+                  >
                     <ListItemIcon sx={{ minWidth: 34, mt: 0.2 }}>
                       {index === 0 ? (
-                        <CheckCircleOutlineOutlinedIcon color='success' fontSize='small' />
+                        <CheckCircleOutlineOutlinedIcon
+                          color='success'
+                          fontSize='small'
+                        />
                       ) : index === 1 ? (
                         <CloseOutlinedIcon color='error' fontSize='small' />
                       ) : (
-                        <AutorenewOutlinedIcon color='warning' fontSize='small' />
+                        <AutorenewOutlinedIcon
+                          color='warning'
+                          fontSize='small'
+                        />
                       )}
                     </ListItemIcon>
                     <ListItemText
-                      primary={<Typography fontWeight={700}>{row.title}</Typography>}
+                      primary={
+                        <Typography fontWeight={700}>{row.title}</Typography>
+                      }
                       secondary={row.detail}
                     />
                   </ListItem>
@@ -629,12 +709,18 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
               </Typography>
               <List dense disablePadding>
                 {noveltyBranchRows.map((row) => (
-                  <ListItem key={row.title} disableGutters sx={{ alignItems: 'flex-start', py: 0.5 }}>
+                  <ListItem
+                    key={row.title}
+                    disableGutters
+                    sx={{ alignItems: 'flex-start', py: 0.5 }}
+                  >
                     <ListItemIcon sx={{ minWidth: 34, mt: 0.2 }}>
                       <BuildCircleOutlinedIcon color='info' fontSize='small' />
                     </ListItemIcon>
                     <ListItemText
-                      primary={<Typography fontWeight={700}>{row.title}</Typography>}
+                      primary={
+                        <Typography fontWeight={700}>{row.title}</Typography>
+                      }
                       secondary={row.detail}
                     />
                   </ListItem>
@@ -651,9 +737,9 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
             Tiempos SLA por fase
           </Typography>
           <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-            Los tiempos se cuentan en días hábiles. Antes del umbral de alerta el
-            servicio se considera al día; desde el umbral aparece alerta; después
-            del objetivo queda vencido.
+            Los tiempos se cuentan en días hábiles. Antes del umbral de alerta
+            el servicio se considera al día; desde el umbral aparece alerta;
+            después del objetivo queda vencido.
           </Typography>
 
           <Table size='small'>
@@ -675,10 +761,20 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
                   <TableCell>{row.startsAt}</TableCell>
                   <TableCell>{row.expectedAction}</TableCell>
                   <TableCell>
-                    <Chip size='small' color='warning' variant='outlined' label={row.alertAt} />
+                    <Chip
+                      size='small'
+                      color='warning'
+                      variant='outlined'
+                      label={row.alertAt}
+                    />
                   </TableCell>
                   <TableCell>
-                    <Chip size='small' color='error' variant='outlined' label={row.overdueAfter} />
+                    <Chip
+                      size='small'
+                      color='error'
+                      variant='outlined'
+                      label={row.overdueAfter}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -686,9 +782,10 @@ const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePane
           </Table>
 
           <Alert severity='info' sx={{ mt: 2 }}>
-            Si una novedad aprobada aumenta cantidades o agrega ítems, el servicio
-            vuelve a quedar pendiente de corte hasta liberar esas cantidades. Por eso
-            no debe pasar a cierre final aunque los cortes anteriores ya estén enviados.
+            Si una novedad aprobada aumenta cantidades o agrega ítems, el
+            servicio vuelve a quedar pendiente de corte hasta liberar esas
+            cantidades. Por eso no debe pasar a cierre final aunque los cortes
+            anteriores ya estén enviados.
           </Alert>
         </CardContent>
       </Card>

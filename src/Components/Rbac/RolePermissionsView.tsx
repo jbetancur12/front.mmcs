@@ -93,7 +93,9 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
   )
   const [roleId, setRoleId] = useState<number | ''>(
     () =>
-      sortedRoles.find((r) => r.name === 'admin')?.id ?? sortedRoles[0]?.id ?? ''
+      sortedRoles.find((r) => r.name === 'admin')?.id ??
+      sortedRoles[0]?.id ??
+      ''
   )
   const [moduleFilter, setModuleFilter] = useState<string>('')
   const [status, setStatus] = useState<StatusFilter>('all')
@@ -115,8 +117,8 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
 
   const modules = useMemo(
     () =>
-      Array.from(new Set(matrix.permissions.map((p) => p.module))).sort((a, b) =>
-        moduleLabel(a).localeCompare(moduleLabel(b), 'es')
+      Array.from(new Set(matrix.permissions.map((p) => p.module))).sort(
+        (a, b) => moduleLabel(a).localeCompare(moduleLabel(b), 'es')
       ),
     [matrix.permissions]
   )
@@ -159,7 +161,9 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
     const term = search.trim().toLowerCase()
     const filtered = matrix.permissions.filter((p) => {
       if (moduleFilter && p.module !== moduleFilter) return false
-      const granted = role ? effectiveGrants.has(cellKey(role.id, p.key)) : false
+      const granted = role
+        ? effectiveGrants.has(cellKey(role.id, p.key))
+        : false
       if (status === 'granted' && !granted) return false
       if (status === 'missing' && granted) return false
       if (!term) return true
@@ -181,7 +185,15 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
         items: filtered.filter((p) => p.module === module)
       }))
       .filter((g) => g.items.length > 0)
-  }, [matrix.permissions, modules, moduleFilter, status, search, effectiveGrants, role])
+  }, [
+    matrix.permissions,
+    modules,
+    moduleFilter,
+    status,
+    search,
+    effectiveGrants,
+    role
+  ])
 
   const setAll = (keys: string[], granted: boolean) => {
     if (!role) return
@@ -225,7 +237,8 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
   )
   const changesByRole = useMemo(() => {
     const out = new Map<number, PendingChange[]>()
-    for (const c of changes) out.set(c.roleId, [...(out.get(c.roleId) ?? []), c])
+    for (const c of changes)
+      out.set(c.roleId, [...(out.get(c.roleId) ?? []), c])
     return Array.from(out.entries())
   }, [changes])
 
@@ -242,7 +255,10 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
           mb: 0.5,
           alignItems: 'flex-start',
           opacity: r.isActive ? 1 : 0.55,
-          '&.Mui-selected': { bgcolor: TEAL_SOFT, boxShadow: `inset 3px 0 0 ${TEAL}` },
+          '&.Mui-selected': {
+            bgcolor: TEAL_SOFT,
+            boxShadow: `inset 3px 0 0 ${TEAL}`
+          },
           '&.Mui-selected:hover': { bgcolor: TEAL_SOFT }
         }}
       >
@@ -261,7 +277,12 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
             <Chip
               size='small'
               label={pending}
-              sx={{ bgcolor: AMBER, color: '#5d4037', fontWeight: 700, height: 20 }}
+              sx={{
+                bgcolor: AMBER,
+                color: '#5d4037',
+                fontWeight: 700,
+                height: 20
+              }}
             />
           </Tooltip>
         )}
@@ -291,12 +312,19 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
           />
           <List
             disablePadding
-            sx={{ maxHeight: { xs: 260, md: 'calc(100vh - 280px)' }, overflowY: 'auto' }}
+            sx={{
+              maxHeight: { xs: 260, md: 'calc(100vh - 280px)' },
+              overflowY: 'auto'
+            }}
             aria-label='Roles'
           >
             {roleList.map(renderRoleItem)}
             {roleList.length === 0 && (
-              <Typography variant='caption' color='text.secondary' sx={{ p: 1 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ p: 1 }}
+              >
                 Ningún rol coincide con la búsqueda.
               </Typography>
             )}
@@ -331,7 +359,11 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                 <Chip size='small' color='warning' label='Rol inactivo' />
               )}
               {role.description && (
-                <Typography variant='caption' color='text.secondary' sx={{ flexBasis: '100%' }}>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ flexBasis: '100%' }}
+                >
                   {role.description}
                 </Typography>
               )}
@@ -387,7 +419,11 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                   label={`${moduleLabel(m)} ${c?.granted ?? 0}/${c?.total ?? 0}`}
                   sx={{
                     bgcolor: active ? TEAL : 'transparent',
-                    color: active ? '#fff' : empty ? 'text.disabled' : 'text.primary',
+                    color: active
+                      ? '#fff'
+                      : empty
+                        ? 'text.disabled'
+                        : 'text.primary',
                     border: '1px solid',
                     borderColor: active ? TEAL : 'divider'
                   }}
@@ -459,7 +495,10 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
           )}
 
           {groups.length === 0 && (
-            <Typography color='text.secondary' sx={{ py: 4, textAlign: 'center' }}>
+            <Typography
+              color='text.secondary'
+              sx={{ py: 4, textAlign: 'center' }}
+            >
               Ninguna capacidad coincide con el filtro. Cambia el módulo o
               limpia la búsqueda.
             </Typography>
@@ -530,7 +569,10 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                         boxShadow: changed ? `inset 3px 0 0 ${AMBER}` : 'none'
                       }}
                     >
-                      <Tooltip title={reason ?? ''} disableHoverListener={!reason}>
+                      <Tooltip
+                        title={reason ?? ''}
+                        disableHoverListener={!reason}
+                      >
                         <span>
                           <Switch
                             checked={granted}
@@ -542,7 +584,9 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                               'aria-label': `${p.key} para ${role ? roleDisplayName(role) : ''}`
                             }}
                             sx={{
-                              '& .MuiSwitch-switchBase.Mui-checked': { color: TEAL },
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: TEAL
+                              },
                               '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
                                 { bgcolor: TEAL }
                             }}
@@ -550,7 +594,14 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                         </span>
                       </Tooltip>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            flexWrap: 'wrap'
+                          }}
+                        >
                           <Typography variant='body2' sx={{ fontWeight: 600 }}>
                             {permissionPlainText(p).name}
                           </Typography>
@@ -654,7 +705,10 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
             p: 2,
             position: { md: 'sticky' },
             top: { md: 16 },
-            border: changes.length > 0 ? `1px solid ${AMBER}` : '1px solid transparent',
+            border:
+              changes.length > 0
+                ? `1px solid ${AMBER}`
+                : '1px solid transparent',
             bgcolor: changes.length > 0 ? AMBER_SOFT : 'background.paper'
           }}
           role='region'
@@ -672,19 +726,29 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
             <>
               <Typography variant='body2' sx={{ mt: 0.5 }}>
                 {changes.length}{' '}
-                {changes.length === 1 ? 'cambio sin guardar' : 'cambios sin guardar'}
+                {changes.length === 1
+                  ? 'cambio sin guardar'
+                  : 'cambios sin guardar'}
                 {affectedUsers > 0
                   ? `, hasta ${affectedUsers} ${affectedUsers === 1 ? 'usuario' : 'usuarios'}`
                   : ''}
               </Typography>
-              <Box sx={{ maxHeight: { md: 'calc(100vh - 360px)' }, overflowY: 'auto', mt: 1 }}>
+              <Box
+                sx={{
+                  maxHeight: { md: 'calc(100vh - 360px)' },
+                  overflowY: 'auto',
+                  mt: 1
+                }}
+              >
                 {changesByRole.map(([id, items]) => {
                   const r = roleById.get(id)
                   return (
                     <Box key={id} sx={{ mb: 1.5 }}>
                       <Typography variant='caption' fontWeight={700}>
                         {r ? roleDisplayName(r) : 'Rol desconocido'}
-                        {r ? ` · ${r.userCount} ${r.userCount === 1 ? 'usuario' : 'usuarios'}` : ''}
+                        {r
+                          ? ` · ${r.userCount} ${r.userCount === 1 ? 'usuario' : 'usuarios'}`
+                          : ''}
                       </Typography>
                       {items.map((c) => {
                         const screens = screensOf(c.permissionKey)
@@ -697,27 +761,47 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                             <Typography
                               component='span'
                               fontWeight={700}
-                              sx={{ color: c.granted ? TEAL_DARK : 'error.main', width: 14 }}
+                              sx={{
+                                color: c.granted ? TEAL_DARK : 'error.main',
+                                width: 14
+                              }}
                             >
                               {c.granted ? '+' : '−'}
                             </Typography>
                             <Box sx={{ minWidth: 0 }}>
                               <Typography
                                 variant='caption'
-                                sx={{ fontFamily: 'monospace', fontWeight: 600, wordBreak: 'break-all' }}
+                                sx={{
+                                  fontFamily: 'monospace',
+                                  fontWeight: 600,
+                                  wordBreak: 'break-all'
+                                }}
                               >
                                 {c.permissionKey}
                               </Typography>
                               {perm?.description && (
-                                <Typography variant='caption' color='text.secondary' component='div'>
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                  component='div'
+                                >
                                   {perm.description}
                                 </Typography>
                               )}
                               {screens.length > 0 && (
-                                <Typography variant='caption' color='text.secondary' component='div'>
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                  component='div'
+                                >
                                   {c.granted ? 'Se habilita' : 'Se oculta'}:{' '}
-                                  {screens.slice(0, 2).map((s) => s.label).join(', ')}
-                                  {screens.length > 2 ? ` y ${screens.length - 2} más` : ''}
+                                  {screens
+                                    .slice(0, 2)
+                                    .map((s) => s.label)
+                                    .join(', ')}
+                                  {screens.length > 2
+                                    ? ` y ${screens.length - 2} más`
+                                    : ''}
                                 </Typography>
                               )}
                             </Box>

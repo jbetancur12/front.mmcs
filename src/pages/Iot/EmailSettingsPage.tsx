@@ -12,7 +12,12 @@ const EmailSettingsPage = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/iot')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver a dispositivos
       </Button>

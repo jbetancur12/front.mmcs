@@ -11,7 +11,10 @@ export const certificatesDueKeys = {
     [...certificatesDueKeys.all, 'customer', customerId] as const
 }
 
-type QueryOpts<T> = Omit<UseQueryOptions<T[], unknown, T[], QueryKey>, 'queryKey' | 'queryFn'>
+type QueryOpts<T> = Omit<
+  UseQueryOptions<T[], unknown, T[], QueryKey>,
+  'queryKey' | 'queryFn'
+>
 
 /**
  * Clientes con certificados próximos a vencer (agrupados por cliente).
@@ -24,7 +27,10 @@ export const useCertificatesNextToExpireGrouped = <T = unknown>(
   return useQuery<T[], unknown, T[], QueryKey>(
     certificatesDueKeys.grouped(),
     async () => {
-      const response = await axiosPrivate.get(`/files/next-to-expire-grouped`, {})
+      const response = await axiosPrivate.get(
+        `/files/next-to-expire-grouped`,
+        {}
+      )
       return response.data || []
     },
     options

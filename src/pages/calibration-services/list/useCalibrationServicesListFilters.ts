@@ -30,30 +30,60 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
   const [search, setSearch] = useState(storedFilters.search ?? '')
   const [statusFilter, setStatusFilter] = useState<
     CalibrationServiceStatus | typeof FILTER_ALL
-  >((storedFilters.statusFilter as CalibrationServiceStatus | typeof FILTER_ALL) ?? FILTER_ALL)
+  >(
+    (storedFilters.statusFilter as
+      | CalibrationServiceStatus
+      | typeof FILTER_ALL) ?? FILTER_ALL
+  )
   const [approvalFilter, setApprovalFilter] = useState<
     CalibrationServiceApprovalStatus | typeof FILTER_ALL
-  >((storedFilters.approvalFilter as CalibrationServiceApprovalStatus | typeof FILTER_ALL) ?? FILTER_ALL)
+  >(
+    (storedFilters.approvalFilter as
+      | CalibrationServiceApprovalStatus
+      | typeof FILTER_ALL) ?? FILTER_ALL
+  )
   const [scopeFilter, setScopeFilter] = useState<
     CalibrationServiceScopeType | typeof FILTER_ALL
-  >((storedFilters.scopeFilter as CalibrationServiceScopeType | typeof FILTER_ALL) ?? FILTER_ALL)
+  >(
+    (storedFilters.scopeFilter as
+      | CalibrationServiceScopeType
+      | typeof FILTER_ALL) ?? FILTER_ALL
+  )
   const [slaFilter, setSlaFilter] = useState<
     CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL
-  >((storedFilters.slaFilter as CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL) ?? FILTER_ALL)
-  const [siteFilter, setSiteFilter] = useState(storedFilters.siteFilter ?? '')
-  const [metrologistFilter, setMetrologistFilter] = useState<string>(storedFilters.metrologistFilter ?? FILTER_ALL)
-  const [hasAdjustmentsFilter, setHasAdjustmentsFilter] = useState<string>(storedFilters.hasAdjustmentsFilter ?? FILTER_ALL)
-  const [areFiltersOpen, setAreFiltersOpen] = useState(storedFilters.areFiltersOpen ?? false)
-  const [viewMode, setViewMode] = useState<CalibrationServicesViewMode>(
-    getStoredViewMode
+  >(
+    (storedFilters.slaFilter as
+      | CalibrationServiceSlaIndicatorColor
+      | typeof FILTER_ALL) ?? FILTER_ALL
   )
-  const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(storedFilters.showOnlyMyLoad ?? false)
-  const hasCutsReadyForInvoicing = (statusFilter as string) === 'ready_for_invoicing'
+  const [siteFilter, setSiteFilter] = useState(storedFilters.siteFilter ?? '')
+  const [metrologistFilter, setMetrologistFilter] = useState<string>(
+    storedFilters.metrologistFilter ?? FILTER_ALL
+  )
+  const [hasAdjustmentsFilter, setHasAdjustmentsFilter] = useState<string>(
+    storedFilters.hasAdjustmentsFilter ?? FILTER_ALL
+  )
+  const [areFiltersOpen, setAreFiltersOpen] = useState(
+    storedFilters.areFiltersOpen ?? false
+  )
+  const [viewMode, setViewMode] =
+    useState<CalibrationServicesViewMode>(getStoredViewMode)
+  const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(
+    storedFilters.showOnlyMyLoad ?? false
+  )
+  const hasCutsReadyForInvoicing =
+    (statusFilter as string) === 'ready_for_invoicing'
   const hasCutsInvoiced = (statusFilter as string) === 'invoiced'
   // Tareas de cortes de "Mis pendientes": una tarjeta activa filtra la bandeja y se apaga con el mismo clic
-  const [cutTaskFilter, setCutTaskFilter] = useState<CalibrationServiceCutTask | ''>('')
-  const [billingStatusFilter, setBillingStatusFilter] = useState<string | undefined>(undefined)
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string | undefined>(undefined)
+  const [cutTaskFilter, setCutTaskFilter] = useState<
+    CalibrationServiceCutTask | ''
+  >('')
+  const [billingStatusFilter, setBillingStatusFilter] = useState<
+    string | undefined
+  >(undefined)
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<
+    string | undefined
+  >(undefined)
 
   // La bandeja carga de a PAGE_SIZE servicios; "Cargar más" amplía el límite
   const [limit, setLimit] = useState(PAGE_SIZE)
@@ -115,10 +145,7 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
       return
     }
 
-    window.localStorage.setItem(
-      CALIBRATION_SERVICES_VIEW_STORAGE_KEY,
-      viewMode
-    )
+    window.localStorage.setItem(CALIBRATION_SERVICES_VIEW_STORAGE_KEY, viewMode)
   }, [viewMode])
 
   useEffect(() => {

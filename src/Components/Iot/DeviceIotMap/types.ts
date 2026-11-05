@@ -33,7 +33,10 @@ export interface FilterState {
 /** Valor que puede recibir un filtro del mapa (cada campo valida el suyo). */
 export type FilterValue = string | Set<string> | boolean | number | null
 
-export type OnFilterChange = (type: keyof FilterState, value: FilterValue) => void
+export type OnFilterChange = (
+  type: keyof FilterState,
+  value: FilterValue
+) => void
 
 export interface MapControlsProps {
   isSidebarOpen: boolean

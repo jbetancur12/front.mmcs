@@ -81,11 +81,25 @@ const CalibrationServiceKanbanCard = ({
                 fontWeight={800}
                 sx={{ color: ui.text, lineHeight: 1.2 }}
               >
-                <Box component='span' title='Código interno del servicio (SCL)' sx={{ cursor: 'help' }}>
+                <Box
+                  component='span'
+                  title='Código interno del servicio (SCL)'
+                  sx={{ cursor: 'help' }}
+                >
                   {service.serviceCode}
                 </Box>
                 {service.quoteCode ? (
-                  <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: ui.textSecondary, fontWeight: 600, fontSize: '0.75rem', cursor: 'help' }}>
+                  <Box
+                    component='span'
+                    title='Consecutivo de cotización'
+                    sx={{
+                      ml: 1,
+                      color: ui.textSecondary,
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      cursor: 'help'
+                    }}
+                  >
                     {service.quoteCode}
                   </Box>
                 ) : null}
@@ -112,20 +126,15 @@ const CalibrationServiceKanbanCard = ({
               size='small'
               label={getCompactSlaLabel(service.slaIndicator?.color)}
               tone={chipColorToStatusTone(
-                CALIBRATION_SERVICE_SLA_COLORS[service.slaIndicator?.color || 'gray']
+                CALIBRATION_SERVICE_SLA_COLORS[
+                  service.slaIndicator?.color || 'gray'
+                ]
               )}
             />
           </Stack>
 
-          <Stack
-            direction='row'
-            spacing={0.75}
-            flexWrap='wrap'
-            useFlexGap
-          >
-            <CalibrationServiceStatusChip
-              status={service.status}
-            />
+          <Stack direction='row' spacing={0.75} flexWrap='wrap' useFlexGap>
+            <CalibrationServiceStatusChip status={service.status} />
             {!isTechnicalOnlyView &&
             service.approvalStatus !== 'approved' &&
             !(
@@ -137,7 +146,9 @@ const CalibrationServiceKanbanCard = ({
                 tone={chipColorToStatusTone(
                   CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
                 )}
-                label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]}
+                label={
+                  CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
+                }
               />
             ) : null}
             {serviceFocus ? (
@@ -190,7 +201,16 @@ const CalibrationServiceKanbanCard = ({
               {(service.items?.length ?? 0) === 1 ? '' : 's'}
             </Typography>
             {service.otherFields?.hasEquipmentSale === true ? (
-              <Chip size='small' color='warning' variant='outlined' label='Venta de equipos' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
+              <Chip
+                size='small'
+                color='warning'
+                variant='outlined'
+                label='Venta de equipos'
+                sx={{
+                  height: 20,
+                  '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 }
+                }}
+              />
             ) : null}
             <Typography
               variant='caption'
@@ -199,12 +219,9 @@ const CalibrationServiceKanbanCard = ({
             >
               {isTechnicalOnlyView
                 ? service.odsCode || 'ODS pendiente'
-                : currencyFormatter.format(
-                    getItemsTotal(service)
-                  )}
+                : currencyFormatter.format(getItemsTotal(service))}
             </Typography>
           </Stack>
-
         </Stack>
       </CardContent>
     </Card>

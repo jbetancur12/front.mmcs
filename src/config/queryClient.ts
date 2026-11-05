@@ -62,8 +62,10 @@ export const queryKeys = {
   courses: {
     all: ['courses'] as const,
     lists: () => [...queryKeys.courses.all, 'list'] as const,
-    list: (filters?: object) => [...queryKeys.courses.lists(), filters] as const,
-    available: (scope?: string) => [...queryKeys.courses.all, 'available', scope] as const,
+    list: (filters?: object) =>
+      [...queryKeys.courses.lists(), filters] as const,
+    available: (scope?: string) =>
+      [...queryKeys.courses.all, 'available', scope] as const,
     details: () => [...queryKeys.courses.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.courses.details(), id] as const,
     stats: (id: number) => [...queryKeys.courses.detail(id), 'stats'] as const,
@@ -73,7 +75,8 @@ export const queryKeys = {
   // Progress
   progress: {
     all: ['progress'] as const,
-    user: (userId?: number) => [...queryKeys.progress.all, 'user', userId] as const,
+    user: (userId?: number) =>
+      [...queryKeys.progress.all, 'user', userId] as const,
     course: (courseId: number, userId?: number) =>
       [...queryKeys.progress.all, 'course', courseId, userId] as const
   },
@@ -81,10 +84,13 @@ export const queryKeys = {
   // Certificates
   certificates: {
     all: ['certificates'] as const,
-    user: (userId?: number) => [...queryKeys.certificates.all, 'user', userId] as const,
-    detail: (id: number) => [...queryKeys.certificates.all, 'detail', id] as const,
+    user: (userId?: number) =>
+      [...queryKeys.certificates.all, 'user', userId] as const,
+    detail: (id: number) =>
+      [...queryKeys.certificates.all, 'detail', id] as const,
     templates: () => [...queryKeys.certificates.all, 'templates'] as const,
-    templatePreview: (id: number) => [...queryKeys.certificates.all, 'templates', id, 'preview'] as const
+    templatePreview: (id: number) =>
+      [...queryKeys.certificates.all, 'templates', id, 'preview'] as const
   },
 
   // Training plans (planes de formación)
@@ -92,17 +98,22 @@ export const queryKeys = {
     all: ['training-plans'] as const,
     list: () => [...queryKeys.plans.all, 'list'] as const,
     detail: (id: number) => [...queryKeys.plans.all, 'detail', id] as const,
-    assignments: (id: number) => [...queryKeys.plans.all, 'assignments', id] as const,
-    progress: (id: number, mandatoryOnly = true) => [...queryKeys.plans.all, 'progress', id, mandatoryOnly] as const,
+    assignments: (id: number) =>
+      [...queryKeys.plans.all, 'assignments', id] as const,
+    progress: (id: number, mandatoryOnly = true) =>
+      [...queryKeys.plans.all, 'progress', id, mandatoryOnly] as const,
     my: () => [...queryKeys.plans.all, 'my'] as const,
-    mergeable: (id: number) => [...queryKeys.plans.all, 'mergeable', id] as const
+    mergeable: (id: number) =>
+      [...queryKeys.plans.all, 'mergeable', id] as const
   },
 
   // Assignments
   assignments: {
     all: ['assignments'] as const,
-    user: (userId?: number) => [...queryKeys.assignments.all, 'user', userId] as const,
-    course: (courseId: number) => [...queryKeys.assignments.all, 'course', courseId] as const
+    user: (userId?: number) =>
+      [...queryKeys.assignments.all, 'user', userId] as const,
+    course: (courseId: number) =>
+      [...queryKeys.assignments.all, 'course', courseId] as const
   },
 
   // Quizzes
@@ -116,9 +127,12 @@ export const queryKeys = {
   // Analytics
   analytics: {
     all: ['analytics'] as const,
-    dashboard: (filters?: object) => [...queryKeys.analytics.all, 'dashboard', filters] as const,
-    course: (courseId: number) => [...queryKeys.analytics.all, 'course', courseId] as const,
-    user: (userId?: number) => [...queryKeys.analytics.all, 'user', userId] as const
+    dashboard: (filters?: object) =>
+      [...queryKeys.analytics.all, 'dashboard', filters] as const,
+    course: (courseId: number) =>
+      [...queryKeys.analytics.all, 'course', courseId] as const,
+    user: (userId?: number) =>
+      [...queryKeys.analytics.all, 'user', userId] as const
   },
 
   // Notifications
@@ -136,18 +150,24 @@ export const queryKeys = {
   // Content
   content: {
     all: ['content'] as const,
-    modules: (courseId: number) => [...queryKeys.content.all, 'modules', courseId] as const,
-    lessons: (moduleId: number) => [...queryKeys.content.all, 'lessons', moduleId] as const
+    modules: (courseId: number) =>
+      [...queryKeys.content.all, 'modules', courseId] as const,
+    lessons: (moduleId: number) =>
+      [...queryKeys.content.all, 'lessons', moduleId] as const
   },
 
   // Jobs
   jobs: {
     all: ['jobs'] as const,
     queueStats: () => [...queryKeys.jobs.all, 'queue', 'stats'] as const,
-    failedJobs: (limit?: number) => [...queryKeys.jobs.all, 'failed', limit] as const,
-    detail: (jobId: string) => [...queryKeys.jobs.all, 'detail', jobId] as const,
-    schedulerStatus: () => [...queryKeys.jobs.all, 'scheduler', 'status'] as const,
-    reminderStatus: () => [...queryKeys.jobs.all, 'reminders', 'status'] as const,
+    failedJobs: (limit?: number) =>
+      [...queryKeys.jobs.all, 'failed', limit] as const,
+    detail: (jobId: string) =>
+      [...queryKeys.jobs.all, 'detail', jobId] as const,
+    schedulerStatus: () =>
+      [...queryKeys.jobs.all, 'scheduler', 'status'] as const,
+    reminderStatus: () =>
+      [...queryKeys.jobs.all, 'reminders', 'status'] as const,
     statistics: () => [...queryKeys.jobs.all, 'statistics'] as const,
     dashboard: () => [...queryKeys.jobs.all, 'dashboard'] as const,
     health: () => [...queryKeys.jobs.all, 'health'] as const

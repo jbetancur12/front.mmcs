@@ -55,8 +55,6 @@ const GraphDrawer = ({
   )
   const [tabValue, setTabValue] = useState(0)
 
-
-
   const {
     visibleSeries,
     setVisibleSeries,

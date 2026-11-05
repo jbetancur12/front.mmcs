@@ -30,7 +30,9 @@ vi.mock('src/utils/api', async () => ({
 }))
 
 vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
+  ...(await vi.importActual<typeof import('react-router-dom')>(
+    'react-router-dom'
+  )),
   useNavigate: () => mockNavigate
 }))
 
@@ -40,17 +42,15 @@ const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        retry: false,
-      },
-    },
+        retry: false
+      }
+    }
   })
 
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          {component}
-        </ThemeProvider>
+        <ThemeProvider theme={theme}>{component}</ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )
@@ -116,7 +116,9 @@ describe('LmsCourseManagement', () => {
     await waitFor(() => {
       // Check first course
       expect(screen.getByText('JavaScript Fundamentals')).toBeInTheDocument()
-      expect(screen.getByText('Learn the basics of JavaScript programming')).toBeInTheDocument()
+      expect(
+        screen.getByText('Learn the basics of JavaScript programming')
+      ).toBeInTheDocument()
       expect(screen.getByText('Obligatorio')).toBeInTheDocument()
       expect(screen.getByText('Con certificado')).toBeInTheDocument()
       expect(screen.getByText('2h 0m')).toBeInTheDocument()
@@ -124,7 +126,9 @@ describe('LmsCourseManagement', () => {
 
       // Check second course
       expect(screen.getByText('React Development')).toBeInTheDocument()
-      expect(screen.getByText('Advanced React concepts and patterns')).toBeInTheDocument()
+      expect(
+        screen.getByText('Advanced React concepts and patterns')
+      ).toBeInTheDocument()
       expect(screen.getByText('3h 0m')).toBeInTheDocument()
       expect(screen.getByText('Borrador')).toBeInTheDocument()
     })
@@ -143,8 +147,12 @@ describe('LmsCourseManagement', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Editar Curso')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('JavaScript Fundamentals')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('Learn the basics of JavaScript programming')).toBeInTheDocument()
+      expect(
+        screen.getByDisplayValue('JavaScript Fundamentals')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByDisplayValue('Learn the basics of JavaScript programming')
+      ).toBeInTheDocument()
     })
   })
 
@@ -207,7 +215,11 @@ describe('LmsCourseManagement', () => {
     renderWithProviders(<LmsCourseManagement />)
 
     await waitFor(() => {
-      expect(screen.getByText('Error al cargar los cursos. Por favor, intenta nuevamente.')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Error al cargar los cursos. Por favor, intenta nuevamente.'
+        )
+      ).toBeInTheDocument()
     })
   })
 

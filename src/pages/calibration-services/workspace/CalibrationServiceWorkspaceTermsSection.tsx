@@ -36,7 +36,12 @@ const CalibrationServiceWorkspaceTermsSection = ({
   return (
     <Card elevation={0} sx={sectionCardSx}>
       <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-        <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+        <Stack
+          direction='row'
+          alignItems='center'
+          spacing={1.5}
+          sx={{ mb: 2.5 }}
+        >
           <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
           <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
             Términos
@@ -47,19 +52,29 @@ const CalibrationServiceWorkspaceTermsSection = ({
             <Typography variant='body2' color='text.secondary'>
               Este bloque se deja al final para ajustar la última hoja de la
               cotización. Al guardar, los términos quedan como snapshot de este
-              servicio sin afectar la plantilla global. Para modificar la plantilla
-              que se precarga en servicios nuevos, usa el botón &quot;Plantilla
-              términos&quot; en la bandeja de entrada.
+              servicio sin afectar la plantilla global. Para modificar la
+              plantilla que se precarga en servicios nuevos, usa el botón
+              &quot;Plantilla términos&quot; en la bandeja de entrada.
             </Typography>
           </Box>
           <Alert severity='info'>
-            Puedes usar variables dentro del texto. Al generar el PDF se reemplazan
-            automáticamente por los valores de esta cotización:
+            Puedes usar variables dentro del texto. Al generar el PDF se
+            reemplazan automáticamente por los valores de esta cotización:
             <Box component='ul' sx={{ mt: 1, mb: 0, pl: 3 }}>
-              <li><strong>{'{{validityDays}}'}</strong>: validez de la oferta.</li>
-              <li><strong>{'{{paymentMethod}}'}</strong>: forma de pago acordada.</li>
-              <li><strong>{'{{instrumentDeliveryTime}}'}</strong>: tiempo de entrega de los equipos.</li>
-              <li><strong>{'{{certificateDeliveryTime}}'}</strong>: tiempo de entrega de los certificados.</li>
+              <li>
+                <strong>{'{{validityDays}}'}</strong>: validez de la oferta.
+              </li>
+              <li>
+                <strong>{'{{paymentMethod}}'}</strong>: forma de pago acordada.
+              </li>
+              <li>
+                <strong>{'{{instrumentDeliveryTime}}'}</strong>: tiempo de
+                entrega de los equipos.
+              </li>
+              <li>
+                <strong>{'{{certificateDeliveryTime}}'}</strong>: tiempo de
+                entrega de los certificados.
+              </li>
             </Box>
           </Alert>
           {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => (
@@ -67,7 +82,11 @@ const CalibrationServiceWorkspaceTermsSection = ({
               key={termKey}
               disableGutters
               elevation={0}
-              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: '12px !important'
+              }}
             >
               <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
                 <Typography fontWeight={800}>

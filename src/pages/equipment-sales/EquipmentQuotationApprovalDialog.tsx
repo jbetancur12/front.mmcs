@@ -65,9 +65,8 @@ const EquipmentQuotationApprovalDialog = ({
   onClose,
   onSubmit
 }: EquipmentQuotationApprovalDialogProps) => {
-  const [values, setValues] = useState<EquipmentQuotationDecisionValues>(
-    createInitialValues
-  )
+  const [values, setValues] =
+    useState<EquipmentQuotationDecisionValues>(createInitialValues)
 
   useEffect(() => {
     if (!open) {
@@ -79,7 +78,12 @@ const EquipmentQuotationApprovalDialog = ({
   const isRequestChangesMode = mode === 'request_changes'
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
+    <Dialog
+      open={open}
+      onClose={isLoading ? undefined : onClose}
+      fullWidth
+      maxWidth='sm'
+    >
       <DialogTitle>
         {isRejectMode
           ? 'Registrar rechazo del cliente'
@@ -98,9 +102,7 @@ const EquipmentQuotationApprovalDialog = ({
           </Alert>
 
           <FormControl fullWidth required>
-            <InputLabel>
-              Medio de respuesta del cliente
-            </InputLabel>
+            <InputLabel>Medio de respuesta del cliente</InputLabel>
             <Select
               value={values.approvalChannel}
               label='Medio de respuesta del cliente'
@@ -186,7 +188,11 @@ const EquipmentQuotationApprovalDialog = ({
           />
 
           <Box>
-            <Typography variant='caption' fontWeight={700} sx={{ color: '#dc2626', mb: 1, display: 'block' }}>
+            <Typography
+              variant='caption'
+              fontWeight={700}
+              sx={{ color: '#dc2626', mb: 1, display: 'block' }}
+            >
               * Evidencia obligatoria
             </Typography>
             <Button
@@ -227,7 +233,9 @@ const EquipmentQuotationApprovalDialog = ({
           disabled={isLoading}
           onClick={() => {
             if (!values.evidenceFile) {
-              notify.error('Debes adjuntar la evidencia de la respuesta del cliente.')
+              notify.error(
+                'Debes adjuntar la evidencia de la respuesta del cliente.'
+              )
               return
             }
             void onSubmit(values)

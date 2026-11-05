@@ -30,7 +30,11 @@ describe('frequentPaths', () => {
     visit('u1', '/poco', 2)
     visit('u1', '/mucho', 5)
     visit('u1', '/medio', 3)
-    expect(frequentPaths('u1', 5, [], NOW)).toEqual(['/mucho', '/medio', '/poco'])
+    expect(frequentPaths('u1', 5, [], NOW)).toEqual([
+      '/mucho',
+      '/medio',
+      '/poco'
+    ])
   })
 
   it('respeta el límite y las exclusiones', () => {
@@ -82,7 +86,9 @@ describe('almacenamiento', () => {
 
   it('conserva como máximo 60 pantallas', () => {
     for (let i = 0; i < 65; i++) recordVisit('u1', `/p${i}`, NOW + i)
-    const saved = JSON.parse(localStorage.getItem('quick-search-usage:u1') ?? '{}')
+    const saved = JSON.parse(
+      localStorage.getItem('quick-search-usage:u1') ?? '{}'
+    )
     expect(Object.keys(saved)).toHaveLength(60)
   })
 

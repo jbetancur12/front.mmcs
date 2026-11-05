@@ -14,7 +14,11 @@ import {
   Visibility as VisibilityIcon,
   Info as InfoIcon
 } from '@mui/icons-material'
-import { useUserLMSRole, useUserPermissions, getRoleDisplayInfo } from '../../../utils/roleUtils'
+import {
+  useUserLMSRole,
+  useUserPermissions,
+  getRoleDisplayInfo
+} from '../../../utils/roleUtils'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
 
 interface RoleBasedDataFilterProps {
@@ -77,7 +81,7 @@ const RoleBasedDataFilter: React.FC<RoleBasedDataFilterProps> = ({
 
   const getFilterDescription = () => {
     const restrictions = []
-    
+
     if (permissions.scopeRestrictions?.coursesOnly) {
       restrictions.push('cursos gestionados')
     }
@@ -100,8 +104,8 @@ const RoleBasedDataFilter: React.FC<RoleBasedDataFilterProps> = ({
     <Box>
       {showAlert && scope !== 'admin' && (
         <Alert
-          severity="info"
-          sx={{ 
+          severity='info'
+          sx={{
             mb: 2,
             bgcolor: `${scopeInfo.color}08`,
             border: `1px solid ${scopeInfo.color}20`,
@@ -112,49 +116,54 @@ const RoleBasedDataFilter: React.FC<RoleBasedDataFilterProps> = ({
           icon={scopeInfo.icon}
           action={
             onScopeInfo && (
-              <Tooltip title="Información sobre permisos">
+              <Tooltip title='Información sobre permisos'>
                 <IconButton
-                  size="small"
+                  size='small'
                   onClick={onScopeInfo}
                   sx={{ color: scopeInfo.color }}
                 >
-                  <InfoIcon fontSize="small" />
+                  <InfoIcon fontSize='small' />
                 </IconButton>
               </Tooltip>
             )
           }
         >
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          <Typography variant='body2' sx={{ fontWeight: 600 }}>
             {scopeInfo.label}
           </Typography>
-          <Typography variant="caption" display="block">
+          <Typography variant='caption' display='block'>
             {scopeInfo.description}
           </Typography>
         </Alert>
       )}
 
       {showFilterIcon && scope !== 'admin' && (
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1, 
-          mb: 1,
-          p: 1,
-          bgcolor: colors.primaryLight,
-          borderRadius: 1,
-          border: `1px solid ${colors.primary}20`
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            mb: 1,
+            p: 1,
+            bgcolor: colors.primaryLight,
+            borderRadius: 1,
+            border: `1px solid ${colors.primary}20`
+          }}
+        >
           <FilterIcon sx={{ color: colors.primary, fontSize: 16 }} />
-          <Typography variant="caption" sx={{ 
-            color: colors.primary,
-            fontWeight: 600,
-            flex: 1
-          }}>
+          <Typography
+            variant='caption'
+            sx={{
+              color: colors.primary,
+              fontWeight: 600,
+              flex: 1
+            }}
+          >
             {getFilterDescription()}
           </Typography>
           <Chip
             label={roleInfo.label}
-            size="small"
+            size='small'
             sx={{
               bgcolor: colors.primary,
               color: 'white',

@@ -1,11 +1,4 @@
-import {
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  TextField,
-  Chip
-} from '@mui/material'
+import { Grid, Paper, Typography, Box, TextField, Chip } from '@mui/material'
 import { Build } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
@@ -17,13 +10,11 @@ interface MaintenanceTicketEquipmentCardProps {
 }
 
 /** Datos del equipo y condiciones de recepción. */
-const MaintenanceTicketEquipmentCard = ({ ticket, details }: MaintenanceTicketEquipmentCardProps) => {
-  const {
-    isTechnician,
-    editMode,
-    editData,
-    setEditData
-  } = details
+const MaintenanceTicketEquipmentCard = ({
+  ticket,
+  details
+}: MaintenanceTicketEquipmentCardProps) => {
+  const { isTechnician, editMode, editData, setEditData } = details
 
   return (
     <>
@@ -48,10 +39,7 @@ const MaintenanceTicketEquipmentCard = ({ ticket, details }: MaintenanceTicketEq
               justifyContent: 'center'
             }}
           >
-            <Build
-              sx={{ color: '#00A651', fontSize: 20 }}
-              aria-hidden='true'
-            />
+            <Build sx={{ color: '#00A651', fontSize: 20 }} aria-hidden='true' />
           </Box>
           <Typography
             variant='h6'
@@ -67,11 +55,7 @@ const MaintenanceTicketEquipmentCard = ({ ticket, details }: MaintenanceTicketEq
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Box mb={2}>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                gutterBottom
-              >
+              <Typography variant='body2' color='text.secondary' gutterBottom>
                 Tipo de Equipo
               </Typography>
               {editMode && !isTechnician ? (
@@ -104,11 +88,7 @@ const MaintenanceTicketEquipmentCard = ({ ticket, details }: MaintenanceTicketEq
 
           <Grid item xs={12} md={6}>
             <Box mb={2}>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                gutterBottom
-              >
+              <Typography variant='body2' color='text.secondary' gutterBottom>
                 Marca
               </Typography>
               {editMode && !isTechnician ? (
@@ -134,11 +114,7 @@ const MaintenanceTicketEquipmentCard = ({ ticket, details }: MaintenanceTicketEq
 
           <Grid item xs={12} md={6}>
             <Box mb={2}>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                gutterBottom
-              >
+              <Typography variant='body2' color='text.secondary' gutterBottom>
                 Modelo
               </Typography>
               {editMode && !isTechnician ? (
@@ -155,20 +131,14 @@ const MaintenanceTicketEquipmentCard = ({ ticket, details }: MaintenanceTicketEq
                   }
                 />
               ) : (
-                <Typography variant='body1'>
-                  {ticket.equipmentModel}
-                </Typography>
+                <Typography variant='body1'>{ticket.equipmentModel}</Typography>
               )}
             </Box>
           </Grid>
 
           <Grid item xs={12} md={6}>
             <Box mb={2}>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                gutterBottom
-              >
+              <Typography variant='body2' color='text.secondary' gutterBottom>
                 Número de Serie
               </Typography>
               {editMode && !isTechnician ? (

@@ -12,7 +12,14 @@ const Welcome: React.FC = () => {
   const $userStore = useStore(userStore)
   const navigate = useNavigate()
   const hasLearningAccess = ($userStore.rol || []).some((role) =>
-    ['employee', 'user', 'client', 'lms_only', 'Training Manager', 'admin'].includes(role)
+    [
+      'employee',
+      'user',
+      'client',
+      'lms_only',
+      'Training Manager',
+      'admin'
+    ].includes(role)
   )
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>

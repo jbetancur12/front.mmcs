@@ -58,7 +58,9 @@ const fetchUnreadCount = async (): Promise<UnreadCountResponse> => {
 }
 
 const markAsRead = async (notificationId: number): Promise<void> => {
-  await axiosPrivate.put(`/calibration-services/notifications/${notificationId}/read`)
+  await axiosPrivate.put(
+    `/calibration-services/notifications/${notificationId}/read`
+  )
 }
 
 const markAllAsRead = async (): Promise<void> => {

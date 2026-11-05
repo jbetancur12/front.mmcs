@@ -10,7 +10,7 @@ export const useNewVersion = () => {
   const fetchVersion = async () => {
     try {
       const res = await fetch(`/version.json?_t=${Date.now()}`)
-      const data = await res.json() as { timestamp: number }
+      const data = (await res.json()) as { timestamp: number }
       if (currentVersion.current === null) {
         currentVersion.current = data.timestamp
       } else if (data.timestamp !== currentVersion.current) {

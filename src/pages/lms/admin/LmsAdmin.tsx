@@ -54,7 +54,10 @@ import {
 import { useErrorReporting } from '../../../services/errorReportingService'
 import type { ComprehensiveDashboard } from '../../../services/lmsService'
 import { MetricCardSkeleton } from '../../../Components/lms/LoadingStates/SkeletonComponents'
-import { MetricHelp, LMSMetricHelp } from '../../../Components/lms/Help/ContextualHelp'
+import {
+  MetricHelp,
+  LMSMetricHelp
+} from '../../../Components/lms/Help/ContextualHelp'
 import { notify } from 'src/utils/notify'
 
 // Modern color palette following design system
@@ -284,8 +287,6 @@ const LmsAdmin: React.FC = () => {
     }
   }, [dashboardError, coursesError, quizError])
 
-
-
   return (
     <DashboardErrorBoundary
       onError={(error, errorInfo) => {
@@ -393,7 +394,7 @@ const LmsAdmin: React.FC = () => {
         >
           {/* Role-based Data Filter */}
           <RoleBasedDataFilter
-              scope={getLmsDashboardScope(userRole)}
+            scope={getLmsDashboardScope(userRole)}
             department={$userStore.customer?.nombre}
             showAlert={userRole !== 'admin'}
             showFilterIcon={false}
@@ -930,7 +931,6 @@ const LmsAdmin: React.FC = () => {
               </Grid>
             </Box>
           </QuickActionsErrorBoundary>
-
         </Box>
       </Box>
     </DashboardErrorBoundary>

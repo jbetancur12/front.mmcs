@@ -523,7 +523,9 @@ const ensureVariable = (
   variableName: string,
   fallback: CertificateTemplateVariable
 ) => {
-  const existingIndex = variables.findIndex((variable) => variable.name === variableName)
+  const existingIndex = variables.findIndex(
+    (variable) => variable.name === variableName
+  )
   if (existingIndex >= 0) {
     const nextVariables = [...variables]
     nextVariables[existingIndex] = {
@@ -567,7 +569,9 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
-const normalizeTemplate = (template: CertificateTemplate): TemplateFormState => {
+const normalizeTemplate = (
+  template: CertificateTemplate
+): TemplateFormState => {
   const normalizedVariables =
     template.variables?.length > 0
       ? template.variables.map((variable) => ({
@@ -576,81 +580,98 @@ const normalizeTemplate = (template: CertificateTemplate): TemplateFormState => 
         }))
       : DEFAULT_VARIABLES
 
-  const legacySignature = normalizedVariables.find((variable) => variable.name === 'organizationSignature')
-  const withBackground = ensureVariable(normalizedVariables, 'certificateBackgroundImage', {
-    name: 'certificateBackgroundImage',
-    label: 'Fondo oficial del certificado',
-    type: 'text',
-    required: false,
-    defaultValue: '/images/template.png',
-    description: 'Imagen base que se usara como arte principal del certificado'
-  })
-  const withLeftSignature = ensureVariable(withBackground, 'leftSignatureImage', {
-    name: 'leftSignatureImage',
-    label: 'Firma izquierda',
-    type: 'text',
-    required: false,
-    defaultValue: legacySignature?.defaultValue || '',
-    description: 'Imagen base64 de la firma izquierda'
-  })
-  const withLeftDisplay = ensureVariable(withLeftSignature, 'leftSignatureDisplay', {
-    name: 'leftSignatureDisplay',
-    label: 'Visualizacion de firma izquierda',
-    type: 'text',
-    required: false,
-    defaultValue: legacySignature?.defaultValue ? 'flex' : 'none',
-    description: 'Control interno para mostrar u ocultar la firma izquierda'
-  })
-  const withSignerMeta = ([
+  const legacySignature = normalizedVariables.find(
+    (variable) => variable.name === 'organizationSignature'
+  )
+  const withBackground = ensureVariable(
+    normalizedVariables,
+    'certificateBackgroundImage',
     {
-      name: 'leftSignerName',
-      label: 'Nombre izquierda',
+      name: 'certificateBackgroundImage',
+      label: 'Fondo oficial del certificado',
       type: 'text',
       required: false,
-      defaultValue: 'Daniel Paredes',
-      description: 'Nombre que se mostrara bajo la firma izquierda'
-    },
-    {
-      name: 'leftSignerRole',
-      label: 'Cargo izquierda',
-      type: 'text',
-      required: false,
-      defaultValue: 'Instructor',
-      description: 'Cargo que se mostrara bajo la firma izquierda'
-    },
-    {
-      name: 'rightSignatureImage',
-      label: 'Firma derecha',
-      type: 'text',
-      required: false,
-      defaultValue: '',
-      description: 'Imagen base64 de la firma derecha'
-    },
-    {
-      name: 'rightSignatureDisplay',
-      label: 'Visualizacion de firma derecha',
-      type: 'text',
-      required: false,
-      defaultValue: 'none',
-      description: 'Control interno para mostrar u ocultar la firma derecha'
-    },
-    {
-      name: 'rightSignerName',
-      label: 'Nombre derecha',
-      type: 'text',
-      required: false,
-      defaultValue: 'Andres Felipe Espitia',
-      description: 'Nombre que se mostrara bajo la firma derecha'
-    },
-    {
-      name: 'rightSignerRole',
-      label: 'Cargo derecha',
-      type: 'text',
-      required: false,
-      defaultValue: 'Director Tecnico',
-      description: 'Cargo que se mostrara bajo la firma derecha'
+      defaultValue: '/images/template.png',
+      description:
+        'Imagen base que se usara como arte principal del certificado'
     }
-  ] as CertificateTemplateVariable[]).reduce(
+  )
+  const withLeftSignature = ensureVariable(
+    withBackground,
+    'leftSignatureImage',
+    {
+      name: 'leftSignatureImage',
+      label: 'Firma izquierda',
+      type: 'text',
+      required: false,
+      defaultValue: legacySignature?.defaultValue || '',
+      description: 'Imagen base64 de la firma izquierda'
+    }
+  )
+  const withLeftDisplay = ensureVariable(
+    withLeftSignature,
+    'leftSignatureDisplay',
+    {
+      name: 'leftSignatureDisplay',
+      label: 'Visualizacion de firma izquierda',
+      type: 'text',
+      required: false,
+      defaultValue: legacySignature?.defaultValue ? 'flex' : 'none',
+      description: 'Control interno para mostrar u ocultar la firma izquierda'
+    }
+  )
+  const withSignerMeta = (
+    [
+      {
+        name: 'leftSignerName',
+        label: 'Nombre izquierda',
+        type: 'text',
+        required: false,
+        defaultValue: 'Daniel Paredes',
+        description: 'Nombre que se mostrara bajo la firma izquierda'
+      },
+      {
+        name: 'leftSignerRole',
+        label: 'Cargo izquierda',
+        type: 'text',
+        required: false,
+        defaultValue: 'Instructor',
+        description: 'Cargo que se mostrara bajo la firma izquierda'
+      },
+      {
+        name: 'rightSignatureImage',
+        label: 'Firma derecha',
+        type: 'text',
+        required: false,
+        defaultValue: '',
+        description: 'Imagen base64 de la firma derecha'
+      },
+      {
+        name: 'rightSignatureDisplay',
+        label: 'Visualizacion de firma derecha',
+        type: 'text',
+        required: false,
+        defaultValue: 'none',
+        description: 'Control interno para mostrar u ocultar la firma derecha'
+      },
+      {
+        name: 'rightSignerName',
+        label: 'Nombre derecha',
+        type: 'text',
+        required: false,
+        defaultValue: 'Andres Felipe Espitia',
+        description: 'Nombre que se mostrara bajo la firma derecha'
+      },
+      {
+        name: 'rightSignerRole',
+        label: 'Cargo derecha',
+        type: 'text',
+        required: false,
+        defaultValue: 'Director Tecnico',
+        description: 'Cargo que se mostrara bajo la firma derecha'
+      }
+    ] as CertificateTemplateVariable[]
+  ).reduce(
     (acc, variable) => ensureVariable(acc, variable.name, variable),
     withLeftDisplay
   )
@@ -661,7 +682,9 @@ const normalizeTemplate = (template: CertificateTemplate): TemplateFormState => 
     templateCss:
       template.templateCss ||
       template.template_css ||
-      ((template.templateHtml || template.template_html || '').includes('certificate-template-official')
+      ((template.templateHtml || template.template_html || '').includes(
+        'certificate-template-official'
+      )
         ? DEFAULT_TEMPLATE_CSS
         : ''),
     isDefault: template.isDefault ?? template.is_default ?? false,
@@ -674,95 +697,106 @@ const buildSamplePreviewHtml = (
   templateCss: string,
   variables: CertificateTemplateVariable[]
 ) => {
-  const sampleValues = variables.reduce<Record<string, string>>((acc, variable) => {
-    if (variable.defaultValue || variable.default_value) {
-      acc[variable.name] = variable.defaultValue || variable.default_value || ''
+  const sampleValues = variables.reduce<Record<string, string>>(
+    (acc, variable) => {
+      if (variable.defaultValue || variable.default_value) {
+        acc[variable.name] =
+          variable.defaultValue || variable.default_value || ''
+        return acc
+      }
+
+      if (variable.type === 'date') {
+        acc[variable.name] = new Date().toLocaleDateString('es-CO')
+        return acc
+      }
+
+      if (variable.type === 'number') {
+        acc[variable.name] = '40'
+        return acc
+      }
+
+      if (variable.name === 'userName') {
+        acc[variable.name] = 'Laura Betancur'
+        return acc
+      }
+
+      if (variable.name === 'courseTitle') {
+        acc[variable.name] = 'Curso de Seguridad y Calidad'
+        return acc
+      }
+
+      if (variable.name === 'certificateNumber') {
+        acc[variable.name] = 'MMCS-PREVIEW-001'
+        return acc
+      }
+
+      if (variable.name === 'courseDuration') {
+        acc[variable.name] = '40 horas'
+        return acc
+      }
+
+      if (variable.name === 'courseDurationDisplay') {
+        acc[variable.name] = 'flex'
+        return acc
+      }
+
+      if (variable.name === 'certificateMetaGridColumns') {
+        acc[variable.name] = 'repeat(3, minmax(0, 1fr))'
+        return acc
+      }
+
+      if (variable.name === 'organizationLogo') {
+        acc[variable.name] =
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/images/logo2.png`
+            : '/images/logo2.png'
+        return acc
+      }
+
+      if (variable.name === 'certificateBackgroundImage') {
+        acc[variable.name] = certificateTemplateBackground
+        return acc
+      }
+
+      if (
+        variable.name === 'leftSignatureImage' ||
+        variable.name === 'rightSignatureImage' ||
+        variable.name === 'organizationSignature'
+      ) {
+        acc[variable.name] =
+          variable.defaultValue || variable.default_value || ''
+        return acc
+      }
+
+      if (variable.name === 'leftSignatureDisplay') {
+        const signatureValue = acc.leftSignatureImage
+        acc[variable.name] = signatureValue ? 'flex' : 'none'
+        return acc
+      }
+
+      if (variable.name === 'rightSignatureDisplay') {
+        const signatureValue = acc.rightSignatureImage
+        acc[variable.name] = signatureValue ? 'flex' : 'none'
+        return acc
+      }
+
+      if (variable.name === 'organizationSignatureDisplay') {
+        const signatureValue =
+          acc.organizationSignature || acc.leftSignatureImage
+        acc[variable.name] = signatureValue ? 'flex' : 'none'
+        return acc
+      }
+
+      acc[variable.name] = variable.label || variable.name
       return acc
-    }
+    },
+    {}
+  )
 
-    if (variable.type === 'date') {
-      acc[variable.name] = new Date().toLocaleDateString('es-CO')
-      return acc
-    }
-
-    if (variable.type === 'number') {
-      acc[variable.name] = '40'
-      return acc
-    }
-
-    if (variable.name === 'userName') {
-      acc[variable.name] = 'Laura Betancur'
-      return acc
-    }
-
-    if (variable.name === 'courseTitle') {
-      acc[variable.name] = 'Curso de Seguridad y Calidad'
-      return acc
-    }
-
-    if (variable.name === 'certificateNumber') {
-      acc[variable.name] = 'MMCS-PREVIEW-001'
-      return acc
-    }
-
-    if (variable.name === 'courseDuration') {
-      acc[variable.name] = '40 horas'
-      return acc
-    }
-
-    if (variable.name === 'courseDurationDisplay') {
-      acc[variable.name] = 'flex'
-      return acc
-    }
-
-    if (variable.name === 'certificateMetaGridColumns') {
-      acc[variable.name] = 'repeat(3, minmax(0, 1fr))'
-      return acc
-    }
-
-    if (variable.name === 'organizationLogo') {
-      acc[variable.name] = typeof window !== 'undefined'
-        ? `${window.location.origin}/images/logo2.png`
-        : '/images/logo2.png'
-      return acc
-    }
-
-    if (variable.name === 'certificateBackgroundImage') {
-      acc[variable.name] = certificateTemplateBackground
-      return acc
-    }
-
-    if (variable.name === 'leftSignatureImage' || variable.name === 'rightSignatureImage' || variable.name === 'organizationSignature') {
-      acc[variable.name] =
-        variable.defaultValue ||
-        variable.default_value ||
-        ''
-      return acc
-    }
-
-    if (variable.name === 'leftSignatureDisplay') {
-      const signatureValue = acc.leftSignatureImage
-      acc[variable.name] = signatureValue ? 'flex' : 'none'
-      return acc
-    }
-
-    if (variable.name === 'rightSignatureDisplay') {
-      const signatureValue = acc.rightSignatureImage
-      acc[variable.name] = signatureValue ? 'flex' : 'none'
-      return acc
-    }
-
-    if (variable.name === 'organizationSignatureDisplay') {
-      const signatureValue = acc.organizationSignature || acc.leftSignatureImage
-      acc[variable.name] = signatureValue ? 'flex' : 'none'
-      return acc
-    }
-
-    acc[variable.name] = variable.label || variable.name
-    return acc
-  }, {})
-
-  const renderedHtml = templateHtml.replace(/\{\{(\w+)\}\}/g, (_, variableName: string) => sampleValues[variableName] || '')
+  const renderedHtml = templateHtml.replace(
+    /\{\{(\w+)\}\}/g,
+    (_, variableName: string) => sampleValues[variableName] || ''
+  )
   const renderedCss = templateCss.replace(
     /\{\{(\w+)\}\}/g,
     (_, variableName: string) => sampleValues[variableName] || ''
@@ -1411,9 +1445,12 @@ ${renderedCss}
 const LmsCertificateTemplates: React.FC = () => {
   const [tab, setTab] = useState(0)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<CertificateTemplate | null>(null)
-  const [previewTemplate, setPreviewTemplate] = useState<CertificateTemplate | null>(null)
-  const [templateToDelete, setTemplateToDelete] = useState<CertificateTemplate | null>(null)
+  const [editingTemplate, setEditingTemplate] =
+    useState<CertificateTemplate | null>(null)
+  const [previewTemplate, setPreviewTemplate] =
+    useState<CertificateTemplate | null>(null)
+  const [templateToDelete, setTemplateToDelete] =
+    useState<CertificateTemplate | null>(null)
   const [form, setForm] = useState<TemplateFormState>(emptyFormState)
 
   const { data: templates = [], isLoading, refetch } = useCertificateTemplates()
@@ -1424,15 +1461,18 @@ const LmsCertificateTemplates: React.FC = () => {
     onSuccess: () => handleCloseEditor()
   })
   const deleteTemplateMutation = useDeleteCertificateTemplate()
-  const {
-    data: previewData,
-    isLoading: isPreviewLoading
-  } = usePreviewCertificateTemplate(previewTemplate?.id, {
-    enabled: !!previewTemplate?.id
-  })
+  const { data: previewData, isLoading: isPreviewLoading } =
+    usePreviewCertificateTemplate(previewTemplate?.id, {
+      enabled: !!previewTemplate?.id
+    })
 
   const localPreviewHtml = useMemo(
-    () => buildSamplePreviewHtml(form.templateHtml, form.templateCss, form.variables),
+    () =>
+      buildSamplePreviewHtml(
+        form.templateHtml,
+        form.templateCss,
+        form.variables
+      ),
     [form.templateHtml, form.templateCss, form.variables]
   )
 
@@ -1564,7 +1604,9 @@ const LmsCertificateTemplates: React.FC = () => {
   const removeVariable = (index: number) => {
     setForm((current) => ({
       ...current,
-      variables: current.variables.filter((_, variableIndex) => variableIndex !== index)
+      variables: current.variables.filter(
+        (_, variableIndex) => variableIndex !== index
+      )
     }))
   }
 
@@ -1574,7 +1616,10 @@ const LmsCertificateTemplates: React.FC = () => {
     nextValue: string | null
   ) => {
     setForm((current) => {
-      const signatureLabel = signatureName === 'leftSignatureImage' ? 'Firma izquierda' : 'Firma derecha'
+      const signatureLabel =
+        signatureName === 'leftSignatureImage'
+          ? 'Firma izquierda'
+          : 'Firma derecha'
       const displayLabel =
         displayName === 'leftSignatureDisplay'
           ? 'Visualizacion de firma izquierda'
@@ -1628,16 +1673,25 @@ const LmsCertificateTemplates: React.FC = () => {
   ) => {
     setForm((current) => ({
       ...current,
-      variables: setManagedVariable(current.variables, variableName, fallback, nextValue)
+      variables: setManagedVariable(
+        current.variables,
+        variableName,
+        fallback,
+        nextValue
+      )
     }))
   }
 
   const leftSignatureVariable = useMemo(
-    () => form.variables.find((variable) => variable.name === 'leftSignatureImage'),
+    () =>
+      form.variables.find((variable) => variable.name === 'leftSignatureImage'),
     [form.variables]
   )
   const rightSignatureVariable = useMemo(
-    () => form.variables.find((variable) => variable.name === 'rightSignatureImage'),
+    () =>
+      form.variables.find(
+        (variable) => variable.name === 'rightSignatureImage'
+      ),
     [form.variables]
   )
   const leftSignerNameVariable = useMemo(
@@ -1649,22 +1703,29 @@ const LmsCertificateTemplates: React.FC = () => {
     [form.variables]
   )
   const rightSignerNameVariable = useMemo(
-    () => form.variables.find((variable) => variable.name === 'rightSignerName'),
+    () =>
+      form.variables.find((variable) => variable.name === 'rightSignerName'),
     [form.variables]
   )
   const rightSignerRoleVariable = useMemo(
-    () => form.variables.find((variable) => variable.name === 'rightSignerRole'),
+    () =>
+      form.variables.find((variable) => variable.name === 'rightSignerRole'),
     [form.variables]
   )
 
   const applyVariableSuggestion = (index: number, value: string) => {
-    const matchingDefault = DEFAULT_VARIABLES.find((variable) => variable.name === value)
+    const matchingDefault = DEFAULT_VARIABLES.find(
+      (variable) => variable.name === value
+    )
     if (matchingDefault) {
       const nextVariables = [...form.variables]
       nextVariables[index] = {
         ...nextVariables[index],
         ...matchingDefault,
-        defaultValue: nextVariables[index].defaultValue || matchingDefault.defaultValue || ''
+        defaultValue:
+          nextVariables[index].defaultValue ||
+          matchingDefault.defaultValue ||
+          ''
       }
       setForm((current) => ({
         ...current,
@@ -1690,7 +1751,11 @@ const LmsCertificateTemplates: React.FC = () => {
         subtitle='Administra el diseño base de los certificados generados por el LMS'
         icon={<WorkspacePremiumIcon />}
         actions={
-          <Button variant='contained' startIcon={<AddIcon />} onClick={handleCreate}>
+          <Button
+            variant='contained'
+            startIcon={<AddIcon />}
+            onClick={handleCreate}
+          >
             Nueva Plantilla
           </Button>
         }
@@ -1698,10 +1763,13 @@ const LmsCertificateTemplates: React.FC = () => {
 
       {!isLoading &&
         templateCards.length > 0 &&
-        !templateCards.some((template) => template.isDefault || template.is_default) && (
+        !templateCards.some(
+          (template) => template.isDefault || template.is_default
+        ) && (
           <Alert severity='warning' sx={{ mb: 3 }}>
-            Ninguna plantilla está marcada como «por defecto». Edita una y activa «Plantilla por defecto»
-            para que los cursos sin plantilla propia usen ese diseño.
+            Ninguna plantilla está marcada como «por defecto». Edita una y
+            activa «Plantilla por defecto» para que los cursos sin plantilla
+            propia usen ese diseño.
           </Alert>
         )}
 
@@ -1713,9 +1781,14 @@ const LmsCertificateTemplates: React.FC = () => {
             No hay plantillas registradas
           </Typography>
           <Typography color='text.secondary' sx={{ mb: 2 }}>
-            Crea la primera plantilla para controlar el formato de los certificados.
+            Crea la primera plantilla para controlar el formato de los
+            certificados.
           </Typography>
-          <Button variant='contained' startIcon={<AddIcon />} onClick={handleCreate}>
+          <Button
+            variant='contained'
+            startIcon={<AddIcon />}
+            onClick={handleCreate}
+          >
             Crear Plantilla
           </Button>
         </Paper>
@@ -1723,20 +1796,39 @@ const LmsCertificateTemplates: React.FC = () => {
         <Grid container spacing={3}>
           {templateCards.map((template) => (
             <Grid item xs={12} md={6} lg={4} key={template.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
                 <CardHeader
                   title={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        flexWrap: 'wrap'
+                      }}
+                    >
                       <Typography variant='h6'>{template.name}</Typography>
                       {template.isDefault || template.is_default ? (
-                        <Chip label='Por defecto' color='primary' size='small' />
+                        <Chip
+                          label='Por defecto'
+                          color='primary'
+                          size='small'
+                        />
                       ) : null}
                     </Box>
                   }
                   action={
                     <Box>
                       <Tooltip title='Vista previa'>
-                        <IconButton onClick={() => setPreviewTemplate(template)}>
+                        <IconButton
+                          onClick={() => setPreviewTemplate(template)}
+                        >
                           <PreviewIcon />
                         </IconButton>
                       </Tooltip>
@@ -1765,25 +1857,38 @@ const LmsCertificateTemplates: React.FC = () => {
                   }
                 />
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    Variables configuradas: {template.normalized.variables.length}
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mb: 2 }}
+                  >
+                    Variables configuradas:{' '}
+                    {template.normalized.variables.length}
                   </Typography>
 
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                    {template.normalized.variables.slice(0, 4).map((variable) => (
-                      <Chip
-                        key={`${template.id}-${variable.name}`}
-                        label={variable.label}
-                        size='small'
-                        variant='outlined'
-                      />
-                    ))}
+                  <Box
+                    sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}
+                  >
+                    {template.normalized.variables
+                      .slice(0, 4)
+                      .map((variable) => (
+                        <Chip
+                          key={`${template.id}-${variable.name}`}
+                          label={variable.label}
+                          size='small'
+                          variant='outlined'
+                        />
+                      ))}
                   </Box>
 
                   <Typography variant='caption' color='text.secondary'>
                     Actualizada:{' '}
                     {new Date(
-                      template.updatedAt || template.updated_at || template.createdAt || template.created_at || Date.now()
+                      template.updatedAt ||
+                        template.updated_at ||
+                        template.createdAt ||
+                        template.created_at ||
+                        Date.now()
                     ).toLocaleDateString('es-CO')}
                   </Typography>
                 </CardContent>
@@ -1793,12 +1898,23 @@ const LmsCertificateTemplates: React.FC = () => {
         </Grid>
       )}
 
-      <Dialog open={isEditorOpen} onClose={handleCloseEditor} fullWidth maxWidth='lg'>
+      <Dialog
+        open={isEditorOpen}
+        onClose={handleCloseEditor}
+        fullWidth
+        maxWidth='lg'
+      >
         <DialogTitle>
-          {editingTemplate ? 'Editar Plantilla de Certificado' : 'Nueva Plantilla de Certificado'}
+          {editingTemplate
+            ? 'Editar Plantilla de Certificado'
+            : 'Nueva Plantilla de Certificado'}
         </DialogTitle>
         <DialogContent>
-          <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mt: 1 }}>
+          <Tabs
+            value={tab}
+            onChange={(_, value) => setTab(value)}
+            sx={{ mt: 1 }}
+          >
             <Tab label='Ficha' />
             <Tab label='HTML' />
             <Tab label='CSS' />
@@ -1810,8 +1926,8 @@ const LmsCertificateTemplates: React.FC = () => {
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Alert severity='info'>
-                  Define primero el nombre interno de la plantilla y si será la opción base para
-                  certificados nuevos.
+                  Define primero el nombre interno de la plantilla y si será la
+                  opción base para certificados nuevos.
                 </Alert>
               </Grid>
               <Grid item xs={12} md={8}>
@@ -1820,7 +1936,10 @@ const LmsCertificateTemplates: React.FC = () => {
                   label='Nombre'
                   value={form.name}
                   onChange={(event) =>
-                    setForm((current) => ({ ...current, name: event.target.value }))
+                    setForm((current) => ({
+                      ...current,
+                      name: event.target.value
+                    }))
                   }
                 />
               </Grid>
@@ -1830,7 +1949,10 @@ const LmsCertificateTemplates: React.FC = () => {
                     <Switch
                       checked={form.isDefault}
                       onChange={(event) =>
-                        setForm((current) => ({ ...current, isDefault: event.target.checked }))
+                        setForm((current) => ({
+                          ...current,
+                          isDefault: event.target.checked
+                        }))
                       }
                     />
                   }
@@ -1847,9 +1969,10 @@ const LmsCertificateTemplates: React.FC = () => {
                     <Grid container spacing={3}>
                       <Grid item xs={12}>
                         <Alert severity='success'>
-                          Fondo oficial activo: <strong>/images/template.png</strong>. Si mañana
-                          cambian las personas, solo actualizas nombre, cargo o la firma
-                          correspondiente.
+                          Fondo oficial activo:{' '}
+                          <strong>/images/template.png</strong>. Si mañana
+                          cambian las personas, solo actualizas nombre, cargo o
+                          la firma correspondiente.
                         </Alert>
                       </Grid>
 
@@ -1896,7 +2019,8 @@ const LmsCertificateTemplates: React.FC = () => {
                                         type: 'text',
                                         required: false,
                                         defaultValue: 'Daniel Paredes',
-                                        description: 'Nombre que se mostrara bajo la firma izquierda'
+                                        description:
+                                          'Nombre que se mostrara bajo la firma izquierda'
                                       },
                                       event.target.value
                                     )
@@ -1921,7 +2045,8 @@ const LmsCertificateTemplates: React.FC = () => {
                                         type: 'text',
                                         required: false,
                                         defaultValue: 'Instructor',
-                                        description: 'Cargo que se mostrara bajo la firma izquierda'
+                                        description:
+                                          'Cargo que se mostrara bajo la firma izquierda'
                                       },
                                       event.target.value
                                     )
@@ -1976,7 +2101,8 @@ const LmsCertificateTemplates: React.FC = () => {
                                         type: 'text',
                                         required: false,
                                         defaultValue: 'Andres Felipe Espitia',
-                                        description: 'Nombre que se mostrara bajo la firma derecha'
+                                        description:
+                                          'Nombre que se mostrara bajo la firma derecha'
                                       },
                                       event.target.value
                                     )
@@ -2001,7 +2127,8 @@ const LmsCertificateTemplates: React.FC = () => {
                                         type: 'text',
                                         required: false,
                                         defaultValue: 'Director Tecnico',
-                                        description: 'Cargo que se mostrara bajo la firma derecha'
+                                        description:
+                                          'Cargo que se mostrara bajo la firma derecha'
                                       },
                                       event.target.value
                                     )
@@ -2022,8 +2149,8 @@ const LmsCertificateTemplates: React.FC = () => {
           <TabPanel value={tab} index={1}>
             <Alert severity='info' sx={{ mb: 2 }}>
               <AlertTitle>Tokens rápidos</AlertTitle>
-              Inserta variables conocidas sin escribirlas a mano. Usa este paso solo para ajustar
-              el diseño del certificado.
+              Inserta variables conocidas sin escribirlas a mano. Usa este paso
+              solo para ajustar el diseño del certificado.
             </Alert>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
               {CERTIFICATE_HTML_SNIPPETS.map((snippet) => (
@@ -2038,10 +2165,24 @@ const LmsCertificateTemplates: React.FC = () => {
             </Box>
             <Paper
               variant='outlined'
-              sx={{ overflow: 'hidden', borderRadius: 2, borderColor: 'divider' }}
+              sx={{
+                overflow: 'hidden',
+                borderRadius: 2,
+                borderColor: 'divider'
+              }}
             >
-              <Box sx={{ px: 2, py: 1, bgcolor: 'grey.100', borderBottom: '1px solid', borderColor: 'divider' }}>
-                <Typography variant='subtitle2'>HTML del certificado</Typography>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: 'grey.100',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
+                <Typography variant='subtitle2'>
+                  HTML del certificado
+                </Typography>
               </Box>
               <Editor
                 height='560px'
@@ -2050,7 +2191,10 @@ const LmsCertificateTemplates: React.FC = () => {
                 theme='vs-light'
                 value={form.templateHtml}
                 onChange={(value) =>
-                  setForm((current) => ({ ...current, templateHtml: value || '' }))
+                  setForm((current) => ({
+                    ...current,
+                    templateHtml: value || ''
+                  }))
                 }
                 options={{
                   minimap: { enabled: false },
@@ -2070,8 +2214,9 @@ const LmsCertificateTemplates: React.FC = () => {
           <TabPanel value={tab} index={2}>
             <Alert severity='info' sx={{ mb: 2 }}>
               <AlertTitle>CSS del certificado</AlertTitle>
-              Este bloque controla posiciones, tamaños, colores y espaciados. Lo que guardes aqui
-              se usara tanto en la vista previa como en el PDF real.
+              Este bloque controla posiciones, tamaños, colores y espaciados. Lo
+              que guardes aqui se usara tanto en la vista previa como en el PDF
+              real.
             </Alert>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
               <Button
@@ -2089,9 +2234,21 @@ const LmsCertificateTemplates: React.FC = () => {
             </Box>
             <Paper
               variant='outlined'
-              sx={{ overflow: 'hidden', borderRadius: 2, borderColor: 'divider' }}
+              sx={{
+                overflow: 'hidden',
+                borderRadius: 2,
+                borderColor: 'divider'
+              }}
             >
-              <Box sx={{ px: 2, py: 1, bgcolor: 'grey.100', borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: 'grey.100',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
                 <Typography variant='subtitle2'>CSS del certificado</Typography>
               </Box>
               <Editor
@@ -2101,7 +2258,10 @@ const LmsCertificateTemplates: React.FC = () => {
                 theme='vs-light'
                 value={form.templateCss}
                 onChange={(value) =>
-                  setForm((current) => ({ ...current, templateCss: value || '' }))
+                  setForm((current) => ({
+                    ...current,
+                    templateCss: value || ''
+                  }))
                 }
                 options={{
                   minimap: { enabled: false },
@@ -2121,8 +2281,8 @@ const LmsCertificateTemplates: React.FC = () => {
           <TabPanel value={tab} index={3}>
             <Alert severity='info' sx={{ mb: 2 }}>
               <AlertTitle>Variables guiadas</AlertTitle>
-              Usa primero nombres conocidos del sistema para evitar que el certificado quede con
-              campos sin reemplazar.
+              Usa primero nombres conocidos del sistema para evitar que el
+              certificado quede con campos sin reemplazar.
             </Alert>
             <Box
               sx={{
@@ -2133,7 +2293,11 @@ const LmsCertificateTemplates: React.FC = () => {
               }}
             >
               <Typography variant='h6'>Variables dinamicas</Typography>
-              <Button variant='outlined' startIcon={<AddIcon />} onClick={addVariable}>
+              <Button
+                variant='outlined'
+                startIcon={<AddIcon />}
+                onClick={addVariable}
+              >
                 Agregar variable
               </Button>
             </Box>
@@ -2196,7 +2360,11 @@ const LmsCertificateTemplates: React.FC = () => {
                           label='Valor de ejemplo'
                           value={variable.defaultValue || ''}
                           onChange={(event) =>
-                            updateVariable(index, 'defaultValue', event.target.value)
+                            updateVariable(
+                              index,
+                              'defaultValue',
+                              event.target.value
+                            )
                           }
                         />
                       </Grid>
@@ -2206,7 +2374,11 @@ const LmsCertificateTemplates: React.FC = () => {
                             <Switch
                               checked={variable.required}
                               onChange={(event) =>
-                                updateVariable(index, 'required', event.target.checked)
+                                updateVariable(
+                                  index,
+                                  'required',
+                                  event.target.checked
+                                )
                               }
                             />
                           }
@@ -2214,7 +2386,10 @@ const LmsCertificateTemplates: React.FC = () => {
                         />
                       </Grid>
                       <Grid item xs={12} md={0.5}>
-                        <IconButton color='error' onClick={() => removeVariable(index)}>
+                        <IconButton
+                          color='error'
+                          onClick={() => removeVariable(index)}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </Grid>
@@ -2224,7 +2399,11 @@ const LmsCertificateTemplates: React.FC = () => {
                           label='Descripcion'
                           value={variable.description || ''}
                           onChange={(event) =>
-                            updateVariable(index, 'description', event.target.value)
+                            updateVariable(
+                              index,
+                              'description',
+                              event.target.value
+                            )
                           }
                         />
                       </Grid>
@@ -2238,8 +2417,8 @@ const LmsCertificateTemplates: React.FC = () => {
 
           <TabPanel value={tab} index={4}>
             <Alert severity='info' sx={{ mb: 2 }}>
-              La vista previa del editor usa datos de ejemplo locales para que puedas iterar antes
-              de guardar.
+              La vista previa del editor usa datos de ejemplo locales para que
+              puedas iterar antes de guardar.
             </Alert>
             <Paper
               sx={{
@@ -2270,7 +2449,9 @@ const LmsCertificateTemplates: React.FC = () => {
           <Button
             variant='contained'
             onClick={handleSave}
-            disabled={!form.name.trim() || !form.templateHtml.trim() || isSaving}
+            disabled={
+              !form.name.trim() || !form.templateHtml.trim() || isSaving
+            }
           >
             {editingTemplate ? 'Guardar cambios' : 'Crear plantilla'}
           </Button>
@@ -2283,7 +2464,9 @@ const LmsCertificateTemplates: React.FC = () => {
         fullWidth
         maxWidth='lg'
       >
-        <DialogTitle>{previewTemplate?.name || 'Vista previa de plantilla'}</DialogTitle>
+        <DialogTitle>
+          {previewTemplate?.name || 'Vista previa de plantilla'}
+        </DialogTitle>
         <DialogContent>
           <Alert severity='info' sx={{ mb: 2 }}>
             Vista previa con datos de ejemplo.
@@ -2299,7 +2482,9 @@ const LmsCertificateTemplates: React.FC = () => {
             }}
           >
             {isPreviewLoading ? (
-              <Typography color='text.secondary'>Generando vista previa...</Typography>
+              <Typography color='text.secondary'>
+                Generando vista previa...
+              </Typography>
             ) : (
               <Box
                 component='iframe'
@@ -2330,8 +2515,8 @@ const LmsCertificateTemplates: React.FC = () => {
         <DialogTitle>Eliminar plantilla</DialogTitle>
         <DialogContent>
           <Alert severity='warning' sx={{ mt: 1 }}>
-            Vas a eliminar la plantilla "{templateToDelete?.name}". Esta acción no se puede
-            deshacer.
+            Vas a eliminar la plantilla "{templateToDelete?.name}". Esta acción
+            no se puede deshacer.
           </Alert>
         </DialogContent>
         <DialogActions>

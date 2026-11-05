@@ -24,7 +24,10 @@ afterEach(() => {
 describe('api()', () => {
   it('en producción (dominio real) usa la API de producción', async () => {
     expect(
-      await loadApi({ ...base, VITE_ENV: 'production' }, 'app.metromedicslab.com')
+      await loadApi(
+        { ...base, VITE_ENV: 'production' },
+        'app.metromedicslab.com'
+      )
     ).toBe('https://api.metromedicslab.com')
   })
 

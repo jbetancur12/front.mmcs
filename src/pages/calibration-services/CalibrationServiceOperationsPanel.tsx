@@ -49,7 +49,9 @@ const getOperationsSummary = (
   otherFields: Record<string, unknown> | undefined
 ): CalibrationServiceOperationsSummary => {
   const operations = otherFields?.operations
-  return operations && typeof operations === 'object' && !Array.isArray(operations)
+  return operations &&
+    typeof operations === 'object' &&
+    !Array.isArray(operations)
     ? (operations as CalibrationServiceOperationsSummary)
     : {}
 }
@@ -99,28 +101,41 @@ const getExecutedQuantity = (
       ? effectiveQuantity
       : 0
 
-  return Math.min(Math.max(recorded, getReleasedQuantity(item)), effectiveQuantity)
+  return Math.min(
+    Math.max(recorded, getReleasedQuantity(item)),
+    effectiveQuantity
+  )
 }
 
 const getEffectiveQuantity = (
   service: CalibrationService,
   item: CalibrationServiceOperationalItem
 ) => {
-  const approvedDelta = (service.adjustments || []).reduce((accumulator, adjustment) => {
-    if (adjustment.serviceItemId !== item.id) {
-      return accumulator
-    }
+  const approvedDelta = (service.adjustments || []).reduce(
+    (accumulator, adjustment) => {
+      if (adjustment.serviceItemId !== item.id) {
+        return accumulator
+      }
 
-    if (!['approved', 'applied_to_cut', 'customer_approved', 'tacitly_accepted'].includes(adjustment.status)) {
-      return accumulator
-    }
+      if (
+        ![
+          'approved',
+          'applied_to_cut',
+          'customer_approved',
+          'tacitly_accepted'
+        ].includes(adjustment.status)
+      ) {
+        return accumulator
+      }
 
-    if (adjustment.changeType === 'extra_item') {
-      return accumulator
-    }
+      if (adjustment.changeType === 'extra_item') {
+        return accumulator
+      }
 
-    return accumulator + (adjustment.differenceQuantity || 0)
-  }, 0)
+      return accumulator + (adjustment.differenceQuantity || 0)
+    },
+    0
+  )
 
   return Math.max((item.quantity || 0) + approvedDelta, 0)
 }
@@ -167,7 +182,10 @@ const CalibrationServiceOperationsPanel = ({
   // Si el cliente firmó por enlace, esa firma queda bloqueada en la plataforma.
   const isSignedByRemoteLink =
     Boolean(initialDeliverySignatureData) &&
-    Boolean((service.otherFields?.remoteSignature as { usedAt?: string } | undefined)?.usedAt)
+    Boolean(
+      (service.otherFields?.remoteSignature as { usedAt?: string } | undefined)
+        ?.usedAt
+    )
   const hasDeliveryChanged =
     deliveryName !== (initialDeliveryName ?? '') ||
     deliveryRole !== (initialDeliveryRole ?? '') ||
@@ -175,9 +193,11 @@ const CalibrationServiceOperationsPanel = ({
   const pendingFormalAdjustments = (service.adjustments || []).filter(
     (adjustment) =>
       adjustment.requiresCommercialAdjustment &&
-      ['reported', 'pending_customer_approval', 'customer_changes_requested'].includes(
-        adjustment.status
-      )
+      [
+        'reported',
+        'pending_customer_approval',
+        'customer_changes_requested'
+      ].includes(adjustment.status)
   )
   const [draftItems, setDraftItems] = useState<
     CalibrationServiceItemProgressEntryPayload[]
@@ -185,25 +205,25 @@ const CalibrationServiceOperationsPanel = ({
 
   const buildSavedItems = (): CalibrationServiceItemProgressEntryPayload[] =>
     (service.items || []).map((item) => ({
-        itemId: item.id,
-        operationalStatus: getItemStatus(item),
-        technicalNotes: getItemText(item, 'technicalNotes'),
-        executedQuantity: getExecutedQuantity(
-          item,
-          getEffectiveQuantity(service, item)
-        ),
-        scheduledFor:
-          typeof item.otherFields?.scheduledFor === 'string'
-            ? item.otherFields.scheduledFor.slice(0, 10)
-            : null,
-        startedAt:
-          typeof item.otherFields?.startedAt === 'string'
-            ? item.otherFields.startedAt
-            : null,
-        completedAt:
-          typeof item.otherFields?.completedAt === 'string'
-            ? item.otherFields.completedAt
-            : null
+      itemId: item.id,
+      operationalStatus: getItemStatus(item),
+      technicalNotes: getItemText(item, 'technicalNotes'),
+      executedQuantity: getExecutedQuantity(
+        item,
+        getEffectiveQuantity(service, item)
+      ),
+      scheduledFor:
+        typeof item.otherFields?.scheduledFor === 'string'
+          ? item.otherFields.scheduledFor.slice(0, 10)
+          : null,
+      startedAt:
+        typeof item.otherFields?.startedAt === 'string'
+          ? item.otherFields.startedAt
+          : null,
+      completedAt:
+        typeof item.otherFields?.completedAt === 'string'
+          ? item.otherFields.completedAt
+          : null
     }))
 
   useEffect(() => {
@@ -215,10 +235,7 @@ const CalibrationServiceOperationsPanel = ({
     JSON.stringify(draftItems) !== JSON.stringify(buildSavedItems())
 
   const handleItemChange =
-    (
-      itemId: number,
-      field: keyof CalibrationServiceItemProgressEntryPayload
-    ) =>
+    (itemId: number, field: keyof CalibrationServiceItemProgressEntryPayload) =>
     (event: ChangeEvent<HTMLInputElement>) => {
       setDraftItems((currentItems) =>
         currentItems.map((item) =>
@@ -287,42 +304,55 @@ const CalibrationServiceOperationsPanel = ({
     <Stack spacing={3}>
       {pendingFormalAdjustments.length ? (
         <Alert severity='info'>
-          Hay {pendingFormalAdjustments.length} novedad(es) pendientes de validación
-          comercial o cliente. En operación puedes registrar lo ocurrido técnicamente,
-          pero el servicio formal solo cambia cuando esas novedades queden aprobadas.
+          Hay {pendingFormalAdjustments.length} novedad(es) pendientes de
+          validación comercial o cliente. En operación puedes registrar lo
+          ocurrido técnicamente, pero el servicio formal solo cambia cuando esas
+          novedades queden aprobadas.
         </Alert>
       ) : null}
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
-          <DetailField label='Metrólogos asignados'>{(() => {
+          <DetailField label='Metrólogos asignados'>
+            {(() => {
               const metrologists = operations.assignedMetrologists
               if (Array.isArray(metrologists) && metrologists.length > 0) {
                 return metrologists.map((m) => m.name).join(', ')
               }
               return operations.assignedMetrologistName || 'Sin asignar'
-            })()}</DetailField>
+            })()}
+          </DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <DetailField label='Fecha compromiso'>{operations.commitmentDate
+          <DetailField label='Fecha compromiso'>
+            {operations.commitmentDate
               ? new Date(operations.commitmentDate).toLocaleDateString('es-CO')
-              : 'Sin registrar'}</DetailField>
+              : 'Sin registrar'}
+          </DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <DetailField label='Fecha programada'>{operations.scheduledDate
+          <DetailField label='Fecha programada'>
+            {operations.scheduledDate
               ? new Date(operations.scheduledDate).toLocaleDateString('es-CO')
-              : 'Sin registrar'}</DetailField>
+              : 'Sin registrar'}
+          </DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <DetailField label='Responsable operativo'>{operations.operationalResponsibleName || 'Sin registrar'}</DetailField>
+          <DetailField label='Responsable operativo'>
+            {operations.operationalResponsibleName || 'Sin registrar'}
+          </DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <DetailField label='Rol del responsable'>{operations.operationalResponsibleRole || 'Sin registrar'}</DetailField>
+          <DetailField label='Rol del responsable'>
+            {operations.operationalResponsibleRole || 'Sin registrar'}
+          </DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <DetailField label='Inicio de ejecución'>{operations.startedAt
+          <DetailField label='Inicio de ejecución'>
+            {operations.startedAt
               ? new Date(operations.startedAt).toLocaleString('es-CO')
-              : 'Pendiente'}</DetailField>
+              : 'Pendiente'}
+          </DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
           <Typography variant='caption' color='text.secondary'>
@@ -334,12 +364,16 @@ const CalibrationServiceOperationsPanel = ({
         </Grid>
         {operations.programmingNotes ? (
           <Grid item xs={12}>
-            <DetailField label='Notas de programación'>{operations.programmingNotes}</DetailField>
+            <DetailField label='Notas de programación'>
+              {operations.programmingNotes}
+            </DetailField>
           </Grid>
         ) : null}
         {operations.executionNotes ? (
           <Grid item xs={12}>
-            <DetailField label='Notas de ejecución'>{operations.executionNotes}</DetailField>
+            <DetailField label='Notas de ejecución'>
+              {operations.executionNotes}
+            </DetailField>
           </Grid>
         ) : null}
       </Grid>
@@ -362,8 +396,8 @@ const CalibrationServiceOperationsPanel = ({
                 (programado, en proceso o completado).
               </Typography>
               <Typography variant='caption' component='div'>
-                2. En <strong>Ejecutado</strong> escribe cuántas unidades ya
-                se hicieron. Al marcar Completado se llena con el total.
+                2. En <strong>Ejecutado</strong> escribe cuántas unidades ya se
+                hicieron. Al marcar Completado se llena con el total.
               </Typography>
               <Typography variant='caption' component='div'>
                 3. Agrega las <strong>Notas técnicas</strong> si hace falta.
@@ -372,9 +406,9 @@ const CalibrationServiceOperationsPanel = ({
               <Typography variant='caption' component='div'>
                 4. Pulsa <strong>Generar anexo de avance técnico</strong> para
                 descargar el PDF con lo ofertado, lo ejecutado y lo pendiente.
-                Si hay cambios sin guardar, se guardan automáticamente antes
-                de generarlo. Queda en los documentos del servicio como
-                soporte para el cliente.
+                Si hay cambios sin guardar, se guardan automáticamente antes de
+                generarlo. Queda en los documentos del servicio como soporte
+                para el cliente.
               </Typography>
               <Typography variant='caption' component='div' sx={{ mt: 0.5 }}>
                 «Liberado a corte» es lo ya incluido en cortes.
@@ -389,7 +423,14 @@ const CalibrationServiceOperationsPanel = ({
       </Stack>
 
       {service.items?.length ? (
-        <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+        <Box
+          sx={{
+            overflowX: 'auto',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2
+          }}
+        >
           <Table size='small'>
             <TableHead sx={{ bgcolor: '#f5f5f5', '& th': { fontWeight: 600 } }}>
               <TableRow>
@@ -409,10 +450,7 @@ const CalibrationServiceOperationsPanel = ({
                 const releasedQuantity = getReleasedQuantity(item)
                 const effectiveQuantity = getEffectiveQuantity(service, item)
                 const executedQuantity = Math.max(
-                  Math.min(
-                    draftItem?.executedQuantity ?? 0,
-                    effectiveQuantity
-                  ),
+                  Math.min(draftItem?.executedQuantity ?? 0, effectiveQuantity),
                   releasedQuantity
                 )
                 const pendingQuantity = Math.max(
@@ -485,13 +523,18 @@ const CalibrationServiceOperationsPanel = ({
                           fullWidth
                           size='small'
                           value={draftItem?.operationalStatus || 'pending'}
-                          onChange={handleStatusChange(item.id, effectiveQuantity)}
+                          onChange={handleStatusChange(
+                            item.id,
+                            effectiveQuantity
+                          )}
                         >
                           {OPERATIONAL_STATUS_OPTIONS.map((statusOption) => (
                             <MenuItem key={statusOption} value={statusOption}>
-                              {CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[
-                                statusOption
-                              ]}
+                              {
+                                CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[
+                                  statusOption
+                                ]
+                              }
                             </MenuItem>
                           ))}
                         </TextField>
@@ -523,18 +566,32 @@ const CalibrationServiceOperationsPanel = ({
           </Table>
         </Box>
       ) : (
-        <Alert severity='info'>Aún no hay ítems para gestionar operativamente.</Alert>
+        <Alert severity='info'>
+          Aún no hay ítems para gestionar operativamente.
+        </Alert>
       )}
 
       {canEditProgress || onGenerateProgressPdf ? (
-        <Stack direction='row' spacing={1} justifyContent='flex-end' useFlexGap flexWrap='wrap'>
+        <Stack
+          direction='row'
+          spacing={1}
+          justifyContent='flex-end'
+          useFlexGap
+          flexWrap='wrap'
+        >
           {onGenerateProgressPdf && service.items?.length ? (
             <Button
               variant='outlined'
               startIcon={<PictureAsPdfIcon />}
               onClick={() => void handleGeneratePdf()}
               disabled={isGeneratingProgressPdf || isBusy}
-              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               Generar anexo de avance técnico
             </Button>
@@ -545,7 +602,12 @@ const CalibrationServiceOperationsPanel = ({
               onClick={() => void handleSave()}
               disabled={isBusy}
               disableElevation
-              sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#00ACC1' } }}
+              sx={{
+                bgcolor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
             >
               Guardar avance técnico
             </Button>
@@ -571,8 +633,9 @@ const CalibrationServiceOperationsPanel = ({
         <AccordionDetails>
           <Stack spacing={2}>
             <Typography variant='caption' color='text.secondary'>
-              Datos de la persona que recibe el servicio a satisfacción. Aparecen
-              en la Orden de Servicio (ODS) como constancia de recibido.
+              Datos de la persona que recibe el servicio a satisfacción.
+              Aparecen en la Orden de Servicio (ODS) como constancia de
+              recibido.
             </Typography>
             <CalibrationServiceRemoteSignatureLink
               serviceId={service.id}
@@ -609,7 +672,13 @@ const CalibrationServiceOperationsPanel = ({
               height={160}
               helperText='Firma de recepción conforme del servicio.'
             />
-            <Stack direction='row' spacing={1} justifyContent='flex-end' useFlexGap flexWrap='wrap'>
+            <Stack
+              direction='row'
+              spacing={1}
+              justifyContent='flex-end'
+              useFlexGap
+              flexWrap='wrap'
+            >
               <Button
                 size='small'
                 variant='outlined'

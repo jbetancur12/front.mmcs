@@ -51,7 +51,6 @@ const InspectionsTable = () => {
     useState<InspectionHistory | null>(null)
   const [openModal, setOpenModal] = useState<boolean>(false)
 
-
   const columns = useMemo<MRT_ColumnDef<InspectionHistory>[]>(
     () => [
       { accessorKey: 'id', header: 'ID', size: 50 },
@@ -123,7 +122,12 @@ const InspectionsTable = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/fleet')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver a flota
       </Button>
@@ -138,28 +142,28 @@ const InspectionsTable = () => {
       ) : (
         <>
           <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <MaterialReactTable
-            {...purchaseTableStyle}
-            columns={columns}
-            data={inspections}
-            enableColumnOrdering
-            enableSorting
-            enablePagination={false}
-            enableColumnFilters={false}
-            enableEditing={true}
-            initialState={{ columnVisibility: { id: false } }} // Oculta columnas no deseadas
-            renderRowActions={({ row }) => (
-              <Box sx={{ display: 'flex', gap: '1rem' }}>
-                <Tooltip arrow placement='right' title='Ver'>
-                  <IconButton
-                    onClick={() => handleInpectionVisibility(row.original)}
-                  >
-                    <Visibility />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            )}
-          />
+            <MaterialReactTable
+              {...purchaseTableStyle}
+              columns={columns}
+              data={inspections}
+              enableColumnOrdering
+              enableSorting
+              enablePagination={false}
+              enableColumnFilters={false}
+              enableEditing={true}
+              initialState={{ columnVisibility: { id: false } }} // Oculta columnas no deseadas
+              renderRowActions={({ row }) => (
+                <Box sx={{ display: 'flex', gap: '1rem' }}>
+                  <Tooltip arrow placement='right' title='Ver'>
+                    <IconButton
+                      onClick={() => handleInpectionVisibility(row.original)}
+                    >
+                      <Visibility />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
+            />
           </Paper>
           <Modal open={openModal} onClose={() => setOpenModal(false)}>
             <Box

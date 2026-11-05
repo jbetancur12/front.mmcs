@@ -95,7 +95,9 @@ const getNotificationContextLabel = (notification: Notification) => {
 
   switch (type) {
     case 'course_assigned':
-      return notification.metadata?.isMandatory ? 'Curso obligatorio asignado' : 'Curso asignado'
+      return notification.metadata?.isMandatory
+        ? 'Curso obligatorio asignado'
+        : 'Curso asignado'
     case 'mandatory_reminder':
       return 'Recordatorio obligatorio'
     case 'deadline_reminder':
@@ -116,7 +118,9 @@ const getNotificationDisplayTitle = (notification: Notification) => {
 
   switch (type) {
     case 'course_assigned':
-      return notification.metadata?.isMandatory ? 'Nuevo curso obligatorio' : 'Nuevo curso disponible'
+      return notification.metadata?.isMandatory
+        ? 'Nuevo curso obligatorio'
+        : 'Nuevo curso disponible'
     case 'mandatory_reminder':
       return 'Recordatorio de curso obligatorio'
     case 'deadline_reminder':
@@ -170,7 +174,9 @@ const getNotificationDisplayMessage = (notification: Notification) => {
 const formatTimestamp = (timestamp: Notification['timestamp']) => {
   const date = new Date(timestamp)
   const now = new Date()
-  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+  const diffInHours = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+  )
 
   if (diffInHours < 1) {
     return 'Hace unos minutos'
@@ -220,8 +226,11 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
 
   const navigate = useNavigate()
   const [openDialog, setOpenDialog] = useState(false)
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
-  const [filter, setFilter] = useState<'all' | 'unread' | 'actionRequired'>('all')
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null)
+  const [filter, setFilter] = useState<'all' | 'unread' | 'actionRequired'>(
+    'all'
+  )
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
   const { data, isLoading, error } = useNotifications({
@@ -234,14 +243,17 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
   })
   const markAllAsReadMutation = useMarkAllNotificationsAsRead({
     onSuccess: () => {
-      setFeedbackMessage('Se actualizó tu bandeja y ya no quedan avisos sin leer.')
+      setFeedbackMessage(
+        'Se actualizó tu bandeja y ya no quedan avisos sin leer.'
+      )
     }
   })
 
   const notifications = data?.notifications || []
 
   const unreadCount = Number(
-    data?.summary?.unread ?? notifications.filter((notification) => !notification.read).length
+    data?.summary?.unread ??
+      notifications.filter((notification) => !notification.read).length
   )
   const actionRequiredCount = notifications.filter(
     (notification) => hasNotificationAction(notification) && !notification.read
@@ -250,26 +262,31 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
   const filteredNotifications = useMemo(() => {
     return notifications
       .filter((notification) => {
-      switch (filter) {
-        case 'unread':
-          return !notification.read
-        case 'actionRequired':
-          return hasNotificationAction(notification) && !notification.read
-        default:
-          return true
-      }
+        switch (filter) {
+          case 'unread':
+            return !notification.read
+          case 'actionRequired':
+            return hasNotificationAction(notification) && !notification.read
+          default:
+            return true
+        }
       })
       .sort((left, right) => {
         const leftPriority =
-          (hasNotificationAction(left) && !left.read ? 2 : 0) + (!left.read ? 1 : 0)
+          (hasNotificationAction(left) && !left.read ? 2 : 0) +
+          (!left.read ? 1 : 0)
         const rightPriority =
-          (hasNotificationAction(right) && !right.read ? 2 : 0) + (!right.read ? 1 : 0)
+          (hasNotificationAction(right) && !right.read ? 2 : 0) +
+          (!right.read ? 1 : 0)
 
         if (leftPriority !== rightPriority) {
           return rightPriority - leftPriority
         }
 
-        return new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime()
+        return (
+          new Date(right.timestamp).getTime() -
+          new Date(left.timestamp).getTime()
+        )
       })
   }, [filter, notifications])
 
@@ -347,7 +364,9 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                   value={filter}
                   label='Filtrar'
                   onChange={(event) =>
-                    setFilter(event.target.value as 'all' | 'unread' | 'actionRequired')
+                    setFilter(
+                      event.target.value as 'all' | 'unread' | 'actionRequired'
+                    )
                   }
                 >
                   <MenuItem value='all'>Todas</MenuItem>
@@ -379,7 +398,10 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                 </Alert>
               ) : null}
               {unreadCount > 0 && (
-                <Alert severity={actionRequiredCount > 0 ? 'warning' : 'info'} sx={{ mb: 2 }}>
+                <Alert
+                  severity={actionRequiredCount > 0 ? 'warning' : 'info'}
+                  sx={{ mb: 2 }}
+                >
                   Tienes {unreadCount} aviso(s) sin leer.
                 </Alert>
               )}
@@ -397,7 +419,9 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
             </Box>
           ) : filteredNotifications.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}>
-              <NotificationsIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+              <NotificationsIcon
+                sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }}
+              />
               <Typography variant='h6' color='text.secondary'>
                 No hay notificaciones
               </Typography>
@@ -413,18 +437,29 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                     button
                     onClick={() => handleNotificationClick(notification)}
                     sx={{
-                      backgroundColor: notification.read ? 'transparent' : 'action.hover',
+                      backgroundColor: notification.read
+                        ? 'transparent'
+                        : 'action.hover',
                       '&:hover': {
                         backgroundColor: 'action.selected'
                       }
                     }}
                   >
-                    <ListItemIcon>{getNotificationIcon(notification)}</ListItemIcon>
+                    <ListItemIcon>
+                      {getNotificationIcon(notification)}
+                    </ListItemIcon>
                     <ListItemText
                       primaryTypographyProps={{ component: 'div' }}
                       secondaryTypographyProps={{ component: 'div' }}
                       primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            flexWrap: 'wrap'
+                          }}
+                        >
                           <Typography
                             variant='body1'
                             fontWeight={notification.read ? 'normal' : 'bold'}
@@ -446,10 +481,16 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                           <Typography variant='body2' color='text.secondary'>
                             {getNotificationDisplayMessage(notification)}
                           </Typography>
-                          <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            sx={{ display: 'block' }}
+                          >
                             {notification.metadata?.courseTitle ||
                               notification.metadata?.certificateNumber ||
-                              (notification.metadata?.isMandatory ? 'Capacitación obligatoria' : null) ||
+                              (notification.metadata?.isMandatory
+                                ? 'Capacitación obligatoria'
+                                : null) ||
                               'Notificación del LMS'}
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
@@ -481,11 +522,23 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
         </CardContent>
       </Card>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth='sm' fullWidth>
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        maxWidth='sm'
+        fullWidth
+      >
         {selectedNotification && (
           <>
             <DialogTitle>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  flexWrap: 'wrap'
+                }}
+              >
                 {getNotificationIcon(selectedNotification)}
                 <Typography variant='h6'>
                   {getNotificationDisplayTitle(selectedNotification)}
@@ -529,7 +582,8 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
 
               {hasNotificationAction(selectedNotification) && (
                 <Alert severity='info' sx={{ mt: 2 }}>
-                  Esta notificación te puede devolver al punto correcto del LMS para continuar.
+                  Esta notificación te puede devolver al punto correcto del LMS
+                  para continuar.
                 </Alert>
               )}
             </DialogContent>

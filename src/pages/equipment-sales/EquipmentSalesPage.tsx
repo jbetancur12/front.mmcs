@@ -185,7 +185,11 @@ const EquipmentSalesPage = () => {
   }
 
   const handleSend = async (quotation: EquipmentQuotation) => {
-    const result = await confirmDialog({ title: `¿Marcar la cotización ${quotation.quoteCode} como enviada al cliente?`, confirmLabel: 'Sí, marcar como enviada', cancelLabel: 'Cancelar' })
+    const result = await confirmDialog({
+      title: `¿Marcar la cotización ${quotation.quoteCode} como enviada al cliente?`,
+      confirmLabel: 'Sí, marcar como enviada',
+      cancelLabel: 'Cancelar'
+    })
     if (!result.isConfirmed) return
     try {
       await mutations.requestApproval.mutateAsync(quotation.id)
@@ -319,7 +323,6 @@ const EquipmentSalesPage = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-
       <LmsPageHeader
         title='Cotizaciones de venta de equipos'
         subtitle='Sigue cada cotización desde el borrador hasta la factura.'

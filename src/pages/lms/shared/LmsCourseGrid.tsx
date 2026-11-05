@@ -24,10 +24,16 @@ export type CourseTone = {
 }
 
 /** Color e icono de la portada según el estado del curso. */
-export const getCourseTone = (course: { progress?: number; has_certificate?: boolean }): CourseTone => {
-  if (course.progress === 100) return { color: 'success', icon: <CheckCircleIcon /> }
-  if ((course.progress || 0) > 0) return { color: 'primary', icon: <BookOpenIcon /> }
-  if (course.has_certificate) return { color: 'secondary', icon: <PremiumIcon /> }
+export const getCourseTone = (course: {
+  progress?: number
+  has_certificate?: boolean
+}): CourseTone => {
+  if (course.progress === 100)
+    return { color: 'success', icon: <CheckCircleIcon /> }
+  if ((course.progress || 0) > 0)
+    return { color: 'primary', icon: <BookOpenIcon /> }
+  if (course.has_certificate)
+    return { color: 'secondary', icon: <PremiumIcon /> }
   return { color: 'secondary', icon: <StoriesIcon /> }
 }
 
@@ -82,7 +88,12 @@ const LmsCourseGrid: React.FC<LmsCourseGridProps> = ({ courses, onOpen }) => (
               {React.cloneElement(tone.icon, { sx: { fontSize: 38 } })}
               {done && <Chip size='small' color='success' label='Completado' />}
               {!done && course.has_certificate && (
-                <Chip size='small' variant='outlined' color={tone.color} label='Con certificado' />
+                <Chip
+                  size='small'
+                  variant='outlined'
+                  color={tone.color}
+                  label='Con certificado'
+                />
               )}
             </Box>
             <CardContent sx={{ flex: 1, pb: 1 }}>
@@ -100,7 +111,11 @@ const LmsCourseGrid: React.FC<LmsCourseGridProps> = ({ courses, onOpen }) => (
               >
                 {course.title}
               </Typography>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.75 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mt: 0.75 }}
+              >
                 {course.completedLessons}/{course.totalLessons} lecciones
               </Typography>
               {started ? (
@@ -110,7 +125,11 @@ const LmsCourseGrid: React.FC<LmsCourseGridProps> = ({ courses, onOpen }) => (
                     value={course.progress}
                     sx={{ height: 8, borderRadius: 4 }}
                   />
-                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ display: 'block', mt: 0.5 }}
+                  >
                     {course.progress}% completado
                   </Typography>
                 </Box>
