@@ -219,8 +219,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     // Extract courses array from response
     const courses = coursesData
     const allAssignments = [
-      ...(userAssignments?.mandatory || []),
-      ...(userAssignments?.optional || [])
+      ...(userAssignments?.assignments?.mandatory || []),
+      ...(userAssignments?.assignments?.optional || [])
     ]
     const certificatesByCourseId = new Map(
       userCertificates.map((certificate: Certificate) => [certificate.course_id, certificate])

@@ -31,6 +31,42 @@ import type {
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+
+/**
+ * Opciones extra de una consulta. Se escriben a mano (en vez de
+ * `UseQueryOptions`) porque react-query tipa `refetchInterval` y `refetchOn*`
+ * con el tipo literal de la query key de cada hook, y aquí no se conoce.
+ */
+type QueryOptionsOf<F extends (...args: never[]) => Promise<unknown>> = {
+  enabled?: boolean
+  staleTime?: number
+  cacheTime?: number
+  retry?: boolean | number
+  retryDelay?: number
+  keepPreviousData?: boolean
+  refetchInterval?: number | false
+  refetchOnMount?: boolean | 'always'
+  refetchOnWindowFocus?: boolean | 'always'
+  refetchOnReconnect?: boolean | 'always'
+  onSuccess?: (data: Awaited<ReturnType<F>>) => void
+  onError?: (error: unknown) => void
+}
+
+/** Opciones extra de una mutación, tipadas con lo que devuelve el servicio. */
+type MutationOptionsOf<
+  F extends (...args: never[]) => Promise<unknown>,
+  Variables
+> = UseMutationOptions<Awaited<ReturnType<F>>, Error, Variables>
+
+type CompletionMutationData =
+  | Awaited<ReturnType<typeof lmsService.bulkSetCourseCompletionDates>>
+  | Awaited<ReturnType<typeof lmsService.setCourseCompletionDate>>
+
+type AssignmentDatesMutationData =
+  | Awaited<ReturnType<typeof lmsService.clearUserAssignmentDates>>
+  | Awaited<ReturnType<typeof lmsService.updateAssignmentDates>>
+  | Awaited<ReturnType<typeof lmsService.setUserAssignmentDates>>
+
 // ===========================
 // Course Hooks
 // ===========================
@@ -40,7 +76,7 @@ import { logger } from 'src/utils/logger'
  */
 export const useCourses = (
   params?: CourseQueryParams,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCourses>
 ) => {
   return useQuery(
     queryKeys.courses.list(params),
@@ -56,7 +92,7 @@ export const useCourses = (
  * Get available courses for current user
  */
 export const useAvailableCourses = (
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getAvailableCourses>
 ) => {
   const $userStore = useStore(userStore)
   const scopeKey = `${$userStore.email || 'anonymous'}-${$userStore.customer?.id || 'internal'}-${$userStore.userType || 'unknown'}`
@@ -76,7 +112,7 @@ export const useAvailableCourses = (
  * Get current user's LMS permissions and user type context
  */
 export const useLmsPermissions = (
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getMyPermissions>
 ) => {
   return useQuery<LmsPermissions>(
     queryKeys.lms.permissions(),
@@ -93,7 +129,7 @@ export const useLmsPermissions = (
  */
 export const useCourse = (
   id: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCourse>
 ) => {
   return useQuery(
     queryKeys.courses.detail(id),
@@ -111,7 +147,7 @@ export const useCourse = (
  */
 export const useCoursePreview = (
   id: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCoursePreview>
 ) => {
   return useQuery(
     queryKeys.courses.preview(id),
@@ -129,7 +165,7 @@ export const useCoursePreview = (
  */
 export const useCourseStats = (
   id: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCourseStats>
 ) => {
   return useQuery(
     queryKeys.courses.stats(id),
@@ -330,7 +366,7 @@ export const useDuplicateCourse = (
  */
 export const useUserProgress = (
   userId?: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getUserProgress>
 ) => {
   return useQuery<OverallUserProgressResponse>(
     queryKeys.progress.user(userId),
@@ -348,7 +384,7 @@ export const useUserProgress = (
 export const useCourseProgress = (
   courseId: number,
   userId?: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCourseProgress>
 ) => {
   return useQuery<CourseProgressResponse>(
     queryKeys.progress.course(courseId, userId),
@@ -432,7 +468,7 @@ export const useCompleteLesson = (
  */
 export const useQuiz = (
   id: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getQuiz>
 ) => {
   return useQuery(
     queryKeys.quizzes.detail(id),
@@ -564,7 +600,7 @@ export const useSubmitQuiz = (
 export const useQuizAttempts = (
   quizId: number,
   userId?: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getQuizAttempts>
 ) => {
   return useQuery(
     queryKeys.quizzes.attempts(quizId, userId),
@@ -586,7 +622,7 @@ export const useQuizAttempts = (
  */
 export const useUserCertificates = (
   userId?: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getUserCertificates>
 ) => {
   return useQuery(
     queryKeys.certificates.user(userId),
@@ -603,7 +639,7 @@ export const useUserCertificates = (
  */
 export const useCertificate = (
   id: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCertificate>
 ) => {
   return useQuery(
     queryKeys.certificates.detail(id),
@@ -680,7 +716,7 @@ export const useDownloadCertificate = (
   )
 }
 
-export const useCertificateTemplates = (options?: any) => {
+export const useCertificateTemplates = (options?: QueryOptionsOf<typeof lmsService.getCertificateTemplates>) => {
   return useQuery(
     queryKeys.certificates.templates(),
     () => lmsService.getCertificateTemplates(),
@@ -765,7 +801,7 @@ export const useDeleteCertificateTemplate = (
 
 export const usePreviewCertificateTemplate = (
   id?: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.previewCertificateTemplate>
 ) => {
   return useQuery<CertificateTemplatePreviewResponse>(
     queryKeys.certificates.templatePreview(id || 0),
@@ -787,7 +823,7 @@ export const usePreviewCertificateTemplate = (
  */
 export const useCourseAssignments = (
   courseId: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCourseAssignments>
 ) => {
   return useQuery(
     queryKeys.assignments.course(courseId),
@@ -805,7 +841,7 @@ export const useCourseAssignments = (
  */
 export const useUserAssignments = (
   userId?: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getUserAssignments>
 ) => {
   return useQuery(
     queryKeys.assignments.user(userId),
@@ -915,7 +951,7 @@ export const useDeleteAssignment = (
  */
 export const useLmsAnalytics = (
   params?: { startDate?: string; endDate?: string },
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getAnalytics>
 ) => {
   return useQuery(
     queryKeys.analytics.dashboard(params),
@@ -937,7 +973,7 @@ export const useComprehensiveDashboard = (
     userType?: string;
     courseStatus?: string;
   },
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getComprehensiveDashboard>
 ) => {
   return useQuery(
     ['analytics', 'comprehensive-dashboard', params],
@@ -961,7 +997,7 @@ export const useQuizPerformanceAnalytics = (
     endDate?: string;
     includeQuestionAnalysis?: boolean;
   },
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getQuizPerformanceAnalytics>
 ) => {
   return useQuery(
     ['analytics', 'quiz-performance', params],
@@ -984,7 +1020,7 @@ export const useMandatoryTrainingAnalytics = (
     endDate?: string;
     includeEscalation?: boolean;
   },
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getMandatoryTrainingAnalytics>
 ) => {
   return useQuery(
     ['analytics', 'mandatory-training-analytics', params],
@@ -1001,7 +1037,10 @@ export const useMandatoryTrainingAnalytics = (
  * Trigger manual reminders
  */
 export const useTriggerManualReminders = (
-  options?: UseMutationOptions<any, Error, { assignmentIds: number[]; customMessage?: string }>
+  options?: MutationOptionsOf<
+    typeof lmsService.triggerManualReminders,
+    { assignmentIds: number[]; customMessage?: string }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -1036,7 +1075,7 @@ export const useTriggerManualReminders = (
  */
 export const useSetCourseCompletionDate = (
   options?: UseMutationOptions<
-    any,
+    CompletionMutationData,
     Error,
     { completedAt: string; userId?: number; courseId?: number; items?: Array<{ userId: number; courseId: number }> }
   >
@@ -1063,7 +1102,7 @@ export const useSetCourseCompletionDate = (
  */
 export const useSetUserAssignmentDates = (
   options?: UseMutationOptions<
-    any,
+    AssignmentDatesMutationData,
     Error,
     {
       scope: 'user' | 'clear' | 'group' | 'group-clear'
@@ -1116,7 +1155,10 @@ export const useSetUserAssignmentDates = (
  * Reset a user's progress for a course (admin). Certificates are preserved.
  */
 export const useResetUserCourseProgress = (
-  options?: UseMutationOptions<any, Error, { userId: number; courseId: number }>
+  options?: MutationOptionsOf<
+    typeof lmsService.resetUserCourseProgress,
+    { userId: number; courseId: number }
+  >
 ) => {
   const queryClient = useQueryClient()
 
@@ -1146,7 +1188,7 @@ export const useAssignmentManagementAnalytics = (
     endDate?: string;
     includeOverdue?: boolean;
   },
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getAssignmentManagementAnalytics>
 ) => {
   return useQuery(
     ['analytics', 'assignment-management', params],
@@ -1169,7 +1211,7 @@ export const useMandatoryTrainingStatus = (
     sortBy?: string;
     sortOrder?: string;
   },
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getMandatoryTrainingStatus>
 ) => {
   return useQuery(
     ['analytics', 'mandatory-training', params],
@@ -1186,7 +1228,7 @@ export const useMandatoryTrainingStatus = (
  */
 export const useCourseAnalytics = (
   courseId: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getCourseAnalytics>
 ) => {
   return useQuery(
     queryKeys.analytics.course(courseId),
@@ -1204,7 +1246,7 @@ export const useCourseAnalytics = (
  */
 export const useUserAnalytics = (
   userId?: number,
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getUserAnalytics>
 ) => {
   return useQuery(
     queryKeys.analytics.user(userId),
@@ -1224,7 +1266,7 @@ export const useUserAnalytics = (
  * Get user notifications
  */
 export const useNotifications = (
-  options?: any
+  options?: QueryOptionsOf<typeof lmsService.getNotifications>
 ) => {
   return useQuery(
     queryKeys.notifications.list(),
