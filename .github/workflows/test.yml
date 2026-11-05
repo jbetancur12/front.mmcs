@@ -1,8 +1,8 @@
 name: Checks
 
+# En main no hace falta: el workflow Deploy ya corre check, lint y tests antes
+# de publicar (job "verificar"). Aquí solo se validan los pull requests.
 on:
-  push:
-    branches: [main]
   pull_request:
 
 jobs:
