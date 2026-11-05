@@ -58,7 +58,6 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
   fleet: 'Flota',
   assets: 'Activos de TI',
   repositories: 'Repositorios',
-  tools: 'Utilidades',
   rbac: 'Administración de permisos'
 }
 

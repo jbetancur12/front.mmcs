@@ -477,8 +477,6 @@ export const PERMISSIONS = {
   REPOSITORIES_REPOSITORY_VIEW: 'repositories:repository:view',
   /** Subir, editar y eliminar archivos del repositorio */
   REPOSITORIES_REPOSITORY_MANAGE: 'repositories:repository:manage',
-  /** Usar las utilidades de administración: procesar Excel, generar y convertir PDF, generar scripts y agregar módulos */
-  TOOLS_UTILITY_USE: 'tools:utility:use',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Otorgar o quitar capacidades sensibles desde el panel de roles */

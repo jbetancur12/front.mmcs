@@ -181,12 +181,5 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     parents: ['Herramientas'],
     permission: PERMISSIONS.REPOSITORIES_REPOSITORY_VIEW,
     keywords: ['archivos', 'documentos']
-  },
-  {
-    label: 'Generador de scripts PDF',
-    path: '/pdf-script',
-    parents: ['Herramientas'],
-    permission: PERMISSIONS.TOOLS_UTILITY_USE,
-    keywords: ['plantillas', 'certificados']
   }
 ]

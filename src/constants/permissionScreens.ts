@@ -1046,9 +1046,6 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'system:settings:view': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }
   ],
-  'tools:utility:use': [
-    { path: "/pdf-script", label: "Script de PDF", kind: 'screen' }
-  ],
   'users:profile:manage': [
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'action' },
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'action' },

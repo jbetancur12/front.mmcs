@@ -1217,12 +1217,6 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Subir, editar y eliminar archivos del repositorio.',
     'Repositorios.'
   ],
-  'tools:utility:use': [
-    'Usar utilidades de administración',
-    'Procesar Excel, generar y convertir PDF, generar scripts y agregar módulos.',
-    'Utilidades.'
-  ],
-
   // --- Administración de permisos
   'rbac:view': [
     'Ver roles y permisos',
