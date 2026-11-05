@@ -144,7 +144,7 @@ const useCalibrationServiceAdjustmentActions = ({
       })
       if (result.delivery?.actualRecipient) {
         toast(
-          `${result.delivery.adjustmentCount} novedades enviadas a ${result.delivery.actualRecipient}`,
+          `${pending.length} novedades enviadas a ${result.delivery.actualRecipient}`,
           { duration: 5000, icon: '📧' }
         )
       } else {
