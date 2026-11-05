@@ -203,7 +203,7 @@ export interface QuizAttempt {
   score: number
   total_points?: number
   passed: boolean
-  answers: Record<string, any>
+  answers: Record<string, unknown>
   attempt_number?: number
   started_at: string
   completed_at?: string
@@ -317,7 +317,7 @@ export interface QuizSubmissionResult {
     passed: boolean
     percentage: number
     timeSpentMinutes: number
-    correctAnswers: Record<string, any> | null
+    correctAnswers: Record<string, unknown> | null
   }
 }
 
@@ -338,7 +338,7 @@ export interface Certificate {
   pdfPath?: string | null
   courseTitle?: string
   courseDescription?: string
-  certificateData?: Record<string, any>
+  certificateData?: Record<string, unknown>
   verificationUrl?: string
   created_at?: string
 }
@@ -519,7 +519,7 @@ export interface Notification {
   type: string
   title: string
   message: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   read: boolean
   created_at: string
 }
@@ -529,7 +529,7 @@ interface BackendNotificationResponseItem {
   type: string
   title: string
   message: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   priority?: 'high' | 'normal' | 'low'
   actionUrl?: string | null
   readAt?: string | null
@@ -641,7 +641,7 @@ export interface Job {
   type: string
   status: 'pending' | 'active' | 'completed' | 'failed' | 'cancelled'
   priority: number
-  data: Record<string, any>
+  data: Record<string, unknown>
   progress: number
   attempts: number
   maxAttempts: number
@@ -1074,7 +1074,7 @@ export interface CreateAssignmentRequest {
 }
 
 export interface SubmitQuizRequest {
-  answers: Record<string, any>
+  answers: Record<string, unknown>
   timeSpent?: number
 }
 
@@ -1082,7 +1082,7 @@ export interface UpdateProgressRequest {
   lessonId: number
   action: 'start' | 'complete' | 'update_time'
   timeSpentMinutes?: number
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, unknown>
 }
 
 // ===========================
@@ -1092,13 +1092,14 @@ export interface UpdateProgressRequest {
 class LMSService {
   private readonly baseURL = '/lms'
 
-  private unwrapResponse<T>(payload: any, nestedKey?: string): T {
-    if (payload?.data !== undefined) {
-      return payload.data as T
+  private unwrapResponse<T>(payload: unknown, nestedKey?: string): T {
+    const record = (payload ?? {}) as Record<string, unknown>
+    if (record.data !== undefined) {
+      return record.data as T
     }
 
-    if (nestedKey && payload?.[nestedKey] !== undefined) {
-      return payload[nestedKey] as T
+    if (nestedKey && record[nestedKey] !== undefined) {
+      return record[nestedKey] as T
     }
 
     return payload as T
@@ -1856,7 +1857,7 @@ class LMSService {
     severity: 'critical' | 'warning' | 'info' | 'system';
     actionUrl?: string;
     actionLabel?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }): Promise<any> {
     const response = await axiosPrivate.post(`${this.baseURL}/notifications`, data)
     return response.data
@@ -1939,7 +1940,7 @@ class LMSService {
     originalSize?: number
     mimetype: string
     optimized?: boolean
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
     streamUrl: string
     thumbnailUrl?: string
     description?: string | null
