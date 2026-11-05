@@ -18,6 +18,7 @@ export const dataSheetKeys = {
   paginated: (params: ServerListParams) =>
     [...dataSheetKeys.all, 'paginated', params] as const,
   counts: () => [...dataSheetKeys.all, 'counts'] as const,
+  deletedLogs: () => [...dataSheetKeys.all, 'deleted-logs'] as const,
   reusableCodes: (serviceType?: string) =>
     [...dataSheetKeys.all, 'reusable-codes', serviceType ?? ''] as const
 }
@@ -116,6 +117,27 @@ export const useReusableCodes = (serviceType?: string) => {
       staleTime: 30 * 1000,
       onError: (error) => {
         logger.error('Error fetching reusable dataSheet codes:', error)
+      }
+    }
+  )
+}
+
+/** Bitácora de equipos eliminados definitivamente. */
+export const useDeletedDataSheets = () => {
+  const axiosPrivate = useAxiosPrivate()
+
+  return useQuery(
+    dataSheetKeys.deletedLogs(),
+    async () => {
+      const response = await axiosPrivate.get('/dataSheet/lifecycle-logs', {
+        params: { action: 'deleted' }
+      })
+      return Array.isArray(response.data) ? response.data : []
+    },
+    {
+      staleTime: 30 * 1000,
+      onError: (error) => {
+        logger.error('Error fetching deleted dataSheets:', error)
       }
     }
   )

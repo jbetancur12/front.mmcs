@@ -28,7 +28,9 @@ export const DATASHEET_QUERY_KEYS = {
       ...DATASHEET_QUERY_KEYS.all,
       'inspection-maintenance',
       String(id ?? '')
-    ] as const
+    ] as const,
+  lifecycle: (id: Id) =>
+    [...DATASHEET_QUERY_KEYS.all, 'lifecycle', String(id ?? '')] as const
 }
 
 /**
@@ -97,6 +99,19 @@ export const useEquipmentInOutReport = <T = unknown>(id: Id) => {
       return response.data as T
     },
     { enabled: hasId(id), staleTime: 0, keepPreviousData: false }
+  )
+}
+
+/** Bitácora de baja/restauración/eliminación de una hoja de vida. */
+export const useDataSheetLifecycle = <T = unknown>(id: Id) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery(
+    DATASHEET_QUERY_KEYS.lifecycle(id),
+    async () => {
+      const response = await axiosPrivate.get(`/dataSheet/${id}/lifecycle`)
+      return (Array.isArray(response.data) ? response.data : []) as T[]
+    },
+    { enabled: hasId(id), staleTime: 0 }
   )
 }
 

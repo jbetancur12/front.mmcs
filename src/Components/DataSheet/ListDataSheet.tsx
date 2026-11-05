@@ -2,6 +2,7 @@ import {
   Add as AddKpi,
   Build as BuildKpi,
   CheckCircle as CheckKpi,
+  DeleteForever as DeletedKpi,
   Inventory as InventoryKpi,
   WarningAmber as WarnKpi
 } from '@mui/icons-material'
@@ -26,6 +27,7 @@ import DataSheetLifecycleDialog, {
   type DataSheetLifecycleMode,
   type DataSheetLifecycleTarget
 } from './list-data-sheet/DataSheetLifecycleDialog'
+import DeletedDataSheetsDialog from './list-data-sheet/DeletedDataSheetsDialog'
 import DataSheetRowActions from './list-data-sheet/DataSheetRowActions'
 import DataSheetEditFormDialog from './list-data-sheet/DataSheetEditFormDialog'
 import DataSheetToolbarActions from './list-data-sheet/DataSheetToolbarActions'
@@ -98,6 +100,7 @@ const ListDataSheet: React.FC = () => {
     mode: DataSheetLifecycleMode
     dataSheet: DataSheetLifecycleTarget
   } | null>(null)
+  const [deletedOpen, setDeletedOpen] = useState(false)
 
   useEffect(() => {
     // Guardar los filtros en el localStorage cada vez que cambien
@@ -166,6 +169,21 @@ const ListDataSheet: React.FC = () => {
               }}
             >
               {showRetired ? 'Ver activos' : 'Ver retirados'}
+            </Button>
+            <Button
+              variant='outlined'
+              startIcon={<DeletedKpi />}
+              onClick={() => setDeletedOpen(true)}
+              sx={{
+                whiteSpace: 'nowrap',
+                textTransform: 'none',
+                fontWeight: 600,
+                color: brand.ink,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
+              }}
+            >
+              Ver eliminados
             </Button>
             {canCreateDataSheet && (
               <Button
@@ -308,6 +326,11 @@ const ListDataSheet: React.FC = () => {
             force
           )
         }}
+      />
+
+      <DeletedDataSheetsDialog
+        open={deletedOpen}
+        onClose={() => setDeletedOpen(false)}
       />
     </Container>
   )
