@@ -10,7 +10,7 @@ import {
   Collapse,
   Divider
 } from '@mui/material'
-import { FilterState } from '../types'
+import { FilterState, OnFilterChange } from '../types'
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
@@ -26,6 +26,17 @@ import { useStore } from '@nanostores/react'
 
 import { ROLES, hasAnyRole } from 'src/constants/roles'
 import { logger } from 'src/utils/logger'
+
+interface CustomerSearchItem {
+  id: number
+  nombre: string
+}
+
+interface CustomerOption {
+  value: number
+  label: string
+}
+
 // Componente Chip personalizado con icono y tooltip
 const FilterChip = ({
   value,
@@ -111,7 +122,7 @@ export const FilterPanel = ({
   onFilterChange
 }: {
   filterState: FilterState
-  onFilterChange: (type: keyof FilterState, value: any) => void
+  onFilterChange: OnFilterChange
 }) => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
@@ -120,11 +131,11 @@ export const FilterPanel = ({
   const loadOptionsClient = useCallback(
     debounce(async (inputValue: string) => {
       try {
-        const response = await axiosPrivate.get(`/customers`, {
-          params: { q: inputValue }
-        })
-        const data = response.data
-        return data.map((item: any) => ({
+        const response = await axiosPrivate.get<CustomerSearchItem[]>(
+          `/customers`,
+          { params: { q: inputValue } }
+        )
+        return response.data.map((item) => ({
           value: item.id,
           label: item.nombre
         }))
@@ -301,14 +312,16 @@ export const FilterPanel = ({
               >
                 Clientes
               </Box>
-              <AsyncSelect
+              <AsyncSelect<CustomerOption, false>
                 cacheOptions
                 // defaultOptions
 
                 placeholder='Buscar Cliente'
-                loadOptions={loadOptionsClient}
-                onChange={(selectedOption: any) => {
-                  onFilterChange('customerId', selectedOption?.value || null)
+                loadOptions={(inputValue) =>
+                  loadOptionsClient(inputValue) ?? Promise.resolve([])
+                }
+                onChange={(selectedOption) => {
+                  onFilterChange('customerId', selectedOption?.value ?? null)
                 }}
                 isClearable
               />

@@ -7,6 +7,11 @@ import { addMonths, format, isValid, parse } from 'date-fns'
 import ModalCustomer from '../Components/ModalCustomer'
 import ModalDevice from '../Components/ModalDevice'
 import { AnalyzeExcelComponentProps } from '../Components/ExcelManipulation/Types'
+import type {
+  CertificateTemplateData,
+  CreatedCustomerOption,
+  CreatedDeviceOption
+} from '../Components/ExcelManipulation/Types'
 import { ResourceOption } from '../utils/loadOptions'
 import AsyncSelectField, {
   type AsyncSelectOption
@@ -24,7 +29,6 @@ import { busyDialog, choiceDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
 
 const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
-  dataReceived,
   hideUpload,
   selectedFile,
   isFile,
@@ -37,7 +41,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const uploadRawCertificate = useUploadRawCertificate()
   const [file, setFile] = useState<File | null>(null)
   const [filePdf, setFilePdf] = useState<File | null>(null)
-  const [_data, setData] = useState<any[]>([])
   const [data2, setData2] = useState<CertificateTemplateData>(
     {} as CertificateTemplateData
   )
@@ -100,10 +103,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     return true
   }
 
-  useEffect(() => {
-    setData(dataReceived as any[])
-  }, [dataReceived])
-
   // La espera de leer el Excel o de enviar bloquea la pantalla con el aviso común
   useEffect(() => {
     if (loading) busyDialog.show('Procesando el archivo')
@@ -111,16 +110,16 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     return () => busyDialog.hide()
   }, [loading])
 
-  const searchOptions = async <T,>(
+  const searchOptions = async <TSource, T>(
     inputValue: string,
     resource: string,
-    mapFunction: (item: any) => T
+    mapFunction: (item: TSource) => T
   ): Promise<T[]> => {
     try {
-      const response = await axiosPrivate.get(`/${resource}`, {
+      const response = await axiosPrivate.get<TSource[]>(`/${resource}`, {
         params: { q: inputValue }
       })
-      return response.data.map((item: any) => mapFunction(item))
+      return response.data.map((item) => mapFunction(item))
     } catch (error) {
       logger.error('Error al cargar opciones:', error)
       return []
@@ -129,7 +128,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
   const readExcel = async (file: File) => {
     const passwords = [...wbPasswords] // Replace with your passwords
-    let workbook: any
+    let workbook: import('xlsx-populate').Workbook | undefined
     const XlsxPopulate = (await import('xlsx-populate')).default
 
     try {
@@ -156,17 +155,19 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       throw new Error('Failed to open file with any password')
     }
 
+    const openedWorkbook = workbook
+
     try {
-      let sheet = null
+      let sheet: import('xlsx-populate').Sheet | null = null
       let sheetName: string | null = null
-      workbook.sheets().forEach((ws: any) => {
+      openedWorkbook.sheets().forEach((ws) => {
         if (ws.name().toLowerCase() === 'certificado' && !ws.hidden()) {
-          sheet = workbook.sheet(ws.name())
-          sheetName = ws.name() as string
+          sheet = openedWorkbook.sheet(ws.name())
+          sheetName = ws.name()
         }
       })
       if (!sheet) {
-        sheet = workbook.sheet('CC')
+        sheet = openedWorkbook.sheet('CC')
         sheetName = 'CC'
       }
       if (!sheet) {
@@ -188,7 +189,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
               const value = sheet.cell(`${col}${row}`)
 
               if (value.value()) {
-                const result = await fetchDevice(value.value() as string)
+                const result = await fetchDevice(String(value.value()))
 
                 if (result.length > 0) {
                   setDevice({
@@ -199,26 +200,25 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
                   const cerTemplate: CertificateTemplateData =
                     result[0].certificateTemplate
+                  const resolvedSheetName = sheetName ?? 'CC'
 
                   const getValueFromCell = (
-                    workbook: any,
-                    field: keyof typeof cerTemplate
-                  ) => {
-                    if (field === 'calibrationDate') {
-                      return XlsxPopulate.numberToDate(
-                        workbook
-                          .sheet(sheetName)
-                          .cell(cerTemplate[field].toUpperCase())
-                          .value()
-                      )
-                    }
-                    return workbook
-                      .sheet(sheetName)
+                    workbook: import('xlsx-populate').Workbook,
+                    field: keyof CertificateTemplateData
+                  ): string => {
+                    const rawValue = workbook
+                      .sheet(resolvedSheetName)
                       .cell(cerTemplate[field].toUpperCase())
                       .value()
+
+                    if (field === 'calibrationDate') {
+                      return XlsxPopulate.numberToDate(Number(rawValue)).toISOString()
+                    }
+
+                    return String(rawValue ?? '')
                   }
 
-                  const fields: (keyof typeof cerTemplate)[] = [
+                  const fields: Array<keyof CertificateTemplateData> = [
                     'city',
                     'location',
                     'sede',
@@ -229,10 +229,10 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
                     'instrumento'
                   ]
 
-                  const info = fields.reduce((acc, field) => {
-                    acc[field] = getValueFromCell(workbook, field)
-                    return acc
-                  }, {} as any)
+                  const info = fields.reduce<CertificateTemplateData>(
+                    (acc, field) => ({ ...acc, [field]: getValueFromCell(openedWorkbook, field) }),
+                    { ...cerTemplate }
+                  )
 
                   return info
                 } else {
@@ -250,7 +250,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         }
       }
     } catch (error) {
-      throw new Error(error as string)
+      throw new Error(error instanceof Error ? error.message : String(error))
     }
   }
 
@@ -263,8 +263,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       try {
         const cells = await readExcel(uploadedFile)
         // Sin celdas leídas no habrá análisis posterior que apague la espera
-        if (!cells) setLoading(false)
-        setData2(cells)
+        if (cells) setData2(cells)
+        else setLoading(false)
       } catch (error) {
         setLoading(false)
         logger.error('Error al leer el Excel:', error)
@@ -273,12 +273,12 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     reader.readAsBinaryString(uploadedFile)
   }
 
-  const dataReturned = (data: any) => {
+  const dataReturned = (data: CreatedCustomerOption) => {
     setCustomer({ value: data.id, label: data.nombre, sedes: data.sede })
     setMissedData({ ...missedData, customer: '' })
   }
 
-  const dataReturnedDevice = (data: any) => {
+  const dataReturnedDevice = (data: CreatedDeviceOption) => {
     setDevice({
       value: data.id,
       label: data.name,
@@ -297,7 +297,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       setSerialNumber(data2.serie)
       setCertificateDate(new Date(data2.calibrationDate))
       customer = data2.solicitante
-      const results: any = await fetchCustomer(customer)
+      const results = await fetchCustomer(customer)
       const missed = { customer: '' }
 
       if (results.length > 0) {
@@ -315,9 +315,9 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     }
   }
 
-  const fetchCustomer = async (name: string) => {
+  const fetchCustomer = async (name: string): Promise<CustomerSearchResult[]> => {
     try {
-      const response = await axiosPrivate.get(`/customers`, {
+      const response = await axiosPrivate.get<CustomerSearchResult[]>(`/customers`, {
         params: { q: name }
       })
       const customers = response.data
@@ -329,9 +329,9 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     }
   }
 
-  const fetchDevice = async (name: string) => {
+  const fetchDevice = async (name: string): Promise<DeviceSearchResult[]> => {
     try {
-      const response = await axiosPrivate.get(`/devices`, {
+      const response = await axiosPrivate.get<DeviceSearchResult[]>(`/devices`, {
         params: { q: name }
       })
       const devices = response.data
@@ -416,9 +416,9 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     }
 
     // Añade datos al formData solo si no son nulos o indefinidos
-    const appendIfNotNull = (key: string, value: any) => {
+    const appendIfNotNull = (key: string, value: unknown) => {
       if (value !== null && value !== undefined) {
-        formData.append(key, value.toString())
+        formData.append(key, String(value))
       }
     }
 
@@ -618,7 +618,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
               )
             }
             loadOptions={(input) =>
-              searchOptions<AsyncSelectOption>(
+              searchOptions<CertificateTypeSearchResult, AsyncSelectOption>(
                 input,
                 'certificateTypes',
                 (o) => ({
@@ -759,17 +759,34 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   )
 }
 
-const mapDevices = (option: any): DeviceOption => ({
+const mapDevices = (option: DeviceSearchResult): DeviceOption => ({
   value: option.id,
   label: option.name,
   certificateTemplate: option.certificateTemplate
 })
 
-const mapCustomers = (option: any): ResourceCustomerOption => ({
+const mapCustomers = (option: CustomerSearchResult): ResourceCustomerOption => ({
   value: option.id,
   label: option.nombre,
   sedes: option.sede
 })
+
+interface DeviceSearchResult {
+  id: number
+  name: string
+  certificateTemplate: CertificateTemplateData
+}
+
+interface CustomerSearchResult {
+  id: number
+  nombre: string
+  sede: string[]
+}
+
+interface CertificateTypeSearchResult {
+  id: number
+  name: string
+}
 
 interface DeviceOption extends ResourceOption {
   certificateTemplate: CertificateTemplateData
@@ -777,17 +794,6 @@ interface DeviceOption extends ResourceOption {
 
 interface ResourceCustomerOption extends ResourceOption {
   sedes: string[]
-}
-
-export interface CertificateTemplateData {
-  location: string
-  city: string
-  solicitante: string
-  activoFijo: string
-  calibrationDate: string
-  sede: string
-  serie: string
-  instrumento: string
 }
 
 export default AnalyzeExcelComponent

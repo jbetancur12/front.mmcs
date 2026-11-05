@@ -6,6 +6,7 @@ import { memo } from 'react'
 import DevicePopupContent from './DevicePopupContent'
 
 import { DeviceIot } from '../../types'
+import type { DeviceMarker } from '../index'
 import { DeviceStatus } from '../constants'
 import { Sensors } from '@mui/icons-material'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -92,7 +93,7 @@ const DeviceMarker = memo(
         eventHandlers={{
           add: (e) => {
             // Almacenar datos del dispositivo en el marcador
-            ;(e.target as any).deviceData = device
+            ;(e.target as DeviceMarker).deviceData = device
           },
           click: () => {
             // Maneja clics específicos en el marcador

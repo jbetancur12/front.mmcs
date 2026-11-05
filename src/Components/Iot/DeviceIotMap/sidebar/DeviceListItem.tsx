@@ -292,7 +292,7 @@ const DeviceListItem = ({
                   device.status,
                   hasActiveAlarms,
                   highestSeverity
-                ) as any
+                ) 
               }
               icon={hasActiveAlarms ? <Warning fontSize='small' /> : undefined}
               sx={
@@ -333,7 +333,7 @@ const DeviceListItem = ({
                     color:
                       hasActiveAlarms &&
                       activeAlarms.some(
-                        (alarm: any) => alarm.metric === 'temperature'
+                        (alarm) => alarm.metric === 'temperature'
                       )
                         ? 'error.main'
                         : 'inherit'
@@ -345,14 +345,14 @@ const DeviceListItem = ({
                     color:
                       hasActiveAlarms &&
                       activeAlarms.some(
-                        (alarm: any) => alarm.metric === 'temperature'
+                        (alarm) => alarm.metric === 'temperature'
                       )
                         ? 'error.main'
                         : 'text.secondary',
                     fontWeight:
                       hasActiveAlarms &&
                       activeAlarms.some(
-                        (alarm: any) => alarm.metric === 'temperature'
+                        (alarm) => alarm.metric === 'temperature'
                       )
                         ? 'bold'
                         : 'normal',
@@ -372,7 +372,7 @@ const DeviceListItem = ({
                     color:
                       hasActiveAlarms &&
                       activeAlarms.some(
-                        (alarm: any) => alarm.metric === 'humidity'
+                        (alarm) => alarm.metric === 'humidity'
                       )
                         ? 'error.main'
                         : 'inherit'
@@ -384,14 +384,14 @@ const DeviceListItem = ({
                     color:
                       hasActiveAlarms &&
                       activeAlarms.some(
-                        (alarm: any) => alarm.metric === 'humidity'
+                        (alarm) => alarm.metric === 'humidity'
                       )
                         ? 'error.main'
                         : 'text.secondary',
                     fontWeight:
                       hasActiveAlarms &&
                       activeAlarms.some(
-                        (alarm: any) => alarm.metric === 'humidity'
+                        (alarm) => alarm.metric === 'humidity'
                       )
                         ? 'bold'
                         : 'normal',

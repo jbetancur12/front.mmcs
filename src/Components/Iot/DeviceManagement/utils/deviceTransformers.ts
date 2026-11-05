@@ -1,6 +1,6 @@
-import { Customer, DeviceIot, DeviceIotConfig } from '../../types'
+import { DeviceIot, DeviceIotRaw } from '../../types'
 
-export const transformDevice = (device: any): DeviceIot => {
+export const transformDevice = (device: DeviceIotRaw): DeviceIot => {
   const [lng, lat] = device.lastLocation?.coordinates || [0, 0]
 
   return {
@@ -10,17 +10,17 @@ export const transformDevice = (device: any): DeviceIot => {
     lastLocation: { lat, lng },
     lastSeen: new Date(device.lastSeen || Date.now()),
     status: device.isOnline ? 'online' : 'offline',
-    customer: (device.customer as Customer) || null,
-    customerId: device.customerId || null,
+    customer: device.customer ?? null,
+    customerId: device.customerId ?? undefined,
     isOnline: device.isOnline || false,
     sensorData: {
-      h: device.lastHumidity,
-      t: device.lastTemperature
+      h: device.lastHumidity ?? '',
+      t: device.lastTemperature ?? ''
     },
     src: device.src === 'bat' ? 'bat' : 'main',
-    deviceIotConfigs: (device.deviceIotConfigs as DeviceIotConfig[]) || [],
+    deviceIotConfigs: (device.deviceIotConfigs) || [],
     isInAlarm: device.isInAlarm || false,
-    alarms: device.alarms,
-    location: device.location
+    alarms: device.alarms ?? [],
+    location: device.location ?? ''
   }
 }

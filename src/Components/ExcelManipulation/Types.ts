@@ -1,22 +1,30 @@
-export interface ResourceOption {
-  value: string
-  label: string
+/** Datos de la plantilla de certificado que llegan desde el Excel. */
+export interface CertificateTemplateData {
+  location: string
+  city: string
+  solicitante: string
+  activoFijo: string
+  calibrationDate: string
+  sede: string
+  serie: string
+  instrumento: string
 }
 
-export interface RepositoryData {
+/** Equipo recién creado desde el modal, ya en el formato del selector. */
+export interface CreatedDeviceOption {
   id: number
   name: string
-  path: string
+  certificateTemplate: CertificateTemplateData
 }
 
-export interface ResourceOptionCustomer extends ResourceOption {
-  city: string
-  department: string
-  address: string
+/** Cliente recién creado desde el modal, ya en el formato del selector. */
+export interface CreatedCustomerOption {
+  id: number
+  nombre: string
+  sede: string[]
 }
 
 export interface AnalyzeExcelComponentProps {
-  dataReceived?: any[]
   hideUpload?: boolean
   fileNames?: string[]
   selectedFile?: string | null
@@ -25,17 +33,4 @@ export interface AnalyzeExcelComponentProps {
   headerActions?: React.ReactNode
   setFileNames?: React.Dispatch<React.SetStateAction<string[]>>
   wbPasswords: string[]
-}
-
-export interface ResourceOptionDevice extends ResourceOption {
-  repositoryPath: string
-  magnitude: string
-  unit: string
-}
-
-export interface ComponentsCertificateProps {
-  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  formData: any
-  setFormData: (data: any) => void
-  error: boolean
 }

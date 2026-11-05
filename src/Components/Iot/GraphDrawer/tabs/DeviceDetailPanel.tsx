@@ -157,7 +157,7 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
               device?.status,
               hasActiveAlarms,
               highestSeverity
-            ) as any
+            )
           }
           size='medium'
           icon={hasActiveAlarms ? <Warning /> : undefined}

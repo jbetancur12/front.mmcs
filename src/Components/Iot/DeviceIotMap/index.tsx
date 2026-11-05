@@ -30,6 +30,15 @@ import L from 'leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import AlarmNotification from './parts/AlarmNotification.tsx'
 
+/** Marcador de Leaflet con los datos del dispositivo adjuntos al agregarse al mapa. */
+export type DeviceMarker = L.Marker & { deviceData?: DeviceIot }
+
+/** Lo mínimo que usamos del cluster de Leaflet (el paquete no trae tipos). */
+interface MarkerClusterLike {
+  getAllChildMarkers(): DeviceMarker[]
+  getChildCount(): number
+}
+
 function MapController({
   center,
   zoom
@@ -169,11 +178,11 @@ const DeviceIotMap = () => {
             spiderfyOnMaxZoom={true}
             showCoverageOnHover={false}
             maxClusterRadius={40}
-            iconCreateFunction={(cluster: any) => {
+            iconCreateFunction={(cluster: MarkerClusterLike) => {
               const markers = cluster.getAllChildMarkers()
 
-              const hasAlarm = markers.some((marker: any) => {
-                const deviceData = (marker as any).deviceData // Acceder a los datos del dispositivo
+              const hasAlarm = markers.some((marker) => {
+                const deviceData = marker.deviceData // Acceder a los datos del dispositivo
                 return deviceData?.isInAlarm // Verificar si tiene alarma activa
               })
               const baseColor = hasAlarm ? '#ff0000' : '#1976d2'

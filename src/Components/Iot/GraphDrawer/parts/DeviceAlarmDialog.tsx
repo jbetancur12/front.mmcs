@@ -92,13 +92,13 @@ const DeviceAlarmDialog: React.FC<DeviceAlarmDialogProps> = ({
   const isAlarmMetric = (
     value: string
   ): value is (typeof ALARM_METRICS)[number] => {
-    return ALARM_METRICS.includes(value as any)
+    return ALARM_METRICS.some((metric) => metric === value)
   }
 
   const isAlarmCondition = (
     value: string
   ): value is (typeof ALARM_CONDITIONS)[number] => {
-    return ALARM_CONDITIONS.includes(value as any)
+    return ALARM_CONDITIONS.some((condition) => condition === value)
   }
 
   const initialValues: AlarmFormValues = {

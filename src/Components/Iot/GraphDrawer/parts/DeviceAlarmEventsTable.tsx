@@ -11,7 +11,8 @@ import {
   Paper,
   Box,
   Chip,
-  Button
+  Button,
+  type ChipProps
 } from '@mui/material'
 import { format } from 'date-fns'
 import { Alert, AlertTitle } from '@mui/material'
@@ -31,6 +32,12 @@ interface AlarmEvent {
   condition: string
   threshold: number
   value: number
+}
+
+const SEVERITY_COLORS: Record<string, ChipProps['color']> = {
+  info: 'info',
+  warning: 'warning',
+  critical: 'error'
 }
 
 interface DeviceAlarmEventsTableProps {
@@ -181,11 +188,7 @@ const DeviceAlarmEventsTable: React.FC<DeviceAlarmEventsTableProps> = ({
                     }[event.severity] || event.severity
                   }
                   color={
-                    ({
-                      info: 'info',
-                      warning: 'warning',
-                      critical: 'error'
-                    }[event.severity] as any) || 'default'
+                    SEVERITY_COLORS[event.severity] || 'default'
                   }
                 />
               </TableCell>

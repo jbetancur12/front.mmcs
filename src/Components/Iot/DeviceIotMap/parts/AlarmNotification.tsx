@@ -1,7 +1,7 @@
 import { Paper, Typography, IconButton, Collapse, Button } from '@mui/material'
 import { Close } from '@mui/icons-material'
 import { useState } from 'react'
-import { FilterState } from '../types'
+import { OnFilterChange } from '../types'
 import { $hasAlarms } from '@stores/deviceIotStore'
 import { useStore } from '@nanostores/react'
 // import { $hasAlarms } from 'src/store/alertsStore' // Ajusta la importación de tu store
@@ -9,7 +9,7 @@ import { useStore } from '@nanostores/react'
 const AlarmNotification = ({
   onFilterChange
 }: {
-  onFilterChange: (type: keyof FilterState, value: any) => void
+  onFilterChange: OnFilterChange
 }) => {
   const hasAlarms = useStore($hasAlarms)
   const [visible, setVisible] = useState(true)

@@ -70,7 +70,7 @@ const GraphDrawer = ({
     setTabValue(newValue)
   }
 
-  const stats = useMemo(() => aggregateStats(graphData), [graphData])
+  const stats = useMemo(() => aggregateStats(graphData ?? []), [graphData])
 
   const lilygoData = realTimeData?.[deviceName] || []
   const lastEntry = lilygoData[lilygoData.length - 1] || null

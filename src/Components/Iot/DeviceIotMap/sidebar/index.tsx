@@ -1,7 +1,7 @@
 // components/DeviceIotMap/sidebar/index.tsx
 import { Drawer, Box, IconButton, Typography, useTheme } from '@mui/material'
 import { ChevronLeft } from '@mui/icons-material'
-import { FilterState } from '../types'
+import { FilterState, OnFilterChange } from '../types'
 import { SIDEBAR_WIDTH } from '../constants'
 import { FilterPanel } from './FilterPanel'
 import { DeviceList } from './DeviceList'
@@ -21,7 +21,7 @@ export const DeviceSidebar = ({
   onClose: () => void
   filteredDevices: DeviceIot[]
   filterState: FilterState
-  onFilterChange: (type: keyof FilterState, value: any) => void
+  onFilterChange: OnFilterChange
   onSelectDevice: (device: DeviceIot) => void
   handleShowDeviceGraph: (device: DeviceIot) => void
 }) => {

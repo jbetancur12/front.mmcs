@@ -7,11 +7,13 @@ import FormDialog from './Common/FormDialog'
 import AsyncSelectField, { AsyncSelectOption } from './Common/AsyncSelectField'
 
 import { logger } from 'src/utils/logger'
+import type { CreatedDeviceOption } from './ExcelManipulation/Types'
+
 interface ModalDeviceProps {
   open: boolean
   onClose: Dispatch<SetStateAction<boolean>>
   name: string
-  dataReturned: (data: any) => void
+  dataReturned: (data: CreatedDeviceOption) => void
   resetForm: () => void
 }
 

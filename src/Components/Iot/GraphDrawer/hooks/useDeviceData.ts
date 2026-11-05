@@ -2,7 +2,7 @@
 import { useQuery } from 'react-query'
 import { useState, useMemo } from 'react'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { RangeOption } from '../types'
+import { DeviceDataPoint, RangeOption } from '../types'
 
 export const useDeviceData = (
   deviceId: number | string | null,
@@ -43,7 +43,7 @@ export const useDeviceData = (
     async () => {
       if (!deviceId || !startDateStr || !endDateStr) return []
    
-      const response = await axiosPrivate.get(
+      const response = await axiosPrivate.get<DeviceDataPoint[]>(
         `/devicesIot/dataPoints?startDate=${startDateStr}&endDate=${endDateStr}&deviceIotId=${deviceId}`
       )
       return response.data
@@ -57,7 +57,7 @@ export const useDeviceData = (
 
   const combinedData = useMemo(
     () =>
-      graphData?.map((dp: any) => ({
+      graphData?.map((dp) => ({
         timestamp: new Date(dp.timestamp).getTime(),
         temperature: dp.avg_temperature,
         humidity: dp.avg_humidity

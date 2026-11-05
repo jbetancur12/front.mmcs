@@ -9,6 +9,8 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts'
+import type { TooltipProps } from 'recharts'
+import type { Payload as LegendPayload } from 'recharts/types/component/DefaultLegendContent'
 import { Box, Typography, Stack } from '@mui/material'
 import { useMemo } from 'react'
 
@@ -47,7 +49,7 @@ const MainChart = ({
   humidityAlarms
 }: MainChartProps) => {
   // Custom Tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       const date = new Date(label)
       return (
@@ -61,15 +63,15 @@ const MainChart = ({
           }}
         >
           <Stack spacing={0.5}>
-            {payload.map((pl: any) => (
+            {payload.map((pl) => (
               <Typography
                 key={pl.dataKey}
                 variant='caption'
                 sx={{ color: pl.color }}
               >
                 {pl.dataKey === 'temperature'
-                  ? `Temp: ${pl.value.toFixed(2)}°C`
-                  : `Hum: ${pl.value.toFixed(2)}%`}
+                  ? `Temp: ${Number(pl.value ?? 0).toFixed(2)}°C`
+                  : `Hum: ${Number(pl.value ?? 0).toFixed(2)}%`}
               </Typography>
             ))}
             <Typography variant='caption' sx={{ fontWeight: 'bold' }}>
@@ -120,9 +122,8 @@ const MainChart = ({
     }
   }, [graphData])
   // Handler para clics en leyenda
-  const handleLegendClick = (o: any) => {
-    const { dataKey } = o
-    onToggleSeries(dataKey as 'temperature' | 'humidity')
+  const handleLegendClick = (o: LegendPayload) => {
+    onToggleSeries(o.dataKey === 'humidity' ? 'humidity' : 'temperature')
   }
 
   return (

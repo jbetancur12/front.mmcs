@@ -1,4 +1,6 @@
 // components/DeviceIotMap/types.ts
+import type { Customer, DeviceIotConfig } from '../types'
+
 export interface Device {
   id: string | number
   imei: string
@@ -9,14 +11,14 @@ export interface Device {
   }
   lastSeen: Date
   status: 'online' | 'offline'
-  customer: any
+  customer: Customer | null
   isOnline: boolean
   src: 'main' | 'bat'
   sensorData?: {
     t: number
     h: number
   }
-  deviceIotConfigs?: any[]
+  deviceIotConfigs?: DeviceIotConfig[]
 }
 
 export interface FilterState {
@@ -27,6 +29,11 @@ export interface FilterState {
   withAnyAlarm: boolean
   customerId?: number | null // Nuevo campo
 }
+
+/** Valor que puede recibir un filtro del mapa (cada campo valida el suyo). */
+export type FilterValue = string | Set<string> | boolean | number | null
+
+export type OnFilterChange = (type: keyof FilterState, value: FilterValue) => void
 
 export interface MapControlsProps {
   isSidebarOpen: boolean
