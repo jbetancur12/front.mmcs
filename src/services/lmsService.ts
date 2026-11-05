@@ -1434,7 +1434,7 @@ class LMSService {
         isValid: response.data.data?.valid ?? response.data.valid ?? response.data.success ?? response.data.isValid,
         certificate: response.data.data?.certificate || response.data.certificate
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         isValid: false,
         error: getApiErrorReason(error) || 'Error al verificar el certificado'

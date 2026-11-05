@@ -250,7 +250,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTicket()
       await refetchTimeline()
       showToast('Ticket actualizado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -344,7 +344,7 @@ const useMaintenanceTicketDetails = () => {
           : 'Ticket completado exitosamente',
         'success'
       )
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -369,7 +369,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTicket()
       await refetchTimeline()
       showToast('Ticket completado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -439,7 +439,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTicket()
       await refetchTimeline()
       showToast('Firmas registradas exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error saving signatures:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -468,7 +468,7 @@ const useMaintenanceTicketDetails = () => {
         'La firma del cliente fue revocada. El contenido técnico vuelve a estar editable.',
         'success'
       )
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error revoking customer signature:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -610,7 +610,7 @@ const useMaintenanceTicketDetails = () => {
       await refetchTechnicalReport()
       await refetchTicket()
       showToast('Reporte técnico guardado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error saving technical report:', error)
       const errorMessage =
         getApiErrorReason(error) ||

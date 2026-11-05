@@ -441,7 +441,7 @@ const LmsCoursePreview: React.FC = () => {
 
       // Mostrar éxito
       notify.success('¡Lección completada!', 'Tu progreso ha sido guardado. La siguiente lección está desbloqueada.');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error al completar lección:', error);
 
       notify.error('Error al guardar progreso', getApiErrorReason(error) || 'No se pudo marcar la lección como completada');
@@ -839,7 +839,7 @@ const LmsCoursePreview: React.FC = () => {
                             passed ? '¡Quiz Aprobado!' : 'Quiz Completado',
                             `Puntuación: ${score}/${totalPoints} (${backendPercentage}%). ${passed ? 'La siguiente lección está desbloqueada' : 'Necesitas 70% o más para aprobar'}`
                           )
-                        } catch (error: any) {
+                        } catch (error: unknown) {
                           busyDialog.hide()
                           logger.error('❌ Error al completar quiz:', error);
 

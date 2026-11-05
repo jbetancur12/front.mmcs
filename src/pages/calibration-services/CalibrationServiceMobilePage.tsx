@@ -270,7 +270,7 @@ const MobilePage = () => {
   const handleAction = async (key: string, fn: () => Promise<any>, msg: string, onDone?: () => void) => {
     setActionLoading(key)
     try { await serviceActionMutation.mutateAsync(fn); toast.success(msg); onDone?.() }
-    catch (e: any) { toast.error(getApiErrorReason(e) || `Error: ${msg}`) }
+    catch (e: unknown) { toast.error(getApiErrorReason(e) || `Error: ${msg}`) }
     setActionLoading(null)
   }
 

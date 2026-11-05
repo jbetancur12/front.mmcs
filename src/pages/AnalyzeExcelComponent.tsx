@@ -1,4 +1,4 @@
-import { getApiErrorReason } from 'src/utils/apiError'
+import { getApiErrorPayload, getApiErrorReason, parseApiError } from 'src/utils/apiError'
 import React, { useEffect, useState } from 'react'
 import { Alert, Button, MenuItem, TextField, Typography } from '@mui/material'
 import { UploadFile } from '@mui/icons-material'
@@ -456,8 +456,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
         notify.success('Datos enviados correctamente')
       }
-    } catch (error: any) {
-      if (error.response.status === 409) {
+    } catch (error: unknown) {
+      if (parseApiError(error).status === 409) {
         // El diálogo espera al usuario: el cargando no debe taparlo
         setLoading(false)
         const obj = await choiceDialog({
@@ -465,8 +465,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           text: (
             <div>
               <ul>
-                <li>Serie: {error.response.data.serial}</li>
-                <li>Activo fijo: {error.response.data.activoFijo}</li>
+                <li>Serie: {String(getApiErrorPayload(error).serial ?? '')}</li>
+                <li>Activo fijo: {String(getApiErrorPayload(error).activoFijo ?? '')}</li>
               </ul>
               <p>¿Qué deseas hacer con el archivo?</p>
             </div>

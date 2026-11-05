@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { axiosPrivate, axiosPublic } from '../utils/api'
+import { parseApiError } from '../utils/apiError'
 import {
   MaintenanceTicket,
   MaintenanceCreateRequest,
@@ -85,8 +86,8 @@ const maintenanceAPI = {
         found: true,
         message: 'Ticket encontrado'
       }
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (parseApiError(error).status === 404) {
         return {
           ticket: null,
           found: false,
@@ -283,8 +284,8 @@ const maintenanceAPI = {
         technician: MaintenanceTechnician
       }>(`/maintenance/technicians/by-email/${encodeURIComponent(email)}`)
       return response.data.technician
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (parseApiError(error).status === 404) {
         return null
       }
       throw error

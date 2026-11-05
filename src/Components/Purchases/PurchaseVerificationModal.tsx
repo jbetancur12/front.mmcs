@@ -91,7 +91,7 @@ const CreatePurchaseVerificationModal: React.FC<
       )
       onSuccess(response.data)
       handleClose()
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error creating verification.')
       logger.error(err)
     }

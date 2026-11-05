@@ -399,7 +399,7 @@ const MaintenanceDashboard: React.FC = () => {
       setSelectedTicket(null)
       setEditData({})
       showToast('Ticket actualizado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -496,7 +496,7 @@ const MaintenanceDashboard: React.FC = () => {
           : 'Ticket completado exitosamente',
         'success'
       )
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -537,7 +537,7 @@ const MaintenanceDashboard: React.FC = () => {
       refetchTickets()
       refetchStats()
       showToast('Reporte técnico guardado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error saving technical report:', error)
       const errorMessage =
         getApiErrorReason(error) ||
@@ -576,7 +576,7 @@ const MaintenanceDashboard: React.FC = () => {
       refetchTickets()
       refetchStats()
       showToast('Ticket eliminado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting ticket:', error)
       const errorMessage =
         getApiErrorReason(error) ||

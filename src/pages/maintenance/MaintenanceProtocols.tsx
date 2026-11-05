@@ -225,11 +225,11 @@ const MaintenanceProtocols = () => {
         await createProtocolMutation.mutateAsync(payload)
       }
       resetDialog()
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFormError(
-        getApiErrorReason(error) ||
-          error?.message ||
-          'No se pudo guardar el protocolo.'
+        getApiErrorReason(error) ??
+        (error instanceof Error ? error.message : null) ??
+        'No se pudo guardar el protocolo.'
       )
     }
   }

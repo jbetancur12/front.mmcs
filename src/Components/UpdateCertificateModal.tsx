@@ -1,4 +1,4 @@
-import { getApiErrorReason } from 'src/utils/apiError'
+import { getApiErrorReason, parseApiError } from 'src/utils/apiError'
 import React, { useState, useEffect } from 'react'
 import { Box, Typography } from '@mui/material'
 import toast from 'react-hot-toast'
@@ -101,12 +101,12 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
           onClose()
         }, 500)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setLoading(false)
       logger.error('Error al guardar los datos del certificado:', error)
 
       // Archivo duplicado (409)
-      if (error.response && error.response.status === 409) {
+      if (parseApiError(error).status === 409) {
         toast.error(
           getApiErrorReason(error) ||
             'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.',

@@ -106,7 +106,7 @@ const PurchaseStatistics = () => {
       // Handle date range specific response here if needed
       logger.log('Date range statistics:', response.data)
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Error fetching date range statistics:', err)
       setRangeError(getApiErrorReason(err) || 'Error al cargar las estadísticas por fecha')
     } finally {

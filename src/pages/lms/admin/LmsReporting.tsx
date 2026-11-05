@@ -498,7 +498,7 @@ const LmsReporting: React.FC = () => {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-    } catch (error: any) {
+    } catch (error: unknown) {
       notify.error('Error al descargar reporte', getApiMessage(error, 'No se pudo descargar el reporte.'))
     }
   }

@@ -80,7 +80,7 @@ const Login: React.FC = () => {
     })
   }
 
-  function handleValidationOrNetworkError(error: AxiosError | Error) {
+  function handleValidationOrNetworkError(error: unknown) {
     if (error instanceof Yup.ValidationError) {
       const errorMessage = error.errors[0]
       setError(errorMessage)
@@ -258,7 +258,7 @@ const Login: React.FC = () => {
           )
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // La cuenta ya tiene sesiones abiertas, o llegó al tope: preguntar cuáles cerrar
       if (isAxiosError(error) && error.response?.status === 409) {
         const body = getApiErrorPayload(error) as {

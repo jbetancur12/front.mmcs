@@ -22,6 +22,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { getApiErrorReason } from 'src/utils/apiError'
 // Tipos y constantes
 export type DeviceAlarm = {
   id: number
@@ -167,8 +168,8 @@ const DeviceAlarmDialog: React.FC<DeviceAlarmDialogProps> = ({
       notify.success('¡Alarma creada!', 'La alarma se ha creado exitosamente')
       invalidateQueries()
       onClose()
-    } catch (error: any) {
-      notify.error('Error', error.message || 'Error al crear la alarma')
+    } catch (error: unknown) {
+      notify.error('Error', getApiErrorReason(error) ?? 'Error al crear la alarma')
     }
   }
 
@@ -181,8 +182,8 @@ const DeviceAlarmDialog: React.FC<DeviceAlarmDialogProps> = ({
       )
       invalidateQueries()
       onClose()
-    } catch (error: any) {
-      notify.error('Error', error.message || 'Error al actualizar la alarma')
+    } catch (error: unknown) {
+      notify.error('Error', getApiErrorReason(error) ?? 'Error al actualizar la alarma')
     }
   }
 

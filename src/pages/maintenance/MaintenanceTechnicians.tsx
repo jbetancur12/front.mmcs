@@ -153,7 +153,7 @@ const MaintenanceTechnicians: React.FC = () => {
             ? 'Técnico actualizado exitosamente.'
             : 'Técnico creado exitosamente.')
         refetch()
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error('Error saving technician:', error)
         notify.error(getApiErrorReason(error) ||
             'No se pudo guardar el técnico.')
@@ -215,7 +215,7 @@ const MaintenanceTechnicians: React.FC = () => {
       setDeleteDialogOpen(false)
       setTechnicianToDelete(null)
       refetch()
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting technician:', error)
       const message =
         getApiErrorReason(error) || 'Error al eliminar el técnico'

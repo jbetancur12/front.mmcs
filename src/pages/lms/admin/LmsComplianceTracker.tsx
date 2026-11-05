@@ -1,4 +1,5 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import { getApiErrorReason } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import {
@@ -434,8 +435,8 @@ const LmsComplianceTracker: React.FC = () => {
       await Promise.all(jobs)
       notify.success('Fechas actualizadas')
       handleCloseDetails()
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudieron actualizar las fechas')
+    } catch (e: unknown) {
+      notify.error(getApiErrorReason(e) ?? 'No se pudieron actualizar las fechas')
     } finally {
       setSavingDates(false)
     }
@@ -452,8 +453,8 @@ const LmsComplianceTracker: React.FC = () => {
       })
       notify.success('Fechas restablecidas al grupo')
       handleCloseDetails()
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudo restablecer')
+    } catch (e: unknown) {
+      notify.error(getApiErrorReason(e) ?? 'No se pudo restablecer')
     } finally {
       setSavingDates(false)
     }
@@ -475,8 +476,8 @@ const LmsComplianceTracker: React.FC = () => {
       })
       notify.success('Curso reiniciado')
       handleCloseDetails()
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudo reiniciar el curso')
+    } catch (e: unknown) {
+      notify.error(getApiErrorReason(e) ?? 'No se pudo reiniciar el curso')
     }
   }
 
@@ -526,8 +527,8 @@ const LmsComplianceTracker: React.FC = () => {
       setBulkCompletedAt(null)
       setBulkAssignedAt(null)
       setBulkDeadline(null)
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudo aplicar en lote')
+    } catch (e: unknown) {
+      notify.error(getApiErrorReason(e) ?? 'No se pudo aplicar en lote')
     } finally {
       setBulkSaving(false)
     }
