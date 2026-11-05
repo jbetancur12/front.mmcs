@@ -5,9 +5,9 @@ import {
   Inventory as InventoryKpi,
   WarningAmber as WarnKpi
 } from '@mui/icons-material'
-import { Button, Container, Grid } from '@mui/material'
+import { Alert, Button, Container, Grid } from '@mui/material'
 import { MRT_ColumnFiltersState, type MRT_Row } from 'material-react-table'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -15,13 +15,17 @@ import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { brand } from 'src/theme/designTokens'
 
 import {
   COLUMN_FILTERS_STORAGE_KEY,
   initialColumnVisibility
 } from './list-data-sheet/constants'
 import { CreateNewDataSheetModal } from './list-data-sheet/CreateNewDataSheetModal'
-import { confirmDeleteDataSheet } from './list-data-sheet/dataSheetDialogs'
+import DataSheetLifecycleDialog, {
+  type DataSheetLifecycleMode,
+  type DataSheetLifecycleTarget
+} from './list-data-sheet/DataSheetLifecycleDialog'
 import DataSheetRowActions from './list-data-sheet/DataSheetRowActions'
 import DataSheetEditFormDialog from './list-data-sheet/DataSheetEditFormDialog'
 import DataSheetToolbarActions from './list-data-sheet/DataSheetToolbarActions'
@@ -71,8 +75,16 @@ const ListDataSheet: React.FC = () => {
     columnFilters,
     onColumnFiltersChange: setColumnFilters
   })
+  const [showRetired, setShowRetired] = useState(false)
+  const listParams = useMemo(
+    () => ({
+      ...server.params,
+      ...(showRetired ? { retired: 'only' } : {})
+    }),
+    [server.params, showRetired]
+  )
   const { dataSheets, totalItems, totalPages, isLoading, isFetching } =
-    useDataSheetsPaginated(server.params)
+    useDataSheetsPaginated(listParams)
   useKeepPageInRange(
     totalPages,
     server.pagination.pageIndex,
@@ -82,6 +94,10 @@ const ListDataSheet: React.FC = () => {
   const actions = useDataSheetActions()
   const { columns } = useDataSheetColumns()
   const [editingRow, setEditingRow] = useState<DataSheetData | null>(null)
+  const [lifecycleTarget, setLifecycleTarget] = useState<{
+    mode: DataSheetLifecycleMode
+    dataSheet: DataSheetLifecycleTarget
+  } | null>(null)
 
   useEffect(() => {
     // Guardar los filtros en el localStorage cada vez que cambien
@@ -95,12 +111,24 @@ const ListDataSheet: React.FC = () => {
     }
   }, [columnFilters])
 
-  const handleDeleteRow = (row: MRT_Row<DataSheetData>) => {
-    confirmDeleteDataSheet(row.getValue('equipmentName')).then((result) => {
-      if (result.isConfirmed) {
-        actions.removeDataSheet(row.getValue('id'))
+  const openLifecycleDialog = (
+    mode: DataSheetLifecycleMode,
+    row: MRT_Row<DataSheetData>
+  ) => {
+    setLifecycleTarget({
+      mode,
+      dataSheet: {
+        id: row.original.id as number,
+        internalCode: row.original.internalCode,
+        equipmentName: row.original.equipmentName,
+        serialNumber: row.original.serialNumber
       }
     })
+  }
+
+  const toggleRetired = () => {
+    setShowRetired((current) => !current)
+    server.setPagination((current) => ({ ...current, pageIndex: 0 }))
   }
 
   const dueSoonCount = counts?.dueSoon ?? 0
@@ -124,67 +152,92 @@ const ListDataSheet: React.FC = () => {
         subtitle='Inventario de equipos, calibración y mantenimiento'
         icon={<InventoryKpi />}
         actions={
-          canCreateDataSheet ? (
+          <>
             <Button
-              variant='contained'
-              startIcon={<AddKpi />}
-              onClick={() => setCreateModalOpen(true)}
+              variant='outlined'
+              onClick={toggleRetired}
               sx={{
-                bgcolor: '#00BFA5',
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00897B' }
+                textTransform: 'none',
+                fontWeight: 600,
+                color: brand.ink,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
-              Crear hoja de vida
+              {showRetired ? 'Ver activos' : 'Ver retirados'}
             </Button>
-          ) : undefined
+            {canCreateDataSheet && (
+              <Button
+                variant='contained'
+                startIcon={<AddKpi />}
+                onClick={() => setCreateModalOpen(true)}
+                sx={{
+                  bgcolor: brand.main,
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: brand.hover }
+                }}
+              >
+                Crear hoja de vida
+              </Button>
+            )}
+          </>
         }
       />
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard
-            variant='quiet'
-            label='Equipos'
-            value={counts?.total ?? totalItems}
-            icon={<InventoryKpi />}
-            tone='teal'
-            onClick={() => filterByStatus()}
-          />
+      {!showRetired && (
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              variant='quiet'
+              label='Equipos'
+              value={counts?.total ?? totalItems}
+              icon={<InventoryKpi />}
+              tone='teal'
+              onClick={() => filterByStatus()}
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              variant='quiet'
+              label='Disponibles'
+              value={counts?.available ?? 0}
+              icon={<CheckKpi />}
+              tone='green'
+              active={statusFilter === 'available'}
+              onClick={() => filterByStatus('available')}
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              variant='quiet'
+              label='Ocupados'
+              value={counts?.busy ?? 0}
+              icon={<BuildKpi />}
+              tone='blue'
+              active={statusFilter === 'busy'}
+              onClick={() => filterByStatus('busy')}
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              variant='quiet'
+              label='Por calibrar o inspeccionar'
+              value={dueSoonCount}
+              icon={<WarnKpi />}
+              tone='red'
+              onClick={() => navigate('/datasheets/alerts')}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard
-            variant='quiet'
-            label='Disponibles'
-            value={counts?.available ?? 0}
-            icon={<CheckKpi />}
-            tone='green'
-            active={statusFilter === 'available'}
-            onClick={() => filterByStatus('available')}
-          />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard
-            variant='quiet'
-            label='Ocupados'
-            value={counts?.busy ?? 0}
-            icon={<BuildKpi />}
-            tone='blue'
-            active={statusFilter === 'busy'}
-            onClick={() => filterByStatus('busy')}
-          />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard
-            variant='quiet'
-            label='Por calibrar o inspeccionar'
-            value={dueSoonCount}
-            icon={<WarnKpi />}
-            tone='red'
-            onClick={() => navigate('/datasheets/alerts')}
-          />
-        </Grid>
-      </Grid>
+      )}
+
+      {showRetired && (
+        <Alert severity='info' sx={{ mb: 2 }}>
+          Mostrando equipos dados de baja. No aparecen en alertas, cronogramas
+          ni préstamos; puedes restaurarlos mientras su código siga libre.
+        </Alert>
+      )}
 
       <DataTable
         itemLabel={['equipo', 'equipos']}
@@ -207,7 +260,10 @@ const ListDataSheet: React.FC = () => {
           <DataSheetRowActions
             row={row}
             actions={actions}
-            onDelete={handleDeleteRow}
+            onRetire={(target) => openLifecycleDialog('retire', target)}
+            onDeletePermanent={(target) =>
+              openLifecycleDialog('delete', target)
+            }
             onEditData={setEditingRow}
           />
         )}
@@ -229,6 +285,29 @@ const ListDataSheet: React.FC = () => {
         columns={columns}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
+      />
+
+      <DataSheetLifecycleDialog
+        open={Boolean(lifecycleTarget)}
+        mode={lifecycleTarget?.mode ?? 'retire'}
+        dataSheet={lifecycleTarget?.dataSheet ?? null}
+        onClose={() => setLifecycleTarget(null)}
+        onRetire={async ({ reason, releaseCode }) => {
+          if (!lifecycleTarget) return
+          await actions.retireDataSheetWithReason(
+            lifecycleTarget.dataSheet.id,
+            reason,
+            releaseCode
+          )
+        }}
+        onDelete={async ({ reason, force }) => {
+          if (!lifecycleTarget) return
+          await actions.deleteDataSheetPermanently(
+            lifecycleTarget.dataSheet.id,
+            reason,
+            force
+          )
+        }}
       />
     </Container>
   )

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { ALERTS_QUERY_KEY } from 'src/Components/DataSheet/equipmentAlerts'
 
 type Id = number | string | null | undefined
 
@@ -140,7 +141,10 @@ export const useInspectionMaintenanceRecord = <T = unknown>(id: Id) => {
 
 const useInvalidateDataSheets = () => {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries(DATASHEET_QUERY_KEYS.all)
+  return () => {
+    queryClient.invalidateQueries(DATASHEET_QUERY_KEYS.all)
+    queryClient.invalidateQueries(ALERTS_QUERY_KEY)
+  }
 }
 
 /** Crea (POST) o actualiza (PUT) un registro de calibración. */

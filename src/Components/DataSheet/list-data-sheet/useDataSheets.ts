@@ -9,6 +9,7 @@ import {
   ServerListParams
 } from 'src/hooks/useServerTable'
 
+import { ALERTS_QUERY_KEY } from '../equipmentAlerts'
 import { DataSheetData } from './types'
 
 import { logger } from 'src/utils/logger'
@@ -16,7 +17,9 @@ export const dataSheetKeys = {
   all: ['dataSheets'] as const,
   paginated: (params: ServerListParams) =>
     [...dataSheetKeys.all, 'paginated', params] as const,
-  counts: () => [...dataSheetKeys.all, 'counts'] as const
+  counts: () => [...dataSheetKeys.all, 'counts'] as const,
+  reusableCodes: (serviceType?: string) =>
+    [...dataSheetKeys.all, 'reusable-codes', serviceType ?? ''] as const
 }
 
 /** Columnas que `GET /dataSheet` acepta en `sortBy`. */
@@ -97,11 +100,36 @@ export const useDataSheetCounts = () => {
   )
 }
 
-/** Mutaciones de hojas de vida; todas invalidan la lista al terminar bien. */
+/** Códigos liberados que un equipo nuevo puede reutilizar. */
+export const useReusableCodes = (serviceType?: string) => {
+  const axiosPrivate = useAxiosPrivate()
+
+  return useQuery(
+    dataSheetKeys.reusableCodes(serviceType),
+    async () => {
+      const response = await axiosPrivate.get('/dataSheet/codes/reusable', {
+        params: serviceType ? { serviceType } : undefined
+      })
+      return Array.isArray(response.data) ? response.data : []
+    },
+    {
+      enabled: Boolean(serviceType),
+      staleTime: 30 * 1000,
+      onError: (error) => {
+        logger.error('Error fetching reusable dataSheet codes:', error)
+      }
+    }
+  )
+}
+
+/** Mutaciones de hojas de vida; todas invalidan la lista y las alertas al terminar bien. */
 export const useDataSheetMutations = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
-  const invalidate = () => queryClient.invalidateQueries(dataSheetKeys.all)
+  const invalidate = () => {
+    queryClient.invalidateQueries(dataSheetKeys.all)
+    queryClient.invalidateQueries(ALERTS_QUERY_KEY)
+  }
   // Sin reintentos: el `retry: 1` global de mutaciones reenviaría POST/PUT/DELETE.
   const options = { onSuccess: invalidate, retry: 0 }
 
@@ -114,8 +142,31 @@ export const useDataSheetMutations = () => {
     options
   )
 
-  const deleteDataSheet = useMutation<AxiosResponse, unknown, number>(
-    (id) => axiosPrivate.delete(`/dataSheet/${id}`),
+  const deleteDataSheet = useMutation<
+    AxiosResponse,
+    unknown,
+    number | { id: number; reason?: string; force?: boolean }
+  >((input) => {
+    const id = typeof input === 'number' ? input : input.id
+    const data =
+      typeof input === 'number'
+        ? undefined
+        : { reason: input.reason, force: input.force }
+    return axiosPrivate.delete(`/dataSheet/${id}`, { data })
+  }, options)
+
+  const retireDataSheet = useMutation<
+    AxiosResponse,
+    unknown,
+    { id: number; reason?: string; releaseCode?: boolean }
+  >(
+    ({ id, reason, releaseCode }) =>
+      axiosPrivate.post(`/dataSheet/${id}/retire`, { reason, releaseCode }),
+    options
+  )
+
+  const restoreDataSheet = useMutation<AxiosResponse, unknown, number>(
+    (id) => axiosPrivate.post(`/dataSheet/${id}/restore`, {}),
     options
   )
 
@@ -158,6 +209,8 @@ export const useDataSheetMutations = () => {
   return {
     updateDataSheet,
     deleteDataSheet,
+    retireDataSheet,
+    restoreDataSheet,
     uploadImage,
     uploadInvoice,
     createDataSheet

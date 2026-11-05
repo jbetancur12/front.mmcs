@@ -365,7 +365,9 @@ export const PERMISSIONS = {
   CALIBRATION_DATASHEET_CREATE: 'calibration:datasheet:create',
   /** Editar hojas de datos de equipos, su estado, imagen y factura */
   CALIBRATION_DATASHEET_UPDATE: 'calibration:datasheet:update',
-  /** Eliminar hojas de datos de equipos */
+  /** Dar de baja una hoja de datos y liberar su código interno */
+  CALIBRATION_DATASHEET_RETIRE: 'calibration:datasheet:retire',
+  /** Eliminar definitivamente una hoja de datos (solo administración) */
   CALIBRATION_DATASHEET_DELETE: 'calibration:datasheet:delete',
   /** Ver el listado de equipos */
   CALIBRATION_DEVICE_VIEW: 'calibration:device:view',

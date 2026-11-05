@@ -1,10 +1,12 @@
 import {
-  Delete,
+  Block,
+  DeleteForever,
   Download,
   Edit,
   Engineering,
   ExitToApp,
   MoreVert,
+  Restore,
   Visibility
 } from '@mui/icons-material'
 import {
@@ -21,6 +23,7 @@ import { Link } from 'react-router-dom'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { intent, brand } from 'src/theme/designTokens'
 
 import DataSheetEditDialogs, { type EditStep } from './DataSheetEditDialogs'
 import { DataSheetData } from './types'
@@ -29,7 +32,8 @@ import { DataSheetActions } from './useDataSheetActions'
 interface DataSheetRowActionsProps {
   row: MRT_Row<DataSheetData>
   actions: DataSheetActions
-  onDelete: (row: MRT_Row<DataSheetData>) => void
+  onRetire: (row: MRT_Row<DataSheetData>) => void
+  onDeletePermanent: (row: MRT_Row<DataSheetData>) => void
   /** Abre la edición de los datos de la hoja de vida. */
   onEditData: (row: DataSheetData) => void
 }
@@ -37,7 +41,8 @@ interface DataSheetRowActionsProps {
 const DataSheetRowActions = ({
   row,
   actions,
-  onDelete,
+  onRetire,
+  onDeletePermanent,
   onEditData
 }: DataSheetRowActionsProps) => {
   const canViewDetail = useCan(PERMISSIONS.CALIBRATION_DATASHEET_DETAIL)
@@ -45,11 +50,13 @@ const DataSheetRowActions = ({
     PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_VIEW
   )
   const canUpdateDataSheet = useCan(PERMISSIONS.CALIBRATION_DATASHEET_UPDATE)
+  const canRetire = useCan(PERMISSIONS.CALIBRATION_DATASHEET_RETIRE)
   const canDeleteDataSheet = useCan(PERMISSIONS.CALIBRATION_DATASHEET_DELETE)
   const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
   const [editStep, setEditStep] = useState<EditStep>(null)
 
   const id = row.original.id as number
+  const isRetired = Boolean(row.original.isRetired)
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation()
@@ -109,7 +116,7 @@ const DataSheetRowActions = ({
           </MuiMenuItem>
         )}
 
-        {canViewMaintenance && (
+        {!isRetired && canViewMaintenance && (
           <MuiMenuItem
             component={Link}
             to={`${row.original.id}/inspection-maintenance`}
@@ -122,16 +129,18 @@ const DataSheetRowActions = ({
           </MuiMenuItem>
         )}
 
-        <MuiMenuItem
-          component={Link}
-          to={`${row.original.id}/in-out`}
-          onClick={handleMenuClose}
-        >
-          <ListItemIcon>
-            <ExitToApp fontSize='small' sx={{ color: '#00695C' }} />
-          </ListItemIcon>
-          Entrada y salida
-        </MuiMenuItem>
+        {!isRetired && (
+          <MuiMenuItem
+            component={Link}
+            to={`${row.original.id}/in-out`}
+            onClick={handleMenuClose}
+          >
+            <ListItemIcon>
+              <ExitToApp fontSize='small' sx={{ color: '#00695C' }} />
+            </ListItemIcon>
+            Entrada y salida
+          </MuiMenuItem>
+        )}
 
         {row.original.invoiceUrl && canViewDetail && (
           <MuiMenuItem
@@ -149,7 +158,7 @@ const DataSheetRowActions = ({
 
         <Divider sx={{ my: 0.5 }} />
 
-        {canUpdateDataSheet && (
+        {!isRetired && canUpdateDataSheet && (
           <MuiMenuItem onClick={handleEdit}>
             <ListItemIcon>
               <Edit fontSize='small' sx={{ color: '#2563eb' }} />
@@ -158,31 +167,65 @@ const DataSheetRowActions = ({
           </MuiMenuItem>
         )}
 
+        {isRetired && canRetire && (
+          <MuiMenuItem
+            onClick={() => {
+              actions.restoreDataSheetFromRetirement(id)
+              handleMenuClose()
+            }}
+          >
+            <ListItemIcon>
+              <Restore fontSize='small' sx={{ color: brand.ink }} />
+            </ListItemIcon>
+            Restaurar
+          </MuiMenuItem>
+        )}
+
+        {!isRetired && canRetire && (
+          <MuiMenuItem
+            onClick={() => {
+              onRetire(row)
+              handleMenuClose()
+            }}
+            sx={{
+              color: intent.warningInk,
+              '&:hover': { bgcolor: intent.warningSoft }
+            }}
+          >
+            <ListItemIcon>
+              <Block fontSize='small' sx={{ color: intent.warningInk }} />
+            </ListItemIcon>
+            Dar de baja
+          </MuiMenuItem>
+        )}
+
         {canDeleteDataSheet && (
           <MuiMenuItem
             onClick={() => {
-              onDelete(row)
+              onDeletePermanent(row)
               handleMenuClose()
             }}
             sx={{ color: '#dc2626', '&:hover': { bgcolor: '#fef2f2' } }}
           >
             <ListItemIcon>
-              <Delete fontSize='small' sx={{ color: '#dc2626' }} />
+              <DeleteForever fontSize='small' sx={{ color: '#dc2626' }} />
             </ListItemIcon>
-            Eliminar
+            Eliminar definitivamente
           </MuiMenuItem>
         )}
       </Menu>
 
-      <DataSheetEditDialogs
-        step={editStep}
-        onClose={() => setEditStep(null)}
-        onStepChange={setEditStep}
-        equipmentName={row.original.equipmentName as string | undefined}
-        onUploadImage={(image) => actions.handleUpload({ id, image })}
-        onUploadInvoice={(pdfFile) => actions.handleUploadPdf(id, pdfFile)}
-        onEditOther={() => onEditData(row.original)}
-      />
+      {!isRetired && (
+        <DataSheetEditDialogs
+          step={editStep}
+          onClose={() => setEditStep(null)}
+          onStepChange={setEditStep}
+          equipmentName={row.original.equipmentName as string | undefined}
+          onUploadImage={(image) => actions.handleUpload({ id, image })}
+          onUploadInvoice={(pdfFile) => actions.handleUploadPdf(id, pdfFile)}
+          onEditOther={() => onEditData(row.original)}
+        />
+      )}
     </Box>
   )
 }

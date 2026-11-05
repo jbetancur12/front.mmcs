@@ -931,9 +931,14 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Cambiar una hoja de datos, su estado, imagen y factura.',
     'Hojas de datos: edición.'
   ],
+  'calibration:datasheet:retire': [
+    'Dar de baja hojas de datos',
+    'Retirar un equipo de la operación y liberar su código interno para reutilizarlo.',
+    'Hojas de datos: acción de dar de baja.'
+  ],
   'calibration:datasheet:delete': [
-    'Eliminar hojas de datos',
-    'Borrar una hoja de datos.',
+    'Eliminar hojas de datos definitivamente',
+    'Borrar una hoja de datos y su historial. Solo administración.',
     'Hojas de datos: acción de eliminar.'
   ],
   'calibration:device:view': [

@@ -1,4 +1,5 @@
 import { notify } from 'src/utils/notify'
+import { getApiErrorMessage } from 'src/utils/apiError'
 
 import { useDataSheetMutations, useDownloadInvoice } from './useDataSheets'
 import { downloadBlob } from './utils'
@@ -9,8 +10,14 @@ import { logger } from 'src/utils/logger'
  * del paso a react-query.
  */
 export const useDataSheetActions = () => {
-  const { updateDataSheet, deleteDataSheet, uploadImage, uploadInvoice } =
-    useDataSheetMutations()
+  const {
+    updateDataSheet,
+    deleteDataSheet,
+    retireDataSheet,
+    restoreDataSheet,
+    uploadImage,
+    uploadInvoice
+  } = useDataSheetMutations()
   const downloadInvoice = useDownloadInvoice()
 
   const saveDataSheet = async (
@@ -43,6 +50,44 @@ export const useDataSheetActions = () => {
     } catch (error) {
       logger.error('Error de red:', error)
       notify.error('Error al eliminar la hoja de datos')
+    }
+  }
+
+  const retireDataSheetWithReason = async (
+    id: number,
+    reason: string,
+    releaseCode: boolean
+  ): Promise<void> => {
+    try {
+      await retireDataSheet.mutateAsync({ id, reason, releaseCode })
+      notify.success('Equipo dado de baja correctamente')
+    } catch (error) {
+      logger.error('Error al dar de baja la hoja de datos:', error)
+      throw error
+    }
+  }
+
+  const deleteDataSheetPermanently = async (
+    id: number,
+    reason: string,
+    force: boolean
+  ): Promise<void> => {
+    try {
+      await deleteDataSheet.mutateAsync({ id, reason, force })
+      notify.success('Equipo eliminado definitivamente')
+    } catch (error) {
+      logger.error('Error al eliminar la hoja de datos:', error)
+      throw error
+    }
+  }
+
+  const restoreDataSheetFromRetirement = async (id: number): Promise<void> => {
+    try {
+      await restoreDataSheet.mutateAsync(id)
+      notify.success('Equipo restaurado correctamente')
+    } catch (error) {
+      logger.error('Error al restaurar la hoja de datos:', error)
+      notify.error(getApiErrorMessage(error, 'No se pudo restaurar el equipo'))
     }
   }
 
@@ -94,6 +139,9 @@ export const useDataSheetActions = () => {
   return {
     saveDataSheet,
     removeDataSheet,
+    retireDataSheetWithReason,
+    deleteDataSheetPermanently,
+    restoreDataSheetFromRetirement,
     handleUpload,
     handleUploadPdf,
     handleDownloadPdf

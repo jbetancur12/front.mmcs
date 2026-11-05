@@ -5,10 +5,7 @@ import { MenuOption } from './types'
 // Validation Schema
 export const validationSchema = yup.object({
   picture: yup.mixed().required('La imagen es obligatoria'),
-  internalCode: yup
-    .string()
-    .required('Código interno es obligatorio')
-    .default('Automatico'),
+  internalCode: yup.string(),
   equipmentName: yup.string().required('Nombre del equipo es obligatorio'),
   brand: yup.string().required('Marca es obligatoria'),
   model: yup.string().required('Modelo es obligatorio'),
@@ -59,7 +56,7 @@ export const validationSchema = yup.object({
 
 export const initialDataSheetFormValues = {
   picture: null as File | null,
-  internalCode: 'Automático', // Este valor es solo para visualización y no será enviado al backend
+  internalCode: '', // Vacío = automático. Si trae valor, se reutiliza ese código liberado.
   equipmentName: '',
   brand: '',
   model: '',
