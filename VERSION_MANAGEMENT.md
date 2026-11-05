@@ -3,6 +3,7 @@
 ## 📋 Comandos Disponibles
 
 ### **Incrementar Versión**
+
 ```bash
 # Solo actualizar archivo (requiere commit manual)
 npm run version:patch    # 1.2.1 → 1.2.2 (bugfixes)
@@ -16,6 +17,7 @@ npm run version:major:commit "Complete redesign"
 ```
 
 ### **Información de Versiones**
+
 ```bash
 npm run version:current  # Ver versión actual
 npm run version:list     # Listar últimas 10 versiones
@@ -23,6 +25,7 @@ git tag -l "v*"         # Ver todas las versiones
 ```
 
 ### **Rollback**
+
 ```bash
 # Ver versiones disponibles
 npm run version:rollback
@@ -34,6 +37,7 @@ npm run version:rollback v1.2.0 --force
 ## 🔄 Flujo de Trabajo
 
 ### **1. Desarrollo Normal (Recomendado)**
+
 ```bash
 # Hacer cambios en el código...
 # Ejemplo: Agregar nueva funcionalidad al LMS
@@ -55,6 +59,7 @@ git push && git push --tags
 ```
 
 ### **2. Bug Fix Rápido**
+
 ```bash
 # Arreglar bug...
 # Ejemplo: Fix en el editor de contenido LMS
@@ -75,6 +80,7 @@ git push && git push --tags
 ```
 
 ### **3. Flujo Automático (Todo en uno)**
+
 ```bash
 # Hacer cambios...
 # NO hacer commit todavía
@@ -85,6 +91,7 @@ git push && git push --tags
 ```
 
 ### **4. Rollback de Emergencia**
+
 ```bash
 # Ver versiones disponibles
 npm run version:list
@@ -167,18 +174,21 @@ git push && git push --tags
 ## 📝 Tipos de Versión
 
 ### **PATCH (1.2.1 → 1.2.2)**
+
 - ✅ Bugfixes
 - ✅ Cambios de UI menores
 - ✅ Optimizaciones
 - ❌ **NO limpia tokens**
 
 ### **MINOR (1.2.1 → 1.3.0)**
+
 - ✅ Nuevas features
 - ✅ Cambios en autenticación
 - ✅ Updates de seguridad
 - ✅ **SÍ limpia tokens**
 
 ### **MAJOR (1.2.1 → 2.0.0)**
+
 - ✅ Breaking changes
 - ✅ Reestructuración completa
 - ✅ Migración de datos
@@ -187,6 +197,7 @@ git push && git push --tags
 ## 🚨 Casos de Emergencia
 
 ### **Si el deploy falló:**
+
 ```bash
 # Opción 1: Rollback completo
 npm run version:rollback v1.2.0 --force
@@ -198,6 +209,7 @@ git push
 ```
 
 ### **Si los usuarios reportan problemas:**
+
 ```bash
 # Rollback inmediato
 npm run version:rollback v1.2.0 --force
@@ -208,6 +220,7 @@ echo "🚨 ROLLBACK: Reverted to v1.2.0 due to issues"
 ```
 
 ### **Si se perdió el historial:**
+
 ```bash
 # Recuperar desde remoto
 git fetch --all --tags
@@ -220,17 +233,20 @@ npm run version:list
 ## 🔧 Configuración
 
 ### **Archivo de versión:** `src/constants/version.ts`
+
 - `VERSION`: Versión actual
 - `CLEAR_TOKENS_ON_VERSION_CHANGE`: Si limpiar tokens
 - `CHANGELOG`: Historial de cambios
 
 ### **Scripts:** `scripts/`
+
 - `update-version.js`: Incrementar versión
 - `rollback-version.js`: Hacer rollback
 
 ## 📊 Monitoreo
 
 ### **Logs en producción:**
+
 ```javascript
 // En browser console
 console.log(APP_CONFIG.VERSION)
@@ -238,6 +254,7 @@ console.log(APP_CONFIG.CHANGELOG)
 ```
 
 ### **Verificar deploy:**
+
 ```bash
 # Ver última versión deployada
 curl -s https://app.metromedics.co | grep -o 'VERSION.*'
@@ -257,6 +274,7 @@ curl -s https://app.metromedics.co | grep -o 'VERSION.*'
 ## 🔍 Troubleshooting
 
 ### **Error: "Hay cambios sin commitear"**
+
 ```bash
 # Solución 1: Commit manual primero
 git add .
@@ -268,6 +286,7 @@ npm run version:patch:commit "bug fix"
 ```
 
 ### **Error: "Cannot read properties of undefined"**
+
 ```bash
 # Problema con import.meta.env
 # Ya está solucionado en version.ts
@@ -275,6 +294,7 @@ npm run version:current  # Debería funcionar
 ```
 
 ### **Rollback no funciona**
+
 ```bash
 # Verificar que la versión existe
 git tag -l "v*"
@@ -288,7 +308,7 @@ npm run version:rollback v1.4.0 --force
 ```bash
 # Comandos más usados
 npm run version:patch "bug description"     # Bug fix
-npm run version:minor "feature description" # New feature  
+npm run version:minor "feature description" # New feature
 npm run version:current                     # Ver versión
 git tag v1.x.x && git push --tags         # Deploy
 ```

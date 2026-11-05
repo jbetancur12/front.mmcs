@@ -8,15 +8,15 @@ La meta **no** es un porcentaje de cobertura. Es cubrir lo que duele cuando fall
 
 Lógica pura, rápida de probar y estable. Un error ahí es silencioso y llega al usuario.
 
-| Prioridad | Archivo | Por qué |
-|---|---|---|
-| 1 | `src/utils/roleUtils.ts`, `src/constants/roles.ts` | Un error muestra u oculta pantallas por rol. Ya hubo un saneamiento de roles (RBAC). Probar sobre todo `normalizeRole` y las comprobaciones de acceso, con `"Training Manager"` (con espacio) como caso. |
-| 1 | `src/utils/lmsIdentity.ts`, `src/utils/lmsAudience.ts` | Decide qué ve cada tipo de usuario en el LMS. |
-| 2 | `src/utils/lmsProgress.ts` | Cálculo de avance; un error cambia reportes y certificados. |
-| 2 | `src/utils/dateOnly.ts` | Fechas sin desfase de zona horaria (el error clásico de `toISOString`). |
-| 2 | `src/utils/passwordPolicy.ts`, `src/utils/rbacErrors.ts`, `src/utils/sessionEnd.ts` | Reglas pequeñas con casos límite claros. |
-| 3 | `src/utils/quickSearchUsage.ts` | Conteo de visitas con decaimiento a 14 días. |
-| 3 | `src/utils/tableStateUtils.ts` | Estado persistente de las tablas. |
+| Prioridad | Archivo                                                                             | Por qué                                                                                                                                                                                                  |
+| --------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1         | `src/utils/roleUtils.ts`, `src/constants/roles.ts`                                  | Un error muestra u oculta pantallas por rol. Ya hubo un saneamiento de roles (RBAC). Probar sobre todo `normalizeRole` y las comprobaciones de acceso, con `"Training Manager"` (con espacio) como caso. |
+| 1         | `src/utils/lmsIdentity.ts`, `src/utils/lmsAudience.ts`                              | Decide qué ve cada tipo de usuario en el LMS.                                                                                                                                                            |
+| 2         | `src/utils/lmsProgress.ts`                                                          | Cálculo de avance; un error cambia reportes y certificados.                                                                                                                                              |
+| 2         | `src/utils/dateOnly.ts`                                                             | Fechas sin desfase de zona horaria (el error clásico de `toISOString`).                                                                                                                                  |
+| 2         | `src/utils/passwordPolicy.ts`, `src/utils/rbacErrors.ts`, `src/utils/sessionEnd.ts` | Reglas pequeñas con casos límite claros.                                                                                                                                                                 |
+| 3         | `src/utils/quickSearchUsage.ts`                                                     | Conteo de visitas con decaimiento a 14 días.                                                                                                                                                             |
+| 3         | `src/utils/tableStateUtils.ts`                                                      | Estado persistente de las tablas.                                                                                                                                                                        |
 
 Ya cubiertos: `apiError.ts`, `clientErrors.ts`, `features/libraryFlags.ts`.
 

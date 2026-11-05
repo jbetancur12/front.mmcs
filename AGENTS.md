@@ -26,23 +26,23 @@ npm run version:patch|minor|major   # scripts/update-version.js (ver VERSIONING.
 
 ## Estructura (`src/`)
 
-| Carpeta | Contenido |
-|---|---|
-| `main.tsx`, `router.tsx` | Entrada, providers, árbol de rutas (lazy + `RequireAuth`) |
-| `routes/` | Un archivo `*Routes.tsx` por módulo (Calibration, Maintenance, Lms, Fleet, Iot, ...) que `router.tsx` compone |
-| `pages/` | Pantallas por ruta (`pages/lms/{admin,employee,client,course}`, `pages/Admin`, ...) |
-| `Components/` | Componentes por dominio (`Maintenance`, `Purchases`, `lms`, `Authentication`, `Table`, ...) + `Layout`, `SideBar` |
-| `hooks/` | Hooks de datos/tiempo real (`useLms`, `useMaintenance`, `useCalibrationServices`, `use*WebSocket`...) |
-| `services/` | Clientes API puntuales (`lmsService`, `quizService`) |
-| `store/` | nanostores (`userStore`, `customerStore`, `deviceStore`, ...) |
-| `utils/` | `api.ts` (`axiosPublic`/`axiosPrivate`), `use-axios-private`, `roleUtils`, `lmsIdentity`, WebSocket |
-| `constants/`, `types/`, `theme/` | Roles/módulos/versión, tipos de dominio, design system |
+| Carpeta                          | Contenido                                                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `main.tsx`, `router.tsx`         | Entrada, providers, árbol de rutas (lazy + `RequireAuth`)                                                         |
+| `routes/`                        | Un archivo `*Routes.tsx` por módulo (Calibration, Maintenance, Lms, Fleet, Iot, ...) que `router.tsx` compone     |
+| `pages/`                         | Pantallas por ruta (`pages/lms/{admin,employee,client,course}`, `pages/Admin`, ...)                               |
+| `Components/`                    | Componentes por dominio (`Maintenance`, `Purchases`, `lms`, `Authentication`, `Table`, ...) + `Layout`, `SideBar` |
+| `hooks/`                         | Hooks de datos/tiempo real (`useLms`, `useMaintenance`, `useCalibrationServices`, `use*WebSocket`...)             |
+| `services/`                      | Clientes API puntuales (`lmsService`, `quizService`)                                                              |
+| `store/`                         | nanostores (`userStore`, `customerStore`, `deviceStore`, ...)                                                     |
+| `utils/`                         | `api.ts` (`axiosPublic`/`axiosPrivate`), `use-axios-private`, `roleUtils`, `lmsIdentity`, WebSocket               |
+| `constants/`, `types/`, `theme/` | Roles/módulos/versión, tipos de dominio, design system                                                            |
 
 Alias de imports: `src/...` (baseUrl `.`), `@utils/*`, `@stores/*`, `@hooks/*`, `@services/*`, `@config/*`.
 
 ## Convenciones
 
-- Estilo: Prettier con `prettier-config-standard` (clave `"prettier"` de `package.json`, la única configuración: 80 columnas, sin `;`, comillas simples, JSX con `'`). Todo `src` (`ts`, `tsx`, `css`, `md`) está formateado; corre `npm run format` tras editar y `npm run lint` lo verifica con `format:check` (los archivos generados de `src/constants` están en `.prettierignore`). `noUnusedLocals/Parameters` están activos: el build falla con imports sobrantes.
+- Estilo: Prettier con `prettier-config-standard` (clave `"prettier"` de `package.json`, la única configuración: 80 columnas, sin `;`, comillas simples, JSX con `'`). Todo el repo está formateado salvo lo listado en `.prettierignore` (dependencias, builds y los constants generados de `src/constants`). Corre `npm run format` tras editar; `npm run lint` lo verifica con `format:check`. `noUnusedLocals/Parameters` están activos: el build falla con imports sobrantes.
 - Commits **Conventional Commits** (commitlint + husky); versionado en `VERSIONING.md` / `VERSION_MANAGEMENT.md`.
 - Páginas nuevas: `lazy()` en el `*Routes.tsx` del módulo, envuelta en `ProtectedRoute`/guard con los roles correspondientes. Roles del front deben coincidir con los del backend (`../api.mmcs/constants/roles.constants.js`); ver `src/constants/roles.ts`, `src/utils/roleUtils.ts`, `src/utils/lmsIdentity.ts` (`"Training Manager"` con espacio).
 - Errores del API: el backend responde en varios formatos (`{ error: { code, message, details } }`, `{ error: "texto" }`, `{ message: "texto" }`). Léelos siempre con `getApiErrorReason(error)` / `parseApiError(error)` de `src/utils/apiError.ts` (`getApiErrorMessage` para "texto base + motivo"); una regla ESLint prohíbe `response.data.error|message` a mano. Plan de unificación en `plans/estandarizar-errores-api.md`.

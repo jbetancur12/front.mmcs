@@ -11,7 +11,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = path.join(root, 'src', 'constants', 'passwordPolicy.ts')
-const apiPolicy = path.resolve(root, '..', 'api.mmcs', 'services', 'passwordPolicy.js')
+const apiPolicy = path.resolve(
+  root,
+  '..',
+  'api.mmcs',
+  'services',
+  'passwordPolicy.js'
+)
 
 const { PASSWORD_MIN_LENGTH, COMMON_PASSWORDS } = await import(
   pathToFileURL(apiPolicy).href
@@ -40,4 +46,6 @@ if (process.argv.includes('--check')) {
   process.exit(0)
 }
 fs.writeFileSync(OUT, OUT_TEXT)
-console.log(`ok: ${COMMON_PASSWORDS.length} contraseñas comunes, mínimo ${PASSWORD_MIN_LENGTH}`)
+console.log(
+  `ok: ${COMMON_PASSWORDS.length} contraseñas comunes, mínimo ${PASSWORD_MIN_LENGTH}`
+)
