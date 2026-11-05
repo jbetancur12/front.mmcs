@@ -42,8 +42,13 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
+  type ChipProps,
 } from '@mui/material'
-import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
+import {
+  MaterialReactTable,
+  type MRT_ColumnDef,
+  type MRT_RowSelectionState
+} from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -80,6 +85,11 @@ import {
 } from '../../../hooks/useLms'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { notify } from 'src/utils/notify'
+import type {
+  AssignmentReminderSummary,
+  MandatoryTrainingRecord,
+  MandatoryTrainingStatus
+} from '../../../services/lmsService'
 
 interface ComplianceRecord {
   id: number
@@ -89,23 +99,14 @@ interface ComplianceRecord {
   department: string
   courseId: number
   courseTitle: string
-  assignedDate: string
-  deadline: string
-  completedDate?: string
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue'
+  assignedDate: string | null
+  deadline: string | null
+  completedDate?: string | null
+  status: MandatoryTrainingStatus
   progress: number
   daysUntilDeadline: number | null
   isOverdue: boolean
-  reminderSummary?: {
-    totalNotifications: number
-    reminderNotifications: number
-    manualReminderNotifications: number
-    unreadReminderNotifications: number
-    lastNotificationAt: string | null
-    lastReminderAt: string | null
-    lastManualReminderAt: string | null
-    lastReminderType: string | null
-  }
+  reminderSummary?: AssignmentReminderSummary
 }
 
 const hasUpcomingDeadline = (record: Pick<ComplianceRecord, 'isOverdue' | 'daysUntilDeadline' | 'status'>) =>
@@ -278,7 +279,7 @@ const LmsComplianceTracker: React.FC = () => {
       return []
     }
 
-    const records = trainingData.mandatoryTraining.map((training: any, index: number) => ({
+    const records = trainingData.mandatoryTraining.map((training: MandatoryTrainingRecord, index: number) => ({
       id: training.assignmentId || index,
       userId: training.userId,
       userName: training.userName,
@@ -329,7 +330,7 @@ const LmsComplianceTracker: React.FC = () => {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): ChipProps['color'] => {
     switch (status) {
       case 'completed':
         return 'success'
@@ -361,7 +362,7 @@ const LmsComplianceTracker: React.FC = () => {
 
   const handleSendReminder = (record: ComplianceRecord) => {
     setSelectedRecord(record)
-    setReminderMessage(`Recordatorio: El curso "${record.courseTitle}" ${record.isOverdue ? 'está vencido' : `vence el ${new Date(record.deadline).toLocaleDateString()}`}. Por favor, completa las lecciones restantes.`)
+    setReminderMessage(`Recordatorio: El curso "${record.courseTitle}" ${record.isOverdue ? 'está vencido' : `vence el ${record.deadline ? new Date(record.deadline).toLocaleDateString() : 'sin fecha'}`}. Por favor, completa las lecciones restantes.`)
     setOpenDialog(true)
   }
 
@@ -411,7 +412,7 @@ const LmsComplianceTracker: React.FC = () => {
 
     setSavingDates(true)
     try {
-      const jobs: Promise<any>[] = [
+      const jobs: Promise<unknown>[] = [
         setUserDatesMutation.mutateAsync({
           scope: dateScope,
           userId: detailsRecord.userId,
@@ -495,7 +496,7 @@ const LmsComplianceTracker: React.FC = () => {
 
     setBulkSaving(true)
     try {
-      const jobs: Promise<any>[] = []
+      const jobs: Promise<unknown>[] = []
 
       if (bulkCompletedAt) {
         jobs.push(
@@ -631,7 +632,7 @@ const LmsComplianceTracker: React.FC = () => {
     [selectedKeys]
   )
 
-  const handleRowSelectionChange = (updater: any) => {
+  const handleRowSelectionChange = (updater: MRT_RowSelectionState | ((old: MRT_RowSelectionState) => MRT_RowSelectionState)) => {
     const next: Record<string, boolean> = typeof updater === 'function' ? updater(rowSelectionState) : updater
     setSelectedKeys(Object.keys(next).filter((key) => next[key]))
   }
@@ -686,7 +687,7 @@ const LmsComplianceTracker: React.FC = () => {
             <Box>
               <Chip
                 label={getStatusLabel(record.status)}
-                color={getStatusColor(record.status) as any}
+                color={getStatusColor(record.status)}
                 size='small'
               />
               <Typography
@@ -771,7 +772,7 @@ const LmsComplianceTracker: React.FC = () => {
       r.department ? getRoleLabelEs(r.department) : 'N/A',
       getStatusLabel(r.status),
       `${r.progress}%`,
-      new Date(r.deadline).toLocaleDateString(),
+      r.deadline ? new Date(r.deadline).toLocaleDateString() : '',
       formatDeadlineLabel(r)
     ])
 
@@ -1204,7 +1205,7 @@ const LmsComplianceTracker: React.FC = () => {
                             <TableCell>
                               <Chip
                                 label={getStatusLabel(record.status)}
-                                color={getStatusColor(record.status) as any}
+                                color={getStatusColor(record.status)}
                                 size="small"
                               />
                             </TableCell>
@@ -1488,7 +1489,7 @@ const LmsComplianceTracker: React.FC = () => {
                       </Typography>
                       <Chip
                         label={getStatusLabel(detailsRecord.status)}
-                        color={getStatusColor(detailsRecord.status) as any}
+                        color={getStatusColor(detailsRecord.status)}
                       />
                     </Box>
                   </Grid>
@@ -1575,7 +1576,7 @@ const LmsComplianceTracker: React.FC = () => {
                         <Select
                           label="Aplicar a"
                           value={dateScope}
-                          onChange={(e) => setDateScope(e.target.value as any)}
+                          onChange={(e) => setDateScope(e.target.value as 'user' | 'group' | 'group-clear')}
                         >
                           <MenuItem value="user">Solo este usuario</MenuItem>
                           <MenuItem value="group">Todo el grupo (asignación)</MenuItem>

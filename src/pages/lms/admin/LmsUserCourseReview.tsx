@@ -12,7 +12,8 @@ import {
   Grid,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  type ChipProps
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -37,7 +38,7 @@ const lessonStatusLabel = (status?: string) => {
   }
 }
 
-const lessonStatusColor = (status?: string) => {
+const lessonStatusColor = (status?: string): ChipProps['color'] => {
   switch (status) {
     case 'completed':
       return 'success'
@@ -75,12 +76,12 @@ const LmsUserCourseReview = () => {
     let quizzes = 0
     let attempts = 0
     const bests: number[] = []
-    data.modules.forEach((module: any) =>
-      module.lessons.forEach((lesson: any) => {
+    data.modules.forEach((module) =>
+      module.lessons.forEach((lesson) => {
         if (!lesson.quiz) return
         quizzes++
         attempts += lesson.quiz.attempts.length
-        const best = lesson.quiz.attempts.reduce((max: number, a: any) => Math.max(max, a.percentage), 0)
+        const best = lesson.quiz.attempts.reduce((max: number, a) => Math.max(max, a.percentage), 0)
         if (lesson.quiz.attempts.length > 0) bests.push(best)
       })
     )
@@ -104,6 +105,9 @@ const LmsUserCourseReview = () => {
     )
   }
 
+  const courseCompleted =
+    data.progress.totalLessons > 0 && data.progress.completedLessons >= data.progress.totalLessons
+
   return (
     <Box sx={{ p: 3, maxWidth: 1100, mx: 'auto' }}>
       <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 2 }}>
@@ -125,9 +129,9 @@ const LmsUserCourseReview = () => {
             </Typography>
           </Box>
           <Chip
-            icon={data.progress.isCompleted ? <CheckCircleIcon /> : <SchoolIcon />}
-            label={data.progress.isCompleted ? 'Curso completado' : 'En progreso'}
-            color={data.progress.isCompleted ? 'success' : 'primary'}
+            icon={courseCompleted ? <CheckCircleIcon /> : <SchoolIcon />}
+            label={courseCompleted ? 'Curso completado' : 'En progreso'}
+            color={courseCompleted ? 'success' : 'primary'}
           />
         </Box>
 
@@ -172,7 +176,7 @@ const LmsUserCourseReview = () => {
       </Alert>
 
       {/* Módulos */}
-      {data.modules.map((module: any) => (
+      {data.modules.map((module) => (
         <Paper key={module.id} variant="outlined" sx={{ mb: 3, overflow: 'hidden' }}>
           <Box sx={{ p: 2, bgcolor: 'grey.50', display: 'flex', alignItems: 'center', gap: 1 }}>
             <SchoolIcon color="primary" />
@@ -182,18 +186,19 @@ const LmsUserCourseReview = () => {
             <Chip
               size="small"
               variant="outlined"
-              label={`${module.lessons.filter((l: any) => l.progress?.status === 'completed').length}/${module.lessons.length} completadas`}
+              label={`${module.lessons.filter((l) => l.progress?.status === 'completed').length}/${module.lessons.length} completadas`}
             />
           </Box>
 
           <Divider />
 
-          {module.lessons.map((lesson: any, index: number) => {
+          {module.lessons.map((lesson, index: number) => {
             const quizAttempts = lesson.quiz?.attempts || []
+            const quizId = lesson.quiz?.id
             const activeId =
-              selectedAttempt[lesson.quiz?.id] ??
+              (quizId != null ? selectedAttempt[quizId] : undefined) ??
               (quizAttempts.length ? quizAttempts[quizAttempts.length - 1].id : null)
-            const active = quizAttempts.find((a: any) => a.id === activeId)
+            const active = quizAttempts.find((a) => a.id === activeId)
 
             return (
               <Box key={lesson.id} sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
@@ -207,7 +212,7 @@ const LmsUserCourseReview = () => {
                   <Chip
                     size="small"
                     label={lessonStatusLabel(lesson.progress?.status)}
-                    color={lessonStatusColor(lesson.progress?.status) as any}
+                    color={lessonStatusColor(lesson.progress?.status)}
                   />
                 </Box>
 
@@ -222,13 +227,13 @@ const LmsUserCourseReview = () => {
                         <>
                           <Chip
                             size="small"
-                            color={quizAttempts.some((a: any) => a.passed) ? 'success' : 'error'}
-                            label={quizAttempts.some((a: any) => a.passed) ? 'Aprobado' : 'No aprobado'}
+                            color={quizAttempts.some((a) => a.passed) ? 'success' : 'error'}
+                            label={quizAttempts.some((a) => a.passed) ? 'Aprobado' : 'No aprobado'}
                           />
                           <Chip
                             size="small"
                             variant="outlined"
-                            label={`Mejor intento: ${Math.max(...quizAttempts.map((a: any) => a.percentage))}%`}
+                            label={`Mejor intento: ${Math.max(...quizAttempts.map((a) => a.percentage))}%`}
                           />
                         </>
                       ) : (
@@ -242,15 +247,16 @@ const LmsUserCourseReview = () => {
                           Intentos ({quizAttempts.length})
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                          {quizAttempts.map((attempt: any) => (
+                          {quizAttempts.map((attempt) => (
                             <Button
                               key={attempt.id}
                               size="small"
                               variant={attempt.id === activeId ? 'contained' : 'outlined'}
                               color={attempt.passed ? 'success' : 'error'}
-                              onClick={() =>
-                                setSelectedAttempt((prev) => ({ ...prev, [lesson.quiz.id]: attempt.id }))
-                              }
+                              onClick={() => {
+                                if (quizId == null) return
+                                setSelectedAttempt((prev) => ({ ...prev, [quizId]: attempt.id }))
+                              }}
                             >
                               Intento {attempt.attempt_number} · {attempt.percentage}%
                             </Button>
@@ -278,8 +284,8 @@ const LmsUserCourseReview = () => {
                             </AccordionSummary>
                             <AccordionDetails>
 
-                            {lesson.quiz.questions.map((question: any, questionIndex: number) => {
-                              const answer = active.answers.find((a: any) => a.question_id === question.id)
+                            {lesson.quiz.questions.map((question, questionIndex: number) => {
+                              const answer = active.answers.find((a) => a.question_id === question.id)
                               const chosen = answer?.chosen || []
                               const toLetter = (index: number) => String.fromCharCode(65 + index)
                               const typeLabel =

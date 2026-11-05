@@ -19,6 +19,7 @@ import {
   IconButton,
   List,
   Chip,
+  type ChipProps,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -62,6 +63,7 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import quizService from '../../../services/quizService'
+import type { QuizQuestion as ApiQuizQuestion } from '../../../services/lmsService'
 import LmsQuizComponent from '../components/LmsQuizComponent'
 import { notify } from 'src/utils/notify'
 import { notify as appNotify } from 'src/utils/notify'
@@ -229,7 +231,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           }))
         })
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('❌ Error loading quiz:', error)
       }
     }
@@ -248,7 +250,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       retry: (failureCount, error) =>
         (error as AxiosError | undefined)?.response?.status !== 429 && failureCount < 1,
       refetchInterval: 30000, // Refresh every 30 seconds when on analytics tab
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('❌ Error loading quiz stats:', error)
       }
     }
@@ -300,7 +302,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           onQuizSaved(quiz.id)
         }
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('❌ Error saving quiz:', error)
       }
     }
@@ -329,7 +331,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         logger.log('✅ Question bank loaded from API:', data)
         setQuestionBank(data.data || [])
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('❌ Error loading question bank:', error)
         appNotify.error('Error', 'Error al cargar el banco de preguntas')
       }
@@ -364,12 +366,12 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       timeLimitMinutes: quiz.time_limit_minutes,
       allowReview: true,
       showProgressBar: true,
-      questions: quiz.questions.map((q: any) => ({
+      questions: quiz.questions.map((q: ApiQuizQuestion) => ({
         id: q.id,
         type: q.type,
         question: q.question,
-        options: q.options,
-        correct_answers: q.correct_answers,
+        options: q.options ?? [],
+        correct_answers: q.correct_answers ?? [],
         points: q.points,
         explanation: q.explanation || undefined
       }))
@@ -425,7 +427,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         resetQuestionForm()
         setOpenQuestionDialog(false)
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('❌ Error creating question:', error)
         appNotify.error('Error', getApiErrorReason(error) || 'Error al crear la pregunta')
       }
@@ -457,7 +459,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         resetQuestionForm()
         setOpenQuestionDialog(false)
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('❌ Error updating question:', error)
         appNotify.error('Error', getApiErrorReason(error) || 'Error al actualizar la pregunta')
       }
@@ -476,7 +478,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         appNotify.success('Éxito', 'Pregunta eliminada exitosamente')
         queryClient.invalidateQueries(['questionBank'])
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error('❌ Error deleting question:', error)
         appNotify.error('Error', getApiErrorReason(error) || 'Error al eliminar la pregunta')
       }
@@ -487,7 +489,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     setActiveTab(newValue)
   }
 
-  const handleQuizConfigChange = (field: keyof QuizConfiguration, value: any) => {
+  const handleQuizConfigChange = (
+    field: keyof QuizConfiguration,
+    value: QuizConfiguration[keyof QuizConfiguration]
+  ) => {
     setQuizConfig(prev => ({ ...prev, [field]: value }))
   }
 
@@ -695,7 +700,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     }
   }
 
-  const getDifficultyColor = (difficulty?: string) => {
+  const getDifficultyColor = (difficulty?: string): ChipProps['color'] => {
     switch (difficulty) {
       case 'easy': return 'success'
       case 'medium': return 'warning'
@@ -824,7 +829,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   return (
     <Box sx={{ width: '100%' }}>
       {/* Error Messages */}
-      {quizLoadError && (
+      {Boolean(quizLoadError) && (
         <Alert severity="error" sx={{ mb: 2 }}>
           Error al cargar el quiz. Por favor, inténtalo de nuevo.
         </Alert>
@@ -832,7 +837,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
       {saveQuizMutation.isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Error al guardar el quiz: {(saveQuizMutation.error as any)?.message || 'Error desconocido'}
+          Error al guardar el quiz: {getApiErrorReason(saveQuizMutation.error) || 'Error desconocido'}
         </Alert>
       )}
 
@@ -1517,7 +1522,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           )}
 
           {/* Error loading stats */}
-          {statsLoadError && (
+          {Boolean(statsLoadError) && (
             <Grid item xs={12}>
               <Alert severity="warning">
                 No se pudieron cargar las estadísticas. Puede que aún no haya intentos registrados.

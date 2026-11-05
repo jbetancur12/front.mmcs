@@ -1,3 +1,6 @@
+import type { MaintenanceTicket } from 'src/types/maintenance'
+import type { GridCalculation } from 'src/hooks/useResponsiveTicketGrid'
+
 export interface TVMetrics {
   totalTickets: number
   pendingTickets: number
@@ -41,12 +44,12 @@ export interface SmartPagination {
 }
 
 export interface OrganizedTickets {
-  stickyUrgents: any[]
-  paginatedTickets: any[]
-  allActive: any[]
-  urgent: any[]
-  high: any[]
-  normal: any[]
+  stickyUrgents: MaintenanceTicket[]
+  paginatedTickets: MaintenanceTicket[]
+  allActive: MaintenanceTicket[]
+  urgent: MaintenanceTicket[]
+  high: MaintenanceTicket[]
+  normal: MaintenanceTicket[]
   totalUrgentPages?: number
   currentUrgentPage?: number
 }
@@ -82,7 +85,7 @@ export interface MetricsDashboardProps {
 }
 
 export interface CriticalTicketsSectionProps {
-  urgentTickets: any[]
+  urgentTickets: MaintenanceTicket[]
   colors: ModernColors
   getElapsedTime: (createdAt: string) => string
   totalUrgentTickets?: number
@@ -91,8 +94,8 @@ export interface CriticalTicketsSectionProps {
 }
 
 export interface RegularTicketsGridProps {
-  tickets: any[]
-  gridCalculation: any
+  tickets: MaintenanceTicket[]
+  gridCalculation: GridCalculation
   colors: ModernColors
   getElapsedTime: (createdAt: string) => string
   displayColumns?: number

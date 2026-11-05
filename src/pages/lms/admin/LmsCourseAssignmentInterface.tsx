@@ -22,6 +22,7 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  type ChipProps,
   Avatar,
   LinearProgress,
   Tabs,
@@ -204,9 +205,9 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
   }
 }
 
-const getApiMessage = (error: any, fallback: string) =>
+const getApiMessage = (error: unknown, fallback: string) =>
   getApiErrorReason(error)
-  || error?.message
+  || (error instanceof Error ? error.message : null)
   || fallback
 
 const formatRelativeDate = (value?: string | null) => {
@@ -224,7 +225,7 @@ const formatRelativeDate = (value?: string | null) => {
   })
 }
 
-const getUrgencyColor = (level: Assignment['urgency']['level']) => {
+const getUrgencyColor = (level: Assignment['urgency']['level']): ChipProps['color'] => {
   switch (level) {
     case 'critical':
       return 'error'
@@ -306,8 +307,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     },
     {
       keepPreviousData: true,
-      onError: (error: any) => {
-        notify.error('Error al cargar cursos', getApiErrorReason(error) || error.message || 'Ocurrió un error')
+      onError: (error: unknown) => {
+        notify.error('Error al cargar cursos', getApiErrorReason(error) || (error instanceof Error ? error.message : '') || 'Ocurrió un error')
       }
     }
   )
@@ -327,8 +328,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     },
     {
       keepPreviousData: true,
-      onError: (error: any) => {
-        notify.error('Error al cargar asignaciones', getApiErrorReason(error) || error.message || 'Ocurrió un error')
+      onError: (error: unknown) => {
+        notify.error('Error al cargar asignaciones', getApiErrorReason(error) || (error instanceof Error ? error.message : '') || 'Ocurrió un error')
       }
     }
   )
@@ -378,7 +379,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         }
         setSearchParams(nextParams, { replace: true })
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al crear asignación', getApiMessage(error, 'No se pudo crear la asignación.'))
       }
     }
@@ -403,7 +404,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
         notify.success('Asignación actualizada', 'La nueva fecha límite ya quedó guardada.')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al actualizar asignación', getApiMessage(error, 'No se pudo actualizar la asignación.'))
       }
     }
@@ -418,7 +419,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
         notify.success('Asignación eliminada', 'La regla ya no estará activa para ese curso.')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al eliminar asignación', getApiMessage(error, 'No se pudo eliminar la asignación.'))
       }
     }
@@ -432,12 +433,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       return response.data.data
     },
     {
-      onSuccess: (data: any) => {
+      onSuccess: (data: { totalNotifications?: number }) => {
         notify.success('Recordatorio enviado', `${data?.totalNotifications || 0} notificación(es) enviadas para esta asignación.`)
         queryClient.invalidateQueries(['lms-all-assignments'])
         queryClient.invalidateQueries(['analytics', 'mandatory-training'])
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al enviar recordatorio', getApiMessage(error, 'No se pudo enviar el recordatorio.'))
       }
     }
@@ -661,7 +662,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     handleCloseEditDialog()
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): ChipProps['color'] => {
     switch (status) {
       case 'completed':
         return 'success'
@@ -796,12 +797,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                             </Box>
                             <Chip
                               label={getStatusLabel(assignment.status)}
-                              color={getStatusColor(assignment.status) as any}
+                              color={getStatusColor(assignment.status)}
                               size="small"
                             />
                             <Chip
                               label={assignment.urgency.label}
-                              color={getUrgencyColor(assignment.urgency.level) as any}
+                              color={getUrgencyColor(assignment.urgency.level)}
                               size="small"
                               variant="outlined"
                             />
@@ -1052,7 +1053,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <Select
                         value={assignmentType}
                         label="Tipo de Asignación"
-                        onChange={(e) => setAssignmentType(e.target.value as any)}
+                        onChange={(e) => setAssignmentType(e.target.value as 'role' | 'all' | 'users')}
                       >
                         <MenuItem value="role">Por Rol</MenuItem>
                         <MenuItem value="all">Todos los Empleados</MenuItem>

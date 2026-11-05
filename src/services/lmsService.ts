@@ -1099,6 +1099,128 @@ export interface UpdateProgressRequest {
   additionalData?: Record<string, unknown>
 }
 
+/** Resumen de recordatorios de una asignación (tabla de cumplimiento). */
+export interface AssignmentReminderSummary {
+  totalNotifications: number
+  reminderNotifications: number
+  manualReminderNotifications: number
+  unreadReminderNotifications: number
+  lastNotificationAt: string | null
+  lastReminderAt: string | null
+  lastManualReminderAt: string | null
+  lastReminderType: string | null
+}
+
+export type MandatoryTrainingStatus = 'pending' | 'in_progress' | 'completed' | 'overdue'
+
+/** Un usuario en un curso obligatorio (analytics/assignments/mandatory). */
+export interface MandatoryTrainingRecord {
+  assignmentId: number
+  courseId: number
+  courseTitle: string
+  userId: number
+  userName: string
+  userEmail: string
+  role: string
+  department: string
+  assignedDate: string | null
+  deadline: string | null
+  completedDate: string | null
+  status: MandatoryTrainingStatus
+  progress: number
+  isOverdue: boolean
+  daysUntilDeadline: number | null
+  reminderSummary: AssignmentReminderSummary
+}
+
+export interface MandatoryTrainingStatusResponse {
+  mandatoryTraining: MandatoryTrainingRecord[]
+  summary: {
+    total: number
+    pending: number
+    inProgress: number
+    completed: number
+    overdue: number
+  }
+}
+
+/** Respuesta del detalle de avance de un usuario en un curso (vista admin). */
+export interface CourseReviewAnswer {
+  question_id: number
+  chosen: number[]
+  correct: number[]
+  is_correct: boolean
+}
+
+export interface CourseReviewAttempt {
+  id: number
+  attempt_number: number
+  score: number
+  total_points: number
+  percentage: number
+  passed: boolean
+  started_at: string
+  completed_at: string | null
+  answers: CourseReviewAnswer[]
+}
+
+export interface CourseReviewQuestion {
+  id: number
+  question: string
+  type: 'single' | 'multiple' | 'boolean'
+  points: number
+  options: string[]
+  correct_answers: number[]
+  explanation: string | null
+}
+
+export interface CourseReviewQuiz {
+  id: number
+  title: string
+  passing_percentage: number
+  questions: CourseReviewQuestion[]
+  attempts: CourseReviewAttempt[]
+}
+
+export interface CourseReviewLesson {
+  id: number
+  title: string
+  type: LessonType
+  order_index: number
+  progress: {
+    status: 'not_started' | 'in_progress' | 'completed'
+    started_at: string | null
+    completed_at: string | null
+    time_spent_minutes: number
+  } | null
+  quiz: CourseReviewQuiz | null
+}
+
+export interface CourseReviewResponse {
+  user: {
+    id: number
+    name: string | null
+    email: string | null
+  }
+  course: {
+    id: number
+    title: string
+    description: string
+    has_certificate: boolean
+  }
+  progress: {
+    totalLessons: number
+    completedLessons: number
+    progressPercentage: number
+  }
+  modules: Array<{
+    id: number
+    title: string
+    order_index: number
+    lessons: CourseReviewLesson[]
+  }>
+}
+
 // ===========================
 // LMS Service
 // ===========================
@@ -1667,7 +1789,7 @@ class LMSService {
     includeCompleted?: boolean;
     sortBy?: string;
     sortOrder?: string;
-  }): Promise<any> {
+  }): Promise<MandatoryTrainingStatusResponse> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/mandatory`, { params })
     return response.data.data
   }
@@ -1784,7 +1906,7 @@ class LMSService {
   /**
    * Admin review of another user's course progress (lessons + quizzes with answers).
    */
-  async getCourseReviewForAdmin(userId: number, courseId: number): Promise<any> {
+  async getCourseReviewForAdmin(userId: number, courseId: number): Promise<CourseReviewResponse> {
     const response = await axiosPrivate.get(
       `${this.baseURL}/progress/admin/users/${userId}/courses/${courseId}/review`
     )

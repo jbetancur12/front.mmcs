@@ -14,6 +14,8 @@ interface GridCalculation {
   containerHeight: number
 }
 
+export type { GridCalculation }
+
 /**
  * Hook para calcular automáticamente la disposición óptima de tickets
  * basada en el tamaño de pantalla disponible

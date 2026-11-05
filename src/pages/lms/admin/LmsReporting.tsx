@@ -160,9 +160,9 @@ const emptyScheduleForm = {
   recipients: [] as string[]
 }
 
-const getApiMessage = (error: any, fallback: string) =>
+const getApiMessage = (error: unknown, fallback: string) =>
   getApiErrorReason(error)
-  || error?.message
+  || (error instanceof Error ? error.message : null)
   || fallback
 
 const getReportStatusLabel = (status: GeneratedReport['status']) => {
@@ -251,7 +251,7 @@ const LmsReporting: React.FC = () => {
             ? 'La plantilla quedó lista para seguir generando o programando reportes.'
             : 'La plantilla ya puede usarse para generar o programar reportes.')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al guardar plantilla', getApiMessage(error, 'No se pudo guardar la plantilla.'))
       }
     }
@@ -264,7 +264,7 @@ const LmsReporting: React.FC = () => {
         invalidateReporting()
         notify.success('Plantilla eliminada', 'La plantilla ya no aparecerá en generación ni programación.')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al eliminar plantilla', getApiMessage(error, 'No se pudo eliminar la plantilla.'))
       }
     }
@@ -284,7 +284,7 @@ const LmsReporting: React.FC = () => {
         invalidateReporting()
         notify.success('Reporte generado', 'Quedó registrado en reportes recientes y podrás descargarlo cuando termine.')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al generar reporte', getApiMessage(error, 'No se pudo generar el reporte.'))
       }
     }
@@ -321,7 +321,7 @@ const LmsReporting: React.FC = () => {
             ? 'La programación quedó ajustada con los nuevos datos.'
             : 'La programación quedó activa para futuros envíos.')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al guardar programación', getApiMessage(error, 'No se pudo guardar la programación.'))
       }
     }
@@ -334,7 +334,7 @@ const LmsReporting: React.FC = () => {
         invalidateReporting()
         notify.success('Programación eliminada', 'Ese envío ya no se ejecutará automáticamente.')
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         notify.error('Error al eliminar programación', getApiMessage(error, 'No se pudo eliminar la programación.'))
       }
     }

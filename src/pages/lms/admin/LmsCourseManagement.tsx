@@ -10,6 +10,7 @@ import {
   Paper,
   IconButton,
   Chip,
+  type ChipProps,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -288,8 +289,8 @@ const LmsCourseManagement: React.FC = () => {
     },
     {
       keepPreviousData: true,
-      onError: (error: any) => {
-        notify.error('Error al cargar los cursos: ' + (getApiErrorReason(error) || error.message))
+      onError: (error: unknown) => {
+        notify.error('Error al cargar los cursos: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
       }
     }
   )
@@ -333,8 +334,8 @@ const LmsCourseManagement: React.FC = () => {
         handleCloseDialog()
         notify.success(editingCourse ? 'Curso actualizado exitosamente' : 'Curso creado exitosamente')
       },
-      onError: (error: any) => {
-        notify.error('Error al guardar curso: ' + (getApiErrorReason(error) || error.message))
+      onError: (error: unknown) => {
+        notify.error('Error al guardar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
       }
     }
   )
@@ -349,8 +350,8 @@ const LmsCourseManagement: React.FC = () => {
         queryClient.invalidateQueries(['lms-courses'])
         notify.success('Curso eliminado exitosamente')
       },
-      onError: (error: any) => {
-        notify.error('Error al eliminar curso: ' + (getApiErrorReason(error) || error.message))
+      onError: (error: unknown) => {
+        notify.error('Error al eliminar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
       }
     }
   )
@@ -365,8 +366,8 @@ const LmsCourseManagement: React.FC = () => {
         queryClient.invalidateQueries(['lms-courses'])
         notify.success('Curso publicado exitosamente')
       },
-      onError: (error: any) => {
-        notify.error('Error al publicar curso: ' + (getApiErrorReason(error) || error.message))
+      onError: (error: unknown) => {
+        notify.error('Error al publicar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
       }
     }
   )
@@ -381,8 +382,8 @@ const LmsCourseManagement: React.FC = () => {
         queryClient.invalidateQueries(['lms-courses'])
         notify.success('Curso archivado exitosamente')
       },
-      onError: (error: any) => {
-        notify.error('Error al archivar curso: ' + (getApiErrorReason(error) || error.message))
+      onError: (error: unknown) => {
+        notify.error('Error al archivar curso: ' + (getApiErrorReason(error) || (error instanceof Error ? error.message : '')))
       }
     }
   )
@@ -577,7 +578,7 @@ const LmsCourseManagement: React.FC = () => {
     handleCloseCourseActionDialog()
   }
 
-  const handleInputChange = (field: keyof CreateCourseData, value: any) => {
+  const handleInputChange = (field: keyof CreateCourseData, value: CreateCourseData[keyof CreateCourseData]) => {
     setFormData((prev) => {
       const nextFormData = {
         ...prev,
@@ -628,7 +629,7 @@ const LmsCourseManagement: React.FC = () => {
     navigate(`/lms/admin/analytics?courseId=${courseId}`)
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): ChipProps['color'] => {
     switch (status) {
       case 'published':
         return 'success'
@@ -747,7 +748,7 @@ const LmsCourseManagement: React.FC = () => {
         Cell: ({ row }) => (
           <Chip
             label={getStatusLabel(row.original.status)}
-            color={getStatusColor(row.original.status) as any}
+            color={getStatusColor(row.original.status)}
             size='small'
           />
         )
