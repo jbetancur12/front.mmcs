@@ -26,6 +26,7 @@ import ImpersonationDialog from './ImpersonationDialog'
 import { ROLE_GROUPS, getRoleLabelEs, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { openAnalyticsConsentPreferences } from 'src/utils/analyticsConsent'
 interface HeaderProps {
   toggleMobileMenu: () => void
 }
@@ -181,6 +182,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
               onStopImpersonation={stopImpersonation}
               onLogout={logout}
               onOpenSessions={() => setSessionsDialogOpen(true)}
+              onOpenAnalyticsPreferences={openAnalyticsConsentPreferences}
               versionLabel={`Versión ${import.meta.env.VITE_APP_VERSION}${
                 apiVersion ? ` (API ${apiVersion})` : ''
               }`}

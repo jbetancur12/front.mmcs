@@ -9,6 +9,7 @@ import { usePostHog } from 'posthog-js/react'
 
 import { userStore } from 'src/store/userStore'
 import { getPreferredPostLoginRoute } from 'src/utils/lmsIdentity'
+import { getAnalyticsConsent } from 'src/utils/analyticsConsent'
 import { axiosPublic } from '@utils/api'
 import Cookies from 'js-cookie'
 import {
@@ -248,10 +249,12 @@ const Login: React.FC = () => {
         localStorage.setItem('accessToken', token)
         navigate(preferredDestination, { replace: true })
 
-        posthog?.capture('clicked_log_in')
-        posthog?.identify(response.data.user.id, {
-          email: response.data.user.email
-        })
+        if (getAnalyticsConsent() === 'granted') {
+          posthog?.capture('clicked_log_in')
+          posthog?.identify(response.data.user.id, {
+            email: response.data.user.email
+          })
+        }
         setError(null)
       } else {
         // Handle login error
