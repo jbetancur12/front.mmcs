@@ -14,7 +14,7 @@
     "quick-search:check": "node scripts/check-quick-search.mjs",
     "password-policy": "node scripts/gen-password-policy.mjs",
     "password-policy:check": "node scripts/gen-password-policy.mjs --check",
-    "lint": "eslint src --report-unused-disable-directives --max-warnings 355 && node scripts/check-colors.mjs",
+    "lint": "eslint src --report-unused-disable-directives --max-warnings 330 && node scripts/check-colors.mjs",
     "colors:check": "node scripts/check-colors.mjs",
     "colors:migrate": "node scripts/migrate-colors.mjs",
     "preview": "vite preview",
