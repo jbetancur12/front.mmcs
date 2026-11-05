@@ -48,7 +48,7 @@ import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
 import { useAvailableCourses, useMyPlans, useUserAssignments, useUserCertificates } from '../../../hooks/useLms'
 import MyTrainingPlans from './MyTrainingPlans'
-import type { Certificate, Course } from '../../../services/lmsService'
+import type { Certificate, Course, CourseAssignment } from '../../../services/lmsService'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import {
   getCourseCompletedLessons,
@@ -147,7 +147,27 @@ type CourseTone = {
   icon: React.ReactElement
 }
 
-const getCourseTone = (course: any): CourseTone => {
+/** Curso con los datos de asignación y progreso ya combinados para la vista. */
+interface HomeCourse extends Course {
+  progress: number
+  totalLessons: number
+  completedLessons: number
+  category: string
+  instructor: string
+  duration: string
+  earnedCertificate?: Certificate
+  isAssigned: boolean
+  deadline?: string
+  daysUntilDeadline?: number
+  isOverdue: boolean
+  isMandatory?: boolean
+  homeKind?: 'mandatory' | 'assigned'
+  nextLessonLabel: string | null
+  lastAccessLabel: string | null
+  completedAt: string | null
+}
+
+const getCourseTone = (course: HomeCourse): CourseTone => {
   if (course.progress === 100) return { color: 'success', icon: <CheckCircleIcon /> }
   if (course.isOverdue) return { color: 'error', icon: <EventBusyIcon /> }
   if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) {
@@ -158,7 +178,7 @@ const getCourseTone = (course: any): CourseTone => {
   return { color: 'secondary', icon: <StoriesIcon /> }
 }
 
-const getCourseKind = (course: any) =>
+const getCourseKind = (course: HomeCourse) =>
   course.isMandatory ? 'Obligatorio' : course.isAssigned ? 'Asignado' : 'Opcional'
 
 const formatLearnedTime = (minutes: number) => {
@@ -174,7 +194,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [courseSearch, setCourseSearch] = useState('')
   const [courseFilter, setCourseFilter] = useState<'all' | 'mandatory' | 'optional' | 'completed'>('all')
   const normalizedSearch = courseSearch.trim().toLowerCase()
-  const matchesSearch = (course: any) =>
+  const matchesSearch = (course: HomeCourse) =>
     !normalizedSearch || String(course.title || '').toLowerCase().includes(normalizedSearch)
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
@@ -226,8 +246,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       userCertificates.map((certificate: Certificate) => [certificate.course_id, certificate])
     )
     // Un curso puede tener varias asignaciones (rol + usuario): se usa la de fecha límite más próxima
-    const assignmentsByCourseId = new Map<number, any>()
-    allAssignments.forEach((assignment: any) => {
+    const assignmentsByCourseId = new Map<number, CourseAssignment>()
+    allAssignments.forEach((assignment: CourseAssignment) => {
       const current = assignmentsByCourseId.get(assignment.course_id)
       const time = (value?: string | null) =>
         value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER
@@ -237,8 +257,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     })
 
     // Separar cursos obligatorios y opcionales
-    const mandatory: any[] = []
-    const optional: any[] = []
+    const mandatory: HomeCourse[] = []
+    const optional: HomeCourse[] = []
 
     courses.forEach((course: Course) => {
       const assignment = assignmentsByCourseId.get(course.id)
@@ -363,20 +383,20 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
   // Inicio: una sola lista de prioridad (sin repetir cursos entre bloques)
   const homeFeed = useMemo(() => {
-    const urgency = (course: any) => {
+    const urgency = (course: HomeCourse) => {
       if (course.isOverdue) return 0
       if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) return 1
       return 2
     }
-    const deadlineTime = (course: any) =>
+    const deadlineTime = (course: HomeCourse) =>
       typeof course.daysUntilDeadline === 'number' ? course.daysUntilDeadline : Number.MAX_SAFE_INTEGER
 
     const attention = [
       ...mandatoryCourses
-        .filter((course: any) => course.progress < 100)
-        .map((course: any) => ({ ...course, homeKind: 'mandatory' as const })),
-      ...assignedOptionalCourses.map((course: any) => ({ ...course, homeKind: 'assigned' as const }))
-    ].sort((left: any, right: any) => {
+        .filter((course: HomeCourse) => course.progress < 100)
+        .map((course: HomeCourse) => ({ ...course, homeKind: 'mandatory' as const })),
+      ...assignedOptionalCourses.map((course: HomeCourse) => ({ ...course, homeKind: 'assigned' as const }))
+    ].sort((left: HomeCourse, right: HomeCourse) => {
       const byUrgency = urgency(left) - urgency(right)
       if (byUrgency !== 0) return byUrgency
       const byMandatory = Number(right.homeKind === 'mandatory') - Number(left.homeKind === 'mandatory')
@@ -384,10 +404,10 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       return deadlineTime(left) - deadlineTime(right)
     })
 
-    const attentionIds = new Set(attention.map((course: any) => course.id))
+    const attentionIds = new Set(attention.map((course: HomeCourse) => course.id))
     const resume = optionalCourses
-      .filter((course: any) => course.progress > 0 && course.progress < 100 && !attentionIds.has(course.id))
-      .sort((left: any, right: any) => right.progress - left.progress)
+      .filter((course: HomeCourse) => course.progress > 0 && course.progress < 100 && !attentionIds.has(course.id))
+      .sort((left: HomeCourse, right: HomeCourse) => right.progress - left.progress)
       .slice(0, 3)
 
     return { attention, resume }
@@ -435,9 +455,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     )
   }
 
-  const renderCourseGrid = (list: any[], options: { showKind?: boolean } = {}) => (
+  const renderCourseGrid = (list: HomeCourse[], options: { showKind?: boolean } = {}) => (
     <Grid container spacing={2.5}>
-      {list.map((course: any) => {
+      {list.map((course: HomeCourse) => {
         const tone = getCourseTone(course)
         const done = course.progress === 100
         const overdue = !done && Boolean(course.isOverdue)
@@ -479,7 +499,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                   <Chip
                     size='small'
                     color='error'
-                    label={`Vencido hace ${Math.abs(course.daysUntilDeadline)} d`}
+                    label={`Vencido hace ${Math.abs(course.daysUntilDeadline ?? 0)} d`}
                   />
                 )}
                 {soon && (
@@ -731,7 +751,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                         <Chip
                           size='small'
                           color='error'
-                          label={`Vencido hace ${Math.abs(hero.daysUntilDeadline)} d`}
+                          label={`Vencido hace ${Math.abs(hero.daysUntilDeadline ?? 0)} d`}
                         />
                       )}
                       {!hero.isOverdue &&
@@ -876,7 +896,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               : courseFilter === 'optional'
                 ? optionalCourses
                 : [...mandatoryCourses, ...optionalCourses]
-          const visible = pool.filter((course: any) => course.progress < 100).filter(matchesSearch)
+          const visible = pool.filter((course: HomeCourse) => course.progress < 100).filter(matchesSearch)
 
           if (visible.length === 0) {
             return (

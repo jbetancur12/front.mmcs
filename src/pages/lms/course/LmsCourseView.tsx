@@ -62,7 +62,12 @@ import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from '../../../utils/lmsAudience'
-import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from '../../../services/lmsService'
+import {
+  buildLessonResourceDownloadUrl,
+  buildLmsVideoStreamUrl,
+  type Certificate as ApiCertificate,
+  type LessonResource as ApiLessonResource
+} from '../../../services/lmsService'
 import PDFViewer from 'src/Components/PDFViewer'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
@@ -78,6 +83,48 @@ const styles = `
 }`
 
 
+interface MappedResource {
+  id: number
+  title: string
+  description: string
+  resourceType: 'pdf' | 'document' | 'link'
+  href: string
+  original_filename?: string
+  external_url?: string
+}
+
+interface MappedQuizQuestion {
+  id: number
+  question: string
+  type: 'single-choice' | 'multiple-choice' | 'true-false'
+  options: string[]
+  correctAnswer: number | number[]
+  explanation?: string
+  points: number
+}
+
+interface MappedQuiz {
+  id: number
+  title: string
+  instructions: string
+  passingPercentage: number
+  maxAttempts: number
+  cooldownMinutes: number
+  showCorrectAnswers: boolean
+  randomizeQuestions: boolean
+  shuffleAnswers: boolean
+  timeLimitMinutes?: number
+  allowReview: boolean
+  showProgressBar: boolean
+  questions: MappedQuizQuestion[]
+}
+
+interface QuizAttemptPayload {
+  answers: (number | number[])[]
+  questionIds?: number[]
+  timeSpent: number
+}
+
 interface CourseLesson {
   id: number
   title: string
@@ -92,17 +139,9 @@ interface CourseLesson {
     videoSource?: 'minio' | 'youtube' | 'gdrive'
     transcript?: string
     text?: string
-    quiz?: any
+    quiz?: MappedQuiz
     description?: string
-    resources?: Array<{
-      id: number
-      title: string
-      description?: string
-      resourceType: 'pdf' | 'document' | 'link'
-      href: string
-      original_filename?: string
-      external_url?: string
-    }>
+    resources?: MappedResource[]
   }
 }
 
@@ -138,10 +177,11 @@ interface UserProgress {
   completedAt?: Date
 }
 
-const getResourceHref = (resource: any) =>
+const getResourceHref = (resource: ApiLessonResource): string =>
   resource.external_url ||
   resource.download_url ||
-  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
+  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url) ||
+  ''
 
 interface QuizOutcomeSummary {
   passed: boolean
@@ -170,7 +210,7 @@ const LmsCourseView: React.FC = () => {
   const [latestQuizOutcome, setLatestQuizOutcome] = useState<QuizOutcomeSummary | null>(null)
   const [certificateReadyNoticeVisible, setCertificateReadyNoticeVisible] = useState(false)
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
-  const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
+  const [pdfViewerResource, setPdfViewerResource] = useState<MappedResource | null>(null)
   const autoAdvance = false
   const storeUser = useStore(userStore)
 
@@ -186,8 +226,8 @@ const LmsCourseView: React.FC = () => {
   })
   const normalizedCourseId = parseInt(courseId || '0')
   const currentCourseCertificate = useMemo(() => {
-    return userCertificates.find((certificate: any) => {
-      const certificateCourseId = certificate.course_id ?? certificate.courseId
+    return userCertificates.find((certificate: ApiCertificate) => {
+      const certificateCourseId = certificate.course_id
       return certificateCourseId === normalizedCourseId
     }) || null
   }, [normalizedCourseId, userCertificates])
@@ -203,12 +243,12 @@ const LmsCourseView: React.FC = () => {
     const completedLessonIds = new Set<number>()
 
     if (progressData?.modules && Array.isArray(progressData.modules)) {
-      progressData.modules.forEach((module: any) => {
+      progressData.modules.forEach((module) => {
         if (!Array.isArray(module.lessons)) {
           return
         }
 
-        module.lessons.forEach((lesson: any) => {
+        module.lessons.forEach((lesson) => {
           if (lesson.progress?.status === 'completed') {
             completedLessonIds.add(lesson.id)
           }
@@ -219,12 +259,12 @@ const LmsCourseView: React.FC = () => {
     let previousLessonCompleted = true
     const mappedModules = (courseData.modules || [])
       .slice()
-      .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
-      .map((mod: any, modIndex: number) => {
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      .map((mod, modIndex: number) => {
         const lessons = (mod.lessons || [])
           .slice()
-          .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
-          .map((lesson: any, lessonIndex: number) => {
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+          .map((lesson, lessonIndex: number) => {
             const completed = hasReviewAccess || completedLessonIds.has(lesson.id)
             const unlocked = hasReviewAccess || (modIndex === 0 && lessonIndex === 0
               ? true
@@ -261,10 +301,10 @@ const LmsCourseView: React.FC = () => {
                   showCorrectAnswers: lesson.quiz.show_correct_answers ?? true,
                   randomizeQuestions: lesson.quiz.randomize_questions ?? false,
                   shuffleAnswers: lesson.quiz.shuffle_answers ?? false,
-                  timeLimitMinutes: lesson.quiz.time_limit_minutes,
+                  timeLimitMinutes: lesson.quiz.time_limit_minutes ?? undefined,
                   allowReview: lesson.quiz.allow_review ?? true,
                   showProgressBar: lesson.quiz.show_progress_bar ?? true,
-                  questions: (lesson.quiz.questions || []).map((q: any) => ({
+                  questions: (lesson.quiz.questions || []).map((q): MappedQuizQuestion => ({
                     id: q.id,
                     question: q.question,
                     type: q.type === 'single' ? 'single-choice' : q.type === 'boolean' ? 'true-false' : 'multiple-choice',
@@ -272,20 +312,20 @@ const LmsCourseView: React.FC = () => {
                     correctAnswer: q.type === 'single' || q.type === 'boolean'
                       ? (q.correct_answers?.[0] ?? 0)
                       : (q.correct_answers || []),
-                    explanation: q.explanation,
+                    explanation: q.explanation ?? undefined,
                     points: q.points || 1
                   }))
                 } : undefined,
                 resources: (lesson.resources || [])
-                  .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
-                  .map((resource: any) => ({
+                  .filter((resource) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
+                  .map((resource) => ({
                     id: resource.id,
                     title: resource.title,
                     description: resource.description || '',
                     resourceType: resource.resource_type,
                     href: getResourceHref(resource),
-                    original_filename: resource.original_filename,
-                    external_url: resource.external_url
+                    original_filename: resource.original_filename ?? undefined,
+                    external_url: resource.external_url ?? undefined
                   }))
               }
             }
@@ -296,8 +336,8 @@ const LmsCourseView: React.FC = () => {
           title: mod.title,
           description: mod.description || '',
           order: mod.order_index || modIndex + 1,
-          completed: lessons.length > 0 && lessons.every((lesson: any) => lesson.completed),
-          unlocked: lessons.some((lesson: any) => lesson.unlocked),
+          completed: lessons.length > 0 && lessons.every((lesson) => lesson.completed),
+          unlocked: lessons.some((lesson) => lesson.unlocked),
           lessons
         }
       })
@@ -330,8 +370,8 @@ const LmsCourseView: React.FC = () => {
         || reviewProgress?.completed_at
         || new Date().toISOString()
 
-      return (courseData.modules || []).flatMap((module: any) =>
-        (module.lessons || []).map((lesson: any) => ({
+      return (courseData.modules || []).flatMap((module) =>
+        (module.lessons || []).map((lesson) => ({
           courseId: normalizedCourseId,
           lessonId: lesson.id,
           status: 'completed' as const,
@@ -344,9 +384,9 @@ const LmsCourseView: React.FC = () => {
     if (!progressData || !progressData.modules) return []
 
     const lessons: UserProgress[] = []
-    progressData.modules.forEach((module: any) => {
+    progressData.modules.forEach((module) => {
       if (module.lessons && Array.isArray(module.lessons)) {
-        module.lessons.forEach((lesson: any) => {
+        module.lessons.forEach((lesson) => {
           if (lesson.progress && lesson.progress.status === 'completed') {
             lessons.push({
               courseId: normalizedCourseId,
@@ -367,7 +407,7 @@ const LmsCourseView: React.FC = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Error al completar lección:', error)
     }
   })
@@ -377,7 +417,7 @@ const LmsCourseView: React.FC = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Error al completar quiz:', error)
     }
   })
@@ -402,15 +442,19 @@ const LmsCourseView: React.FC = () => {
   const userQuizAttempts = useMemo(() => {
     if (!quizAttemptsData) return []
 
-    return quizAttemptsData.map((attempt: any) => ({
-      attemptNumber: attempt.attempt_number,
-      startedAt: new Date(attempt.started_at),
-      answers: attempt.answers,
-      timeSpent: Math.round((new Date(attempt.completed_at).getTime() - new Date(attempt.started_at).getTime()) / 1000),
-      score: attempt.score,
-      totalPoints: attempt.total_points,
-      passed: attempt.passed
-    }))
+    return quizAttemptsData.map((attempt) => {
+      const started = new Date(attempt.started_at)
+      const completed = attempt.completed_at ? new Date(attempt.completed_at) : started
+      return {
+        attemptNumber: attempt.attempt_number ?? 1,
+        startedAt: started,
+        answers: [],
+        timeSpent: Math.round((completed.getTime() - started.getTime()) / 1000),
+        score: attempt.score,
+        totalPoints: attempt.total_points ?? 0,
+        passed: attempt.passed
+      }
+    })
   }, [quizAttemptsData])
 
   // Helper functions
@@ -592,7 +636,7 @@ const LmsCourseView: React.FC = () => {
     }
   }, [lessonStartTime, updateProgressMutation, autoAdvance, getNextLesson, isLessonUnlocked, isMobile])
 
-  const handleQuizComplete = useCallback(async (attempt: any) => {
+  const handleQuizComplete = useCallback(async (attempt: QuizAttemptPayload) => {
     if (!currentQuizConfig || !course || !course.modules[currentModuleIndex]) return
     const currentLesson = course.modules[currentModuleIndex].lessons[currentLessonIndex]
     if (!currentLesson) return
@@ -600,7 +644,7 @@ const LmsCourseView: React.FC = () => {
     try {
       // Transform answers to service schema: object with questionId as key, answer array as value
       const formattedAnswers: Record<number, number[]> = {}
-      attempt.answers.forEach((answer: any, index: number) => {
+      attempt.answers.forEach((answer, index: number) => {
         const questionId = attempt.questionIds?.[index] ?? currentQuizConfig.questions[index].id
         // Ensure answer is always an array
         formattedAnswers[questionId] = Array.isArray(answer) ? answer : [answer]
@@ -726,7 +770,7 @@ const LmsCourseView: React.FC = () => {
     }
   }, [course, courseProgress.percentage, hasGeneratedCertificate])
 
-  const handleOpenResource = (resource: any) => {
+  const handleOpenResource = (resource: MappedResource) => {
     if (resource.external_url) {
       window.open(resource.external_url, '_blank', 'noopener,noreferrer')
       return

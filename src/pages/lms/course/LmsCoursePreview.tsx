@@ -59,6 +59,11 @@ import {
   normalizeCourseAudience
 } from 'src/utils/lmsAudience'
 import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from 'src/services/lmsService'
+import type {
+  Course as ApiCourse,
+  CourseProgressResponse,
+  LessonResource as ApiLessonResource
+} from 'src/services/lmsService'
 import PDFViewer from 'src/Components/PDFViewer'
 import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
 
@@ -68,6 +73,26 @@ import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { busyDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
+interface MappedResource {
+  id: number
+  title: string
+  description: string
+  resourceType: 'pdf' | 'document' | 'link'
+  href: string
+  original_filename?: string
+  external_url?: string
+}
+
+interface MappedQuestion {
+  id: number
+  question: string
+  type: 'single-choice' | 'multiple-choice' | 'true-false'
+  options: string[]
+  correctAnswer: number | number[]
+  explanation?: string
+  points: number
+}
+
 interface CourseUnit {
   id: number
   title: string
@@ -84,17 +109,9 @@ interface CourseUnit {
     quizId?: number
     maxAttempts?: number
     currentAttempt?: number
-    questions?: any[]
+    questions?: MappedQuestion[]
     description?: string
-    resources?: Array<{
-      id: number
-      title: string
-      description?: string
-      resourceType: 'pdf' | 'document' | 'link'
-      href: string
-      original_filename?: string
-      external_url?: string
-    }>
+    resources?: MappedResource[]
   }
 }
 
@@ -111,10 +128,11 @@ interface Course {
   status: 'draft' | 'published' | 'archived'
 }
 
-const getResourceHref = (resource: any) =>
+const getResourceHref = (resource: ApiLessonResource): string =>
   resource.external_url ||
   resource.download_url ||
-  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
+  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url) ||
+  ''
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -155,7 +173,12 @@ const convertToEmbedUrl = (url: string): string => {
   return url
 }
 
-const resolveLessonVideoUrl = (lesson: any): string => {
+interface VideoSourceLesson {
+  video_url?: string
+  video_source?: 'youtube' | 'minio' | 'gdrive'
+}
+
+const resolveLessonVideoUrl = (lesson: VideoSourceLesson): string => {
   if (!lesson?.video_url) return ''
   if (lesson.video_source === 'minio') return buildLmsVideoStreamUrl(lesson.video_url)
   if (lesson.video_source === 'gdrive') return buildGDriveEmbedUrl(lesson.video_url)
@@ -165,19 +188,19 @@ const resolveLessonVideoUrl = (lesson: any): string => {
 /**
  * Transforma datos de preview (modo admin) al formato Course
  */
-const transformPreviewDataToCourse = (previewData: any): Course => {
-  const units = previewData.modules.flatMap((module: any, moduleIndex: number) =>
-    module.lessons.map((lesson: any, lessonIndex: number) => {
+const transformPreviewDataToCourse = (previewData: ApiCourse): Course => {
+  const units = (previewData.modules ?? []).flatMap((module, moduleIndex) =>
+    (module.lessons ?? []).map((lesson, lessonIndex): CourseUnit => {
       // Transformar quiz questions si existen
-      let questions: any[] = []
+      let questions: MappedQuestion[] = []
       if (lesson.quiz && lesson.quiz.questions && Array.isArray(lesson.quiz.questions)) {
-        questions = lesson.quiz.questions.map((q: any) => ({
+        questions = lesson.quiz.questions.map((q): MappedQuestion => ({
           id: q.id,
           question: q.question,
           type: mapQuizType(q.type),
           options: q.options || [],
-          correctAnswer: q.type === 'multiple' ? q.correct_answers : q.correct_answers[0],
-          explanation: q.explanation,
+          correctAnswer: q.type === 'multiple' ? (q.correct_answers ?? []) : (q.correct_answers?.[0] ?? 0),
+          explanation: q.explanation ?? undefined,
           points: q.points
         }))
       }
@@ -196,18 +219,17 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
           text: lesson.content,
           quizId: lesson.quiz?.id,
           maxAttempts: lesson.quiz?.max_attempts,
-          currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           resources: (lesson.resources || [])
-            .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
-            .map((resource: any) => ({
+            .filter((resource) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
+            .map((resource) => ({
               id: resource.id,
               title: resource.title,
               description: resource.description || '',
               resourceType: resource.resource_type,
               href: getResourceHref(resource),
-              original_filename: resource.original_filename,
-              external_url: resource.external_url
+              original_filename: resource.original_filename ?? undefined,
+              external_url: resource.external_url ?? undefined
             })),
           questions: questions
         }
@@ -221,7 +243,7 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
     description: previewData.description,
     category: getCourseAudienceLabel(previewData.audience),
     instructor: previewData.instructor || 'Instructor',
-    duration: previewData.duration || '8 horas',
+    duration: previewData.duration ? String(previewData.duration) : '8 horas',
     audience: normalizeCourseAudience(previewData.audience),
     thumbnail: previewData.thumbnail || '/placeholder.svg?height=400&width=600',
     status: previewData.status,
@@ -232,14 +254,14 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
 /**
  * Transforma datos de progreso (modo estudiante) al formato Course
  */
-const transformProgressDataToCourse = (progressData: any): Course => {
+const transformProgressDataToCourse = (progressData: CourseProgressResponse): Course => {
   const hasReviewAccess = progressData?.progress?.isCompleted === true ||
-    Number(progressData?.progress?.progressPercentage ?? progressData?.progress?.progress_percentage ?? 0) >= 100
+    Number(progressData?.progress?.progressPercentage ?? 0) >= 100
 
   let previousLessonCompleted = true
 
-  const units = progressData.modules.flatMap((module: any, moduleIndex: number) =>
-    module.lessons.map((lesson: any, lessonIndex: number) => {
+  const units = progressData.modules.flatMap((module, moduleIndex) =>
+    (module.lessons ?? []).map((lesson, lessonIndex): CourseUnit => {
       const isCompleted = lesson.progress?.status === 'completed'
       const isUnlocked = hasReviewAccess || (moduleIndex === 0 && lessonIndex === 0
         ? true
@@ -248,15 +270,15 @@ const transformProgressDataToCourse = (progressData: any): Course => {
       previousLessonCompleted = hasReviewAccess || isCompleted
 
       // Transformar quiz questions si existen
-      let questions: any[] = []
+      let questions: MappedQuestion[] = []
       if (lesson.quiz && lesson.quiz.questions && Array.isArray(lesson.quiz.questions)) {
-        questions = lesson.quiz.questions.map((q: any) => ({
+        questions = lesson.quiz.questions.map((q): MappedQuestion => ({
           id: q.id,
           question: q.question,
           type: mapQuizType(q.type),
           options: q.options || [],
-          correctAnswer: q.type === 'multiple' ? q.correct_answers : q.correct_answers[0],
-          explanation: q.explanation,
+          correctAnswer: q.type === 'multiple' ? (q.correct_answers ?? []) : (q.correct_answers?.[0] ?? 0),
+          explanation: q.explanation ?? undefined,
           points: q.points
         }))
       }
@@ -275,18 +297,17 @@ const transformProgressDataToCourse = (progressData: any): Course => {
           text: lesson.content,
           quizId: lesson.quiz?.id,
           maxAttempts: lesson.quiz?.max_attempts,
-          currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           resources: (lesson.resources || [])
-            .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
-            .map((resource: any) => ({
+            .filter((resource) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
+            .map((resource) => ({
               id: resource.id,
               title: resource.title,
               description: resource.description || '',
               resourceType: resource.resource_type,
               href: getResourceHref(resource),
-              original_filename: resource.original_filename,
-              external_url: resource.external_url
+              original_filename: resource.original_filename ?? undefined,
+              external_url: resource.external_url ?? undefined
             })),
           questions: questions
         }
@@ -295,9 +316,9 @@ const transformProgressDataToCourse = (progressData: any): Course => {
   )
 
   return {
-    id: progressData.course?.id || progressData.id,
-    title: progressData.course?.title || progressData.title,
-    description: progressData.course?.description || progressData.description,
+    id: progressData.course.id,
+    title: progressData.course.title,
+    description: progressData.course.description,
     category: getCourseAudienceLabel(progressData.course?.audience),
     instructor: 'Instructor',
     duration: `${Math.ceil((progressData.progress?.totalTimeSpent || 0) / 60)} horas`,
@@ -315,7 +336,7 @@ const LmsCoursePreview: React.FC = () => {
 
   const [previewMode, setPreviewMode] = useState<'student' | 'admin'>('student')
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
-  const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
+  const [pdfViewerResource, setPdfViewerResource] = useState<MappedResource | null>(null)
 
   const storeUser = useStore(userStore)
   // La vista previa es para quien gestiona cursos (capacidad de la administración del LMS), no solo para "admin"
@@ -361,7 +382,7 @@ const LmsCoursePreview: React.FC = () => {
     }
   }, [navigate, storeUser, canPreviewCourse])
 
-  const handleOpenResource = (resource: any) => {
+  const handleOpenResource = (resource: MappedResource) => {
     if (resource.external_url) {
       window.open(resource.external_url, '_blank', 'noopener,noreferrer')
       return
@@ -796,7 +817,7 @@ const LmsCoursePreview: React.FC = () => {
                           busyDialog.show('Guardando resultados del quiz...')
 
                           const formattedAnswers = (currentUnitData.content.questions ?? []).reduce(
-                            (acc: Record<number, number[]>, question: any, index: number) => {
+                            (acc: Record<number, number[]>, question: MappedQuestion, index: number) => {
                               const answer = answers[index]
 
                               if (answer !== undefined) {

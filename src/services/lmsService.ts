@@ -44,6 +44,9 @@ export interface Course {
   target_customer_ids?: number[]
   is_mandatory: boolean
   has_certificate: boolean
+  instructor?: string | null
+  thumbnail?: string | null
+  duration?: string | number
   estimated_duration_minutes?: number
   certificate_duration_text?: string | null
   show_duration_on_certificate?: boolean
@@ -149,7 +152,8 @@ export interface CourseLesson {
   content: string
   type: LessonType
   video_url?: string
-  video_source?: 'youtube' | 'minio'
+  video_source?: 'youtube' | 'minio' | 'gdrive'
+  description?: string
   duration_minutes?: number
   estimated_minutes?: number
   order_index: number
@@ -169,12 +173,19 @@ export interface Quiz {
   course_id?: number
   title: string
   description?: string
-  passing_score: number
+  instructions?: string
+  passing_percentage?: number
   max_attempts?: number
-  time_limit_minutes?: number
+  cooldown_minutes?: number
+  show_correct_answers?: boolean
+  randomize_questions?: boolean
+  shuffle_answers?: boolean
+  time_limit_minutes?: number | null
+  allow_review?: boolean
+  show_progress_bar?: boolean
   questions?: QuizQuestion[]
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
 
 /**
@@ -182,15 +193,16 @@ export interface Quiz {
  */
 export interface QuizQuestion {
   id: number
-  quiz_id: number
-  question_text: string
-  question_type: QuestionType
+  quiz_id?: number
+  question: string
+  type: 'single' | 'multiple' | 'boolean'
   options?: string[]
-  correct_answer: string
+  correct_answers?: number[]
+  explanation?: string | null
   points: number
-  order_index: number
-  created_at: string
-  updated_at: string
+  order_index?: number
+  created_at?: string
+  updated_at?: string
 }
 
 /**
@@ -244,6 +256,7 @@ export interface CourseProgressResponse {
     title: string
     description: string
     has_certificate: boolean
+    audience?: CourseAudience
   }
   progress: CourseProgressSummary
   modules: Array<{
@@ -256,6 +269,7 @@ export interface CourseProgressResponse {
       type: LessonType
       content?: string
       video_url?: string
+      video_source?: 'youtube' | 'minio' | 'gdrive'
       description?: string
       order_index: number
       estimated_minutes?: number
