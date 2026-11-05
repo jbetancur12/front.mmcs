@@ -1091,6 +1091,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/lms/admin/courses/:courseId/content", label: "Academia › Administración › Cursos › Contenido", kind: 'related' },
     { path: "/lms/admin/notifications", label: "Academia › Mis notificaciones", kind: 'related' },
     { path: "/lms/admin/plans", label: "Academia › Planes de formación", kind: 'related' },
+    { path: "/lms/admin/quiz-management", label: "Academia › Administración › Banco de preguntas", kind: 'related' },
     { path: "/lms/admin/users/:userId/courses/:courseId/review", label: "Academia › Administración › Usuarios › Cursos › Revisión", kind: 'related' },
     { path: "/lms/certificate/:certificateId", label: "Academia › Certificado", kind: 'related' },
     { path: "/lms/certificates", label: "Academia › Mis certificados", kind: 'related' },
