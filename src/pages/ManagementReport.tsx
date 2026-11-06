@@ -16,11 +16,6 @@ import {
   Grid,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -29,6 +24,10 @@ import {
 import {
   AssessmentOutlined,
   AttachMoneyOutlined,
+  GroupsOutlined,
+  HourglassTopOutlined,
+  PaymentsOutlined,
+  TrendingUpOutlined,
   ExpandMoreOutlined,
   GridOnOutlined,
   HistoryOutlined,
@@ -47,6 +46,8 @@ import LmsStatCard, {
   type LmsStatTone
 } from 'src/Components/lms/admin/LmsStatCard'
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import DataTable from 'src/Components/Common/DataTable'
+import { type MRT_ColumnDef } from 'material-react-table'
 import { userStore } from 'src/store/userStore'
 import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import { brand, intent, neutral } from 'src/theme/designTokens'
@@ -59,7 +60,11 @@ import {
   useManagementReportConfig,
   useManagementReportHistory
 } from 'src/hooks/useManagementReport'
-import type { ManagementReportStatus } from 'src/types/managementReport'
+import type {
+  ManagementReportMetric,
+  ManagementReportStatus,
+  StoredManagementReport
+} from 'src/types/managementReport'
 import { getApiErrorMessage } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 
@@ -67,7 +72,7 @@ const STATUS_TONE: Record<ManagementReportStatus, LmsStatTone> = {
   green: 'green',
   yellow: 'orange',
   red: 'red',
-  gray: 'teal'
+  gray: 'gray'
 }
 
 const STATUS_LABEL: Record<ManagementReportStatus, string> = {
@@ -108,12 +113,89 @@ const formatDateTime = (value: string | null) =>
 
 const coverIcon = (code: string) => {
   if (code === 'C2') return <AttachMoneyOutlined />
-  if (code === 'C6/C7') return <ReceiptLongOutlined />
-  if (code === 'C3') return <PercentOutlined />
+  if (code === 'C12') return <TrendingUpOutlined />
+  if (code === 'C6') return <ReceiptLongOutlined />
+  if (code === 'C11') return <PercentOutlined />
+  if (code === 'C8') return <PaymentsOutlined />
+  if (code === 'C14') return <HourglassTopOutlined />
   if (code === 'O4') return <ScheduleOutlined />
   if (code === 'Q1') return <WarningAmberOutlined />
+  if (code === 'Q7') return <GroupsOutlined />
   return <SentimentSatisfiedOutlined />
 }
+
+// "-12 % vs mes anterior" o, si no hay con qué comparar, "sin comparación"
+const changeText = (item: { variationDisplay: string; comparison?: string }) =>
+  item.variationDisplay === 'Sin dato' || item.variationDisplay === '—'
+    ? 'sin comparación'
+    : `${item.variationDisplay} vs ${item.comparison || 'mes anterior'}`
+
+// En gris puede faltar el dato o solo la comparación: no son lo mismo
+const statusLabel = (metric: ManagementReportMetric) =>
+  metric.status === 'gray' && metric.value !== null
+    ? 'Sin comparación'
+    : STATUS_LABEL[metric.status]
+
+// Tablas cortas dentro de una tarjeta: sin sombra propia ni scroll interno
+const INLINE_TABLE = {
+  enableStickyHeader: false,
+  muiTableContainerProps: { sx: { maxHeight: 'none' } },
+  muiTablePaperProps: {
+    elevation: 0,
+    sx: {
+      borderRadius: '12px',
+      border: `1px solid ${neutral.border}`,
+      overflow: 'hidden'
+    }
+  }
+} as const
+
+const METRIC_COLUMNS: MRT_ColumnDef<ManagementReportMetric>[] = [
+  {
+    accessorKey: 'label',
+    header: 'Indicador',
+    muiTableBodyCellProps: { sx: { fontWeight: 600 } }
+  },
+  {
+    accessorKey: 'display',
+    header: 'Valor',
+    muiTableHeadCellProps: { align: 'right' },
+    muiTableBodyCellProps: ({ row }) => ({
+      align: 'right',
+      sx: {
+        fontWeight: 700,
+        color: STATUS_COLOR[row.original.status],
+        whiteSpace: 'nowrap'
+      }
+    })
+  },
+  {
+    accessorKey: 'variationDisplay',
+    header: 'Cambio',
+    Cell: ({ row }) => changeText(row.original),
+    muiTableHeadCellProps: { align: 'right' },
+    muiTableBodyCellProps: { align: 'right', sx: { whiteSpace: 'nowrap' } }
+  },
+  {
+    accessorKey: 'note',
+    header: 'Lectura',
+    muiTableBodyCellProps: { sx: { color: neutral.textMuted } }
+  },
+  {
+    accessorKey: 'status',
+    header: 'Estado',
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => (
+      <Chip
+        size='small'
+        variant='outlined'
+        label={statusLabel(row.original)}
+        color={STATUS_CHIP[row.original.status]}
+      />
+    )
+  }
+]
 
 const ManagementReportPage = () => {
   const $userStore = useStore(userStore)
@@ -245,6 +327,63 @@ const ManagementReportPage = () => {
     }
   }
 
+  const historyColumns = useMemo<MRT_ColumnDef<StoredManagementReport>[]>(
+    () => [
+      { accessorKey: 'period', header: 'Periodo' },
+      {
+        accessorKey: 'profile',
+        header: 'Versión',
+        Cell: ({ row }) =>
+          row.original.profile === 'full' ? 'Con valores' : 'Sin valores'
+      },
+      {
+        accessorKey: 'sentAt',
+        header: 'Envío',
+        Cell: ({ row }) => formatDateTime(row.original.sentAt)
+      },
+      {
+        id: 'download',
+        header: 'Descargar',
+        enableSorting: false,
+        muiTableHeadCellProps: { align: 'right' },
+        muiTableBodyCellProps: { align: 'right' },
+        Cell: ({ row }) => (
+          <>
+            <Button
+              size='small'
+              startIcon={<PictureAsPdfOutlined />}
+              onClick={() =>
+                handleHistoryDownload(
+                  row.original.period,
+                  row.original.profile,
+                  'pdf'
+                )
+              }
+              sx={{ textTransform: 'none' }}
+            >
+              PDF
+            </Button>
+            <Button
+              size='small'
+              startIcon={<GridOnOutlined />}
+              onClick={() =>
+                handleHistoryDownload(
+                  row.original.period,
+                  row.original.profile,
+                  'xlsx'
+                )
+              }
+              sx={{ textTransform: 'none' }}
+            >
+              Excel
+            </Button>
+          </>
+        )
+      }
+    ],
+    []
+  )
+
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
@@ -365,13 +504,13 @@ const ManagementReportPage = () => {
         <>
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {report.cover.map((item) => (
-              <Grid item xs={12} sm={6} md={4} key={item.code}>
+              <Grid item xs={12} sm={6} md={3} key={item.code}>
                 <LmsStatCard
                   label={item.label}
                   value={item.display}
                   icon={coverIcon(item.code)}
                   tone={STATUS_TONE[item.status]}
-                  caption={`vs mes anterior: ${item.variationDisplay}`}
+                  caption={changeText(item)}
                   compact
                 />
               </Grid>
@@ -390,7 +529,7 @@ const ManagementReportPage = () => {
             >
               <Stack direction='row' spacing={1} alignItems='center' mb={1}>
                 <AssessmentOutlined sx={{ color: brand.ink }} />
-                <Typography variant='h6'>Alertas y decisiones</Typography>
+                <Typography variant='h6'>Decisiones de este mes</Typography>
               </Stack>
               <Stack spacing={1}>
                 {report.alerts.map((alert) => (
@@ -434,50 +573,18 @@ const ManagementReportPage = () => {
                   {block.question}
                 </Typography>
               </Stack>
-              <Table size='small'>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Indicador</TableCell>
-                    <TableCell align='right'>Valor</TableCell>
-                    <TableCell align='right'>vs mes anterior</TableCell>
-                    <TableCell>Lectura</TableCell>
-                    <TableCell align='center'>Estado</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {block.metrics.map((metric) => (
-                    <TableRow key={metric.code} hover>
-                      <TableCell sx={{ fontWeight: 600 }}>
-                        {metric.label}
-                      </TableCell>
-                      <TableCell
-                        align='right'
-                        sx={{
-                          fontWeight: 700,
-                          color: STATUS_COLOR[metric.status],
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {metric.display}
-                      </TableCell>
-                      <TableCell align='right' sx={{ whiteSpace: 'nowrap' }}>
-                        {metric.variationDisplay}
-                      </TableCell>
-                      <TableCell sx={{ color: 'text.secondary' }}>
-                        {metric.note}
-                      </TableCell>
-                      <TableCell align='center'>
-                        <Chip
-                          size='small'
-                          variant='outlined'
-                          label={STATUS_LABEL[metric.status]}
-                          color={STATUS_CHIP[metric.status]}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <DataTable
+                columns={METRIC_COLUMNS}
+                data={block.metrics}
+                {...INLINE_TABLE}
+                enableTopToolbar={false}
+                enableBottomToolbar={false}
+                enablePagination={false}
+                enableSorting={false}
+                enableGlobalFilter={false}
+                enableColumnFilters={false}
+                getRowId={(metric) => metric.code}
+              />
               {block.action && (
                 <Alert severity='info' sx={{ mt: 1 }}>
                   {block.action}
@@ -485,6 +592,18 @@ const ManagementReportPage = () => {
               )}
             </Paper>
           ))}
+
+          {report.noData && report.noData.length > 0 && (
+            <Alert severity='info' sx={{ mb: 3 }}>
+              <Typography variant='body2' fontWeight={600}>
+                Sin información suficiente este mes
+              </Typography>
+              <Typography variant='body2'>
+                {report.noData.map((item) => item.label).join(' · ')}. Mientras
+                no se registren estos datos, el reporte no los muestra.
+              </Typography>
+            </Alert>
+          )}
 
           {canSeeAmounts && (
             <Accordion
@@ -581,57 +700,16 @@ const ManagementReportPage = () => {
                 Todavía no hay reportes guardados.
               </Typography>
             ) : (
-              <Table size='small'>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Periodo</TableCell>
-                    <TableCell>Versión</TableCell>
-                    <TableCell>Envío</TableCell>
-                    <TableCell align='right'>Descargar</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {visibleHistory.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell>{row.period}</TableCell>
-                      <TableCell>
-                        {row.profile === 'full' ? 'Con valores' : 'Sin valores'}
-                      </TableCell>
-                      <TableCell>{formatDateTime(row.sentAt)}</TableCell>
-                      <TableCell align='right'>
-                        <Button
-                          size='small'
-                          startIcon={<PictureAsPdfOutlined />}
-                          onClick={() =>
-                            handleHistoryDownload(
-                              row.period,
-                              row.profile,
-                              'pdf'
-                            )
-                          }
-                          sx={{ textTransform: 'none' }}
-                        >
-                          PDF
-                        </Button>
-                        <Button
-                          size='small'
-                          startIcon={<GridOnOutlined />}
-                          onClick={() =>
-                            handleHistoryDownload(
-                              row.period,
-                              row.profile,
-                              'xlsx'
-                            )
-                          }
-                          sx={{ textTransform: 'none' }}
-                        >
-                          Excel
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <DataTable
+                columns={historyColumns}
+                data={visibleHistory}
+                {...INLINE_TABLE}
+                enableTopToolbar={false}
+                enablePagination={visibleHistory.length > 10}
+                enableGlobalFilter={false}
+                enableColumnFilters={false}
+                getRowId={(row) => String(row.id)}
+              />
             )}
           </Paper>
         </>

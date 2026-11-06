@@ -11,6 +11,8 @@ export interface ManagementReportMetric {
   variation: number | null
   variationDisplay: string
   direction: 'up' | 'down'
+  /** Contra qué se compara el cambio (por defecto, el mes anterior). */
+  comparison?: string
   status: ManagementReportStatus
   note: string
   count?: number | null
@@ -32,6 +34,8 @@ export interface ManagementReportCoverItem {
   display: string
   status: ManagementReportStatus
   variationDisplay: string
+  comparison?: string
+  hasValue?: boolean
   note?: string
 }
 
@@ -60,6 +64,8 @@ export interface ManagementReport {
   cover: ManagementReportCoverItem[]
   blocks: Record<string, ManagementReportBlock>
   alerts: ManagementReportAlert[]
+  /** Indicadores sin información suficiente este mes. */
+  noData?: Array<{ section: string; label: string; note?: string }>
   annexes?: Record<string, unknown>
   definitions: {
     terms: Array<{ term: string; definition: string }>
