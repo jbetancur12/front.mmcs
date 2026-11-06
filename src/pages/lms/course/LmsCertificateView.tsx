@@ -24,7 +24,7 @@ import {
   TextField,
   InputAdornment,
   Tooltip,
-  Avatar,
+  Avatar
 } from '@mui/material'
 import {
   Download as DownloadIcon,
@@ -45,8 +45,15 @@ import {
 } from '@mui/icons-material'
 import { alpha } from '@mui/material/styles'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { useUserCertificates, useCertificate, useDownloadCertificate } from '../../../hooks/useLms'
-import { lmsService, type Certificate as ApiCertificate } from '../../../services/lmsService'
+import {
+  useUserCertificates,
+  useCertificate,
+  useDownloadCertificate
+} from '../../../hooks/useLms'
+import {
+  lmsService,
+  type Certificate as ApiCertificate
+} from '../../../services/lmsService'
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
@@ -81,30 +88,66 @@ interface CertificateVerification {
   error?: string
 }
 
-const normalizeCertificate = (certificate: ApiCertificate | Certificate): Certificate => ({
+const normalizeCertificate = (
+  certificate: ApiCertificate | Certificate
+): Certificate => ({
   ...certificate,
-  certificateNumber: (certificate as Certificate).certificateNumber || certificate.certificate_number || '',
-  courseTitle: (certificate as Certificate).courseTitle || (certificate as Certificate).course_name || (certificate as Certificate).certificateData?.courseTitle || '',
+  certificateNumber:
+    (certificate as Certificate).certificateNumber ||
+    certificate.certificate_number ||
+    '',
+  courseTitle:
+    (certificate as Certificate).courseTitle ||
+    (certificate as Certificate).course_name ||
+    (certificate as Certificate).certificateData?.courseTitle ||
+    '',
   courseDescription: (certificate as Certificate).courseDescription || '',
-  issuedAt: (certificate as Certificate).issuedAt || certificate.issued_at || certificate.created_at || '',
+  issuedAt:
+    (certificate as Certificate).issuedAt ||
+    certificate.issued_at ||
+    certificate.created_at ||
+    '',
   pdfPath: (certificate as Certificate).pdfPath || certificate.file_url || '',
-  verification_url: (certificate as Certificate).verification_url || certificate.verificationUrl || '',
-  course_name: (certificate as Certificate).course_name || (certificate as Certificate).courseTitle || (certificate as Certificate).certificateData?.courseTitle || '',
-  user_name: (certificate as Certificate).user_name || (certificate as Certificate).userName || (certificate as Certificate).certificateData?.userName || 'Usuario',
-  completion_date: (certificate as Certificate).completion_date || (certificate as Certificate).certificateData?.completionDate || certificate.issued_at || certificate.created_at || '',
+  verification_url:
+    (certificate as Certificate).verification_url ||
+    certificate.verificationUrl ||
+    '',
+  course_name:
+    (certificate as Certificate).course_name ||
+    (certificate as Certificate).courseTitle ||
+    (certificate as Certificate).certificateData?.courseTitle ||
+    '',
+  user_name:
+    (certificate as Certificate).user_name ||
+    (certificate as Certificate).userName ||
+    (certificate as Certificate).certificateData?.userName ||
+    'Usuario',
+  completion_date:
+    (certificate as Certificate).completion_date ||
+    (certificate as Certificate).certificateData?.completionDate ||
+    certificate.issued_at ||
+    certificate.created_at ||
+    '',
   template_name: (certificate as Certificate).template_name || 'Certificado',
-  userName: (certificate as Certificate).userName || (certificate as Certificate).user_name || (certificate as Certificate).certificateData?.userName || 'Usuario',
+  userName:
+    (certificate as Certificate).userName ||
+    (certificate as Certificate).user_name ||
+    (certificate as Certificate).certificateData?.userName ||
+    'Usuario',
   certificateData: (certificate as Certificate).certificateData || {}
 })
 
 const getOrganizationName = (certificate?: Certificate | null) =>
-  certificate?.certificateData?.organizationName || 'MMCS Learning Management System'
+  certificate?.certificateData?.organizationName ||
+  'MMCS Learning Management System'
 
 const formatMinutes = (minutes: number) => {
   if (minutes < 60) return `${minutes} minuto${minutes === 1 ? '' : 's'}`
   const hours = Math.floor(minutes / 60)
   const rest = Math.round(minutes % 60)
-  return rest ? `${hours} h ${rest} min` : `${hours} hora${hours === 1 ? '' : 's'}`
+  return rest
+    ? `${hours} h ${rest} min`
+    : `${hours} hora${hours === 1 ? '' : 's'}`
 }
 
 const getCourseDurationLabel = (certificate?: Certificate | null) => {
@@ -125,41 +168,59 @@ const getCourseDurationLabel = (certificate?: Certificate | null) => {
 }
 
 const LmsCertificateView: React.FC = () => {
-  const { certificateId, certificateNumber: certificateNumberParam } = useParams<{ certificateId: string; certificateNumber: string }>()
+  const { certificateId, certificateNumber: certificateNumberParam } =
+    useParams<{ certificateId: string; certificateNumber: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const certificateIdNumber = certificateId ? Number(certificateId) : undefined
-  const verificationParam = certificateNumberParam || searchParams.get('verify') || ''
+  const verificationParam =
+    certificateNumberParam || searchParams.get('verify') || ''
   const isAuthenticated = localStorage.getItem('accessToken') !== null
   const isPublicVerificationMode = Boolean(verificationParam && !certificateId)
   const hasAutoVerified = useRef(false)
 
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
-  const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false)
-  const [verificationNumber, setVerificationNumber] = useState(verificationParam)
-  const [verificationResult, setVerificationResult] = useState<CertificateVerification | null>(null)
+  const [isVerificationDialogOpen, setIsVerificationDialogOpen] =
+    useState(false)
+  const [verificationNumber, setVerificationNumber] =
+    useState(verificationParam)
+  const [verificationResult, setVerificationResult] =
+    useState<CertificateVerification | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode] = useState<'single' | 'gallery'>(certificateId ? 'single' : 'gallery')
-  const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
-  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
+  const [viewMode] = useState<'single' | 'gallery'>(
+    certificateId ? 'single' : 'gallery'
+  )
+  const [selectedCertificate, setSelectedCertificate] =
+    useState<Certificate | null>(null)
+  const showSnackbar = (
+    message: string,
+    severity: 'success' | 'error' = 'success'
+  ) => {
     notify[severity](message)
   }
 
   // Fetch user certificates or single certificate
-  const { data: userCertificatesData, isLoading: isLoadingCertificates } = useUserCertificates(undefined, {
-    enabled: isAuthenticated && !certificateId && !isPublicVerificationMode
-  })
-  const { data: singleCertificate, isLoading: isLoadingSingle } = useCertificate(
-    certificateIdNumber ?? 0,
-    { enabled: !!certificateId && isAuthenticated }
-  )
+  const { data: userCertificatesData, isLoading: isLoadingCertificates } =
+    useUserCertificates(undefined, {
+      enabled: isAuthenticated && !certificateId && !isPublicVerificationMode
+    })
+  const { data: singleCertificate, isLoading: isLoadingSingle } =
+    useCertificate(certificateIdNumber ?? 0, {
+      enabled: !!certificateId && isAuthenticated
+    })
   const downloadCertificateMutation = useDownloadCertificate()
 
-  const loading = isLoadingCertificates || isLoadingSingle || downloadCertificateMutation.isLoading
+  const loading =
+    isLoadingCertificates ||
+    isLoadingSingle ||
+    downloadCertificateMutation.isLoading
   const certificate = useMemo(
-    () => (viewMode === 'single'
-      ? (singleCertificate ? normalizeCertificate(singleCertificate) : null)
-      : selectedCertificate),
+    () =>
+      viewMode === 'single'
+        ? singleCertificate
+          ? normalizeCertificate(singleCertificate)
+          : null
+        : selectedCertificate,
     [selectedCertificate, singleCertificate, viewMode]
   )
   const userCertificates = useMemo(
@@ -192,7 +253,9 @@ const LmsCertificateView: React.FC = () => {
       const result = await lmsService.verifyCertificate(verificationNumber)
       setVerificationResult({
         ...result,
-        certificate: result.certificate ? normalizeCertificate(result.certificate) : undefined
+        certificate: result.certificate
+          ? normalizeCertificate(result.certificate)
+          : undefined
       })
     } catch (error) {
       logger.error('Error verifying certificate:', error)
@@ -205,7 +268,10 @@ const LmsCertificateView: React.FC = () => {
 
   const copyVerificationLink = async (verificationUrl?: string) => {
     if (!verificationUrl) {
-      showSnackbar('Este certificado aún no tiene un enlace de verificación disponible.', 'error')
+      showSnackbar(
+        'Este certificado aún no tiene un enlace de verificación disponible.',
+        'error'
+      )
       return
     }
 
@@ -227,11 +293,14 @@ const LmsCertificateView: React.FC = () => {
 
     if (!hasAutoVerified.current) {
       hasAutoVerified.current = true
-      void lmsService.verifyCertificate(verificationParam)
+      void lmsService
+        .verifyCertificate(verificationParam)
         .then((result) => {
           setVerificationResult({
             ...result,
-            certificate: result.certificate ? normalizeCertificate(result.certificate) : undefined
+            certificate: result.certificate
+              ? normalizeCertificate(result.certificate)
+              : undefined
           })
         })
         .catch(() => {
@@ -285,9 +354,10 @@ const LmsCertificateView: React.FC = () => {
     `
   }
 
-  const filteredCertificates = userCertificates.filter(cert =>
-    cert.courseTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cert.certificateNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCertificates = userCertificates.filter(
+    (cert) =>
+      cert.courseTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.certificateNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const shareOptions = [
@@ -304,7 +374,9 @@ const LmsCertificateView: React.FC = () => {
       action: () => {
         const subject = `Mi certificado: ${certificate?.course_name}`
         const body = `He completado el curso "${certificate?.course_name}" y obtenido mi certificado. Puedes verificarlo en: ${certificate?.verification_url}`
-        window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+        window.open(
+          `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+        )
       }
     }
   ]
@@ -320,24 +392,25 @@ const LmsCertificateView: React.FC = () => {
   if (isPublicVerificationMode) {
     return (
       <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-        <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
+        <Typography variant='h4' component='h1' sx={{ mb: 2 }}>
           Verificación de Certificado
         </Typography>
-        <Alert severity="info" sx={{ mb: 3 }}>
-          Este enlace permite validar la autenticidad del certificado sin iniciar sesión.
+        <Alert severity='info' sx={{ mb: 3 }}>
+          Este enlace permite validar la autenticidad del certificado sin
+          iniciar sesión.
         </Alert>
 
         <Paper sx={{ p: 3 }}>
           <Box sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              label="Número de Certificado"
+              label='Número de Certificado'
               value={verificationNumber}
               onChange={(e) => setVerificationNumber(e.target.value)}
-              placeholder="Ej: MMCS-2026-ABCD1234"
+              placeholder='Ej: MMCS-2026-ABCD1234'
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">
+                  <InputAdornment position='start'>
                     <VerifiedIcon />
                   </InputAdornment>
                 )
@@ -346,7 +419,7 @@ const LmsCertificateView: React.FC = () => {
           </Box>
 
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleVerifyCertificate}
             disabled={!verificationNumber.trim()}
             sx={{ mb: 3 }}
@@ -355,66 +428,101 @@ const LmsCertificateView: React.FC = () => {
           </Button>
 
           {verificationResult && (
-            <Paper sx={{ p: 3, border: '1px solid', borderColor: verificationResult.isValid ? 'success.main' : 'error.main' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Paper
+              sx={{
+                p: 3,
+                border: '1px solid',
+                borderColor: verificationResult.isValid
+                  ? 'success.main'
+                  : 'error.main'
+              }}
+            >
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
                 {verificationResult.isValid ? (
-                  <CheckCircleIcon color="success" />
+                  <CheckCircleIcon color='success' />
                 ) : (
-                  <ErrorIcon color="error" />
+                  <ErrorIcon color='error' />
                 )}
-                <Typography variant="h6" color={verificationResult.isValid ? 'success.main' : 'error.main'}>
-                  {verificationResult.isValid ? 'Certificado válido' : 'Certificado no válido'}
+                <Typography
+                  variant='h6'
+                  color={
+                    verificationResult.isValid ? 'success.main' : 'error.main'
+                  }
+                >
+                  {verificationResult.isValid
+                    ? 'Certificado válido'
+                    : 'Certificado no válido'}
                 </Typography>
               </Box>
 
               {verificationResult.isValid && verificationResult.certificate ? (
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">Estudiante</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Estudiante
+                    </Typography>
+                    <Typography variant='body1' sx={{ fontWeight: 'bold' }}>
                       {verificationResult.certificate.userName}
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">Curso</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Curso
+                    </Typography>
+                    <Typography variant='body1' sx={{ fontWeight: 'bold' }}>
                       {verificationResult.certificate.courseTitle}
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">Organización</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Organización
+                    </Typography>
+                    <Typography variant='body1' sx={{ fontWeight: 'bold' }}>
                       {getOrganizationName(verificationResult.certificate)}
                     </Typography>
                   </Grid>
                   {verificationResult.certificate.courseDescription && (
                     <Grid item xs={12}>
-                      <Typography variant="caption" color="text.secondary">Descripción del curso</Typography>
-                      <Typography variant="body2">
+                      <Typography variant='caption' color='text.secondary'>
+                        Descripción del curso
+                      </Typography>
+                      <Typography variant='body2'>
                         {verificationResult.certificate.courseDescription}
                       </Typography>
                     </Grid>
                   )}
                   <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">Fecha de finalización</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                      {verificationResult.certificate.certificateData?.completionDate
-                        ? new Date(verificationResult.certificate.certificateData.completionDate).toLocaleDateString('es-ES')
+                    <Typography variant='caption' color='text.secondary'>
+                      Fecha de finalización
+                    </Typography>
+                    <Typography variant='body1' sx={{ fontWeight: 'bold' }}>
+                      {verificationResult.certificate.certificateData
+                        ?.completionDate
+                        ? new Date(
+                            verificationResult.certificate.certificateData.completionDate
+                          ).toLocaleDateString('es-ES')
                         : 'N/A'}
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">Fecha de emisión</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Fecha de emisión
+                    </Typography>
+                    <Typography variant='body1' sx={{ fontWeight: 'bold' }}>
                       {verificationResult.certificate.issuedAt
-                        ? new Date(verificationResult.certificate.issuedAt).toLocaleDateString('es-ES')
+                        ? new Date(
+                            verificationResult.certificate.issuedAt
+                          ).toLocaleDateString('es-ES')
                         : 'N/A'}
                     </Typography>
                   </Grid>
                 </Grid>
               ) : (
-                <Typography variant="body2" color="error">
-                  {verificationResult.error || 'El certificado no pudo ser verificado.'}
+                <Typography variant='body2' color='error'>
+                  {verificationResult.error ||
+                    'El certificado no pudo ser verificado.'}
                 </Typography>
               )}
             </Paper>
@@ -429,41 +537,58 @@ const LmsCertificateView: React.FC = () => {
       {viewMode === 'single' && certificate ? (
         // Single Certificate View
         <Box>
-          <Alert
-            severity='success'
-            sx={{ mb: 3 }}
-          >
-            Tu certificado ya está listo para descargar, compartir o verificar con un enlace público.
+          <Alert severity='success' sx={{ mb: 3 }}>
+            Tu certificado ya está listo para descargar, compartir o verificar
+            con un enlace público.
           </Alert>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: 2,
+              mb: 3,
+              flexWrap: 'wrap'
+            }}
+          >
             <Box>
-              <Typography variant="h4" component="h1">
+              <Typography variant='h4' component='h1'>
                 Certificado de Finalización
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
-                <Chip label={getOrganizationName(certificate)} color='success' variant='outlined' />
-                <Chip label={getCourseDurationLabel(certificate)} variant='outlined' />
-                <Chip label={certificate.certificateNumber} variant='outlined' />
+                <Chip
+                  label={getOrganizationName(certificate)}
+                  color='success'
+                  variant='outlined'
+                />
+                <Chip
+                  label={getCourseDurationLabel(certificate)}
+                  variant='outlined'
+                />
+                <Chip
+                  label={certificate.certificateNumber}
+                  variant='outlined'
+                />
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button
-                variant="outlined"
+                variant='outlined'
                 startIcon={<PrintIcon />}
                 onClick={handlePrintCertificate}
               >
                 Imprimir
               </Button>
               <Button
-                variant="outlined"
+                variant='outlined'
                 startIcon={<ShareIcon />}
                 onClick={() => handleShareCertificate(certificate)}
               >
                 Compartir
               </Button>
               <Button
-                variant="contained"
+                variant='contained'
                 startIcon={<DownloadIcon />}
                 onClick={() => handleDownloadCertificate(certificate.id)}
               >
@@ -486,7 +611,7 @@ const LmsCertificateView: React.FC = () => {
             <Grid item xs={12} lg={4}>
               <Card sx={{ mb: 3 }}>
                 <CardHeader
-                  title="Información del Certificado"
+                  title='Información del Certificado'
                   avatar={
                     <Avatar sx={{ bgcolor: 'primary.main' }}>
                       <CertificateIcon />
@@ -500,7 +625,7 @@ const LmsCertificateView: React.FC = () => {
                         <PersonIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Estudiante"
+                        primary='Estudiante'
                         secondary={certificate.user_name}
                       />
                     </ListItem>
@@ -509,7 +634,7 @@ const LmsCertificateView: React.FC = () => {
                         <SchoolIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Curso"
+                        primary='Curso'
                         secondary={certificate.courseTitle}
                       />
                     </ListItem>
@@ -518,7 +643,7 @@ const LmsCertificateView: React.FC = () => {
                         <CalendarIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Duración del curso"
+                        primary='Duración del curso'
                         secondary={getCourseDurationLabel(certificate)}
                       />
                     </ListItem>
@@ -527,8 +652,10 @@ const LmsCertificateView: React.FC = () => {
                         <CalendarIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Fecha de finalización"
-                        secondary={new Date(certificate.completion_date).toLocaleDateString('es-ES')}
+                        primary='Fecha de finalización'
+                        secondary={new Date(
+                          certificate.completion_date
+                        ).toLocaleDateString('es-ES')}
                       />
                     </ListItem>
                     <ListItem>
@@ -536,8 +663,14 @@ const LmsCertificateView: React.FC = () => {
                         <CalendarIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Fecha de emisión"
-                        secondary={certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString('es-ES') : 'N/A'}
+                        primary='Fecha de emisión'
+                        secondary={
+                          certificate.issuedAt
+                            ? new Date(certificate.issuedAt).toLocaleDateString(
+                                'es-ES'
+                              )
+                            : 'N/A'
+                        }
                       />
                     </ListItem>
                     <ListItem>
@@ -545,7 +678,7 @@ const LmsCertificateView: React.FC = () => {
                         <CertificateIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Organización"
+                        primary='Organización'
                         secondary={getOrganizationName(certificate)}
                       />
                     </ListItem>
@@ -554,7 +687,7 @@ const LmsCertificateView: React.FC = () => {
                         <VerifiedIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Número de certificado"
+                        primary='Número de certificado'
                         secondary={certificate.certificateNumber}
                       />
                     </ListItem>
@@ -562,44 +695,68 @@ const LmsCertificateView: React.FC = () => {
 
                   <Divider sx={{ my: 2 }} />
 
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <CheckCircleIcon color="success" />
-                    <Typography variant="body2" color="success.main">
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mb: 2
+                    }}
+                  >
+                    <CheckCircleIcon color='success' />
+                    <Typography variant='body2' color='success.main'>
                       Certificado verificado
                     </Typography>
                   </Box>
 
-                  <Typography variant="caption" color="text.secondary">
-                    Este certificado puede ser verificado usando el número: {certificate.certificateNumber}
+                  <Typography variant='caption' color='text.secondary'>
+                    Este certificado puede ser verificado usando el número:{' '}
+                    {certificate.certificateNumber}
                   </Typography>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader title="Compartir y Verificar" />
+                <CardHeader title='Compartir y Verificar' />
                 <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Usa este enlace cuando necesites compartir el certificado o validar su autenticidad.
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mb: 2 }}
+                  >
+                    Usa este enlace cuando necesites compartir el certificado o
+                    validar su autenticidad.
                   </Typography>
                   <Alert severity='info' sx={{ mb: 2 }}>
-                    El enlace público permite verificar este certificado sin iniciar sesión.
+                    El enlace público permite verificar este certificado sin
+                    iniciar sesión.
                   </Alert>
-                  <Paper sx={{ p: 2, bgcolor: 'grey.50', border: '1px dashed', borderColor: 'grey.300', mb: 2 }}>
-                    <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                  <Paper
+                    sx={{
+                      p: 2,
+                      bgcolor: 'grey.50',
+                      border: '1px dashed',
+                      borderColor: 'grey.300',
+                      mb: 2
+                    }}
+                  >
+                    <Typography variant='body2' sx={{ wordBreak: 'break-all' }}>
                       {certificate.verification_url}
                     </Typography>
                   </Paper>
                   <Button
-                    variant="contained"
+                    variant='contained'
                     fullWidth
                     startIcon={<LinkIcon />}
                     sx={{ mb: 1 }}
-                    onClick={() => copyVerificationLink(certificate.verification_url)}
+                    onClick={() =>
+                      copyVerificationLink(certificate.verification_url)
+                    }
                   >
                     Copiar enlace de verificación
                   </Button>
                   <Button
-                    variant="outlined"
+                    variant='outlined'
                     fullWidth
                     startIcon={<VerifiedIcon />}
                     onClick={() => setIsVerificationDialogOpen(true)}
@@ -614,12 +771,19 @@ const LmsCertificateView: React.FC = () => {
       ) : (
         // Certificate Gallery View
         <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" component="h1">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3
+            }}
+          >
+            <Typography variant='h4' component='h1'>
               Mis Certificados
             </Typography>
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<VerifiedIcon />}
               onClick={() => setIsVerificationDialogOpen(true)}
             >
@@ -630,12 +794,12 @@ const LmsCertificateView: React.FC = () => {
           <Box sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              placeholder="Buscar certificados por nombre del curso o número..."
+              placeholder='Buscar certificados por nombre del curso o número...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">
+                  <InputAdornment position='start'>
                     <SearchIcon />
                   </InputAdornment>
                 )
@@ -676,7 +840,12 @@ const LmsCertificateView: React.FC = () => {
                       })}
                     >
                       <CertificateIcon sx={{ fontSize: 40 }} />
-                      <Chip size='small' color='success' icon={<VerifiedIcon />} label='Verificado' />
+                      <Chip
+                        size='small'
+                        color='success'
+                        icon={<VerifiedIcon />}
+                        label='Verificado'
+                      />
                     </Box>
                     <CardContent sx={{ flexGrow: 1 }}>
                       <Typography
@@ -693,13 +862,35 @@ const LmsCertificateView: React.FC = () => {
                       >
                         {cert.courseTitle}
                       </Typography>
-                      <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.75 }}>
-                        Emitido {cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString('es-ES') : 'N/A'}
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: 'block', mt: 0.75 }}
+                      >
+                        Emitido{' '}
+                        {cert.issuedAt
+                          ? new Date(cert.issuedAt).toLocaleDateString('es-ES')
+                          : 'N/A'}
                         {' · '}N° {cert.certificateNumber}
                       </Typography>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
-                        <Chip size='small' label={getOrganizationName(cert)} variant='outlined' />
-                        <Chip size='small' label={getCourseDurationLabel(cert)} variant='outlined' />
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          gap: 1,
+                          flexWrap: 'wrap',
+                          mt: 1.5
+                        }}
+                      >
+                        <Chip
+                          size='small'
+                          label={getOrganizationName(cert)}
+                          variant='outlined'
+                        />
+                        <Chip
+                          size='small'
+                          label={getCourseDurationLabel(cert)}
+                          variant='outlined'
+                        />
                       </Box>
                     </CardContent>
                     <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1 }}>
@@ -713,12 +904,18 @@ const LmsCertificateView: React.FC = () => {
                         Ver certificado
                       </Button>
                       <Tooltip title='Descargar PDF'>
-                        <IconButton color='primary' onClick={() => handleDownloadCertificate(cert.id)}>
+                        <IconButton
+                          color='primary'
+                          onClick={() => handleDownloadCertificate(cert.id)}
+                        >
                           <DownloadIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title='Compartir'>
-                        <IconButton color='primary' onClick={() => handleShareCertificate(cert)}>
+                        <IconButton
+                          color='primary'
+                          onClick={() => handleShareCertificate(cert)}
+                        >
                           <ShareIcon />
                         </IconButton>
                       </Tooltip>
@@ -731,22 +928,36 @@ const LmsCertificateView: React.FC = () => {
 
           {filteredCertificates.length === 0 && !loading && (
             <Paper sx={{ p: 4, textAlign: 'center' }}>
-              <CertificateIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                {searchTerm ? 'No se encontraron certificados' : 'No tienes certificados aún'}
+              <CertificateIcon
+                sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+              />
+              <Typography variant='h6' color='text.secondary' gutterBottom>
+                {searchTerm
+                  ? 'No se encontraron certificados'
+                  : 'No tienes certificados aún'}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {searchTerm 
+              <Typography variant='body2' color='text.secondary'>
+                {searchTerm
                   ? 'Intenta con otros términos de búsqueda'
-                  : 'Completa cursos para obtener tus primeros certificados'
-                }
+                  : 'Completa cursos para obtener tus primeros certificados'}
               </Typography>
               {!searchTerm && (
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <Button variant="contained" onClick={() => navigate('/lms')}>
+                <Box
+                  sx={{
+                    mt: 3,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 1,
+                    flexWrap: 'wrap'
+                  }}
+                >
+                  <Button variant='contained' onClick={() => navigate('/lms')}>
                     Volver al LMS
                   </Button>
-                  <Button variant="outlined" onClick={() => setIsVerificationDialogOpen(true)}>
+                  <Button
+                    variant='outlined'
+                    onClick={() => setIsVerificationDialogOpen(true)}
+                  >
                     Verificar un certificado
                   </Button>
                 </Box>
@@ -754,51 +965,65 @@ const LmsCertificateView: React.FC = () => {
             </Paper>
           )}
         </Box>
-      )}   
-   {/* Share Certificate Dialog */}
+      )}
+      {/* Share Certificate Dialog */}
       <Dialog
         open={isShareDialogOpen}
         onClose={() => setIsShareDialogOpen(false)}
-        maxWidth="sm"
+        maxWidth='sm'
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">
-              Compartir Certificado
-            </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <Typography variant='h6'>Compartir Certificado</Typography>
             <IconButton onClick={() => setIsShareDialogOpen(false)}>
               <CloseIcon />
             </IconButton>
           </Box>
         </DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="body2">
-              Comparte el enlace de verificación o envíalo por correo cuando necesites validar tu
-              certificado con otra persona.
+          <Alert severity='info' sx={{ mb: 3 }}>
+            <Typography variant='body2'>
+              Comparte el enlace de verificación o envíalo por correo cuando
+              necesites validar tu certificado con otra persona.
             </Typography>
           </Alert>
 
           <Paper sx={{ p: 2, mb: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
-            <Typography variant='subtitle2'>{certificate?.courseTitle}</Typography>
+            <Typography variant='subtitle2'>
+              {certificate?.courseTitle}
+            </Typography>
             <Typography variant='body2' color='text.secondary'>
-              {certificate?.certificateNumber} · {getOrganizationName(certificate)}
+              {certificate?.certificateNumber} ·{' '}
+              {getOrganizationName(certificate)}
             </Typography>
           </Paper>
 
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
+            <Typography variant='subtitle2' gutterBottom>
               Enlace de verificación:
             </Typography>
-            <Paper sx={{ p: 2, bgcolor: 'grey.50', border: '1px dashed', borderColor: 'grey.300' }}>
-              <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+            <Paper
+              sx={{
+                p: 2,
+                bgcolor: 'grey.50',
+                border: '1px dashed',
+                borderColor: 'grey.300'
+              }}
+            >
+              <Typography variant='body2' sx={{ wordBreak: 'break-all' }}>
                 {certificate?.verification_url}
               </Typography>
             </Paper>
           </Box>
 
-          <Typography variant="subtitle2" gutterBottom>
+          <Typography variant='subtitle2' gutterBottom>
             Opciones disponibles:
           </Typography>
           <Grid container spacing={2}>
@@ -806,7 +1031,7 @@ const LmsCertificateView: React.FC = () => {
               <Grid item xs={6} key={option.name}>
                 <Button
                   fullWidth
-                  variant="outlined"
+                  variant='outlined'
                   startIcon={option.icon}
                   onClick={option.action}
                   sx={{ justifyContent: 'flex-start' }}
@@ -827,29 +1052,28 @@ const LmsCertificateView: React.FC = () => {
           setVerificationResult(null)
           setVerificationNumber('')
         }}
-        maxWidth="md"
+        maxWidth='md'
         fullWidth
       >
-        <DialogTitle>
-          Verificar Certificado
-        </DialogTitle>
+        <DialogTitle>Verificar Certificado</DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="body2">
-              Ingresa el número de certificado para verificar su autenticidad y validez.
+          <Alert severity='info' sx={{ mb: 3 }}>
+            <Typography variant='body2'>
+              Ingresa el número de certificado para verificar su autenticidad y
+              validez.
             </Typography>
           </Alert>
 
           <Box sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              label="Número de Certificado"
+              label='Número de Certificado'
               value={verificationNumber}
               onChange={(e) => setVerificationNumber(e.target.value)}
-              placeholder="Ej: MMCS-2026-ABCD1234"
+              placeholder='Ej: MMCS-2026-ABCD1234'
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">
+                  <InputAdornment position='start'>
                     <VerifiedIcon />
                   </InputAdornment>
                 )
@@ -858,7 +1082,7 @@ const LmsCertificateView: React.FC = () => {
           </Box>
 
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleVerifyCertificate}
             disabled={!verificationNumber.trim() || loading}
             fullWidth
@@ -868,84 +1092,117 @@ const LmsCertificateView: React.FC = () => {
           </Button>
 
           {verificationResult && (
-            <Paper sx={{ p: 3, border: '1px solid', borderColor: verificationResult.isValid ? 'success.main' : 'error.main' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Paper
+              sx={{
+                p: 3,
+                border: '1px solid',
+                borderColor: verificationResult.isValid
+                  ? 'success.main'
+                  : 'error.main'
+              }}
+            >
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
                 {verificationResult.isValid ? (
-                  <CheckCircleIcon color="success" />
+                  <CheckCircleIcon color='success' />
                 ) : (
-                  <ErrorIcon color="error" />
+                  <ErrorIcon color='error' />
                 )}
-                <Typography variant="h6" color={verificationResult.isValid ? 'success.main' : 'error.main'}>
-                  {verificationResult.isValid ? 'Certificado Válido' : 'Certificado No Válido'}
+                <Typography
+                  variant='h6'
+                  color={
+                    verificationResult.isValid ? 'success.main' : 'error.main'
+                  }
+                >
+                  {verificationResult.isValid
+                    ? 'Certificado Válido'
+                    : 'Certificado No Válido'}
                 </Typography>
               </Box>
 
               {verificationResult.isValid && verificationResult.certificate ? (
                 <Box>
-                  <Typography variant="body2" sx={{ mb: 2 }}>
-                    Este certificado es auténtico y ha sido emitido por nuestra plataforma.
+                  <Typography variant='body2' sx={{ mb: 2 }}>
+                    Este certificado es auténtico y ha sido emitido por nuestra
+                    plataforma.
                   </Typography>
-                  
+
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='caption' color='text.secondary'>
                         Estudiante:
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
                         {verificationResult.certificate.userName}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='caption' color='text.secondary'>
                         Curso:
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
                         {verificationResult.certificate.courseTitle}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='caption' color='text.secondary'>
                         Fecha de finalización:
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {verificationResult.certificate.certificateData?.completionDate ? new Date(verificationResult.certificate.certificateData.completionDate).toLocaleDateString('es-ES') : 'N/A'}
+                      <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
+                        {verificationResult.certificate.certificateData
+                          ?.completionDate
+                          ? new Date(
+                              verificationResult.certificate.certificateData.completionDate
+                            ).toLocaleDateString('es-ES')
+                          : 'N/A'}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='caption' color='text.secondary'>
                         Fecha de emisión:
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {new Date(verificationResult.certificate.issuedAt).toLocaleDateString('es-ES')}
+                      <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
+                        {new Date(
+                          verificationResult.certificate.issuedAt
+                        ).toLocaleDateString('es-ES')}
                       </Typography>
                     </Grid>
                   </Grid>
 
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button
-                      variant="outlined"
-                      size="small"
+                      variant='outlined'
+                      size='small'
                       startIcon={<VisibilityIcon />}
                       onClick={() => {
-                        navigate(`/lms/certificate/${verificationResult.certificate?.id}`)
+                        navigate(
+                          `/lms/certificate/${verificationResult.certificate?.id}`
+                        )
                         setIsVerificationDialogOpen(false)
                       }}
                     >
                       Ver Certificado
                     </Button>
                     <Button
-                      variant="outlined"
-                      size="small"
+                      variant='outlined'
+                      size='small'
                       startIcon={<DownloadIcon />}
-                      onClick={() => verificationResult.certificate && handleDownloadCertificate(verificationResult.certificate.id)}
+                      onClick={() =>
+                        verificationResult.certificate &&
+                        handleDownloadCertificate(
+                          verificationResult.certificate.id
+                        )
+                      }
                     >
                       Descargar
                     </Button>
                   </Box>
                 </Box>
               ) : (
-                <Typography variant="body2" color="error">
-                  {verificationResult.error || 'El certificado no pudo ser verificado.'}
+                <Typography variant='body2' color='error'>
+                  {verificationResult.error ||
+                    'El certificado no pudo ser verificado.'}
                 </Typography>
               )}
             </Paper>
@@ -963,7 +1220,6 @@ const LmsCertificateView: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
     </Box>
   )
 }

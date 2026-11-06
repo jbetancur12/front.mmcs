@@ -11,11 +11,15 @@ import {
 
 describe('sanitizeHtml: ataques que deben quedar fuera', () => {
   it('elimina <script> y conserva el resto', () => {
-    expect(sanitizeHtml('<p>hola</p><script>alert(1)</script>')).toBe('<p>hola</p>')
+    expect(sanitizeHtml('<p>hola</p><script>alert(1)</script>')).toBe(
+      '<p>hola</p>'
+    )
   })
 
   it('quita los atributos de eventos (onerror, onclick)', () => {
-    expect(sanitizeHtml('<img src="x" onerror="alert(1)">')).not.toContain('onerror')
+    expect(sanitizeHtml('<img src="x" onerror="alert(1)">')).not.toContain(
+      'onerror'
+    )
     expect(sanitizeHtml('<p onclick="alert(1)">x</p>')).toBe('<p>x</p>')
   })
 
@@ -66,9 +70,9 @@ describe('sanitizeHtml: lo normal debe sobrevivir', () => {
 
 describe('sanitizeHtml: según el tipo de contenido', () => {
   it('basicText deja el texto de un enlace pero no el enlace', () => {
-    expect(sanitizeHtml('<p>x <a href="https://a.com">l</a></p>', 'basicText')).toBe(
-      '<p>x l</p>'
-    )
+    expect(
+      sanitizeHtml('<p>x <a href="https://a.com">l</a></p>', 'basicText')
+    ).toBe('<p>x l</p>')
   })
 
   it('quiz solo permite negrita, cursiva, subrayado y salto de línea', () => {
@@ -151,28 +155,40 @@ describe('createSafeHtmlRenderer', () => {
 
 describe('validateYouTubeUrl', () => {
   it('acepta youtube.com/watch y youtu.be con id de 11 caracteres', () => {
-    expect(validateYouTubeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toEqual({
+    expect(
+      validateYouTubeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    ).toEqual({
       isValid: true,
       cleanUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
     })
-    expect(validateYouTubeUrl('https://youtu.be/dQw4w9WgXcQ').isValid).toBe(true)
-  })
-
-  it('ignora los espacios alrededor', () => {
-    expect(validateYouTubeUrl('  https://youtu.be/dQw4w9WgXcQ  ').cleanUrl).toBe(
-      'https://youtu.be/dQw4w9WgXcQ'
+    expect(validateYouTubeUrl('https://youtu.be/dQw4w9WgXcQ').isValid).toBe(
+      true
     )
   })
 
+  it('ignora los espacios alrededor', () => {
+    expect(
+      validateYouTubeUrl('  https://youtu.be/dQw4w9WgXcQ  ').cleanUrl
+    ).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
   it('rechaza otros dominios, ids cortos y URLs con intentos de inyección', () => {
-    expect(validateYouTubeUrl('https://evil.com/watch?v=dQw4w9WgXcQ').isValid).toBe(false)
-    expect(validateYouTubeUrl('https://www.youtube.com/watch?v=corto').isValid).toBe(false)
-    expect(validateYouTubeUrl('https://youtu.be/dQw4w9WgXcQ"><script>').isValid).toBe(false)
+    expect(
+      validateYouTubeUrl('https://evil.com/watch?v=dQw4w9WgXcQ').isValid
+    ).toBe(false)
+    expect(
+      validateYouTubeUrl('https://www.youtube.com/watch?v=corto').isValid
+    ).toBe(false)
+    expect(
+      validateYouTubeUrl('https://youtu.be/dQw4w9WgXcQ"><script>').isValid
+    ).toBe(false)
   })
 
   it('rechaza vacío o valores que no son texto', () => {
     expect(validateYouTubeUrl('').isValid).toBe(false)
-    expect(validateYouTubeUrl(undefined as unknown as string).isValid).toBe(false)
+    expect(validateYouTubeUrl(undefined as unknown as string).isValid).toBe(
+      false
+    )
   })
 })
 

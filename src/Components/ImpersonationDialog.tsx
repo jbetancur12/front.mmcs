@@ -12,7 +12,7 @@ import {
   ListItemButton,
   ListItemText,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material'
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
@@ -43,7 +43,7 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
   candidates,
   onSearch,
   onSelect,
-  onClose,
+  onClose
 }) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
@@ -86,26 +86,40 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
           InputProps={{
             startAdornment: (
               <InputAdornment position='start'>
-                <SearchOutlinedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                <SearchOutlinedIcon
+                  sx={{ color: 'text.secondary', fontSize: 20 }}
+                />
               </InputAdornment>
-            ),
+            )
           }}
         />
 
         {searching && (
-          <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center', py: 2 }}>
+          <Typography
+            variant='body2'
+            color='text.secondary'
+            sx={{ textAlign: 'center', py: 2 }}
+          >
             Buscando...
           </Typography>
         )}
 
         {!searching && candidates.length === 0 && query.trim() && (
-          <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center', py: 2 }}>
+          <Typography
+            variant='body2'
+            color='text.secondary'
+            sx={{ textAlign: 'center', py: 2 }}
+          >
             No se encontraron usuarios.
           </Typography>
         )}
 
         {!searching && !query.trim() && (
-          <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center', py: 2 }}>
+          <Typography
+            variant='body2'
+            color='text.secondary'
+            sx={{ textAlign: 'center', py: 2 }}
+          >
             Escribe al menos 3 caracteres para buscar.
           </Typography>
         )}
@@ -115,9 +129,18 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
             <Typography
               variant='caption'
               fontWeight={700}
-              sx={{ color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', ml: 1, mb: 0.5, display: 'block' }}
+              sx={{
+                color: '#6b7280',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                ml: 1,
+                mb: 0.5,
+                display: 'block'
+              }}
             >
-              <GroupOutlinedIcon sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'text-top' }} />
+              <GroupOutlinedIcon
+                sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'text-top' }}
+              />
               Usuarios internos
             </Typography>
             <List dense disablePadding>
@@ -128,23 +151,47 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
                   sx={{ borderRadius: '8px', mb: 0.25 }}
                 >
                   <ListItemAvatar>
-                    <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem', bgcolor: '#6366f1' }}>
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        fontSize: '0.8rem',
+                        bgcolor: '#6366f1'
+                      }}
+                    >
                       {u.name.charAt(0).toUpperCase()}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={u.name}
                     secondary={u.email}
-                    primaryTypographyProps={{ fontWeight: 600, variant: 'body2' }}
+                    primaryTypographyProps={{
+                      fontWeight: 600,
+                      variant: 'body2'
+                    }}
                     secondaryTypographyProps={{ variant: 'caption' }}
                   />
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', ml: 1, maxWidth: 160, justifyContent: 'flex-end' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 0.5,
+                      flexWrap: 'wrap',
+                      ml: 1,
+                      maxWidth: 160,
+                      justifyContent: 'flex-end'
+                    }}
+                  >
                     {u.roles.slice(0, 3).map((r) => (
                       <Chip
                         key={r}
                         size='small'
                         label={r}
-                        sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600, '& .MuiChip-label': { px: 0.6 } }}
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          '& .MuiChip-label': { px: 0.6 }
+                        }}
                       />
                     ))}
                   </Box>
@@ -159,9 +206,18 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
             <Typography
               variant='caption'
               fontWeight={700}
-              sx={{ color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', ml: 1, mb: 0.5, display: 'block' }}
+              sx={{
+                color: '#6b7280',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                ml: 1,
+                mb: 0.5,
+                display: 'block'
+              }}
             >
-              <BusinessOutlinedIcon sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'text-top' }} />
+              <BusinessOutlinedIcon
+                sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'text-top' }}
+              />
               Clientes
             </Typography>
             <List dense disablePadding>
@@ -172,23 +228,47 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
                   sx={{ borderRadius: '8px', mb: 0.25 }}
                 >
                   <ListItemAvatar>
-                    <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem', bgcolor: '#059669' }}>
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        fontSize: '0.8rem',
+                        bgcolor: '#059669'
+                      }}
+                    >
                       {u.name.charAt(0).toUpperCase()}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={u.name}
                     secondary={u.customerName || u.email}
-                    primaryTypographyProps={{ fontWeight: 600, variant: 'body2' }}
+                    primaryTypographyProps={{
+                      fontWeight: 600,
+                      variant: 'body2'
+                    }}
                     secondaryTypographyProps={{ variant: 'caption' }}
                   />
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', ml: 1, maxWidth: 160, justifyContent: 'flex-end' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 0.5,
+                      flexWrap: 'wrap',
+                      ml: 1,
+                      maxWidth: 160,
+                      justifyContent: 'flex-end'
+                    }}
+                  >
                     {u.roles.slice(0, 2).map((r) => (
                       <Chip
                         key={r}
                         size='small'
                         label={r}
-                        sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600, '& .MuiChip-label': { px: 0.6 } }}
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          '& .MuiChip-label': { px: 0.6 }
+                        }}
                       />
                     ))}
                   </Box>

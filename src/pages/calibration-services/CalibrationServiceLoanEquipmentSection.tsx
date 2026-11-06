@@ -52,20 +52,24 @@ const getOptionLabel = (option: CalibrationServiceLoanEquipmentOption) =>
   [option.internalCode, option.equipmentName].filter(Boolean).join(' · ')
 
 const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
-  const { data: loans = [], isLoading } = useCalibrationServiceLoanEquipment(serviceId)
-  const { createLoan, returnLoan, cancelLoan } = useCalibrationServiceLoanMutations()
+  const { data: loans = [], isLoading } =
+    useCalibrationServiceLoanEquipment(serviceId)
+  const { createLoan, returnLoan, cancelLoan } =
+    useCalibrationServiceLoanMutations()
 
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
   const { data: options = [], isFetching: isSearching } =
     useAvailableLoanEquipment(deferredSearch)
 
-  const [selected, setSelected] = useState<CalibrationServiceLoanEquipmentOption | null>(null)
+  const [selected, setSelected] =
+    useState<CalibrationServiceLoanEquipmentOption | null>(null)
   const [visualOut, setVisualOut] = useState(DEFAULT_INSPECTION)
   const [operationalOut, setOperationalOut] = useState(DEFAULT_INSPECTION)
   const [notesOut, setNotesOut] = useState('')
 
-  const [returnTarget, setReturnTarget] = useState<CalibrationServiceLoanEquipment | null>(null)
+  const [returnTarget, setReturnTarget] =
+    useState<CalibrationServiceLoanEquipment | null>(null)
   const [visualIn, setVisualIn] = useState(DEFAULT_INSPECTION)
   const [operationalIn, setOperationalIn] = useState(DEFAULT_INSPECTION)
   const [notesIn, setNotesIn] = useState('')
@@ -95,7 +99,9 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
       resetOutForm()
     } catch (error) {
       logger.error(error)
-      toast.error(getApiErrorMessage(error, 'No pudimos registrar el equipo de préstamo.'))
+      toast.error(
+        getApiErrorMessage(error, 'No pudimos registrar el equipo de préstamo.')
+      )
     }
   }
 
@@ -121,7 +127,9 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
       setReturnTarget(null)
     } catch (error) {
       logger.error(error)
-      toast.error(getApiErrorMessage(error, 'No pudimos registrar el retorno del equipo.'))
+      toast.error(
+        getApiErrorMessage(error, 'No pudimos registrar el retorno del equipo.')
+      )
     }
   }
 
@@ -146,8 +154,8 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
   return (
     <Stack spacing={2}>
       <Typography variant='body2' color='text.secondary'>
-        Deja registrados los equipos de préstamo que se entregan al cliente con este
-        servicio. Al entregar, haz aquí el chequeo de retorno de cada uno.
+        Deja registrados los equipos de préstamo que se entregan al cliente con
+        este servicio. Al entregar, haz aquí el chequeo de retorno de cada uno.
       </Typography>
 
       <Box>
@@ -184,7 +192,14 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
       </Box>
 
       {selected ? (
-        <Box sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
           <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1.5 }}>
             {getOptionLabel(selected)}
           </Typography>
@@ -217,8 +232,17 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
               />
             </Grid>
           </Grid>
-          <Stack direction='row' spacing={1} justifyContent='flex-end' sx={{ mt: 2 }}>
-            <Button size='small' onClick={resetOutForm} disabled={createLoan.isLoading}>
+          <Stack
+            direction='row'
+            spacing={1}
+            justifyContent='flex-end'
+            sx={{ mt: 2 }}
+          >
+            <Button
+              size='small'
+              onClick={resetOutForm}
+              disabled={createLoan.isLoading}
+            >
               Cancelar
             </Button>
             <Button
@@ -226,7 +250,11 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
               variant='contained'
               onClick={() => void handleAdd()}
               disabled={createLoan.isLoading}
-              sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' }, textTransform: 'none' }}
+              sx={{
+                bgcolor: '#00BFA5',
+                '&:hover': { bgcolor: '#00897B' },
+                textTransform: 'none'
+              }}
             >
               Dejar en préstamo
             </Button>
@@ -251,7 +279,9 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
               {pendingCount === 1 ? '' : 's'} de retorno.
             </Alert>
           ) : (
-            <Alert severity='success'>Todos los equipos de préstamo fueron devueltos.</Alert>
+            <Alert severity='success'>
+              Todos los equipos de préstamo fueron devueltos.
+            </Alert>
           )}
           <TableContainer>
             <Table size='small'>
@@ -277,7 +307,9 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant='body2'>{formatDateTime(loan.outDate)}</Typography>
+                      <Typography variant='body2'>
+                        {formatDateTime(loan.outDate)}
+                      </Typography>
                       <Typography variant='caption' color='text.secondary'>
                         {loan.visualOutInspection} · {loan.operationalOutTest}
                       </Typography>
@@ -305,7 +337,11 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
                     </TableCell>
                     <TableCell align='right'>
                       {!loan.returned ? (
-                        <Stack direction='row' spacing={0.5} justifyContent='flex-end'>
+                        <Stack
+                          direction='row'
+                          spacing={0.5}
+                          justifyContent='flex-end'
+                        >
                           <Button
                             size='small'
                             variant='outlined'
@@ -371,14 +407,21 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setReturnTarget(null)} disabled={returnLoan.isLoading}>
+          <Button
+            onClick={() => setReturnTarget(null)}
+            disabled={returnLoan.isLoading}
+          >
             Cancelar
           </Button>
           <Button
             variant='contained'
             onClick={() => void handleReturn()}
             disabled={returnLoan.isLoading}
-            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' }, textTransform: 'none' }}
+            sx={{
+              bgcolor: '#00BFA5',
+              '&:hover': { bgcolor: '#00897B' },
+              textTransform: 'none'
+            }}
           >
             Confirmar retorno
           </Button>

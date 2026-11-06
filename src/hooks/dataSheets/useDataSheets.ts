@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { ALERTS_QUERY_KEY } from 'src/Components/DataSheet/equipmentAlerts'
 
 type Id = number | string | null | undefined
 
@@ -12,15 +13,24 @@ const hasId = (id: Id) => id !== undefined && id !== null && id !== ''
 export const DATASHEET_QUERY_KEYS = {
   all: ['dataSheets'] as const,
   details: () => [...DATASHEET_QUERY_KEYS.all, 'detail'] as const,
-  detail: (id: Id) => [...DATASHEET_QUERY_KEYS.details(), String(id ?? '')] as const,
-  status: (id: Id) => [...DATASHEET_QUERY_KEYS.all, 'status', String(id ?? '')] as const,
+  detail: (id: Id) =>
+    [...DATASHEET_QUERY_KEYS.details(), String(id ?? '')] as const,
+  status: (id: Id) =>
+    [...DATASHEET_QUERY_KEYS.all, 'status', String(id ?? '')] as const,
   inOutReport: (id: Id) =>
     [...DATASHEET_QUERY_KEYS.all, 'in-out-report', String(id ?? '')] as const,
-  devicesOnLoan: () => [...DATASHEET_QUERY_KEYS.all, 'devices-on-loan'] as const,
+  devicesOnLoan: () =>
+    [...DATASHEET_QUERY_KEYS.all, 'devices-on-loan'] as const,
   calibration: (id: Id) =>
     [...DATASHEET_QUERY_KEYS.all, 'calibration', String(id ?? '')] as const,
   inspectionMaintenance: (id: Id) =>
-    [...DATASHEET_QUERY_KEYS.all, 'inspection-maintenance', String(id ?? '')] as const
+    [
+      ...DATASHEET_QUERY_KEYS.all,
+      'inspection-maintenance',
+      String(id ?? '')
+    ] as const,
+  lifecycle: (id: Id) =>
+    [...DATASHEET_QUERY_KEYS.all, 'lifecycle', String(id ?? '')] as const
 }
 
 /**
@@ -82,10 +92,26 @@ export const useEquipmentInOutReport = <T = unknown>(id: Id) => {
   return useQuery(
     DATASHEET_QUERY_KEYS.inOutReport(id),
     async () => {
-      const response = await axiosPrivate.get(`/dataSheet/${id}/in-out-report`, {})
+      const response = await axiosPrivate.get(
+        `/dataSheet/${id}/in-out-report`,
+        {}
+      )
       return response.data as T
     },
     { enabled: hasId(id), staleTime: 0, keepPreviousData: false }
+  )
+}
+
+/** Bitácora de baja/restauración/eliminación de una hoja de vida. */
+export const useDataSheetLifecycle = <T = unknown>(id: Id) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery(
+    DATASHEET_QUERY_KEYS.lifecycle(id),
+    async () => {
+      const response = await axiosPrivate.get(`/dataSheet/${id}/lifecycle`)
+      return (Array.isArray(response.data) ? response.data : []) as T[]
+    },
+    { enabled: hasId(id), staleTime: 0 }
   )
 }
 
@@ -130,7 +156,10 @@ export const useInspectionMaintenanceRecord = <T = unknown>(id: Id) => {
 
 const useInvalidateDataSheets = () => {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries(DATASHEET_QUERY_KEYS.all)
+  return () => {
+    queryClient.invalidateQueries(DATASHEET_QUERY_KEYS.all)
+    queryClient.invalidateQueries(ALERTS_QUERY_KEY)
+  }
 }
 
 /** Crea (POST) o actualiza (PUT) un registro de calibración. */

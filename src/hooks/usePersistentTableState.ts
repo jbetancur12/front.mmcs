@@ -39,11 +39,14 @@ const DEFAULT_TABLE_STATE: TableState = {
 }
 
 // Debounce utility function
-const useDebounce = (callback: (...args: any[]) => void, delay: number) => {
+const useDebounce = <T extends unknown[]>(
+  callback: (...args: T) => void,
+  delay: number
+) => {
   const timeoutRef = useRef<NodeJS.Timeout>()
 
   return useCallback(
-    (...args: any[]) => {
+    (...args: T) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
@@ -54,7 +57,7 @@ const useDebounce = (callback: (...args: any[]) => void, delay: number) => {
 }
 
 // Validate table state structure
-const validateState = (state: any): state is Partial<TableState> => {
+const validateState = (state: unknown): state is Partial<TableState> => {
   if (!state || typeof state !== 'object') return false
 
   const validKeys: Array<keyof TableState> = [
@@ -64,7 +67,7 @@ const validateState = (state: any): state is Partial<TableState> => {
     'columnVisibility',
     'density'
   ]
-  const stateKeys = Object.keys(state)
+  const stateKeys = Object.keys(state as Record<string, unknown>)
 
   return stateKeys.every((key) => validKeys.includes(key as keyof TableState))
 }
@@ -100,8 +103,9 @@ const saveStateToStorage = (
   try {
     const stateToSave: Partial<TableState> = {}
     persistedProperties.forEach((prop) => {
-      if (state[prop] !== undefined) {
-        ;(stateToSave as any)[prop] = state[prop]
+      const value = state[prop]
+      if (value !== undefined) {
+        Object.assign(stateToSave, { [prop]: value })
       }
     })
 
@@ -110,6 +114,9 @@ const saveStateToStorage = (
     logger.error(`Error saving table state for ${tableId}:`, error)
   }
 }
+
+// Generic state update function
+export type Updater<T> = T | ((old: T) => T)
 
 /**
  * Generic hook for persistent table state across all MaterialReactTable components
@@ -164,7 +171,7 @@ export const usePersistentTableState = (
 
   // Individual state handlers
   const handleColumnFiltersChange = useCallback(
-    (updater: any) => {
+    (updater: Updater<MRT_ColumnFiltersState>) => {
       const newFilters =
         typeof updater === 'function'
           ? updater(tableState.columnFilters)
@@ -175,7 +182,7 @@ export const usePersistentTableState = (
   )
 
   const handleSortingChange = useCallback(
-    (updater: any) => {
+    (updater: Updater<MRT_SortingState>) => {
       const newSorting =
         typeof updater === 'function' ? updater(tableState.sorting) : updater
       updateTableState({ sorting: newSorting })
@@ -184,7 +191,7 @@ export const usePersistentTableState = (
   )
 
   const handlePaginationChange = useCallback(
-    (updater: any) => {
+    (updater: Updater<MRT_PaginationState>) => {
       const newPagination =
         typeof updater === 'function' ? updater(tableState.pagination) : updater
       updateTableState({ pagination: newPagination })
@@ -193,7 +200,7 @@ export const usePersistentTableState = (
   )
 
   const handleColumnVisibilityChange = useCallback(
-    (updater: any) => {
+    (updater: Updater<MRT_VisibilityState>) => {
       const newVisibility =
         typeof updater === 'function'
           ? updater(tableState.columnVisibility || {})
@@ -204,7 +211,7 @@ export const usePersistentTableState = (
   )
 
   const handleDensityChange = useCallback(
-    (updater: any) => {
+    (updater: Updater<MRT_DensityState>) => {
       const newDensity =
         typeof updater === 'function'
           ? updater(tableState.density || 'comfortable')

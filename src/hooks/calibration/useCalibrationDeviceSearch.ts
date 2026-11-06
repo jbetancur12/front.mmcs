@@ -29,9 +29,12 @@ export const useCalibrationDeviceSearch = (query: string) => {
   const result = useQuery<CalibrationDeviceOption[]>(
     ['calibration-device-search', debounced],
     async () => {
-      const res = await axiosPrivate.get<CalibrationDeviceOption[] | null>('/devices', {
-        params: { q: debounced }
-      })
+      const res = await axiosPrivate.get<CalibrationDeviceOption[] | null>(
+        '/devices',
+        {
+          params: { q: debounced }
+        }
+      )
       return (res.data || []).map((d) => ({ id: d.id, name: d.name }))
     },
     {

@@ -6,11 +6,13 @@ import { notify } from 'src/utils/notify'
 import { useCreateCustomer } from 'src/hooks/customers/useCustomers'
 
 import { logger } from 'src/utils/logger'
+import type { CreatedCustomerOption } from './ExcelManipulation/Types'
+
 interface ModalCustomerProps {
   open: boolean
   onClose: Dispatch<SetStateAction<boolean>>
   name: string
-  dataReturned: (data: any) => void
+  dataReturned: (data: CreatedCustomerOption) => void
 }
 
 const FIELDS: Array<{ name: string; label: string; fullWidth?: boolean }> = [

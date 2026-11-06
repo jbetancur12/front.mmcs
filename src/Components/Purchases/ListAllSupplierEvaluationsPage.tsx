@@ -103,7 +103,6 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
       if (pdfWindow) {
         pdfWindow.focus()
         // Opcional: intentar nombrar la pestaña (puede no funcionar en todos los navegadores)
-        // setTimeout(() => { try { pdfWindow.document.title = `Evaluacion_${supplierName}_${evaluationDate}`; } catch(e){} }, 500);
       } else {
         notify.warning(
           'Error',
@@ -129,14 +128,6 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
     // Podrías abrir otro modal para seleccionar el proveedor, o navegar a una página.
     // Por simplicidad, asumiré que tienes un flujo para obtener `selectedSupplierObject`
     // Esto es un placeholder, necesitarás implementar la selección de proveedor.
-    // const exampleSupplier: ISupplier = { id: 1, name: "Proveedor Ejemplo", taxId: "123", typePerson:0, contactName:"",email:"",phone:"", purchaseType: 1 };
-    // if (exampleSupplier) {
-    //   setSupplierForNewEvaluation(exampleSupplier);
-    //   setSelectedEvaluation(null); // Asegurar que es modo creación
-    //   setIsFormModalOpen(true);
-    // } else {
-    //   Swal.fire("Info", "Por favor, selecciona un proveedor para evaluar.", "info");
-    // }
     navigate('/purchases/suppliers') // Navegar a la lista de proveedores para seleccionar uno y luego evaluar
     notify.info(
       'Info',
@@ -161,12 +152,13 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
       id: evaluation.supplier.id,
       name: evaluation.supplier.name,
       taxId: evaluation.supplier.taxId,
-      // Rellenar otros campos de ISupplier con valores por defecto o de 'evaluation.supplier' si están disponibles
-      typePerson: (evaluation.supplier as any).typePerson || 0,
-      contactName: (evaluation.supplier as any).contactName || '',
-      email: (evaluation.supplier as any).email || '',
-      phone: (evaluation.supplier as any).phone || '',
-      purchaseType: (evaluation.supplier as any).purchaseType || 1
+      // El backend solo expone id/name/taxId en la evaluación, así que el
+      // resto del proveedor se completa con sus valores por defecto.
+      typePerson: 0,
+      contactName: '',
+      email: '',
+      phone: '',
+      purchaseType: 1
     }
 
     setSelectedEvaluation(evaluation)

@@ -9,12 +9,12 @@ interface SectionErrorBoundaryProps {
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void
 }
 
-export const MetricsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const MetricsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Métricas del Dashboard"
+    section='Métricas del Dashboard'
     onError={onError}
     enableRetry={true}
     enableNavigation={false}
@@ -24,12 +24,12 @@ export const MetricsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
   </LmsErrorBoundary>
 )
 
-export const AnalyticsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const AnalyticsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Analíticas"
+    section='Analíticas'
     onError={onError}
     enableRetry={true}
     enableNavigation={true}
@@ -39,12 +39,12 @@ export const AnalyticsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
   </LmsErrorBoundary>
 )
 
-export const AssignmentErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const AssignmentErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Gestión de Asignaciones"
+    section='Gestión de Asignaciones'
     onError={onError}
     enableRetry={true}
     enableNavigation={true}
@@ -54,12 +54,12 @@ export const AssignmentErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
   </LmsErrorBoundary>
 )
 
-export const NotificationErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const NotificationErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Notificaciones"
+    section='Notificaciones'
     onError={onError}
     enableRetry={true}
     enableNavigation={false}
@@ -69,12 +69,12 @@ export const NotificationErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
   </LmsErrorBoundary>
 )
 
-export const ReportErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const ReportErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Reportes"
+    section='Reportes'
     onError={onError}
     enableRetry={true}
     enableNavigation={true}
@@ -84,12 +84,12 @@ export const ReportErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
   </LmsErrorBoundary>
 )
 
-export const SystemHealthErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const SystemHealthErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Estado del Sistema"
+    section='Estado del Sistema'
     onError={onError}
     enableRetry={true}
     enableNavigation={false}
@@ -99,12 +99,12 @@ export const SystemHealthErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
   </LmsErrorBoundary>
 )
 
-export const QuickActionsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const QuickActionsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Acciones Rápidas"
+    section='Acciones Rápidas'
     onError={onError}
     enableRetry={true}
     enableNavigation={false}
@@ -114,12 +114,12 @@ export const QuickActionsErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
   </LmsErrorBoundary>
 )
 
-export const RealTimeErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const RealTimeErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Dashboard en Tiempo Real"
+    section='Dashboard en Tiempo Real'
     onError={onError}
     enableRetry={true}
     enableNavigation={false}
@@ -130,19 +130,32 @@ export const RealTimeErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
 )
 
 // Composite error boundary that wraps the entire dashboard
-export const DashboardErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({ 
-  children, 
-  onError 
+export const DashboardErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
+  children,
+  onError
 }) => (
   <LmsErrorBoundary
-    section="Dashboard LMS"
+    section='Dashboard LMS'
     onError={(error, errorInfo) => {
       // Log critical dashboard errors
       logger.error('Critical Dashboard Error:', error, errorInfo)
-      
+
       // Report to error tracking service
-      if (typeof window !== 'undefined' && (window as any).errorTracker) {
-        (window as any).errorTracker.captureException(error, {
+      if (typeof window !== 'undefined') {
+        const errorTracker = (
+          window as Window & {
+            errorTracker?: {
+              captureException: (
+                error: Error,
+                context: {
+                  tags: Record<string, unknown>
+                  extra: Record<string, unknown>
+                }
+              ) => void
+            }
+          }
+        ).errorTracker
+        errorTracker?.captureException(error, {
           tags: {
             section: 'dashboard',
             critical: true
@@ -152,7 +165,7 @@ export const DashboardErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
           }
         })
       }
-      
+
       // Call custom error handler
       if (onError) {
         onError(error, errorInfo)
@@ -167,9 +180,11 @@ export const DashboardErrorBoundary: React.FC<SectionErrorBoundaryProps> = ({
 )
 
 // Error boundary for individual widgets
-export const WidgetErrorBoundary: React.FC<SectionErrorBoundaryProps & {
-  widgetName: string
-}> = ({ children, widgetName, onError }) => (
+export const WidgetErrorBoundary: React.FC<
+  SectionErrorBoundaryProps & {
+    widgetName: string
+  }
+> = ({ children, widgetName, onError }) => (
   <LmsErrorBoundary
     section={`Widget: ${widgetName}`}
     onError={onError}
@@ -196,7 +211,7 @@ export const withDashboardErrorBoundary = <P extends object>(
       <Component {...props} />
     </LmsErrorBoundary>
   )
-  
+
   WrappedComponent.displayName = `withDashboardErrorBoundary(${Component.displayName || Component.name})`
   return WrappedComponent
 }

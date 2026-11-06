@@ -28,7 +28,9 @@ interface MaintenanceSignaturesDialogProps {
   canCaptureTechnicianSignature?: boolean
 }
 
-const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = ({
+const MaintenanceSignaturesDialog: React.FC<
+  MaintenanceSignaturesDialogProps
+> = ({
   open,
   onClose,
   onSave,
@@ -42,13 +44,19 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
 }) => {
   const [customerSignerName, setCustomerSignerName] = useState('')
   const [customerSignerNameError, setCustomerSignerNameError] = useState('')
-  const [customerSignatureData, setCustomerSignatureData] = useState<string | null>(null)
+  const [customerSignatureData, setCustomerSignatureData] = useState<
+    string | null
+  >(null)
   const [customerSignatureError, setCustomerSignatureError] = useState('')
-  const [technicianSignatureData, setTechnicianSignatureData] = useState<string | null>(null)
+  const [technicianSignatureData, setTechnicianSignatureData] = useState<
+    string | null
+  >(null)
   const [technicianSignatureError, setTechnicianSignatureError] = useState('')
 
   const effectiveTechnicianSignature =
-    currentTicketTechnicianSignature || storedTechnicianSignature || technicianSignatureData
+    currentTicketTechnicianSignature ||
+    storedTechnicianSignature ||
+    technicianSignatureData
 
   useEffect(() => {
     if (!open) return
@@ -73,7 +81,9 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
     let isValid = true
 
     if (!customerSignerName.trim() || customerSignerName.trim().length < 2) {
-      setCustomerSignerNameError('Ingresa el nombre de quien recibe el servicio')
+      setCustomerSignerNameError(
+        'Ingresa el nombre de quien recibe el servicio'
+      )
       isValid = false
     } else {
       setCustomerSignerNameError('')
@@ -111,7 +121,12 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
   }
 
   return (
-    <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth='md' fullWidth>
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onClose}
+      maxWidth='md'
+      fullWidth
+    >
       <DialogTitle sx={{ borderBottom: '1px solid #e5e7eb' }}>
         <Box display='flex' alignItems='center' gap={1}>
           <Draw sx={{ color: '#00A651' }} />
@@ -120,7 +135,8 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
       </DialogTitle>
       <DialogContent dividers>
         <Alert severity='info' sx={{ mb: 3 }}>
-          Este flujo te permite completar las firmas después del cierre, sin reabrir ni cambiar el estado del ticket.
+          Este flujo te permite completar las firmas después del cierre, sin
+          reabrir ni cambiar el estado del ticket.
         </Alert>
 
         <Grid container spacing={3}>
@@ -134,7 +150,10 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
                 if (customerSignerNameError) setCustomerSignerNameError('')
               }}
               error={!!customerSignerNameError}
-              helperText={customerSignerNameError || 'Este nombre aparecerá en la orden de servicio.'}
+              helperText={
+                customerSignerNameError ||
+                'Este nombre aparecerá en la orden de servicio.'
+              }
               sx={{ mb: 2 }}
             />
             <SignaturePad
@@ -174,10 +193,18 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
                     component='img'
                     src={effectiveTechnicianSignature}
                     alt={`Firma de ${technicianName || 'técnico'}`}
-                    sx={{ maxWidth: '100%', maxHeight: 140, objectFit: 'contain' }}
+                    sx={{
+                      maxWidth: '100%',
+                      maxHeight: 140,
+                      objectFit: 'contain'
+                    }}
                   />
                 </Box>
-                <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ mt: 1, display: 'block' }}
+                >
                   {currentTicketTechnicianSignature
                     ? 'El ticket ya tiene firma del técnico registrada.'
                     : `Usaremos la firma guardada de ${technicianName || 'este técnico'}.`}
@@ -199,7 +226,9 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
               />
             ) : (
               <Alert severity='warning'>
-                No encontramos una firma guardada del técnico asignado. Si necesitas que también aparezca en el PDF, toca registrar su firma primero desde su perfil o con su sesión.
+                No encontramos una firma guardada del técnico asignado. Si
+                necesitas que también aparezca en el PDF, toca registrar su
+                firma primero desde su perfil o con su sesión.
               </Alert>
             )}
           </Grid>

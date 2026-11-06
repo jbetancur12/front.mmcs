@@ -26,7 +26,10 @@ const fetchManageableQuizzes = async (): Promise<ManageableQuizOption[]> => {
       try {
         return await lmsService.getCourse(course.id)
       } catch (error) {
-        logger.warn(`No se pudo cargar el detalle del curso ${course.id}`, error)
+        logger.warn(
+          `No se pudo cargar el detalle del curso ${course.id}`,
+          error
+        )
         return null
       }
     })

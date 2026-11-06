@@ -133,9 +133,15 @@ const LmsUserManagement: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
-  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'internal' | 'client'>('all')
-  const [lmsOnlyFilter, setLmsOnlyFilter] = useState<'all' | 'only' | 'mixed'>('all')
-  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [userTypeFilter, setUserTypeFilter] = useState<
+    'all' | 'internal' | 'client'
+  >('all')
+  const [lmsOnlyFilter, setLmsOnlyFilter] = useState<'all' | 'only' | 'mixed'>(
+    'all'
+  )
+  const [activeFilter, setActiveFilter] = useState<
+    'all' | 'active' | 'inactive'
+  >('all')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<LmsUser | null>(null)
   const [form, setForm] = useState<LmsUserForm>(emptyForm)
@@ -145,7 +151,15 @@ const LmsUserManagement: React.FC = () => {
   const { data: optionsData } = useLmsUserOptions<LmsUserOptions>()
 
   const { data: usersData, isLoading } = useQuery<LmsUsersResponse>(
-    ['lms-users', userTypeFilter, lmsOnlyFilter, activeFilter, search, page, rowsPerPage],
+    [
+      'lms-users',
+      userTypeFilter,
+      lmsOnlyFilter,
+      activeFilter,
+      search,
+      page,
+      rowsPerPage
+    ],
     async () => {
       const response = await axiosPrivate.get('/lms/users', {
         params: {
@@ -198,7 +212,8 @@ const LmsUserManagement: React.FC = () => {
         email: payload.email,
         password: payload.password || undefined,
         userType: payload.userType,
-        customerId: payload.userType === 'client' ? Number(payload.customerId) : null,
+        customerId:
+          payload.userType === 'client' ? Number(payload.customerId) : null,
         roles: payload.roles,
         lmsOnly: payload.lmsOnly,
         active: payload.active
@@ -216,10 +231,14 @@ const LmsUserManagement: React.FC = () => {
         setDialogOpen(false)
         setEditingUser(null)
         setForm(emptyForm)
-        notify.success(editingUser ? 'Usuario LMS actualizado' : 'Usuario LMS creado')
+        notify.success(
+          editingUser ? 'Usuario LMS actualizado' : 'Usuario LMS creado'
+        )
       },
-      onError: (error: any) => {
-        notify.error(getApiErrorReason(error) || 'No se pudo guardar el usuario LMS')
+      onError: (error: unknown) => {
+        notify.error(
+          getApiErrorReason(error) || 'No se pudo guardar el usuario LMS'
+        )
       }
     }
   )
@@ -230,7 +249,9 @@ const LmsUserManagement: React.FC = () => {
     {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries(['lms-users'])
-        notify.success(variables.active ? 'Usuario activado' : 'Usuario desactivado')
+        notify.success(
+          variables.active ? 'Usuario activado' : 'Usuario desactivado'
+        )
       },
       onError: () => {
         notify.error('No se pudo actualizar el estado del usuario')
@@ -240,11 +261,17 @@ const LmsUserManagement: React.FC = () => {
 
   const summary = useMemo(() => usersSummary, [usersSummary])
 
-  const applyUserTypeDefaults = (userType: 'internal' | 'client', currentLmsOnly: boolean) => {
+  const applyUserTypeDefaults = (
+    userType: 'internal' | 'client',
+    currentLmsOnly: boolean
+  ) => {
     const defaults = optionsData?.defaults
     if (!defaults) return
 
-    const roles = userType === 'client' ? [...defaults.clientRoles] : [...defaults.internalRoles]
+    const roles =
+      userType === 'client'
+        ? [...defaults.clientRoles]
+        : [...defaults.internalRoles]
     if (currentLmsOnly && !roles.includes(defaults.lmsOnlyRole)) {
       roles.push(defaults.lmsOnlyRole)
     }
@@ -260,11 +287,9 @@ const LmsUserManagement: React.FC = () => {
   const buildCreateForm = (overrides?: Partial<LmsUserForm>) => {
     const defaults = optionsData?.defaults
     const fallbackUserType =
-      overrides?.userType
-      || (userTypeFilter === 'client' ? 'client' : 'internal')
-    const fallbackLmsOnly =
-      overrides?.lmsOnly
-      ?? (lmsOnlyFilter === 'only')
+      overrides?.userType ||
+      (userTypeFilter === 'client' ? 'client' : 'internal')
+    const fallbackLmsOnly = overrides?.lmsOnly ?? lmsOnlyFilter === 'only'
     const baseRoles =
       fallbackUserType === 'client'
         ? [...(defaults?.clientRoles || ['user'])]
@@ -292,7 +317,10 @@ const LmsUserManagement: React.FC = () => {
     setDialogOpen(true)
   }
 
-  const handleOpenCreatePreset = (userType: 'internal' | 'client', lmsOnly: boolean) => {
+  const handleOpenCreatePreset = (
+    userType: 'internal' | 'client',
+    lmsOnly: boolean
+  ) => {
     setEditingUser(null)
     setForm(buildCreateForm({ userType, lmsOnly }))
     setDialogOpen(true)
@@ -343,7 +371,9 @@ const LmsUserManagement: React.FC = () => {
       const hasRole = prev.roles.includes(roleName)
       return {
         ...prev,
-        roles: hasRole ? prev.roles.filter((role) => role !== roleName) : [...prev.roles, roleName]
+        roles: hasRole
+          ? prev.roles.filter((role) => role !== roleName)
+          : [...prev.roles, roleName]
       }
     })
   }
@@ -359,7 +389,9 @@ const LmsUserManagement: React.FC = () => {
     setPage(nextPage)
   }
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
   }
@@ -375,31 +407,52 @@ const LmsUserManagement: React.FC = () => {
         subtitle='Crea y administra accesos para internos, clientes y usuarios solo LMS'
         icon={<PeopleIcon />}
         actions={
-          <Button variant='contained' startIcon={<AddIcon />} onClick={handleOpenCreate}>
+          <Button
+            variant='contained'
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+          >
             Nuevo Usuario LMS
           </Button>
         }
       />
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-        <Chip label={`${summary.totalFiltered} usuarios filtrados`} variant='outlined' />
-        <Chip label={`${summary.totalVisible} visibles en esta página`} variant='outlined' />
+        <Chip
+          label={`${summary.totalFiltered} usuarios filtrados`}
+          variant='outlined'
+        />
+        <Chip
+          label={`${summary.totalVisible} visibles en esta página`}
+          variant='outlined'
+        />
         <Chip label={`${summary.lmsOnly} LMS-only`} variant='outlined' />
         <Chip label={`${summary.clients} clientes`} variant='outlined' />
         <Chip label={`${summary.inactive} inactivos`} variant='outlined' />
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
-        <Button variant='outlined' size='small' onClick={() => handleOpenCreatePreset('internal', true)}>
+        <Button
+          variant='outlined'
+          size='small'
+          onClick={() => handleOpenCreatePreset('internal', true)}
+        >
           Nuevo interno solo LMS
         </Button>
-        <Button variant='outlined' size='small' onClick={() => handleOpenCreatePreset('client', true)}>
+        <Button
+          variant='outlined'
+          size='small'
+          onClick={() => handleOpenCreatePreset('client', true)}
+        >
           Nuevo cliente solo LMS
         </Button>
       </Box>
 
       <Card sx={{ mb: 3 }}>
-        <CardHeader title='Filtros' subheader='Aísla el segmento que quieres revisar antes de crear, editar o activar accesos.' />
+        <CardHeader
+          title='Filtros'
+          subheader='Aísla el segmento que quieres revisar antes de crear, editar o activar accesos.'
+        />
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
@@ -416,7 +469,11 @@ const LmsUserManagement: React.FC = () => {
                 fullWidth
                 label='Tipo de usuario'
                 value={userTypeFilter}
-                onChange={(event) => setUserTypeFilter(event.target.value as 'all' | 'internal' | 'client')}
+                onChange={(event) =>
+                  setUserTypeFilter(
+                    event.target.value as 'all' | 'internal' | 'client'
+                  )
+                }
               >
                 <MenuItem value='all'>Todos</MenuItem>
                 <MenuItem value='internal'>Internos</MenuItem>
@@ -429,7 +486,11 @@ const LmsUserManagement: React.FC = () => {
                 fullWidth
                 label='Acceso LMS'
                 value={lmsOnlyFilter}
-                onChange={(event) => setLmsOnlyFilter(event.target.value as 'all' | 'only' | 'mixed')}
+                onChange={(event) =>
+                  setLmsOnlyFilter(
+                    event.target.value as 'all' | 'only' | 'mixed'
+                  )
+                }
               >
                 <MenuItem value='all'>Todos</MenuItem>
                 <MenuItem value='only'>Solo LMS</MenuItem>
@@ -442,7 +503,11 @@ const LmsUserManagement: React.FC = () => {
                 fullWidth
                 label='Estado'
                 value={activeFilter}
-                onChange={(event) => setActiveFilter(event.target.value as 'all' | 'active' | 'inactive')}
+                onChange={(event) =>
+                  setActiveFilter(
+                    event.target.value as 'all' | 'active' | 'inactive'
+                  )
+                }
               >
                 <MenuItem value='all'>Todos</MenuItem>
                 <MenuItem value='active'>Activos</MenuItem>
@@ -494,18 +559,33 @@ const LmsUserManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={user.userType === 'client' ? 'Cliente' : 'Interno'}
+                          label={
+                            user.userType === 'client' ? 'Cliente' : 'Interno'
+                          }
                           size='small'
-                          color={user.userType === 'client' ? 'secondary' : 'primary'}
+                          color={
+                            user.userType === 'client' ? 'secondary' : 'primary'
+                          }
                           variant='outlined'
                         />
                       </TableCell>
-                      <TableCell>{user.customerName || 'Sin cliente'}</TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {user.roles.filter((role) => role !== ROLES.LMS_ONLY).map((role) => (
-                            <Chip key={role} label={getCompactRoleLabel(role)} size='small' variant='outlined' />
-                          ))}
+                        {user.customerName || 'Sin cliente'}
+                      </TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
+                        >
+                          {user.roles
+                            .filter((role) => role !== ROLES.LMS_ONLY)
+                            .map((role) => (
+                              <Chip
+                                key={role}
+                                label={getCompactRoleLabel(role)}
+                                size='small'
+                                variant='outlined'
+                              />
+                            ))}
                         </Box>
                       </TableCell>
                       <TableCell>
@@ -524,13 +604,19 @@ const LmsUserManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Button size='small' startIcon={<EditIcon />} onClick={() => handleOpenEdit(user)}>
+                          <Button
+                            size='small'
+                            startIcon={<EditIcon />}
+                            onClick={() => handleOpenEdit(user)}
+                          >
                             Editar
                           </Button>
                           <Button
                             size='small'
                             color={user.active ? 'warning' : 'success'}
-                            startIcon={user.active ? <PersonOffIcon /> : <PersonIcon />}
+                            startIcon={
+                              user.active ? <PersonOffIcon /> : <PersonIcon />
+                            }
                             onClick={() =>
                               toggleActiveMutation.mutate({
                                 userId: user.id,
@@ -557,25 +643,37 @@ const LmsUserManagement: React.FC = () => {
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[10, 25, 50]}
             labelRowsPerPage='Usuarios por página'
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+            }
           />
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth='md'>
-        <DialogTitle>{editingUser ? 'Editar usuario LMS' : 'Nuevo usuario LMS'}</DialogTitle>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        fullWidth
+        maxWidth='md'
+      >
+        <DialogTitle>
+          {editingUser ? 'Editar usuario LMS' : 'Nuevo usuario LMS'}
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <Alert severity='info'>
-                Define primero el tipo de usuario y luego ajusta el alcance. Si activas
-                <strong> LMS-only</strong>, la persona quedará redirigida solo a rutas del LMS.
+                Define primero el tipo de usuario y luego ajusta el alcance. Si
+                activas
+                <strong> LMS-only</strong>, la persona quedará redirigida solo a
+                rutas del LMS.
               </Alert>
             </Grid>
             {editingUser && (
               <Grid item xs={12}>
                 <Alert severity='warning'>
-                  Esta pantalla ajusta la capa LMS del usuario. Si la persona ya tiene roles de otros módulos, se conservarán al guardar.
+                  Esta pantalla ajusta la capa LMS del usuario. Si la persona ya
+                  tiene roles de otros módulos, se conservarán al guardar.
                 </Alert>
               </Grid>
             )}
@@ -584,7 +682,9 @@ const LmsUserManagement: React.FC = () => {
                 fullWidth
                 label='Nombre'
                 value={form.nombre}
-                onChange={(event) => setForm((prev) => ({ ...prev, nombre: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, nombre: event.target.value }))
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -592,16 +692,28 @@ const LmsUserManagement: React.FC = () => {
                 fullWidth
                 label='Correo'
                 value={form.email}
-                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, email: event.target.value }))
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label={editingUser ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'}
+                label={
+                  editingUser
+                    ? 'Nueva contraseña (opcional)'
+                    : 'Contraseña inicial'
+                }
                 value={form.password}
-                onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                helperText={editingUser ? 'Déjalo vacío si no quieres cambiarla.' : 'Puedes usar la sugerida o escribir una propia de 8+ caracteres.'}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, password: event.target.value }))
+                }
+                helperText={
+                  editingUser
+                    ? 'Déjalo vacío si no quieres cambiarla.'
+                    : 'Puedes usar la sugerida o escribir una propia de 8+ caracteres.'
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -610,7 +722,12 @@ const LmsUserManagement: React.FC = () => {
                 fullWidth
                 label='Tipo de usuario'
                 value={form.userType}
-                onChange={(event) => applyUserTypeDefaults(event.target.value as 'internal' | 'client', form.lmsOnly)}
+                onChange={(event) =>
+                  applyUserTypeDefaults(
+                    event.target.value as 'internal' | 'client',
+                    form.lmsOnly
+                  )
+                }
               >
                 <MenuItem value='internal'>Interno</MenuItem>
                 <MenuItem value='client'>Cliente</MenuItem>
@@ -623,7 +740,12 @@ const LmsUserManagement: React.FC = () => {
                   <Select
                     value={form.customerId}
                     label='Cliente'
-                    onChange={(event) => setForm((prev) => ({ ...prev, customerId: event.target.value }))}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        customerId: event.target.value
+                      }))
+                    }
                   >
                     {customerOptions.map((customer) => (
                       <MenuItem key={customer.id} value={String(customer.id)}>
@@ -643,10 +765,16 @@ const LmsUserManagement: React.FC = () => {
             </Grid>
             <Grid item xs={12}>
               <Alert severity='info'>
-                Perfil resultante: <strong>{form.userType === 'client' ? 'Cliente' : 'Interno'}</strong>
-                {needsCustomer ? ` · ${selectedCustomerName || 'Cliente pendiente por seleccionar'}` : ' · Sin empresa asociada'}
+                Perfil resultante:{' '}
+                <strong>
+                  {form.userType === 'client' ? 'Cliente' : 'Interno'}
+                </strong>
+                {needsCustomer
+                  ? ` · ${selectedCustomerName || 'Cliente pendiente por seleccionar'}`
+                  : ' · Sin empresa asociada'}
                 {form.lmsOnly ? ' · Solo LMS' : ' · Acceso mixto'}
-                {effectiveRoles.filter((role) => role !== ROLES.LMS_ONLY).length > 0
+                {effectiveRoles.filter((role) => role !== ROLES.LMS_ONLY)
+                  .length > 0
                   ? ` · Roles: ${effectiveRoles.filter((role) => role !== ROLES.LMS_ONLY).join(', ')}`
                   : ' · Selecciona al menos un rol operativo'}
               </Alert>
@@ -670,7 +798,12 @@ const LmsUserManagement: React.FC = () => {
                 control={
                   <Switch
                     checked={form.active}
-                    onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        active: event.target.checked
+                      }))
+                    }
                   />
                 }
                 label='Usuario activo'
@@ -687,7 +820,9 @@ const LmsUserManagement: React.FC = () => {
                     .map((role) => {
                       const disabled =
                         form.userType === 'client' &&
-                        (role.name === ROLES.ADMIN || role.name === ROLES.TRAINING_MANAGER || role.name === ROLES.EMPLOYEE)
+                        (role.name === ROLES.ADMIN ||
+                          role.name === ROLES.TRAINING_MANAGER ||
+                          role.name === ROLES.EMPLOYEE)
 
                       return (
                         <Grid item xs={12} md={6} key={role.id}>
@@ -710,7 +845,9 @@ const LmsUserManagement: React.FC = () => {
                 {effectiveRoles.map((role) => (
                   <Chip
                     key={role}
-                    label={role === ROLES.LMS_ONLY ? 'Solo LMS' : getRoleLabel(role)}
+                    label={
+                      role === ROLES.LMS_ONLY ? 'Solo LMS' : getRoleLabel(role)
+                    }
                     size='small'
                     color={role === ROLES.LMS_ONLY ? 'warning' : 'default'}
                   />
@@ -721,12 +858,15 @@ const LmsUserManagement: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
-          <Button variant='contained' onClick={handleSave} disabled={isSaveDisabled}>
+          <Button
+            variant='contained'
+            onClick={handleSave}
+            disabled={isSaveDisabled}
+          >
             {saveUserMutation.isLoading ? 'Guardando...' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>
-
     </Box>
   )
 }

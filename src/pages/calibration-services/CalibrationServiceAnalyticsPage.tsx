@@ -207,7 +207,9 @@ const secondaryButtonSx = {
 }
 
 const formatCurrency = (value?: number | null) =>
-  value === null || value === undefined ? 'Restringido' : currencyFormatter.format(value)
+  value === null || value === undefined
+    ? 'Restringido'
+    : currencyFormatter.format(value)
 
 const formatCompactCurrency = (value?: number | null) =>
   value === null || value === undefined
@@ -235,9 +237,27 @@ const parseBooleanFilter = (value: string) => {
 
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 
-const YesNoSelect = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
-  <TextField fullWidth select label={label} value={value} onChange={(e) => onChange(e.target.value)}>
-    {yesNoOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+const YesNoSelect = ({
+  label,
+  value,
+  onChange
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+}) => (
+  <TextField
+    fullWidth
+    select
+    label={label}
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+  >
+    {yesNoOptions.map((o) => (
+      <MenuItem key={o.value} value={o.value}>
+        {o.label}
+      </MenuItem>
+    ))}
   </TextField>
 )
 
@@ -245,9 +265,9 @@ const CalibrationServiceAnalyticsPage = () => {
   const navigate = useNavigate()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [status, setStatus] = useState<CalibrationServiceStatus | typeof FILTER_ALL>(
-    FILTER_ALL
-  )
+  const [status, setStatus] = useState<
+    CalibrationServiceStatus | typeof FILTER_ALL
+  >(FILTER_ALL)
   const [slaColor, setSlaColor] = useState<
     CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL
   >(FILTER_ALL)
@@ -289,7 +309,9 @@ const CalibrationServiceAnalyticsPage = () => {
     filters.hasInvoice = parseBooleanFilter(hasInvoice)
   }
   if (hasPendingDocumentControl !== FILTER_ALL) {
-    filters.hasPendingDocumentControl = parseBooleanFilter(hasPendingDocumentControl)
+    filters.hasPendingDocumentControl = parseBooleanFilter(
+      hasPendingDocumentControl
+    )
   }
   filters.tableLimit = tablePagination.pageSize
   filters.tableOffset = tablePagination.pageIndex * tablePagination.pageSize
@@ -325,7 +347,8 @@ const CalibrationServiceAnalyticsPage = () => {
     hasInvoice !== FILTER_ALL,
     hasPendingDocumentControl !== FILTER_ALL
   ].filter(Boolean).length
-  const percentOfTotal = (count: number) => (totalServices ? Math.round((count / totalServices) * 100) : 0)
+  const percentOfTotal = (count: number) =>
+    totalServices ? Math.round((count / totalServices) * 100) : 0
   const isUnassigned = (name: string) => /sin metr/i.test(name)
   const overdueCount = data?.slaCounts.red ?? 0
   const unassignedCount = (data?.metrologists ?? [])
@@ -333,7 +356,9 @@ const CalibrationServiceAnalyticsPage = () => {
     .reduce((acc, item) => acc + item.total, 0)
   const approvedValue = Number(data?.summary.approvedQuotedValue ?? 0)
   const invoicedShare = approvedValue
-    ? Math.round((Number(data?.summary.invoicedValue ?? 0) / approvedValue) * 100)
+    ? Math.round(
+        (Number(data?.summary.invoicedValue ?? 0) / approvedValue) * 100
+      )
     : 0
   const SLA_COLORS: Record<string, string> = {
     green: '#00BFA5',
@@ -348,7 +373,9 @@ const CalibrationServiceAnalyticsPage = () => {
       value: option.value as string,
       label: option.label,
       color: SLA_COLORS[option.value as string],
-      count: data?.slaCounts[option.value as CalibrationServiceSlaIndicatorColor] ?? 0
+      count:
+        data?.slaCounts[option.value as CalibrationServiceSlaIndicatorColor] ??
+        0
     }))
   const maxFunnelValue = Math.max(
     1,
@@ -461,12 +488,13 @@ const CalibrationServiceAnalyticsPage = () => {
         tableLimit: undefined,
         tableOffset: undefined
       }
-      const response = await axiosPrivate.get<CalibrationServiceAnalyticsResponse>(
-        '/calibration-services/analytics',
-        {
-          params: exportFilters
-        }
-      )
+      const response =
+        await axiosPrivate.get<CalibrationServiceAnalyticsResponse>(
+          '/calibration-services/analytics',
+          {
+            params: exportFilters
+          }
+        )
       const exportData = response.data
 
       if (!exportData) {
@@ -475,8 +503,9 @@ const CalibrationServiceAnalyticsPage = () => {
 
       const workbook = XLSX.utils.book_new()
       const selectedCustomer =
-        customerData?.customers.find((customer) => String(customer.id) === customerId)
-          ?.nombre || 'Todos'
+        customerData?.customers.find(
+          (customer) => String(customer.id) === customerId
+        )?.nombre || 'Todos'
       const selectedMetrologist =
         metrologistId === 'unassigned'
           ? 'Sin metrólogo asignado'
@@ -501,9 +530,11 @@ const CalibrationServiceAnalyticsPage = () => {
               'Todo el semáforo',
             'Servicios visibles': exportData.summary.totalServices,
             'Servicios activos': exportData.summary.activeServices,
-            'Servicios con novedades': exportData.summary.servicesWithAdjustments,
+            'Servicios con novedades':
+              exportData.summary.servicesWithAdjustments,
             'Servicios con cortes': exportData.summary.servicesWithCuts,
-            'Valor cotizado total': exportData.summary.quotedValue ?? 'Restringido',
+            'Valor cotizado total':
+              exportData.summary.quotedValue ?? 'Restringido',
             'Valor cotizado aprobado':
               exportData.summary.approvedQuotedValue ?? 'Restringido',
             'Valor novedades aprobadas':
@@ -561,16 +592,20 @@ const CalibrationServiceAnalyticsPage = () => {
             Detalle: 'Novedades registradas',
             Cantidad: exportData.adjustments.total
           },
-          ...Object.entries(exportData.adjustments.byStatus).map(([key, value]) => ({
-            Categoría: 'Por estado',
-            Detalle: adjustmentStatusLabels[key] || key,
-            Cantidad: value
-          })),
-          ...Object.entries(exportData.adjustments.byType).map(([key, value]) => ({
-            Categoría: 'Por tipo',
-            Detalle: adjustmentTypeLabels[key] || key,
-            Cantidad: value
-          }))
+          ...Object.entries(exportData.adjustments.byStatus).map(
+            ([key, value]) => ({
+              Categoría: 'Por estado',
+              Detalle: adjustmentStatusLabels[key] || key,
+              Cantidad: value
+            })
+          ),
+          ...Object.entries(exportData.adjustments.byType).map(
+            ([key, value]) => ({
+              Categoría: 'Por tipo',
+              Detalle: adjustmentTypeLabels[key] || key,
+              Cantidad: value
+            })
+          )
         ]),
         'Novedades'
       )
@@ -610,7 +645,9 @@ const CalibrationServiceAnalyticsPage = () => {
             Cliente: row.customerName,
             Estado: CALIBRATION_SERVICE_STATUS_LABELS[row.status] || row.status,
             Semáforo: slaLabels[row.slaColor] || row.slaLabel,
-            Fase: row.activePhase ? phaseLabels[row.activePhase] || row.activePhase : '',
+            Fase: row.activePhase
+              ? phaseLabels[row.activePhase] || row.activePhase
+              : '',
             Metrólogo: row.metrologistName || 'Sin asignar',
             Novedades: row.adjustmentsCount,
             Cortes: row.cutsCount,
@@ -635,7 +672,9 @@ const CalibrationServiceAnalyticsPage = () => {
     }
   }
 
-  const applyDatePreset = (preset: 'all' | 'current_month' | 'last_30_days') => {
+  const applyDatePreset = (
+    preset: 'all' | 'current_month' | 'last_30_days'
+  ) => {
     const today = new Date()
 
     if (preset === 'all') {
@@ -645,7 +684,9 @@ const CalibrationServiceAnalyticsPage = () => {
     }
 
     if (preset === 'current_month') {
-      setDateFrom(formatDateInput(new Date(today.getFullYear(), today.getMonth(), 1)))
+      setDateFrom(
+        formatDateInput(new Date(today.getFullYear(), today.getMonth(), 1))
+      )
       setDateTo(formatDateInput(today))
       return
     }
@@ -662,7 +703,12 @@ const CalibrationServiceAnalyticsPage = () => {
         variant='text'
         startIcon={<ArrowBackOutlinedIcon />}
         onClick={() => navigate('/calibration-services')}
-        sx={{ color: 'text.secondary', textTransform: 'none', fontWeight: 600, mb: 1 }}
+        sx={{
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600,
+          mb: 1
+        }}
       >
         Volver a la bandeja
       </Button>
@@ -690,7 +736,11 @@ const CalibrationServiceAnalyticsPage = () => {
                 void exportToExcel()
               }}
               disabled={!data || isExporting}
-              sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
             >
               {isExporting ? 'Generando...' : 'Descargar Excel'}
             </Button>
@@ -700,8 +750,8 @@ const CalibrationServiceAnalyticsPage = () => {
 
       {data?.limitedTechnicalView ? (
         <Alert severity='info' sx={{ mb: 3 }}>
-          Estás viendo una analítica técnica limitada a los servicios asignados a
-          tu usuario. Los valores comerciales se ocultan.
+          Estás viendo una analítica técnica limitada a los servicios asignados
+          a tu usuario. Los valores comerciales se ocultan.
         </Alert>
       ) : null}
 
@@ -739,7 +789,11 @@ const CalibrationServiceAnalyticsPage = () => {
                     setHasInvoice(FILTER_ALL)
                     setHasPendingDocumentControl(FILTER_ALL)
                   }}
-                  sx={{ color: ui.muted, textTransform: 'none', fontWeight: 700 }}
+                  sx={{
+                    color: ui.muted,
+                    textTransform: 'none',
+                    fontWeight: 700
+                  }}
                 >
                   Limpiar
                 </Button>
@@ -748,7 +802,11 @@ const CalibrationServiceAnalyticsPage = () => {
                 variant='outlined'
                 startIcon={<FilterListOutlinedIcon />}
                 endIcon={
-                  areFiltersOpen ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />
+                  areFiltersOpen ? (
+                    <ExpandLessOutlinedIcon />
+                  ) : (
+                    <ExpandMoreOutlinedIcon />
+                  )
                 }
                 onClick={() => setAreFiltersOpen((current) => !current)}
                 sx={secondaryButtonSx}
@@ -765,7 +823,10 @@ const CalibrationServiceAnalyticsPage = () => {
               alignItems={{ xs: 'stretch', sm: 'center' }}
               sx={{ mt: 2 }}
             >
-              <Typography variant='body2' sx={{ color: ui.muted, fontWeight: 700 }}>
+              <Typography
+                variant='body2'
+                sx={{ color: ui.muted, fontWeight: 700 }}
+              >
                 Fecha rápida:
               </Typography>
               <Button
@@ -794,108 +855,135 @@ const CalibrationServiceAnalyticsPage = () => {
               </Button>
             </Stack>
             <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label='Desde'
-                type='date'
-                value={dateFrom}
-                onChange={(event) => setDateFrom(event.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  label='Desde'
+                  type='date'
+                  value={dateFrom}
+                  onChange={(event) => setDateFrom(event.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  label='Hasta'
+                  type='date'
+                  value={dateTo}
+                  onChange={(event) => setDateTo(event.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  select
+                  label='Estado'
+                  value={status}
+                  onChange={(event) =>
+                    setStatus(
+                      event.target.value as
+                        | CalibrationServiceStatus
+                        | typeof FILTER_ALL
+                    )
+                  }
+                >
+                  {statusOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  select
+                  label='Semáforo'
+                  value={slaColor}
+                  onChange={(event) =>
+                    setSlaColor(
+                      event.target.value as
+                        | CalibrationServiceSlaIndicatorColor
+                        | typeof FILTER_ALL
+                    )
+                  }
+                >
+                  {slaOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  select
+                  label='Cliente'
+                  value={customerId}
+                  onChange={(event) => setCustomerId(event.target.value)}
+                >
+                  <MenuItem value={FILTER_ALL}>Todos los clientes</MenuItem>
+                  {(customerData?.customers ?? []).map((customer) => (
+                    <MenuItem key={customer.id} value={String(customer.id)}>
+                      {customer.nombre}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  select
+                  label='Metrólogo'
+                  value={metrologistId}
+                  onChange={(event) => setMetrologistId(event.target.value)}
+                >
+                  <MenuItem value={FILTER_ALL}>Todos los metrólogos</MenuItem>
+                  <MenuItem value='unassigned'>Sin metrólogo asignado</MenuItem>
+                  {metrologists.map(
+                    (metrologist: CalibrationServiceUserSummary) => (
+                      <MenuItem
+                        key={metrologist.id}
+                        value={String(metrologist.id)}
+                      >
+                        {metrologist.nombre}
+                      </MenuItem>
+                    )
+                  )}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <YesNoSelect
+                  label='Con novedades'
+                  value={hasAdjustments}
+                  onChange={setHasAdjustments}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <YesNoSelect
+                  label='Con cortes'
+                  value={hasCuts}
+                  onChange={setHasCuts}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <YesNoSelect
+                  label='Con factura'
+                  value={hasInvoice}
+                  onChange={setHasInvoice}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <YesNoSelect
+                  label='Doc. pendiente'
+                  value={hasPendingDocumentControl}
+                  onChange={setHasPendingDocumentControl}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label='Hasta'
-                type='date'
-                value={dateTo}
-                onChange={(event) => setDateTo(event.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Estado'
-                value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as CalibrationServiceStatus | typeof FILTER_ALL)
-                }
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Semáforo'
-                value={slaColor}
-                onChange={(event) =>
-                  setSlaColor(
-                    event.target.value as CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL
-                  )
-                }
-              >
-                {slaOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Cliente'
-                value={customerId}
-                onChange={(event) => setCustomerId(event.target.value)}
-              >
-                <MenuItem value={FILTER_ALL}>Todos los clientes</MenuItem>
-                {(customerData?.customers ?? []).map((customer) => (
-                  <MenuItem key={customer.id} value={String(customer.id)}>
-                    {customer.nombre}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Metrólogo'
-                value={metrologistId}
-                onChange={(event) => setMetrologistId(event.target.value)}
-              >
-                <MenuItem value={FILTER_ALL}>Todos los metrólogos</MenuItem>
-                <MenuItem value='unassigned'>Sin metrólogo asignado</MenuItem>
-                {metrologists.map((metrologist: CalibrationServiceUserSummary) => (
-                  <MenuItem key={metrologist.id} value={String(metrologist.id)}>
-                    {metrologist.nombre}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <YesNoSelect label='Con novedades' value={hasAdjustments} onChange={setHasAdjustments} />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <YesNoSelect label='Con cortes' value={hasCuts} onChange={setHasCuts} />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <YesNoSelect label='Con factura' value={hasInvoice} onChange={setHasInvoice} />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <YesNoSelect label='Doc. pendiente' value={hasPendingDocumentControl} onChange={setHasPendingDocumentControl} />
-            </Grid>
-          </Grid>
           </Collapse>
         </CardContent>
       </Card>
@@ -937,7 +1025,9 @@ const CalibrationServiceAnalyticsPage = () => {
             <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Con novedades'
-                value={numberFormatter.format(data?.summary.servicesWithAdjustments ?? 0)}
+                value={numberFormatter.format(
+                  data?.summary.servicesWithAdjustments ?? 0
+                )}
                 icon={<AssignmentTurnedInOutlinedIcon />}
                 tone='blue'
               />
@@ -961,15 +1051,24 @@ const CalibrationServiceAnalyticsPage = () => {
               <Grid container spacing={2}>
                 {[
                   { label: 'Cotizado', value: data?.summary.quotedValue },
-                  { label: 'Cotizado aprobado', value: data?.summary.approvedQuotedValue },
-                  { label: 'Novedades aprobadas', value: data?.summary.approvedAdjustmentValue },
+                  {
+                    label: 'Cotizado aprobado',
+                    value: data?.summary.approvedQuotedValue
+                  },
+                  {
+                    label: 'Novedades aprobadas',
+                    value: data?.summary.approvedAdjustmentValue
+                  },
                   { label: 'Facturado', value: data?.summary.invoicedValue }
                 ].map((item) => (
                   <Grid item xs={12} sm={6} md={3} key={item.label}>
                     <Typography variant='body2' sx={{ color: ui.muted }}>
                       {item.label}
                     </Typography>
-                    <Typography variant='h5' sx={{ fontWeight: 700, color: ui.text }}>
+                    <Typography
+                      variant='h5'
+                      sx={{ fontWeight: 700, color: ui.text }}
+                    >
                       {formatCurrency(item.value)}
                     </Typography>
                   </Grid>
@@ -987,7 +1086,15 @@ const CalibrationServiceAnalyticsPage = () => {
                 <LinearProgress
                   variant='determinate'
                   value={Math.min(invoicedShare, 100)}
-                  sx={{ height: 10, borderRadius: 999, backgroundColor: '#E0F7F4', '& .MuiLinearProgress-bar': { borderRadius: 999, backgroundColor: '#00BFA5' } }}
+                  sx={{
+                    height: 10,
+                    borderRadius: 999,
+                    backgroundColor: '#E0F7F4',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 999,
+                      backgroundColor: '#00BFA5'
+                    }
+                  }}
                 />
               </Box>
             </CardContent>
@@ -1006,8 +1113,8 @@ const CalibrationServiceAnalyticsPage = () => {
                     Tendencia financiera
                   </Typography>
                   <Typography variant='body2' sx={{ color: ui.muted }}>
-                    Compara mes a mes lo cotizado, aprobado, ajustado por novedades
-                    y facturado.
+                    Compara mes a mes lo cotizado, aprobado, ajustado por
+                    novedades y facturado.
                   </Typography>
                 </Box>
                 <Button
@@ -1030,8 +1137,8 @@ const CalibrationServiceAnalyticsPage = () => {
                 <Box sx={{ height: 340, mt: 3 }}>
                   {data?.limitedTechnicalView ? (
                     <Alert severity='info'>
-                      Esta tendencia contiene valores comerciales y no está disponible
-                      para la vista técnica limitada.
+                      Esta tendencia contiene valores comerciales y no está
+                      disponible para la vista técnica limitada.
                     </Alert>
                   ) : (data?.financialTrend ?? []).length ? (
                     <ResponsiveContainer width='100%' height='100%'>
@@ -1039,7 +1146,10 @@ const CalibrationServiceAnalyticsPage = () => {
                         data={data?.financialTrend ?? []}
                         margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
                       >
-                        <CartesianGrid strokeDasharray='3 3' stroke={ui.border} />
+                        <CartesianGrid
+                          strokeDasharray='3 3'
+                          stroke={ui.border}
+                        />
                         <XAxis
                           dataKey='monthLabel'
                           tick={{ fill: ui.muted, fontSize: 12 }}
@@ -1047,7 +1157,9 @@ const CalibrationServiceAnalyticsPage = () => {
                           tickLine={false}
                         />
                         <YAxis
-                          tickFormatter={(value) => formatCompactCurrency(Number(value))}
+                          tickFormatter={(value) =>
+                            formatCompactCurrency(Number(value))
+                          }
                           tick={{ fill: ui.muted, fontSize: 12 }}
                           axisLine={{ stroke: ui.border }}
                           tickLine={false}
@@ -1096,7 +1208,8 @@ const CalibrationServiceAnalyticsPage = () => {
                     </ResponsiveContainer>
                   ) : (
                     <Alert severity='info'>
-                      No hay datos financieros mensuales para los filtros actuales.
+                      No hay datos financieros mensuales para los filtros
+                      actuales.
                     </Alert>
                   )}
                 </Box>
@@ -1114,22 +1227,59 @@ const CalibrationServiceAnalyticsPage = () => {
                   <Typography variant='body2' sx={{ color: ui.muted, mb: 2 }}>
                     Cómo va cada servicio frente a su plazo.
                   </Typography>
-                  <Box sx={{ display: 'flex', height: 16, borderRadius: 999, overflow: 'hidden', mb: 2.5 }} role='img' aria-label='Reparto de servicios por estado del semáforo'>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      height: 16,
+                      borderRadius: 999,
+                      overflow: 'hidden',
+                      mb: 2.5
+                    }}
+                    role='img'
+                    aria-label='Reparto de servicios por estado del semáforo'
+                  >
                     {slaSegments.map((segment) => (
-                      <Box key={segment.value} title={`${segment.label}: ${segment.count}`} sx={{ width: `${percentOfTotal(segment.count)}%`, backgroundColor: segment.color }} />
+                      <Box
+                        key={segment.value}
+                        title={`${segment.label}: ${segment.count}`}
+                        sx={{
+                          width: `${percentOfTotal(segment.count)}%`,
+                          backgroundColor: segment.color
+                        }}
+                      />
                     ))}
                   </Box>
                   <Stack spacing={1.25}>
                     {slaSegments.map((segment) => (
-                      <Stack key={segment.value} direction='row' alignItems='center' spacing={1.5}>
-                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: segment.color, flexShrink: 0 }} />
+                      <Stack
+                        key={segment.value}
+                        direction='row'
+                        alignItems='center'
+                        spacing={1.5}
+                      >
+                        <Box
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            backgroundColor: segment.color,
+                            flexShrink: 0
+                          }}
+                        />
                         <Typography variant='body2' sx={{ flexGrow: 1 }}>
                           {segment.label}
                         </Typography>
                         <Typography variant='body2' sx={{ fontWeight: 700 }}>
                           {numberFormatter.format(segment.count)}
                         </Typography>
-                        <Typography variant='body2' sx={{ color: ui.muted, minWidth: 44, textAlign: 'right' }}>
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            color: ui.muted,
+                            minWidth: 44,
+                            textAlign: 'right'
+                          }}
+                        >
                           {percentOfTotal(segment.count)}%
                         </Typography>
                       </Stack>
@@ -1150,7 +1300,12 @@ const CalibrationServiceAnalyticsPage = () => {
                   </Typography>
                   <Stack spacing={1.2}>
                     {(data?.funnel ?? []).map((item) => (
-                      <Grid container spacing={1} alignItems='center' key={item.phase}>
+                      <Grid
+                        container
+                        spacing={1}
+                        alignItems='center'
+                        key={item.phase}
+                      >
                         <Grid item xs={12} md={4}>
                           <Typography variant='body2' sx={{ fontWeight: 700 }}>
                             {phaseLabels[item.phase] || item.phase}
@@ -1171,7 +1326,10 @@ const CalibrationServiceAnalyticsPage = () => {
                           />
                         </Grid>
                         <Grid item xs={3} md={1}>
-                          <Typography variant='body2' sx={{ textAlign: 'right' }}>
+                          <Typography
+                            variant='body2'
+                            sx={{ textAlign: 'right' }}
+                          >
                             {item.count}
                           </Typography>
                         </Grid>
@@ -1191,38 +1349,68 @@ const CalibrationServiceAnalyticsPage = () => {
                     Carga por metrólogo
                   </Typography>
                   <Typography variant='body2' sx={{ color: ui.muted, mb: 2 }}>
-                    Servicios por persona. En ámbar, los que aún no tienen a quién asignarse.
+                    Servicios por persona. En ámbar, los que aún no tienen a
+                    quién asignarse.
                   </Typography>
                   <Stack spacing={1.75}>
-                    {(data?.metrologists ?? []).slice(0, 8).map((metrologist) => {
-                      const unassigned = isUnassigned(metrologist.metrologistName)
-                      const barColor = unassigned ? '#f59e0b' : '#00BFA5'
-                      return (
-                        <Box key={metrologist.key}>
-                          <Stack direction='row' justifyContent='space-between' mb={0.5}>
-                            <Typography variant='body2' sx={{ fontWeight: 600, color: unassigned ? '#b45309' : ui.text }}>
-                              {metrologist.metrologistName}
+                    {(data?.metrologists ?? [])
+                      .slice(0, 8)
+                      .map((metrologist) => {
+                        const unassigned = isUnassigned(
+                          metrologist.metrologistName
+                        )
+                        const barColor = unassigned ? '#f59e0b' : '#00BFA5'
+                        return (
+                          <Box key={metrologist.key}>
+                            <Stack
+                              direction='row'
+                              justifyContent='space-between'
+                              mb={0.5}
+                            >
+                              <Typography
+                                variant='body2'
+                                sx={{
+                                  fontWeight: 600,
+                                  color: unassigned ? '#b45309' : ui.text
+                                }}
+                              >
+                                {metrologist.metrologistName}
+                              </Typography>
+                              <Typography
+                                variant='body2'
+                                sx={{ fontWeight: 700 }}
+                              >
+                                {metrologist.total}
+                              </Typography>
+                            </Stack>
+                            <LinearProgress
+                              variant='determinate'
+                              value={
+                                (metrologist.total / maxMetrologistValue) * 100
+                              }
+                              sx={{
+                                height: 8,
+                                borderRadius: 999,
+                                backgroundColor: unassigned
+                                  ? '#fff7ed'
+                                  : '#E0F7F4',
+                                '& .MuiLinearProgress-bar': {
+                                  borderRadius: 999,
+                                  backgroundColor: barColor
+                                }
+                              }}
+                            />
+                            <Typography
+                              variant='caption'
+                              sx={{ color: ui.muted }}
+                            >
+                              {metrologist.inExecution} en ejecución,{' '}
+                              {metrologist.warningOrOverdue} con SLA en alerta o
+                              vencido, {metrologist.pendingClosure} por cerrar
                             </Typography>
-                            <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                              {metrologist.total}
-                            </Typography>
-                          </Stack>
-                          <LinearProgress
-                            variant='determinate'
-                            value={(metrologist.total / maxMetrologistValue) * 100}
-                            sx={{
-                              height: 8,
-                              borderRadius: 999,
-                              backgroundColor: unassigned ? '#fff7ed' : '#E0F7F4',
-                              '& .MuiLinearProgress-bar': { borderRadius: 999, backgroundColor: barColor }
-                            }}
-                          />
-                          <Typography variant='caption' sx={{ color: ui.muted }}>
-                            {metrologist.inExecution} en ejecución, {metrologist.warningOrOverdue} con SLA en alerta o vencido, {metrologist.pendingClosure} por cerrar
-                          </Typography>
-                        </Box>
-                      )
-                    })}
+                          </Box>
+                        )
+                      })}
                   </Stack>
                 </CardContent>
               </Card>
@@ -1239,20 +1427,52 @@ const CalibrationServiceAnalyticsPage = () => {
                   </Typography>
                   <Grid container spacing={1.5}>
                     {[
-                      { label: 'Cortes en borrador', value: data?.cuts.draft ?? 0, hint: 'Falta enviarlos' },
-                      { label: 'Listos para facturar', value: data?.cuts.ready_for_invoicing ?? 0, hint: 'Pueden pasar a facturación' },
-                      { label: 'Documentos pendientes', value: data?.cuts.document_pending ?? 0, hint: 'Falta control documental' },
-                      { label: 'Listos para cierre', value: data?.cuts.final_close_ready ?? 0, hint: 'Se pueden cerrar' }
+                      {
+                        label: 'Cortes en borrador',
+                        value: data?.cuts.draft ?? 0,
+                        hint: 'Falta enviarlos'
+                      },
+                      {
+                        label: 'Listos para facturar',
+                        value: data?.cuts.ready_for_invoicing ?? 0,
+                        hint: 'Pueden pasar a facturación'
+                      },
+                      {
+                        label: 'Documentos pendientes',
+                        value: data?.cuts.document_pending ?? 0,
+                        hint: 'Falta control documental'
+                      },
+                      {
+                        label: 'Listos para cierre',
+                        value: data?.cuts.final_close_ready ?? 0,
+                        hint: 'Se pueden cerrar'
+                      }
                     ].map((item) => (
                       <Grid item xs={6} key={item.label}>
-                        <Paper variant='outlined' sx={{ p: 2, borderRadius: '12px', borderColor: ui.border }}>
-                          <Typography variant='h5' sx={{ fontWeight: 700, color: item.value > 0 ? ui.text : ui.muted }}>
+                        <Paper
+                          variant='outlined'
+                          sx={{
+                            p: 2,
+                            borderRadius: '12px',
+                            borderColor: ui.border
+                          }}
+                        >
+                          <Typography
+                            variant='h5'
+                            sx={{
+                              fontWeight: 700,
+                              color: item.value > 0 ? ui.text : ui.muted
+                            }}
+                          >
                             {item.value}
                           </Typography>
                           <Typography variant='body2' sx={{ fontWeight: 600 }}>
                             {item.label}
                           </Typography>
-                          <Typography variant='caption' sx={{ color: ui.muted }}>
+                          <Typography
+                            variant='caption'
+                            sx={{ color: ui.muted }}
+                          >
                             {item.hint}
                           </Typography>
                         </Paper>

@@ -24,7 +24,14 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     path: '/settings/roles/ayuda',
     parents: ['Ajustes', 'Roles y permisos'],
     permission: PERMISSIONS.RBAC_VIEW,
-    keywords: ['ayuda', 'wiki', 'permisos', 'capacidades', 'explicacion', 'guia']
+    keywords: [
+      'ayuda',
+      'wiki',
+      'permisos',
+      'capacidades',
+      'explicacion',
+      'guia'
+    ]
   },
   {
     label: 'Equipos en préstamo',
@@ -88,7 +95,14 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     path: '/calibration-services/entregas',
     parents: ['Servicios de calibración'],
     permission: PERMISSIONS.CALIBRATION_SERVICE_DELIVER,
-    keywords: ['entregar', 'entrega', 'firma', 'recepcion', 'mensajero', 'equipos']
+    keywords: [
+      'entregar',
+      'entrega',
+      'firma',
+      'recepcion',
+      'mensajero',
+      'equipos'
+    ]
   },
   {
     label: 'Guía del flujo de servicios',
@@ -181,26 +195,5 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     parents: ['Herramientas'],
     permission: PERMISSIONS.REPOSITORIES_REPOSITORY_VIEW,
     keywords: ['archivos', 'documentos']
-  },
-  {
-    label: 'Manipulación de Excel',
-    path: '/excel-manipulation',
-    parents: ['Herramientas'],
-    permission: PERMISSIONS.TOOLS_UTILITY_USE,
-    keywords: ['xlsx', 'hoja de calculo']
-  },
-  {
-    label: 'Generador de scripts PDF',
-    path: '/pdf-script',
-    parents: ['Herramientas'],
-    permission: PERMISSIONS.TOOLS_UTILITY_USE,
-    keywords: ['plantillas', 'certificados']
-  },
-  {
-    label: 'Gotenberg',
-    path: '/gotemberg',
-    parents: ['Herramientas'],
-    permission: PERMISSIONS.TOOLS_UTILITY_USE,
-    keywords: ['convertir', 'pdf']
   }
 ]

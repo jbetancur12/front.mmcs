@@ -139,7 +139,9 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
     (a, b) =>
       new Date(b.performedAt).getTime() - new Date(a.performedAt).getTime()
   )
-  const getDotColors = (color: 'primary' | 'success' | 'error' | 'secondary' | 'default') => {
+  const getDotColors = (
+    color: 'primary' | 'success' | 'error' | 'secondary' | 'default'
+  ) => {
     switch (color) {
       case 'primary':
         return { bg: '#e8f7ef', fg: '#00A651' }
@@ -165,9 +167,9 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
         }}
       >
         <CardContent>
-          <Typography 
-            variant='body2' 
-            color='text.secondary' 
+          <Typography
+            variant='body2'
+            color='text.secondary'
             textAlign='center'
             sx={{ fontWeight: 500 }}
           >

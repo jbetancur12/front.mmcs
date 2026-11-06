@@ -14,13 +14,16 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 import { WebSocketProvider } from '@utils/use-websockets.tsx'
 import { queryClient } from './config/queryClient'
 import NewVersionBanner from './Components/NewVersionBanner'
+import AnalyticsConsentBanner from './Components/Common/AnalyticsConsentBanner'
 import AppToaster from './Components/Common/AppToaster'
 import { DialogHost } from './utils/confirm'
 // Reporta al backend los errores no capturados del navegador (ver services/errorReportingService.ts)
 import './services/errorReportingService'
 
 const options = {
-  api_host: import.meta.env.VITE_POSTHOG_HOST
+  api_host: import.meta.env.VITE_POSTHOG_HOST,
+  // Analítica apagada hasta que la persona acepte en AnalyticsConsentBanner.
+  opt_out_capturing_by_default: true
 }
 
 // Sentry.init({
@@ -46,6 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Router />
             </WebSocketProvider>
             <NewVersionBanner />
+            <AnalyticsConsentBanner />
             <AppToaster />
             <DialogHost />
           </ThemeProvider>

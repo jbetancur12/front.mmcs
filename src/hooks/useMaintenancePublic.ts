@@ -46,6 +46,16 @@ interface TVDisplayData {
   }
 }
 
+interface TVDisplayWebSocketMessage {
+  type:
+    | 'tv_display_update'
+    | 'ticket_updated'
+    | 'ticket_created'
+    | 'ticket_assigned'
+    | 'ticket_status_changed'
+  data?: TVDisplayData
+}
+
 // Public API functions for TV display (no auth required)
 const maintenancePublicAPI = {
   // Get TV display data - single endpoint with all data
@@ -161,7 +171,7 @@ export const useTVDisplayDataWithWebSocket = () => {
   }, [queryClient])
 
   const handleWebSocketMessage = useCallback(
-    (message: any) => {
+    (message: TVDisplayWebSocketMessage) => {
       switch (message.type) {
         case 'tv_display_update':
           // Update the cache with new data
@@ -175,10 +185,7 @@ export const useTVDisplayDataWithWebSocket = () => {
           queryClient.invalidateQueries({ queryKey: ['tv-display-data'] })
           break
         default:
-          logger.log(
-            'Unknown TV Display WebSocket message type:',
-            message.type
-          )
+          logger.log('Unknown TV Display WebSocket message type:', message.type)
       }
     },
     [queryClient]

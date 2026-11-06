@@ -25,7 +25,23 @@ import {
 import { notify } from 'src/utils/notify'
 import { logger } from 'src/utils/logger'
 // Utilidad para manejar peticiones API
-const apiRequest = async (url: string, options: RequestInit = {}) => {
+interface EmailTestConfig {
+  status: string
+  message?: string
+  recipients?: string[]
+}
+
+interface TestEmailResponse {
+  success?: boolean
+  fallbackUsed?: boolean
+  message?: string
+  emailConfig?: EmailTestConfig
+}
+
+const apiRequest = async <T,>(
+  url: string,
+  options: RequestInit = {}
+): Promise<T> => {
   const response = await fetch(url, options)
   if (!response.ok) {
     throw new Error(`Error en la petición: ${response.status}`)
@@ -44,12 +60,7 @@ export const EmailNotificationSettings = ({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [testLoading, setTestLoading] = useState(false)
-  const [testResult, setTestResult] = useState<{
-    success?: boolean
-    fallbackUsed?: boolean
-    emailConfig?: any
-  } | null>(null)
-
+  const [testResult, setTestResult] = useState<TestEmailResponse | null>(null)
 
   // Cargar la lista de emails de notificación
   const { data: emails = [], isLoading: emailsLoading } =
@@ -120,12 +131,15 @@ export const EmailNotificationSettings = ({
       setTestLoading(true)
       setTestResult(null)
 
-      const response = await apiRequest('/api/notifications/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await apiRequest<TestEmailResponse>(
+        '/api/notifications/test',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         }
-      })
+      )
 
       setTestResult(response)
 

@@ -82,20 +82,25 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
     <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Stack spacing={3}>
         <Box>
-          <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography
+            variant='h4'
+            component='h1'
+            sx={{ fontWeight: 700, mb: 1 }}
+          >
             Analíticas de quizzes
           </Typography>
           <Typography variant='body1' color='text.secondary'>
-            Esta pantalla usa métricas reales del backend. Hoy muestra estadísticas por quiz y
-            el detalle básico de sus preguntas, sin fingir tendencias o distractores que aún no
-            existen en la API.
+            Esta pantalla usa métricas reales del backend. Hoy muestra
+            estadísticas por quiz y el detalle básico de sus preguntas, sin
+            fingir tendencias o distractores que aún no existen en la API.
           </Typography>
         </Box>
 
         <Alert severity='info' icon={<HelpOutlineIcon />}>
-          Disponible hoy: intentos, usuarios únicos, puntaje promedio, tasa de aprobación,
-          tiempo promedio y listado real de preguntas. Pendiente: tendencias temporales,
-          análisis de opciones distractoras y recomendaciones automáticas por pregunta.
+          Disponible hoy: intentos, usuarios únicos, puntaje promedio, tasa de
+          aprobación, tiempo promedio y listado real de preguntas. Pendiente:
+          tendencias temporales, análisis de opciones distractoras y
+          recomendaciones automáticas por pregunta.
         </Alert>
 
         <Card>
@@ -108,7 +113,9 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                     labelId='quiz-analytics-select-label'
                     value={selectedQuizId}
                     label='Quiz'
-                    onChange={(event) => setSelectedQuizId(event.target.value as number | '')}
+                    onChange={(event) =>
+                      setSelectedQuizId(event.target.value as number | '')
+                    }
                     disabled={isLoadingOptions || quizOptions.length === 0}
                   >
                     {quizOptions.map((quiz) => (
@@ -120,13 +127,19 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                 </FormControl>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Stack direction='row' spacing={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+                <Stack
+                  direction='row'
+                  spacing={1}
+                  justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
+                >
                   <Button
                     variant='outlined'
                     disabled={!selectedQuiz}
                     onClick={() =>
                       selectedQuiz &&
-                      navigate(`/lms/admin/courses/${selectedQuiz.courseId}/content`)
+                      navigate(
+                        `/lms/admin/courses/${selectedQuiz.courseId}/content`
+                      )
                     }
                   >
                     Abrir contenido
@@ -136,7 +149,8 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                     endIcon={<ArrowForwardIcon />}
                     disabled={!selectedQuiz}
                     onClick={() =>
-                      selectedQuiz && navigate(`/lms/course/${selectedQuiz.courseId}/preview`)
+                      selectedQuiz &&
+                      navigate(`/lms/course/${selectedQuiz.courseId}/preview`)
                     }
                   >
                     Vista previa
@@ -166,9 +180,19 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                 <Typography variant='h6'>{selectedQuiz.title}</Typography>
                 <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
                   <Chip icon={<QuizIcon />} label={selectedQuiz.courseTitle} />
-                  <Chip label={`Módulo: ${selectedQuiz.moduleTitle}`} variant='outlined' />
-                  <Chip label={`Lección: ${selectedQuiz.lessonTitle}`} variant='outlined' />
-                  <Chip label={`${selectedQuiz.questionCount} preguntas`} color='primary' variant='outlined' />
+                  <Chip
+                    label={`Módulo: ${selectedQuiz.moduleTitle}`}
+                    variant='outlined'
+                  />
+                  <Chip
+                    label={`Lección: ${selectedQuiz.lessonTitle}`}
+                    variant='outlined'
+                  />
+                  <Chip
+                    label={`${selectedQuiz.questionCount} preguntas`}
+                    color='primary'
+                    variant='outlined'
+                  />
                 </Stack>
               </Stack>
             </CardContent>
@@ -193,7 +217,9 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                   <CardContent>
                     <Stack spacing={1}>
                       <AssessmentIcon color='primary' />
-                      <Typography variant='h4'>{analytics.statistics.totalAttempts}</Typography>
+                      <Typography variant='h4'>
+                        {analytics.statistics.totalAttempts}
+                      </Typography>
                       <Typography variant='body2' color='text.secondary'>
                         Intentos totales
                       </Typography>
@@ -206,7 +232,9 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                   <CardContent>
                     <Stack spacing={1}>
                       <AnalyticsIcon color='success' />
-                      <Typography variant='h4'>{formatPercent(analytics.statistics.averageScore)}</Typography>
+                      <Typography variant='h4'>
+                        {formatPercent(analytics.statistics.averageScore)}
+                      </Typography>
                       <Typography variant='body2' color='text.secondary'>
                         Puntaje promedio
                       </Typography>
@@ -219,7 +247,9 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                   <CardContent>
                     <Stack spacing={1}>
                       <QuizIcon color='warning' />
-                      <Typography variant='h4'>{formatPercent(analytics.statistics.passRate)}</Typography>
+                      <Typography variant='h4'>
+                        {formatPercent(analytics.statistics.passRate)}
+                      </Typography>
                       <Typography variant='body2' color='text.secondary'>
                         Tasa de aprobación
                       </Typography>
@@ -232,7 +262,9 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                   <CardContent>
                     <Stack spacing={1}>
                       <TimerIcon color='info' />
-                      <Typography variant='h4'>{formatMinutes(analytics.statistics.averageTimeMinutes)}</Typography>
+                      <Typography variant='h4'>
+                        {formatMinutes(analytics.statistics.averageTimeMinutes)}
+                      </Typography>
                       <Typography variant='body2' color='text.secondary'>
                         Tiempo promedio
                       </Typography>
@@ -299,8 +331,12 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
                       {analytics.questionAnalytics.map((question) => (
                         <TableRow key={question.questionId} hover>
                           <TableCell>{question.question}</TableCell>
-                          <TableCell>{getQuestionTypeLabel(question.type)}</TableCell>
-                          <TableCell align='center'>{question.points}</TableCell>
+                          <TableCell>
+                            {getQuestionTypeLabel(question.type)}
+                          </TableCell>
+                          <TableCell align='center'>
+                            {question.points}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

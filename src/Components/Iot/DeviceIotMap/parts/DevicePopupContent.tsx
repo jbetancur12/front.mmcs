@@ -48,8 +48,6 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
   const getValue = (type: 't' | 'h' | 'gps' | 'pwr' | 'ts') => {
     if (!currentSensorData) return 'N/A'
 
-   
-
     switch (type) {
       case 't':
         return currentSensorData.sen?.t ?? 'N/A'
@@ -70,13 +68,11 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
 
   const hasActiveAlarms = device.isInAlarm
   const raw = getValue('ts') // "14/4/2025, 20:55:55"
-const parsedDate = parse(raw, 'd/M/yyyy, HH:mm:ss', new Date())
-const lastUpdateTime = formatDistanceToNow(parsedDate, {
-  addSuffix: true,
-  locale: es
-})
-  
-  
+  const parsedDate = parse(raw, 'd/M/yyyy, HH:mm:ss', new Date())
+  const lastUpdateTime = formatDistanceToNow(parsedDate, {
+    addSuffix: true,
+    locale: es
+  })
 
   const activeAlarms = device?.alarms.filter(
     (alarm) => alarm.enabled === true && alarm.active === true

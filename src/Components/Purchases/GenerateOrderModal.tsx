@@ -57,7 +57,6 @@ interface GenerateOrderModalProps {
   onSuccess: () => void
 }
 
-
 const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   open,
   onClose,
@@ -104,7 +103,10 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
       return
     }
     if (assignedItems.length === 0) {
-      notify.warning('Advertencia', 'No hay ítems asignados para este proveedor.')
+      notify.warning(
+        'Advertencia',
+        'No hay ítems asignados para este proveedor.'
+      )
       return
     }
     if (isLoadingFiscalSettings) {
@@ -112,7 +114,10 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
       return
     }
     if (fiscalSettingsError || !fiscalSettings) {
-      notify.error('Error', 'No se pudo cargar la configuración fiscal necesaria.')
+      notify.error(
+        'Error',
+        'No se pudo cargar la configuración fiscal necesaria.'
+      )
       return
     }
 
@@ -232,7 +237,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   ) => {
     setAssignedItems((prevItems) => {
       const newItems = [...prevItems]
-      ;(newItems[index] as any)[field] = value
+      Object.assign(newItems[index], { [field]: value })
       if (field === 'unitValue' || field === 'quantity') {
         const quantity = Number(newItems[index].quantity) || 0
         const unitValue =
@@ -577,7 +582,9 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
             <Box sx={{ overflowX: 'auto', mb: 3 }}>
               <Table size='small'>
                 <TableHead>
-                  <TableRow sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}>
+                  <TableRow
+                    sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}
+                  >
                     <TableCell>Descripción</TableCell>
                     <TableCell sx={{ minWidth: 120 }}>Tipo</TableCell>
                     <TableCell>Cant.</TableCell>
@@ -750,7 +757,11 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                         orderData.totalBeforeVAT === 0
                       }
                     />
-                    <Typography variant='body2' sx={{ minWidth: 80 }} align='right'>
+                    <Typography
+                      variant='body2'
+                      sx={{ minWidth: 80 }}
+                      align='right'
+                    >
                       {formatCOP(orderData.discount)}
                     </Typography>
                   </Box>
@@ -810,7 +821,11 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
 
       <DialogActions sx={{ px: 3, py: 2 }}>
         {blockedReason && (
-          <Typography variant='body2' color='text.secondary' sx={{ mr: 'auto' }}>
+          <Typography
+            variant='body2'
+            color='text.secondary'
+            sx={{ mr: 'auto' }}
+          >
             {blockedReason}
           </Typography>
         )}

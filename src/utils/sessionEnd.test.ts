@@ -35,7 +35,9 @@ describe('detección de errores de sesión', () => {
     ).toBe('replaced')
     // formato viejo, con el código en la raíz
     expect(
-      getSessionRevokedReason(fail({ code: 'SESSION_REVOKED', reason: 'manual' }))
+      getSessionRevokedReason(
+        fail({ code: 'SESSION_REVOKED', reason: 'manual' })
+      )
     ).toBe('manual')
   })
 
@@ -52,9 +54,9 @@ describe('detección de errores de sesión', () => {
   })
 
   it('isRolesChangedError e isReauthRequired miran el código exacto', () => {
-    expect(isRolesChangedError(fail({ error: { code: 'ROLES_CHANGED' } }))).toBe(
-      true
-    )
+    expect(
+      isRolesChangedError(fail({ error: { code: 'ROLES_CHANGED' } }))
+    ).toBe(true)
     expect(isRolesChangedError(fail({ code: 'OTRO' }))).toBe(false)
     expect(isReauthRequired(fail({ code: 'SESSION_REAUTH_REQUIRED' }))).toBe(
       true
@@ -128,7 +130,10 @@ describe('clearLocalSession', () => {
 describe('isTokenExpired', () => {
   const tokenWith = (payload: object) => {
     const encode = (value: object) =>
-      btoa(JSON.stringify(value)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
+      btoa(JSON.stringify(value))
+        .replace(/=+$/, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
     return `${encode({ alg: 'HS256' })}.${encode(payload)}.firma`
   }
   const NOW = 1_800_000_000_000

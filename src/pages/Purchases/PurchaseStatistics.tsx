@@ -5,15 +5,37 @@ import {
   Bar,
   Line,
   ComposedChart,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
 } from 'recharts'
-import { Container, Grid, Box, Alert, Button, Card, CardContent, LinearProgress, Paper, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
-import { BarChart as BarChart, DateRange, ErrorOutline, FactCheck, HourglassEmpty, ListAlt, ReceiptLong, RemoveShoppingCart } from '@mui/icons-material'
+import {
+  Container,
+  Grid,
+  Box,
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  LinearProgress,
+  Paper,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography
+} from '@mui/material'
+import {
+  BarChart as BarChart,
+  DateRange,
+  ErrorOutline,
+  FactCheck,
+  HourglassEmpty,
+  ListAlt,
+  ReceiptLong,
+  RemoveShoppingCart
+} from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
@@ -60,7 +82,9 @@ interface PurchaseStatistics {
 // const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
 const PurchaseStatistics = () => {
-  const [timeRange, setTimeRange] = useState<'daily' | 'monthly' | 'yearly'>('monthly')
+  const [timeRange, setTimeRange] = useState<'daily' | 'monthly' | 'yearly'>(
+    'monthly'
+  )
   const [dateFilter, setDateFilter] = useState({
     startDate: subDays(new Date(), 30),
     endDate: new Date()
@@ -83,8 +107,7 @@ const PurchaseStatistics = () => {
 
   const loading = statisticsLoading || rangeLoading
   const error: string | null = statisticsError
-    ? getApiErrorReason(statisticsError) ||
-      'Error al cargar las estadísticas'
+    ? getApiErrorReason(statisticsError) || 'Error al cargar las estadísticas'
     : rangeError
 
   const fetchStatistics = () => {
@@ -96,19 +119,23 @@ const PurchaseStatistics = () => {
     try {
       setRangeLoading(true)
       setRangeError(null)
-      
+
       const params = {
         startDate: format(dateFilter.startDate, 'yyyy-MM-dd'),
         endDate: format(dateFilter.endDate, 'yyyy-MM-dd')
       }
-      
-      const response = await axiosPrivate.get('/purchase-statistics/date-range', { params })
+
+      const response = await axiosPrivate.get(
+        '/purchase-statistics/date-range',
+        { params }
+      )
       // Handle date range specific response here if needed
       logger.log('Date range statistics:', response.data)
-      
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Error fetching date range statistics:', err)
-      setRangeError(getApiErrorReason(err) || 'Error al cargar las estadísticas por fecha')
+      setRangeError(
+        getApiErrorReason(err) || 'Error al cargar las estadísticas por fecha'
+      )
     } finally {
       setRangeLoading(false)
     }
@@ -120,18 +147,18 @@ const PurchaseStatistics = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors: { [key: string]: string } = {
-      'pendiente': '#f59e0b',
+      pendiente: '#f59e0b',
       'pre-aprobado': '#3b82f6',
-      'aprobado': '#00BFA5',
-      'aceptada': '#00BFA5',
-      'rechazado': '#ef4444'
+      aprobado: '#00BFA5',
+      aceptada: '#00BFA5',
+      rechazado: '#ef4444'
     }
     return statusColors[String(status).toLowerCase()] || '#9ca3af'
   }
 
   const formatCurrency = (value: number) => {
-    if (!value || isNaN(value)) return '$0';
-    
+    if (!value || isNaN(value)) return '$0'
+
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -141,17 +168,22 @@ const PurchaseStatistics = () => {
   }
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+    if (!dateString) return ''
     try {
-      return format(new Date(dateString), 'MMM dd', { locale: es });
+      return format(new Date(dateString), 'MMM dd', { locale: es })
     } catch (error) {
-      return dateString;
+      return dateString
     }
   }
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <SignalLoader />
       </Box>
     )
@@ -160,11 +192,14 @@ const PurchaseStatistics = () => {
   if (error) {
     return (
       <Box p={3}>
-        <Alert severity="error" action={
-          <Button color="inherit" size="small" onClick={fetchStatistics}>
-            Reintentar
-          </Button>
-        }>
+        <Alert
+          severity='error'
+          action={
+            <Button color='inherit' size='small' onClick={fetchStatistics}>
+              Reintentar
+            </Button>
+          }
+        >
           {error}
         </Alert>
       </Box>
@@ -174,33 +209,42 @@ const PurchaseStatistics = () => {
   if (!statistics) {
     return (
       <Box p={3}>
-        <Alert severity="info">No hay datos disponibles</Alert>
+        <Alert severity='info'>No hay datos disponibles</Alert>
       </Box>
     )
   }
 
-  const timeSeriesData = statistics.timeSeriesData[timeRange].map(item => {
-    let formattedDate = '';
+  const timeSeriesData = statistics.timeSeriesData[timeRange].map((item) => {
+    let formattedDate = ''
     try {
       if (timeRange === 'yearly') {
-        const dateValue = 'date' in item ? item.date : 'year' in item ? item.year : '';
-        formattedDate = format(new Date(dateValue), 'yyyy');
+        const dateValue =
+          'date' in item ? item.date : 'year' in item ? item.year : ''
+        formattedDate = format(new Date(dateValue), 'yyyy')
       } else if (timeRange === 'monthly') {
-        const dateValue = 'date' in item ? item.date : 'month' in item ? item.month : '';
-        formattedDate = format(new Date(dateValue), 'MMM yyyy', { locale: es });
+        const dateValue =
+          'date' in item ? item.date : 'month' in item ? item.month : ''
+        formattedDate = format(new Date(dateValue), 'MMM yyyy', { locale: es })
       } else {
-        const dateValue = 'date' in item ? item.date : '';
-        formattedDate = formatDate(dateValue);
+        const dateValue = 'date' in item ? item.date : ''
+        formattedDate = formatDate(dateValue)
       }
     } catch (error) {
-      const fallbackDate = 'date' in item ? item.date : 'month' in item ? item.month : 'year' in item ? item.year : '';
-      formattedDate = fallbackDate;
+      const fallbackDate =
+        'date' in item
+          ? item.date
+          : 'month' in item
+            ? item.month
+            : 'year' in item
+              ? item.year
+              : ''
+      formattedDate = fallbackDate
     }
-    
+
     return {
       ...item,
       date: formattedDate
-    };
+    }
   })
 
   const compactCurrency = (value: number) => {
@@ -209,20 +253,49 @@ const PurchaseStatistics = () => {
     return `${value}`
   }
 
-  const { totalRequests, totalOrders, totalVerifications, requestsWithoutOrders, ordersWithoutVerification } = statistics.overview
-  const percentOf = (part: number, whole: number) => (whole ? Math.round((part / whole) * 1000) / 10 : 0)
+  const {
+    totalRequests,
+    totalOrders,
+    totalVerifications,
+    requestsWithoutOrders,
+    ordersWithoutVerification
+  } = statistics.overview
+  const percentOf = (part: number, whole: number) =>
+    whole ? Math.round((part / whole) * 1000) / 10 : 0
   const funnel = [
-    { label: 'Solicitudes', value: totalRequests, rate: null as number | null, color: '#3b82f6' },
-    { label: 'Órdenes de compra', value: totalOrders, rate: percentOf(totalOrders, totalRequests), color: '#00BFA5' },
-    { label: 'Verificaciones', value: totalVerifications, rate: percentOf(totalVerifications, totalOrders), color: '#00695C' }
+    {
+      label: 'Solicitudes',
+      value: totalRequests,
+      rate: null as number | null,
+      color: '#3b82f6'
+    },
+    {
+      label: 'Órdenes de compra',
+      value: totalOrders,
+      rate: percentOf(totalOrders, totalRequests),
+      color: '#00BFA5'
+    },
+    {
+      label: 'Verificaciones',
+      value: totalVerifications,
+      rate: percentOf(totalVerifications, totalOrders),
+      color: '#00695C'
+    }
   ]
   const funnelMax = Math.max(...funnel.map((step) => step.value), 0)
   const stuckTotal = requestsWithoutOrders + ordersWithoutVerification
-  const statusTotal = statistics.requestsByStatus.reduce((acc, entry) => acc + entry.count, 0)
+  const statusTotal = statistics.requestsByStatus.reduce(
+    (acc, entry) => acc + entry.count,
+    0
+  )
 
   const chartPaperSx = { p: { xs: 2, md: 3 }, borderRadius: 2 }
   const toggleSx = {
-    '& .MuiToggleButton-root': { textTransform: 'none', fontWeight: 600, px: 2 },
+    '& .MuiToggleButton-root': {
+      textTransform: 'none',
+      fontWeight: 600,
+      px: 2
+    },
     '& .Mui-selected': { bgcolor: '#E0F7F4 !important', color: '#00695C' }
   }
 
@@ -239,8 +312,16 @@ const PurchaseStatistics = () => {
             onClick={() => setCustomDateRange(!customDateRange)}
             sx={
               customDateRange
-                ? { color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }
-                : { bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }
+                ? {
+                    color: '#00897B',
+                    borderColor: '#00BFA5',
+                    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                  }
+                : {
+                    bgcolor: '#00BFA5',
+                    whiteSpace: 'nowrap',
+                    '&:hover': { bgcolor: '#00ACC1' }
+                  }
             }
           >
             {customDateRange ? 'Ocultar filtros' : 'Filtro por fechas'}
@@ -252,21 +333,30 @@ const PurchaseStatistics = () => {
       {customDateRange && (
         <Card>
           <CardContent>
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-              <div className="flex gap-4 items-center">
+            <LocalizationProvider
+              dateAdapter={AdapterDateFns}
+              adapterLocale={es}
+            >
+              <div className='flex gap-4 items-center'>
                 <DatePicker
-                  label="Fecha Inicio"
+                  label='Fecha Inicio'
                   value={dateFilter.startDate}
-                  onChange={(date) => date && setDateFilter(prev => ({ ...prev, startDate: date }))}
+                  onChange={(date) =>
+                    date &&
+                    setDateFilter((prev) => ({ ...prev, startDate: date }))
+                  }
                   slotProps={{ textField: { size: 'small' } }}
                 />
                 <DatePicker
-                  label="Fecha Fin"
+                  label='Fecha Fin'
                   value={dateFilter.endDate}
-                  onChange={(date) => date && setDateFilter(prev => ({ ...prev, endDate: date }))}
+                  onChange={(date) =>
+                    date &&
+                    setDateFilter((prev) => ({ ...prev, endDate: date }))
+                  }
                   slotProps={{ textField: { size: 'small' } }}
                 />
-                <Button variant="contained" onClick={handleDateRangeFilter}>
+                <Button variant='contained' onClick={handleDateRangeFilter}>
                   Aplicar Filtro
                 </Button>
               </div>
@@ -278,22 +368,58 @@ const PurchaseStatistics = () => {
       {/* Overview Cards */}
       <Grid container spacing={3}>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard variant='quiet' label='Total solicitudes' value={statistics.overview.totalRequests} icon={<ListAlt />} tone='blue' />
+          <LmsStatCard
+            variant='quiet'
+            label='Total solicitudes'
+            value={statistics.overview.totalRequests}
+            icon={<ListAlt />}
+            tone='blue'
+          />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard variant='quiet' label='Total órdenes' value={statistics.overview.totalOrders} icon={<ReceiptLong />} tone='teal' />
+          <LmsStatCard
+            variant='quiet'
+            label='Total órdenes'
+            value={statistics.overview.totalOrders}
+            icon={<ReceiptLong />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard variant='quiet' label='Verificaciones' value={statistics.overview.totalVerifications} icon={<FactCheck />} tone='green' />
+          <LmsStatCard
+            variant='quiet'
+            label='Verificaciones'
+            value={statistics.overview.totalVerifications}
+            icon={<FactCheck />}
+            tone='green'
+          />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard variant='quiet' label='Sin orden' value={statistics.overview.requestsWithoutOrders} icon={<RemoveShoppingCart />} tone='orange' />
+          <LmsStatCard
+            variant='quiet'
+            label='Sin orden'
+            value={statistics.overview.requestsWithoutOrders}
+            icon={<RemoveShoppingCart />}
+            tone='orange'
+          />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard variant='quiet' label='Sin verificar' value={statistics.overview.ordersWithoutVerification} icon={<ErrorOutline />} tone='red' />
+          <LmsStatCard
+            variant='quiet'
+            label='Sin verificar'
+            value={statistics.overview.ordersWithoutVerification}
+            icon={<ErrorOutline />}
+            tone='red'
+          />
         </Grid>
         <Grid item xs={6} sm={4} lg={2}>
-          <LmsStatCard variant='quiet' label='Pendientes' value={statistics.overview.pendingVerifications} icon={<HourglassEmpty />} tone='orange' />
+          <LmsStatCard
+            variant='quiet'
+            label='Pendientes'
+            value={statistics.overview.pendingVerifications}
+            icon={<HourglassEmpty />}
+            tone='orange'
+          />
         </Grid>
       </Grid>
 
@@ -301,13 +427,23 @@ const PurchaseStatistics = () => {
       <Grid container spacing={3}>
         <Grid item xs={12} lg={8}>
           <Paper elevation={2} sx={{ ...chartPaperSx, height: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                gap: 2,
+                flexWrap: 'wrap',
+                mb: 2
+              }}
+            >
               <Box>
                 <Typography variant='h6' fontWeight={700}>
                   Órdenes y monto comprado
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
-                  Las barras son órdenes emitidas; la línea es el monto en pesos.
+                  Las barras son órdenes emitidas; la línea es el monto en
+                  pesos.
                 </Typography>
               </Box>
               <ToggleButtonGroup
@@ -325,14 +461,30 @@ const PurchaseStatistics = () => {
             </Box>
             {timeSeriesData.length === 0 ? (
               <Box sx={{ py: 8, textAlign: 'center', color: 'text.secondary' }}>
-                No hay órdenes en este período. Cambia el rango para ver otras fechas.
+                No hay órdenes en este período. Cambia el rango para ver otras
+                fechas.
               </Box>
             ) : (
               <ResponsiveContainer width='100%' height={320}>
-                <ComposedChart data={timeSeriesData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <ComposedChart
+                  data={timeSeriesData}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                >
                   <CartesianGrid vertical={false} stroke='#e5e7eb' />
-                  <XAxis dataKey='date' tickLine={false} axisLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                  <YAxis yAxisId='left' allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} width={32} />
+                  <XAxis
+                    dataKey='date'
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                  />
+                  <YAxis
+                    yAxisId='left'
+                    allowDecimals={false}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    width={32}
+                  />
                   <YAxis
                     yAxisId='right'
                     orientation='right'
@@ -344,15 +496,36 @@ const PurchaseStatistics = () => {
                   />
                   <Tooltip
                     cursor={{ fill: 'rgba(0, 191, 165, 0.06)' }}
-                    contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                    }}
                     formatter={(value: number, name: string) => [
-                      name === 'Monto' ? formatCurrency(value) : `${value} órdenes`,
+                      name === 'Monto'
+                        ? formatCurrency(value)
+                        : `${value} órdenes`,
                       name
                     ]}
                   />
                   <Legend iconType='circle' wrapperStyle={{ fontSize: 13 }} />
-                  <Bar yAxisId='left' dataKey='orderCount' name='Órdenes' fill='#00BFA5' radius={[6, 6, 0, 0]} maxBarSize={36} />
-                  <Line yAxisId='right' dataKey='totalAmount' name='Monto' stroke='#00695C' strokeWidth={2.5} dot={{ r: 3, fill: '#00695C' }} activeDot={{ r: 5 }} />
+                  <Bar
+                    yAxisId='left'
+                    dataKey='orderCount'
+                    name='Órdenes'
+                    fill='#00BFA5'
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={36}
+                  />
+                  <Line
+                    yAxisId='right'
+                    dataKey='totalAmount'
+                    name='Monto'
+                    stroke='#00695C'
+                    strokeWidth={2.5}
+                    dot={{ r: 3, fill: '#00695C' }}
+                    activeDot={{ r: 5 }}
+                  />
                 </ComposedChart>
               </ResponsiveContainer>
             )}
@@ -368,8 +541,18 @@ const PurchaseStatistics = () => {
               Cuántas solicitudes llegan a orden y cuántas órdenes se verifican.
             </Typography>
             {funnel.map((step, index) => (
-              <Box key={step.label} sx={{ mb: index === funnel.length - 1 ? 0 : 2.5 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.75 }}>
+              <Box
+                key={step.label}
+                sx={{ mb: index === funnel.length - 1 ? 0 : 2.5 }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    mb: 0.75
+                  }}
+                >
                   <Typography variant='body2' fontWeight={600}>
                     {step.label}
                   </Typography>
@@ -380,7 +563,15 @@ const PurchaseStatistics = () => {
                 <LinearProgress
                   variant='determinate'
                   value={funnelMax ? (step.value / funnelMax) * 100 : 0}
-                  sx={{ height: 12, borderRadius: 6, bgcolor: '#E0F7F4', '& .MuiLinearProgress-bar': { borderRadius: 6, bgcolor: step.color } }}
+                  sx={{
+                    height: 12,
+                    borderRadius: 6,
+                    bgcolor: '#E0F7F4',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 6,
+                      bgcolor: step.color
+                    }
+                  }}
                 />
                 {step.rate !== null && (
                   <Typography variant='caption' color='text.secondary'>
@@ -389,7 +580,14 @@ const PurchaseStatistics = () => {
                 )}
               </Box>
             ))}
-            <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: stuckTotal > 0 ? '#fff7ed' : '#E0F7F4' }}>
+            <Box
+              sx={{
+                mt: 3,
+                p: 2,
+                borderRadius: 2,
+                bgcolor: stuckTotal > 0 ? '#fff7ed' : '#E0F7F4'
+              }}
+            >
               <Typography variant='body2' fontWeight={600}>
                 {stuckTotal > 0
                   ? `${stuckTotal} pendientes por atender`
@@ -413,26 +611,62 @@ const PurchaseStatistics = () => {
               {statusTotal} solicitudes en total.
             </Typography>
             {statusTotal === 0 ? (
-              <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>Aún no hay solicitudes registradas.</Box>
+              <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
+                Aún no hay solicitudes registradas.
+              </Box>
             ) : (
               <>
-                <Box sx={{ display: 'flex', height: 14, borderRadius: 7, overflow: 'hidden', mb: 2.5 }} role='img' aria-label='Reparto de solicitudes por estado'>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    height: 14,
+                    borderRadius: 7,
+                    overflow: 'hidden',
+                    mb: 2.5
+                  }}
+                  role='img'
+                  aria-label='Reparto de solicitudes por estado'
+                >
                   {statistics.requestsByStatus.map((entry) => (
-                    <Box key={entry.status} title={`${entry.status}: ${entry.count}`} sx={{ width: `${(entry.count / statusTotal) * 100}%`, bgcolor: getStatusColor(entry.status) }} />
+                    <Box
+                      key={entry.status}
+                      title={`${entry.status}: ${entry.count}`}
+                      sx={{
+                        width: `${(entry.count / statusTotal) * 100}%`,
+                        bgcolor: getStatusColor(entry.status)
+                      }}
+                    />
                   ))}
                 </Box>
                 <Grid container spacing={2}>
                   {statistics.requestsByStatus.map((entry) => (
                     <Grid item xs={12} sm={6} md={4} key={entry.status}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: getStatusColor(entry.status), flexShrink: 0 }} />
-                        <Typography variant='body2' sx={{ textTransform: 'capitalize', flexGrow: 1 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}
+                      >
+                        <Box
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            bgcolor: getStatusColor(entry.status),
+                            flexShrink: 0
+                          }}
+                        />
+                        <Typography
+                          variant='body2'
+                          sx={{ textTransform: 'capitalize', flexGrow: 1 }}
+                        >
                           {entry.status}
                         </Typography>
                         <Typography variant='body2' fontWeight={700}>
                           {entry.count}
                         </Typography>
-                        <Typography variant='body2' color='text.secondary' sx={{ minWidth: 44, textAlign: 'right' }}>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ minWidth: 44, textAlign: 'right' }}
+                        >
                           {Math.round((entry.count / statusTotal) * 100)}%
                         </Typography>
                       </Box>

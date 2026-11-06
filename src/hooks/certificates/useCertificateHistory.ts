@@ -8,7 +8,11 @@ import useAxiosPrivate from '@utils/use-axios-private'
 export const CERTIFICATE_HISTORY_QUERY_KEYS = {
   all: ['certificate-history'] as const,
   byFile: (fileId: number | string | undefined) =>
-    [...CERTIFICATE_HISTORY_QUERY_KEYS.all, 'file', String(fileId ?? '')] as const
+    [
+      ...CERTIFICATE_HISTORY_QUERY_KEYS.all,
+      'file',
+      String(fileId ?? '')
+    ] as const
 }
 
 export interface CertificateHistoryItem {

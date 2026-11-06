@@ -62,9 +62,22 @@ const formatCurrency = (value: number) =>
   }).format(value || 0)
 
 // Totales, abiertos (pendiente), cerrados (correcto), tiempo, costo y satisfacción
-const KPI_TONES: LmsStatTone[] = ['teal', 'orange', 'green', 'blue', 'blue', 'teal']
-// eslint-disable-next-line react/jsx-key -- se leen por índice, no se pintan como lista
-const KPI_ICONS = [<Assignment />, <FolderOpen />, <CheckCircle />, <Schedule />, <AttachMoney />, <SentimentSatisfied />]
+const KPI_TONES: LmsStatTone[] = [
+  'teal',
+  'orange',
+  'green',
+  'blue',
+  'blue',
+  'teal'
+]
+const KPI_ICONS = [
+  <Assignment key='assignments' />,
+  <FolderOpen key='in-progress' />,
+  <CheckCircle key='completed' />,
+  <Schedule key='time' />,
+  <AttachMoney key='cost' />,
+  <SentimentSatisfied key='satisfaction' />
+]
 
 const formatHours = (value: number) => {
   if (!value) return '0 h'
@@ -108,14 +121,16 @@ const MaintenanceAnalytics: React.FC = () => {
       {
         'Fecha inicial': filters.startDate || 'Sin filtro',
         'Fecha final': filters.endDate || 'Sin filtro',
-        'Tecnico': technicians.find((tech) => String(tech.id) === filters.technicianId)
-          ?.name || 'Todos',
+        Tecnico:
+          technicians.find((tech) => String(tech.id) === filters.technicianId)
+            ?.name || 'Todos',
         'Total tickets': analytics.overview.totalTickets,
         'Tickets abiertos': analytics.overview.openTickets,
         'Tickets completados': analytics.overview.completedTickets,
         'Tickets cancelados': analytics.overview.cancelledTickets,
         'Urgentes abiertos': analytics.overview.urgentOpenTickets,
-        'Tiempo medio resolucion (h)': analytics.overview.avgResolutionTimeHours,
+        'Tiempo medio resolucion (h)':
+          analytics.overview.avgResolutionTimeHours,
         'Costo promedio': analytics.overview.avgActualCost,
         'Satisfaccion promedio': analytics.overview.avgCustomerSatisfaction,
         'Completados facturados': analytics.overview.invoicedCompletedTickets,
@@ -181,13 +196,42 @@ const MaintenanceAnalytics: React.FC = () => {
         icon={<Assessment />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<ArrowBack />} onClick={() => navigate('/maintenance')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/maintenance')}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Volver
             </Button>
-            <Button variant='outlined' startIcon={<Refresh />} onClick={() => refetch()} disabled={isFetching} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<Refresh />}
+              onClick={() => refetch()}
+              disabled={isFetching}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Actualizar
             </Button>
-            <Button variant='contained' startIcon={<Download />} onClick={exportToExcel} disabled={!analytics} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Download />}
+              onClick={exportToExcel}
+              disabled={!analytics}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Descargar Excel
             </Button>
           </>
@@ -299,27 +343,31 @@ const MaintenanceAnalytics: React.FC = () => {
             <Grid item xs={12} lg={8}>
               <Paper sx={{ ...surfaceSx, p: 0, overflow: 'hidden' }}>
                 <Box sx={{ p: 2.5 }}>
-                  <Typography variant='h6' sx={{ fontWeight: 700, color: '#0f172a' }}>
+                  <Typography
+                    variant='h6'
+                    sx={{ fontWeight: 700, color: '#0f172a' }}
+                  >
                     Desempeño por técnico
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
-                    Asignados incluye tickets legacy en pendiente que ya tenían técnico; abiertos queda para estados operativos en curso.
+                    Asignados incluye tickets legacy en pendiente que ya tenían
+                    técnico; abiertos queda para estados operativos en curso.
                   </Typography>
                 </Box>
                 <Divider />
                 <Box sx={{ overflowX: 'auto' }}>
                   <Table size='small'>
                     <TableHead>
-                        <TableRow>
-                          <TableCell>Técnico</TableCell>
-                          <TableCell align='right'>Pendientes</TableCell>
-                          <TableCell align='right'>Asignados</TableCell>
-                          <TableCell align='right'>Abiertos</TableCell>
-                          <TableCell align='right'>Cerrados</TableCell>
-                          <TableCell align='right'>Gestionados</TableCell>
-                          <TableCell align='right'>Cierre</TableCell>
-                          <TableCell align='right'>Tiempo medio</TableCell>
-                          <TableCell align='right'>Satisfacción</TableCell>
+                      <TableRow>
+                        <TableCell>Técnico</TableCell>
+                        <TableCell align='right'>Pendientes</TableCell>
+                        <TableCell align='right'>Asignados</TableCell>
+                        <TableCell align='right'>Abiertos</TableCell>
+                        <TableCell align='right'>Cerrados</TableCell>
+                        <TableCell align='right'>Gestionados</TableCell>
+                        <TableCell align='right'>Cierre</TableCell>
+                        <TableCell align='right'>Tiempo medio</TableCell>
+                        <TableCell align='right'>Satisfacción</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -327,28 +375,54 @@ const MaintenanceAnalytics: React.FC = () => {
                         <TableRow key={technician.technicianId} hover>
                           <TableCell>
                             <Stack spacing={0.25}>
-                              <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                              <Typography
+                                variant='body2'
+                                sx={{ fontWeight: 700 }}
+                              >
                                 {technician.name}
                               </Typography>
-                              <Stack direction='row' spacing={0.75} alignItems='center'>
+                              <Stack
+                                direction='row'
+                                spacing={0.75}
+                                alignItems='center'
+                              >
                                 <Chip
                                   size='small'
                                   label={`Carga actual ${technician.workload}/${technician.maxWorkload}`}
-                                  color={technician.isAvailable ? 'success' : 'default'}
+                                  color={
+                                    technician.isAvailable
+                                      ? 'success'
+                                      : 'default'
+                                  }
                                   variant='outlined'
                                 />
-                                <Typography variant='caption' color='text.secondary'>
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                >
                                   {technician.status}
                                 </Typography>
                               </Stack>
                             </Stack>
                           </TableCell>
-                          <TableCell align='right'>{technician.pendingTickets}</TableCell>
-                          <TableCell align='right'>{technician.assignedTickets}</TableCell>
-                          <TableCell align='right'>{technician.openTickets}</TableCell>
-                          <TableCell align='right'>{technician.completedTickets}</TableCell>
-                          <TableCell align='right'>{technician.totalAssignedTickets}</TableCell>
-                          <TableCell align='right'>{technician.completionRate}%</TableCell>
+                          <TableCell align='right'>
+                            {technician.pendingTickets}
+                          </TableCell>
+                          <TableCell align='right'>
+                            {technician.assignedTickets}
+                          </TableCell>
+                          <TableCell align='right'>
+                            {technician.openTickets}
+                          </TableCell>
+                          <TableCell align='right'>
+                            {technician.completedTickets}
+                          </TableCell>
+                          <TableCell align='right'>
+                            {technician.totalAssignedTickets}
+                          </TableCell>
+                          <TableCell align='right'>
+                            {technician.completionRate}%
+                          </TableCell>
                           <TableCell align='right'>
                             {formatHours(technician.avgResolutionTimeHours)}
                           </TableCell>
@@ -366,7 +440,10 @@ const MaintenanceAnalytics: React.FC = () => {
             <Grid item xs={12} lg={4}>
               <Stack spacing={3}>
                 <Paper sx={{ ...surfaceSx, p: 2.5 }}>
-                  <Typography variant='h6' sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}>
+                  <Typography
+                    variant='h6'
+                    sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                  >
                     Top técnicos por tickets cerrados
                   </Typography>
                   <Stack spacing={1.5}>
@@ -380,7 +457,10 @@ const MaintenanceAnalytics: React.FC = () => {
                             alignItems='center'
                             mb={0.75}
                           >
-                            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                            <Typography
+                              variant='body2'
+                              sx={{ fontWeight: 600 }}
+                            >
                               {technician.name}
                             </Typography>
                             <Typography variant='body2' color='text.secondary'>
@@ -389,7 +469,9 @@ const MaintenanceAnalytics: React.FC = () => {
                           </Box>
                           <LinearProgress
                             variant='determinate'
-                            value={(technician.completedTickets / maxValue) * 100}
+                            value={
+                              (technician.completedTickets / maxValue) * 100
+                            }
                             sx={{
                               height: 8,
                               borderRadius: 999,
@@ -407,7 +489,10 @@ const MaintenanceAnalytics: React.FC = () => {
                 </Paper>
 
                 <Paper sx={{ ...surfaceSx, p: 2.5 }}>
-                  <Typography variant='h6' sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}>
+                  <Typography
+                    variant='h6'
+                    sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                  >
                     Estado de tickets
                   </Typography>
                   <Stack spacing={1.25}>
@@ -417,8 +502,14 @@ const MaintenanceAnalytics: React.FC = () => {
                         : 0
                       return (
                         <Box key={item.label}>
-                          <Box display='flex' justifyContent='space-between' mb={0.5}>
-                            <Typography variant='body2'>{item.label}</Typography>
+                          <Box
+                            display='flex'
+                            justifyContent='space-between'
+                            mb={0.5}
+                          >
+                            <Typography variant='body2'>
+                              {item.label}
+                            </Typography>
                             <Typography variant='body2' color='text.secondary'>
                               {item.count}
                             </Typography>
@@ -446,7 +537,10 @@ const MaintenanceAnalytics: React.FC = () => {
 
             <Grid item xs={12} md={6}>
               <Paper sx={{ ...surfaceSx, p: 2.5 }}>
-                <Typography variant='h6' sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                >
                   Tendencia diaria
                 </Typography>
                 <Stack spacing={1}>
@@ -459,8 +553,16 @@ const MaintenanceAnalytics: React.FC = () => {
                     >
                       <Typography variant='body2'>{point.date}</Typography>
                       <Stack direction='row' spacing={1.5}>
-                        <Chip size='small' label={`Creados ${point.created}`} variant='outlined' />
-                        <Chip size='small' label={`Cerrados ${point.completed}`} color='success' />
+                        <Chip
+                          size='small'
+                          label={`Creados ${point.created}`}
+                          variant='outlined'
+                        />
+                        <Chip
+                          size='small'
+                          label={`Cerrados ${point.completed}`}
+                          color='success'
+                        />
                       </Stack>
                     </Box>
                   ))}
@@ -470,14 +572,23 @@ const MaintenanceAnalytics: React.FC = () => {
 
             <Grid item xs={12} md={6}>
               <Paper sx={{ ...surfaceSx, p: 2.5 }}>
-                <Typography variant='h6' sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                >
                   Equipos más frecuentes
                 </Typography>
                 <Stack spacing={1.25}>
                   {analytics.topEquipmentTypes.map((item) => (
                     <Box key={item.equipmentType}>
-                      <Box display='flex' justifyContent='space-between' mb={0.5}>
-                        <Typography variant='body2'>{item.equipmentType}</Typography>
+                      <Box
+                        display='flex'
+                        justifyContent='space-between'
+                        mb={0.5}
+                      >
+                        <Typography variant='body2'>
+                          {item.equipmentType}
+                        </Typography>
                         <Typography variant='body2' color='text.secondary'>
                           {item.count} tickets
                         </Typography>
@@ -495,19 +606,34 @@ const MaintenanceAnalytics: React.FC = () => {
               <Paper sx={{ ...surfaceSx, p: 2.5 }}>
                 <Box display='flex' alignItems='center' gap={1} mb={1.5}>
                   <Engineering sx={{ color: '#0f766e' }} />
-                  <Typography variant='h6' sx={{ fontWeight: 700, color: '#0f172a' }}>
+                  <Typography
+                    variant='h6'
+                    sx={{ fontWeight: 700, color: '#0f172a' }}
+                  >
                     Envejecimiento y facturación
                   </Typography>
                 </Box>
                 <Grid container spacing={2}>
                   {analytics.agingBuckets.map((bucket) => (
                     <Grid item xs={12} sm={6} md={3} key={bucket.bucket}>
-                      <Card sx={{ backgroundColor: '#f8fafc', borderRadius: '14px', boxShadow: 'none' }}>
+                      <Card
+                        sx={{
+                          backgroundColor: '#f8fafc',
+                          borderRadius: '14px',
+                          boxShadow: 'none'
+                        }}
+                      >
                         <CardContent>
-                          <Typography variant='overline' sx={{ color: '#64748b', fontWeight: 700 }}>
+                          <Typography
+                            variant='overline'
+                            sx={{ color: '#64748b', fontWeight: 700 }}
+                          >
                             {bucket.bucket}
                           </Typography>
-                          <Typography variant='h5' sx={{ fontWeight: 700, color: '#0f172a' }}>
+                          <Typography
+                            variant='h5'
+                            sx={{ fontWeight: 700, color: '#0f172a' }}
+                          >
                             {bucket.count}
                           </Typography>
                           <Typography variant='body2' color='text.secondary'>
@@ -518,12 +644,24 @@ const MaintenanceAnalytics: React.FC = () => {
                     </Grid>
                   ))}
                   <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{ backgroundColor: '#f8fafc', borderRadius: '14px', boxShadow: 'none' }}>
+                    <Card
+                      sx={{
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '14px',
+                        boxShadow: 'none'
+                      }}
+                    >
                       <CardContent>
-                        <Typography variant='overline' sx={{ color: '#64748b', fontWeight: 700 }}>
+                        <Typography
+                          variant='overline'
+                          sx={{ color: '#64748b', fontWeight: 700 }}
+                        >
                           Facturación
                         </Typography>
-                        <Typography variant='h5' sx={{ fontWeight: 700, color: '#0f172a' }}>
+                        <Typography
+                          variant='h5'
+                          sx={{ fontWeight: 700, color: '#0f172a' }}
+                        >
                           {analytics.overview.notInvoicedCompletedTickets}
                         </Typography>
                         <Typography variant='body2' color='text.secondary'>

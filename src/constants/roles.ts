@@ -53,7 +53,7 @@ export const ROLE_LABELS_ES: Record<string, string> = {
   calibration_coordinator: 'Coord. de calibración',
   technical_director: 'Director técnico',
   analista_datos: 'Analista de Datos',
-  entregas: 'Entregas',
+  entregas: 'Entregas'
 }
 
 /** Label en español o el nombre crudo si no está mapeado. */

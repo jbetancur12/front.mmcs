@@ -51,4 +51,14 @@ export interface LibraryDocumentForm {
   source: File | null
 }
 
+/** Estado de la vista por páginas que usa el visor de solo lectura. */
+export interface LibraryPreview {
+  status: 'pending' | 'processing' | 'ready' | 'failed'
+  pageCount: number | null
+  width: number | null
+  height: number | null
+  token: string | null
+  message: string | null
+}
+
 export const LIBRARY_SOURCE_ACCEPT = '.doc,.docx,.xls,.xlsx'

@@ -465,8 +465,7 @@ const CalibrationServiceDetailDialogsHost = ({
             variant='contained'
             onClick={() =>
               void handleSaveExecutionCustomer({
-                executionCustomerName:
-                  executionCustomerDraft.trim() || null,
+                executionCustomerName: executionCustomerDraft.trim() || null,
                 executionSiteName: executionSiteDraft.trim() || null
               })
             }
@@ -498,7 +497,15 @@ const CalibrationServiceDetailDialogsHost = ({
             </IconButton>
           </Stack>
         </DialogTitle>
-        <DialogContent dividers sx={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <DialogContent
+          dividers
+          sx={{
+            minHeight: '70vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}
+        >
           {viewDocumentBlobUrl && viewDocumentIsImage ? (
             <Box
               component='img'

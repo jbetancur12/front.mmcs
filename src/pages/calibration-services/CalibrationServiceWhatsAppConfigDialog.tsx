@@ -17,7 +17,7 @@ import {
   useCalibrationWhatsAppConfigs,
   useCalibrationWhatsAppConfigMutation,
   WHATSAPP_CONFIG_OPTIONS,
-  WhatsAppConfig,
+  WhatsAppConfig
 } from '../../hooks/useCalibrationWhatsAppConfig'
 
 interface Props {
@@ -29,9 +29,9 @@ const ConfigSection = ({
   configOption,
   dbConfig,
   phoneNumbers,
-  onChange,
+  onChange
 }: {
-  configOption: typeof WHATSAPP_CONFIG_OPTIONS[0]
+  configOption: (typeof WHATSAPP_CONFIG_OPTIONS)[0]
   dbConfig: WhatsAppConfig | undefined
   phoneNumbers: Record<string, string[]>
   onChange: (type: string, phones: string[]) => void
@@ -49,22 +49,39 @@ const ConfigSection = ({
   }
 
   const removePhone = (index: number) => {
-    onChange(configOption.type, phones.filter((_, i) => i !== index))
+    onChange(
+      configOption.type,
+      phones.filter((_, i) => i !== index)
+    )
   }
 
   return (
     <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: '12px' }}>
-      <Stack direction='row' alignItems='center' justifyContent='space-between' sx={{ mb: 1.5 }}>
+      <Stack
+        direction='row'
+        alignItems='center'
+        justifyContent='space-between'
+        sx={{ mb: 1.5 }}
+      >
         <Box>
-          <Typography variant='body2' fontWeight={700}>{configOption.label}</Typography>
-          <Typography variant='caption' color='text.secondary'>{configOption.description}</Typography>
+          <Typography variant='body2' fontWeight={700}>
+            {configOption.label}
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            {configOption.description}
+          </Typography>
         </Box>
         <Chip
           size='small'
-          label={phones.length > 0 ? `${phones.length} número(s)` : 'Sin configurar'}
+          label={
+            phones.length > 0 ? `${phones.length} número(s)` : 'Sin configurar'
+          }
           color={phones.length > 0 ? 'success' : 'default'}
           variant='outlined'
-          sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.6 } }}
+          sx={{
+            height: 20,
+            '& .MuiChip-label': { fontSize: '0.65rem', px: 0.6 }
+          }}
         />
       </Stack>
       <Stack spacing={1}>
@@ -78,7 +95,11 @@ const ConfigSection = ({
               sx={{ flex: 1 }}
               InputProps={{ sx: { fontSize: '0.85rem' } }}
             />
-            <IconButton size='small' onClick={() => removePhone(i)} color='error'>
+            <IconButton
+              size='small'
+              onClick={() => removePhone(i)}
+              color='error'
+            >
               <DeleteOutlineIcon fontSize='small' />
             </IconButton>
           </Stack>
@@ -87,7 +108,11 @@ const ConfigSection = ({
           size='small'
           startIcon={<AddIcon />}
           onClick={addPhone}
-          sx={{ textTransform: 'none', fontSize: '0.8rem', alignSelf: 'flex-start' }}
+          sx={{
+            textTransform: 'none',
+            fontSize: '0.8rem',
+            alignSelf: 'flex-start'
+          }}
         >
           Agregar número
         </Button>
@@ -113,7 +138,8 @@ const CalibrationServiceWhatsAppConfigDialog = ({ open, onClose }: Props) => {
   }
 
   const hasChanges = (type: string) => {
-    const dbPhones = dbConfigs?.find((c) => c.notificationType === type)?.phoneNumbers || []
+    const dbPhones =
+      dbConfigs?.find((c) => c.notificationType === type)?.phoneNumbers || []
     const local = localPhones[type]
     if (!local) return false
     return JSON.stringify(local) !== JSON.stringify(dbPhones)
@@ -122,11 +148,16 @@ const CalibrationServiceWhatsAppConfigDialog = ({ open, onClose }: Props) => {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const typesWithChanges = WHATSAPP_CONFIG_OPTIONS.filter((opt) => hasChanges(opt.type))
+      const typesWithChanges = WHATSAPP_CONFIG_OPTIONS.filter((opt) =>
+        hasChanges(opt.type)
+      )
       for (const opt of typesWithChanges) {
         const phones = localPhones[opt.type]
         if (phones !== undefined) {
-          await updateConfig.mutateAsync({ type: opt.type, phoneNumbers: phones })
+          await updateConfig.mutateAsync({
+            type: opt.type,
+            phoneNumbers: phones
+          })
         }
       }
       toast.success('Configuración de WhatsApp guardada')

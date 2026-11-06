@@ -33,7 +33,7 @@ import MaintenanceFileUpload from './MaintenanceFileUpload'
 import SignaturePad from './SignaturePad'
 import type { MaintenanceFile } from '../../types/maintenance'
 
-interface Cost {
+export interface CompletionCost {
   name: string
   description?: string
   amount: number | string
@@ -57,7 +57,7 @@ interface CompletionCostsDialogProps {
   onComplete: (
     workPerformed: string,
     technicianWorkMinutes: number,
-    costs: Cost[],
+    costs: CompletionCost[],
     completionPhotos: CompletionPhotoInput[],
     technicianSignature: {
       technicianSignatureData?: string | null
@@ -95,17 +95,19 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const [technicianWorkMinutes, setTechnicianWorkMinutes] = useState<string>('')
   const [technicianWorkMinutesError, setTechnicianWorkMinutesError] =
     useState<string>('')
-  const [costs, setCosts] = useState<Cost[]>([
+  const [costs, setCosts] = useState<CompletionCost[]>([
     { name: '', description: '', amount: '' }
   ])
   const [errors, setErrors] = useState<
     Record<number, { name?: string; amount?: string }>
   >({})
   const [showPhotoUpload, setShowPhotoUpload] = useState(false)
-  const [completionPhotos, setCompletionPhotos] = useState<CompletionPhotoInput[]>([])
-  const [technicianSignatureData, setTechnicianSignatureData] = useState<string | null>(
-    storedTechnicianSignature || null
-  )
+  const [completionPhotos, setCompletionPhotos] = useState<
+    CompletionPhotoInput[]
+  >([])
+  const [technicianSignatureData, setTechnicianSignatureData] = useState<
+    string | null
+  >(storedTechnicianSignature || null)
   const [technicianSignatureError, setTechnicianSignatureError] = useState('')
 
   useEffect(() => {
@@ -138,7 +140,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
   const handleCostChange = (
     index: number,
-    field: keyof Cost,
+    field: keyof CompletionCost,
     value: string
   ) => {
     const updated = [...costs]
@@ -239,14 +241,14 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       formattedCosts,
       completionPhotos,
       {
-      technicianSignatureData: signaturesEnabled
-        ? effectiveTechnicianSignature
-        : null,
-      saveTechnicianSignature:
-        signaturesEnabled &&
-        canCaptureTechnicianSignature &&
-        !storedTechnicianSignature &&
-        Boolean(technicianSignatureData)
+        technicianSignatureData: signaturesEnabled
+          ? effectiveTechnicianSignature
+          : null,
+        saveTechnicianSignature:
+          signaturesEnabled &&
+          canCaptureTechnicianSignature &&
+          !storedTechnicianSignature &&
+          Boolean(technicianSignatureData)
       }
     )
   }
@@ -269,14 +271,14 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       [],
       completionPhotos,
       {
-      technicianSignatureData: signaturesEnabled
-        ? effectiveTechnicianSignature
-        : null,
-      saveTechnicianSignature:
-        signaturesEnabled &&
-        canCaptureTechnicianSignature &&
-        !storedTechnicianSignature &&
-        Boolean(technicianSignatureData)
+        technicianSignatureData: signaturesEnabled
+          ? effectiveTechnicianSignature
+          : null,
+        saveTechnicianSignature:
+          signaturesEnabled &&
+          canCaptureTechnicianSignature &&
+          !storedTechnicianSignature &&
+          Boolean(technicianSignatureData)
       }
     )
   }
@@ -290,7 +292,9 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
   const handlePhotoRemove = (fileId: string) => {
     const fileIndex = parseInt(fileId, 10)
-    setCompletionPhotos((prev) => prev.filter((_, index) => index !== fileIndex))
+    setCompletionPhotos((prev) =>
+      prev.filter((_, index) => index !== fileIndex)
+    )
   }
 
   const handlePhotoDescriptionChange = (index: number, value: string) => {
@@ -526,7 +530,9 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                   })
             }}
           >
-            {showPhotoUpload ? 'Ocultar fotos del servicio' : 'Adjuntar fotos del servicio'}
+            {showPhotoUpload
+              ? 'Ocultar fotos del servicio'
+              : 'Adjuntar fotos del servicio'}
           </Button>
 
           <Collapse in={showPhotoUpload}>
@@ -544,22 +550,26 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 Evidencia fotográfica del servicio
               </Typography>
               <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                Puedes adjuntar hasta 5 fotos del trabajo realizado. Estas imágenes aparecerán en la orden de servicio PDF.
+                Puedes adjuntar hasta 5 fotos del trabajo realizado. Estas
+                imágenes aparecerán en la orden de servicio PDF.
               </Typography>
               <MaintenanceFileUpload
-                files={completionPhotos.map((photo, index) => ({
-                  id: index.toString(),
-                  ticketId: '',
-                  fileName: photo.file.name,
-                  originalName: photo.file.name,
-                  fileType: photo.file.type,
-                  fileSize: photo.file.size,
-                  filePath: '',
-                  uploadedBy: '',
-                  uploadedAt: '',
-                  isImage: photo.file.type.startsWith('image/'),
-                  isVideo: false
-                } as MaintenanceFile))}
+                files={completionPhotos.map(
+                  (photo, index) =>
+                    ({
+                      id: index.toString(),
+                      ticketId: '',
+                      fileName: photo.file.name,
+                      originalName: photo.file.name,
+                      fileType: photo.file.type,
+                      fileSize: photo.file.size,
+                      filePath: '',
+                      uploadedBy: '',
+                      uploadedAt: '',
+                      isImage: photo.file.type.startsWith('image/'),
+                      isVideo: false
+                    }) as MaintenanceFile
+                )}
                 onFilesChange={handlePhotosChange}
                 onFileRemove={handlePhotoRemove}
                 acceptedFileTypes={['image/*']}
@@ -569,7 +579,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               />
               {completionPhotos.length > 0 && (
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 1 }}>
+                  <Typography
+                    variant='subtitle2'
+                    fontWeight={600}
+                    sx={{ mb: 1 }}
+                  >
                     Descripción por foto (opcional)
                   </Typography>
                   <Grid container spacing={2}>
@@ -608,12 +622,17 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           >
             <Box display='flex' alignItems='center' gap={1} mb={1.5}>
               <Draw sx={{ color: '#2563eb' }} />
-              <Typography variant='h6' fontWeight={600} sx={{ color: '#0f172a' }}>
+              <Typography
+                variant='h6'
+                fontWeight={600}
+                sx={{ color: '#0f172a' }}
+              >
                 Firma del técnico
               </Typography>
             </Box>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-              La firma del cliente puede registrarse después. Para completar el ticket necesitamos dejar confirmada la firma del técnico.
+              La firma del cliente puede registrarse después. Para completar el
+              ticket necesitamos dejar confirmada la firma del técnico.
             </Typography>
 
             {storedTechnicianSignature ? (
@@ -634,11 +653,20 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                     component='img'
                     src={storedTechnicianSignature}
                     alt={`Firma de ${technicianName || 'técnico'}`}
-                    sx={{ maxWidth: '100%', maxHeight: 140, objectFit: 'contain' }}
+                    sx={{
+                      maxWidth: '100%',
+                      maxHeight: 140,
+                      objectFit: 'contain'
+                    }}
                   />
                 </Box>
-                <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
-                  Se usará la firma guardada de {technicianName || 'este técnico'}.
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ mt: 1, display: 'block' }}
+                >
+                  Se usará la firma guardada de{' '}
+                  {technicianName || 'este técnico'}.
                 </Typography>
               </Box>
             ) : canCaptureTechnicianSignature ? (
@@ -657,7 +685,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               />
             ) : (
               <Alert severity='warning'>
-                Este ticket no tiene una firma de técnico disponible. Debes registrar una para poder completarlo.
+                Este ticket no tiene una firma de técnico disponible. Debes
+                registrar una para poder completarlo.
               </Alert>
             )}
           </Paper>

@@ -213,7 +213,9 @@ const CalibrationServicesFiltersCard = ({
                 active={cutTaskFilter === 'ready_to_invoice'}
                 onClick={() =>
                   setCutTaskFilter(
-                    cutTaskFilter === 'ready_to_invoice' ? '' : 'ready_to_invoice'
+                    cutTaskFilter === 'ready_to_invoice'
+                      ? ''
+                      : 'ready_to_invoice'
                   )
                 }
               />

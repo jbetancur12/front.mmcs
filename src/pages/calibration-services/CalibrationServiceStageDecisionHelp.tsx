@@ -146,7 +146,8 @@ const buildDecisionItems = ({
     return [
       {
         title: 'Emitir ODS',
-        detail: 'Convierte la aprobación del cliente en orden operativa del servicio.',
+        detail:
+          'Convierte la aprobación del cliente en orden operativa del servicio.',
         roles: ROLE_GROUPS.COMMERCIAL_EDITORS,
         tone: 'info'
       }
@@ -180,7 +181,8 @@ const buildDecisionItems = ({
     return [
       {
         title: 'Seguir ejecución normal',
-        detail: 'Actualizar avance por ítem y completar técnicamente el servicio.',
+        detail:
+          'Actualizar avance por ítem y completar técnicamente el servicio.',
         roles: ROLE_GROUPS.CUSTOMER_WRITE,
         tone: 'success'
       },
@@ -218,7 +220,13 @@ const buildDecisionItems = ({
         title: 'Resolver novedades económicas',
         detail:
           'Antes de dejar cortes listos para facturar, las novedades con impacto económico deben quedar revisadas.',
-        roles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COMP_ADMIN, ROLES.COMP_REQUESTER, ROLES.INVOICING],
+        roles: [
+          ROLES.ADMIN,
+          ROLES.SUPER_ADMIN,
+          ROLES.COMP_ADMIN,
+          ROLES.COMP_REQUESTER,
+          ROLES.INVOICING
+        ],
         tone: 'warning'
       })
     }
@@ -226,8 +234,14 @@ const buildDecisionItems = ({
     if (allCutsSent) {
       items.push({
         title: 'Cerrar servicio',
-        detail: 'Si todos los cortes ya fueron enviados, el servicio queda listo para cierre final.',
-        roles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COMP_ADMIN, ROLES.INVOICING],
+        detail:
+          'Si todos los cortes ya fueron enviados, el servicio queda listo para cierre final.',
+        roles: [
+          ROLES.ADMIN,
+          ROLES.SUPER_ADMIN,
+          ROLES.COMP_ADMIN,
+          ROLES.INVOICING
+        ],
         tone: 'success'
       })
     }
@@ -241,7 +255,12 @@ const buildDecisionItems = ({
         title: 'Flujo completado',
         detail:
           'El servicio ya cerró su flujo técnico, administrativo y documental. Solo queda disponible la consulta histórica.',
-        roles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COMP_ADMIN, ROLES.INVOICING],
+        roles: [
+          ROLES.ADMIN,
+          ROLES.SUPER_ADMIN,
+          ROLES.COMP_ADMIN,
+          ROLES.INVOICING
+        ],
         tone: 'default'
       }
     ]
@@ -250,8 +269,16 @@ const buildDecisionItems = ({
   return [
     {
       title: 'Consultar flujo',
-      detail: 'Revisa la pestaña Guía para ver el mapa completo del proceso y sus desvíos.',
-      roles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COMP_ADMIN, ROLES.COMP_REQUESTER, ROLES.METROLOGIST, ROLES.INVOICING],
+      detail:
+        'Revisa la pestaña Guía para ver el mapa completo del proceso y sus desvíos.',
+      roles: [
+        ROLES.ADMIN,
+        ROLES.SUPER_ADMIN,
+        ROLES.COMP_ADMIN,
+        ROLES.COMP_REQUESTER,
+        ROLES.METROLOGIST,
+        ROLES.INVOICING
+      ],
       tone: 'info'
     }
   ]
@@ -289,14 +316,16 @@ const CalibrationServiceStageDecisionHelp = (
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        PaperProps={{ sx: { width: 430, maxWidth: 'calc(100vw - 32px)', p: 2 } }}
+        PaperProps={{
+          sx: { width: 430, maxWidth: 'calc(100vw - 32px)', p: 2 }
+        }}
       >
         <Typography variant='subtitle1' fontWeight={700} gutterBottom>
           Decisiones posibles en esta etapa
         </Typography>
         <Typography variant='body2' color='text.secondary' sx={{ mb: 1.5 }}>
-          Antes de seguir a la siguiente fase, aquí ves qué caminos puede tomar el
-          servicio y quién está habilitado para ejecutarlos.
+          Antes de seguir a la siguiente fase, aquí ves qué caminos puede tomar
+          el servicio y quién está habilitado para ejecutarlos.
         </Typography>
         <Divider sx={{ mb: 1.5 }} />
         <List dense disablePadding>
@@ -311,7 +340,12 @@ const CalibrationServiceStageDecisionHelp = (
               </ListItemIcon>
               <ListItemText
                 primary={
-                  <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 0.5 }}>
+                  <Stack
+                    direction='row'
+                    spacing={1}
+                    alignItems='center'
+                    sx={{ mb: 0.5 }}
+                  >
                     <Typography fontWeight={700} variant='body2'>
                       {item.title}
                     </Typography>

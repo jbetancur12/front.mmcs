@@ -83,8 +83,8 @@ interface CourseMetrics {
     enrollmentCount: number
     averageRating: number | null
     isMandatory: boolean
-    timeToComplete: number
-    trend: 'up' | 'down' | 'stable'
+    timeToComplete?: number
+    trend?: 'up' | 'down' | 'stable'
   }>
   topPerformingCourses?: Array<{
     courseId: number
@@ -92,8 +92,8 @@ interface CourseMetrics {
     completionRate: number
     totalUsers: number
     isMandatory: boolean
-    timeToComplete: number
-    trend: 'up' | 'down' | 'stable'
+    timeToComplete?: number
+    trend?: 'up' | 'down' | 'stable'
   }>
   underperformingCourses?: Array<{
     courseId: number
@@ -101,8 +101,8 @@ interface CourseMetrics {
     completionRate: number
     totalUsers: number
     isMandatory: boolean
-    timeToComplete: number
-    trend: 'up' | 'down' | 'stable'
+    timeToComplete?: number
+    trend?: 'up' | 'down' | 'stable'
   }>
   timeToCompletionAnalytics?: {
     average: number
@@ -122,7 +122,10 @@ interface EnhancedCourseMetricsWidgetProps {
   error?: string
   onCourseClick?: (courseId: number) => void
   onViewAll?: () => void
-  onDrillDown?: (type: 'performance' | 'popularity' | 'time-analysis', courseId?: number) => void
+  onDrillDown?: (
+    type: 'performance' | 'popularity' | 'time-analysis',
+    courseId?: number
+  ) => void
   scope?: LmsDashboardScope
   userRole?: string
   department?: string
@@ -134,10 +137,15 @@ interface TabPanelProps {
   value: number
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
+const TabPanel: React.FC<TabPanelProps> = ({
+  children,
+  value,
+  index,
+  ...other
+}) => {
   return (
     <div
-      role="tabpanel"
+      role='tabpanel'
       hidden={value !== index}
       id={`course-metrics-tabpanel-${index}`}
       aria-labelledby={`course-metrics-tab-${index}`}
@@ -148,7 +156,9 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
   )
 }
 
-const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = ({
+const EnhancedCourseMetricsWidget: React.FC<
+  EnhancedCourseMetricsWidgetProps
+> = ({
   data,
   loading = false,
   error,
@@ -168,9 +178,13 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
     return (
       <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.error}` }}>
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', color: colors.error }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', color: colors.error }}
+          >
             <WarningIcon sx={{ mr: 1 }} />
-            <Typography variant="body2">Error loading course metrics</Typography>
+            <Typography variant='body2'>
+              Error loading course metrics
+            </Typography>
           </Box>
         </CardContent>
       </Card>
@@ -227,39 +241,48 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
   }
 
   return (
-    <Card sx={{
-      borderRadius: '16px',
-      border: `1px solid ${colors.gray[200]}`,
-      transition: 'all 0.3s ease-in-out',
-      '&:hover': {
-        borderColor: colors.primary,
-        boxShadow: `0 8px 25px rgba(16, 185, 129, 0.15)`,
-        transform: 'translateY(-2px)'
-      }
-    }}>
+    <Card
+      sx={{
+        borderRadius: '16px',
+        border: `1px solid ${colors.gray[200]}`,
+        transition: 'all 0.3s ease-in-out',
+        '&:hover': {
+          borderColor: colors.primary,
+          boxShadow: `0 8px 25px rgba(16, 185, 129, 0.15)`,
+          transform: 'translateY(-2px)'
+        }
+      }}
+    >
       <CardContent sx={{ p: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Avatar sx={{
-            bgcolor: colors.primaryLight,
-            color: colors.primary,
-            mr: 2,
-            width: 48,
-            height: 48
-          }}>
+          <Avatar
+            sx={{
+              bgcolor: colors.primaryLight,
+              color: colors.primary,
+              mr: 2,
+              width: 48,
+              height: 48
+            }}
+          >
             <SchoolIcon />
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: colors.gray[800] }}>
+            <Typography
+              variant='h6'
+              sx={{ fontWeight: 700, color: colors.gray[800] }}
+            >
               {getScopeLabel()}
             </Typography>
-            <Typography variant="body2" color={colors.gray[500]}>
+            <Typography variant='body2' color={colors.gray[500]}>
               {getScopeDescription()}
             </Typography>
             {scope !== 'admin' && (
               <Chip
-                label={scope === 'training_manager' ? 'Gestor' : 'Vista Acotada'}
-                size="small"
+                label={
+                  scope === 'training_manager' ? 'Gestor' : 'Vista Acotada'
+                }
+                size='small'
                 sx={{
                   mt: 0.5,
                   bgcolor: colors.primaryLight,
@@ -270,8 +293,8 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
               />
             )}
           </Box>
-          <Tooltip title="Ver detalles completos">
-            <IconButton onClick={onViewAll} size="small">
+          <Tooltip title='Ver detalles completos'>
+            <IconButton onClick={onViewAll} size='small'>
               <InfoIcon />
             </IconButton>
           </Tooltip>
@@ -280,21 +303,41 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
         {/* Main Metrics */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={6}>
-            <Box sx={{ textAlign: 'center', p: 2, bgcolor: colors.gray[50], borderRadius: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: colors.gray[800] }}>
+            <Box
+              sx={{
+                textAlign: 'center',
+                p: 2,
+                bgcolor: colors.gray[50],
+                borderRadius: 2
+              }}
+            >
+              <Typography
+                variant='h4'
+                sx={{ fontWeight: 700, color: colors.gray[800] }}
+              >
                 {data.totalCourses || 0}
               </Typography>
-              <Typography variant="body2" color={colors.gray[500]}>
+              <Typography variant='body2' color={colors.gray[500]}>
                 Total Cursos
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={6}>
-            <Box sx={{ textAlign: 'center', p: 2, bgcolor: colors.primaryLight, borderRadius: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: colors.primary }}>
+            <Box
+              sx={{
+                textAlign: 'center',
+                p: 2,
+                bgcolor: colors.primaryLight,
+                borderRadius: 2
+              }}
+            >
+              <Typography
+                variant='h4'
+                sx={{ fontWeight: 700, color: colors.primary }}
+              >
                 {data.publishedCourses || 0}
               </Typography>
-              <Typography variant="body2" color={colors.primary}>
+              <Typography variant='body2' color={colors.primary}>
                 Publicados
               </Typography>
             </Box>
@@ -303,40 +346,62 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
 
         {/* Completion Rate with Trend */}
         <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[700] }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 1
+            }}
+          >
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 600, color: colors.gray[700] }}
+            >
               Tasa de Finalización Promedio
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {completionTrend && getTrendIcon(completionTrend)}
-              <Typography variant="body2" sx={{ fontWeight: 700, color: colors.gray[800], ml: 0.5 }}>
+              <Typography
+                variant='body2'
+                sx={{ fontWeight: 700, color: colors.gray[800], ml: 0.5 }}
+              >
                 {data.averageCompletionRate || 0}%
               </Typography>
               {data.completionTrend && (
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    ml: 1, 
-                    color: data.completionTrend.direction === 'up' ? colors.success : 
-                           data.completionTrend.direction === 'down' ? colors.error : colors.warning,
+                <Typography
+                  variant='caption'
+                  sx={{
+                    ml: 1,
+                    color:
+                      data.completionTrend.direction === 'up'
+                        ? colors.success
+                        : data.completionTrend.direction === 'down'
+                          ? colors.error
+                          : colors.warning,
                     fontWeight: 600
                   }}
                 >
-                  {data.completionTrend.change > 0 ? '+' : ''}{data.completionTrend.change}%
+                  {data.completionTrend.change > 0 ? '+' : ''}
+                  {data.completionTrend.change}%
                 </Typography>
               )}
             </Box>
           </Box>
           <LinearProgress
-            variant="determinate"
+            variant='determinate'
             value={data.averageCompletionRate || 0}
             sx={{
               height: 8,
               borderRadius: 4,
               bgcolor: colors.gray[200],
               '& .MuiLinearProgress-bar': {
-                bgcolor: (data.averageCompletionRate || 0) >= 80 ? colors.success : 
-                        (data.averageCompletionRate || 0) >= 60 ? colors.warning : colors.error,
+                bgcolor:
+                  (data.averageCompletionRate || 0) >= 80
+                    ? colors.success
+                    : (data.averageCompletionRate || 0) >= 60
+                      ? colors.warning
+                      : colors.error,
                 borderRadius: 4
               }
             }}
@@ -345,15 +410,25 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
 
         {/* Course Rankings with Performance Metrics */}
         <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[700] }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 2
+            }}
+          >
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 600, color: colors.gray[700] }}
+            >
               Ranking de Cursos
             </Typography>
             <Button
-              size="small"
+              size='small'
               startIcon={<BarChartIcon />}
               onClick={() => setDetailsOpen(true)}
-              sx={{ 
+              sx={{
                 color: colors.primary,
                 fontSize: '0.75rem',
                 textTransform: 'none'
@@ -364,80 +439,115 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
           </Box>
 
           {/* Top Performing Courses */}
-          {data.topPerformingCourses && data.topPerformingCourses.length > 0 && (
-            <>
-              <Typography variant="caption" sx={{ color: colors.success, fontWeight: 600, mb: 1, display: 'block' }}>
-                🏆 Mejor Rendimiento
-              </Typography>
-              {data.topPerformingCourses.slice(0, 2).map((course, index) => (
-                <Box
-                  key={course.courseId}
+          {data.topPerformingCourses &&
+            data.topPerformingCourses.length > 0 && (
+              <>
+                <Typography
+                  variant='caption'
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    p: 2,
+                    color: colors.success,
+                    fontWeight: 600,
                     mb: 1,
-                    bgcolor: colors.gray[50],
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease-in-out',
-                    border: index === 0 ? `2px solid ${colors.success}` : 'none',
-                    '&:hover': {
-                      bgcolor: colors.primaryLight,
-                      transform: 'translateX(4px)'
-                    }
+                    display: 'block'
                   }}
-                  onClick={() => onCourseClick?.(course.courseId)}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                    {index === 0 && <StarIcon sx={{ color: colors.warning, fontSize: 16, mr: 0.5 }} />}
-                    <CheckCircleIcon sx={{ color: colors.success, fontSize: 20 }} />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[800] }}>
-                        {course.title.length > 25 ? `${course.title.substring(0, 25)}...` : course.title}
-                      </Typography>
-                      {getTrendIcon(course.trend || 'stable')}
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="caption" color={colors.gray[500]}>
-                        {course.totalUsers} usuarios • {course.completionRate}%
-                      </Typography>
-                      <Chip
-                        label={formatTime(course.timeToComplete || 0)}
-                        size="small"
-                        icon={<AccessTimeIcon />}
-                        sx={{
-                          height: 16,
-                          fontSize: '0.6rem',
-                          bgcolor: colors.info,
-                          color: 'white'
-                        }}
+                  🏆 Mejor Rendimiento
+                </Typography>
+                {data.topPerformingCourses.slice(0, 2).map((course, index) => (
+                  <Box
+                    key={course.courseId}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      p: 2,
+                      mb: 1,
+                      bgcolor: colors.gray[50],
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      border:
+                        index === 0 ? `2px solid ${colors.success}` : 'none',
+                      '&:hover': {
+                        bgcolor: colors.primaryLight,
+                        transform: 'translateX(4px)'
+                      }
+                    }}
+                    onClick={() => onCourseClick?.(course.courseId)}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                      {index === 0 && (
+                        <StarIcon
+                          sx={{ color: colors.warning, fontSize: 16, mr: 0.5 }}
+                        />
+                      )}
+                      <CheckCircleIcon
+                        sx={{ color: colors.success, fontSize: 20 }}
                       />
                     </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}
+                      >
+                        <Typography
+                          variant='body2'
+                          sx={{ fontWeight: 600, color: colors.gray[800] }}
+                        >
+                          {course.title.length > 25
+                            ? `${course.title.substring(0, 25)}...`
+                            : course.title}
+                        </Typography>
+                        {getTrendIcon(course.trend || 'stable')}
+                      </Box>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        <Typography variant='caption' color={colors.gray[500]}>
+                          {course.totalUsers} usuarios • {course.completionRate}
+                          %
+                        </Typography>
+                        <Chip
+                          label={formatTime(course.timeToComplete || 0)}
+                          size='small'
+                          icon={<AccessTimeIcon />}
+                          sx={{
+                            height: 16,
+                            fontSize: '0.6rem',
+                            bgcolor: colors.info,
+                            color: 'white'
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                    {course.isMandatory && (
+                      <Chip
+                        label='Obligatorio'
+                        size='small'
+                        sx={{
+                          bgcolor: colors.warning,
+                          color: 'white',
+                          fontSize: '0.7rem',
+                          height: 20
+                        }}
+                      />
+                    )}
                   </Box>
-                  {course.isMandatory && (
-                    <Chip
-                      label="Obligatorio"
-                      size="small"
-                      sx={{
-                        bgcolor: colors.warning,
-                        color: 'white',
-                        fontSize: '0.7rem',
-                        height: 20
-                      }}
-                    />
-                  )}
-                </Box>
-              ))}
-            </>
-          )}
+                ))}
+              </>
+            )}
 
           {/* Popular Courses */}
           {data.popularityCourses && data.popularityCourses.length > 0 && (
             <>
-              <Typography variant="caption" sx={{ color: colors.info, fontWeight: 600, mb: 1, mt: 2, display: 'block' }}>
+              <Typography
+                variant='caption'
+                sx={{
+                  color: colors.info,
+                  fontWeight: 600,
+                  mb: 1,
+                  mt: 2,
+                  display: 'block'
+                }}
+              >
                 🔥 Más Populares
               </Typography>
               {data.popularityCourses.slice(0, 1).map((course) => (
@@ -460,19 +570,28 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
                   }}
                   onClick={() => onCourseClick?.(course.courseId)}
                 >
-                  <PeopleIcon sx={{ color: colors.info, mr: 2, fontSize: 20 }} />
+                  <PeopleIcon
+                    sx={{ color: colors.info, mr: 2, fontSize: 20 }}
+                  />
                   <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[800] }}>
-                        {course.title.length > 25 ? `${course.title.substring(0, 25)}...` : course.title}
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}
+                    >
+                      <Typography
+                        variant='body2'
+                        sx={{ fontWeight: 600, color: colors.gray[800] }}
+                      >
+                        {course.title.length > 25
+                          ? `${course.title.substring(0, 25)}...`
+                          : course.title}
                       </Typography>
                       {getTrendIcon(course.trend || 'stable')}
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="caption" color={colors.gray[500]}>
+                      <Typography variant='caption' color={colors.gray[500]}>
                         {course.enrollmentCount} inscripciones
                       </Typography>
-                      <Typography variant="caption" color={colors.warning}>
+                      <Typography variant='caption' color={colors.warning}>
                         ⭐ {course.averageRating?.toFixed(1) || 'N/A'}
                       </Typography>
                     </Box>
@@ -484,56 +603,87 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
         </Box>
 
         {/* Underperforming Courses Alert */}
-        {data.underperformingCourses && data.underperformingCourses.length > 0 && (
-          <Box sx={{
-            p: 2,
-            bgcolor: '#fef3c7',
-            borderRadius: 2,
-            border: `1px solid ${colors.warning}`
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <WarningIcon sx={{ color: colors.warning, mr: 1, fontSize: 16 }} />
-              <Typography variant="body2" sx={{ fontWeight: 600, color: colors.warning }}>
-                Cursos que Requieren Atención
+        {data.underperformingCourses &&
+          data.underperformingCourses.length > 0 && (
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: '#fef3c7',
+                borderRadius: 2,
+                border: `1px solid ${colors.warning}`
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <WarningIcon
+                  sx={{ color: colors.warning, mr: 1, fontSize: 16 }}
+                />
+                <Typography
+                  variant='body2'
+                  sx={{ fontWeight: 600, color: colors.warning }}
+                >
+                  Cursos que Requieren Atención
+                </Typography>
+              </Box>
+              <Typography variant='caption' color={colors.gray[600]}>
+                {data.underperformingCourses.length} curso(s) con baja tasa de
+                finalización
               </Typography>
             </Box>
-            <Typography variant="caption" color={colors.gray[600]}>
-              {data.underperformingCourses.length} curso(s) con baja tasa de finalización
-            </Typography>
-          </Box>
-        )}
+          )}
 
         {/* Enhanced Stats with Time Analytics */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, pt: 2, borderTop: `1px solid ${colors.gray[200]}` }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            mt: 3,
+            pt: 2,
+            borderTop: `1px solid ${colors.gray[200]}`
+          }}
+        >
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ fontWeight: 700, color: colors.gray[800] }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 700, color: colors.gray[800] }}
+            >
               {formatTime(data.averageTimeSpent || 0)}
             </Typography>
-            <Typography variant="caption" color={colors.gray[500]}>
+            <Typography variant='caption' color={colors.gray[500]}>
               Tiempo Promedio
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ fontWeight: 700, color: colors.gray[800] }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 700, color: colors.gray[800] }}
+            >
               {data.draftCourses || 0}
             </Typography>
-            <Typography variant="caption" color={colors.gray[500]}>
+            <Typography variant='caption' color={colors.gray[500]}>
               En Borrador
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ fontWeight: 700, color: colors.primary }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 700, color: colors.primary }}
+            >
               {data.topPerformingCourses?.length || 0}
             </Typography>
-            <Typography variant="caption" color={colors.gray[500]}>
+            <Typography variant='caption' color={colors.gray[500]}>
               Destacados
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ fontWeight: 700, color: colors.info }}>
-              {data.timeToCompletionAnalytics?.fastest ? formatTime(data.timeToCompletionAnalytics.fastest) : 'N/A'}
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 700, color: colors.info }}
+            >
+              {data.timeToCompletionAnalytics?.fastest
+                ? formatTime(data.timeToCompletionAnalytics.fastest)
+                : 'N/A'}
             </Typography>
-            <Typography variant="caption" color={colors.gray[500]}>
+            <Typography variant='caption' color={colors.gray[500]}>
               Más Rápido
             </Typography>
           </Box>
@@ -544,7 +694,7 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
       <Dialog
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
-        maxWidth="lg"
+        maxWidth='lg'
         fullWidth
         PaperProps={{
           sx: { borderRadius: '16px' }
@@ -553,22 +703,22 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
         <DialogTitle sx={{ pb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <BarChartIcon sx={{ mr: 2, color: colors.primary }} />
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            <Typography variant='h6' sx={{ fontWeight: 700 }}>
               Análisis Detallado de Cursos
             </Typography>
           </Box>
         </DialogTitle>
-        
+
         <DialogContent>
           <Tabs value={selectedTab} onChange={handleTabChange} sx={{ mb: 3 }}>
-            <Tab label="Rendimiento" />
-            <Tab label="Popularidad" />
-            <Tab label="Tiempo de Finalización" />
+            <Tab label='Rendimiento' />
+            <Tab label='Popularidad' />
+            <Tab label='Tiempo de Finalización' />
           </Tabs>
 
           {/* Performance Analysis Tab */}
           <TabPanel value={selectedTab} index={0}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            <Typography variant='h6' sx={{ mb: 2, fontWeight: 600 }}>
               Análisis de Rendimiento por Curso
             </Typography>
             <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
@@ -576,11 +726,21 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
                 <TableHead>
                   <TableRow sx={{ bgcolor: colors.gray[50] }}>
                     <TableCell sx={{ fontWeight: 600 }}>Curso</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Usuarios</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Finalización</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Tendencia</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Tiempo Promedio</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Acciones</TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Usuarios
+                    </TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Finalización
+                    </TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Tendencia
+                    </TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Tiempo Promedio
+                    </TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Acciones
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -588,31 +748,44 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
                     <TableRow key={course.courseId} hover>
                       <TableCell>
                         <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          <Typography variant='body2' sx={{ fontWeight: 600 }}>
                             {course.title}
                           </Typography>
                           {course.isMandatory && (
-                            <Chip label="Obligatorio" size="small" sx={{ mt: 0.5, height: 16, fontSize: '0.6rem' }} />
+                            <Chip
+                              label='Obligatorio'
+                              size='small'
+                              sx={{ mt: 0.5, height: 16, fontSize: '0.6rem' }}
+                            />
                           )}
                         </Box>
                       </TableCell>
-                      <TableCell align="center">{course.totalUsers}</TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: colors.success }}>
+                      <TableCell align='center'>{course.totalUsers}</TableCell>
+                      <TableCell align='center'>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Typography
+                            variant='body2'
+                            sx={{ fontWeight: 600, color: colors.success }}
+                          >
                             {course.completionRate}%
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align='center'>
                         {getTrendIcon(course.trend || 'stable')}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align='center'>
                         {formatTime(course.timeToComplete || 0)}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align='center'>
                         <IconButton
-                          size="small"
+                          size='small'
                           onClick={() => {
                             onDrillDown?.('performance', course.courseId)
                             setDetailsOpen(false)
@@ -630,7 +803,7 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
 
           {/* Popularity Analysis Tab */}
           <TabPanel value={selectedTab} index={1}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            <Typography variant='h6' sx={{ mb: 2, fontWeight: 600 }}>
               Ranking de Popularidad
             </Typography>
             <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
@@ -639,10 +812,18 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
                   <TableRow sx={{ bgcolor: colors.gray[50] }}>
                     <TableCell sx={{ fontWeight: 600 }}>Ranking</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Curso</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Inscripciones</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Calificación</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Tendencia</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>Acciones</TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Inscripciones
+                    </TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Calificación
+                    </TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Tendencia
+                    </TableCell>
+                    <TableCell align='center' sx={{ fontWeight: 600 }}>
+                      Acciones
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -650,35 +831,55 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
                     <TableRow key={course.courseId} hover>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: colors.primary, mr: 1 }}>
+                          <Typography
+                            variant='h6'
+                            sx={{
+                              fontWeight: 700,
+                              color: colors.primary,
+                              mr: 1
+                            }}
+                          >
                             #{index + 1}
                           </Typography>
-                          {index === 0 && <StarIcon sx={{ color: colors.warning, fontSize: 16 }} />}
+                          {index === 0 && (
+                            <StarIcon
+                              sx={{ color: colors.warning, fontSize: 16 }}
+                            />
+                          )}
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
                           {course.title}
                         </Typography>
                       </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: colors.info }}>
+                      <TableCell align='center'>
+                        <Typography
+                          variant='body2'
+                          sx={{ fontWeight: 600, color: colors.info }}
+                        >
                           {course.enrollmentCount}
                         </Typography>
                       </TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Typography variant="body2" sx={{ mr: 0.5 }}>
+                      <TableCell align='center'>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Typography variant='body2' sx={{ mr: 0.5 }}>
                             ⭐ {course.averageRating?.toFixed(1) || 'N/A'}
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align='center'>
                         {getTrendIcon(course.trend || 'stable')}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align='center'>
                         <IconButton
-                          size="small"
+                          size='small'
                           onClick={() => {
                             onDrillDown?.('popularity', course.courseId)
                             setDetailsOpen(false)
@@ -696,92 +897,133 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
 
           {/* Time Analysis Tab */}
           <TabPanel value={selectedTab} index={2}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            <Typography variant='h6' sx={{ mb: 2, fontWeight: 600 }}>
               Análisis de Tiempo de Finalización
             </Typography>
-            
+
             {data.timeToCompletionAnalytics && (
               <>
                 <Grid container spacing={3} sx={{ mb: 3 }}>
                   <Grid item xs={12} md={4}>
-                    <Card sx={{ p: 2, textAlign: 'center', bgcolor: colors.primaryLight }}>
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: colors.primary }}>
+                    <Card
+                      sx={{
+                        p: 2,
+                        textAlign: 'center',
+                        bgcolor: colors.primaryLight
+                      }}
+                    >
+                      <Typography
+                        variant='h4'
+                        sx={{ fontWeight: 700, color: colors.primary }}
+                      >
                         {formatTime(data.timeToCompletionAnalytics.average)}
                       </Typography>
-                      <Typography variant="body2" color={colors.gray[600]}>
+                      <Typography variant='body2' color={colors.gray[600]}>
                         Tiempo Promedio
                       </Typography>
                     </Card>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <Card sx={{ p: 2, textAlign: 'center', bgcolor: colors.gray[50] }}>
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: colors.success }}>
+                    <Card
+                      sx={{
+                        p: 2,
+                        textAlign: 'center',
+                        bgcolor: colors.gray[50]
+                      }}
+                    >
+                      <Typography
+                        variant='h4'
+                        sx={{ fontWeight: 700, color: colors.success }}
+                      >
                         {formatTime(data.timeToCompletionAnalytics.fastest)}
                       </Typography>
-                      <Typography variant="body2" color={colors.gray[600]}>
+                      <Typography variant='body2' color={colors.gray[600]}>
                         Más Rápido
                       </Typography>
                     </Card>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <Card sx={{ p: 2, textAlign: 'center', bgcolor: colors.gray[50] }}>
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: colors.warning }}>
+                    <Card
+                      sx={{
+                        p: 2,
+                        textAlign: 'center',
+                        bgcolor: colors.gray[50]
+                      }}
+                    >
+                      <Typography
+                        variant='h4'
+                        sx={{ fontWeight: 700, color: colors.warning }}
+                      >
                         {formatTime(data.timeToCompletionAnalytics.slowest)}
                       </Typography>
-                      <Typography variant="body2" color={colors.gray[600]}>
+                      <Typography variant='body2' color={colors.gray[600]}>
                         Más Lento
                       </Typography>
                     </Card>
                   </Grid>
                 </Grid>
 
-                <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                <Typography variant='subtitle1' sx={{ mb: 2, fontWeight: 600 }}>
                   Distribución de Tiempos
                 </Typography>
                 <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
                   <Table>
                     <TableHead>
                       <TableRow sx={{ bgcolor: colors.gray[50] }}>
-                        <TableCell sx={{ fontWeight: 600 }}>Rango de Tiempo</TableCell>
-                        <TableCell align="center" sx={{ fontWeight: 600 }}>Cantidad de Cursos</TableCell>
-                        <TableCell align="center" sx={{ fontWeight: 600 }}>Porcentaje</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          Rango de Tiempo
+                        </TableCell>
+                        <TableCell align='center' sx={{ fontWeight: 600 }}>
+                          Cantidad de Cursos
+                        </TableCell>
+                        <TableCell align='center' sx={{ fontWeight: 600 }}>
+                          Porcentaje
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {data.timeToCompletionAnalytics.distribution?.map((item, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell>{item.range}</TableCell>
-                          <TableCell align="center">{item.count}</TableCell>
-                          <TableCell align="center">
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Typography variant="body2" sx={{ mr: 1 }}>
-                                {item.percentage}%
-                              </Typography>
-                              <LinearProgress
-                                variant="determinate"
-                                value={item.percentage}
+                      {data.timeToCompletionAnalytics.distribution?.map(
+                        (item, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell>{item.range}</TableCell>
+                            <TableCell align='center'>{item.count}</TableCell>
+                            <TableCell align='center'>
+                              <Box
                                 sx={{
-                                  width: 60,
-                                  height: 6,
-                                  borderRadius: 3,
-                                  bgcolor: colors.gray[200],
-                                  '& .MuiLinearProgress-bar': {
-                                    bgcolor: colors.primary,
-                                    borderRadius: 3
-                                  }
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
                                 }}
-                              />
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                              >
+                                <Typography variant='body2' sx={{ mr: 1 }}>
+                                  {item.percentage}%
+                                </Typography>
+                                <LinearProgress
+                                  variant='determinate'
+                                  value={item.percentage}
+                                  sx={{
+                                    width: 60,
+                                    height: 6,
+                                    borderRadius: 3,
+                                    bgcolor: colors.gray[200],
+                                    '& .MuiLinearProgress-bar': {
+                                      bgcolor: colors.primary,
+                                      borderRadius: 3
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
 
                 <Box sx={{ mt: 3, textAlign: 'center' }}>
                   <Button
-                    variant="outlined"
+                    variant='outlined'
                     startIcon={<TimelineIcon />}
                     onClick={() => {
                       onDrillDown?.('time-analysis')
@@ -798,11 +1040,14 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
         </DialogContent>
 
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setDetailsOpen(false)} sx={{ borderRadius: 2 }}>
+          <Button
+            onClick={() => setDetailsOpen(false)}
+            sx={{ borderRadius: 2 }}
+          >
             Cerrar
           </Button>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={onViewAll}
             sx={{
               borderRadius: 2,

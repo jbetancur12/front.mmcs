@@ -94,10 +94,9 @@ const Table: React.FC = () => {
   const createDeviceMutation = useCreateDevice()
   const updateDeviceMutation = useUpdateDevice()
   const deleteDeviceMutation = useDeleteDevice()
-  const [format, setFormat] = useState<{ labe: string; value: string } | null>(
+  const [format, setFormat] = useState<{ label: string; value: number } | null>(
     null
   )
-  // const [filteredTableData, setFilteredTableData] = useState<DeviceData[]>([]);
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -258,7 +257,8 @@ const Table: React.FC = () => {
         header: 'Plantilla de Certificado',
         enableSorting: false,
         enableColumnFilter: false,
-        Cell: ({ row }) => row.original.certificateTemplate?.name || 'Sin plantilla',
+        Cell: ({ row }) =>
+          row.original.certificateTemplate?.name || 'Sin plantilla',
 
         Edit: () => (
           <AsyncSelect
@@ -271,32 +271,15 @@ const Table: React.FC = () => {
                 mapOptions(item, 'id', 'name')
               )
             }
-            onChange={(selectedOption: any) => setFormat(selectedOption) as any}
+            onChange={(selectedOption) =>
+              setFormat(
+                selectedOption as { label: string; value: number } | null
+              )
+            }
             styles={styles(false)}
           />
         )
       }
-
-      // {
-      //   accessorKey: 'repository.name',
-      //   header: 'Formato',
-
-      //   Edit: () => (
-      //     <AsyncSelect
-      //       cacheOptions
-      //       // defaultOptions
-
-      //       placeholder='Buscar Formato'
-      //       loadOptions={(inputValue) =>
-      //         loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
-      //           mapOptions(item, 'id', 'name')
-      //         )
-      //       }
-      //       onChange={(selectedOption: any) => setFormat(selectedOption) as any}
-      //       styles={styles(false)}
-      //     />
-      //   )
-      // }
     ],
     [getCommonEditTextFieldProps]
   )
@@ -309,7 +292,16 @@ const Table: React.FC = () => {
         icon={<Build />}
         actions={
           canManageDevices ? (
-            <Button variant='contained' startIcon={<Add />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={() => setCreateModalOpen(true)}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Crear equipo
             </Button>
           ) : undefined
@@ -318,7 +310,8 @@ const Table: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Total equipos'
             value={devicesCount ?? devicesPage?.totalItems ?? 0}
             icon={<Build />}
@@ -347,26 +340,26 @@ const Table: React.FC = () => {
         initialState={{ columnVisibility: { id: false } }}
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip arrow placement='top' title='Editar'>
-            <IconButton
-            size='small'
-            aria-label='Editar'
-            sx={{ color: '#2563eb' }}
-            onClick={() => table.setEditingRow(row)}
-            >
-            <EditOutlined fontSize='small' />
-            </IconButton>
-          </Tooltip>
-          <Tooltip arrow placement='top' title='Eliminar'>
-            <IconButton
-            size='small'
-            color='error'
-            aria-label='Eliminar'
-            onClick={() => handleDeleteRow(row)}
-            >
-            <DeleteOutline fontSize='small' />
-            </IconButton>
-          </Tooltip>
+            <Tooltip arrow placement='top' title='Editar'>
+              <IconButton
+                size='small'
+                aria-label='Editar'
+                sx={{ color: '#2563eb' }}
+                onClick={() => table.setEditingRow(row)}
+              >
+                <EditOutlined fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip arrow placement='top' title='Eliminar'>
+              <IconButton
+                size='small'
+                color='error'
+                aria-label='Eliminar'
+                onClick={() => handleDeleteRow(row)}
+              >
+                <DeleteOutline fontSize='small' />
+              </IconButton>
+            </Tooltip>
           </Box>
         )}
       />

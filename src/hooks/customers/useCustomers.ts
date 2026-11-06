@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient, UseQueryOptions } from 'react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions
+} from 'react-query'
 import type { AxiosResponse } from 'axios'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { ROLES } from 'src/constants/roles'
@@ -55,7 +60,9 @@ export const useCustomers = <T extends CustomerWithRol = CustomerWithRol>(
 }
 
 /** POST /customers */
-export const useCreateCustomer = <T extends object = Record<string, unknown>>() => {
+export const useCreateCustomer = <
+  T extends object = Record<string, unknown>
+>() => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   return useMutation<AxiosResponse, unknown, T>(
@@ -64,24 +71,29 @@ export const useCreateCustomer = <T extends object = Record<string, unknown>>() 
       retry: false,
       onSuccess: () => {
         queryClient.invalidateQueries(customersKeys.lists())
+        queryClient.invalidateQueries(['customer-identification-check'])
       }
     }
   )
 }
 
 /** PUT /customers/:id */
-export const useUpdateCustomer = <T extends object = Record<string, unknown>>() => {
+export const useUpdateCustomer = <
+  T extends object = Record<string, unknown>
+>() => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
-  return useMutation<AxiosResponse, unknown, { id: number | string; values: T }>(
-    ({ id, values }) => axiosPrivate.put(`/customers/${id}`, values, {}),
-    {
-      retry: false,
-      onSuccess: () => {
-        queryClient.invalidateQueries(customersKeys.lists())
-      }
+  return useMutation<
+    AxiosResponse,
+    unknown,
+    { id: number | string; values: T }
+  >(({ id, values }) => axiosPrivate.put(`/customers/${id}`, values, {}), {
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries(customersKeys.lists())
+      queryClient.invalidateQueries(['customer-identification-check'])
     }
-  )
+  })
 }
 
 /** DELETE /customers/:id */

@@ -19,7 +19,7 @@ import {
   DialogContent,
   DialogActions,
   Paper,
-  Stack,
+  Stack
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -62,7 +62,12 @@ import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from '../../../utils/lmsAudience'
-import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from '../../../services/lmsService'
+import {
+  buildLessonResourceDownloadUrl,
+  buildLmsVideoStreamUrl,
+  type Certificate as ApiCertificate,
+  type LessonResource as ApiLessonResource
+} from '../../../services/lmsService'
 import PDFViewer from 'src/Components/PDFViewer'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
@@ -77,6 +82,47 @@ const styles = `
   to { transform: rotate(360deg); }
 }`
 
+interface MappedResource {
+  id: number
+  title: string
+  description: string
+  resourceType: 'pdf' | 'document' | 'link'
+  href: string
+  original_filename?: string
+  external_url?: string
+}
+
+interface MappedQuizQuestion {
+  id: number
+  question: string
+  type: 'single-choice' | 'multiple-choice' | 'true-false'
+  options: string[]
+  correctAnswer: number | number[]
+  explanation?: string
+  points: number
+}
+
+interface MappedQuiz {
+  id: number
+  title: string
+  instructions: string
+  passingPercentage: number
+  maxAttempts: number
+  cooldownMinutes: number
+  showCorrectAnswers: boolean
+  randomizeQuestions: boolean
+  shuffleAnswers: boolean
+  timeLimitMinutes?: number
+  allowReview: boolean
+  showProgressBar: boolean
+  questions: MappedQuizQuestion[]
+}
+
+interface QuizAttemptPayload {
+  answers: (number | number[])[]
+  questionIds?: number[]
+  timeSpent: number
+}
 
 interface CourseLesson {
   id: number
@@ -92,17 +138,9 @@ interface CourseLesson {
     videoSource?: 'minio' | 'youtube' | 'gdrive'
     transcript?: string
     text?: string
-    quiz?: any
+    quiz?: MappedQuiz
     description?: string
-    resources?: Array<{
-      id: number
-      title: string
-      description?: string
-      resourceType: 'pdf' | 'document' | 'link'
-      href: string
-      original_filename?: string
-      external_url?: string
-    }>
+    resources?: MappedResource[]
   }
 }
 
@@ -138,10 +176,13 @@ interface UserProgress {
   completedAt?: Date
 }
 
-const getResourceHref = (resource: any) =>
+const getResourceHref = (resource: ApiLessonResource): string =>
   resource.external_url ||
   resource.download_url ||
-  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
+  (resource.object_key
+    ? buildLessonResourceDownloadUrl(resource.id)
+    : resource.file_url) ||
+  ''
 
 interface QuizOutcomeSummary {
   passed: boolean
@@ -160,41 +201,55 @@ const LmsCourseView: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
   const queryClient = useQueryClient()
-  
+
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0)
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
-  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set([0]))
+  const [expandedModules, setExpandedModules] = useState<Set<number>>(
+    new Set([0])
+  )
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
-  const [latestQuizOutcome, setLatestQuizOutcome] = useState<QuizOutcomeSummary | null>(null)
-  const [certificateReadyNoticeVisible, setCertificateReadyNoticeVisible] = useState(false)
+  const [latestQuizOutcome, setLatestQuizOutcome] =
+    useState<QuizOutcomeSummary | null>(null)
+  const [certificateReadyNoticeVisible, setCertificateReadyNoticeVisible] =
+    useState(false)
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
-  const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
+  const [pdfViewerResource, setPdfViewerResource] =
+    useState<MappedResource | null>(null)
   const autoAdvance = false
   const storeUser = useStore(userStore)
 
   // Obtener curso real de la API
-  const { data: courseData, isLoading: isLoadingCourse, error: courseError } = useCourse(
-    parseInt(courseId || '0')
+  const {
+    data: courseData,
+    isLoading: isLoadingCourse,
+    error: courseError
+  } = useCourse(parseInt(courseId || '0'))
+  const { data: progressData } = useCourseProgress(
+    parseInt(courseId || '0'),
+    undefined,
+    {
+      enabled: !!courseId
+    }
   )
-  const { data: progressData } = useCourseProgress(parseInt(courseId || '0'), undefined, {
-    enabled: !!courseId
-  })
   const { data: userCertificates = [] } = useUserCertificates(undefined, {
     enabled: !!courseId
   })
   const normalizedCourseId = parseInt(courseId || '0')
   const currentCourseCertificate = useMemo(() => {
-    return userCertificates.find((certificate: any) => {
-      const certificateCourseId = certificate.course_id ?? certificate.courseId
-      return certificateCourseId === normalizedCourseId
-    }) || null
+    return (
+      userCertificates.find((certificate: ApiCertificate) => {
+        const certificateCourseId = certificate.course_id
+        return certificateCourseId === normalizedCourseId
+      }) || null
+    )
   }, [normalizedCourseId, userCertificates])
   const hasGeneratedCertificate = Boolean(currentCourseCertificate?.id)
-  const hasReviewAccess = hasGeneratedCertificate
-    || progressData?.progress?.isCompleted === true
-    || Number(progressData?.progress?.progressPercentage ?? 0) >= 100
+  const hasReviewAccess =
+    hasGeneratedCertificate ||
+    progressData?.progress?.isCompleted === true ||
+    Number(progressData?.progress?.progressPercentage ?? 0) >= 100
 
   // Adapter: Convert API data to expected Course interface (memoized to prevent infinite loops)
   const course: Course | null = useMemo(() => {
@@ -203,12 +258,12 @@ const LmsCourseView: React.FC = () => {
     const completedLessonIds = new Set<number>()
 
     if (progressData?.modules && Array.isArray(progressData.modules)) {
-      progressData.modules.forEach((module: any) => {
+      progressData.modules.forEach((module) => {
         if (!Array.isArray(module.lessons)) {
           return
         }
 
-        module.lessons.forEach((lesson: any) => {
+        module.lessons.forEach((lesson) => {
           if (lesson.progress?.status === 'completed') {
             completedLessonIds.add(lesson.id)
           }
@@ -219,16 +274,19 @@ const LmsCourseView: React.FC = () => {
     let previousLessonCompleted = true
     const mappedModules = (courseData.modules || [])
       .slice()
-      .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
-      .map((mod: any, modIndex: number) => {
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      .map((mod, modIndex: number) => {
         const lessons = (mod.lessons || [])
           .slice()
-          .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
-          .map((lesson: any, lessonIndex: number) => {
-            const completed = hasReviewAccess || completedLessonIds.has(lesson.id)
-            const unlocked = hasReviewAccess || (modIndex === 0 && lessonIndex === 0
-              ? true
-              : previousLessonCompleted)
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+          .map((lesson, lessonIndex: number) => {
+            const completed =
+              hasReviewAccess || completedLessonIds.has(lesson.id)
+            const unlocked =
+              hasReviewAccess ||
+              (modIndex === 0 && lessonIndex === 0
+                ? true
+                : previousLessonCompleted)
 
             previousLessonCompleted = completed
 
@@ -236,10 +294,12 @@ const LmsCourseView: React.FC = () => {
               id: lesson.id,
               title: lesson.title,
               type: lesson.type || 'text',
-              duration: (lesson.estimated_minutes || lesson.duration_minutes)
-                ? `${lesson.estimated_minutes || lesson.duration_minutes} min`
-                : 'N/A',
-              estimatedMinutes: lesson.estimated_minutes || lesson.duration_minutes || 30,
+              duration:
+                lesson.estimated_minutes || lesson.duration_minutes
+                  ? `${lesson.estimated_minutes || lesson.duration_minutes} min`
+                  : 'N/A',
+              estimatedMinutes:
+                lesson.estimated_minutes || lesson.duration_minutes || 30,
               order: lesson.order_index || lessonIndex + 1,
               completed,
               unlocked,
@@ -251,41 +311,60 @@ const LmsCourseView: React.FC = () => {
                 videoSource: lesson.video_source,
                 text: lesson.content,
                 description: lesson.description || '',
-                quiz: lesson.quiz ? {
-                  id: lesson.quiz.id,
-                  title: lesson.quiz.title,
-                  instructions: lesson.quiz.instructions || '',
-                  passingPercentage: lesson.quiz.passing_percentage ?? 70,
-                  maxAttempts: lesson.quiz.max_attempts ?? 10,
-                  cooldownMinutes: lesson.quiz.cooldown_minutes ?? 0,
-                  showCorrectAnswers: lesson.quiz.show_correct_answers ?? true,
-                  randomizeQuestions: lesson.quiz.randomize_questions ?? false,
-                  shuffleAnswers: lesson.quiz.shuffle_answers ?? false,
-                  timeLimitMinutes: lesson.quiz.time_limit_minutes,
-                  allowReview: lesson.quiz.allow_review ?? true,
-                  showProgressBar: lesson.quiz.show_progress_bar ?? true,
-                  questions: (lesson.quiz.questions || []).map((q: any) => ({
-                    id: q.id,
-                    question: q.question,
-                    type: q.type === 'single' ? 'single-choice' : q.type === 'boolean' ? 'true-false' : 'multiple-choice',
-                    options: q.options || [],
-                    correctAnswer: q.type === 'single' || q.type === 'boolean'
-                      ? (q.correct_answers?.[0] ?? 0)
-                      : (q.correct_answers || []),
-                    explanation: q.explanation,
-                    points: q.points || 1
-                  }))
-                } : undefined,
+                quiz: lesson.quiz
+                  ? {
+                      id: lesson.quiz.id,
+                      title: lesson.quiz.title,
+                      instructions: lesson.quiz.instructions || '',
+                      passingPercentage: lesson.quiz.passing_percentage ?? 70,
+                      maxAttempts: lesson.quiz.max_attempts ?? 10,
+                      cooldownMinutes: lesson.quiz.cooldown_minutes ?? 0,
+                      showCorrectAnswers:
+                        lesson.quiz.show_correct_answers ?? true,
+                      randomizeQuestions:
+                        lesson.quiz.randomize_questions ?? false,
+                      shuffleAnswers: lesson.quiz.shuffle_answers ?? false,
+                      timeLimitMinutes:
+                        lesson.quiz.time_limit_minutes ?? undefined,
+                      allowReview: lesson.quiz.allow_review ?? true,
+                      showProgressBar: lesson.quiz.show_progress_bar ?? true,
+                      questions: (lesson.quiz.questions || []).map(
+                        (q): MappedQuizQuestion => ({
+                          id: q.id,
+                          question: q.question,
+                          type:
+                            q.type === 'single'
+                              ? 'single-choice'
+                              : q.type === 'boolean'
+                                ? 'true-false'
+                                : 'multiple-choice',
+                          options: q.options || [],
+                          correctAnswer:
+                            q.type === 'single' || q.type === 'boolean'
+                              ? q.correct_answers?.[0] ?? 0
+                              : q.correct_answers || [],
+                          explanation: q.explanation ?? undefined,
+                          points: q.points || 1
+                        })
+                      )
+                    }
+                  : undefined,
                 resources: (lesson.resources || [])
-                  .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
-                  .map((resource: any) => ({
+                  .filter(
+                    (resource) =>
+                      resource.external_url ||
+                      resource.download_url ||
+                      resource.object_key ||
+                      resource.file_url
+                  )
+                  .map((resource) => ({
                     id: resource.id,
                     title: resource.title,
                     description: resource.description || '',
                     resourceType: resource.resource_type,
                     href: getResourceHref(resource),
-                    original_filename: resource.original_filename,
-                    external_url: resource.external_url
+                    original_filename: resource.original_filename ?? undefined,
+                    external_url: resource.external_url ?? undefined
                   }))
               }
             }
@@ -296,8 +375,9 @@ const LmsCourseView: React.FC = () => {
           title: mod.title,
           description: mod.description || '',
           order: mod.order_index || modIndex + 1,
-          completed: lessons.length > 0 && lessons.every((lesson: any) => lesson.completed),
-          unlocked: lessons.some((lesson: any) => lesson.unlocked),
+          completed:
+            lessons.length > 0 && lessons.every((lesson) => lesson.completed),
+          unlocked: lessons.some((lesson) => lesson.unlocked),
           lessons
         }
       })
@@ -308,7 +388,9 @@ const LmsCourseView: React.FC = () => {
       description: courseData.description,
       category: getCourseAudienceLabel(courseData.audience),
       instructor: courseData.creator?.nombre || 'Instructor',
-      duration: courseData.estimated_duration_minutes ? `${courseData.estimated_duration_minutes} min` : 'N/A',
+      duration: courseData.estimated_duration_minutes
+        ? `${courseData.estimated_duration_minutes} min`
+        : 'N/A',
       audience: normalizeCourseAudience(courseData.audience),
       thumbnail: '/placeholder.svg?height=400&width=600',
       hasCertificate: courseData.has_certificate || false,
@@ -322,16 +404,19 @@ const LmsCourseView: React.FC = () => {
     if (!courseData?.modules) return []
 
     if (hasReviewAccess) {
-      const reviewProgress = progressData?.progress as {
-        completedAt?: string
-        completed_at?: string
-      } | undefined
-      const completedAt = reviewProgress?.completedAt
-        || reviewProgress?.completed_at
-        || new Date().toISOString()
+      const reviewProgress = progressData?.progress as
+        | {
+            completedAt?: string
+            completed_at?: string
+          }
+        | undefined
+      const completedAt =
+        reviewProgress?.completedAt ||
+        reviewProgress?.completed_at ||
+        new Date().toISOString()
 
-      return (courseData.modules || []).flatMap((module: any) =>
-        (module.lessons || []).map((lesson: any) => ({
+      return (courseData.modules || []).flatMap((module) =>
+        (module.lessons || []).map((lesson) => ({
           courseId: normalizedCourseId,
           lessonId: lesson.id,
           status: 'completed' as const,
@@ -344,16 +429,18 @@ const LmsCourseView: React.FC = () => {
     if (!progressData || !progressData.modules) return []
 
     const lessons: UserProgress[] = []
-    progressData.modules.forEach((module: any) => {
+    progressData.modules.forEach((module) => {
       if (module.lessons && Array.isArray(module.lessons)) {
-        module.lessons.forEach((lesson: any) => {
+        module.lessons.forEach((lesson) => {
           if (lesson.progress && lesson.progress.status === 'completed') {
             lessons.push({
               courseId: normalizedCourseId,
               lessonId: lesson.id,
               status: lesson.progress.status,
               timeSpent: lesson.progress.time_spent_minutes || 0,
-              completedAt: lesson.progress.completed_at ? new Date(lesson.progress.completed_at) : undefined
+              completedAt: lesson.progress.completed_at
+                ? new Date(lesson.progress.completed_at)
+                : undefined
             })
           }
         })
@@ -365,9 +452,11 @@ const LmsCourseView: React.FC = () => {
   // Mutation para completar lección
   const updateProgressMutation = useCompleteLesson({
     onSuccess: async () => {
-      await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
+      await queryClient.invalidateQueries(
+        queryKeys.certificates.user(undefined)
+      )
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Error al completar lección:', error)
     }
   })
@@ -375,49 +464,63 @@ const LmsCourseView: React.FC = () => {
   // Mutation para completar quiz
   const completeQuizMutation = useSubmitQuiz({
     onSuccess: async () => {
-      await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
+      await queryClient.invalidateQueries(
+        queryKeys.certificates.user(undefined)
+      )
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Error al completar quiz:', error)
     }
   })
 
   // Memoize quiz config and empty arrays to prevent infinite loop in LmsQuizPlayer
   const currentQuizConfig = useMemo(() => {
-    if (!course || !course.modules || !course.modules[currentModuleIndex]) return null
+    if (!course || !course.modules || !course.modules[currentModuleIndex])
+      return null
     const currentModule = course.modules[currentModuleIndex]
-    if (!currentModule.lessons || !currentModule.lessons[currentLessonIndex]) return null
+    if (!currentModule.lessons || !currentModule.lessons[currentLessonIndex])
+      return null
     const lesson = currentModule.lessons[currentLessonIndex]
     if (lesson.type !== 'quiz' || !lesson.content.quiz) return null
     return lesson.content.quiz
   }, [course, currentModuleIndex, currentLessonIndex])
 
   // Query para obtener intentos del quiz actual
-  const { data: quizAttemptsData } = useQuizAttempts(currentQuizConfig?.id || 0, undefined, {
-    enabled: !!currentQuizConfig?.id,
-    staleTime: 30000
-  })
+  const { data: quizAttemptsData } = useQuizAttempts(
+    currentQuizConfig?.id || 0,
+    undefined,
+    {
+      enabled: !!currentQuizConfig?.id,
+      staleTime: 30000
+    }
+  )
 
   // Adaptador de intentos del quiz
   const userQuizAttempts = useMemo(() => {
     if (!quizAttemptsData) return []
 
-    return quizAttemptsData.map((attempt: any) => ({
-      attemptNumber: attempt.attempt_number,
-      startedAt: new Date(attempt.started_at),
-      answers: attempt.answers,
-      timeSpent: Math.round((new Date(attempt.completed_at).getTime() - new Date(attempt.started_at).getTime()) / 1000),
-      score: attempt.score,
-      totalPoints: attempt.total_points,
-      passed: attempt.passed
-    }))
+    return quizAttemptsData.map((attempt) => {
+      const started = new Date(attempt.started_at)
+      const completed = attempt.completed_at
+        ? new Date(attempt.completed_at)
+        : started
+      return {
+        attemptNumber: attempt.attempt_number ?? 1,
+        startedAt: started,
+        answers: [],
+        timeSpent: Math.round((completed.getTime() - started.getTime()) / 1000),
+        score: attempt.score,
+        totalPoints: attempt.total_points ?? 0,
+        passed: attempt.passed
+      }
+    })
   }, [quizAttemptsData])
 
   // Helper functions
   const getAllLessons = useCallback(() => {
     if (!course || !course.modules) return []
-    return course.modules.flatMap(module =>
-      module.lessons.map(lesson => ({
+    return course.modules.flatMap((module) =>
+      module.lessons.map((lesson) => ({
         ...lesson,
         moduleId: module.id,
         moduleTitle: module.title
@@ -426,8 +529,11 @@ const LmsCourseView: React.FC = () => {
   }, [course])
 
   const getCurrentLesson = useCallback(() => {
-    if (!course || !course.modules || !course.modules[currentModuleIndex]) return null
-    return course.modules[currentModuleIndex].lessons[currentLessonIndex] || null
+    if (!course || !course.modules || !course.modules[currentModuleIndex])
+      return null
+    return (
+      course.modules[currentModuleIndex].lessons[currentLessonIndex] || null
+    )
   }, [course, currentModuleIndex, currentLessonIndex])
 
   const getNextLesson = useCallback(() => {
@@ -467,7 +573,8 @@ const LmsCourseView: React.FC = () => {
       return {
         moduleIndex: currentModuleIndex,
         lessonIndex: currentLessonIndex - 1,
-        lesson: course.modules[currentModuleIndex].lessons[currentLessonIndex - 1]
+        lesson:
+          course.modules[currentModuleIndex].lessons[currentLessonIndex - 1]
       }
     }
 
@@ -486,45 +593,61 @@ const LmsCourseView: React.FC = () => {
     return null
   }, [course, currentModuleIndex, currentLessonIndex])
 
-  const isLessonCompleted = useCallback((lessonId: number) => {
-    return userProgress.some(p => p.lessonId === lessonId && p.status === 'completed')
-  }, [userProgress])
+  const isLessonCompleted = useCallback(
+    (lessonId: number) => {
+      return userProgress.some(
+        (p) => p.lessonId === lessonId && p.status === 'completed'
+      )
+    },
+    [userProgress]
+  )
 
-  const getPreviousLessonByIndex = useCallback((moduleIndex: number, lessonIndex: number) => {
-    if (!course || !course.modules) return null
+  const getPreviousLessonByIndex = useCallback(
+    (moduleIndex: number, lessonIndex: number) => {
+      if (!course || !course.modules) return null
 
-    if (lessonIndex > 0) {
-      return course.modules[moduleIndex].lessons[lessonIndex - 1]
-    }
-    if (moduleIndex > 0) {
-      const prevModule = course.modules[moduleIndex - 1]
-      return prevModule.lessons[prevModule.lessons.length - 1]
-    }
-    return null
-  }, [course])
+      if (lessonIndex > 0) {
+        return course.modules[moduleIndex].lessons[lessonIndex - 1]
+      }
+      if (moduleIndex > 0) {
+        const prevModule = course.modules[moduleIndex - 1]
+        return prevModule.lessons[prevModule.lessons.length - 1]
+      }
+      return null
+    },
+    [course]
+  )
 
-  const isLessonUnlocked = useCallback((moduleIndex: number, lessonIndex: number) => {
-    if (hasReviewAccess) return true
+  const isLessonUnlocked = useCallback(
+    (moduleIndex: number, lessonIndex: number) => {
+      if (hasReviewAccess) return true
 
-    // First lesson of first module is always unlocked
-    if (moduleIndex === 0 && lessonIndex === 0) return true
+      // First lesson of first module is always unlocked
+      if (moduleIndex === 0 && lessonIndex === 0) return true
 
-    // Check if previous lesson is completed
-    const prevLesson = getPreviousLessonByIndex(moduleIndex, lessonIndex)
-    if (prevLesson) {
-      return isLessonCompleted(prevLesson.id)
-    }
+      // Check if previous lesson is completed
+      const prevLesson = getPreviousLessonByIndex(moduleIndex, lessonIndex)
+      if (prevLesson) {
+        return isLessonCompleted(prevLesson.id)
+      }
 
-    return false
-  }, [getPreviousLessonByIndex, hasReviewAccess, isLessonCompleted])
+      return false
+    },
+    [getPreviousLessonByIndex, hasReviewAccess, isLessonCompleted]
+  )
 
   const getCourseProgress = useCallback(() => {
     const allLessons = getAllLessons()
-    const completedLessons = allLessons.filter(lesson => isLessonCompleted(lesson.id))
+    const completedLessons = allLessons.filter((lesson) =>
+      isLessonCompleted(lesson.id)
+    )
     return {
       completed: completedLessons.length,
       total: allLessons.length,
-      percentage: allLessons.length > 0 ? (completedLessons.length / allLessons.length) * 100 : 0
+      percentage:
+        allLessons.length > 0
+          ? (completedLessons.length / allLessons.length) * 100
+          : 0
     }
   }, [getAllLessons, isLessonCompleted])
 
@@ -564,109 +687,138 @@ const LmsCourseView: React.FC = () => {
   }, [isMobile])
 
   // Event handlers
-  const handleLessonComplete = useCallback(async (lessonId: number) => {
-    const timeSpent = lessonStartTime
-      ? Math.round((new Date().getTime() - lessonStartTime.getTime()) / 1000 / 60)
-      : 0
+  const handleLessonComplete = useCallback(
+    async (lessonId: number) => {
+      const timeSpent = lessonStartTime
+        ? Math.round(
+            (new Date().getTime() - lessonStartTime.getTime()) / 1000 / 60
+          )
+        : 0
 
-    try {
-      await updateProgressMutation.mutateAsync({
-        lessonId,
-        timeSpent
-      })
-      if (autoAdvance) {
-        const nl = getNextLesson()
-        if (nl && isLessonUnlocked(nl.moduleIndex, nl.lessonIndex)) {
-          setTimeout(() => {
-            setCurrentModuleIndex(nl.moduleIndex)
-            setCurrentLessonIndex(nl.lessonIndex)
-            setExpandedModules(prev => new Set([...prev, nl.moduleIndex]))
-            if (isMobile) {
-              setSidebarOpen(false)
-            }
-          }, 1500)
+      try {
+        await updateProgressMutation.mutateAsync({
+          lessonId,
+          timeSpent
+        })
+        if (autoAdvance) {
+          const nl = getNextLesson()
+          if (nl && isLessonUnlocked(nl.moduleIndex, nl.lessonIndex)) {
+            setTimeout(() => {
+              setCurrentModuleIndex(nl.moduleIndex)
+              setCurrentLessonIndex(nl.lessonIndex)
+              setExpandedModules((prev) => new Set([...prev, nl.moduleIndex]))
+              if (isMobile) {
+                setSidebarOpen(false)
+              }
+            }, 1500)
+          }
+        }
+      } catch (error) {
+        logger.error('Error completing lesson:', error)
+      }
+    },
+    [
+      lessonStartTime,
+      updateProgressMutation,
+      autoAdvance,
+      getNextLesson,
+      isLessonUnlocked,
+      isMobile
+    ]
+  )
+
+  const handleQuizComplete = useCallback(
+    async (attempt: QuizAttemptPayload) => {
+      if (!currentQuizConfig || !course || !course.modules[currentModuleIndex])
+        return
+      const currentLesson =
+        course.modules[currentModuleIndex].lessons[currentLessonIndex]
+      if (!currentLesson) return
+
+      try {
+        // Transform answers to service schema: object with questionId as key, answer array as value
+        const formattedAnswers: Record<number, number[]> = {}
+        attempt.answers.forEach((answer, index: number) => {
+          const questionId =
+            attempt.questionIds?.[index] ??
+            currentQuizConfig.questions[index].id
+          // Ensure answer is always an array
+          formattedAnswers[questionId] = Array.isArray(answer)
+            ? answer
+            : [answer]
+        })
+
+        const result = await completeQuizMutation.mutateAsync({
+          quizId: currentQuizConfig.id,
+          data: {
+            answers: formattedAnswers,
+            timeSpent: attempt.timeSpent || 0
+          }
+        })
+
+        const allLessons = getAllLessons()
+        const completedLessonsCount = allLessons.filter((lesson) =>
+          isLessonCompleted(lesson.id)
+        ).length
+        const completesCourse =
+          !isLessonCompleted(currentLesson.id) &&
+          completedLessonsCount + 1 >= allLessons.length
+
+        setLatestQuizOutcome({
+          passed: result.results.passed,
+          percentage: result.results.percentage,
+          score: result.results.score,
+          totalPoints: result.results.totalPoints,
+          passingPercentage: currentQuizConfig.passingPercentage,
+          attemptsRemaining: Math.max(
+            0,
+            (currentQuizConfig.maxAttempts || 0) - (userQuizAttempts.length + 1)
+          ),
+          completesCourse
+        })
+
+        // Use backend result to determine if quiz was passed
+        if (result.results.passed) {
+          await handleLessonComplete(currentLesson.id)
+        }
+      } catch (error) {
+        logger.error('Error completing quiz:', error)
+      }
+    },
+    [
+      currentQuizConfig,
+      course,
+      currentModuleIndex,
+      currentLessonIndex,
+      completeQuizMutation,
+      handleLessonComplete,
+      userQuizAttempts.length,
+      getAllLessons,
+      isLessonCompleted
+    ]
+  )
+
+  const handleNavigateToLesson = useCallback(
+    (moduleIndex: number, lessonIndex: number) => {
+      if (isLessonUnlocked(moduleIndex, lessonIndex)) {
+        setCurrentModuleIndex(moduleIndex)
+        setCurrentLessonIndex(lessonIndex)
+        setExpandedModules((prev) => new Set([...prev, moduleIndex]))
+
+        if (isMobile) {
+          setSidebarOpen(false)
         }
       }
-    } catch (error) {
-      logger.error('Error completing lesson:', error)
-    }
-  }, [lessonStartTime, updateProgressMutation, autoAdvance, getNextLesson, isLessonUnlocked, isMobile])
-
-  const handleQuizComplete = useCallback(async (attempt: any) => {
-    if (!currentQuizConfig || !course || !course.modules[currentModuleIndex]) return
-    const currentLesson = course.modules[currentModuleIndex].lessons[currentLessonIndex]
-    if (!currentLesson) return
-
-    try {
-      // Transform answers to service schema: object with questionId as key, answer array as value
-      const formattedAnswers: Record<number, number[]> = {}
-      attempt.answers.forEach((answer: any, index: number) => {
-        const questionId = attempt.questionIds?.[index] ?? currentQuizConfig.questions[index].id
-        // Ensure answer is always an array
-        formattedAnswers[questionId] = Array.isArray(answer) ? answer : [answer]
-      })
-
-      const result = await completeQuizMutation.mutateAsync({
-        quizId: currentQuizConfig.id,
-        data: {
-          answers: formattedAnswers,
-          timeSpent: attempt.timeSpent || 0
-        }
-      })
-
-      const allLessons = getAllLessons()
-      const completedLessonsCount = allLessons.filter((lesson) => isLessonCompleted(lesson.id)).length
-      const completesCourse =
-        !isLessonCompleted(currentLesson.id) &&
-        completedLessonsCount + 1 >= allLessons.length
-
-      setLatestQuizOutcome({
-        passed: result.results.passed,
-        percentage: result.results.percentage,
-        score: result.results.score,
-        totalPoints: result.results.totalPoints,
-        passingPercentage: currentQuizConfig.passingPercentage,
-        attemptsRemaining: Math.max(
-          0,
-          (currentQuizConfig.maxAttempts || 0) - (userQuizAttempts.length + 1)
-        ),
-        completesCourse
-      })
-
-      // Use backend result to determine if quiz was passed
-      if (result.results.passed) {
-        await handleLessonComplete(currentLesson.id)
-      }
-    } catch (error) {
-      logger.error('Error completing quiz:', error)
-    }
-  }, [
-    currentQuizConfig,
-    course,
-    currentModuleIndex,
-    currentLessonIndex,
-    completeQuizMutation,
-    handleLessonComplete,
-    userQuizAttempts.length,
-    getAllLessons,
-    isLessonCompleted
-  ])
-
-  const handleNavigateToLesson = useCallback((moduleIndex: number, lessonIndex: number) => {
-    if (isLessonUnlocked(moduleIndex, lessonIndex)) {
-      setCurrentModuleIndex(moduleIndex)
-      setCurrentLessonIndex(lessonIndex)
-      setExpandedModules(prev => new Set([...prev, moduleIndex]))
-      
-      if (isMobile) {
-        setSidebarOpen(false)
-      }
-    }
-  }, [isLessonUnlocked, isMobile])
+    },
+    [isLessonUnlocked, isMobile]
+  )
 
   const handleNextLesson = useCallback(() => {
     const nextLesson = getNextLesson()
-    if (nextLesson && isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)) {
+    if (
+      nextLesson &&
+      isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)
+    ) {
       handleNavigateToLesson(nextLesson.moduleIndex, nextLesson.lessonIndex)
     }
   }, [getNextLesson, isLessonUnlocked, handleNavigateToLesson])
@@ -679,7 +831,7 @@ const LmsCourseView: React.FC = () => {
   }, [getPreviousLesson, handleNavigateToLesson])
 
   const handleToggleModule = useCallback((moduleIndex: number) => {
-    setExpandedModules(prev => {
+    setExpandedModules((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(moduleIndex)) {
         newSet.delete(moduleIndex)
@@ -694,12 +846,15 @@ const LmsCourseView: React.FC = () => {
   const courseProgress = getCourseProgress()
   const nextLesson = getNextLesson()
   const prevLesson = getPreviousLesson()
-  const currentLessonCompleted = currentLesson ? isLessonCompleted(currentLesson.id) : false
+  const currentLessonCompleted = currentLesson
+    ? isLessonCompleted(currentLesson.id)
+    : false
   const allLessons = getAllLessons()
-  const currentLessonGlobalIndex = allLessons.findIndex(l => l.id === currentLesson?.id) + 1
+  const currentLessonGlobalIndex =
+    allLessons.findIndex((l) => l.id === currentLesson?.id) + 1
   const totalLessons = allLessons.length
   const estimatedMinutesRemaining = allLessons
-    .filter(l => !isLessonCompleted(l.id))
+    .filter((l) => !isLessonCompleted(l.id))
     .reduce((sum, l) => sum + (l.estimatedMinutes || 0), 0)
 
   useEffect(() => {
@@ -709,7 +864,11 @@ const LmsCourseView: React.FC = () => {
   }, [courseProgress.percentage])
 
   useEffect(() => {
-    if (!course?.hasCertificate || courseProgress.percentage !== 100 || hasGeneratedCertificate) {
+    if (
+      !course?.hasCertificate ||
+      courseProgress.percentage !== 100 ||
+      hasGeneratedCertificate
+    ) {
       return
     }
 
@@ -718,15 +877,25 @@ const LmsCourseView: React.FC = () => {
     }, 5000)
 
     return () => window.clearInterval(interval)
-  }, [course?.hasCertificate, courseProgress.percentage, hasGeneratedCertificate, queryClient])
+  }, [
+    course?.hasCertificate,
+    courseProgress.percentage,
+    hasGeneratedCertificate,
+    queryClient
+  ])
 
   useEffect(() => {
-    if (course && courseProgress.percentage === 100 && course.hasCertificate && hasGeneratedCertificate) {
+    if (
+      course &&
+      courseProgress.percentage === 100 &&
+      course.hasCertificate &&
+      hasGeneratedCertificate
+    ) {
       setCertificateReadyNoticeVisible(true)
     }
   }, [course, courseProgress.percentage, hasGeneratedCertificate])
 
-  const handleOpenResource = (resource: any) => {
+  const handleOpenResource = (resource: MappedResource) => {
     if (resource.external_url) {
       window.open(resource.external_url, '_blank', 'noopener,noreferrer')
       return
@@ -753,8 +922,12 @@ const LmsCourseView: React.FC = () => {
   if (courseError || !course) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Error al cargar el curso. Por favor, intenta nuevamente.</Alert>
-        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>Volver</Button>
+        <Alert severity='error'>
+          Error al cargar el curso. Por favor, intenta nuevamente.
+        </Alert>
+        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+          Volver
+        </Button>
       </Box>
     )
   }
@@ -813,22 +986,48 @@ const LmsCourseView: React.FC = () => {
           }}
         >
           <ShieldIcon sx={{ fontSize: 10 }} />
-          <Typography variant='caption' sx={{ fontSize: '0.72rem', lineHeight: 1 }}>
-            {course.category || 'Empleados'} · {course.isMandatory ? 'Obligatorio' : 'Voluntario'}
+          <Typography
+            variant='caption'
+            sx={{ fontSize: '0.72rem', lineHeight: 1 }}
+          >
+            {course.category || 'Empleados'} ·{' '}
+            {course.isMandatory ? 'Obligatorio' : 'Voluntario'}
           </Typography>
         </Box>
 
-        <Typography variant='subtitle1' sx={{ fontWeight: 600, color: '#f0f4f8', lineHeight: 1.35, mb: 3, fontSize: '1.05rem' }}>
+        <Typography
+          variant='subtitle1'
+          sx={{
+            fontWeight: 600,
+            color: '#f0f4f8',
+            lineHeight: 1.35,
+            mb: 3,
+            fontSize: '1.05rem'
+          }}
+        >
           {course.title}
         </Typography>
 
         {/* Progress */}
         <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant='caption' sx={{ color: 'rgba(240,244,248,0.65)', fontSize: '0.78rem' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 1
+            }}
+          >
+            <Typography
+              variant='caption'
+              sx={{ color: 'rgba(240,244,248,0.65)', fontSize: '0.78rem' }}
+            >
               Tu progreso
             </Typography>
-            <Typography variant='caption' sx={{ color: '#5EEAD4', fontWeight: 700, fontSize: '1rem' }}>
+            <Typography
+              variant='caption'
+              sx={{ color: '#5EEAD4', fontWeight: 700, fontSize: '1rem' }}
+            >
               {Math.round(courseProgress.percentage)}%
             </Typography>
           </Box>
@@ -846,8 +1045,17 @@ const LmsCourseView: React.FC = () => {
               }
             }}
           />
-          <Typography variant='caption' sx={{ color: 'rgba(240,244,248,0.6)', fontSize: '0.75rem', mt: 0.75, display: 'block' }}>
-            {courseProgress.completed} de {courseProgress.total} lecciones completadas
+          <Typography
+            variant='caption'
+            sx={{
+              color: 'rgba(240,244,248,0.6)',
+              fontSize: '0.75rem',
+              mt: 0.75,
+              display: 'block'
+            }}
+          >
+            {courseProgress.completed} de {courseProgress.total} lecciones
+            completadas
           </Typography>
         </Box>
       </Box>
@@ -855,11 +1063,16 @@ const LmsCourseView: React.FC = () => {
       <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
         {course.modules.map((module, moduleIndex) => {
           const isExpanded = expandedModules.has(moduleIndex)
-          const modCompleted = module.lessons.filter(l => isLessonCompleted(l.id)).length
+          const modCompleted = module.lessons.filter((l) =>
+            isLessonCompleted(l.id)
+          ).length
           const modTotal = module.lessons.length
 
           return (
-            <Box key={module.id} sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <Box
+              key={module.id}
+              sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+            >
               {/* Module header */}
               <Box
                 onClick={() => handleToggleModule(moduleIndex)}
@@ -887,15 +1100,30 @@ const LmsCourseView: React.FC = () => {
                   >
                     {module.title}
                   </Typography>
-                  <Typography variant='caption' sx={{ color: 'rgba(200,216,232,0.6)', fontSize: '0.73rem' }}>
+                  <Typography
+                    variant='caption'
+                    sx={{ color: 'rgba(200,216,232,0.6)', fontSize: '0.73rem' }}
+                  >
                     {modCompleted}/{modTotal} lecciones
                   </Typography>
                 </Box>
-                <Box sx={{ color: 'rgba(200,216,232,0.5)', display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+                <Box
+                  sx={{
+                    color: 'rgba(200,216,232,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    flexShrink: 0
+                  }}
+                >
                   {modTotal > 0 && modCompleted === modTotal && (
                     <CheckCircleIcon sx={{ fontSize: 16, color: '#4ade80' }} />
                   )}
-                  {isExpanded ? <ExpandMoreIcon sx={{ fontSize: 14 }} /> : <ChevronRightIcon sx={{ fontSize: 14 }} />}
+                  {isExpanded ? (
+                    <ExpandMoreIcon sx={{ fontSize: 14 }} />
+                  ) : (
+                    <ChevronRightIcon sx={{ fontSize: 14 }} />
+                  )}
                 </Box>
               </Box>
 
@@ -904,13 +1132,21 @@ const LmsCourseView: React.FC = () => {
                 <Box sx={{ pb: 0.5 }}>
                   {module.lessons.map((lesson, lessonIndex) => {
                     const isCompleted = isLessonCompleted(lesson.id)
-                    const isUnlocked = isLessonUnlocked(moduleIndex, lessonIndex)
-                    const isCurrent = currentModuleIndex === moduleIndex && currentLessonIndex === lessonIndex
+                    const isUnlocked = isLessonUnlocked(
+                      moduleIndex,
+                      lessonIndex
+                    )
+                    const isCurrent =
+                      currentModuleIndex === moduleIndex &&
+                      currentLessonIndex === lessonIndex
 
                     return (
                       <Box
                         key={lesson.id}
-                        onClick={() => isUnlocked && handleNavigateToLesson(moduleIndex, lessonIndex)}
+                        onClick={() =>
+                          isUnlocked &&
+                          handleNavigateToLesson(moduleIndex, lessonIndex)
+                        }
                         sx={{
                           display: 'flex',
                           gap: 1.5,
@@ -920,10 +1156,20 @@ const LmsCourseView: React.FC = () => {
                           cursor: isUnlocked ? 'pointer' : 'default',
                           transition: 'all 0.15s ease',
                           opacity: isUnlocked ? 1 : 0.45,
-                          bgcolor: isCurrent ? 'rgba(0,191,165,0.18)' : 'transparent',
+                          bgcolor: isCurrent
+                            ? 'rgba(0,191,165,0.18)'
+                            : 'transparent',
                           borderLeft: '2px solid',
-                          borderLeftColor: isCurrent ? '#00BFA5' : 'transparent',
-                          '&:hover': isUnlocked ? { bgcolor: isCurrent ? 'rgba(0,191,165,0.25)' : 'rgba(255,255,255,0.04)' } : {}
+                          borderLeftColor: isCurrent
+                            ? '#00BFA5'
+                            : 'transparent',
+                          '&:hover': isUnlocked
+                            ? {
+                                bgcolor: isCurrent
+                                  ? 'rgba(0,191,165,0.25)'
+                                  : 'rgba(255,255,255,0.04)'
+                              }
+                            : {}
                         }}
                       >
                         {/* Status icon */}
@@ -934,8 +1180,8 @@ const LmsCourseView: React.FC = () => {
                             color: isCompleted
                               ? '#4dc8e0'
                               : isCurrent
-                              ? '#9de4f0'
-                              : 'rgba(200,216,232,0.3)'
+                                ? '#9de4f0'
+                                : 'rgba(200,216,232,0.3)'
                           }}
                         >
                           {isCompleted ? (
@@ -955,17 +1201,37 @@ const LmsCourseView: React.FC = () => {
                               color: isCurrent
                                 ? '#f0f4f8'
                                 : isCompleted
-                                ? 'rgba(240,244,248,0.55)'
-                                : 'rgba(240,244,248,0.82)',
+                                  ? 'rgba(240,244,248,0.55)'
+                                  : 'rgba(240,244,248,0.82)',
                               fontWeight: isCurrent ? 500 : 400
                             }}
                           >
                             {lesson.title}
                           </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                            <Box sx={{ color: 'rgba(200,216,232,0.6)', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              mt: 0.5
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                color: 'rgba(200,216,232,0.6)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5
+                              }}
+                            >
                               {getLessonTypeIcon(lesson.type)}
-                              <Typography variant='caption' sx={{ fontSize: '0.73rem', color: 'rgba(200,216,232,0.6)' }}>
+                              <Typography
+                                variant='caption'
+                                sx={{
+                                  fontSize: '0.73rem',
+                                  color: 'rgba(200,216,232,0.6)'
+                                }}
+                              >
                                 {lesson.duration}
                               </Typography>
                             </Box>
@@ -985,567 +1251,919 @@ const LmsCourseView: React.FC = () => {
 
   return (
     <>
-    <style>{styles}</style>
-    <Box
-      sx={{
-        display: 'flex',
-        height: '100%',
-        minHeight: '100vh',
-        overflow: 'hidden',
-        background:
-          'radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, #f3fbfa 0%, #ecf6f5 100%)'
-      }}
-    >
-      {/* Mobile FAB for sidebar */}
-      {isMobile && (
-        <Fab
-          color="primary"
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            left: 16,
-            zIndex: 1200
-          }}
-          onClick={() => setSidebarOpen(true)}
-        >
-          <MenuIcon />
-        </Fab>
-      )}
-
-      {/* Sidebar */}
-      <Drawer
-        variant={isMobile ? 'temporary' : 'persistent'}
-        anchor="left"
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+      <style>{styles}</style>
+      <Box
         sx={{
-          '& .MuiDrawer-paper': {
-            width: isMobile ? '100vw' : 304,
-            boxSizing: 'border-box',
-            position: 'relative',
-            height: '100%',
-            borderRight: 'none',
-            background: '#0b3532'
-          }
+          display: 'flex',
+          height: '100%',
+          minHeight: '100vh',
+          overflow: 'hidden',
+          background:
+            'radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, #f3fbfa 0%, #ecf6f5 100%)'
         }}
       >
+        {/* Mobile FAB for sidebar */}
         {isMobile && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
-            <IconButton onClick={() => setSidebarOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
+          <Fab
+            color='primary'
+            sx={{
+              position: 'fixed',
+              bottom: 16,
+              left: 16,
+              zIndex: 1200
+            }}
+            onClick={() => setSidebarOpen(true)}
+          >
+            <MenuIcon />
+          </Fab>
         )}
-        {sidebarContent}
-      </Drawer>
 
-      {/* Main content */}
-      <Box sx={{ 
-        flex: 1, 
-        display: 'flex', 
-        flexDirection: 'column',
-        overflow: 'hidden',
-        marginLeft: !isMobile && sidebarOpen ? 0 : 0
-      }}>
-
-        {/* Header nav */}
-        <Box
+        {/* Sidebar */}
+        <Drawer
+          variant={isMobile ? 'temporary' : 'persistent'}
+          anchor='left'
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
           sx={{
-            px: { xs: 2, md: 3 },
-            height: 52,
-            borderBottom: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            flexShrink: 0
+            '& .MuiDrawer-paper': {
+              width: isMobile ? '100vw' : 304,
+              boxSizing: 'border-box',
+              position: 'relative',
+              height: '100%',
+              borderRight: 'none',
+              background: '#0b3532'
+            }
           }}
         >
-          <IconButton onClick={() => navigate(-1)} size='small'>
-            <ArrowBackIcon sx={{ fontSize: 18 }} />
-          </IconButton>
-          {!isMobile && !sidebarOpen && (
-            <IconButton onClick={() => setSidebarOpen(true)} size='small'>
-              <MenuIcon sx={{ fontSize: 18 }} />
-            </IconButton>
+          {isMobile && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+              <IconButton onClick={() => setSidebarOpen(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
           )}
+          {sidebarContent}
+        </Drawer>
 
-          <Typography
-            variant='caption'
-            noWrap
-            sx={{ fontWeight: 500, color: '#0f1117', fontSize: '0.82rem', minWidth: 0, display: { xs: 'none', md: 'block' } }}
-          >
-            {course.title}
-          </Typography>
-          <Typography variant='caption' sx={{ color: '#94a3b8', display: { xs: 'none', md: 'block' } }}>/</Typography>
-          <Typography
-            variant='caption'
-            noWrap
-            sx={{ color: '#00BFA5', fontWeight: 600, fontSize: '0.82rem', minWidth: 0, flex: '0 1 auto' }}
-          >
-            {currentLesson?.title || 'Curso'}
-          </Typography>
-          <Box sx={{ flex: 1 }} />
-          <Typography variant='caption' sx={{ color: '#00BFA5', fontWeight: 700, fontSize: '0.85rem' }}>
-            {Math.round(courseProgress.percentage)}%
-          </Typography>
-        </Box>
-        <LinearProgress
-          variant='determinate'
-          value={courseProgress.percentage}
+        {/* Main content */}
+        <Box
           sx={{
-            height: 4,
-            flexShrink: 0,
-            bgcolor: '#e2e8f0',
-            '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5', transition: 'width 0.5s ease' }
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            marginLeft: !isMobile && sidebarOpen ? 0 : 0
           }}
-        />
+        >
+          {/* Header nav */}
+          <Box
+            sx={{
+              px: { xs: 2, md: 3 },
+              height: 52,
+              borderBottom: '1px solid #e2e8f0',
+              bgcolor: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flexShrink: 0
+            }}
+          >
+            <IconButton onClick={() => navigate(-1)} size='small'>
+              <ArrowBackIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            {!isMobile && !sidebarOpen && (
+              <IconButton onClick={() => setSidebarOpen(true)} size='small'>
+                <MenuIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            )}
 
-        {/* Lesson content */}
-        <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#f8fafc' }}>
-          <Box sx={{ maxWidth: 1320, mx: 'auto', p: { xs: 2, md: 3 } }}>
-          {currentLesson ? (
-            <Box key={`${currentModuleIndex}-${currentLessonIndex}`} sx={{ ...fadeIn }}>
-              {/* Title */}
-              <Typography variant='h5' sx={{ fontWeight: 700, color: '#0f1117', mb: 2, fontSize: { xs: '1.35rem', md: '1.7rem' } }}>
-                {currentLesson.title}
-              </Typography>
+            <Typography
+              variant='caption'
+              noWrap
+              sx={{
+                fontWeight: 500,
+                color: '#0f1117',
+                fontSize: '0.82rem',
+                minWidth: 0,
+                display: { xs: 'none', md: 'block' }
+              }}
+            >
+              {course.title}
+            </Typography>
+            <Typography
+              variant='caption'
+              sx={{ color: '#94a3b8', display: { xs: 'none', md: 'block' } }}
+            >
+              /
+            </Typography>
+            <Typography
+              variant='caption'
+              noWrap
+              sx={{
+                color: '#00BFA5',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                minWidth: 0,
+                flex: '0 1 auto'
+              }}
+            >
+              {currentLesson?.title || 'Curso'}
+            </Typography>
+            <Box sx={{ flex: 1 }} />
+            <Typography
+              variant='caption'
+              sx={{ color: '#00BFA5', fontWeight: 700, fontSize: '0.85rem' }}
+            >
+              {Math.round(courseProgress.percentage)}%
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant='determinate'
+            value={courseProgress.percentage}
+            sx={{
+              height: 4,
+              flexShrink: 0,
+              bgcolor: '#e2e8f0',
+              '& .MuiLinearProgress-bar': {
+                bgcolor: '#00BFA5',
+                transition: 'width 0.5s ease'
+              }
+            }}
+          />
 
-              {/* Meta */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 3 }}>
-                <Chip
-                  size='small'
-                  icon={<AccessTimeIcon />}
-                  label={`${currentLesson.duration} · ${getContentTypeLabel(currentLesson.type)}`}
-                  sx={{ bgcolor: '#E0F7F4', color: '#00695C', '& .MuiChip-icon': { color: '#00897B' } }}
-                />
-                <Chip
-                  size='small'
-                  variant='outlined'
-                  icon={<PeopleIcon />}
-                  label={`${course.category} · ${course.isMandatory ? 'Obligatorio' : 'Voluntario'}`}
-                />
-              </Box>
-
-              {/* Content */}
-              <Box sx={{ maxWidth: currentLesson.type === 'video' ? 'min(1040px, calc((100vh - 390px) * 1.78))' : 800, mx: 'auto', mb: 4 }}>
-                {courseProgress.percentage === 100 && (
-                  <Box sx={{ textAlign: 'center', mb: 4, py: 3, px: 2, borderRadius: 3, color: 'white', boxShadow: 3, background: 'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)' }}>
-                    <CheckCircleIcon sx={{ fontSize: 44, color: 'white', mb: 1 }} />
-                    <Typography variant='h6' fontWeight={700} sx={{ mb: 0.5 }}>¡Curso completado!</Typography>
-                    <Typography variant='body2' sx={{ opacity: 0.95, mb: 2 }}>Ya cerraste todo el recorrido de aprendizaje.</Typography>
-                    {course.hasCertificate && hasGeneratedCertificate && (
-                      <Button variant='contained' size='small' startIcon={<CertificateIcon />} onClick={handleOpenCurrentCertificate}
-                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, bgcolor: 'white', color: '#00695C', '&:hover': { bgcolor: '#E0F7F4' } }}>
-                        Abrir certificado
-                      </Button>
-                    )}
-                    {course.hasCertificate && !hasGeneratedCertificate && (
-                      <Typography variant='caption' sx={{ opacity: 0.9 }}>Preparando certificado...</Typography>
-                    )}
-                  </Box>
-                )}
-
-                {certificateReadyNoticeVisible && !(courseProgress.percentage === 100 && hasGeneratedCertificate) && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, p: 2, bgcolor: '#E0F7F4', borderRadius: 2 }}>
-                    <Box>
-                      <Typography variant='body2' fontWeight={600} sx={{ color: '#00897B' }}>Certificado disponible</Typography>
-                      <Typography variant='caption' color='text.secondary'>Tu certificado ya quedó listo.</Typography>
-                    </Box>
-                    <Button size='small' variant='contained' onClick={handleOpenCurrentCertificate}
-                      sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}>
-                      Abrir
-                    </Button>
-                  </Box>
-                )}
-
-                {currentLesson.type === 'quiz' && latestQuizOutcome && !(latestQuizOutcome.passed && latestQuizOutcome.completesCourse && courseProgress.percentage === 100) && (
-                  <Alert severity={latestQuizOutcome.passed ? 'success' : 'warning'} sx={{ mb: 3, borderRadius: 2 }}>
-                    <AlertTitle>{latestQuizOutcome.passed ? 'Quiz aprobado' : 'Aún no alcanzas el puntaje mínimo'}</AlertTitle>
-                    {latestQuizOutcome.passed ? (
-                      latestQuizOutcome.completesCourse ? 'Completaste el curso.' : 'Ya puedes seguir con la siguiente lección.'
-                    ) : (
-                      <>Lograste <strong>{latestQuizOutcome.percentage}%</strong> y necesitas <strong>{latestQuizOutcome.passingPercentage}%</strong> para aprobar. {latestQuizOutcome.attemptsRemaining > 0 ? `Te quedan ${latestQuizOutcome.attemptsRemaining} intento(s).` : 'Ya no quedan intentos.'}</>
-                    )}
-                  </Alert>
-                )}
-
-                {/* Description / intro */}
-                {currentLesson.content.description && (
-                  <Typography variant='body2' sx={{ color: '#0f1117', lineHeight: 1.8, mb: 4, fontSize: '0.8rem' }}>
-                    {currentLesson.content.description}
+          {/* Lesson content */}
+          <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#f8fafc' }}>
+            <Box sx={{ maxWidth: 1320, mx: 'auto', p: { xs: 2, md: 3 } }}>
+              {currentLesson ? (
+                <Box
+                  key={`${currentModuleIndex}-${currentLessonIndex}`}
+                  sx={{ ...fadeIn }}
+                >
+                  {/* Title */}
+                  <Typography
+                    variant='h5'
+                    sx={{
+                      fontWeight: 700,
+                      color: '#0f1117',
+                      mb: 2,
+                      fontSize: { xs: '1.35rem', md: '1.7rem' }
+                    }}
+                  >
+                    {currentLesson.title}
                   </Typography>
-                )}
 
-                {currentLessonCompleted &&
-                  courseProgress.percentage < 100 &&
-                  course.modules[currentModuleIndex] &&
-                  course.modules[currentModuleIndex].lessons.length > 0 &&
-                  course.modules[currentModuleIndex].lessons.every((lesson) => isLessonCompleted(lesson.id)) && (
-                    <Box
+                  {/* Meta */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      flexWrap: 'wrap',
+                      mb: 3
+                    }}
+                  >
+                    <Chip
+                      size='small'
+                      icon={<AccessTimeIcon />}
+                      label={`${currentLesson.duration} · ${getContentTypeLabel(currentLesson.type)}`}
                       sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1.5,
-                        mb: 3,
-                        px: 2,
-                        py: 1.5,
-                        borderRadius: 2,
                         bgcolor: '#E0F7F4',
-                        color: '#00897B'
+                        color: '#00695C',
+                        '& .MuiChip-icon': { color: '#00897B' }
                       }}
-                    >
-                      <CheckCircleIcon sx={{ fontSize: 24 }} />
-                      <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                        ¡Módulo completado! {course.modules[currentModuleIndex].title}
-                      </Typography>
-                    </Box>
-                  )}
-
-                {/* Video */}
-                {currentLesson.type === 'video' && currentLesson.content.videoUrl && (
-                  <Box sx={{ mb: 3 }}>
-                    <LmsVideoPlayer
-                      src={currentLesson.content.videoUrl}
-                      videoSource={currentLesson.content.videoSource || 'youtube'}
-                      title={currentLesson.title}
-                      onComplete={() => handleLessonComplete(currentLesson.id)}
+                    />
+                    <Chip
+                      size='small'
+                      variant='outlined'
+                      icon={<PeopleIcon />}
+                      label={`${course.category} · ${course.isMandatory ? 'Obligatorio' : 'Voluntario'}`}
                     />
                   </Box>
-                )}
 
-                {/* Text */}
-                {currentLesson.type === 'text' && currentLesson.content.text && (
-                  <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #e2e8f0', mb: 3, bgcolor: '#ffffff' }}>
-                    <Typography
-                      component='div'
-                      sx={{
-                        '& h1, & h2, & h3': { color: '#0f172a', mb: 2, mt: 3 },
-                        '& p': { mb: 2, lineHeight: 1.8, color: '#334155', fontSize: '0.9rem' },
-                        '& code': { bgcolor: '#f1f5f9', px: 1, borderRadius: 1, fontFamily: 'monospace' },
-                        '& pre': { bgcolor: '#0f172a', color: '#e2e8f0', p: 2, borderRadius: 1, overflow: 'auto' },
-                        '& ul, & ol': { mb: 2, pl: 3 },
-                        '& li': { mb: 1, color: '#334155' }
-                      }}
-                      dangerouslySetInnerHTML={{ __html: currentLesson.content.text }}
-                    />
-                  </Paper>
-                )}
+                  {/* Content */}
+                  <Box
+                    sx={{
+                      maxWidth:
+                        currentLesson.type === 'video'
+                          ? 'min(1040px, calc((100vh - 390px) * 1.78))'
+                          : 800,
+                      mx: 'auto',
+                      mb: 4
+                    }}
+                  >
+                    {courseProgress.percentage === 100 && (
+                      <Box
+                        sx={{
+                          textAlign: 'center',
+                          mb: 4,
+                          py: 3,
+                          px: 2,
+                          borderRadius: 3,
+                          color: 'white',
+                          boxShadow: 3,
+                          background:
+                            'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)'
+                        }}
+                      >
+                        <CheckCircleIcon
+                          sx={{ fontSize: 44, color: 'white', mb: 1 }}
+                        />
+                        <Typography
+                          variant='h6'
+                          fontWeight={700}
+                          sx={{ mb: 0.5 }}
+                        >
+                          ¡Curso completado!
+                        </Typography>
+                        <Typography
+                          variant='body2'
+                          sx={{ opacity: 0.95, mb: 2 }}
+                        >
+                          Ya cerraste todo el recorrido de aprendizaje.
+                        </Typography>
+                        {course.hasCertificate && hasGeneratedCertificate && (
+                          <Button
+                            variant='contained'
+                            size='small'
+                            startIcon={<CertificateIcon />}
+                            onClick={handleOpenCurrentCertificate}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              bgcolor: 'white',
+                              color: '#00695C',
+                              '&:hover': { bgcolor: '#E0F7F4' }
+                            }}
+                          >
+                            Abrir certificado
+                          </Button>
+                        )}
+                        {course.hasCertificate && !hasGeneratedCertificate && (
+                          <Typography variant='caption' sx={{ opacity: 0.9 }}>
+                            Preparando certificado...
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
 
-                {/* Quiz */}
-                {currentLesson.type === 'quiz' && currentQuizConfig && (
-                  <LmsQuizPlayer
-                    quizConfig={currentQuizConfig}
-                    userAttempts={userQuizAttempts}
-                    onComplete={handleQuizComplete}
-                    hideTitle={
-                      (currentQuizConfig.title || '').trim().toLowerCase() === (currentLesson.title || '').trim().toLowerCase()
-                    }
-                  />
-                )}
-
-
-
-                {/* Resources */}
-                {!!currentLesson.content.resources?.length && (
-                  <Box sx={{ pt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 600, color: '#0f1117', mb: 2, fontSize: '0.85rem' }}>
-                      Recursos de apoyo
-                    </Typography>
-                    <Stack spacing={1.5}>
-                      {currentLesson.content.resources.map((resource) => (
+                    {certificateReadyNoticeVisible &&
+                      !(
+                        courseProgress.percentage === 100 &&
+                        hasGeneratedCertificate
+                      ) && (
                         <Box
-                          key={resource.id}
-                          onClick={() => handleOpenResource(resource)}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            mb: 3,
+                            p: 2,
+                            bgcolor: '#E0F7F4',
+                            borderRadius: 2
+                          }}
+                        >
+                          <Box>
+                            <Typography
+                              variant='body2'
+                              fontWeight={600}
+                              sx={{ color: '#00897B' }}
+                            >
+                              Certificado disponible
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              Tu certificado ya quedó listo.
+                            </Typography>
+                          </Box>
+                          <Button
+                            size='small'
+                            variant='contained'
+                            onClick={handleOpenCurrentCertificate}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontSize: '0.75rem',
+                              bgcolor: '#00BFA5',
+                              '&:hover': { bgcolor: '#00897B' }
+                            }}
+                          >
+                            Abrir
+                          </Button>
+                        </Box>
+                      )}
+
+                    {currentLesson.type === 'quiz' &&
+                      latestQuizOutcome &&
+                      !(
+                        latestQuizOutcome.passed &&
+                        latestQuizOutcome.completesCourse &&
+                        courseProgress.percentage === 100
+                      ) && (
+                        <Alert
+                          severity={
+                            latestQuizOutcome.passed ? 'success' : 'warning'
+                          }
+                          sx={{ mb: 3, borderRadius: 2 }}
+                        >
+                          <AlertTitle>
+                            {latestQuizOutcome.passed
+                              ? 'Quiz aprobado'
+                              : 'Aún no alcanzas el puntaje mínimo'}
+                          </AlertTitle>
+                          {latestQuizOutcome.passed ? (
+                            latestQuizOutcome.completesCourse ? (
+                              'Completaste el curso.'
+                            ) : (
+                              'Ya puedes seguir con la siguiente lección.'
+                            )
+                          ) : (
+                            <>
+                              Lograste{' '}
+                              <strong>{latestQuizOutcome.percentage}%</strong> y
+                              necesitas{' '}
+                              <strong>
+                                {latestQuizOutcome.passingPercentage}%
+                              </strong>{' '}
+                              para aprobar.{' '}
+                              {latestQuizOutcome.attemptsRemaining > 0
+                                ? `Te quedan ${latestQuizOutcome.attemptsRemaining} intento(s).`
+                                : 'Ya no quedan intentos.'}
+                            </>
+                          )}
+                        </Alert>
+                      )}
+
+                    {/* Description / intro */}
+                    {currentLesson.content.description && (
+                      <Typography
+                        variant='body2'
+                        sx={{
+                          color: '#0f1117',
+                          lineHeight: 1.8,
+                          mb: 4,
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        {currentLesson.content.description}
+                      </Typography>
+                    )}
+
+                    {currentLessonCompleted &&
+                      courseProgress.percentage < 100 &&
+                      course.modules[currentModuleIndex] &&
+                      course.modules[currentModuleIndex].lessons.length > 0 &&
+                      course.modules[currentModuleIndex].lessons.every(
+                        (lesson) => isLessonCompleted(lesson.id)
+                      ) && (
+                        <Box
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: 1.5,
+                            mb: 3,
                             px: 2,
                             py: 1.5,
                             borderRadius: 2,
-                            border: '1px solid #e2e8f0',
-                            bgcolor: '#ffffff',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                            '&:hover': { borderColor: '#00BFA5', bgcolor: '#f8fbfc' },
-                            '&:hover .resource-download': { color: '#00BFA5' }
+                            bgcolor: '#E0F7F4',
+                            color: '#00897B'
                           }}
                         >
-                          <Box
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: 1,
-                              bgcolor: '#f0eeea',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0
-                            }}
-                          >
-                            {resource.resourceType === 'link' ? (
-                              <ExternalLinkIcon sx={{ fontSize: 14, color: '#00BFA5' }} />
-                            ) : (
-                              <DescriptionIcon sx={{ fontSize: 14, color: '#00BFA5' }} />
-                            )}
-                          </Box>
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant='body2' sx={{ fontWeight: 500, color: '#0f1117', fontSize: '0.75rem' }}>
-                              {resource.title}
-                            </Typography>
-                            <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.65rem' }}>
-                              {resource.resourceType === 'pdf' ? 'PDF' : resource.resourceType === 'link' ? 'Enlace' : 'Documento'}
-                              {resource.description ? ` · ${resource.description}` : ''}
-                            </Typography>
-                          </Box>
-                          <DownloadIcon sx={{ fontSize: 13, color: '#6b6b72', flexShrink: 0, transition: 'color 0.15s ease' }} className="resource-download" />
+                          <CheckCircleIcon sx={{ fontSize: 24 }} />
+                          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                            ¡Módulo completado!{' '}
+                            {course.modules[currentModuleIndex].title}
+                          </Typography>
                         </Box>
-                      ))}
-                    </Stack>
-                  </Box>
-                )}
-              </Box>
+                      )}
 
-              {/* Footer - completion toggle + CTA */}
-              <Box
-                sx={{
-                  mt: 4,
-                  pt: 3,
-                  pb: 1,
-                  borderTop: '1px solid #e2e8f0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: 2
-                }}
-              >
-                {/* Mark complete toggle */}
-                <Box
-                  onClick={() => {
-                    if (!currentLessonCompleted && currentLesson && currentLesson.type !== 'quiz') {
-                      handleLessonComplete(currentLesson.id)
-                    }
-                  }}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    cursor: currentLesson && currentLesson.type !== 'quiz' ? 'pointer' : 'default',
-                    userSelect: 'none'
-                  }}
-                >
+                    {/* Video */}
+                    {currentLesson.type === 'video' &&
+                      currentLesson.content.videoUrl && (
+                        <Box sx={{ mb: 3 }}>
+                          <LmsVideoPlayer
+                            src={currentLesson.content.videoUrl}
+                            videoSource={
+                              currentLesson.content.videoSource || 'youtube'
+                            }
+                            title={currentLesson.title}
+                            onComplete={() =>
+                              handleLessonComplete(currentLesson.id)
+                            }
+                          />
+                        </Box>
+                      )}
+
+                    {/* Text */}
+                    {currentLesson.type === 'text' &&
+                      currentLesson.content.text && (
+                        <Paper
+                          sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            border: '1px solid #e2e8f0',
+                            mb: 3,
+                            bgcolor: '#ffffff'
+                          }}
+                        >
+                          <Typography
+                            component='div'
+                            sx={{
+                              '& h1, & h2, & h3': {
+                                color: '#0f172a',
+                                mb: 2,
+                                mt: 3
+                              },
+                              '& p': {
+                                mb: 2,
+                                lineHeight: 1.8,
+                                color: '#334155',
+                                fontSize: '0.9rem'
+                              },
+                              '& code': {
+                                bgcolor: '#f1f5f9',
+                                px: 1,
+                                borderRadius: 1,
+                                fontFamily: 'monospace'
+                              },
+                              '& pre': {
+                                bgcolor: '#0f172a',
+                                color: '#e2e8f0',
+                                p: 2,
+                                borderRadius: 1,
+                                overflow: 'auto'
+                              },
+                              '& ul, & ol': { mb: 2, pl: 3 },
+                              '& li': { mb: 1, color: '#334155' }
+                            }}
+                            dangerouslySetInnerHTML={{
+                              __html: currentLesson.content.text
+                            }}
+                          />
+                        </Paper>
+                      )}
+
+                    {/* Quiz */}
+                    {currentLesson.type === 'quiz' && currentQuizConfig && (
+                      <LmsQuizPlayer
+                        quizConfig={currentQuizConfig}
+                        userAttempts={userQuizAttempts}
+                        onComplete={handleQuizComplete}
+                        hideTitle={
+                          (currentQuizConfig.title || '')
+                            .trim()
+                            .toLowerCase() ===
+                          (currentLesson.title || '').trim().toLowerCase()
+                        }
+                      />
+                    )}
+
+                    {/* Resources */}
+                    {!!currentLesson.content.resources?.length && (
+                      <Box sx={{ pt: 2 }}>
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            fontWeight: 600,
+                            color: '#0f1117',
+                            mb: 2,
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          Recursos de apoyo
+                        </Typography>
+                        <Stack spacing={1.5}>
+                          {currentLesson.content.resources.map((resource) => (
+                            <Box
+                              key={resource.id}
+                              onClick={() => handleOpenResource(resource)}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                px: 2,
+                                py: 1.5,
+                                borderRadius: 2,
+                                border: '1px solid #e2e8f0',
+                                bgcolor: '#ffffff',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                                '&:hover': {
+                                  borderColor: '#00BFA5',
+                                  bgcolor: '#f8fbfc'
+                                },
+                                '&:hover .resource-download': {
+                                  color: '#00BFA5'
+                                }
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: 1,
+                                  bgcolor: '#f0eeea',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {resource.resourceType === 'link' ? (
+                                  <ExternalLinkIcon
+                                    sx={{ fontSize: 14, color: '#00BFA5' }}
+                                  />
+                                ) : (
+                                  <DescriptionIcon
+                                    sx={{ fontSize: 14, color: '#00BFA5' }}
+                                  />
+                                )}
+                              </Box>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                  variant='body2'
+                                  sx={{
+                                    fontWeight: 500,
+                                    color: '#0f1117',
+                                    fontSize: '0.75rem'
+                                  }}
+                                >
+                                  {resource.title}
+                                </Typography>
+                                <Typography
+                                  variant='caption'
+                                  sx={{ color: '#6b6b72', fontSize: '0.65rem' }}
+                                >
+                                  {resource.resourceType === 'pdf'
+                                    ? 'PDF'
+                                    : resource.resourceType === 'link'
+                                      ? 'Enlace'
+                                      : 'Documento'}
+                                  {resource.description
+                                    ? ` · ${resource.description}`
+                                    : ''}
+                                </Typography>
+                              </Box>
+                              <DownloadIcon
+                                sx={{
+                                  fontSize: 13,
+                                  color: '#6b6b72',
+                                  flexShrink: 0,
+                                  transition: 'color 0.15s ease'
+                                }}
+                                className='resource-download'
+                              />
+                            </Box>
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Footer - completion toggle + CTA */}
                   <Box
                     sx={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 0.5,
-                      border: '2px solid',
+                      mt: 4,
+                      pt: 3,
+                      pb: 1,
+                      borderTop: '1px solid #e2e8f0',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.15s ease',
-                      borderColor: currentLessonCompleted ? '#00BFA5' : '#d1d5db',
-                      bgcolor: currentLessonCompleted ? '#00BFA5' : 'transparent'
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 2
                     }}
                   >
-                    {currentLessonCompleted && <CheckIcon sx={{ fontSize: 13, color: '#ffffff' }} />}
-                  </Box>
-                  <Typography variant='caption' sx={{ color: currentLessonCompleted ? '#00BFA5' : '#6b6b72', fontWeight: 500, fontSize: '0.75rem' }}>
-                    {currentLessonCompleted ? 'Completado' : 'Marcar como completado'}
-                  </Typography>
-                </Box>
-
-                {/* CTA */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.82rem', display: { xs: 'none', sm: 'block' } }}>
-                    Lección {currentLessonGlobalIndex} de {totalLessons}
-                    {estimatedMinutesRemaining > 0 ? ` · ~${Math.max(1, estimatedMinutesRemaining)} min` : ''}
-                  </Typography>
-                  {currentLesson && currentLesson.type !== 'quiz' && !currentLessonCompleted && (
-                    <Button
-                      variant='contained'
-                      size='small'
-                      onClick={() => handleLessonComplete(currentLesson.id)}
-                      disabled={updateProgressMutation.isLoading}
-                      endIcon={<ChevronRightIcon />}
+                    {/* Mark complete toggle */}
+                    <Box
+                      onClick={() => {
+                        if (
+                          !currentLessonCompleted &&
+                          currentLesson &&
+                          currentLesson.type !== 'quiz'
+                        ) {
+                          handleLessonComplete(currentLesson.id)
+                        }
+                      }}
                       sx={{
-                        borderRadius: 1,
-                        px: 2.5,
-                        py: 1,
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        bgcolor: '#00BFA5',
-                        '&:hover': { bgcolor: '#00695C', opacity: 0.9 },
-                        '&:active': { transform: 'scale(0.98)' },
-                        transition: 'all 0.15s ease'
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        cursor:
+                          currentLesson && currentLesson.type !== 'quiz'
+                            ? 'pointer'
+                            : 'default',
+                        userSelect: 'none'
                       }}
                     >
-                      {updateProgressMutation.isLoading ? 'Guardando...' : 'Completar y continuar'}
-                    </Button>
-                  )}
-                  {currentLessonCompleted && (
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        variant='outlined'
-                        size='small'
-                        startIcon={<SkipPreviousIcon />}
-                        onClick={handlePreviousLesson}
-                        disabled={!prevLesson}
-                        sx={{ borderRadius: 1, px: { xs: 1.25, sm: 2 }, fontSize: '0.85rem', borderColor: '#d1d5db', color: '#374151' }}
+                      <Box
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 0.5,
+                          border: '2px solid',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                          borderColor: currentLessonCompleted
+                            ? '#00BFA5'
+                            : '#d1d5db',
+                          bgcolor: currentLessonCompleted
+                            ? '#00BFA5'
+                            : 'transparent'
+                        }}
                       >
-                        {isMobile ? 'Anterior' : 'Lección Anterior'}
-                      </Button>
-                      <Button
-                        variant='contained'
-                        size='small'
-                        endIcon={<SkipNextIcon />}
-                        onClick={handleNextLesson}
-                        disabled={!nextLesson || !isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)}
-                        sx={{ borderRadius: 1, px: { xs: 1.25, sm: 2 }, fontSize: '0.85rem', bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00695C' } }}
+                        {currentLessonCompleted && (
+                          <CheckIcon sx={{ fontSize: 13, color: '#ffffff' }} />
+                        )}
+                      </Box>
+                      <Typography
+                        variant='caption'
+                        sx={{
+                          color: currentLessonCompleted ? '#00BFA5' : '#6b6b72',
+                          fontWeight: 500,
+                          fontSize: '0.75rem'
+                        }}
                       >
-                        {isMobile ? 'Siguiente' : 'Siguiente Lección'}
-                      </Button>
+                        {currentLessonCompleted
+                          ? 'Completado'
+                          : 'Marcar como completado'}
+                      </Typography>
                     </Box>
-                  )}
+
+                    {/* CTA */}
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}
+                    >
+                      <Typography
+                        variant='caption'
+                        sx={{
+                          color: '#6b6b72',
+                          fontSize: '0.82rem',
+                          display: { xs: 'none', sm: 'block' }
+                        }}
+                      >
+                        Lección {currentLessonGlobalIndex} de {totalLessons}
+                        {estimatedMinutesRemaining > 0
+                          ? ` · ~${Math.max(1, estimatedMinutesRemaining)} min`
+                          : ''}
+                      </Typography>
+                      {currentLesson &&
+                        currentLesson.type !== 'quiz' &&
+                        !currentLessonCompleted && (
+                          <Button
+                            variant='contained'
+                            size='small'
+                            onClick={() =>
+                              handleLessonComplete(currentLesson.id)
+                            }
+                            disabled={updateProgressMutation.isLoading}
+                            endIcon={<ChevronRightIcon />}
+                            sx={{
+                              borderRadius: 1,
+                              px: 2.5,
+                              py: 1,
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              bgcolor: '#00BFA5',
+                              '&:hover': { bgcolor: '#00695C', opacity: 0.9 },
+                              '&:active': { transform: 'scale(0.98)' },
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {updateProgressMutation.isLoading
+                              ? 'Guardando...'
+                              : 'Completar y continuar'}
+                          </Button>
+                        )}
+                      {currentLessonCompleted && (
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button
+                            variant='outlined'
+                            size='small'
+                            startIcon={<SkipPreviousIcon />}
+                            onClick={handlePreviousLesson}
+                            disabled={!prevLesson}
+                            sx={{
+                              borderRadius: 1,
+                              px: { xs: 1.25, sm: 2 },
+                              fontSize: '0.85rem',
+                              borderColor: '#d1d5db',
+                              color: '#374151'
+                            }}
+                          >
+                            {isMobile ? 'Anterior' : 'Lección Anterior'}
+                          </Button>
+                          <Button
+                            variant='contained'
+                            size='small'
+                            endIcon={<SkipNextIcon />}
+                            onClick={handleNextLesson}
+                            disabled={
+                              !nextLesson ||
+                              !isLessonUnlocked(
+                                nextLesson.moduleIndex,
+                                nextLesson.lessonIndex
+                              )
+                            }
+                            sx={{
+                              borderRadius: 1,
+                              px: { xs: 1.25, sm: 2 },
+                              fontSize: '0.85rem',
+                              bgcolor: '#00BFA5',
+                              '&:hover': { bgcolor: '#00695C' }
+                            }}
+                          >
+                            {isMobile ? 'Siguiente' : 'Siguiente Lección'}
+                          </Button>
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
                 </Box>
-              </Box>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <Typography variant='h6' color='text.secondary'>
+                    No hay contenido disponible
+                  </Typography>
+                </Box>
+              )}
             </Box>
-          ) : (
-            <Box sx={{ textAlign: 'center', py: 8 }}>
-              <Typography variant='h6' color='text.secondary'>No hay contenido disponible</Typography>
-            </Box>
-          )}
           </Box>
         </Box>
-      </Box>
 
-      {/* Completion Dialog */}
-      <Dialog open={showCompletionDialog} onClose={() => setShowCompletionDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ textAlign: 'center', pt: 4 }}>
-          <Box sx={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)',
-            boxShadow: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 2,
-            animation: 'fadeSlideIn 0.5s ease-out'
-          }}>
-            <CertificateIcon sx={{ fontSize: 44, color: 'white' }} />
-          </Box>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: '#183153' }}>
-            ¡Felicitaciones!
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-            Has completado exitosamente el curso
-          </Typography>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#00A58E', mt: 0.5 }}>
-            "{course.title}"
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 1.5 }}>
-              <LmsStatCard label='Lecciones' value={courseProgress.completed} tone='teal' icon={<BookIcon />} />
-              <LmsStatCard label='Progreso' value={`${Math.round(courseProgress.percentage)}%`} tone='green' icon={<CheckCircleIcon />} />
-              <LmsStatCard label='Duración' value={course.duration} tone='blue' icon={<AccessTimeIcon />} />
-            </Box>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Ya puedes cerrar esta etapa del aprendizaje y revisar tu certificado o volver a tu ruta.
-              </Typography>
-              {course.hasCertificate && hasGeneratedCertificate && (
-                <Typography variant="body2" color="success.main" sx={{ mt: 1, fontWeight: 600 }}>
-                  Tu certificado está listo para descargar.
-                </Typography>
-              )}
-              {course.hasCertificate && !hasGeneratedCertificate && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Tu certificado se está preparando y lo seguiremos revisando automáticamente en esta pantalla.
-                </Typography>
-              )}
-            </Box>
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 3, gap: 1 }}>
-          {course.hasCertificate && hasGeneratedCertificate && (
-            <Button
-              variant="contained"
-              color="success"
-              startIcon={<CertificateIcon />}
-              sx={{ borderRadius: 999, px: 3 }}
-              disabled={!hasGeneratedCertificate}
-              onClick={handleOpenCurrentCertificate}
+        {/* Completion Dialog */}
+        <Dialog
+          open={showCompletionDialog}
+          onClose={() => setShowCompletionDialog(false)}
+          maxWidth='sm'
+          fullWidth
+        >
+          <DialogTitle sx={{ textAlign: 'center', pt: 4 }}>
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)',
+                boxShadow: 3,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+                mb: 2,
+                animation: 'fadeSlideIn 0.5s ease-out'
+              }}
             >
-              Ver Certificado
-            </Button>
-          )}
-          {course.hasCertificate && !hasGeneratedCertificate && (
-            <Button
-              variant="contained"
-              color="success"
-              sx={{ borderRadius: 999, px: 3 }}
-              onClick={() => navigate('/lms/certificates')}
-            >
-              Ir a mis certificados
-            </Button>
-          )}
-          <Button
-            variant="outlined"
-            onClick={() => setShowCompletionDialog(false)}
-            sx={{ borderRadius: 999, px: 3 }}
-          >
-            Continuar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* PDF Secure Viewer */}
-      <Dialog
-        open={pdfViewerOpen}
-        onClose={() => setPdfViewerOpen(false)}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle sx={{ m: 0, p: 2 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {pdfViewerResource?.title || 'Documento PDF'}
+              <CertificateIcon sx={{ fontSize: 44, color: 'white' }} />
+            </Box>
+            <Typography variant='h4' sx={{ fontWeight: 800, color: '#183153' }}>
+              ¡Felicitaciones!
             </Typography>
-            <IconButton onClick={() => setPdfViewerOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Stack>
-        </DialogTitle>
-        <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
-          {pdfViewerResource && (
-            <PDFViewer
-              downloadUrl={`/lms/content/resources/${pdfViewerResource.id}/download`}
-              allowDownload={false}
-              allowOpen={false}
-              buttons={false}
-              disableContextMenu
-            />
-          )}
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', p: 2 }}>
-          <Button
-            variant="contained"
-            onClick={() => setPdfViewerOpen(false)}
-            sx={{ borderRadius: 999, px: 3 }}
-          >
-            Cerrar
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
+              Has completado exitosamente el curso
+            </Typography>
+            <Typography
+              variant='h6'
+              sx={{ fontWeight: 700, color: '#00A58E', mt: 0.5 }}
+            >
+              "{course.title}"
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                  gap: 1.5
+                }}
+              >
+                <LmsStatCard
+                  label='Lecciones'
+                  value={courseProgress.completed}
+                  tone='teal'
+                  icon={<BookIcon />}
+                />
+                <LmsStatCard
+                  label='Progreso'
+                  value={`${Math.round(courseProgress.percentage)}%`}
+                  tone='green'
+                  icon={<CheckCircleIcon />}
+                />
+                <LmsStatCard
+                  label='Duración'
+                  value={course.duration}
+                  tone='blue'
+                  icon={<AccessTimeIcon />}
+                />
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant='body2' color='text.secondary'>
+                  Ya puedes cerrar esta etapa del aprendizaje y revisar tu
+                  certificado o volver a tu ruta.
+                </Typography>
+                {course.hasCertificate && hasGeneratedCertificate && (
+                  <Typography
+                    variant='body2'
+                    color='success.main'
+                    sx={{ mt: 1, fontWeight: 600 }}
+                  >
+                    Tu certificado está listo para descargar.
+                  </Typography>
+                )}
+                {course.hasCertificate && !hasGeneratedCertificate && (
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mt: 1 }}
+                  >
+                    Tu certificado se está preparando y lo seguiremos revisando
+                    automáticamente en esta pantalla.
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center', pb: 3, gap: 1 }}>
+            {course.hasCertificate && hasGeneratedCertificate && (
+              <Button
+                variant='contained'
+                color='success'
+                startIcon={<CertificateIcon />}
+                sx={{ borderRadius: 999, px: 3 }}
+                disabled={!hasGeneratedCertificate}
+                onClick={handleOpenCurrentCertificate}
+              >
+                Ver Certificado
+              </Button>
+            )}
+            {course.hasCertificate && !hasGeneratedCertificate && (
+              <Button
+                variant='contained'
+                color='success'
+                sx={{ borderRadius: 999, px: 3 }}
+                onClick={() => navigate('/lms/certificates')}
+              >
+                Ir a mis certificados
+              </Button>
+            )}
+            <Button
+              variant='outlined'
+              onClick={() => setShowCompletionDialog(false)}
+              sx={{ borderRadius: 999, px: 3 }}
+            >
+              Continuar
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-    </Box>
+        {/* PDF Secure Viewer */}
+        <Dialog
+          open={pdfViewerOpen}
+          onClose={() => setPdfViewerOpen(false)}
+          maxWidth='lg'
+          fullWidth
+        >
+          <DialogTitle sx={{ m: 0, p: 2 }}>
+            <Stack
+              direction='row'
+              alignItems='center'
+              justifyContent='space-between'
+            >
+              <Typography variant='h6' sx={{ fontWeight: 700 }}>
+                {pdfViewerResource?.title || 'Documento PDF'}
+              </Typography>
+              <IconButton onClick={() => setPdfViewerOpen(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Stack>
+          </DialogTitle>
+          <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+            {pdfViewerResource && (
+              <PDFViewer
+                downloadUrl={`/lms/content/resources/${pdfViewerResource.id}/download`}
+                allowDownload={false}
+                allowOpen={false}
+                buttons={false}
+                disableContextMenu
+              />
+            )}
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center', p: 2 }}>
+            <Button
+              variant='contained'
+              onClick={() => setPdfViewerOpen(false)}
+              sx={{ borderRadius: 999, px: 3 }}
+            >
+              Cerrar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </>
   )
 }

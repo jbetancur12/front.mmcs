@@ -1,18 +1,5 @@
-import {
-  Paper,
-  Typography,
-  Box,
-  Button,
-  Divider,
-  Stack
-} from '@mui/material'
-import {
-  Print,
-  Share,
-  TrendingUp,
-  Draw,
-  Science
-} from '@mui/icons-material'
+import { Paper, Typography, Box, Button, Divider, Stack } from '@mui/material'
+import { Print, Share, TrendingUp, Draw, Science } from '@mui/icons-material'
 import {
   MaintenanceTicket,
   MaintenanceStatus
@@ -27,7 +14,10 @@ interface MaintenanceTicketQuickActionsProps {
 }
 
 /** Acciones rápidas del ticket. */
-const MaintenanceTicketQuickActions = ({ ticket, details }: MaintenanceTicketQuickActionsProps) => {
+const MaintenanceTicketQuickActions = ({
+  ticket,
+  details
+}: MaintenanceTicketQuickActionsProps) => {
   const {
     hasCustomerSignature,
     isCustomerApprovalLocked,
@@ -45,10 +35,7 @@ const MaintenanceTicketQuickActions = ({ ticket, details }: MaintenanceTicketQui
       <Paper sx={{ ...surfaceSx, p: 3 }}>
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <TrendingUp sx={{ color: '#64748b' }} />
-          <Typography
-            variant='h6'
-            sx={{ color: '#0f172a', fontWeight: 600 }}
-          >
+          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
             Acciones Rápidas
           </Typography>
         </Box>
@@ -95,9 +82,7 @@ const MaintenanceTicketQuickActions = ({ ticket, details }: MaintenanceTicketQui
                 onClick={() => setSignaturesDialogOpen(true)}
                 size='small'
               >
-                {signaturesMissing
-                  ? 'Registrar firmas'
-                  : 'Actualizar firmas'}
+                {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
               </Button>
             )}
           {/* 

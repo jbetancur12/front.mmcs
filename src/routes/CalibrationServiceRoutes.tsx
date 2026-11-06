@@ -66,7 +66,13 @@ const CalibrationServiceRoutes = (role: string[]) => {
       >
         <Route
           path='calibration-services'
-          element={isMobile ? <CalibrationServiceMobileListPage /> : <CalibrationServicesPage />}
+          element={
+            isMobile ? (
+              <CalibrationServiceMobileListPage />
+            ) : (
+              <CalibrationServicesPage />
+            )
+          }
         />
         <Route
           path='calibration-services/analytics'
@@ -106,7 +112,13 @@ const CalibrationServiceRoutes = (role: string[]) => {
         />
         <Route
           path='calibration-services/:serviceId'
-          element={isMobile ? <CalibrationServiceMobilePage /> : <CalibrationServiceDetailsPage />}
+          element={
+            isMobile ? (
+              <CalibrationServiceMobilePage />
+            ) : (
+              <CalibrationServiceDetailsPage />
+            )
+          }
         />
       </Route>
 

@@ -22,6 +22,7 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  type ChipProps,
   Avatar,
   LinearProgress,
   Tabs,
@@ -41,7 +42,7 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Add as AddIcon,
-  AccountTree as PlanIcon,
+  AccountTree as PlanIcon
 } from '@mui/icons-material'
 import { describePlanDeadline } from 'src/Components/lms/admin/plans/planUi'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
@@ -167,23 +168,42 @@ interface Assignment {
 }
 
 // Transform backend assignment to frontend format
-const transformAssignment = (backendAssignment: BackendAssignment): Assignment => {
+const transformAssignment = (
+  backendAssignment: BackendAssignment
+): Assignment => {
   return {
     id: backendAssignment.id,
     courseId: backendAssignment.course_id,
     courseTitle: backendAssignment.course.title,
     assignedTo: backendAssignment.assigned_to,
     user_ids: backendAssignment.user_ids,
-    assignmentType: backendAssignment.all_employees ? 'all' : backendAssignment.role ? 'role' : 'users',
+    assignmentType: backendAssignment.all_employees
+      ? 'all'
+      : backendAssignment.role
+        ? 'role'
+        : 'users',
     role: backendAssignment.role || undefined,
     allEmployees: backendAssignment.all_employees,
     assignedBy: backendAssignment.creator?.nombre || 'Admin',
     deadline: backendAssignment.deadline || '',
     status: backendAssignment.status,
-    daysUntilDeadline: backendAssignment.days_until_deadline ?? backendAssignment.urgency?.daysUntilDeadline ?? null,
+    daysUntilDeadline:
+      backendAssignment.days_until_deadline ??
+      backendAssignment.urgency?.daysUntilDeadline ??
+      null,
     urgency: backendAssignment.urgency || {
-      level: backendAssignment.status === 'overdue' ? 'critical' : backendAssignment.status === 'completed' ? 'resolved' : 'normal',
-      label: backendAssignment.status === 'overdue' ? 'Vencida' : backendAssignment.status === 'completed' ? 'Completada' : 'Activa',
+      level:
+        backendAssignment.status === 'overdue'
+          ? 'critical'
+          : backendAssignment.status === 'completed'
+            ? 'resolved'
+            : 'normal',
+      label:
+        backendAssignment.status === 'overdue'
+          ? 'Vencida'
+          : backendAssignment.status === 'completed'
+            ? 'Completada'
+            : 'Activa',
       daysUntilDeadline: backendAssignment.days_until_deadline ?? null
     },
     progress: Math.round(backendAssignment.progress_stats.avgProgress || 0),
@@ -204,10 +224,10 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
   }
 }
 
-const getApiMessage = (error: any, fallback: string) =>
-  getApiErrorReason(error)
-  || error?.message
-  || fallback
+const getApiMessage = (error: unknown, fallback: string) =>
+  getApiErrorReason(error) ||
+  (error instanceof Error ? error.message : null) ||
+  fallback
 
 const formatRelativeDate = (value?: string | null) => {
   if (!value) return 'Sin seguimiento todavía'
@@ -224,7 +244,9 @@ const formatRelativeDate = (value?: string | null) => {
   })
 }
 
-const getUrgencyColor = (level: Assignment['urgency']['level']) => {
+const getUrgencyColor = (
+  level: Assignment['urgency']['level']
+): ChipProps['color'] => {
   switch (level) {
     case 'critical':
       return 'error'
@@ -243,15 +265,24 @@ const formatDeadlineInsight = (assignment: Assignment) => {
   // Filas de planes: el plazo se calcula por persona a partir del plan
   if (!assignment.deadline && assignment.planOrigins.length > 0) {
     return assignment.planOrigins
-      .map((origin) => `${describePlanDeadline(origin.deadline, origin.deadline_days)} (por plan)`)
+      .map(
+        (origin) =>
+          `${describePlanDeadline(origin.deadline, origin.deadline_days)} (por plan)`
+      )
       .join(' · ')
   }
   if (!assignment.deadline) return 'Sin fecha límite'
   if (assignment.status === 'completed') return 'Completada'
-  if (assignment.status === 'overdue' && typeof assignment.daysUntilDeadline === 'number') {
+  if (
+    assignment.status === 'overdue' &&
+    typeof assignment.daysUntilDeadline === 'number'
+  ) {
     return `Vencida hace ${Math.abs(assignment.daysUntilDeadline)} día(s)`
   }
-  if (typeof assignment.daysUntilDeadline === 'number' && assignment.daysUntilDeadline <= 7) {
+  if (
+    typeof assignment.daysUntilDeadline === 'number' &&
+    assignment.daysUntilDeadline <= 7
+  ) {
     return `Vence en ${assignment.daysUntilDeadline} día(s)`
   }
   return new Date(assignment.deadline).toLocaleDateString()
@@ -265,34 +296,53 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const statusFromSearch = searchParams.get('status') || 'all'
   const [activeTab, setActiveTab] = useState(initialTab)
   const [selectedCourse, setSelectedCourse] = useState<number | ''>(
-    Number.isFinite(courseIdFromSearch) && courseIdFromSearch > 0 ? courseIdFromSearch : ''
+    Number.isFinite(courseIdFromSearch) && courseIdFromSearch > 0
+      ? courseIdFromSearch
+      : ''
   )
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'overdue'>(
-    statusFromSearch === 'active' || statusFromSearch === 'completed' || statusFromSearch === 'overdue'
+  const [selectedStatus, setSelectedStatus] = useState<
+    'all' | 'active' | 'completed' | 'overdue'
+  >(
+    statusFromSearch === 'active' ||
+      statusFromSearch === 'completed' ||
+      statusFromSearch === 'overdue'
       ? statusFromSearch
       : 'all'
   )
   const [selectedRole, setSelectedRole] = useState<string>('')
-  const [selectedUsers, setSelectedUsers] = useState<Array<{ id: number; name: string; email: string }>>([])
+  const [selectedUsers, setSelectedUsers] = useState<
+    Array<{ id: number; name: string; email: string }>
+  >([])
   const [deadlineDays, setDeadlineDays] = useState<number>(30)
   const [deadline, setDeadline] = useState<Date | null>(null)
-  const [assignmentType, setAssignmentType] = useState<'role' | 'all' | 'users'>('role')
+  const [assignmentType, setAssignmentType] = useState<
+    'role' | 'all' | 'users'
+  >('role')
   const [page, setPage] = useState(0)
   const rowsPerPage = 10
 
   // Edit modal states
   const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(
+    null
+  )
   const [editDeadline, setEditDeadline] = useState<Date | null>(null)
   const [editDeadlineDays, setEditDeadlineDays] = useState<number>(30)
-  const [editAssignmentType, setEditAssignmentType] = useState<'role' | 'all' | 'users'>('role')
+  const [editAssignmentType, setEditAssignmentType] = useState<
+    'role' | 'all' | 'users'
+  >('role')
   const [editSelectedRole, setEditSelectedRole] = useState<string>('')
-  const [editSelectedUsers, setEditSelectedUsers] = useState<Array<{ id: number; name: string; email: string }>>([])
+  const [editSelectedUsers, setEditSelectedUsers] = useState<
+    Array<{ id: number; name: string; email: string }>
+  >([])
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
-  const { data: coursesResponse } = useQuery<{ courses: Course[], total: number }>(
+  const { data: coursesResponse } = useQuery<{
+    courses: Course[]
+    total: number
+  }>(
     ['lms-courses', page, rowsPerPage],
     async () => {
       const response = await axiosPrivate.get('/lms/courses', {
@@ -306,13 +356,31 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     },
     {
       keepPreviousData: true,
-      onError: (error: any) => {
-        notify.error('Error al cargar cursos', getApiErrorReason(error) || error.message || 'Ocurrió un error')
+      onError: (error: unknown) => {
+        notify.error(
+          'Error al cargar cursos',
+          getApiErrorReason(error) ||
+            (error instanceof Error ? error.message : '') ||
+            'Ocurrió un error'
+        )
       }
     }
   )
   // Get all assignments
-  const { data: assignmentsResponse } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number, summary?: { total: number, active: number, completed: number, overdue: number, withoutFollowUp: number, needingAttention: number } }>(
+  const { data: assignmentsResponse } = useQuery<{
+    assignments: BackendAssignment[]
+    total: number
+    page: number
+    limit: number
+    summary?: {
+      total: number
+      active: number
+      completed: number
+      overdue: number
+      withoutFollowUp: number
+      needingAttention: number
+    }
+  }>(
     ['lms-all-assignments', page, rowsPerPage, selectedCourse, selectedStatus],
     async () => {
       const response = await axiosPrivate.get('/lms/assignments/all', {
@@ -327,28 +395,38 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     },
     {
       keepPreviousData: true,
-      onError: (error: any) => {
-        notify.error('Error al cargar asignaciones', getApiErrorReason(error) || error.message || 'Ocurrió un error')
+      onError: (error: unknown) => {
+        notify.error(
+          'Error al cargar asignaciones',
+          getApiErrorReason(error) ||
+            (error instanceof Error ? error.message : '') ||
+            'Ocurrió un error'
+        )
       }
     }
   )
 
   // Get internal users for user-specific assignment
-  const { data: internalUsers = [] } = useQuery<Array<{ id: number; name: string; email: string }>>(
-    ['lms-internal-users'],
-    async () => {
-      const response = await axiosPrivate.get('/lms/users', {
-        params: { userType: 'internal', active: true, limit: 1000 }
-      })
-      return response.data?.data || []
-    }
-  )
-
+  const { data: internalUsers = [] } = useQuery<
+    Array<{ id: number; name: string; email: string }>
+  >(['lms-internal-users'], async () => {
+    const response = await axiosPrivate.get('/lms/users', {
+      params: { userType: 'internal', active: true, limit: 1000 }
+    })
+    return response.data?.data || []
+  })
 
   // Mutations
   const createAssignmentMutation = useMutation(
-    async (data: { courseId: number; type: string; role?: string; userIds?: number[]; deadline?: string; deadlineDays?: number }) => {
-      const course = courses.find(c => c.id === data.courseId)
+    async (data: {
+      courseId: number
+      type: string
+      role?: string
+      userIds?: number[]
+      deadline?: string
+      deadlineDays?: number
+    }) => {
+      const course = courses.find((c) => c.id === data.courseId)
       const response = await axiosPrivate.post(
         `/lms/assignments/courses/${data.courseId}/assign`,
         {
@@ -366,7 +444,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
-        notify.success('Asignación creada', 'La regla quedó lista y ya puedes revisar su progreso o reenviar recordatorios.')
+        notify.success(
+          'Asignación creada',
+          'La regla quedó lista y ya puedes revisar su progreso o reenviar recordatorios.'
+        )
         setActiveTab(0) // Volver al tab de asignaciones
         const nextParams = new URLSearchParams(searchParams)
         nextParams.set('tab', 'active')
@@ -378,14 +459,24 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         }
         setSearchParams(nextParams, { replace: true })
       },
-      onError: (error: any) => {
-        notify.error('Error al crear asignación', getApiMessage(error, 'No se pudo crear la asignación.'))
+      onError: (error: unknown) => {
+        notify.error(
+          'Error al crear asignación',
+          getApiMessage(error, 'No se pudo crear la asignación.')
+        )
       }
     }
   )
 
   const updateAssignmentMutation = useMutation(
-    async (data: { id: number; deadline?: string; role?: string | null; all_employees?: boolean; user_ids?: number[]; deadline_days?: number }) => {
+    async (data: {
+      id: number
+      deadline?: string
+      role?: string | null
+      all_employees?: boolean
+      user_ids?: number[]
+      deadline_days?: number
+    }) => {
       const response = await axiosPrivate.put(
         `/lms/assignments/assignments/${data.id}`,
         {
@@ -401,10 +492,16 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
-        notify.success('Asignación actualizada', 'La nueva fecha límite ya quedó guardada.')
+        notify.success(
+          'Asignación actualizada',
+          'La nueva fecha límite ya quedó guardada.'
+        )
       },
-      onError: (error: any) => {
-        notify.error('Error al actualizar asignación', getApiMessage(error, 'No se pudo actualizar la asignación.'))
+      onError: (error: unknown) => {
+        notify.error(
+          'Error al actualizar asignación',
+          getApiMessage(error, 'No se pudo actualizar la asignación.')
+        )
       }
     }
   )
@@ -416,48 +513,77 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-all-assignments'])
-        notify.success('Asignación eliminada', 'La regla ya no estará activa para ese curso.')
+        notify.success(
+          'Asignación eliminada',
+          'La regla ya no estará activa para ese curso.'
+        )
       },
-      onError: (error: any) => {
-        notify.error('Error al eliminar asignación', getApiMessage(error, 'No se pudo eliminar la asignación.'))
+      onError: (error: unknown) => {
+        notify.error(
+          'Error al eliminar asignación',
+          getApiMessage(error, 'No se pudo eliminar la asignación.')
+        )
       }
     }
   )
 
   const sendNotificationMutation = useMutation(
     async (assignmentId: number) => {
-      const response = await axiosPrivate.post('/lms/analytics/reminders/trigger-manual', {
-        assignmentIds: [assignmentId]
-      })
+      const response = await axiosPrivate.post(
+        '/lms/analytics/reminders/trigger-manual',
+        {
+          assignmentIds: [assignmentId]
+        }
+      )
       return response.data.data
     },
     {
-      onSuccess: (data: any) => {
-        notify.success('Recordatorio enviado', `${data?.totalNotifications || 0} notificación(es) enviadas para esta asignación.`)
+      onSuccess: (data: { totalNotifications?: number }) => {
+        notify.success(
+          'Recordatorio enviado',
+          `${data?.totalNotifications || 0} notificación(es) enviadas para esta asignación.`
+        )
         queryClient.invalidateQueries(['lms-all-assignments'])
         queryClient.invalidateQueries(['analytics', 'mandatory-training'])
       },
-      onError: (error: any) => {
-        notify.error('Error al enviar recordatorio', getApiMessage(error, 'No se pudo enviar el recordatorio.'))
+      onError: (error: unknown) => {
+        notify.error(
+          'Error al enviar recordatorio',
+          getApiMessage(error, 'No se pudo enviar el recordatorio.')
+        )
       }
     }
   )
 
   const courses = coursesResponse?.courses || []
-  const assignableCourses = courses.filter((course) => course.audience !== 'client')
-  const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
+  const assignableCourses = courses.filter(
+    (course) => course.audience !== 'client'
+  )
+  const assignments = (assignmentsResponse?.assignments || []).map(
+    transformAssignment
+  )
   const assignmentSummary = assignmentsResponse?.summary || {
     total: assignments.length,
-    active: assignments.filter((assignment) => assignment.status === 'active').length,
-    completed: assignments.filter((assignment) => assignment.status === 'completed').length,
-    overdue: assignments.filter((assignment) => assignment.status === 'overdue').length,
-    withoutFollowUp: assignments.filter((assignment) => assignment.urgency.level === 'medium').length,
-    needingAttention: assignments.filter((assignment) => assignment.urgency.level === 'critical' || assignment.urgency.level === 'high').length
+    active: assignments.filter((assignment) => assignment.status === 'active')
+      .length,
+    completed: assignments.filter(
+      (assignment) => assignment.status === 'completed'
+    ).length,
+    overdue: assignments.filter((assignment) => assignment.status === 'overdue')
+      .length,
+    withoutFollowUp: assignments.filter(
+      (assignment) => assignment.urgency.level === 'medium'
+    ).length,
+    needingAttention: assignments.filter(
+      (assignment) =>
+        assignment.urgency.level === 'critical' ||
+        assignment.urgency.level === 'high'
+    ).length
   }
   const selectedCourseData = useMemo(
     () =>
-      assignableCourses.find((course) => course.id === selectedCourse)
-      || courses.find((course) => course.id === selectedCourse),
+      assignableCourses.find((course) => course.id === selectedCourse) ||
+      courses.find((course) => course.id === selectedCourse),
     [assignableCourses, courses, selectedCourse]
   )
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -499,7 +625,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     syncCourseInSearch(courseId)
   }
 
-  const handleStatusSelection = (status: 'all' | 'active' | 'completed' | 'overdue') => {
+  const handleStatusSelection = (
+    status: 'all' | 'active' | 'completed' | 'overdue'
+  ) => {
     setSelectedStatus(status)
     setPage(0)
     const nextParams = new URLSearchParams(searchParams)
@@ -524,12 +652,18 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
 
     if (assignmentType === 'users' && (!deadlineDays || deadlineDays < 1)) {
-      notify.warning('Días requeridos', 'Debes especificar el número de días para la fecha límite')
+      notify.warning(
+        'Días requeridos',
+        'Debes especificar el número de días para la fecha límite'
+      )
       return
     }
 
     if (assignmentType !== 'users' && !deadline) {
-      notify.warning('Fecha límite requerida', 'Debes seleccionar una fecha límite')
+      notify.warning(
+        'Fecha límite requerida',
+        'Debes seleccionar una fecha límite'
+      )
       return
     }
 
@@ -539,13 +673,21 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
 
     if (assignmentType === 'users' && selectedUsers.length === 0) {
-      notify.warning('Usuarios requeridos', 'Debes seleccionar al menos un usuario')
+      notify.warning(
+        'Usuarios requeridos',
+        'Debes seleccionar al menos un usuario'
+      )
       return
     }
 
-    const selectedCourseData = assignableCourses.find((course) => course.id === selectedCourse)
+    const selectedCourseData = assignableCourses.find(
+      (course) => course.id === selectedCourse
+    )
     if (!selectedCourseData) {
-      notify.warning('Curso no asignable', 'Las asignaciones LMS solo aplican a cursos internos o de audiencia mixta.')
+      notify.warning(
+        'Curso no asignable',
+        'Las asignaciones LMS solo aplican a cursos internos o de audiencia mixta.'
+      )
       return
     }
 
@@ -566,7 +708,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       courseId: selectedCourse as number,
       type: assignmentType,
       role: selectedRole,
-      userIds: selectedUsers.map(u => u.id),
+      userIds: selectedUsers.map((u) => u.id),
       deadline: deadlineISO,
       deadlineDays: assignmentType === 'users' ? deadlineDays : undefined
     })
@@ -578,7 +720,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   }
 
   const handleSendNotification = (assignmentId: number) => {
-    confirmDialog({ title: '¿Enviar recordatorio?', text: 'Se enviará un recordatorio a todos los usuarios asignados', confirmLabel: 'Sí, enviar', cancelLabel: 'Cancelar' }).then((result) => {
+    confirmDialog({
+      title: '¿Enviar recordatorio?',
+      text: 'Se enviará un recordatorio a todos los usuarios asignados',
+      confirmLabel: 'Sí, enviar',
+      cancelLabel: 'Cancelar'
+    }).then((result) => {
       if (result.isConfirmed) {
         sendNotificationMutation.mutate(assignmentId)
       }
@@ -587,10 +734,19 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
   const handleDeleteAssignment = (assignment: Assignment) => {
     const assignmentId = assignment.id
-    const planNames = assignment.planOrigins.map((origin) => origin.plan_name).filter(Boolean).join(', ')
-    confirmDialog({ title: '¿Eliminar asignación?', text: planNames
+    const planNames = assignment.planOrigins
+      .map((origin) => origin.plan_name)
+      .filter(Boolean)
+      .join(', ')
+    confirmDialog({
+      title: '¿Eliminar asignación?',
+      text: planNames
         ? `Se quita la asignación directa; el curso sigue asignado por el plan ${planNames}.`
-        : 'Esta acción no se puede deshacer', confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' }).then((result) => {
+        : 'Esta acción no se puede deshacer',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    }).then((result) => {
       if (result.isConfirmed) {
         deleteAssignmentMutation.mutate(assignmentId)
       }
@@ -601,11 +757,13 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     setEditingAssignment(assignment)
     setEditDeadline(assignment.deadline ? new Date(assignment.deadline) : null)
     setEditDeadlineDays(30)
-    setEditAssignmentType(assignment.allEmployees ? 'all' : assignment.role ? 'role' : 'users')
+    setEditAssignmentType(
+      assignment.allEmployees ? 'all' : assignment.role ? 'role' : 'users'
+    )
     setEditSelectedRole(assignment.role || '')
     setEditSelectedUsers(
       assignment.user_ids && assignment.user_ids.length > 0
-        ? internalUsers.filter(u => assignment.user_ids?.includes(u.id))
+        ? internalUsers.filter((u) => assignment.user_ids?.includes(u.id))
         : []
     )
     setEditDialogOpen(true)
@@ -627,41 +785,58 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
 
     if (editAssignmentType !== 'users' && !editDeadline) {
-      notify.warning('Fecha requerida', 'Debes seleccionar una nueva fecha límite')
+      notify.warning(
+        'Fecha requerida',
+        'Debes seleccionar una nueva fecha límite'
+      )
       return
     }
 
     if (editAssignmentType === 'users' && editSelectedUsers.length === 0) {
-      notify.warning('Usuarios requeridos', 'Debes seleccionar al menos un usuario.')
+      notify.warning(
+        'Usuarios requeridos',
+        'Debes seleccionar al menos un usuario.'
+      )
       return
     }
 
-    if (editAssignmentType === 'users' && (!editDeadlineDays || editDeadlineDays < 1)) {
-      notify.warning('Días requeridos', 'Debes especificar el número de días para la fecha límite.')
+    if (
+      editAssignmentType === 'users' &&
+      (!editDeadlineDays || editDeadlineDays < 1)
+    ) {
+      notify.warning(
+        'Días requeridos',
+        'Debes especificar el número de días para la fecha límite.'
+      )
       return
     }
 
-    const deadlineEndOfDay = editAssignmentType === 'users'
-      ? undefined
-      : (() => {
-          const d = new Date(editDeadline!)
-          d.setHours(23, 59, 59, 999)
-          return d.toISOString()
-        })()
+    const deadlineEndOfDay =
+      editAssignmentType === 'users'
+        ? undefined
+        : (() => {
+            const d = new Date(editDeadline!)
+            d.setHours(23, 59, 59, 999)
+            return d.toISOString()
+          })()
 
     updateAssignmentMutation.mutate({
       id: editingAssignment.id,
       deadline: deadlineEndOfDay,
       role: editAssignmentType === 'role' ? editSelectedRole : null,
       all_employees: editAssignmentType === 'all',
-      user_ids: editAssignmentType === 'users' ? editSelectedUsers.map(u => u.id) : undefined,
-      deadline_days: editAssignmentType === 'users' ? editDeadlineDays : undefined
+      user_ids:
+        editAssignmentType === 'users'
+          ? editSelectedUsers.map((u) => u.id)
+          : undefined,
+      deadline_days:
+        editAssignmentType === 'users' ? editDeadlineDays : undefined
     })
 
     handleCloseEditDialog()
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): ChipProps['color'] => {
     switch (status) {
       case 'completed':
         return 'success'
@@ -696,55 +871,96 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   }
 
   return (
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <Container maxWidth='xl' sx={{ py: 3 }}>
-          <LmsPageHeader
-            title='Centro de Asignaciones LMS'
-            subtitle='Obligatoriedad y fechas límite de usuarios internos. Los clientes siguen en modo catálogo.'
-            icon={<AssignmentIcon />}
-          />
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <LmsPageHeader
+          title='Centro de Asignaciones LMS'
+          subtitle='Obligatoriedad y fechas límite de usuarios internos. Los clientes siguen en modo catálogo.'
+          icon={<AssignmentIcon />}
+        />
 
-          {selectedCourseData && (
-            <Alert severity='success' sx={{ mb: 3 }}>
-              Estás trabajando sobre <strong>{selectedCourseData.title}</strong>. Ya no necesitas volver a buscar el curso para crear o revisar sus reglas.
-            </Alert>
-          )}
+        {selectedCourseData && (
+          <Alert severity='success' sx={{ mb: 3 }}>
+            Estás trabajando sobre <strong>{selectedCourseData.title}</strong>.
+            Ya no necesitas volver a buscar el curso para crear o revisar sus
+            reglas.
+          </Alert>
+        )}
 
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard label='Reglas' value={assignmentSummary.total} icon={<AssignmentIcon />} tone='teal' />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard label='Vencidas' value={assignmentSummary.overdue} icon={<EventBusyIcon />} tone={assignmentSummary.overdue > 0 ? 'red' : 'green'} />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard label='Por atender' value={assignmentSummary.needingAttention} icon={<NotificationsIcon />} tone='orange' />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard label='Sin seguimiento' value={assignmentSummary.withoutFollowUp} icon={<VisibilityOffIcon />} tone='blue' />
-            </Grid>
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              label='Reglas'
+              value={assignmentSummary.total}
+              icon={<AssignmentIcon />}
+              tone='teal'
+            />
           </Grid>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              label='Vencidas'
+              value={assignmentSummary.overdue}
+              icon={<EventBusyIcon />}
+              tone={assignmentSummary.overdue > 0 ? 'red' : 'green'}
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              label='Por atender'
+              value={assignmentSummary.needingAttention}
+              icon={<NotificationsIcon />}
+              tone='orange'
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              label='Sin seguimiento'
+              value={assignmentSummary.withoutFollowUp}
+              icon={<VisibilityOffIcon />}
+              tone='blue'
+            />
+          </Grid>
+        </Grid>
 
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
-          <Tab label="Asignaciones Activas" />
-          <Tab label="Crear Asignación" />
+          <Tab label='Asignaciones Activas' />
+          <Tab label='Crear Asignación' />
         </Tabs>
 
-          {activeTab === 0 && (
+        {activeTab === 0 && (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-              <Typography variant="h6">
-                Asignaciones Activas ({assignmentsResponse?.total ?? assignments.length})
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 2,
+                mb: 3,
+                flexWrap: 'wrap'
+              }}
+            >
+              <Typography variant='h6'>
+                Asignaciones Activas (
+                {assignmentsResponse?.total ?? assignments.length})
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                <FormControl size="small" sx={{ minWidth: 280 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  alignItems: 'center',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <FormControl size='small' sx={{ minWidth: 280 }}>
                   <InputLabel>Filtrar por curso</InputLabel>
                   <Select
                     value={selectedCourse}
-                    label="Filtrar por curso"
-                    onChange={(e) => handleCourseSelection((e.target.value as number) || '')}
+                    label='Filtrar por curso'
+                    onChange={(e) =>
+                      handleCourseSelection((e.target.value as number) || '')
+                    }
                   >
-                    <MenuItem value="">Todos los cursos</MenuItem>
+                    <MenuItem value=''>Todos los cursos</MenuItem>
                     {assignableCourses.map((course) => (
                       <MenuItem key={course.id} value={course.id}>
                         {course.title}
@@ -752,21 +968,29 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ minWidth: 180 }}>
+                <FormControl size='small' sx={{ minWidth: 180 }}>
                   <InputLabel>Estado</InputLabel>
                   <Select
                     value={selectedStatus}
-                    label="Estado"
-                    onChange={(e) => handleStatusSelection(e.target.value as 'all' | 'active' | 'completed' | 'overdue')}
+                    label='Estado'
+                    onChange={(e) =>
+                      handleStatusSelection(
+                        e.target.value as
+                          | 'all'
+                          | 'active'
+                          | 'completed'
+                          | 'overdue'
+                      )
+                    }
                   >
-                    <MenuItem value="all">Todos</MenuItem>
-                    <MenuItem value="active">Activas</MenuItem>
-                    <MenuItem value="completed">Completadas</MenuItem>
-                    <MenuItem value="overdue">Vencidas</MenuItem>
+                    <MenuItem value='all'>Todos</MenuItem>
+                    <MenuItem value='active'>Activas</MenuItem>
+                    <MenuItem value='completed'>Completadas</MenuItem>
+                    <MenuItem value='overdue'>Vencidas</MenuItem>
                   </Select>
                 </FormControl>
                 <Button
-                  variant="contained"
+                  variant='contained'
                   startIcon={<AddIcon />}
                   onClick={() => handleTabChange({} as React.SyntheticEvent, 1)}
                 >
@@ -780,154 +1004,235 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                 <Grid item xs={12} key={assignment.id}>
                   <Card>
                     <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between'
+                        }}
+                      >
                         <Box sx={{ flex: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              mb: 2,
+                              flexWrap: 'wrap'
+                            }}
+                          >
                             <Avatar sx={{ bgcolor: 'primary.main' }}>
                               <AssignmentIcon />
                             </Avatar>
                             <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
-                              <Typography variant="h6" component="div">
+                              <Typography variant='h6' component='div'>
                                 {assignment.courseTitle}
                               </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                Asignado por {assignment.assignedBy} el {new Date(assignment.createdAt).toLocaleDateString()}
+                              <Typography
+                                variant='body2'
+                                color='text.secondary'
+                              >
+                                Asignado por {assignment.assignedBy} el{' '}
+                                {new Date(
+                                  assignment.createdAt
+                                ).toLocaleDateString()}
                               </Typography>
                             </Box>
                             <Chip
                               label={getStatusLabel(assignment.status)}
-                              color={getStatusColor(assignment.status) as any}
-                              size="small"
+                              color={getStatusColor(assignment.status)}
+                              size='small'
                             />
                             <Chip
                               label={assignment.urgency.label}
-                              color={getUrgencyColor(assignment.urgency.level) as any}
-                              size="small"
-                              variant="outlined"
+                              color={getUrgencyColor(assignment.urgency.level)}
+                              size='small'
+                              variant='outlined'
                             />
                             {assignment.planOrigins.map((origin) => (
                               <Chip
-                                key={origin.plan_assignment_id ?? origin.plan_name}
+                                key={
+                                  origin.plan_assignment_id ?? origin.plan_name
+                                }
                                 icon={<PlanIcon />}
                                 label={`Plan ${origin.plan_name ?? ''}`}
-                                size="small"
+                                size='small'
                                 clickable
                                 onClick={() => navigate('/lms/admin/plans')}
-                                sx={{ bgcolor: '#E0F7F4', color: '#00695C', '& .MuiChip-icon': { color: '#00695C' } }}
+                                sx={{
+                                  bgcolor: '#E0F7F4',
+                                  color: '#00695C',
+                                  '& .MuiChip-icon': { color: '#00695C' }
+                                }}
                               />
                             ))}
                           </Box>
 
                           <Grid container spacing={2} sx={{ mb: 2 }}>
                             <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Asignado a:
                               </Typography>
-                              <Typography variant="body2">
+                              <Typography variant='body2'>
                                 {assignment.assignedTo.join(', ')}
                               </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Fecha límite:
                               </Typography>
-                              <Typography variant="body2">
+                              <Typography variant='body2'>
                                 {formatDeadlineInsight(assignment)}
                               </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Progreso promedio:
                               </Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1
+                                }}
+                              >
                                 <LinearProgress
-                                  variant="determinate"
+                                  variant='determinate'
                                   value={assignment.progress}
                                   sx={{ flex: 1, height: 6, borderRadius: 3 }}
                                 />
-                                <Typography variant="caption">
+                                <Typography variant='caption'>
                                   {assignment.progress}%
                                 </Typography>
                               </Box>
                             </Grid>
                             <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
                                 Seguimiento:
                               </Typography>
-                              <Typography variant="body2">
-                                {assignment.reminderSummary.reminderNotifications > 0
+                              <Typography variant='body2'>
+                                {assignment.reminderSummary
+                                  .reminderNotifications > 0
                                   ? `${assignment.reminderSummary.reminderNotifications} recordatorio(s)`
                                   : 'Sin recordatorios'}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Último: {formatRelativeDate(
-                                  assignment.reminderSummary.lastReminderAt
-                                  || assignment.reminderSummary.lastNotificationAt
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
+                                Último:{' '}
+                                {formatRelativeDate(
+                                  assignment.reminderSummary.lastReminderAt ||
+                                    assignment.reminderSummary
+                                      .lastNotificationAt
                                 )}
                               </Typography>
                             </Grid>
                           </Grid>
 
-                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                            {assignment.reminderSummary.manualReminderNotifications > 0 && (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              gap: 1,
+                              flexWrap: 'wrap',
+                              mb: 2
+                            }}
+                          >
+                            {assignment.reminderSummary
+                              .manualReminderNotifications > 0 && (
                               <Chip
-                                size="small"
-                                color="info"
-                                variant="outlined"
+                                size='small'
+                                color='info'
+                                variant='outlined'
                                 label={`${assignment.reminderSummary.manualReminderNotifications} manual(es)`}
                               />
                             )}
-                            {assignment.reminderSummary.unreadReminderNotifications > 0 && (
+                            {assignment.reminderSummary
+                              .unreadReminderNotifications > 0 && (
                               <Chip
-                                size="small"
-                                color="warning"
+                                size='small'
+                                color='warning'
                                 label={`${assignment.reminderSummary.unreadReminderNotifications} sin leer`}
                               />
                             )}
-                            {assignment.status !== 'completed' && assignment.reminderSummary.lastReminderAt === null && (
-                              <Chip
-                                size="small"
-                                color="info"
-                                variant="outlined"
-                                label="Enviar primer seguimiento"
-                              />
-                            )}
+                            {assignment.status !== 'completed' &&
+                              assignment.reminderSummary.lastReminderAt ===
+                                null && (
+                                <Chip
+                                  size='small'
+                                  color='info'
+                                  variant='outlined'
+                                  label='Enviar primer seguimiento'
+                                />
+                              )}
                           </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            gap: 1,
+                            flexWrap: 'wrap',
+                            justifyContent: 'flex-end'
+                          }}
+                        >
                           <Button
-                            size="small"
-                            variant="outlined"
+                            size='small'
+                            variant='outlined'
                             startIcon={<CourseIcon />}
-                            onClick={() => goToCourseContent(assignment.courseId)}
+                            onClick={() =>
+                              goToCourseContent(assignment.courseId)
+                            }
                           >
                             Contenido
                           </Button>
                           <Button
-                            size="small"
-                            variant="outlined"
+                            size='small'
+                            variant='outlined'
                             startIcon={<ArrowForwardIcon />}
-                            onClick={() => goToCoursePreview(assignment.courseId)}
+                            onClick={() =>
+                              goToCoursePreview(assignment.courseId)
+                            }
                           >
                             Vista previa
                           </Button>
                           <IconButton
-                            size="small"
-                            onClick={() => handleSendNotification(assignment.id)}
-                            title={assignment.reminderSummary.lastReminderAt ? 'Reenviar recordatorio' : 'Enviar primer recordatorio'}
+                            size='small'
+                            onClick={() =>
+                              handleSendNotification(assignment.id)
+                            }
+                            title={
+                              assignment.reminderSummary.lastReminderAt
+                                ? 'Reenviar recordatorio'
+                                : 'Enviar primer recordatorio'
+                            }
                           >
                             <NotificationsIcon />
                           </IconButton>
                           {assignment.managedByPlan ? (
                             // Solo la sostienen planes: se cambia o retira desde el plan
-                            <Tooltip title="Esta asignación la crea un plan de formación; edítala o retírala desde el plan">
+                            <Tooltip title='Esta asignación la crea un plan de formación; edítala o retírala desde el plan'>
                               <Button
-                                size="small"
-                                variant="outlined"
+                                size='small'
+                                variant='outlined'
                                 startIcon={<PlanIcon />}
                                 onClick={() => navigate('/lms/admin/plans')}
-                                sx={{ borderColor: '#00BFA5', color: '#00897B' }}
+                                sx={{
+                                  borderColor: '#00BFA5',
+                                  color: '#00897B'
+                                }}
                               >
                                 Gestionar en Planes
                               </Button>
@@ -935,17 +1240,19 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                           ) : (
                             <>
                               <IconButton
-                                size="small"
-                                title="Editar asignación"
+                                size='small'
+                                title='Editar asignación'
                                 onClick={() => handleOpenEditDialog(assignment)}
                               >
                                 <EditIcon />
                               </IconButton>
                               <IconButton
-                                size="small"
-                                color="error"
-                                title="Eliminar asignación"
-                                onClick={() => handleDeleteAssignment(assignment)}
+                                size='small'
+                                color='error'
+                                title='Eliminar asignación'
+                                onClick={() =>
+                                  handleDeleteAssignment(assignment)
+                                }
                               >
                                 <DeleteIcon />
                               </IconButton>
@@ -959,8 +1266,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
               ))}
               {assignments.length === 0 && (
                 <Grid item xs={12}>
-                  <Alert severity="info">
-                    No hay asignaciones para los filtros actuales. Ajusta el curso, el estado o crea una nueva regla.
+                  <Alert severity='info'>
+                    No hay asignaciones para los filtros actuales. Ajusta el
+                    curso, el estado o crea una nueva regla.
                   </Alert>
                 </Grid>
               )}
@@ -968,11 +1276,13 @@ const LmsCourseAssignmentInterface: React.FC = () => {
             {(assignmentsResponse?.total ?? 0) > rowsPerPage && (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
                 <Pagination
-                  count={Math.ceil((assignmentsResponse?.total ?? 0) / rowsPerPage)}
+                  count={Math.ceil(
+                    (assignmentsResponse?.total ?? 0) / rowsPerPage
+                  )}
                   page={page + 1}
                   onChange={(_, value) => setPage(value - 1)}
-                  color="primary"
-                  shape="rounded"
+                  color='primary'
+                  shape='rounded'
                 />
               </Box>
             )}
@@ -982,7 +1292,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         {activeTab === 1 && (
           <Box>
             <Card>
-              <CardHeader title="Crear Nueva Asignación" />
+              <CardHeader title='Crear Nueva Asignación' />
               <CardContent>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
@@ -990,12 +1300,16 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <InputLabel>Seleccionar Curso</InputLabel>
                       <Select
                         value={selectedCourse}
-                        label="Seleccionar Curso"
-                        onChange={(e) => handleCourseSelection(e.target.value as number)}
+                        label='Seleccionar Curso'
+                        onChange={(e) =>
+                          handleCourseSelection(e.target.value as number)
+                        }
                       >
                         {assignableCourses.map((course) => (
                           <MenuItem key={course.id} value={course.id}>
-                            {course.duration ? `${course.title} (${course.duration})` : course.title}
+                            {course.duration
+                              ? `${course.title} (${course.duration})`
+                              : course.title}
                           </MenuItem>
                         ))}
                       </Select>
@@ -1003,20 +1317,27 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   </Grid>
 
                   {selectedCourseData &&
-                    (selectedCourseData.status !== 'published' || selectedCourseData.is_mandatory === false) && (
+                    (selectedCourseData.status !== 'published' ||
+                      selectedCourseData.is_mandatory === false) && (
                       <Grid item xs={12}>
                         <Alert
-                          severity={selectedCourseData.status !== 'published' ? 'warning' : 'info'}
+                          severity={
+                            selectedCourseData.status !== 'published'
+                              ? 'warning'
+                              : 'info'
+                          }
                         >
                           {selectedCourseData.status !== 'published' && (
                             <div>
-                              Este curso no está publicado: los usuarios asignados no lo verán hasta que se publique.
+                              Este curso no está publicado: los usuarios
+                              asignados no lo verán hasta que se publique.
                             </div>
                           )}
                           {selectedCourseData.is_mandatory === false && (
                             <div>
-                              No es obligatorio: les aparecerá en «Asignados a ti» y «Mis Cursos», no en
-                              «Cursos Obligatorios». Márcalo como obligatorio si debe exigirse.
+                              No es obligatorio: les aparecerá en «Asignados a
+                              ti» y «Mis Cursos», no en «Cursos Obligatorios».
+                              Márcalo como obligatorio si debe exigirse.
                             </div>
                           )}
                         </Alert>
@@ -1027,18 +1348,22 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        type="number"
-                        label="Días para fecha límite"
+                        type='number'
+                        label='Días para fecha límite'
                         value={deadlineDays}
-                        onChange={(e) => setDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={(e) =>
+                          setDeadlineDays(
+                            Math.max(1, parseInt(e.target.value) || 1)
+                          )
+                        }
                         InputProps={{ inputProps: { min: 1 } }}
-                        helperText="La fecha límite se calculará desde el momento de la asignación"
+                        helperText='La fecha límite se calculará desde el momento de la asignación'
                       />
                     </Grid>
                   ) : (
                     <Grid item xs={12} md={6}>
                       <DatePicker
-                        label="Fecha límite"
+                        label='Fecha límite'
                         value={deadline}
                         onChange={(newValue) => setDeadline(newValue)}
                         slotProps={{ textField: { fullWidth: true } }}
@@ -1051,12 +1376,16 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <InputLabel>Tipo de Asignación</InputLabel>
                       <Select
                         value={assignmentType}
-                        label="Tipo de Asignación"
-                        onChange={(e) => setAssignmentType(e.target.value as any)}
+                        label='Tipo de Asignación'
+                        onChange={(e) =>
+                          setAssignmentType(
+                            e.target.value as 'role' | 'all' | 'users'
+                          )
+                        }
                       >
-                        <MenuItem value="role">Por Rol</MenuItem>
-                        <MenuItem value="all">Todos los Empleados</MenuItem>
-                        <MenuItem value="users">Por Usuario</MenuItem>
+                        <MenuItem value='role'>Por Rol</MenuItem>
+                        <MenuItem value='all'>Todos los Empleados</MenuItem>
+                        <MenuItem value='users'>Por Usuario</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
@@ -1067,16 +1396,26 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                         <InputLabel>Rol</InputLabel>
                         <Select
                           value={selectedRole}
-                          label="Rol"
+                          label='Rol'
                           onChange={(e) => setSelectedRole(e.target.value)}
                         >
-                          <MenuItem value="admin">Administrador</MenuItem>
-                          <MenuItem value="Training Manager">Gestor de Capacitación</MenuItem>
-                          <MenuItem value="metrologist">Metrólogo</MenuItem>
-                          <MenuItem value="technician">Técnico de Mantenimiento</MenuItem>
-                          <MenuItem value="mantenimiento">Mantenimiento</MenuItem>
-                          <MenuItem value="maintenance_coordinator">Coordinador de Mantenimiento</MenuItem>
-                          <MenuItem value="comp_admin">Administrador de Compras</MenuItem>
+                          <MenuItem value='admin'>Administrador</MenuItem>
+                          <MenuItem value='Training Manager'>
+                            Gestor de Capacitación
+                          </MenuItem>
+                          <MenuItem value='metrologist'>Metrólogo</MenuItem>
+                          <MenuItem value='technician'>
+                            Técnico de Mantenimiento
+                          </MenuItem>
+                          <MenuItem value='mantenimiento'>
+                            Mantenimiento
+                          </MenuItem>
+                          <MenuItem value='maintenance_coordinator'>
+                            Coordinador de Mantenimiento
+                          </MenuItem>
+                          <MenuItem value='comp_admin'>
+                            Administrador de Compras
+                          </MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
@@ -1087,14 +1426,16 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <Autocomplete
                         multiple
                         options={internalUsers}
-                        getOptionLabel={(option) => `${option.name} (${option.email})`}
+                        getOptionLabel={(option) =>
+                          `${option.name} (${option.email})`
+                        }
                         value={selectedUsers}
                         onChange={(_, newValue) => setSelectedUsers(newValue)}
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label="Seleccionar Usuarios"
-                            placeholder="Buscar usuarios..."
+                            label='Seleccionar Usuarios'
+                            placeholder='Buscar usuarios...'
                           />
                         )}
                         renderTags={(value, getTagProps) =>
@@ -1102,7 +1443,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                             // eslint-disable-next-line react/jsx-key -- getTagProps ya trae la key
                             <Chip
                               label={option.name}
-                              size="small"
+                              size='small'
                               {...getTagProps({ index })}
                             />
                           ))
@@ -1112,25 +1453,45 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   )}
 
                   <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                      Las asignaciones y fechas límite del LMS se aplican solo a usuarios internos. Los cursos de cliente se consumen por catálogo.
+                    <Typography variant='body2' color='text.secondary'>
+                      Las asignaciones y fechas límite del LMS se aplican solo a
+                      usuarios internos. Los cursos de cliente se consumen por
+                      catálogo.
                     </Typography>
                     {selectedCourseData && (
-                      <Alert severity="info" sx={{ mt: 2 }}>
-                        Curso seleccionado: <strong>{selectedCourseData.title}</strong>. Si necesitas ajustar el contenido antes de asignarlo, puedes abrir el editor desde las reglas activas o volver a Gestión de Cursos.
+                      <Alert severity='info' sx={{ mt: 2 }}>
+                        Curso seleccionado:{' '}
+                        <strong>{selectedCourseData.title}</strong>. Si
+                        necesitas ajustar el contenido antes de asignarlo,
+                        puedes abrir el editor desde las reglas activas o volver
+                        a Gestión de Cursos.
                       </Alert>
                     )}
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                      <Button variant="outlined" onClick={() => setActiveTab(0)}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 2,
+                        justifyContent: 'flex-end'
+                      }}
+                    >
+                      <Button
+                        variant='outlined'
+                        onClick={() => setActiveTab(0)}
+                      >
                         Cancelar
                       </Button>
                       <Button
-                        variant="contained"
+                        variant='contained'
                         onClick={handleCreateAssignment}
-                        disabled={!selectedCourse || (assignmentType !== 'users' && !deadline) || (assignmentType === 'users' && (!deadlineDays || deadlineDays < 1))}
+                        disabled={
+                          !selectedCourse ||
+                          (assignmentType !== 'users' && !deadline) ||
+                          (assignmentType === 'users' &&
+                            (!deadlineDays || deadlineDays < 1))
+                        }
                         startIcon={<AssignmentIcon />}
                       >
                         Crear Asignación
@@ -1142,74 +1503,101 @@ const LmsCourseAssignmentInterface: React.FC = () => {
             </Card>
           </Box>
         )}
-
-        </Container>
+      </Container>
 
       {/* Edit Assignment Modal */}
       <Dialog
         open={editDialogOpen}
         onClose={handleCloseEditDialog}
-        maxWidth="sm"
+        maxWidth='sm'
         fullWidth
       >
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <EditIcon color="primary" />
-            <Typography variant="h6">Editar Asignación</Typography>
+            <EditIcon color='primary' />
+            <Typography variant='h6'>Editar Asignación</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
           {editingAssignment && (
             <Box sx={{ pt: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+              >
                 Curso
               </Typography>
-              <Typography variant="body1" sx={{ mb: 3, fontWeight: 500 }}>
+              <Typography variant='body1' sx={{ mb: 3, fontWeight: 500 }}>
                 {editingAssignment.courseTitle}
               </Typography>
 
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+              >
                 Asignado a
               </Typography>
-              <Typography variant="body1" sx={{ mb: 3 }}>
+              <Typography variant='body1' sx={{ mb: 3 }}>
                 {editingAssignment.assignedTo.join(', ')}
               </Typography>
 
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+              >
                 Tipo de asignación
               </Typography>
               <FormControl fullWidth sx={{ mb: 3 }}>
                 <InputLabel>Tipo de Asignación</InputLabel>
                 <Select
                   value={editAssignmentType}
-                  label="Tipo de Asignación"
-                  onChange={(e) => setEditAssignmentType(e.target.value as 'role' | 'all' | 'users')}
+                  label='Tipo de Asignación'
+                  onChange={(e) =>
+                    setEditAssignmentType(
+                      e.target.value as 'role' | 'all' | 'users'
+                    )
+                  }
                 >
-                  <MenuItem value="role">Por Rol</MenuItem>
-                  <MenuItem value="all">Todos los Empleados</MenuItem>
-                  <MenuItem value="users">Por Usuario</MenuItem>
+                  <MenuItem value='role'>Por Rol</MenuItem>
+                  <MenuItem value='all'>Todos los Empleados</MenuItem>
+                  <MenuItem value='users'>Por Usuario</MenuItem>
                 </Select>
               </FormControl>
 
               {editAssignmentType === 'role' && (
                 <>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant='subtitle2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
                     Rol
                   </Typography>
                   <FormControl fullWidth sx={{ mb: 3 }}>
                     <InputLabel>Rol</InputLabel>
                     <Select
                       value={editSelectedRole}
-                      label="Rol"
+                      label='Rol'
                       onChange={(e) => setEditSelectedRole(e.target.value)}
                     >
-                      <MenuItem value="admin">Administrador</MenuItem>
-                      <MenuItem value="Training Manager">Gestor de Capacitación</MenuItem>
-                      <MenuItem value="metrologist">Metrólogo</MenuItem>
-                      <MenuItem value="technician">Técnico de Mantenimiento</MenuItem>
-                      <MenuItem value="mantenimiento">Mantenimiento</MenuItem>
-                      <MenuItem value="maintenance_coordinator">Coordinador de Mantenimiento</MenuItem>
-                      <MenuItem value="comp_admin">Administrador de Compras</MenuItem>
+                      <MenuItem value='admin'>Administrador</MenuItem>
+                      <MenuItem value='Training Manager'>
+                        Gestor de Capacitación
+                      </MenuItem>
+                      <MenuItem value='metrologist'>Metrólogo</MenuItem>
+                      <MenuItem value='technician'>
+                        Técnico de Mantenimiento
+                      </MenuItem>
+                      <MenuItem value='mantenimiento'>Mantenimiento</MenuItem>
+                      <MenuItem value='maintenance_coordinator'>
+                        Coordinador de Mantenimiento
+                      </MenuItem>
+                      <MenuItem value='comp_admin'>
+                        Administrador de Compras
+                      </MenuItem>
                     </Select>
                   </FormControl>
                 </>
@@ -1217,20 +1605,26 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
               {editAssignmentType === 'users' && (
                 <>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant='subtitle2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
                     Usuarios
                   </Typography>
                   <Autocomplete
                     multiple
                     options={internalUsers}
-                    getOptionLabel={(option) => `${option.name} (${option.email})`}
+                    getOptionLabel={(option) =>
+                      `${option.name} (${option.email})`
+                    }
                     value={editSelectedUsers}
                     onChange={(_, newValue) => setEditSelectedUsers(newValue)}
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Seleccionar Usuarios"
-                        placeholder="Buscar usuarios..."
+                        label='Seleccionar Usuarios'
+                        placeholder='Buscar usuarios...'
                       />
                     )}
                     renderTags={(value, getTagProps) =>
@@ -1238,7 +1632,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                         // eslint-disable-next-line react/jsx-key -- getTagProps ya trae la key
                         <Chip
                           label={option.name}
-                          size="small"
+                          size='small'
                           {...getTagProps({ index })}
                         />
                       ))
@@ -1247,16 +1641,23 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                 </>
               )}
 
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+              >
                 Fecha límite actual
               </Typography>
-              <Typography variant="body1" sx={{ mb: 3, color: 'warning.main' }}>
+              <Typography variant='body1' sx={{ mb: 3, color: 'warning.main' }}>
                 {editingAssignment.deadline
-                  ? new Date(editingAssignment.deadline).toLocaleDateString('es-CO', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })
+                  ? new Date(editingAssignment.deadline).toLocaleDateString(
+                      'es-CO',
+                      {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }
+                    )
                   : 'Sin fecha límite'}
               </Typography>
 
@@ -1264,26 +1665,38 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
               {editAssignmentType === 'users' ? (
                 <>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant='subtitle2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
                     Días para fecha límite
                   </Typography>
                   <TextField
                     fullWidth
-                    type="number"
-                    label="Días"
+                    type='number'
+                    label='Días'
                     value={editDeadlineDays}
-                    onChange={(e) => setEditDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) =>
+                      setEditDeadlineDays(
+                        Math.max(1, parseInt(e.target.value) || 1)
+                      )
+                    }
                     InputProps={{ inputProps: { min: 1 } }}
-                    helperText="Se recalculará desde el momento de guardar"
+                    helperText='Se recalculará desde el momento de guardar'
                   />
                 </>
               ) : (
                 <>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant='subtitle2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
                     Nueva fecha límite
                   </Typography>
                   <DatePicker
-                    label="Seleccionar nueva fecha"
+                    label='Seleccionar nueva fecha'
                     value={editDeadline}
                     onChange={(newValue) => setEditDeadline(newValue)}
                     slotProps={{
@@ -1301,15 +1714,15 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         <DialogActions sx={{ p: 2, gap: 1 }}>
           <Button
             onClick={handleCloseEditDialog}
-            variant="outlined"
-            color="inherit"
+            variant='outlined'
+            color='inherit'
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSaveEdit}
-            variant="contained"
-            color="primary"
+            variant='contained'
+            color='primary'
             startIcon={<EditIcon />}
           >
             Guardar Cambios

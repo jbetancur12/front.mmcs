@@ -1,14 +1,14 @@
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
-import {
-  hasTrainingManagerRole,
-  normalizeLmsRoles
-} from './lmsIdentity'
+import { hasTrainingManagerRole, normalizeLmsRoles } from './lmsIdentity'
 
 import { ROLES } from 'src/constants/roles'
 // Define LMS role types
 export type LMSRole = 'admin' | 'training_manager' | 'user'
-export const LMS_MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.TRAINING_MANAGER] as const
+export const LMS_MANAGEMENT_ROLES = [
+  ROLES.ADMIN,
+  ROLES.TRAINING_MANAGER
+] as const
 
 // Define role permissions
 export interface RolePermissions {
@@ -83,7 +83,10 @@ export const ROLE_PERMISSIONS: Record<LMSRole, RolePermissions> = {
 export const getUserLMSRole = (userRoles: string[]): LMSRole => {
   const normalizedRoles = normalizeLmsRoles(userRoles)
 
-  if (normalizedRoles.includes(ROLES.ADMIN) || normalizedRoles.includes(ROLES.SUPER_ADMIN)) {
+  if (
+    normalizedRoles.includes(ROLES.ADMIN) ||
+    normalizedRoles.includes(ROLES.SUPER_ADMIN)
+  ) {
     return 'admin'
   }
   if (hasTrainingManagerRole(normalizedRoles)) {
@@ -127,7 +130,9 @@ export const useUserPermissions = (): RolePermissions => {
 /**
  * Hook to check if user has specific permission
  */
-export const useHasPermission = (permission: keyof RolePermissions): boolean => {
+export const useHasPermission = (
+  permission: keyof RolePermissions
+): boolean => {
   const permissions = useUserPermissions()
   return Boolean(permissions[permission])
 }
@@ -135,9 +140,12 @@ export const useHasPermission = (permission: keyof RolePermissions): boolean => 
 /**
  * Check if user can access a specific feature
  */
-export const canAccessFeature = (userRole: LMSRole, feature: string): boolean => {
+export const canAccessFeature = (
+  userRole: LMSRole,
+  feature: string
+): boolean => {
   const permissions = ROLE_PERMISSIONS[userRole]
-  
+
   switch (feature) {
     case 'course-management':
       return permissions.canCreateCourses || permissions.canEditCourses
@@ -161,10 +169,13 @@ export const canAccessFeature = (userRole: LMSRole, feature: string): boolean =>
 /**
  * Get filtered quick actions based on user role
  */
-export const getFilteredQuickActions = (userRole: LMSRole, allActions: any[]) => {
+export const getFilteredQuickActions = <T extends { id: string }>(
+  userRole: LMSRole,
+  allActions: T[]
+): T[] => {
   const permissions = ROLE_PERMISSIONS[userRole]
-  
-  return allActions.filter(action => {
+
+  return allActions.filter((action) => {
     switch (action.id) {
       case 'create-course':
         return permissions.canCreateCourses
@@ -190,9 +201,9 @@ export const getFilteredQuickActions = (userRole: LMSRole, allActions: any[]) =>
  */
 export const getRoleBasedNavigation = (userRole: LMSRole) => {
   const permissions = ROLE_PERMISSIONS[userRole]
-  
+
   const navigation = []
-  
+
   if (permissions.canViewAllCourses || permissions.canCreateCourses) {
     navigation.push({
       id: 'courses',
@@ -201,7 +212,7 @@ export const getRoleBasedNavigation = (userRole: LMSRole) => {
       icon: 'SchoolIcon'
     })
   }
-  
+
   if (permissions.canManageAssignments) {
     navigation.push({
       id: 'assignments',
@@ -210,7 +221,7 @@ export const getRoleBasedNavigation = (userRole: LMSRole) => {
       icon: 'AssignmentIcon'
     })
   }
-  
+
   if (permissions.canViewAnalytics) {
     navigation.push({
       id: 'analytics',
@@ -219,7 +230,7 @@ export const getRoleBasedNavigation = (userRole: LMSRole) => {
       icon: 'AnalyticsIcon'
     })
   }
-  
+
   if (permissions.canGenerateReports) {
     navigation.push({
       id: 'reports',
@@ -228,7 +239,7 @@ export const getRoleBasedNavigation = (userRole: LMSRole) => {
       icon: 'AssessmentIcon'
     })
   }
-  
+
   if (permissions.canManageCertificates) {
     navigation.push({
       id: 'certificates',
@@ -237,7 +248,7 @@ export const getRoleBasedNavigation = (userRole: LMSRole) => {
       icon: 'CertificateIcon'
     })
   }
-  
+
   return navigation
 }
 
@@ -262,6 +273,6 @@ export const getRoleDisplayInfo = (role: LMSRole) => {
       color: '#6b7280'
     }
   }
-  
+
   return roleInfo[role]
 }

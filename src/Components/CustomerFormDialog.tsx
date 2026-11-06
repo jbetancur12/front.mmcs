@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { TextField } from '@mui/material'
 import FormDialog, { FormDialogSection } from './Common/FormDialog'
+import IdentificationField from './Common/IdentificationField'
 import { CustomerData } from './TableCustomers'
+import { normalizeIdentification } from 'src/utils/identification'
 
 interface CustomerFormDialogProps {
   open: boolean
@@ -72,6 +74,8 @@ const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
   const [values, setValues] = useState<CustomerData>(EMPTY_CUSTOMER)
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({})
   const [saving, setSaving] = useState(false)
+  const [hasDuplicateIdentification, setHasDuplicateIdentification] =
+    useState(false)
 
   // Cada vez que se abre parte de los datos del cliente o de un formulario vacío
   useEffect(() => {
@@ -79,6 +83,7 @@ const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
     setValues(customer ? { ...EMPTY_CUSTOMER, ...customer } : EMPTY_CUSTOMER)
     setErrors({})
     setSaving(false)
+    setHasDuplicateIdentification(false)
   }, [open, customer])
 
   const fieldProps = (name: FieldName) => ({
@@ -99,12 +104,15 @@ const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
     const nextErrors = validate(values)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
+    if (hasDuplicateIdentification) return
     setSaving(true)
     try {
       await onSubmit({
         ...values,
         nombre: values.nombre.trim(),
-        identificacion: values.identificacion.trim(),
+        identificacion:
+          normalizeIdentification(values.identificacion) ||
+          values.identificacion.trim(),
         email: values.email.trim()
       })
     } finally {
@@ -121,6 +129,7 @@ const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
       submitLabel={isEditing ? 'Guardar cambios' : 'Crear cliente'}
       onSubmit={() => void handleSubmit()}
       loading={saving}
+      submitDisabled={hasDuplicateIdentification}
       maxWidth='md'
     >
       <FormDialogSection title='Datos de la empresa'>
@@ -131,10 +140,22 @@ const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
           {...fieldProps('nombre')}
           helperText={errors.nombre}
         />
-        <TextField
+        <IdentificationField
+          required
           label='NIT o identificación'
-          {...fieldProps('identificacion')}
-          helperText={errors.identificacion || 'Como aparece en el RUT.'}
+          value={values.identificacion}
+          onChange={(value) => {
+            setValues((current) => ({ ...current, identificacion: value }))
+            if (errors.identificacion) {
+              setErrors((current) => ({
+                ...current,
+                identificacion: undefined
+              }))
+            }
+          }}
+          excludeCustomerId={customer?.id}
+          onDuplicateChange={setHasDuplicateIdentification}
+          errorText={errors.identificacion}
         />
       </FormDialogSection>
 

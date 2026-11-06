@@ -20,7 +20,9 @@ import {
 const args = process.argv.slice(2)
 const dry = args.includes('--dry')
 const dirIndex = args.indexOf('--dir')
-let files = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--dir')
+let files = args.filter(
+  (a, i) => !a.startsWith('--') && args[i - 1] !== '--dir'
+)
 if (dirIndex !== -1) files = files.concat(walk(args[dirIndex + 1]))
 
 function walk(dir) {
@@ -28,7 +30,8 @@ function walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name)
     if (entry.isDirectory()) out.push(...walk(full))
-    else if (/\.(tsx?|jsx?)$/.test(entry.name) && !/\.test\./.test(entry.name)) out.push(full)
+    else if (/\.(tsx?|jsx?)$/.test(entry.name) && !/\.test\./.test(entry.name))
+      out.push(full)
   }
   return out
 }
@@ -71,7 +74,8 @@ function transform(text) {
     }
     // Hex dentro de un texto más largo: pasa a plantilla con ${token}
     let replaced = inner
-    if (quote !== '`') replaced = replaced.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
+    if (quote !== '`')
+      replaced = replaced.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
     replaced = replaced.replace(HEX_RE, (h) => {
       const token = tokenOf(h)
       if (!token) return h
@@ -87,11 +91,16 @@ function transform(text) {
 function addImport(text, used) {
   const names = ['brand', 'neutral', 'intent'].filter((n) => used.has(n))
   if (!names.length) return text
-  if (text.includes("from 'src/theme/designTokens'") || text.includes("from './designTokens'")) {
+  if (
+    text.includes("from 'src/theme/designTokens'") ||
+    text.includes("from './designTokens'")
+  ) {
     return text
   }
   const line = `import { ${names.join(', ')} } from 'src/theme/designTokens'\n`
-  const imports = [...text.matchAll(/^import[\s\S]*?from\s+['"][^'"]+['"];?[ \t]*$/gm)]
+  const imports = [
+    ...text.matchAll(/^import[\s\S]*?from\s+['"][^'"]+['"];?[ \t]*$/gm)
+  ]
   if (!imports.length) return line + text
   const last = imports[imports.length - 1]
   const end = last.index + last[0].length
@@ -103,8 +112,14 @@ for (const file of files) {
   const raw = fs.readFileSync(file, 'utf8')
   const crlf = raw.includes('\r\n')
   const text = crlf ? raw.replace(/\r\n/g, '\n') : raw
-  if (/\b(?:brand|neutral|intent)\b/.test(text.replace(/\b(?:brand|neutral|intent)\.\w+/g, ''))) {
-    console.log(`OMITIDO ${file}: ya usa un identificador brand/neutral/intent; migrarlo a mano`)
+  if (
+    /\b(?:brand|neutral|intent)\b/.test(
+      text.replace(/\b(?:brand|neutral|intent)\.\w+/g, '')
+    )
+  ) {
+    console.log(
+      `OMITIDO ${file}: ya usa un identificador brand/neutral/intent; migrarlo a mano`
+    )
     continue
   }
   const { out, used, count } = transform(text)
@@ -114,7 +129,9 @@ for (const file of files) {
   }
   const final = addImport(out, used)
   total += count
-  console.log(`${dry ? '[dry] ' : ''}${file}: ${count} colores -> ${[...used].join(', ')}`)
+  console.log(
+    `${dry ? '[dry] ' : ''}${file}: ${count} colores -> ${[...used].join(', ')}`
+  )
   if (!dry) fs.writeFileSync(file, crlf ? final.replace(/\n/g, '\r\n') : final)
 }
 console.log(`\nTotal: ${total} colores${dry ? ' (simulación)' : ''}`)

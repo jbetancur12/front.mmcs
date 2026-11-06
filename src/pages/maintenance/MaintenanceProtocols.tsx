@@ -225,10 +225,10 @@ const MaintenanceProtocols = () => {
         await createProtocolMutation.mutateAsync(payload)
       }
       resetDialog()
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFormError(
-        getApiErrorReason(error) ||
-          error?.message ||
+        getApiErrorReason(error) ??
+          (error instanceof Error ? error.message : null) ??
           'No se pudo guardar el protocolo.'
       )
     }
@@ -256,7 +256,12 @@ const MaintenanceProtocols = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/maintenance')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver al dashboard
       </Button>
@@ -266,7 +271,16 @@ const MaintenanceProtocols = () => {
         subtitle='Catálogo editable de protocolos para el reporte técnico.'
         icon={<PlaylistAddCheck />}
         actions={
-          <Button variant='contained' startIcon={<Add />} onClick={openCreateDialog} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+          <Button
+            variant='contained'
+            startIcon={<Add />}
+            onClick={openCreateDialog}
+            sx={{
+              bgcolor: '#00BFA5',
+              whiteSpace: 'nowrap',
+              '&:hover': { bgcolor: '#00ACC1' }
+            }}
+          >
             Nuevo protocolo
           </Button>
         }
@@ -274,10 +288,20 @@ const MaintenanceProtocols = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Total protocolos' value={protocols.length} icon={<PlaylistAddCheck />} tone='teal' />
+          <LmsStatCard
+            label='Total protocolos'
+            value={protocols.length}
+            icon={<PlaylistAddCheck />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Activos' value={activeCount} icon={<CheckCircleOutline />} tone='green' />
+          <LmsStatCard
+            label='Activos'
+            value={activeCount}
+            icon={<CheckCircleOutline />}
+            tone='green'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
           <LmsStatCard

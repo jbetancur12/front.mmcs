@@ -58,9 +58,8 @@ const CalibrationServicesPage = () => {
     openServiceDetail
   } = actions
 
-  const { data, isLoading, isFetching, isError, error } = useCalibrationServices(
-    filters.queryFilters
-  )
+  const { data, isLoading, isFetching, isError, error } =
+    useCalibrationServices(filters.queryFilters)
   const {
     metrologistOptions,
     visibleServices,
@@ -115,7 +114,6 @@ const CalibrationServicesPage = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-
       <LmsPageHeader
         title='Servicios de calibración'
         subtitle={
@@ -125,23 +123,32 @@ const CalibrationServicesPage = () => {
         }
         icon={<ScienceOutlinedIcon />}
         actions={
-          <CalibrationServicesHeaderActions permissions={permissions} actions={actions} />
+          <CalibrationServicesHeaderActions
+            permissions={permissions}
+            actions={actions}
+          />
         }
       />
 
       {/* El consecutivo se ajusta desde "Más acciones"; aquí solo se avisa si falta */}
-      {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
+      {canManageSequenceConfig &&
+      sequenceConfig &&
+      !sequenceConfig.initialized ? (
         <Alert
           severity='warning'
           sx={{ mb: 3 }}
           action={
-            <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
+            <Button
+              color='inherit'
+              size='small'
+              onClick={() => setIsSequenceDialogOpen(true)}
+            >
               Configurar
             </Button>
           }
         >
-          Antes de crear la primera oferta o emitir la primera ODS, define los consecutivos
-          iniciales del módulo.
+          Antes de crear la primera oferta o emitir la primera ODS, define los
+          consecutivos iniciales del módulo.
         </Alert>
       ) : null}
 
@@ -167,7 +174,8 @@ const CalibrationServicesPage = () => {
 
       {visibleServices.length === 0 ? (
         <Alert severity='info'>
-          No hay servicios con estos filtros. Prueba con otra etapa o usa «Limpiar filtros».
+          No hay servicios con estos filtros. Prueba con otra etapa o usa
+          «Limpiar filtros».
         </Alert>
       ) : filters.viewMode === 'list' ? (
         <CalibrationServicesGroupedList
@@ -199,7 +207,11 @@ const CalibrationServicesPage = () => {
           justifyContent='center'
           sx={{ mt: 3 }}
         >
-          <Typography variant='body2' sx={{ color: '#4b5563' }} aria-live='polite'>
+          <Typography
+            variant='body2'
+            sx={{ color: '#4b5563' }}
+            aria-live='polite'
+          >
             {`Se cargaron ${loadedCount} de ${totalItems} servicios`}
             {visibleServices.length !== loadedCount
               ? `; ${visibleServices.length} coinciden con los filtros`
@@ -212,7 +224,9 @@ const CalibrationServicesPage = () => {
               disabled={isFetching}
               sx={secondaryButtonSx}
             >
-              {isFetching ? 'Cargando…' : `Cargar ${Math.min(100, totalItems - loadedCount)} más`}
+              {isFetching
+                ? 'Cargando…'
+                : `Cargar ${Math.min(100, totalItems - loadedCount)} más`}
             </Button>
           ) : null}
         </Stack>

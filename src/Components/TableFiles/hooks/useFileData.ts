@@ -39,73 +39,76 @@ export const useFileData = () => {
     sorting: [{ id: 'nextCalibrationDate', desc: false }]
   })
 
-  const fetchFiles = useCallback(async (options?: FetchFilesOptions) => {
-    const nextQuery = {
-      ...lastQueryRef.current,
-      ...options
-    }
-    const { force = false, ...queryOptions } = nextQuery
-    const primarySort = queryOptions.sorting?.[0]
-    const queryKey = JSON.stringify({
-      pageIndex: queryOptions.pageIndex ?? 0,
-      pageSize: queryOptions.pageSize ?? 15,
-      globalFilter: queryOptions.globalFilter ?? '',
-      sortId: primarySort?.id ?? 'nextCalibrationDate',
-      sortDesc: primarySort?.desc ?? false
-    })
-
-    if (!force && sharedInFlightQueryKey === queryKey) {
-      return
-    }
-
-    const lastCompleted = sharedLastCompletedQuery
-    if (
-      !force &&
-      lastCompleted?.key === queryKey &&
-      Date.now() - lastCompleted.timestamp < 1000
-    ) {
-      return
-    }
-
-    lastQueryRef.current = queryOptions
-    sharedInFlightQueryKey = queryKey
-    const requestId = ++requestIdRef.current
-    setLoading(true)
-
-    try {
-      const response = await axiosPrivate.get<FilesResponse>('/files', {
-        params: {
-          page: (queryOptions.pageIndex || 0) + 1,
-          limit: queryOptions.pageSize || 15,
-          search: queryOptions.globalFilter || '',
-          sortBy: primarySort?.id || 'nextCalibrationDate',
-          sortDirection: primarySort?.desc ? 'DESC' : 'ASC'
-        }
+  const fetchFiles = useCallback(
+    async (options?: FetchFilesOptions) => {
+      const nextQuery = {
+        ...lastQueryRef.current,
+        ...options
+      }
+      const { force = false, ...queryOptions } = nextQuery
+      const primarySort = queryOptions.sorting?.[0]
+      const queryKey = JSON.stringify({
+        pageIndex: queryOptions.pageIndex ?? 0,
+        pageSize: queryOptions.pageSize ?? 15,
+        globalFilter: queryOptions.globalFilter ?? '',
+        sortId: primarySort?.id ?? 'nextCalibrationDate',
+        sortDesc: primarySort?.desc ?? false
       })
 
-      if (requestId !== requestIdRef.current) {
+      if (!force && sharedInFlightQueryKey === queryKey) {
         return
       }
 
-      if (response.status === 200 && Array.isArray(response.data.items)) {
-        setTableData(response.data.items)
-        setRowCount(response.data.total || 0)
-        sharedLastCompletedQuery = {
-          key: queryKey,
-          timestamp: Date.now()
+      const lastCompleted = sharedLastCompletedQuery
+      if (
+        !force &&
+        lastCompleted?.key === queryKey &&
+        Date.now() - lastCompleted.timestamp < 1000
+      ) {
+        return
+      }
+
+      lastQueryRef.current = queryOptions
+      sharedInFlightQueryKey = queryKey
+      const requestId = ++requestIdRef.current
+      setLoading(true)
+
+      try {
+        const response = await axiosPrivate.get<FilesResponse>('/files', {
+          params: {
+            page: (queryOptions.pageIndex || 0) + 1,
+            limit: queryOptions.pageSize || 15,
+            search: queryOptions.globalFilter || '',
+            sortBy: primarySort?.id || 'nextCalibrationDate',
+            sortDirection: primarySort?.desc ? 'DESC' : 'ASC'
+          }
+        })
+
+        if (requestId !== requestIdRef.current) {
+          return
         }
-      } else {
-        logger.error('Unexpected response:', response)
+
+        if (response.status === 200 && Array.isArray(response.data.items)) {
+          setTableData(response.data.items)
+          setRowCount(response.data.total || 0)
+          sharedLastCompletedQuery = {
+            key: queryKey,
+            timestamp: Date.now()
+          }
+        } else {
+          logger.error('Unexpected response:', response)
+        }
+      } catch (error) {
+        logger.error('Error fetching files:', error)
+      } finally {
+        if (requestId === requestIdRef.current) {
+          sharedInFlightQueryKey = null
+          setLoading(false)
+        }
       }
-    } catch (error) {
-      logger.error('Error fetching files:', error)
-    } finally {
-      if (requestId === requestIdRef.current) {
-        sharedInFlightQueryKey = null
-        setLoading(false)
-      }
-    }
-  }, [axiosPrivate])
+    },
+    [axiosPrivate]
+  )
 
   return { tableData, loading, rowCount, fetchFiles }
 }

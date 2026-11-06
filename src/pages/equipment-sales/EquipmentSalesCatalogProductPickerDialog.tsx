@@ -38,15 +38,16 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 0
 })
 
-const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogProductPickerDialogProps> = ({
-  open,
-  products,
-  onClose,
-  onAddItems
-}) => {
+const EquipmentSalesCatalogProductPickerDialog: React.FC<
+  EquipmentSalesCatalogProductPickerDialogProps
+> = ({ open, products, onClose, onAddItems }) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set())
-  const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(new Set())
+  const [expandedProducts, setExpandedProducts] = useState<Set<number>>(
+    new Set()
+  )
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(
+    new Set()
+  )
   const [defaultQuantity, setDefaultQuantity] = useState(1)
 
   const filteredProducts = useMemo(() => {
@@ -116,14 +117,21 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
             label={`${totalSelected} seleccionados`}
             color={totalSelected > 0 ? 'success' : 'default'}
             variant='outlined'
-            sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }}
+            sx={{
+              height: 22,
+              '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 }
+            }}
           />
         </Stack>
       </DialogTitle>
 
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            alignItems={{ sm: 'center' }}
+          >
             <TextField
               size='small'
               placeholder='Buscar productos...'
@@ -133,7 +141,9 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
               InputProps={{
                 startAdornment: (
                   <InputAdornment position='start'>
-                    <SearchOutlinedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                    <SearchOutlinedIcon
+                      sx={{ color: 'text.secondary', fontSize: 20 }}
+                    />
                   </InputAdornment>
                 )
               }}
@@ -143,7 +153,9 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
               type='number'
               label='Cantidad por defecto'
               value={defaultQuantity}
-              onChange={(e) => setDefaultQuantity(Math.max(1, Number(e.target.value)))}
+              onChange={(e) =>
+                setDefaultQuantity(Math.max(1, Number(e.target.value)))
+              }
               sx={{ width: 160 }}
               inputProps={{ min: 1 }}
             />
@@ -160,12 +172,61 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
           >
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <tr
+                  style={{
+                    backgroundColor: '#f9fafb',
+                    borderBottom: '2px solid #e5e7eb'
+                  }}
+                >
                   <th style={{ width: 40, padding: '10px 8px' }}></th>
-                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Producto</th>
-                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Marca</th>
-                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Modelo</th>
-                  <th style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Precio sugerido</th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '10px 8px',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Producto
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '10px 8px',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Marca
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '10px 8px',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Modelo
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'right',
+                      padding: '10px 8px',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Precio sugerido
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -178,48 +239,104 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
                         style={{
                           borderBottom: '1px solid #e5e7eb',
                           cursor: 'pointer',
-                          backgroundColor: isSelected ? 'rgba(16,185,129,0.04)' : undefined
+                          backgroundColor: isSelected
+                            ? 'rgba(16,185,129,0.04)'
+                            : undefined
                         }}
-                        onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.02)' }}
-                        onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '' }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected)
+                            e.currentTarget.style.backgroundColor =
+                              'rgba(0,0,0,0.02)'
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected)
+                            e.currentTarget.style.backgroundColor = ''
+                        }}
                         onClick={() => toggleProduct(product.id)}
                       >
-                        <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                        <td
+                          style={{ padding: '10px 8px', textAlign: 'center' }}
+                        >
                           <Checkbox
                             size='small'
                             checked={isSelected}
-                            onClick={(e) => { e.stopPropagation(); toggleSelection(product.id) }}
-                            sx={{ color: '#d1d5db', '&.Mui-checked': { color: '#059669' } }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleSelection(product.id)
+                            }}
+                            sx={{
+                              color: '#d1d5db',
+                              '&.Mui-checked': { color: '#059669' }
+                            }}
                           />
                         </td>
                         <td style={{ padding: '10px 8px' }}>
-                          <Typography variant='body2' fontWeight={600}>{product.name}</Typography>
-                        </td>
-                        <td style={{ padding: '10px 8px' }}>
-                          <Typography variant='body2' color='text.secondary'>{product.defaultBrand || '—'}</Typography>
-                        </td>
-                        <td style={{ padding: '10px 8px' }}>
-                          <Typography variant='body2' color='text.secondary'>{product.defaultModel || '—'}</Typography>
-                        </td>
-                        <td style={{ padding: '10px 8px', textAlign: 'right' }}>
-                          <Typography variant='body2' fontWeight={600} color='#059669'>
-                            {product.defaultPrice != null ? CURRENCY_FORMATTER.format(product.defaultPrice) : '—'}
+                          <Typography variant='body2' fontWeight={600}>
+                            {product.name}
                           </Typography>
                         </td>
-                        <td style={{ padding: '10px 8px', textAlign: 'center', width: 40 }}>
-                          <IconButton size='small' sx={{ color: isExpanded ? '#059669' : '#9ca3af' }}>
-                            {isExpanded ? <ExpandLessIcon fontSize='small' /> : <ExpandMoreIcon fontSize='small' />}
+                        <td style={{ padding: '10px 8px' }}>
+                          <Typography variant='body2' color='text.secondary'>
+                            {product.defaultBrand || '—'}
+                          </Typography>
+                        </td>
+                        <td style={{ padding: '10px 8px' }}>
+                          <Typography variant='body2' color='text.secondary'>
+                            {product.defaultModel || '—'}
+                          </Typography>
+                        </td>
+                        <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                          <Typography
+                            variant='body2'
+                            fontWeight={600}
+                            color='#059669'
+                          >
+                            {product.defaultPrice != null
+                              ? CURRENCY_FORMATTER.format(product.defaultPrice)
+                              : '—'}
+                          </Typography>
+                        </td>
+                        <td
+                          style={{
+                            padding: '10px 8px',
+                            textAlign: 'center',
+                            width: 40
+                          }}
+                        >
+                          <IconButton
+                            size='small'
+                            sx={{ color: isExpanded ? '#059669' : '#9ca3af' }}
+                          >
+                            {isExpanded ? (
+                              <ExpandLessIcon fontSize='small' />
+                            ) : (
+                              <ExpandMoreIcon fontSize='small' />
+                            )}
                           </IconButton>
                         </td>
                       </tr>
                       {isExpanded && (
                         <tr style={{ backgroundColor: '#f9fafb' }}>
-                          <td colSpan={6} style={{ padding: '12px 16px 12px 56px' }}>
-                            <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
-                              <strong>Descripción:</strong> {product.description || 'Sin descripción registrada'}
+                          <td
+                            colSpan={6}
+                            style={{ padding: '12px 16px 12px 56px' }}
+                          >
+                            <Typography
+                              variant='body2'
+                              color='text.secondary'
+                              sx={{ mb: 1 }}
+                            >
+                              <strong>Descripción:</strong>{' '}
+                              {product.description ||
+                                'Sin descripción registrada'}
                             </Typography>
-                            <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
-                              <strong>Categoría:</strong> {product.category || '—'}
+                            <Typography
+                              variant='body2'
+                              color='text.secondary'
+                              sx={{ mb: 1 }}
+                            >
+                              <strong>Categoría:</strong>{' '}
+                              {product.category || '—'}
                             </Typography>
                             <Typography variant='body2' color='text.secondary'>
                               <strong>IVA:</strong> {product.taxRate}%
@@ -232,9 +349,14 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
                 })}
                 {filteredProducts.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ padding: 32, textAlign: 'center' }}>
+                    <td
+                      colSpan={6}
+                      style={{ padding: 32, textAlign: 'center' }}
+                    >
                       <Typography variant='body2' color='text.secondary'>
-                        {searchQuery.trim() ? 'Ningún producto coincide con la búsqueda.' : 'No hay productos disponibles en el catálogo.'}
+                        {searchQuery.trim()
+                          ? 'Ningún producto coincide con la búsqueda.'
+                          : 'No hay productos disponibles en el catálogo.'}
                       </Typography>
                     </td>
                   </tr>
@@ -246,11 +368,17 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
       </DialogContent>
 
       <DialogActions sx={{ p: '1.25rem', justifyContent: 'space-between' }}>
-        <Button onClick={clearSelection} color='inherit' disabled={totalSelected === 0}>
+        <Button
+          onClick={clearSelection}
+          color='inherit'
+          disabled={totalSelected === 0}
+        >
           Limpiar selección
         </Button>
         <Stack direction='row' spacing={1}>
-          <Button onClick={handleClose} color='inherit'>Cancelar</Button>
+          <Button onClick={handleClose} color='inherit'>
+            Cancelar
+          </Button>
           <Button
             variant='contained'
             startIcon={<AddCircleOutlineOutlinedIcon />}
@@ -261,10 +389,15 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<EquipmentSalesCatalogPr
               borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 700,
-              '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }
+              '&:hover': {
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+              }
             }}
           >
-            Agregar {totalSelected > 0 ? `${totalSelected} seleccionado${totalSelected !== 1 ? 's' : ''}` : ''}
+            Agregar{' '}
+            {totalSelected > 0
+              ? `${totalSelected} seleccionado${totalSelected !== 1 ? 's' : ''}`
+              : ''}
           </Button>
         </Stack>
       </DialogActions>

@@ -1,24 +1,11 @@
-import {
-  Paper,
-  Typography,
-  Box,
-  Button,
-  Chip,
-  Stack
-} from '@mui/material'
-import {
-  Draw,
-  Lock
-} from '@mui/icons-material'
+import { Paper, Typography, Box, Button, Chip, Stack } from '@mui/material'
+import { Draw, Lock } from '@mui/icons-material'
 import {
   MaintenanceTicket,
   MaintenanceStatus
 } from '../../../types/maintenance'
 import { maintenanceSignaturesEnabled } from '../../../features/maintenanceFlags'
-import {
-  formatDate,
-  surfaceSx
-} from './maintenanceTicketDetailUtils'
+import { formatDate, surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
 
 interface MaintenanceTicketSignaturesCardProps {
@@ -27,7 +14,10 @@ interface MaintenanceTicketSignaturesCardProps {
 }
 
 /** Firmas del cliente y del técnico. */
-const MaintenanceTicketSignaturesCard = ({ ticket, details }: MaintenanceTicketSignaturesCardProps) => {
+const MaintenanceTicketSignaturesCard = ({
+  ticket,
+  details
+}: MaintenanceTicketSignaturesCardProps) => {
   const {
     canManageTechnicians,
     hasCustomerSignature,
@@ -101,25 +91,16 @@ const MaintenanceTicketSignaturesCard = ({ ticket, details }: MaintenanceTicketS
                     }
                   />
                 </Stack>
-                {(ticket.technicianSignedAt ||
-                  ticket.customerSignedAt) && (
+                {(ticket.technicianSignedAt || ticket.customerSignedAt) && (
                   <Stack spacing={0.5} sx={{ mt: 1.5 }}>
                     {ticket.technicianSignedAt && (
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                      >
-                        Firma técnico:{' '}
-                        {formatDate(ticket.technicianSignedAt)}
+                      <Typography variant='caption' color='text.secondary'>
+                        Firma técnico: {formatDate(ticket.technicianSignedAt)}
                       </Typography>
                     )}
                     {ticket.customerSignedAt && (
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                      >
-                        Firma cliente:{' '}
-                        {formatDate(ticket.customerSignedAt)}
+                      <Typography variant='caption' color='text.secondary'>
+                        Firma cliente: {formatDate(ticket.customerSignedAt)}
                       </Typography>
                     )}
                   </Stack>
@@ -132,9 +113,7 @@ const MaintenanceTicketSignaturesCard = ({ ticket, details }: MaintenanceTicketS
                   startIcon={<Draw />}
                   onClick={() => setSignaturesDialogOpen(true)}
                 >
-                  {signaturesMissing
-                    ? 'Registrar firmas'
-                    : 'Actualizar firmas'}
+                  {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
                 </Button>
               )}
               {canManageTechnicians && hasCustomerSignature && (

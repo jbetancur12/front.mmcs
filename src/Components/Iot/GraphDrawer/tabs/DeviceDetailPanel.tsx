@@ -152,13 +152,11 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
         <Chip
           label={hasActiveAlarms ? 'ALARMA' : device?.status}
           variant='filled'
-          color={
-            getStatusColor(
-              device?.status,
-              hasActiveAlarms,
-              highestSeverity
-            ) as any
-          }
+          color={getStatusColor(
+            device?.status,
+            hasActiveAlarms,
+            highestSeverity
+          )}
           size='medium'
           icon={hasActiveAlarms ? <Warning /> : undefined}
           sx={{

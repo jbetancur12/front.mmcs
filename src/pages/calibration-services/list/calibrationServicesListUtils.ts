@@ -21,13 +21,19 @@ export const getStoredViewMode = (): CalibrationServicesViewMode => {
     CALIBRATION_SERVICES_VIEW_STORAGE_KEY
   )
 
-  return storedValue === 'kanban' ? 'kanban' : storedValue === 'table' ? 'table' : 'list'
+  return storedValue === 'kanban'
+    ? 'kanban'
+    : storedValue === 'table'
+      ? 'table'
+      : 'list'
 }
 
 export const getStoredFilters = (): StoredFilters => {
   if (typeof window === 'undefined') return {}
   try {
-    const raw = window.sessionStorage.getItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
+    const raw = window.sessionStorage.getItem(
+      CALIBRATION_SERVICES_FILTERS_STORAGE_KEY
+    )
     return raw ? (JSON.parse(raw) as StoredFilters) : {}
   } catch {
     return {}
@@ -41,50 +47,61 @@ export const saveStoredFilters = (filters: StoredFilters) => {
       CALIBRATION_SERVICES_FILTERS_STORAGE_KEY,
       JSON.stringify(filters)
     )
-  } catch { /* quota exceeded */ }
+  } catch {
+    /* quota exceeded */
+  }
 }
 
-export const getSlaVisualTone = (color?: CalibrationServiceSlaIndicatorColor) => {
+export const getSlaVisualTone = (
+  color?: CalibrationServiceSlaIndicatorColor
+) => {
   switch (color) {
     case 'red':
       return {
         accent: '#ef4444',
-        background: 'linear-gradient(180deg, rgba(239,68,68,0.14) 0%, rgba(255,255,255,0.96) 28%)',
+        background:
+          'linear-gradient(180deg, rgba(239,68,68,0.14) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(239,68,68,0.24)',
         glow: '0 6px 18px rgba(239,68,68,0.12)'
       }
     case 'yellow':
       return {
         accent: '#f59e0b',
-        background: 'linear-gradient(180deg, rgba(245,158,11,0.14) 0%, rgba(255,255,255,0.96) 28%)',
+        background:
+          'linear-gradient(180deg, rgba(245,158,11,0.14) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(245,158,11,0.24)',
         glow: '0 6px 18px rgba(245,158,11,0.12)'
       }
     case 'green':
       return {
         accent: '#10b981',
-        background: 'linear-gradient(180deg, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0.96) 28%)',
+        background:
+          'linear-gradient(180deg, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(16,185,129,0.18)',
         glow: '0 6px 18px rgba(16,185,129,0.08)'
       }
     case 'blue':
       return {
         accent: '#3b82f6',
-        background: 'linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.96) 28%)',
+        background:
+          'linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(59,130,246,0.18)',
         glow: '0 6px 18px rgba(59,130,246,0.08)'
       }
     default:
       return {
         accent: '#94a3b8',
-        background: 'linear-gradient(180deg, rgba(148,163,184,0.08) 0%, rgba(255,255,255,0.96) 28%)',
+        background:
+          'linear-gradient(180deg, rgba(148,163,184,0.08) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(148,163,184,0.16)',
         glow: '0 4px 12px rgba(148,163,184,0.08)'
       }
   }
 }
 
-export const getCompactSlaLabel = (color?: CalibrationServiceSlaIndicatorColor) => {
+export const getCompactSlaLabel = (
+  color?: CalibrationServiceSlaIndicatorColor
+) => {
   switch (color) {
     case 'red':
       return 'Vencido'
@@ -120,7 +137,10 @@ export const getItemsTotal = (service: CalibrationService) => {
   return (service.items ?? []).reduce((accumulator, item) => {
     const value =
       typeof item.total === 'string' ? parseFloat(item.total) : item.total
-    return accumulator + (typeof value === 'number' && Number.isFinite(value) ? value : 0)
+    return (
+      accumulator +
+      (typeof value === 'number' && Number.isFinite(value) ? value : 0)
+    )
   }, 0)
 }
 
@@ -135,7 +155,8 @@ export const getServiceSiteLabel = (service: CalibrationService) => {
 export const getMetrologistNames = (service: CalibrationService): string[] => {
   const ops = getOperationsDetails(service)
   const arr = ops.assignedMetrologists
-  if (Array.isArray(arr) && arr.length > 0) return arr.map((m) => String(m.name)).filter(Boolean)
+  if (Array.isArray(arr) && arr.length > 0)
+    return arr.map((m) => String(m.name)).filter(Boolean)
   const legacy = ops.assignedMetrologistName
   return legacy ? [String(legacy)] : []
 }
@@ -143,12 +164,16 @@ export const getMetrologistNames = (service: CalibrationService): string[] => {
 export const getMetrologistEmails = (service: CalibrationService): string[] => {
   const ops = getOperationsDetails(service)
   const arr = ops.assignedMetrologists
-  if (Array.isArray(arr) && arr.length > 0) return arr.map((m) => String(m.email)).filter(Boolean)
+  if (Array.isArray(arr) && arr.length > 0)
+    return arr.map((m) => String(m.email)).filter(Boolean)
   const legacy = ops.assignedMetrologistEmail
   return legacy ? [String(legacy)] : []
 }
 
-export const matchesSiteFilter = (service: CalibrationService, siteSearch: string) => {
+export const matchesSiteFilter = (
+  service: CalibrationService,
+  siteSearch: string
+) => {
   if (!siteSearch.trim()) {
     return true
   }
@@ -172,7 +197,9 @@ export const hasCustomerChangeRequest = (service: CalibrationService) =>
 export const getOperationsDetails = (service: CalibrationService) => {
   const operations = service.otherFields?.operations
 
-  return operations && typeof operations === 'object' && !Array.isArray(operations)
+  return operations &&
+    typeof operations === 'object' &&
+    !Array.isArray(operations)
     ? (operations as Record<string, unknown>)
     : {}
 }
@@ -191,22 +218,28 @@ export const hasPendingReleasableQuantities = (service: CalibrationService) =>
       return false
     }
 
-    const approvedDelta = (service.adjustments || []).reduce((accumulator, adjustment) => {
-      if (adjustment.serviceItemId !== item.id) {
-        return accumulator
-      }
+    const approvedDelta = (service.adjustments || []).reduce(
+      (accumulator, adjustment) => {
+        if (adjustment.serviceItemId !== item.id) {
+          return accumulator
+        }
 
-      if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
-        return accumulator
-      }
+        if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+          return accumulator
+        }
 
-      if (adjustment.changeType === 'extra_item') {
-        return accumulator
-      }
+        if (adjustment.changeType === 'extra_item') {
+          return accumulator
+        }
 
-      return accumulator + getNumberValue(adjustment.differenceQuantity)
-    }, 0)
-    const effectiveQuantity = Math.max(getNumberValue(item.quantity) + approvedDelta, 0)
+        return accumulator + getNumberValue(adjustment.differenceQuantity)
+      },
+      0
+    )
+    const effectiveQuantity = Math.max(
+      getNumberValue(item.quantity) + approvedDelta,
+      0
+    )
     const releasedQuantity = getNumberValue(item.otherFields?.releasedQuantity)
 
     return Math.max(effectiveQuantity - releasedQuantity, 0) > 0
@@ -344,7 +377,8 @@ export const getKanbanColumns = (
     {
       key: 'pending_close',
       title: 'Facturación y cierre',
-      description: 'Finalizados técnicamente: por facturar, facturados o listos para cierre',
+      description:
+        'Finalizados técnicamente: por facturar, facturados o listos para cierre',
       accent: '#3b82f6',
       priority: 1
     },
@@ -364,7 +398,9 @@ export const getKanbanColumnKey = (
 ) => {
   if (isTechnicalOnlyView) {
     if (
-      ['draft', 'pending_approval', 'rejected', 'approved'].includes(service.status)
+      ['draft', 'pending_approval', 'rejected', 'approved'].includes(
+        service.status
+      )
     ) {
       return 'pre_operational'
     }

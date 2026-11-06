@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-// import { sentryVitePlugin } from '@sentry/vite-plugin'
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -12,7 +11,7 @@ const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
-    'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version)
   },
   server: {
     host: '0.0.0.0'
@@ -34,27 +33,13 @@ export default defineConfig({
         const version = { timestamp: Date.now() }
         const distDir = path.resolve(__dirname, 'dist')
         if (!fs.existsSync(distDir)) return
-        fs.writeFileSync(path.join(distDir, 'version.json'), JSON.stringify(version))
+        fs.writeFileSync(
+          path.join(distDir, 'version.json'),
+          JSON.stringify(version)
+        )
       }
     }
-    // sentryVitePlugin({
-    //   org: 'metromedics',
-    //   project: 'javascript-react'
-    // })
   ],
-
-  // server: {
-  //   proxy: {
-  //     '/lms': {
-  //       target: 'http://localhost:5050',
-  //       changeOrigin: true
-  //     },
-  //     '/api': {
-  //       target: 'http://localhost:5050',
-  //       changeOrigin: true
-  //     }
-  //   }
-  // },
 
   build: {
     sourcemap: false,
@@ -78,11 +63,21 @@ export default defineConfig({
             return 'react-pdf-viewer'
           }
           if (id.includes('xlsx-populate')) return 'excel-populate'
-          if (id.includes('/xlsx/') || id.includes('\\xlsx\\')) return 'excel-utils'
-          if (id.includes('monaco-editor') || id.includes('@monaco-editor/react')) return 'monaco'
+          if (id.includes('/xlsx/') || id.includes('\\xlsx\\'))
+            return 'excel-utils'
+          if (
+            id.includes('monaco-editor') ||
+            id.includes('@monaco-editor/react')
+          )
+            return 'monaco'
           if (id.includes('recharts')) return 'recharts-vendor'
           if (id.includes('victory')) return 'victory-vendor'
-          if (id.includes('react-router') || id.includes('react-dom') || id.includes('/react/')) return 'react-vendor'
+          if (
+            id.includes('react-router') ||
+            id.includes('react-dom') ||
+            id.includes('/react/')
+          )
+            return 'react-vendor'
         }
       }
     }

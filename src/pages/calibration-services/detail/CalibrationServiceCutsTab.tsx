@@ -1,10 +1,4 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  Typography
-} from '@mui/material'
+import { Alert, Box, Button, Stack, Typography } from '@mui/material'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import { CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS } from '../../../constants/calibrationServices'
@@ -62,14 +56,8 @@ const CalibrationServiceCutsTab = ({
     setSelectedCutForPayment,
     setSelectedCutForDocumentControl
   } = dialogs
-  const {
-    handleMarkCutReady,
-    handleGenerateTechnicalProgressPdf
-  } = actions
-  const {
-    isOperationalBusy,
-    isDocumentBusy
-  } = busy
+  const { handleMarkCutReady, handleGenerateTechnicalProgressPdf } = actions
+  const { isOperationalBusy, isDocumentBusy } = busy
 
   return (
     <>
@@ -111,27 +99,25 @@ const CalibrationServiceCutsTab = ({
       ) : null}
       {shouldShowCutsNextStepGuidance ? (
         <Alert severity='info' sx={{ mb: 2 }}>
-          El servicio ya terminó técnicamente y todavía no tiene
-          cortes. Este es el paso para definir qué sale ahora: puedes
-          crear un corte parcial si quedan pendientes, o un corte
-          final si todo ya está listo.
+          El servicio ya terminó técnicamente y todavía no tiene cortes. Este es
+          el paso para definir qué sale ahora: puedes crear un corte parcial si
+          quedan pendientes, o un corte final si todo ya está listo.
         </Alert>
       ) : null}
       {service.status === 'technically_completed' &&
       allCutsSent &&
       hasReleasableItems ? (
         <Alert severity='warning' sx={{ mb: 2 }}>
-          Los cortes existentes ya fueron enviados, pero todavía hay
-          cantidades aprobadas pendientes por liberar. Crea un nuevo
-          corte para esas cantidades antes del cierre final.
+          Los cortes existentes ya fueron enviados, pero todavía hay cantidades
+          aprobadas pendientes por liberar. Crea un nuevo corte para esas
+          cantidades antes del cierre final.
         </Alert>
       ) : null}
       {service.status === 'technically_completed' &&
       allCutsSent &&
       !hasReleasableItems ? (
         <Alert severity='success' sx={{ mb: 2 }}>
-          Todos los cortes ya están enviados. El servicio quedó listo
-          para
+          Todos los cortes ya están enviados. El servicio quedó listo para
           <strong> cierre final</strong>.
         </Alert>
       ) : null}
@@ -203,9 +189,7 @@ const CalibrationServiceCutsTab = ({
         onMarkReady={handleMarkCutReady}
         onMarkInvoiced={(cut) => setSelectedCutForInvoice(cut)}
         onRegisterPayment={(cut) => setSelectedCutForPayment(cut)}
-        onUpdateDocumentControl={(cut) =>
-          setSelectedCutForDocumentControl(cut)
-        }
+        onUpdateDocumentControl={(cut) => setSelectedCutForDocumentControl(cut)}
       />
     </>
   )

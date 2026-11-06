@@ -5,6 +5,7 @@ This guide explains how to use the generic persistent table state solution acros
 ## Overview
 
 The table state management system provides:
+
 - **Persistent state**: Automatically saves and restores table state across browser sessions
 - **Configurable persistence**: Choose which state properties to persist
 - **Module-specific defaults**: Predefined configurations for different modules
@@ -104,6 +105,7 @@ const { tableState, updateTableState } = usePersistentTableState({
 ```
 
 Available properties:
+
 - `columnFilters`: Filter states for all columns
 - `sorting`: Column sorting configuration
 - `pagination`: Page size and current page
@@ -163,6 +165,7 @@ const { tableState, updateTableState } = usePersistentTableState({
 ```
 
 Available presets:
+
 - `BASIC`: Filters, sorting, pagination
 - `FULL`: All state properties
 - `MINIMAL`: Filters and pagination only
@@ -183,9 +186,10 @@ const tableId = generateTableId('fleet', 'vehicles') // 'fleet-vehicles-table'
 ### Manual State Management
 
 ```tsx
-const { tableState, updateTableState, clearState, saveState, loadState } = usePersistentTableState({
-  tableId: 'my-table'
-})
+const { tableState, updateTableState, clearState, saveState, loadState } =
+  usePersistentTableState({
+    tableId: 'my-table'
+  })
 
 // Clear all saved state
 const handleClearFilters = () => {
@@ -239,6 +243,7 @@ const handleCustomUpdate = (newState) => {
 To migrate an existing table component:
 
 1. **Remove old state management**:
+
    ```tsx
    // Remove these:
    const [columnFilters, setColumnFilters] = useState([])
@@ -247,6 +252,7 @@ To migrate an existing table component:
    ```
 
 2. **Add the new hook**:
+
    ```tsx
    const config = getModuleTableConfig('YOUR_MODULE', 'your-table-name')
    const { tableState, updateTableState } = usePersistentTableState(config)
@@ -273,6 +279,7 @@ To migrate an existing table component:
 ### Table ID Naming
 
 Use descriptive, unique table IDs:
+
 - ✅ `'purchase-requests-main'`
 - ✅ `'fleet-vehicles-active'`
 - ✅ `'lms-courses-enrolled'`
@@ -282,6 +289,7 @@ Use descriptive, unique table IDs:
 ### Module Configuration
 
 Always use module-specific configurations when available:
+
 ```tsx
 // Preferred
 const config = getModuleTableConfig('PURCHASES', 'requests')
@@ -302,7 +310,7 @@ The system includes built-in error handling, but you can add custom handling:
 
 ```tsx
 const { tableState, updateTableState } = usePersistentTableState({
-  tableId: 'my-table',
+  tableId: 'my-table'
   // The system will gracefully handle localStorage errors
   // and fall back to default state
 })
@@ -355,12 +363,14 @@ All functions and hooks are fully typed with proper IntelliSense support.
 ## Examples by Module
 
 ### Purchases Module
+
 ```tsx
 const config = getModuleTableConfig('PURCHASES', 'purchase-requests')
 const { tableState, updateTableState } = usePersistentTableState(config)
 ```
 
 ### Fleet Module
+
 ```tsx
 const config = getModuleTableConfig('FLEET', 'vehicles')
 const { tableState, updateTableState } = usePersistentTableState({
@@ -373,12 +383,14 @@ const { tableState, updateTableState } = usePersistentTableState({
 ```
 
 ### LMS Module
+
 ```tsx
 const config = getModuleTableConfig('LMS', 'courses')
 const { tableState, updateTableState } = usePersistentTableState(config)
 ```
 
 ### IoT Module
+
 ```tsx
 const config = getModuleTableConfig('IOT', 'devices')
 const { tableState, updateTableState } = usePersistentTableState(config)

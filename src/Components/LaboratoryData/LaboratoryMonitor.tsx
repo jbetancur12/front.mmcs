@@ -96,7 +96,7 @@ interface RawHistoricalDataPoint {
 // Interfaz para los datos procesados para Recharts (sin cambios)
 interface ChartDataPoint {
   timestamp: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 // --- NUEVAS INTERFACES ---
@@ -130,7 +130,9 @@ interface HistoricalApiResponse {
 
 const avgOf = (values: (number | null | undefined)[], unit: string) => {
   const nums = values.filter((v): v is number => typeof v === 'number')
-  return nums.length ? `${(nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1)}${unit}` : '—'
+  return nums.length
+    ? `${(nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1)}${unit}`
+    : '—'
 }
 
 const LaboratoryMonitor: React.FC = () => {
@@ -177,8 +179,9 @@ const LaboratoryMonitor: React.FC = () => {
         'Received LABORATORY_DATA WebSocket message:',
         lastMessage.data
       )
-      const updatedDeviceState: WebSocketDeviceState =
-        lastMessage.data?.deviceState
+      const data = lastMessage.data as { deviceState?: WebSocketDeviceState }
+      const updatedDeviceState: WebSocketDeviceState | undefined =
+        data.deviceState
 
       if (!updatedDeviceState || updatedDeviceState.id === undefined) {
         logger.warn(
@@ -414,7 +417,16 @@ const LaboratoryMonitor: React.FC = () => {
         icon={<Thermostat />}
         actions={
           canManage ? (
-            <Button variant='contained' startIcon={<AddIcon />} onClick={handleOpenAddModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddModal}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Agregar sensor
             </Button>
           ) : undefined
@@ -423,13 +435,37 @@ const LaboratoryMonitor: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Sensores' value={displayedDevices.length} icon={<Sensors />} tone='teal' />
+          <LmsStatCard
+            variant='quiet'
+            label='Sensores'
+            value={displayedDevices.length}
+            icon={<Sensors />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Temperatura promedio' value={avgOf(displayedDevices.map((d) => d.lastTemperature), '°C')} icon={<Thermostat />} tone='teal' />
+          <LmsStatCard
+            variant='quiet'
+            label='Temperatura promedio'
+            value={avgOf(
+              displayedDevices.map((d) => d.lastTemperature),
+              '°C'
+            )}
+            icon={<Thermostat />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet' label='Humedad promedio' value={avgOf(displayedDevices.map((d) => d.lastHumidity), '%')} icon={<WaterDrop />} tone='blue' />
+          <LmsStatCard
+            variant='quiet'
+            label='Humedad promedio'
+            value={avgOf(
+              displayedDevices.map((d) => d.lastHumidity),
+              '%'
+            )}
+            icon={<WaterDrop />}
+            tone='blue'
+          />
         </Grid>
       </Grid>
 
@@ -844,7 +880,10 @@ const LaboratoryMonitor: React.FC = () => {
             {/* Mostrar indicador de carga o error específico para históricos */}
             {isLoadingHistory && selectedSensorIds.length > 0 && (
               <Box className='flex justify-center items-center h-32'>
-                <SignalLoader size='small' message='Cargando datos históricos...' />
+                <SignalLoader
+                  size='small'
+                  message='Cargando datos históricos...'
+                />
               </Box>
             )}
             {isErrorHistory && selectedSensorIds.length > 0 && (

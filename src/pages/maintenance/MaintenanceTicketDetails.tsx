@@ -1,6 +1,7 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 import { Container, Grid, Alert, Button } from '@mui/material'
+import { getApiErrorReason } from 'src/utils/apiError'
 import { ArrowBack } from '@mui/icons-material'
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import useMaintenanceTicketDetails from './ticket-details/useMaintenanceTicketDetails'
@@ -54,7 +55,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             border: '1px solid rgba(244, 67, 54, 0.2)'
           }}
         >
-          {(ticketError as any)?.message ||
+          {getApiErrorReason(ticketError) ||
             'Error al cargar el ticket. El ticket no existe o no tienes permisos para verlo.'}
         </Alert>
         <Button
@@ -100,15 +101,24 @@ const MaintenanceTicketDetails: React.FC = () => {
             <MaintenanceTicketCustomerCard ticket={ticket} details={details} />
             <MaintenanceTicketEquipmentCard ticket={ticket} details={details} />
             <MaintenanceTicketIssueCard ticket={ticket} />
-            <MaintenanceTicketActivitySections ticket={ticket} details={details} />
+            <MaintenanceTicketActivitySections
+              ticket={ticket}
+              details={details}
+            />
           </Grid>
 
           {/* Sidebar */}
           <Grid item xs={12} lg={4}>
-            <MaintenanceTicketTechnicianCard ticket={ticket} details={details} />
+            <MaintenanceTicketTechnicianCard
+              ticket={ticket}
+              details={details}
+            />
             <MaintenanceTicketScheduleCard ticket={ticket} details={details} />
             <MaintenanceTicketCostsSection ticket={ticket} details={details} />
-            <MaintenanceTicketSignaturesCard ticket={ticket} details={details} />
+            <MaintenanceTicketSignaturesCard
+              ticket={ticket}
+              details={details}
+            />
             <MaintenanceTicketSatisfactionCard ticket={ticket} />
             <MaintenanceTicketQuickActions ticket={ticket} details={details} />
           </Grid>

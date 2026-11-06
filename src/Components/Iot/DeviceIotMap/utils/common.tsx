@@ -1,4 +1,4 @@
-import { Tooltip } from '@mui/material'
+import { Tooltip, type ChipProps } from '@mui/material'
 import { AlarmSeverity, DeviceStatus, PowerSource } from '../constants'
 import {
   Info,
@@ -27,7 +27,7 @@ export const getStatusColor = (
   status?: string,
   isInAlarm?: boolean,
   highestSeverity?: 'warning' | 'info' | 'critical' | null
-) => {
+): ChipProps['color'] => {
   if (isInAlarm) {
     switch (highestSeverity) {
       case AlarmSeverity.INFO:

@@ -1,6 +1,9 @@
 import { Chip, Paper, Stack, Tab, Tabs } from '@mui/material'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
-import { TRACKED_SECTIONS, WORKSPACE_SECTIONS } from './calibrationServiceWorkspaceSections'
+import {
+  TRACKED_SECTIONS,
+  WORKSPACE_SECTIONS
+} from './calibrationServiceWorkspaceSections'
 
 interface CalibrationServiceWorkspaceSectionTabsProps {
   activeSection: number
@@ -20,7 +23,7 @@ const CalibrationServiceWorkspaceSectionTabs = ({
       mb: 3,
       borderRadius: '14px',
       border: '1px solid rgba(0,0,0,0.06)',
-      overflow: 'hidden',
+      overflow: 'hidden'
     }}
   >
     <Tabs
@@ -63,10 +66,21 @@ const CalibrationServiceWorkspaceSectionTabs = ({
                   variant='outlined'
                   label={pendingBySection[index]}
                   aria-label={`${pendingBySection[index]} pendientes`}
-                  sx={{ height: 20, minWidth: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8, fontWeight: 700 } }}
+                  sx={{
+                    height: 20,
+                    minWidth: 22,
+                    '& .MuiChip-label': {
+                      fontSize: '0.7rem',
+                      px: 0.8,
+                      fontWeight: 700
+                    }
+                  }}
                 />
               ) : TRACKED_SECTIONS.includes(index) ? (
-                <CheckCircleOutlineOutlinedIcon aria-label='Completo' sx={{ fontSize: 16, color: '#00897B' }} />
+                <CheckCircleOutlineOutlinedIcon
+                  aria-label='Completo'
+                  sx={{ fontSize: 16, color: '#00897B' }}
+                />
               ) : null}
             </Stack>
           }

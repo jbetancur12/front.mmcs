@@ -14,7 +14,8 @@ const NewVersionBanner = () => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        background: 'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
+        background:
+          'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
         px: { xs: 2, md: 4 },
         py: 1.5,
         display: 'flex',

@@ -233,8 +233,11 @@ export const TableView = ({
                 color='error'
                 aria-label='Eliminar certificado'
                 onClick={() =>
-                handleDeleteRow(Number(row.original.id), row.original.filePath)
-              }
+                  handleDeleteRow(
+                    Number(row.original.id),
+                    row.original.filePath
+                  )
+                }
               >
                 <DeleteOutline fontSize='small' />
               </IconButton>
@@ -244,7 +247,12 @@ export const TableView = ({
       )}
       renderTopToolbarCustomActions={() => (
         <Box
-          sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}
+          sx={{
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
         >
           {hasActiveFilters && (
             <Chip

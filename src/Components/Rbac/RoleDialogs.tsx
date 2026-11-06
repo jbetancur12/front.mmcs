@@ -68,12 +68,17 @@ export const CreateRoleDialog: React.FC<CreateRoleDialogProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={createRole.isLoading ? undefined : onClose} maxWidth='xs' fullWidth>
+    <Dialog
+      open={open}
+      onClose={createRole.isLoading ? undefined : onClose}
+      maxWidth='xs'
+      fullWidth
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>Nuevo rol</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>
-          El rol se crea sin capacidades. Después podrás marcarlas en la matriz y
-          asignárselo a las personas desde Ajustes.
+          El rol se crea sin capacidades. Después podrás marcarlas en la matriz
+          y asignárselo a las personas desde Ajustes.
         </DialogContentText>
         <TextField
           autoFocus
@@ -106,14 +111,22 @@ export const CreateRoleDialog: React.FC<CreateRoleDialogProps> = ({
         )}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} disabled={createRole.isLoading} sx={{ textTransform: 'none' }}>
+        <Button
+          onClick={onClose}
+          disabled={createRole.isLoading}
+          sx={{ textTransform: 'none' }}
+        >
           Cancelar
         </Button>
         <Button
           variant='contained'
           onClick={submit}
           disabled={!nameValid || createRole.isLoading}
-          startIcon={createRole.isLoading ? <CircularProgress size={16} color='inherit' /> : undefined}
+          startIcon={
+            createRole.isLoading ? (
+              <CircularProgress size={16} color='inherit' />
+            ) : undefined
+          }
           sx={primaryButtonSx}
         >
           Crear rol
@@ -156,7 +169,12 @@ export const EditRoleDialog: React.FC<RoleDialogProps> = ({
   }
 
   return (
-    <Dialog open={Boolean(role)} onClose={updateRole.isLoading ? undefined : onClose} maxWidth='xs' fullWidth>
+    <Dialog
+      open={Boolean(role)}
+      onClose={updateRole.isLoading ? undefined : onClose}
+      maxWidth='xs'
+      fullWidth
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>Editar rol</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>
@@ -180,14 +198,22 @@ export const EditRoleDialog: React.FC<RoleDialogProps> = ({
         )}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} disabled={updateRole.isLoading} sx={{ textTransform: 'none' }}>
+        <Button
+          onClick={onClose}
+          disabled={updateRole.isLoading}
+          sx={{ textTransform: 'none' }}
+        >
           Cancelar
         </Button>
         <Button
           variant='contained'
           onClick={submit}
           disabled={updateRole.isLoading}
-          startIcon={updateRole.isLoading ? <CircularProgress size={16} color='inherit' /> : undefined}
+          startIcon={
+            updateRole.isLoading ? (
+              <CircularProgress size={16} color='inherit' />
+            ) : undefined
+          }
           sx={primaryButtonSx}
         >
           Guardar
@@ -215,7 +241,10 @@ export const ToggleRoleDialog: React.FC<RoleDialogProps> = ({
     if (!role) return
     setError(null)
     try {
-      await updateRole.mutateAsync({ roleId: role.id, isActive: !role.isActive })
+      await updateRole.mutateAsync({
+        roleId: role.id,
+        isActive: !role.isActive
+      })
       onDone(
         deactivating
           ? `Rol "${roleDisplayName(role)}" desactivado.`
@@ -228,7 +257,12 @@ export const ToggleRoleDialog: React.FC<RoleDialogProps> = ({
   }
 
   return (
-    <Dialog open={Boolean(role)} onClose={updateRole.isLoading ? undefined : onClose} maxWidth='xs' fullWidth>
+    <Dialog
+      open={Boolean(role)}
+      onClose={updateRole.isLoading ? undefined : onClose}
+      maxWidth='xs'
+      fullWidth
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>
         {deactivating ? 'Desactivar rol' : 'Activar rol'}
       </DialogTitle>
@@ -236,10 +270,11 @@ export const ToggleRoleDialog: React.FC<RoleDialogProps> = ({
         {role && deactivating ? (
           <>
             <DialogContentText sx={{ mb: 2 }}>
-              Mientras <strong>{roleDisplayName(role)}</strong> esté inactivo, sus{' '}
-              {role.userCount} {role.userCount === 1 ? 'usuario' : 'usuarios'}{' '}
-              no recibirán ninguna de sus capacidades. Conservan el rol y todo
-              vuelve al activarlo.
+              Mientras <strong>{roleDisplayName(role)}</strong> esté inactivo,
+              sus {role.userCount}{' '}
+              {role.userCount === 1 ? 'usuario' : 'usuarios'} no recibirán
+              ninguna de sus capacidades. Conservan el rol y todo vuelve al
+              activarlo.
             </DialogContentText>
             <Alert severity='info'>
               Solo afecta a los módulos que ya se gestionan desde este panel; el
@@ -249,8 +284,10 @@ export const ToggleRoleDialog: React.FC<RoleDialogProps> = ({
         ) : (
           role && (
             <DialogContentText>
-              Los {role.userCount} {role.userCount === 1 ? 'usuario' : 'usuarios'} de{' '}
-              <strong>{roleDisplayName(role)}</strong> recuperan sus capacidades.
+              Los {role.userCount}{' '}
+              {role.userCount === 1 ? 'usuario' : 'usuarios'} de{' '}
+              <strong>{roleDisplayName(role)}</strong> recuperan sus
+              capacidades.
             </DialogContentText>
           )
         )}
@@ -261,7 +298,11 @@ export const ToggleRoleDialog: React.FC<RoleDialogProps> = ({
         )}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} disabled={updateRole.isLoading} sx={{ textTransform: 'none' }}>
+        <Button
+          onClick={onClose}
+          disabled={updateRole.isLoading}
+          sx={{ textTransform: 'none' }}
+        >
           Cancelar
         </Button>
         <Button
@@ -269,7 +310,11 @@ export const ToggleRoleDialog: React.FC<RoleDialogProps> = ({
           color={deactivating ? 'warning' : 'primary'}
           onClick={submit}
           disabled={updateRole.isLoading}
-          startIcon={updateRole.isLoading ? <CircularProgress size={16} color='inherit' /> : undefined}
+          startIcon={
+            updateRole.isLoading ? (
+              <CircularProgress size={16} color='inherit' />
+            ) : undefined
+          }
           sx={deactivating ? { textTransform: 'none' } : primaryButtonSx}
         >
           {deactivating ? 'Desactivar' : 'Activar'}

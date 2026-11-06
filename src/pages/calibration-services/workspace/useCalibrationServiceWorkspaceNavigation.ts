@@ -6,7 +6,9 @@ const useCalibrationServiceWorkspaceNavigation = () => {
   const [activeSection, setActiveSection] = useState(0)
 
   const goToSection = (index: number) => {
-    setActiveSection(Math.min(Math.max(index, 0), WORKSPACE_SECTIONS.length - 1))
+    setActiveSection(
+      Math.min(Math.max(index, 0), WORKSPACE_SECTIONS.length - 1)
+    )
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 

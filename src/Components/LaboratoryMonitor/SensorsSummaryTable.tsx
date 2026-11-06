@@ -57,9 +57,7 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
 }) => {
   const now = useNow(15000)
   if (isLoading) {
-    return (
-      <SignalLoader message='Cargando resumen de sensores...' />
-    )
+    return <SignalLoader message='Cargando resumen de sensores...' />
   }
   if (!summaryData || summaryData.length === 0) {
     return (

@@ -1,6 +1,7 @@
 import { getApiErrorReason } from './apiError'
 import { notify } from './notify'
 import { busyDialog, confirmDialog } from './confirm'
+import type { AxiosError } from 'axios'
 
 // Antes eran diálogos de SweetAlert; ahora usan confirmDialog / notify / busyDialog (ver utils/confirm.tsx
 // y utils/notify.tsx). Se conservan los nombres para no tocar a quienes los llaman.
@@ -50,16 +51,19 @@ export const showServerErrorAlert = async () => {
 // Enhanced error handler that determines the appropriate alert based on error type
 export const handleErrorWithAlert = async (error: unknown): Promise<string> => {
   let errorMessage = 'Error desconocido'
-  
+
   if (error instanceof Error) {
     // Handle Axios errors
     if ('isAxiosError' in error && error.isAxiosError) {
-      const axiosError = error as any
-      
+      const axiosError = error as AxiosError
+
       if (axiosError.code === 'NETWORK_ERROR' || !axiosError.response) {
         await showNetworkErrorAlert()
         return 'Error de conexión. Verifique su conexión a internet.'
-      } else if (axiosError.code === 'ECONNABORTED' || axiosError.message?.includes('timeout')) {
+      } else if (
+        axiosError.code === 'ECONNABORTED' ||
+        axiosError.message?.includes('timeout')
+      ) {
         await showTimeoutAlert()
         return 'Tiempo de espera agotado. Intente nuevamente.'
       } else if (axiosError.response?.status === 400) {

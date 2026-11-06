@@ -64,7 +64,6 @@ const Table: React.FC = () => {
   const createCertificateTypeMutation = useCreateCertificateType()
   const updateCertificateTypeMutation = useUpdateCertificateType()
   const deleteCertificateTypeMutation = useDeleteCertificateType()
-  // const [filteredTableData, setFilteredTableData] = useState<CertificateTypeData[]>([]);
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -72,7 +71,7 @@ const Table: React.FC = () => {
 
   // Create a new certificateType
   const onCreateCertificateType = async (
-    certificateTypeData: CertificateTypeData
+    certificateTypeData: Record<string, string>
   ) => {
     try {
       const response = await createCertificateTypeMutation.mutateAsync({
@@ -92,30 +91,7 @@ const Table: React.FC = () => {
     }
   }
 
-  // const updateUser = async (certificateTypeData: CertificateTypeData) => {
-
-  //   try {
-  //     const response = await axiosPrivate.put(`/certificateTypes/${certificateTypeData.id}`, certificateTypeData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Equipo Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear tipo de certificado');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
-
-  const handleCreateNewRow = (values: CertificateTypeData) => {
+  const handleCreateNewRow = (values: Record<string, string>) => {
     onCreateCertificateType(values)
     setCreateModalOpen(false)
   }
@@ -297,26 +273,26 @@ const Table: React.FC = () => {
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip arrow placement='top' title='Editar'>
-            <IconButton
-            size='small'
-            aria-label='Editar'
-            sx={{ color: '#2563eb' }}
-            onClick={() => table.setEditingRow(row)}
-            >
-            <EditOutlined fontSize='small' />
-            </IconButton>
-          </Tooltip>
-          <Tooltip arrow placement='top' title='Eliminar'>
-            <IconButton
-            size='small'
-            color='error'
-            aria-label='Eliminar'
-            onClick={() => handleDeleteRow(row)}
-            >
-            <DeleteOutline fontSize='small' />
-            </IconButton>
-          </Tooltip>
+            <Tooltip arrow placement='top' title='Editar'>
+              <IconButton
+                size='small'
+                aria-label='Editar'
+                sx={{ color: '#2563eb' }}
+                onClick={() => table.setEditingRow(row)}
+              >
+                <EditOutlined fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip arrow placement='top' title='Eliminar'>
+              <IconButton
+                size='small'
+                color='error'
+                aria-label='Eliminar'
+                onClick={() => handleDeleteRow(row)}
+              >
+                <DeleteOutline fontSize='small' />
+              </IconButton>
+            </Tooltip>
           </Box>
         )}
       />
@@ -333,7 +309,7 @@ const Table: React.FC = () => {
 interface CreateModalProps {
   columns: MRT_ColumnDef<CertificateTypeData>[]
   onClose: () => void
-  onSubmit: (values: CertificateTypeData) => void
+  onSubmit: (values: Record<string, string>) => void
   open: boolean
 }
 
@@ -344,7 +320,7 @@ export const CreateNewAccountModal = ({
   onClose,
   onSubmit
 }: CreateModalProps) => {
-  const [values, setValues] = useState<any>({})
+  const [values, setValues] = useState<Record<string, string>>({})
 
   // Cada vez que se abre, el formulario empieza vacío
   useEffect(() => {

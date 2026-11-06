@@ -75,7 +75,7 @@ const RenderRowActions = ({
     }: {
       id: number
       action: string
-      payload: any
+      payload: Record<string, unknown>
     }) => {
       return await axiosPrivate.patch(
         `/purchaseRequests/${id}/${action}`,
@@ -94,7 +94,7 @@ const RenderRowActions = ({
     action: 'pre-approve' | 'approve' | 'reject'
   ) => {
     let message = ''
-    let payload: any = { userId: $userStore.email }
+    let payload: Record<string, unknown> = { userId: $userStore.email }
 
     // Si la acción es "reject", solicitamos el motivo
     if (action === 'reject') {

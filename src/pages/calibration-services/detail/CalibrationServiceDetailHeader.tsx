@@ -43,6 +43,7 @@ import {
   secondaryActionSx,
   cautionActionSx
 } from './calibrationServiceDetailUtils'
+import { getServiceFlag } from '../calibrationServiceOtherFields'
 import {
   CalibrationServiceDetailPermissions,
   CalibrationServiceDetailData,
@@ -137,15 +138,20 @@ const CalibrationServiceDetailHeader = ({
     >
       <Box flex={1} maxWidth={{ xs: '100%', md: '60%' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <Button
-          startIcon={<ArrowBackOutlinedIcon />}
-          onClick={() => navigate('/calibration-services')}
-          sx={{ ml: -1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
-          size='small'
-        >
-          Volver a la bandeja
-        </Button>
-        <CalibrationNotificationBell />
+          <Button
+            startIcon={<ArrowBackOutlinedIcon />}
+            onClick={() => navigate('/calibration-services')}
+            sx={{
+              ml: -1,
+              color: 'text.secondary',
+              textTransform: 'none',
+              fontWeight: 600
+            }}
+            size='small'
+          >
+            Volver a la bandeja
+          </Button>
+          <CalibrationNotificationBell />
         </Box>
 
         <Stack
@@ -187,8 +193,14 @@ const CalibrationServiceDetailHeader = ({
               sx={{ fontWeight: 600 }}
             />
           ) : null}
-          {(service.otherFields as any)?.hasEquipmentSale === true ? (
-            <Chip size='small' color='warning' variant='outlined' label='Venta equipo' sx={{ fontWeight: 600 }} />
+          {getServiceFlag(service, 'hasEquipmentSale') ? (
+            <Chip
+              size='small'
+              color='warning'
+              variant='outlined'
+              label='Venta equipo'
+              sx={{ fontWeight: 600 }}
+            />
           ) : null}
           <CalibrationServiceStageDecisionHelp
             status={service.status}
@@ -202,11 +214,7 @@ const CalibrationServiceDetailHeader = ({
           />
         </Stack>
 
-        <Typography
-          variant='subtitle1'
-          color='text.secondary'
-          fontWeight={500}
-        >
+        <Typography variant='subtitle1' color='text.secondary' fontWeight={500}>
           {service.customer?.nombre ||
             service.executionCustomerName ||
             'Cliente pendiente'}
@@ -282,7 +290,11 @@ const CalibrationServiceDetailHeader = ({
           </Button>
         ) : null}
         {canDecideApproval ? (
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ '& .MuiButton-root': { whiteSpace: 'nowrap' } }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            sx={{ '& .MuiButton-root': { whiteSpace: 'nowrap' } }}
+          >
             <Button
               variant='outlined'
               color='warning'
@@ -353,7 +365,11 @@ const CalibrationServiceDetailHeader = ({
               onClick={(event) => setMoreActionsAnchor(event.currentTarget)}
               disabled={isOperationalBusy}
               aria-haspopup='menu'
-              sx={{ ...secondaryActionSx, color: 'text.primary', borderColor: '#d1d5db' }}
+              sx={{
+                ...secondaryActionSx,
+                color: 'text.primary',
+                borderColor: '#d1d5db'
+              }}
             >
               Más acciones
             </Button>
@@ -380,7 +396,10 @@ const CalibrationServiceDetailHeader = ({
                     setIsReassignDialogOpen(true)
                   }}
                 >
-                  <PersonOutlineOutlinedIcon fontSize='small' sx={{ mr: 1.25 }} />
+                  <PersonOutlineOutlinedIcon
+                    fontSize='small'
+                    sx={{ mr: 1.25 }}
+                  />
                   Reasignar metrólogo
                 </MenuItem>
               ) : null}
@@ -391,7 +410,10 @@ const CalibrationServiceDetailHeader = ({
                     setIsPauseDialogOpen(true)
                   }}
                 >
-                  <PauseCircleOutlineOutlinedIcon fontSize='small' sx={{ mr: 1.25 }} />
+                  <PauseCircleOutlineOutlinedIcon
+                    fontSize='small'
+                    sx={{ mr: 1.25 }}
+                  />
                   Pausar servicio
                 </MenuItem>
               ) : null}
@@ -457,7 +479,9 @@ const CalibrationServiceDetailHeader = ({
               disabled={isOperationalBusy || !canCreateCut}
               sx={secondaryActionSx}
             >
-              {service.status === 'technically_completed' ? 'Crear corte final' : 'Crear corte'}
+              {service.status === 'technically_completed'
+                ? 'Crear corte final'
+                : 'Crear corte'}
             </Button>
           </BlockedActionTooltip>
         ) : null}
@@ -479,9 +503,7 @@ const CalibrationServiceDetailHeader = ({
           <Button
             variant='outlined'
             startIcon={<EditOutlinedIcon />}
-            onClick={() =>
-              navigate(`/calibration-services/${service.id}/edit`)
-            }
+            onClick={() => navigate(`/calibration-services/${service.id}/edit`)}
             sx={secondaryActionSx}
           >
             Editar servicio

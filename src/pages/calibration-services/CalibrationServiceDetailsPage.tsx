@@ -21,7 +21,9 @@ const CalibrationServiceDetailsPage = () => {
     isError,
     error
   } = useCalibrationService(serviceId)
-  const canManageSequenceConfig = useCan(PERMISSIONS.CALIBRATION_CONFIG_SEQUENCE)
+  const canManageSequenceConfig = useCan(
+    PERMISSIONS.CALIBRATION_CONFIG_SEQUENCE
+  )
   const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
     useCalibrationServiceSequenceConfig(canManageSequenceConfig)
   const { data: slaConfig } = useCalibrationServiceSlaConfig(Boolean(serviceId))
@@ -46,12 +48,19 @@ const CalibrationServiceDetailsPage = () => {
         <Alert
           severity='error'
           action={
-            <Button color='inherit' size='small' onClick={() => navigate('/calibration-services')}>
+            <Button
+              color='inherit'
+              size='small'
+              onClick={() => navigate('/calibration-services')}
+            >
               Volver a la bandeja
             </Button>
           }
         >
-          {getApiErrorMessage(error, 'No pudimos cargar el detalle del servicio.')}
+          {getApiErrorMessage(
+            error,
+            'No pudimos cargar el detalle del servicio.'
+          )}
         </Alert>
       </Box>
     )

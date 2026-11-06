@@ -16,9 +16,9 @@ export const useCertificateTypes = () => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery(CERTIFICATE_TYPE_QUERY_KEYS.list(), async () => {
     const response = await axiosPrivate.get('/certificateTypes', {})
-    return (Array.isArray(response.data)
-      ? response.data
-      : []) as CertificateTypeItem[]
+    return (
+      Array.isArray(response.data) ? response.data : []
+    ) as CertificateTypeItem[]
   })
 }
 

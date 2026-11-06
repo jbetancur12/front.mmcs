@@ -35,7 +35,7 @@ const PasswordRecovery: React.FC = () => {
     })
   }
 
-  function handleValidationOrNetworkError(error: AxiosError | Error) {
+  function handleValidationOrNetworkError(error: unknown) {
     if (error instanceof Yup.ValidationError) {
       const errorMessage = error.errors[0]
       setError(errorMessage)
@@ -100,7 +100,7 @@ const PasswordRecovery: React.FC = () => {
         setError('No pudimos enviar el enlace. Inténtalo de nuevo más tarde.')
         setLoading(false)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle network error or other exceptions
       handleValidationOrNetworkError(error)
       setLoading(false)

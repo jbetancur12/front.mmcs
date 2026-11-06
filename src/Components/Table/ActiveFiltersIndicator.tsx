@@ -17,10 +17,15 @@ import {
   ExpandLess,
   Clear
 } from '@mui/icons-material'
-import { hasActiveFilters, getActiveFiltersCount, getFilterSummary } from '../../utils/tableStateUtils'
+import {
+  hasActiveFilters,
+  getActiveFiltersCount,
+  getFilterSummary
+} from '../../utils/tableStateUtils'
+import type { TableStateLike } from '../../utils/tableStateUtils'
 
 interface ActiveFiltersIndicatorProps {
-  tableState: any
+  tableState: TableStateLike
   onClearFilters: () => void
   showDetails?: boolean
   compact?: boolean
@@ -47,13 +52,15 @@ export const ActiveFiltersIndicator: React.FC<ActiveFiltersIndicatorProps> = ({
 
   if (compact) {
     return (
-      <Tooltip title={`${filtersCount} filtro(s) activo(s). Click para limpiar.`}>
+      <Tooltip
+        title={`${filtersCount} filtro(s) activo(s). Click para limpiar.`}
+      >
         <Chip
           icon={<FilterList />}
           label={filtersCount}
-          color="warning"
-          variant="filled"
-          size="small"
+          color='warning'
+          variant='filled'
+          size='small'
           onClick={onClearFilters}
           onDelete={onClearFilters}
           deleteIcon={<Clear />}
@@ -79,19 +86,23 @@ export const ActiveFiltersIndicator: React.FC<ActiveFiltersIndicatorProps> = ({
         borderRadius: 1
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={2}>
-        <FilterList color="warning" />
+      <Stack direction='row' alignItems='center' spacing={2}>
+        <FilterList color='warning' />
 
-        <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
+        <Typography variant='body2' color='text.secondary' sx={{ flexGrow: 1 }}>
           <strong>{filtersCount}</strong> filtro(s) activo(s)
           {filterSummary.length > 0 && !expanded && (
-            <span> - {filterSummary[0]}{filterSummary.length > 1 && '...'}</span>
+            <span>
+              {' '}
+              - {filterSummary[0]}
+              {filterSummary.length > 1 && '...'}
+            </span>
           )}
         </Typography>
 
         {showDetails && filterSummary.length > 1 && (
           <IconButton
-            size="small"
+            size='small'
             onClick={handleToggleExpanded}
             sx={{ color: 'warning.main' }}
           >
@@ -100,9 +111,9 @@ export const ActiveFiltersIndicator: React.FC<ActiveFiltersIndicatorProps> = ({
         )}
 
         <Button
-          size="small"
-          variant="outlined"
-          color="warning"
+          size='small'
+          variant='outlined'
+          color='warning'
           startIcon={<FilterListOff />}
           onClick={onClearFilters}
           sx={{
@@ -117,17 +128,26 @@ export const ActiveFiltersIndicator: React.FC<ActiveFiltersIndicatorProps> = ({
       {showDetails && (
         <Collapse in={expanded}>
           <Box sx={{ mt: 2, pl: 4 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ mb: 1, display: 'block' }}
+            >
               Filtros activos:
             </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 0.5 }}>
+            <Stack
+              direction='row'
+              spacing={1}
+              flexWrap='wrap'
+              sx={{ gap: 0.5 }}
+            >
               {filterSummary.map((filter, index) => (
                 <Chip
                   key={index}
                   label={filter}
-                  size="small"
-                  variant="outlined"
-                  color="warning"
+                  size='small'
+                  variant='outlined'
+                  color='warning'
                   sx={{ fontSize: '0.75rem' }}
                 />
               ))}

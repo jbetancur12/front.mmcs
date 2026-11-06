@@ -1,5 +1,5 @@
 // components/DeviceGraphs/GraphDrawer/helpers.ts
-import { ModuleConfig, GaugeConfig } from './types'
+import { DeviceDataPoint, ModuleConfig, GaugeConfig } from './types'
 
 export const getGaugeConfig = (
   configs: ModuleConfig[] | undefined,
@@ -19,7 +19,7 @@ export const getGaugeConfig = (
   }
 }
 
-export const aggregateStats = (graphData: any[]) => {
+export const aggregateStats = (graphData: DeviceDataPoint[]) => {
   if (!graphData || graphData.length === 0) return null
 
   const tempValues = graphData.reduce(

@@ -31,7 +31,7 @@ import LibraryDocumentDialog, {
   LibraryDialogMode
 } from 'src/Components/Library/LibraryDocumentDialog'
 import LibraryHistoryDialog from 'src/Components/Library/LibraryHistoryDialog'
-import LibraryPdfDialog from 'src/Components/Library/LibraryPdfDialog'
+import LibraryViewerDialog from 'src/Components/Library/LibraryViewerDialog'
 import { formatLibraryDate } from 'src/Components/Library/libraryFormat'
 import {
   LIBRARY_CATEGORY_LABELS,
@@ -75,6 +75,10 @@ const Library: React.FC = () => {
     $userStore.permissions,
     PERMISSIONS.LIBRARY_SOURCE_DOWNLOAD
   )
+  const canDownloadPdf = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.LIBRARY_DOCUMENT_DOWNLOAD
+  )
 
   const [category, setCategory] = useState<LibraryCategory>('management')
   const [dialog, setDialog] = useState<DialogState | null>(null)
@@ -82,8 +86,12 @@ const Library: React.FC = () => {
   const [history, setHistory] = useState<LibraryDocument | null>(null)
   const [deleting, setDeleting] = useState<LibraryDocument | null>(null)
 
-  const { data: documents = [], isLoading, isError, refetch } =
-    useLibraryDocuments(category)
+  const {
+    data: documents = [],
+    isLoading,
+    isError,
+    refetch
+  } = useLibraryDocuments(category)
   const save = useSaveLibraryDocument()
   const remove = useDeleteLibraryDocument()
 
@@ -220,7 +228,11 @@ const Library: React.FC = () => {
           displayColumnDefOptions={{
             'mrt-row-actions': {
               header: 'Acciones',
-              size: 100 + (canManage ? 160 : 0) + (canDownloadSource ? 40 : 0)
+              size:
+                100 +
+                (canManage ? 160 : 0) +
+                (canDownloadSource ? 40 : 0) +
+                (canDownloadPdf ? 40 : 0)
             }
           }}
           renderRowActions={({ row }) => {
@@ -236,14 +248,16 @@ const Library: React.FC = () => {
                     <VisibilityOutlined fontSize='small' />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title='Descargar PDF'>
-                  <IconButton
-                    aria-label={`Descargar PDF de ${document.name}`}
-                    onClick={() => downloadLibraryPdf(document)}
-                  >
-                    <FileDownloadOutlined fontSize='small' />
-                  </IconButton>
-                </Tooltip>
+                {canDownloadPdf && (
+                  <Tooltip title='Descargar PDF'>
+                    <IconButton
+                      aria-label={`Descargar PDF de ${document.name}`}
+                      onClick={() => downloadLibraryPdf(document)}
+                    >
+                      <FileDownloadOutlined fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 {canDownloadSource && document.hasSource && (
                   <Tooltip title='Descargar archivo original (Word o Excel)'>
                     <IconButton
@@ -309,12 +323,16 @@ const Library: React.FC = () => {
         onClose={() => setDialog(null)}
         onSubmit={handleSubmit}
       />
-      <LibraryPdfDialog document={viewing} onClose={() => setViewing(null)} />
+      <LibraryViewerDialog
+        document={viewing}
+        onClose={() => setViewing(null)}
+      />
       <LibraryHistoryDialog
         document={history}
         onClose={() => setHistory(null)}
         onView={setViewing}
         canDownloadSource={canDownloadSource}
+        canDownloadPdf={canDownloadPdf}
       />
       <ConfirmDialog
         open={deleting !== null}

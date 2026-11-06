@@ -93,7 +93,7 @@ class LmsErrorBoundaryClass extends Component<Props, State> {
 
       // You can integrate with your error reporting service here
       logger.log('Error Report:', errorReport)
-      
+
       // Example: Send to API endpoint
       // fetch('/api/errors/report', {
       //   method: 'POST',
@@ -107,7 +107,7 @@ class LmsErrorBoundaryClass extends Component<Props, State> {
 
   private handleRetry = () => {
     if (this.state.retryCount < this.maxRetries) {
-      this.setState(prevState => ({
+      this.setState((prevState) => ({
         hasError: false,
         error: null,
         errorInfo: null,
@@ -118,7 +118,7 @@ class LmsErrorBoundaryClass extends Component<Props, State> {
   }
 
   private toggleDetails = () => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       showDetails: !prevState.showDetails
     }))
   }
@@ -130,7 +130,9 @@ class LmsErrorBoundaryClass extends Component<Props, State> {
         return this.props.fallback
       }
 
-      const canRetry = this.props.enableRetry !== false && this.state.retryCount < this.maxRetries
+      const canRetry =
+        this.props.enableRetry !== false &&
+        this.state.retryCount < this.maxRetries
       const sectionName = this.props.section || 'Componente'
 
       return (
@@ -206,23 +208,26 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <ErrorIcon sx={{ color: '#dc2626', fontSize: 32 }} />
             <Box>
-              <Typography variant="h6" sx={{ color: '#dc2626', fontWeight: 700 }}>
+              <Typography
+                variant='h6'
+                sx={{ color: '#dc2626', fontWeight: 700 }}
+              >
                 Error en {sectionName}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#7f1d1d' }}>
+              <Typography variant='body2' sx={{ color: '#7f1d1d' }}>
                 Se produjo un error inesperado al cargar este componente
               </Typography>
             </Box>
           </Box>
 
           {/* Error Message */}
-          <Alert severity="error" sx={{ borderRadius: '12px' }}>
+          <Alert severity='error' sx={{ borderRadius: '12px' }}>
             <AlertTitle>Detalles del Error</AlertTitle>
             {error?.message || 'Error desconocido'}
             {retryCount > 0 && (
               <Box sx={{ mt: 1 }}>
                 <Chip
-                  size="small"
+                  size='small'
                   label={`Intento ${retryCount}/${maxRetries}`}
                   sx={{ bgcolor: '#fee2e2', color: '#dc2626' }}
                 />
@@ -231,10 +236,10 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
           </Alert>
 
           {/* Action Buttons */}
-          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Stack direction='row' spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
             {canRetry && (
               <Button
-                variant="contained"
+                variant='contained'
                 startIcon={<RefreshIcon />}
                 onClick={onRetry}
                 sx={{
@@ -245,9 +250,9 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                 Reintentar
               </Button>
             )}
-            
+
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<RefreshIcon />}
               onClick={handleReload}
               sx={{
@@ -264,7 +269,7 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
 
             {enableNavigation && (
               <Button
-                variant="outlined"
+                variant='outlined'
                 startIcon={<HomeIcon />}
                 onClick={handleGoHome}
                 sx={{
@@ -285,14 +290,16 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
           {showErrorDetails && error && (
             <Box>
               <Button
-                variant="text"
-                startIcon={showDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                variant='text'
+                startIcon={
+                  showDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />
+                }
                 onClick={onToggleDetails}
                 sx={{ color: '#6b7280', textTransform: 'none' }}
               >
                 {showDetails ? 'Ocultar' : 'Mostrar'} detalles técnicos
               </Button>
-              
+
               <Collapse in={showDetails}>
                 <Box
                   sx={{
@@ -303,7 +310,10 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                     border: '1px solid #e5e7eb'
                   }}
                 >
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                  <Typography
+                    variant='body2'
+                    sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                  >
                     <strong>Error:</strong> {error.message}
                     <br />
                     <strong>Stack:</strong>
@@ -313,7 +323,9 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                     {errorInfo && (
                       <>
                         <strong>Component Stack:</strong>
-                        <pre style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>
+                        <pre
+                          style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}
+                        >
                           {errorInfo.componentStack}
                         </pre>
                       </>
@@ -325,9 +337,9 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
           )}
 
           {/* Help Text */}
-          <Alert severity="info" sx={{ borderRadius: '12px' }}>
-            <Typography variant="body2">
-              Si el problema persiste, contacte al administrador del sistema o 
+          <Alert severity='info' sx={{ borderRadius: '12px' }}>
+            <Typography variant='body2'>
+              Si el problema persiste, contacte al administrador del sistema o
               intente recargar la página completa.
             </Typography>
           </Alert>
@@ -347,7 +359,7 @@ export const withErrorBoundary = <P extends object>(
       <Component {...props} />
     </LmsErrorBoundaryClass>
   )
-  
+
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`
   return WrappedComponent
 }

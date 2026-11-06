@@ -1,18 +1,18 @@
 name: Checks
 
+# En main no hace falta: el workflow Deploy ya corre check, lint y tests antes
+# de publicar (job "verificar"). Aquí solo se validan los pull requests.
 on:
-  push:
-    branches: [main]
   pull_request:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run check

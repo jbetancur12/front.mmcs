@@ -189,17 +189,18 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             </Box>
           </Box>
           <Box display='flex' alignItems='center' gap={1} flexWrap='wrap'>
-            {ticket.status === 'completed' && ticket.technicalReport?.updatedAt && (
-              <Chip
-                size='small'
-                label='Reporte técnico'
-                sx={{
-                  backgroundColor: '#eff6ff',
-                  color: '#1d4ed8',
-                  fontWeight: 600
-                }}
-              />
-            )}
+            {ticket.status === 'completed' &&
+              ticket.technicalReport?.updatedAt && (
+                <Chip
+                  size='small'
+                  label='Reporte técnico'
+                  sx={{
+                    backgroundColor: '#eff6ff',
+                    color: '#1d4ed8',
+                    fontWeight: 600
+                  }}
+                />
+              )}
             <MaintenancePriorityBadge priority={ticket.priority} size='small' />
             <MaintenanceStatusBadge status={ticket.status} />
           </Box>
@@ -209,11 +210,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
 
         {/* Customer name - MINIMAL */}
         <Box mb={2.25}>
-          <Typography
-            variant='subtitle2'
-            gutterBottom
-            sx={sectionLabelSx}
-          >
+          <Typography variant='subtitle2' gutterBottom sx={sectionLabelSx}>
             Cliente
           </Typography>
           <Typography
@@ -230,11 +227,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
 
         {/* Equipment info - MINIMAL */}
         <Box mb={2.25}>
-          <Typography
-            variant='subtitle2'
-            gutterBottom
-            sx={sectionLabelSx}
-          >
+          <Typography variant='subtitle2' gutterBottom sx={sectionLabelSx}>
             Equipo
           </Typography>
           <Box display='flex' alignItems='center' gap={0.5}>
@@ -254,11 +247,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
 
         {/* Issue description - MINIMAL */}
         <Box mb={2.25}>
-          <Typography
-            variant='subtitle2'
-            gutterBottom
-            sx={sectionLabelSx}
-          >
+          <Typography variant='subtitle2' gutterBottom sx={sectionLabelSx}>
             Descripción
           </Typography>
           <Typography
@@ -282,11 +271,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         <Divider sx={{ my: 2, borderColor: '#eef2f7' }} />
 
         <Box mb={0.5}>
-          <Typography
-            variant='subtitle2'
-            gutterBottom
-            sx={sectionLabelSx}
-          >
+          <Typography variant='subtitle2' gutterBottom sx={sectionLabelSx}>
             Técnico Asignado
           </Typography>
           {ticket.assignedTechnician && ticket.assignedTechnician.name ? (

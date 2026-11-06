@@ -11,6 +11,7 @@ import {
 } from '@mui/material'
 import LogoutIcon from '@mui/icons-material/Logout'
 import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined'
+import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { brand, neutral, intent } from 'src/theme/designTokens'
@@ -26,6 +27,8 @@ interface UserMenuProps {
   onLogout: () => void
   /** Abre la lista de sesiones activas de la cuenta; sin esto el ítem no aparece. */
   onOpenSessions?: () => void
+  /** Abre las preferencias de analítica (PostHog); sin esto el ítem no aparece. */
+  onOpenAnalyticsPreferences?: () => void
   /** Pie del menú para soporte: "Versión 1.10.1 (API 1.8.2)". */
   versionLabel?: string
 }
@@ -54,6 +57,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   onStopImpersonation,
   onLogout,
   onOpenSessions,
+  onOpenAnalyticsPreferences,
   versionLabel
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -153,7 +157,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
         }}
       >
         <Box sx={{ px: 2, py: 1.5 }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 700, color: neutral.text }}>
+          <Typography
+            sx={{ fontSize: 14, fontWeight: 700, color: neutral.text }}
+          >
             {displayName}
           </Typography>
           <Typography sx={{ fontSize: 13, color: neutral.textBody }}>
@@ -206,6 +212,20 @@ const UserMenu: React.FC<UserMenuProps> = ({
             Sesiones activas
           </MenuItem>
         )}
+        {onOpenAnalyticsPreferences && (
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null)
+              onOpenAnalyticsPreferences()
+            }}
+            sx={{ fontSize: 14, py: 1.25 }}
+          >
+            <ListItemIcon>
+              <InsightsOutlinedIcon fontSize='small' />
+            </ListItemIcon>
+            Preferencias de analítica
+          </MenuItem>
+        )}
         <MenuItem
           onClick={() => {
             setAnchorEl(null)
@@ -222,7 +242,13 @@ const UserMenu: React.FC<UserMenuProps> = ({
           <Divider key='version-divider' />,
           <Typography
             key='version'
-            sx={{ px: 2, pt: 1, pb: 0.5, fontSize: 12, color: neutral.textBody }}
+            sx={{
+              px: 2,
+              pt: 1,
+              pb: 0.5,
+              fontSize: 12,
+              color: neutral.textBody
+            }}
           >
             {versionLabel}
           </Typography>

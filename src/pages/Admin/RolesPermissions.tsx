@@ -98,7 +98,11 @@ const RolesPermissions: React.FC = () => {
     () =>
       Object.entries(pending).map(([key, granted]) => {
         const [roleId, ...rest] = key.split('|')
-        return { roleId: Number(roleId), permissionKey: rest.join('|'), granted }
+        return {
+          roleId: Number(roleId),
+          permissionKey: rest.join('|'),
+          granted
+        }
       }),
     [pending]
   )
@@ -210,12 +214,16 @@ const RolesPermissions: React.FC = () => {
 
     if (Object.keys(errors).length === 0) {
       setReviewOpen(false)
-      notify.success('Cambios guardados. Rigen desde la siguiente petición de cada usuario.')
+      notify.success(
+        'Cambios guardados. Rigen desde la siguiente petición de cada usuario.'
+      )
     } else {
       setSaveErrors(errors)
-      notify.error(savedRoleIds.size > 0
-            ? 'Algunos roles se guardaron y otros no. Revisa los avisos.'
-            : 'No se pudo guardar. Revisa los avisos.')
+      notify.error(
+        savedRoleIds.size > 0
+          ? 'Algunos roles se guardaron y otros no. Revisa los avisos.'
+          : 'No se pudo guardar. Revisa los avisos.'
+      )
     }
   }
 
@@ -226,7 +234,9 @@ const RolesPermissions: React.FC = () => {
       permissions: matrix.permissions.length,
       // "rbac" es la propia administración de permisos, no un módulo operativo
       modules: new Set(
-        matrix.permissions.filter((p) => p.module !== 'rbac').map((p) => p.module)
+        matrix.permissions
+          .filter((p) => p.module !== 'rbac')
+          .map((p) => p.module)
       ).size
     }
   }, [matrix])
@@ -267,7 +277,8 @@ const RolesPermissions: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Roles activos'
             value={stats.roles}
             icon={<GroupsIcon />}
@@ -275,7 +286,8 @@ const RolesPermissions: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Capacidades'
             value={stats.permissions}
             icon={<VpnKeyIcon />}
@@ -283,7 +295,8 @@ const RolesPermissions: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Módulos gestionados'
             value={stats.modules}
             icon={<ViewModuleIcon />}
@@ -293,9 +306,10 @@ const RolesPermissions: React.FC = () => {
       </Grid>
 
       <Alert severity='info' sx={{ mb: 3 }}>
-        Marca o desmarca una capacidad para dar o quitar ese permiso a un rol. Bajo
-        cada capacidad verás las pantallas de la plataforma donde interviene. Los
-        cambios se aplican de inmediato y quedan en la auditoría.
+        Marca o desmarca una capacidad para dar o quitar ese permiso a un rol.
+        Bajo cada capacidad verás las pantallas de la plataforma donde
+        interviene. Los cambios se aplican de inmediato y quedan en la
+        auditoría.
         <br />
         Los roles se suman: si una persona necesita el portal de cliente
         (equipos y certificados de su empresa), asígnale también el rol{' '}
@@ -333,9 +347,7 @@ const RolesPermissions: React.FC = () => {
               No se pudo cargar la matriz de permisos. Intenta de nuevo.
             </Alert>
           )}
-          {isLoading && (
-            <SignalLoader message='Cargando matriz...' />
-          )}
+          {isLoading && <SignalLoader message='Cargando matriz...' />}
           {matrix && tab === 'role' && (
             <RolePermissionsView
               matrix={matrix}
@@ -396,7 +408,9 @@ const RolesPermissions: React.FC = () => {
         >
           <Typography fontWeight={600}>
             {changes.length}{' '}
-            {changes.length === 1 ? 'cambio sin guardar' : 'cambios sin guardar'}
+            {changes.length === 1
+              ? 'cambio sin guardar'
+              : 'cambios sin guardar'}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
@@ -450,7 +464,6 @@ const RolesPermissions: React.FC = () => {
         onClose={() => setToggleRole(null)}
         onDone={(message) => notify.success(message)}
       />
-
     </Container>
   )
 }

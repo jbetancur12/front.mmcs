@@ -52,7 +52,9 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
     }
     return [...byRole.entries()].map(([roleId, items]) => ({
       role: matrix.roles.find((r) => r.id === roleId),
-      items: items.sort((a, b) => a.permissionKey.localeCompare(b.permissionKey))
+      items: items.sort((a, b) =>
+        a.permissionKey.localeCompare(b.permissionKey)
+      )
     }))
   }, [changes, matrix.roles])
 
@@ -109,7 +111,12 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
   )
 
   return (
-    <Dialog open={open} onClose={saving ? undefined : onCancel} maxWidth='sm' fullWidth>
+    <Dialog
+      open={open}
+      onClose={saving ? undefined : onCancel}
+      maxWidth='sm'
+      fullWidth
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>
         Revisar cambios ({changes.length})
       </DialogTitle>
@@ -118,7 +125,8 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
           {affectedUsers > 0
             ? `Estos cambios afectan a ${affectedUsers} ${affectedUsers === 1 ? 'usuario activo' : 'usuarios activos'}. `
             : 'Ningún usuario activo tiene estos roles hoy. '}
-          Rigen desde la siguiente petición de cada uno, sin que tengan que volver a iniciar sesión.
+          Rigen desde la siguiente petición de cada uno, sin que tengan que
+          volver a iniciar sesión.
         </Alert>
         {unmetAfterChanges.length > 0 && (
           <Alert severity='warning' sx={{ mb: 2 }}>
@@ -185,14 +193,20 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
         ))}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onCancel} disabled={saving} sx={{ textTransform: 'none' }}>
+        <Button
+          onClick={onCancel}
+          disabled={saving}
+          sx={{ textTransform: 'none' }}
+        >
           Seguir editando
         </Button>
         <Button
           variant='contained'
           onClick={onConfirm}
           disabled={saving}
-          startIcon={saving ? <CircularProgress size={16} color='inherit' /> : undefined}
+          startIcon={
+            saving ? <CircularProgress size={16} color='inherit' /> : undefined
+          }
           sx={{
             textTransform: 'none',
             bgcolor: '#00BFA5',

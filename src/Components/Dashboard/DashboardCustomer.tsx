@@ -26,6 +26,7 @@ import { useCertificatesNextToExpire } from 'src/hooks/dashboard/useCertificates
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import { FileData } from '../TableFiles/types/fileTypes'
+import type { Customer } from '../TableFiles/types/fileTypes'
 import { useParams, useNavigate } from 'react-router-dom'
 import { saveAs } from 'file-saver'
 import DataTable from '../Common/DataTable'
@@ -105,7 +106,8 @@ const Dashboard: React.FC = () => {
       }
     })
   // Información del cliente tomada del primer registro
-  const customerInfo: any = tableData.length > 0 ? tableData[0].customer : null
+  const customerInfo: Customer | null =
+    tableData.length > 0 ? tableData[0].customer : null
   const [filterType, setFilterType] = useState<FilterType>('all')
 
   const counts = useMemo(() => {

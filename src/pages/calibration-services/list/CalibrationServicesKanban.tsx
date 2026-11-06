@@ -65,138 +65,147 @@ const CalibrationServicesKanban = ({
         ref={kanbanScrollRef}
         onScroll={(event) => {
           if (kanbanTopScrollRef.current) {
-            kanbanTopScrollRef.current.scrollLeft = event.currentTarget.scrollLeft
+            kanbanTopScrollRef.current.scrollLeft =
+              event.currentTarget.scrollLeft
           }
         }}
         sx={{ overflowX: 'auto', pb: 1 }}
       >
-      <Stack
-        direction='row'
-        spacing={2}
-        alignItems='flex-start'
-        sx={{ minWidth: 'max-content' }}
-      >
-        {columns.map((column) => {
-          const isEmptyColumn = column.services.length === 0
-          const missingCount =
-            column.serverTotal !== null
-              ? Math.max(column.serverTotal - column.services.length, 0)
-              : 0
+        <Stack
+          direction='row'
+          spacing={2}
+          alignItems='flex-start'
+          sx={{ minWidth: 'max-content' }}
+        >
+          {columns.map((column) => {
+            const isEmptyColumn = column.services.length === 0
+            const missingCount =
+              column.serverTotal !== null
+                ? Math.max(column.serverTotal - column.services.length, 0)
+                : 0
 
-          return (
-          <Box
-            key={column.key}
-            sx={{
-              width: isEmptyColumn ? 172 : 312,
-              minWidth: isEmptyColumn ? 172 : 312,
-              borderRadius: '16px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: '#f9fafb',
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: 'calc(100vh - 220px)',
-              overflow: 'hidden'
-            }}
-          >
-            <Box
-              sx={{
-                p: 2,
-                borderBottom: `1px solid ${alpha(column.accent, 0.14)}`
-              }}
-            >
-              <Stack
-                direction='row'
-                justifyContent='space-between'
-                alignItems='flex-start'
-                spacing={1}
+            return (
+              <Box
+                key={column.key}
+                sx={{
+                  width: isEmptyColumn ? 172 : 312,
+                  minWidth: isEmptyColumn ? 172 : 312,
+                  borderRadius: '16px',
+                  border: '1px solid #e5e7eb',
+                  backgroundColor: '#f9fafb',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  maxHeight: 'calc(100vh - 220px)',
+                  overflow: 'hidden'
+                }}
               >
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography
-                    variant='subtitle1'
-                    fontWeight={800}
-                    sx={{ color: ui.text, lineHeight: 1.2 }}
-                  >
-                    {isEmptyColumn
-                      ? getCompactColumnTitle(column.title)
-                      : column.title}
-                  </Typography>
-                  {!isEmptyColumn ? (
-                    <Typography
-                      variant='body2'
-                      sx={{ mt: 0.5, color: ui.textSecondary, lineHeight: 1.45 }}
-                    >
-                      {column.description}
-                    </Typography>
-                  ) : null}
-                </Box>
-                <Chip
-                  size='small'
-                  label={
-                    missingCount > 0
-                      ? `${column.services.length} de ${column.serverTotal}`
-                      : column.services.length
-                  }
-                  sx={{
-                    bgcolor: alpha(column.accent, 0.14),
-                    color: column.accent,
-                    fontWeight: 800
-                  }}
-                />
-              </Stack>
-            </Box>
-
-            <Stack
-              spacing={1}
-              sx={{
-                p: 1.5,
-                minHeight: 0,
-                flex: 1,
-                overflowY: 'auto',
-                scrollbarWidth: 'thin'
-              }}
-            >
-              {column.services.length === 0 ? (
                 <Box
                   sx={{
-                    p: 1.5,
-                    borderRadius: '16px',
-                    border: `1px dashed ${alpha(column.accent, 0.24)}`,
-                    bgcolor: alpha(column.accent, 0.04),
-                    minHeight: 72,
-                    display: 'flex',
-                    alignItems: 'center'
+                    p: 2,
+                    borderBottom: `1px solid ${alpha(column.accent, 0.14)}`
                   }}
                 >
-                  <Typography
-                    variant='caption'
-                    sx={{ color: ui.textSecondary, lineHeight: 1.45 }}
+                  <Stack
+                    direction='row'
+                    justifyContent='space-between'
+                    alignItems='flex-start'
+                    spacing={1}
                   >
-                    Sin servicios.
-                  </Typography>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography
+                        variant='subtitle1'
+                        fontWeight={800}
+                        sx={{ color: ui.text, lineHeight: 1.2 }}
+                      >
+                        {isEmptyColumn
+                          ? getCompactColumnTitle(column.title)
+                          : column.title}
+                      </Typography>
+                      {!isEmptyColumn ? (
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            mt: 0.5,
+                            color: ui.textSecondary,
+                            lineHeight: 1.45
+                          }}
+                        >
+                          {column.description}
+                        </Typography>
+                      ) : null}
+                    </Box>
+                    <Chip
+                      size='small'
+                      label={
+                        missingCount > 0
+                          ? `${column.services.length} de ${column.serverTotal}`
+                          : column.services.length
+                      }
+                      sx={{
+                        bgcolor: alpha(column.accent, 0.14),
+                        color: column.accent,
+                        fontWeight: 800
+                      }}
+                    />
+                  </Stack>
                 </Box>
-              ) : (
-                column.services.map((service) => (
-                  <CalibrationServiceKanbanCard
-                    key={service.id}
-                    service={service}
-                    isTechnicalOnlyView={isTechnicalOnlyView}
-                    openServiceDetail={openServiceDetail}
-                  />
-                ))
-              )}
-              {missingCount > 0 ? (
-                <Typography
-                  variant='caption'
-                  sx={{ color: ui.textSecondary, lineHeight: 1.45, px: 0.5 }}
+
+                <Stack
+                  spacing={1}
+                  sx={{
+                    p: 1.5,
+                    minHeight: 0,
+                    flex: 1,
+                    overflowY: 'auto',
+                    scrollbarWidth: 'thin'
+                  }}
                 >
-                  {`Faltan ${missingCount} por cargar. Usa «Cargar más» al final de la página.`}
-                </Typography>
-              ) : null}
-            </Stack>
-          </Box>
-          )
-        })}
-      </Stack>
+                  {column.services.length === 0 ? (
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        borderRadius: '16px',
+                        border: `1px dashed ${alpha(column.accent, 0.24)}`,
+                        bgcolor: alpha(column.accent, 0.04),
+                        minHeight: 72,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Typography
+                        variant='caption'
+                        sx={{ color: ui.textSecondary, lineHeight: 1.45 }}
+                      >
+                        Sin servicios.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    column.services.map((service) => (
+                      <CalibrationServiceKanbanCard
+                        key={service.id}
+                        service={service}
+                        isTechnicalOnlyView={isTechnicalOnlyView}
+                        openServiceDetail={openServiceDetail}
+                      />
+                    ))
+                  )}
+                  {missingCount > 0 ? (
+                    <Typography
+                      variant='caption'
+                      sx={{
+                        color: ui.textSecondary,
+                        lineHeight: 1.45,
+                        px: 0.5
+                      }}
+                    >
+                      {`Faltan ${missingCount} por cargar. Usa «Cargar más» al final de la página.`}
+                    </Typography>
+                  ) : null}
+                </Stack>
+              </Box>
+            )
+          })}
+        </Stack>
       </Box>
     </Stack>
   )

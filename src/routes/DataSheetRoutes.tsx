@@ -51,7 +51,9 @@ const DataSheetRoutes = (role: string[]) => {
       <Route element={guard(PERMISSIONS.CALIBRATION_DATASHEET_DETAIL)}>
         <Route path='datasheets/:id' element={<DataSheetDetail />} />
       </Route>
-      <Route element={guard(PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_MANAGE)}>
+      <Route
+        element={guard(PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_MANAGE)}
+      >
         <Route
           path='datasheets/:id/new-maintenance'
           element={<InspectionMaintenanceForm />}
@@ -61,7 +63,9 @@ const DataSheetRoutes = (role: string[]) => {
           element={<InspectionMaintenanceForm />}
         />
       </Route>
-      <Route element={guard(PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_VIEW)}>
+      <Route
+        element={guard(PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_VIEW)}
+      >
         <Route
           path='datasheets/:id/inspection-maintenance'
           element={<InspectionMaintenance />}

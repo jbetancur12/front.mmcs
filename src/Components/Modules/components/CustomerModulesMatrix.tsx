@@ -24,12 +24,23 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import { Business, CheckCircle, DomainDisabled, School, ToggleOff, ToggleOn, VerifiedUser } from '@mui/icons-material'
+import {
+  Business,
+  CheckCircle,
+  DomainDisabled,
+  School,
+  ToggleOff,
+  ToggleOn,
+  VerifiedUser
+} from '@mui/icons-material'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
-import { useCustomerModulesMatrix, useSetCustomersModule } from 'src/hooks/useCustomerModules'
+import {
+  useCustomerModulesMatrix,
+  useSetCustomersModule
+} from 'src/hooks/useCustomerModules'
 import {
   CustomerModuleCell,
   CustomerModulesRow,
@@ -44,12 +55,17 @@ const MODULE_ICONS: Record<string, React.ReactElement> = {
   tecnovigilancia: <VerifiedUser />
 }
 
-const isOn = (cell: CustomerModuleCell | null | undefined) => Boolean(cell?.isActive)
+const isOn = (cell: CustomerModuleCell | null | undefined) =>
+  Boolean(cell?.isActive)
 // Solo `false` explícito es inactivo: un cliente sin estado se trata como activo
 const isInactive = (customer: CustomerModulesRow) => customer.isActive === false
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  new Date(iso).toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
 
 const cellTooltip = (cell: CustomerModuleCell | null | undefined) => {
   if (!cell) return 'Nunca asignado'
@@ -60,8 +76,7 @@ const cellTooltip = (cell: CustomerModuleCell | null | undefined) => {
 }
 
 const errorMessage = (error: unknown) =>
-  getApiErrorReason(error) ??
-  'No se pudo actualizar el módulo'
+  getApiErrorReason(error) ?? 'No se pudo actualizar el módulo'
 
 interface PendingChange {
   customerIds: number[]
@@ -91,10 +106,19 @@ const CustomerModulesMatrix: React.FC = () => {
     () => new Map(customers.map((c) => [c.id, c.nombre])),
     [customers]
   )
-  const activeCustomers = useMemo(() => customers.filter((c) => !isInactive(c)), [customers])
-  const inactiveCustomers = useMemo(() => customers.filter(isInactive), [customers])
+  const activeCustomers = useMemo(
+    () => customers.filter((c) => !isInactive(c)),
+    [customers]
+  )
+  const inactiveCustomers = useMemo(
+    () => customers.filter(isInactive),
+    [customers]
+  )
   const visibleCustomers = showInactive ? inactiveCustomers : activeCustomers
-  const inactiveIds = useMemo(() => new Set(inactiveCustomers.map((c) => c.id)), [inactiveCustomers])
+  const inactiveIds = useMemo(
+    () => new Set(inactiveCustomers.map((c) => c.id)),
+    [inactiveCustomers]
+  )
 
   const changeScope = (inactive: boolean) => {
     if (inactive === showInactive) return
@@ -104,7 +128,8 @@ const CustomerModulesMatrix: React.FC = () => {
   const selectedIds = Object.keys(rowSelection)
     .filter((id) => rowSelection[id])
     .map(Number)
-  const effectiveBulkModuleId = bulkModuleId || (modules.length === 1 ? modules[0].id : '')
+  const effectiveBulkModuleId =
+    bulkModuleId || (modules.length === 1 ? modules[0].id : '')
 
   const apply = async (change: PendingChange) => {
     try {
@@ -115,10 +140,12 @@ const CustomerModulesMatrix: React.FC = () => {
       })
       const changed = result.updated + result.created
       const verb = change.isActive ? 'activado' : 'desactivado'
-      notify.success(change.customerIds.length === 1
+      notify.success(
+        change.customerIds.length === 1
           ? `${change.module.label} ${verb}`
           : `${change.module.label} ${verb} en ${changed} cliente${changed === 1 ? '' : 's'}` +
-              (result.unchanged ? ` (${result.unchanged} ya estaban así)` : ''))
+              (result.unchanged ? ` (${result.unchanged} ya estaban así)` : '')
+      )
       if (change.customerIds.length > 1) setRowSelection({})
     } catch (error) {
       notify.error(errorMessage(error))
@@ -128,9 +155,19 @@ const CustomerModulesMatrix: React.FC = () => {
   }
 
   // Activar una celda es inmediato; quitar acceso o tocar varios clientes pide confirmación.
-  const requestCellChange = (row: CustomerModulesRow, module: LicensableModule, isActive: boolean) => {
+  const requestCellChange = (
+    row: CustomerModulesRow,
+    module: LicensableModule,
+    isActive: boolean
+  ) => {
     const inactive = isInactive(row)
-    const change = { customerIds: [row.id], module, isActive, customerName: row.nombre, inactiveCount: inactive ? 1 : 0 }
+    const change = {
+      customerIds: [row.id],
+      module,
+      isActive,
+      customerName: row.nombre,
+      inactiveCount: inactive ? 1 : 0
+    }
     if (isActive && !inactive) apply(change)
     else setPending(change)
   }
@@ -154,7 +191,9 @@ const CustomerModulesMatrix: React.FC = () => {
         size: 280,
         Cell: ({ row }: RowProps) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: '#00BFA5', fontSize: 14 }}>
+            <Avatar
+              sx={{ width: 32, height: 32, bgcolor: '#00BFA5', fontSize: 14 }}
+            >
               {row.original.nombre?.charAt(0) ?? '?'}
             </Avatar>
             <Box sx={{ minWidth: 0 }}>
@@ -162,12 +201,18 @@ const CustomerModulesMatrix: React.FC = () => {
                 component={RouterLink}
                 to={`/customers/${row.original.id}`}
                 underline='hover'
-                sx={{ fontWeight: 600, color: 'text.primary', display: 'block' }}
+                sx={{
+                  fontWeight: 600,
+                  color: 'text.primary',
+                  display: 'block'
+                }}
               >
                 {row.original.nombre}
               </Link>
               <Typography variant='caption' color='text.secondary'>
-                {row.original.identificacion ? `NIT ${row.original.identificacion}` : `ID ${row.original.id}`}
+                {row.original.identificacion
+                  ? `NIT ${row.original.identificacion}`
+                  : `ID ${row.original.id}`}
               </Typography>
             </Box>
           </Box>
@@ -204,7 +249,8 @@ const CustomerModulesMatrix: React.FC = () => {
         id: `module-${module.id}`,
         header: module.label,
         size: 150,
-        accessorFn: (row) => (isOn(row.modules[module.id]) ? 'Habilitado' : 'Deshabilitado'),
+        accessorFn: (row) =>
+          isOn(row.modules[module.id]) ? 'Habilitado' : 'Deshabilitado',
         filterVariant: 'select',
         filterSelectOptions: ['Habilitado', 'Deshabilitado'],
         muiTableHeadCellProps: { align: 'center' },
@@ -217,11 +263,21 @@ const CustomerModulesMatrix: React.FC = () => {
                 <Switch
                   checked={isOn(cell)}
                   disabled={!canAssign}
-                  onChange={(event) => requestCellChange(row.original, module, event.target.checked)}
-                  inputProps={{ 'aria-label': `${module.label} para ${row.original.nombre}` }}
+                  onChange={(event) =>
+                    requestCellChange(
+                      row.original,
+                      module,
+                      event.target.checked
+                    )
+                  }
+                  inputProps={{
+                    'aria-label': `${module.label} para ${row.original.nombre}`
+                  }}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': { color: '#00BFA5' },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#00BFA5' }
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#00BFA5'
+                    }
                   }}
                 />
               </span>
@@ -246,29 +302,39 @@ const CustomerModulesMatrix: React.FC = () => {
         <>
           {pending.inactiveCount > 0 ? (
             <>
-              <strong>{pending.customerName}</strong> quedará con <strong>{pending.module.label}</strong>{' '}
+              <strong>{pending.customerName}</strong> quedará con{' '}
+              <strong>{pending.module.label}</strong>{' '}
               {pending.isActive ? 'habilitado' : 'deshabilitado'}.
             </>
           ) : (
             <>
-              <strong>{pending.customerName}</strong> {pending.isActive ? 'tendrá' : 'dejará de tener'} acceso a{' '}
+              <strong>{pending.customerName}</strong>{' '}
+              {pending.isActive ? 'tendrá' : 'dejará de tener'} acceso a{' '}
               <strong>{pending.module.label}</strong>.
             </>
           )}
         </>
       ) : (
         <>
-          Vas a {pending.isActive ? 'activar' : 'desactivar'} <strong>{pending.module.label}</strong> en{' '}
-          <strong>{pendingCount} cliente{pendingCount === 1 ? '' : 's'}</strong>.
+          Vas a {pending.isActive ? 'activar' : 'desactivar'}{' '}
+          <strong>{pending.module.label}</strong> en{' '}
+          <strong>
+            {pendingCount} cliente{pendingCount === 1 ? '' : 's'}
+          </strong>
+          .
         </>
       )}
-      {!pending.isActive && pending.inactiveCount < pendingCount && ' Sus usuarios dejan de ver el módulo de inmediato.'}
+      {!pending.isActive &&
+        pending.inactiveCount < pendingCount &&
+        ' Sus usuarios dejan de ver el módulo de inmediato.'}
       {pending.inactiveCount > 0 && (
         <Alert severity='warning' sx={{ mt: 2 }}>
           {pending.customerName
             ? 'Este cliente está inactivo: sus usuarios no pueden entrar, así que el cambio aplica cuando se reactive.'
             : `${pending.inactiveCount} de ${pendingCount === pending.inactiveCount ? 'estos' : 'los'} cliente${
-                pending.inactiveCount === 1 ? ' está inactivo' : 's están inactivos'
+                pending.inactiveCount === 1
+                  ? ' está inactivo'
+                  : 's están inactivos'
               }: el cambio les aplica cuando se reactiven.`}
         </Alert>
       )}
@@ -279,7 +345,8 @@ const CustomerModulesMatrix: React.FC = () => {
     <>
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Clientes activos'
             value={activeCustomers.length}
             icon={<Business />}
@@ -290,7 +357,8 @@ const CustomerModulesMatrix: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <LmsStatCard variant='quiet'
+          <LmsStatCard
+            variant='quiet'
             label='Clientes inactivos'
             value={inactiveCustomers.length}
             icon={<DomainDisabled />}
@@ -302,7 +370,8 @@ const CustomerModulesMatrix: React.FC = () => {
         </Grid>
         {modules.map((module) => (
           <Grid item xs={12} sm={6} md={3} key={module.id}>
-            <LmsStatCard variant='quiet'
+            <LmsStatCard
+              variant='quiet'
               label={`Con ${module.label}`}
               value={activeCount(module.id)}
               icon={MODULE_ICONS[module.name] ?? <CheckCircle />}
@@ -332,19 +401,28 @@ const CustomerModulesMatrix: React.FC = () => {
           severity='info'
           sx={{ mb: 2 }}
           action={
-            <Button color='inherit' size='small' onClick={() => setShowLegacy((v) => !v)}>
+            <Button
+              color='inherit'
+              size='small'
+              onClick={() => setShowLegacy((v) => !v)}
+            >
               {showLegacy ? 'Ocultar' : 'Ver'}
             </Button>
           }
         >
-          {legacy.length} cliente{legacy.length === 1 ? ' tiene' : 's tienen'} activo un módulo interno de una
-          configuración antigua. No les da acceso, pero conviene revisarlo desde su perfil.
+          {legacy.length} cliente{legacy.length === 1 ? ' tiene' : 's tienen'}{' '}
+          activo un módulo interno de una configuración antigua. No les da
+          acceso, pero conviene revisarlo desde su perfil.
           <Collapse in={showLegacy}>
             <Box component='ul' sx={{ m: 0, mt: 1, pl: 2.5 }}>
               {legacy.map((item) => (
                 <li key={item.customerId}>
-                  <Link component={RouterLink} to={`/customers/${item.customerId}`}>
-                    {customerName.get(item.customerId) ?? `Cliente ${item.customerId}`}
+                  <Link
+                    component={RouterLink}
+                    to={`/customers/${item.customerId}`}
+                  >
+                    {customerName.get(item.customerId) ??
+                      `Cliente ${item.customerId}`}
                   </Link>{' '}
                   — {item.modules.join(', ')}
                 </li>
@@ -359,13 +437,17 @@ const CustomerModulesMatrix: React.FC = () => {
           severity='warning'
           sx={{ mb: 2 }}
           action={
-            <Button color='inherit' size='small' onClick={() => changeScope(false)}>
+            <Button
+              color='inherit'
+              size='small'
+              onClick={() => changeScope(false)}
+            >
               Ver activos
             </Button>
           }
         >
-          Estás viendo clientes inactivos: sus usuarios no pueden entrar. Puedes dejarles los módulos listos para cuando se
-          reactiven.
+          Estás viendo clientes inactivos: sus usuarios no pueden entrar. Puedes
+          dejarles los módulos listos para cuando se reactiven.
         </Alert>
       )}
 
@@ -375,8 +457,14 @@ const CustomerModulesMatrix: React.FC = () => {
           data={visibleCustomers}
           localization={MRT_Localization_ES}
           // Mientras carga, MRT pinta filas de relleno sin id: sin clave propia React deja filas fantasma
-          getRowId={(row, index) => (row?.id != null ? String(row.id) : `loading-${index}`)}
-          state={{ isLoading, rowSelection, showProgressBars: setModule.isLoading }}
+          getRowId={(row, index) =>
+            row?.id != null ? String(row.id) : `loading-${index}`
+          }
+          state={{
+            isLoading,
+            rowSelection,
+            showProgressBars: setModule.isLoading
+          }}
           enableRowSelection={canAssign}
           onRowSelectionChange={setRowSelection}
           positionToolbarAlertBanner='bottom'
@@ -401,9 +489,17 @@ const CustomerModulesMatrix: React.FC = () => {
           }}
           renderTopToolbarCustomActions={() =>
             canAssign && selectedIds.length > 0 ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  flexWrap: 'wrap'
+                }}
+              >
                 <Typography variant='body2' fontWeight={600} sx={{ mr: 1 }}>
-                  {selectedIds.length} seleccionado{selectedIds.length === 1 ? '' : 's'}
+                  {selectedIds.length} seleccionado
+                  {selectedIds.length === 1 ? '' : 's'}
                 </Typography>
                 {modules.length > 1 && (
                   <TextField
@@ -427,7 +523,11 @@ const CustomerModulesMatrix: React.FC = () => {
                   startIcon={<ToggleOn />}
                   disabled={!effectiveBulkModuleId || setModule.isLoading}
                   onClick={() => requestBulk(true)}
-                  sx={{ textTransform: 'none', bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00ACC1' } }}
+                  sx={{
+                    textTransform: 'none',
+                    bgcolor: '#00BFA5',
+                    '&:hover': { bgcolor: '#00ACC1' }
+                  }}
                 >
                   Activar{modules.length === 1 ? ` ${modules[0].label}` : ''}
                 </Button>
@@ -444,7 +544,11 @@ const CustomerModulesMatrix: React.FC = () => {
                 </Button>
               </Box>
             ) : (
-              <Typography variant='body2' color='text.secondary' sx={{ alignSelf: 'center', pl: 1 }}>
+              <Typography
+                variant='body2'
+                color='text.secondary'
+                sx={{ alignSelf: 'center', pl: 1 }}
+              >
                 {canAssign
                   ? 'Selecciona clientes para activar o desactivar un módulo a varios a la vez.'
                   : 'Solo lectura: no tienes permiso para asignar módulos.'}
@@ -453,8 +557,13 @@ const CustomerModulesMatrix: React.FC = () => {
           }
           muiTableProps={{
             sx: {
-              '& .MuiTableHead-root .MuiTableCell-root': { backgroundColor: '#f5f5f5', fontWeight: 600 },
-              '& .MuiTableBody-root .MuiTableRow-root:hover': { backgroundColor: 'rgba(0, 191, 165, 0.04)' }
+              '& .MuiTableHead-root .MuiTableCell-root': {
+                backgroundColor: '#f5f5f5',
+                fontWeight: 600
+              },
+              '& .MuiTableBody-root .MuiTableRow-root:hover': {
+                backgroundColor: 'rgba(0, 191, 165, 0.04)'
+              }
             }
           }}
           muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}

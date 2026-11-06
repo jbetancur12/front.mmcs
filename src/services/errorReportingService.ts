@@ -17,7 +17,7 @@ interface ErrorReport {
   buildVersion?: string
   severity: 'low' | 'medium' | 'high' | 'critical'
   tags?: Record<string, string>
-  extra?: Record<string, any>
+  extra?: Record<string, unknown>
 }
 
 interface ErrorReportingConfig {
@@ -76,7 +76,7 @@ class ErrorReportingService {
       this.reportError(event.error || new Error(event.message), {
         section: 'global_error',
         severity: 'high',
-        tags: { 
+        tags: {
           type: 'javascript_error',
           filename: event.filename,
           lineno: event.lineno?.toString(),
@@ -92,7 +92,7 @@ class ErrorReportingService {
       section?: string
       severity?: ErrorReport['severity']
       tags?: Record<string, string>
-      extra?: Record<string, any>
+      extra?: Record<string, unknown>
       componentStack?: string
     } = {}
   ) {
@@ -114,7 +114,7 @@ class ErrorReportingService {
       return
     }
     this.recentErrors.set(dedupeKey, now)
-    
+
     const report: ErrorReport = {
       message: errorObj.message,
       stack: errorObj.stack,
@@ -176,15 +176,18 @@ class ErrorReportingService {
       await this.sendReports(reportsToSend)
     } catch (error) {
       // Un 4xx (salvo sesión o límite de peticiones) no se arregla reintentando: se descartan
-      const status = (error as { response?: { status?: number } })?.response?.status
+      const status = (error as { response?: { status?: number } })?.response
+        ?.status
       const retryable =
-        status === undefined || status >= 500 || [401, 408, 429].includes(status)
+        status === undefined ||
+        status >= 500 ||
+        [401, 408, 429].includes(status)
 
       // If sending fails, put reports back in queue (up to a limit)
       if (retryable && this.reportQueue.length < this.config.maxReports) {
         this.reportQueue.unshift(...reportsToSend)
       }
-      
+
       logger.error('Failed to send error reports:', error)
     }
   }
@@ -228,14 +231,14 @@ class ErrorReportingService {
       const key = 'lms_error_reports'
       const stored = localStorage.getItem(key)
       const reports: ErrorReport[] = stored ? JSON.parse(stored) : []
-      
+
       reports.push(report)
-      
+
       // Keep only the last 50 reports
       if (reports.length > 50) {
         reports.splice(0, reports.length - 50)
       }
-      
+
       localStorage.setItem(key, JSON.stringify(reports))
     } catch (error) {
       // Ignore localStorage errors
@@ -268,7 +271,7 @@ class ErrorReportingService {
       clearInterval(this.flushTimer)
       this.flushTimer = null
     }
-    
+
     // Flush remaining reports
     this.flush()
   }

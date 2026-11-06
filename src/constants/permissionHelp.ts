@@ -518,8 +518,13 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
   // --- Biblioteca (Calidad)
   'library:document:view': [
     'Consultar la biblioteca',
-    'Consultar y descargar los documentos vigentes de la biblioteca.',
-    'Biblioteca: listado de documentos y visor del PDF.'
+    'Consultar los documentos vigentes de la biblioteca en el visor, sin descargar el PDF.',
+    'Biblioteca: listado de documentos y visor por páginas.'
+  ],
+  'library:document:download': [
+    'Descargar los PDF de la biblioteca',
+    'Descargar el PDF de un documento de la biblioteca. Sin este permiso solo se puede consultar en el visor.',
+    'Biblioteca: botón de descargar PDF en el listado, el visor y el historial.'
   ],
   'library:document:manage': [
     'Administrar la biblioteca',
@@ -926,9 +931,14 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Cambiar una hoja de datos, su estado, imagen y factura.',
     'Hojas de datos: edición.'
   ],
+  'calibration:datasheet:retire': [
+    'Dar de baja hojas de datos',
+    'Retirar un equipo de la operación y liberar su código interno para reutilizarlo.',
+    'Hojas de datos: acción de dar de baja.'
+  ],
   'calibration:datasheet:delete': [
-    'Eliminar hojas de datos',
-    'Borrar una hoja de datos.',
+    'Eliminar hojas de datos definitivamente',
+    'Borrar una hoja de datos y su historial. Solo administración.',
     'Hojas de datos: acción de eliminar.'
   ],
   'calibration:device:view': [
@@ -1212,12 +1222,6 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Subir, editar y eliminar archivos del repositorio.',
     'Repositorios.'
   ],
-  'tools:utility:use': [
-    'Usar utilidades de administración',
-    'Procesar Excel, generar y convertir PDF, generar scripts y agregar módulos.',
-    'Utilidades.'
-  ],
-
   // --- Administración de permisos
   'rbac:view': [
     'Ver roles y permisos',

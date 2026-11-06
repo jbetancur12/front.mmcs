@@ -146,6 +146,24 @@ export const useSavePlatformExpiration = () => {
   )
 }
 
+export const useRenewPlatformExpiration = () => {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async ({ id, expiresOn }: { id: number; expiresOn: string }) =>
+      (
+        await axiosPrivate.post(`/platform-billing/expirations/${id}/renew`, {
+          expiresOn
+        })
+      ).data,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(expirationsKey)
+        queryClient.invalidateQueries(['platform-billing', 'status'])
+      }
+    }
+  )
+}
+
 export const useDeletePlatformExpiration = () => {
   const queryClient = useQueryClient()
   return useMutation(

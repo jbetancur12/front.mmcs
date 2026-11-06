@@ -10,6 +10,7 @@
 ### ✅ Lo que YA EXISTE en el Backend (100% COMPLETO)
 
 El backend tiene un sistema de quizzes **completamente funcional y robusto**, con:
+
 - **3 Modelos** de base de datos (Quiz, Question, Attempt)
 - **12+ Endpoints** REST para CRUD, taking, analytics
 - **1 Service** completo con validaciones, anti-fraud, scoring
@@ -19,6 +20,7 @@ El backend tiene un sistema de quizzes **completamente funcional y robusto**, co
 ### 🎯 Lo que NECESITA el Frontend (LmsQuizManagement.tsx)
 
 El frontend tiene un sistema completo con:
+
 - **Mock data** simulando quizzes reales
 - **4 tabs**: Configuración, Banco de Preguntas, Vista Previa, Analíticas
 - **Componente embebible** ya integrado en content editor (Phase 1 ✅)
@@ -27,6 +29,7 @@ El frontend tiene un sistema completo con:
 ### 🔧 FASE 2: Trabajo a Realizar
 
 **NO necesitamos crear backend** - solo **CONECTAR** frontend a backend existente:
+
 1. Crear `quizService.ts` en frontend para consumir API
 2. Reemplazar mock data con React Query hooks
 3. Mapear interfaces TypeScript ↔ Modelos backend
@@ -40,6 +43,7 @@ El frontend tiene un sistema completo con:
 ### 1. Database Models
 
 #### `lmsQuiz.cjs` (Tabla: `lms_quizzes`)
+
 ```javascript
 {
   id: INTEGER (PK, auto-increment),
@@ -64,6 +68,7 @@ El frontend tiene un sistema completo con:
 ```
 
 #### `lmsQuizQuestion.cjs` (Tabla: `lms_quiz_questions`)
+
 ```javascript
 {
   id: INTEGER (PK, auto-increment),
@@ -84,6 +89,7 @@ El frontend tiene un sistema completo con:
 ```
 
 #### `lmsQuizAttempt.cjs` (Tabla: `lms_quiz_attempts`)
+
 ```javascript
 {
   id: INTEGER (PK, auto-increment),
@@ -110,27 +116,28 @@ El frontend tiene un sistema completo con:
 
 **Base:** `/api/lms/quizzes`
 
-| Method | Endpoint | Descripción | Auth | Rate Limit |
-|--------|----------|-------------|------|------------|
+| Method                                       | Endpoint                       | Descripción                                     | Auth                         | Rate Limit              |
+| -------------------------------------------- | ------------------------------ | ----------------------------------------------- | ---------------------------- | ----------------------- |
 | **Quiz Management (Admin/Training Manager)** |
-| POST | `/lessons/:lessonId/quiz` | Create quiz for lesson | ✅ authorizeCourseManagement | courseManagementLimiter |
-| GET | `/:quizId/manage` | Get quiz with questions (editing) | ✅ authorizeCourseManagement | - |
-| PUT | `/:quizId` | Update quiz + questions | ✅ authorizeCourseManagement | courseManagementLimiter |
-| DELETE | `/:quizId` | Delete quiz (CASCADE) | ✅ authorizeCourseManagement | - |
-| GET | `/:quizId/preview` | Preview quiz (with answers) | ✅ authorizeCourseManagement | - |
-| **Quiz Taking (All authenticated users)** |
-| GET | `/:quizId` | Get quiz for taking (NO answers) | ✅ authorizeCourseAccess | - |
-| POST | `/:quizId/start` | Start quiz session (timing) | ✅ authorizeCourseAccess | - |
-| POST | `/:quizId/attempt` | Submit quiz attempt | ✅ authorizeCourseAccess | - |
-| GET | `/:quizId/attempts` | Get user's attempts | ✅ authorizeCourseAccess | - |
-| GET | `/:quizId/attempts/:attemptId` | Get attempt details | ✅ authorizeCourseAccess | - |
-| **Analytics (Admin/Training Manager)** |
-| GET | `/:quizId/statistics` | Get quiz stats (attempts, pass rate, avg score) | ✅ authorizeCourseManagement | - |
-| GET | `/:quizId/analytics` | Get detailed analytics (question-level) | ✅ authorizeCourseManagement | - |
-| **Utilities** |
-| POST | `/validate-config` | Validate quiz config without saving | ✅ authorizeCourseManagement | - |
+| POST                                         | `/lessons/:lessonId/quiz`      | Create quiz for lesson                          | ✅ authorizeCourseManagement | courseManagementLimiter |
+| GET                                          | `/:quizId/manage`              | Get quiz with questions (editing)               | ✅ authorizeCourseManagement | -                       |
+| PUT                                          | `/:quizId`                     | Update quiz + questions                         | ✅ authorizeCourseManagement | courseManagementLimiter |
+| DELETE                                       | `/:quizId`                     | Delete quiz (CASCADE)                           | ✅ authorizeCourseManagement | -                       |
+| GET                                          | `/:quizId/preview`             | Preview quiz (with answers)                     | ✅ authorizeCourseManagement | -                       |
+| **Quiz Taking (All authenticated users)**    |
+| GET                                          | `/:quizId`                     | Get quiz for taking (NO answers)                | ✅ authorizeCourseAccess     | -                       |
+| POST                                         | `/:quizId/start`               | Start quiz session (timing)                     | ✅ authorizeCourseAccess     | -                       |
+| POST                                         | `/:quizId/attempt`             | Submit quiz attempt                             | ✅ authorizeCourseAccess     | -                       |
+| GET                                          | `/:quizId/attempts`            | Get user's attempts                             | ✅ authorizeCourseAccess     | -                       |
+| GET                                          | `/:quizId/attempts/:attemptId` | Get attempt details                             | ✅ authorizeCourseAccess     | -                       |
+| **Analytics (Admin/Training Manager)**       |
+| GET                                          | `/:quizId/statistics`          | Get quiz stats (attempts, pass rate, avg score) | ✅ authorizeCourseManagement | -                       |
+| GET                                          | `/:quizId/analytics`           | Get detailed analytics (question-level)         | ✅ authorizeCourseManagement | -                       |
+| **Utilities**                                |
+| POST                                         | `/validate-config`             | Validate quiz config without saving             | ✅ authorizeCourseManagement | -                       |
 
 **Security Middlewares Applied:**
+
 - `authenticateLMS`: All routes require JWT auth
 - `sanitizeUserInput`: Sanitizes title, instructions, question text
 - `sanitizeHtmlContent`: Sanitizes HTML in explanations
@@ -143,16 +150,19 @@ El frontend tiene un sistema completo con:
 #### Core Methods
 
 **Quiz CRUD:**
+
 - `createQuiz(lessonId, quizData, userId)`: Transaction-safe, validates lesson, creates quiz + questions
 - `getQuizById(quizId)`: Returns quiz with questions ordered by `order_index`
 - `updateQuiz(quizId, updateData, userId)`: Updates quiz info + replaces questions
 - `deleteQuiz(quizId, userId)`: Soft delete with CASCADE
 
 **Question Management:**
+
 - `createQuestions(quizId, questions, transaction)`: Bulk create with validation
 - `updateQuestions(quizId, questions, transaction)`: Delete old + create new (replace pattern)
 
 **Quiz Taking:**
+
 - `submitQuizAttempt(quizId, userId, answers, startedAt)`:
   - Validates attempt eligibility (max attempts, cooldown)
   - Validates timing (time limit check with 1 min grace period)
@@ -162,6 +172,7 @@ El frontend tiene un sistema completo con:
   - Returns results + correct answers (if enabled)
 
 **Analytics:**
+
 - `getUserQuizAttempts(quizId, userId)`: User's attempt history
 - `getQuizStatistics(quizId)`:
   - Total attempts, unique users
@@ -169,12 +180,14 @@ El frontend tiene un sistema completo con:
   - Average time, suspicious attempts count
 
 **Validation:**
+
 - `validateQuizData(quizData)`: Validates config (percentages, limits, times)
 - `validateQuestionData(questionData)`: Validates question structure, options, answers
 - `validateQuizAttempt(quizId, userId, transaction)`: Checks attempts left, cooldown
 - `validateAnswerPatterns(quiz, answers, startedAt, completedAt)`: Anti-fraud
 
 **Scoring:**
+
 - `calculateScore(quiz, answers)`: Type-specific answer checking
   - `single`: Exactly 1 correct, 1 selected, must match
   - `multiple`: All correct selected, no extras
@@ -182,6 +195,7 @@ El frontend tiene un sistema completo con:
 - `getCorrectAnswers(quiz)`: Returns map of {questionId: {correct_answers, explanation}}
 
 #### Anti-Fraud Features
+
 - **Timing validation**: Min 30 seconds per question
 - **Pattern detection**: All same answers, sequential patterns (0,1,2,3...)
 - **Logging**: Suspicious attempts logged for review (not blocked)
@@ -193,23 +207,27 @@ El frontend tiene un sistema completo con:
 **Highlights:**
 
 **`getQuizForTaking`** (líneas 62-130):
+
 - Removes `correct_answers` from questions (security)
 - Applies `randomize_questions` if enabled
 - Applies `shuffle_answers` if enabled (with `shuffleMap` for reverse mapping)
 - Returns user info: attempts used, max attempts, cooldown remaining, best score
 
 **`startQuizSession`** (líneas 135-189):
+
 - Validates user can start (attempts, cooldown)
 - Returns session data with `startedAt`, `expiresAt` (for client-side timer)
 - Prevents starting if cooldown active or max attempts reached
 
 **`submitQuizAttempt`** (líneas 194-231):
+
 - Validates `answers` object format
 - Parses `startedAt` timestamp (required for time limit enforcement)
 - Calls service to process attempt
 - Returns full results: score, percentage, time spent, correct answers (if enabled)
 
 **`getQuizAnalytics`** (líneas 309-344):
+
 - Returns quiz stats + question-level analytics
 - **NOTE**: Question analytics are placeholder (TODO: implement answer pattern analysis)
 
@@ -220,17 +238,19 @@ El frontend tiene un sistema completo con:
 ### Componente Principal
 
 **Props Interface:**
+
 ```typescript
 interface LmsQuizManagementProps {
-  courseId?: number          // From parent (LmsCourseContentEditor)
-  moduleId?: string          // From parent (selected module)
-  initialQuizId?: number     // If editing existing quiz
-  onQuizSaved?: (quizId: number) => void  // Callback on save
-  embedded?: boolean         // True when in Dialog, false when standalone
+  courseId?: number // From parent (LmsCourseContentEditor)
+  moduleId?: string // From parent (selected module)
+  initialQuizId?: number // If editing existing quiz
+  onQuizSaved?: (quizId: number) => void // Callback on save
+  embedded?: boolean // True when in Dialog, false when standalone
 }
 ```
 
 **Estado:**
+
 - `quizConfig`: QuizConfig (configuración del quiz)
 - `questionBank`: Question[] (banco de preguntas disponibles)
 - `previewQuestions`: Question[] (preguntas seleccionadas para este quiz)
@@ -239,22 +259,24 @@ interface LmsQuizManagementProps {
 ### Tab 1: Configuración del Quiz
 
 **Interface `QuizConfig`:**
+
 ```typescript
 interface QuizConfig {
-  title: string                    // → quiz.title
-  instructions: string             // → quiz.instructions
-  passingPercentage: number        // → quiz.passing_percentage
-  maxAttempts: number              // → quiz.max_attempts
-  cooldownMinutes: number          // → quiz.cooldown_minutes
-  showCorrectAnswers: boolean      // → quiz.show_correct_answers
-  randomizeQuestions: boolean      // → quiz.randomize_questions
-  shuffleAnswers: boolean          // → quiz.shuffle_answers
-  hasTimeLimit: boolean            // Frontend flag
-  timeLimitMinutes: number | null  // → quiz.time_limit_minutes
+  title: string // → quiz.title
+  instructions: string // → quiz.instructions
+  passingPercentage: number // → quiz.passing_percentage
+  maxAttempts: number // → quiz.max_attempts
+  cooldownMinutes: number // → quiz.cooldown_minutes
+  showCorrectAnswers: boolean // → quiz.show_correct_answers
+  randomizeQuestions: boolean // → quiz.randomize_questions
+  shuffleAnswers: boolean // → quiz.shuffle_answers
+  hasTimeLimit: boolean // Frontend flag
+  timeLimitMinutes: number | null // → quiz.time_limit_minutes
 }
 ```
 
 **Validaciones (frontend):**
+
 - Title: 3-200 chars
 - Passing percentage: 0-100
 - Max attempts: 1-99
@@ -262,6 +284,7 @@ interface QuizConfig {
 - Time limit: 1-999 minutes (if enabled)
 
 **Mapeo a Backend:**
+
 ```typescript
 // Frontend → Backend (al guardar)
 const backendQuizData = {
@@ -273,14 +296,16 @@ const backendQuizData = {
   show_correct_answers: quizConfig.showCorrectAnswers,
   randomize_questions: quizConfig.randomizeQuestions,
   shuffle_answers: quizConfig.shuffleAnswers,
-  time_limit_minutes: quizConfig.hasTimeLimit ? quizConfig.timeLimitMinutes : null,
-  questions: previewQuestions.map(q => ({
+  time_limit_minutes: quizConfig.hasTimeLimit
+    ? quizConfig.timeLimitMinutes
+    : null,
+  questions: previewQuestions.map((q) => ({
     type: q.type,
     question: q.question,
     options: q.options,
     correct_answers: q.correctAnswers,
     points: q.points,
-    order_index: q.id,  // Usar orden actual
+    order_index: q.id, // Usar orden actual
     explanation: q.explanation || null
   }))
 }
@@ -289,27 +314,31 @@ const backendQuizData = {
 ### Tab 2: Banco de Preguntas
 
 **Interface `Question`:**
+
 ```typescript
 interface Question {
-  id: number                       // Temporal (Date.now()) → quiz_question.id (backend genera)
-  type: 'single' | 'multiple' | 'boolean'  // → quiz_question.type
-  question: string                 // → quiz_question.question
-  options: string[]                // → quiz_question.options
-  correctAnswers: number[]         // → quiz_question.correct_answers
-  points: number                   // → quiz_question.points
-  explanation?: string             // → quiz_question.explanation
-  tags?: string[]                  // Frontend only (no persiste en backend)
-  difficulty?: 'easy' | 'medium' | 'hard'  // Frontend only
+  id: number // Temporal (Date.now()) → quiz_question.id (backend genera)
+  type: 'single' | 'multiple' | 'boolean' // → quiz_question.type
+  question: string // → quiz_question.question
+  options: string[] // → quiz_question.options
+  correctAnswers: number[] // → quiz_question.correct_answers
+  points: number // → quiz_question.points
+  explanation?: string // → quiz_question.explanation
+  tags?: string[] // Frontend only (no persiste en backend)
+  difficulty?: 'easy' | 'medium' | 'hard' // Frontend only
 }
 ```
 
 **Funcionalidad:**
+
 - CRUD completo de preguntas en banco local (mock data)
 - Filters: tipo, dificultad, búsqueda por texto
 - Add to Quiz: Mueve preguntas al preview
 
 **Backend Integration Needed:**
+
 - **OPCIÓN A (Simple)**: Preguntas solo existen dentro de quizzes (sin banco global)
+
   - Keep mock banco para crear preguntas
   - Al guardar quiz, send questions array con cada quiz
   - No persistir banco separado
@@ -326,6 +355,7 @@ interface Question {
 **Componente:** `QuizPreview.tsx`
 
 Muestra:
+
 - Lista de preguntas seleccionadas con puntos
 - Preview interactivo (radio/checkbox según tipo)
 - Answers correctas marcadas
@@ -339,6 +369,7 @@ Muestra:
 **Componente:** Muestra stats del quiz
 
 **Mock Data Actual:**
+
 ```typescript
 {
   totalAttempts: 45,
@@ -350,6 +381,7 @@ Muestra:
 ```
 
 **Backend Mapping:**
+
 ```typescript
 // GET /api/lms/quizzes/:quizId/statistics
 {
@@ -366,11 +398,13 @@ completionRate: (uniqueUsers / totalEligibleUsers) * 100  // Requiere endpoint a
 ```
 
 **Gráficos:**
+
 - Score distribution (histogram)
 - Question difficulty analysis
 - Time distribution
 
 **Backend Support:**
+
 - `GET /quizzes/:quizId/analytics` tiene datos pero implementación placeholder
 - **TODO en backend:** Implementar question-level analytics completo
 
@@ -453,7 +487,10 @@ export interface QuizStatistics {
 class QuizService {
   // Quiz CRUD
   async createQuiz(lessonId: number, quizData: CreateQuizDTO): Promise<Quiz> {
-    const response = await axios.post(`${API_BASE}/lessons/${lessonId}/quiz`, quizData)
+    const response = await axios.post(
+      `${API_BASE}/lessons/${lessonId}/quiz`,
+      quizData
+    )
     return response.data.data
   }
 
@@ -506,6 +543,7 @@ export default new QuizService()
 ### PASO 2: Integrar React Query en LmsQuizManagement.tsx
 
 **Imports:**
+
 ```typescript
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -515,6 +553,7 @@ import quizService from '../../../services/quizService'
 **Hooks a Implementar:**
 
 #### 2.1. Load Quiz (si `initialQuizId` existe)
+
 ```typescript
 const { data: loadedQuiz, isLoading: isLoadingQuiz } = useQuery(
   ['quiz', initialQuizId],
@@ -537,7 +576,7 @@ const { data: loadedQuiz, isLoading: isLoadingQuiz } = useQuery(
       })
 
       // Mapear questions del backend al preview
-      const mappedQuestions = quiz.questions.map(q => ({
+      const mappedQuestions = quiz.questions.map((q) => ({
         id: q.id,
         type: q.type,
         question: q.question,
@@ -553,6 +592,7 @@ const { data: loadedQuiz, isLoading: isLoadingQuiz } = useQuery(
 ```
 
 #### 2.2. Create/Update Quiz Mutation
+
 ```typescript
 const queryClient = useQueryClient()
 
@@ -564,14 +604,16 @@ const saveQuizMutation = useMutation(
 
     // Primero necesitamos el lessonId del módulo
     // Obtener lecciones del módulo
-    const lessonsResponse = await axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
+    const lessonsResponse = await axiosPrivate.get(
+      `/lms/content/modules/${moduleId}/lessons`
+    )
     const lessons = lessonsResponse.data.data || lessonsResponse.data || []
 
     if (lessons.length === 0) {
       throw new Error('Module has no lessons')
     }
 
-    const lessonId = lessons[0].id  // Usar la primera lección
+    const lessonId = lessons[0].id // Usar la primera lección
 
     // Preparar quiz data
     const quizData: CreateQuizDTO = {
@@ -583,7 +625,9 @@ const saveQuizMutation = useMutation(
       show_correct_answers: quizConfig.showCorrectAnswers,
       randomize_questions: quizConfig.randomizeQuestions,
       shuffle_answers: quizConfig.shuffleAnswers,
-      time_limit_minutes: quizConfig.hasTimeLimit ? quizConfig.timeLimitMinutes : null,
+      time_limit_minutes: quizConfig.hasTimeLimit
+        ? quizConfig.timeLimitMinutes
+        : null,
       questions: previewQuestions.map((q, index) => ({
         type: q.type,
         question: q.question,
@@ -623,18 +667,20 @@ const saveQuizMutation = useMutation(
 ```
 
 #### 2.3. Load Quiz Statistics
+
 ```typescript
 const { data: quizStats, isLoading: isLoadingStats } = useQuery(
   ['quiz-stats', initialQuizId],
   () => quizService.getQuizStatistics(initialQuizId!),
   {
-    enabled: !!initialQuizId && activeTab === 3,  // Solo cargar si está en tab Analytics
-    refetchInterval: 30000  // Refresh cada 30 segundos
+    enabled: !!initialQuizId && activeTab === 3, // Solo cargar si está en tab Analytics
+    refetchInterval: 30000 // Refresh cada 30 segundos
   }
 )
 ```
 
 #### 2.4. Update handleSaveQuiz
+
 ```typescript
 const handleSaveQuiz = () => {
   const errors = validateQuizConfig()
@@ -658,17 +704,20 @@ const handleSaveQuiz = () => {
 ### PASO 3: Actualizar LmsCourseContentEditor.tsx
 
 **Problema Actual:** El editor guarda `quizId` en `module.content.quizId`, pero:
+
 - `lesson_id` es lo que el backend necesita para crear/obtener quiz
 - Quiz pertenece a Lesson, no a Module directamente
 
 **Solución:**
 
 **Opción A (Recomendada):** Mantener `quizId` en `module.content`
+
 - Al abrir LmsQuizManagement, pasar `initialQuizId` = `module.content.quizId`
 - LmsQuizManagement se encarga de obtener el quiz completo por ID
 - Cuando se guarda, actualizar `module.content.quizId` con el nuevo ID
 
 **Opción B:** Almacenar `lessonId` en `module.content`
+
 - Cambiar de `quizId` a `lessonId` en content
 - Más alineado con arquitectura backend
 - Requiere buscar quiz por `lesson_id` (no hay endpoint directo para esto)
@@ -676,6 +725,7 @@ const handleSaveQuiz = () => {
 **Implementación Opción A (Actual):**
 
 Ya está implementado en Phase 1 ✅:
+
 ```typescript
 // LmsContentEditor.tsx (líneas 1001-1018)
 <LmsQuizManagement
@@ -707,19 +757,21 @@ Ya está implementado en Phase 1 ✅:
 
 ```javascript
 // Get quiz by lesson ID (convenience endpoint)
-router.get('/lessons/:lessonId/quiz',
+router.get(
+  '/lessons/:lessonId/quiz',
   authorizeCourseAccess,
   ...lessonIdParamSchema,
   handleValidationErrors,
   QuizController.getQuizByLessonId
-);
+)
 ```
 
 **Controller Method:**
+
 ```javascript
 getQuizByLessonId = asyncHandler(async (req, res) => {
-  const { lessonId } = req.params;
-  const quiz = await QuizService.getQuizByLessonId(parseInt(lessonId));
+  const { lessonId } = req.params
+  const quiz = await QuizService.getQuizByLessonId(parseInt(lessonId))
 
   if (!quiz) {
     return res.status(404).json({
@@ -728,17 +780,18 @@ getQuizByLessonId = asyncHandler(async (req, res) => {
         code: 'QUIZ_NOT_FOUND',
         message: 'No quiz found for this lesson'
       }
-    });
+    })
   }
 
   res.status(200).json({
     success: true,
     data: quiz
-  });
-});
+  })
+})
 ```
 
 **Service Method:**
+
 ```javascript
 async getQuizByLessonId(lessonId) {
   try {
@@ -760,6 +813,7 @@ async getQuizByLessonId(lessonId) {
 ```
 
 **Uso en Frontend:**
+
 ```typescript
 // quizService.ts
 async getQuizByLessonId(lessonId: number): Promise<Quiz | null> {
@@ -776,19 +830,19 @@ async getQuizByLessonId(lessonId: number): Promise<Quiz | null> {
 ```
 
 **Alternativa (sin nuevo endpoint):** Buscar en frontend
+
 ```typescript
 // En LmsQuizManagement, si initialQuizId no existe pero moduleId sí:
 useEffect(() => {
   if (!initialQuizId && moduleId) {
     // Get lesson ID from module
-    axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
-      .then(res => {
-        const lessons = res.data.data || res.data || []
-        if (lessons.length > 0 && lessons[0].quiz) {
-          // Si la lesson tiene quiz, cargar el quiz
-          setInitialQuizId(lessons[0].quiz.id)
-        }
-      })
+    axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`).then((res) => {
+      const lessons = res.data.data || res.data || []
+      if (lessons.length > 0 && lessons[0].quiz) {
+        // Si la lesson tiene quiz, cargar el quiz
+        setInitialQuizId(lessons[0].quiz.id)
+      }
+    })
   }
 }, [moduleId, initialQuizId])
 ```
@@ -798,6 +852,7 @@ useEffect(() => {
 ### PASO 5: Manejo de Estados y UX
 
 **Loading States:**
+
 ```typescript
 if (isLoadingQuiz) {
   return (
@@ -810,6 +865,7 @@ if (isLoadingQuiz) {
 ```
 
 **Save Button State:**
+
 ```typescript
 <Button
   variant="contained"
@@ -821,6 +877,7 @@ if (isLoadingQuiz) {
 ```
 
 **Error Handling:**
+
 ```typescript
 {saveQuizMutation.isError && (
   <Alert severity="error" sx={{ mb: 2 }}>
@@ -928,6 +985,7 @@ const AnalyticsTab = () => {
 ## ✅ CHECKLIST DE IMPLEMENTACIÓN
 
 ### Backend (OPCIONAL - Sistema ya completo)
+
 - [ ] Agregar endpoint `GET /lessons/:lessonId/quiz` (QuizController, QuizService)
 - [ ] Validar que todos los endpoints funcionen con Postman/Insomnia
 - [ ] Verificar rate limiting y auth en todos los endpoints
@@ -935,11 +993,13 @@ const AnalyticsTab = () => {
 ### Frontend (REQUERIDO)
 
 **Servicios:**
+
 - [ ] Crear `quizService.ts` con todos los métodos
 - [ ] Crear interfaces TypeScript para DTOs y responses
 - [ ] Configurar axios instance con auth headers
 
 **Componente LmsQuizManagement.tsx:**
+
 - [ ] Agregar React Query hooks (useQuery para load, useMutation para save)
 - [ ] Implementar `saveQuizMutation` con mapeo de datos
 - [ ] Actualizar `handleSaveQuiz` para usar mutation
@@ -950,11 +1010,13 @@ const AnalyticsTab = () => {
 - [ ] Validar que `previewQuestions` no esté vacío antes de guardar
 
 **Banco de Preguntas:**
+
 - [ ] **Decisión:** ¿Mantener mock banco o implementar banco global?
   - **Opción A (Simple):** Mock banco, questions solo en quizzes → **RECOMENDADO**
   - **Opción B (Futuro):** Crear tabla `lms_question_bank` y endpoints
 
 **Testing:**
+
 - [ ] Crear quiz nuevo desde cero
 - [ ] Editar quiz existente
 - [ ] Agregar/eliminar preguntas
@@ -966,6 +1028,7 @@ const AnalyticsTab = () => {
 - [ ] Test con randomize/shuffle enabled/disabled
 
 **Error Handling:**
+
 - [ ] 404 cuando quiz no existe
 - [ ] 400 cuando validación falla
 - [ ] 403 cuando usuario no tiene permisos
@@ -973,6 +1036,7 @@ const AnalyticsTab = () => {
 - [ ] Show user-friendly messages
 
 **UX Improvements:**
+
 - [ ] Auto-save draft cada X minutos (opcional)
 - [ ] Confirm before closing with unsaved changes
 - [ ] Show "Guardando..." spinner during save
@@ -985,25 +1049,31 @@ const AnalyticsTab = () => {
 ## 📋 RESUMEN DE CAMBIOS
 
 ### Archivos a CREAR
+
 1. `front.mmcs/src/services/quizService.ts` - API client para quizzes
 
 ### Archivos a MODIFICAR
+
 1. `front.mmcs/src/pages/lms/admin/LmsQuizManagement.tsx`
+
    - Agregar React Query hooks
    - Replace mock data con real API calls
    - Implement save/load logic
    - Update analytics tab
 
 2. `api.mmcs/routes/lms/quizzes.routes.js` (OPCIONAL)
+
    - Agregar `GET /lessons/:lessonId/quiz`
 
 3. `api.mmcs/controllers/lms/QuizController.js` (OPCIONAL)
+
    - Agregar `getQuizByLessonId` method
 
 4. `api.mmcs/services/lms/QuizService.js` (OPCIONAL)
    - Agregar `getQuizByLessonId` method
 
 ### Archivos a PROBAR
+
 1. Todos los endpoints existentes con Postman
 2. Flujo completo: crear módulo → crear quiz → editar quiz → ver analytics
 
@@ -1012,10 +1082,12 @@ const AnalyticsTab = () => {
 ## 🚀 ESTIMACIÓN DE TIEMPO
 
 **Backend (OPCIONAL):** 30-60 minutos
+
 - Agregar endpoint `GET /lessons/:lessonId/quiz`: 30 min
 - Testing: 30 min
 
 **Frontend (CORE):** 3-4 horas
+
 - quizService.ts: 1 hora
 - LmsQuizManagement integration: 2 horas
 - Testing: 1 hora
@@ -1027,21 +1099,20 @@ const AnalyticsTab = () => {
 ## 🎯 SIGUIENTE PASO INMEDIATO
 
 **Comenzar con:**
+
 1. Crear `quizService.ts` con interfaces y métodos básicos
 2. Implementar `useQuery` para cargar quiz existente
 3. Implementar `useMutation` para guardar quiz
 4. Testing básico: crear quiz nuevo
 
-**Después:**
-5. Tab Analytics con datos reales
-6. Error handling y UX polish
-7. Full testing suite
+**Después:** 5. Tab Analytics con datos reales 6. Error handling y UX polish 7. Full testing suite
 
 ---
 
 ## 📝 NOTAS IMPORTANTES
 
 ### Arquitectura Backend
+
 - ✅ **COMPLETO y ROBUSTO** - No necesita modificaciones
 - ✅ Anti-fraud detection implementado
 - ✅ Security middleware completo
@@ -1049,16 +1120,19 @@ const AnalyticsTab = () => {
 - ✅ Transaction-safe operations
 
 ### Decisiones de Diseño
+
 - **Banco de Preguntas:** Mock local (no global database) - suficiente para MVP
 - **Quiz Storage:** Quiz ID en `module.content.quizId` - simple y funcional
 - **Question IDs:** Backend genera IDs reales, reemplazar temporales del frontend
 
 ### Limitaciones Actuales
+
 - **Question Analytics:** Backend tiene placeholder, necesita implementación completa
 - **Banco Global:** No existe, todas las questions son específicas de cada quiz
 - **Question Reuse:** No soportado sin banco global
 
 ### Mejoras Futuras (Post Phase 2)
+
 - [ ] Implementar question bank global (tabla `lms_question_bank`)
 - [ ] Question-level analytics detallado
 - [ ] Question difficulty auto-calculation (based on correct answer rate)

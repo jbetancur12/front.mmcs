@@ -35,6 +35,7 @@ import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 import { busyDialog } from 'src/utils/confirm'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import { logger } from 'src/utils/logger'
 export interface CustomerData {
   id?: number
@@ -92,8 +93,8 @@ const CustomersTable: React.FC = () => {
     } catch (error) {
       logger.error('Error al crear cliente:', error)
       notify.error(
-        'Error',
-        'No se pudo crear el cliente. Por favor intenta nuevamente.'
+        'No se pudo crear el cliente',
+        getApiErrorMessage(error, 'Por favor intenta nuevamente.')
       )
     }
   }
@@ -121,8 +122,8 @@ const CustomersTable: React.FC = () => {
     } catch (error) {
       logger.error('Error al actualizar cliente:', error)
       notify.error(
-        'Error',
-        'No se pudo actualizar el cliente. Por favor intenta nuevamente.'
+        'No se pudo actualizar el cliente',
+        getApiErrorMessage(error, 'Por favor intenta nuevamente.')
       )
     }
   }
@@ -147,7 +148,10 @@ const CustomersTable: React.FC = () => {
     if (!result.isConfirmed) return
 
     try {
-      busyDialog.show('Eliminando...', 'Por favor espera mientras se elimina el cliente')
+      busyDialog.show(
+        'Eliminando...',
+        'Por favor espera mientras se elimina el cliente'
+      )
 
       const response = await deleteCustomer.mutateAsync(customer.id as number)
 

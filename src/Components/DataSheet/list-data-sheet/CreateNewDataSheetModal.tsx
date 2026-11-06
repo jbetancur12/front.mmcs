@@ -11,7 +11,7 @@ import { DatePicker } from '@mui/x-date-pickers'
 import { format, parseISO } from 'date-fns'
 import { useFormik } from 'formik'
 import { type MRT_ColumnDef } from 'material-react-table'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import FormDialog, { FormDialogSection } from '../../Common/FormDialog'
 import { notify } from 'src/utils/notify'
@@ -23,7 +23,7 @@ import {
   validationSchema
 } from './constants'
 import { DataSheetData } from './types'
-import { useDataSheetMutations } from './useDataSheets'
+import { useDataSheetMutations, useReusableCodes } from './useDataSheets'
 
 import { logger } from 'src/utils/logger'
 interface CreateModalProps {
@@ -56,7 +56,9 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
     onSubmit: async (values, { resetForm }) => {
       const formData = new FormData()
       Object.keys(values).forEach((key) => {
-        formData.append(key, values[key as FieldKey] as string | Blob)
+        const value = values[key as FieldKey]
+        if (key === 'internalCode' && !String(value ?? '').trim()) return
+        formData.append(key, value as string | Blob)
       })
 
       try {
@@ -76,6 +78,32 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       }
     }
   })
+
+  const { data: reusableCodes = [] } = useReusableCodes()
+
+  const normalizedServiceType = String(formik.values.serviceType ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+  const expectedPrefix =
+    normalizedServiceType === 'equipo de prestamo' ? 'PRES-' : 'MMCS-'
+  const availableCodes = formik.values.serviceType
+    ? (reusableCodes as Array<Record<string, unknown>>).filter((code) =>
+        String(code.internalCode ?? '').startsWith(expectedPrefix)
+      )
+    : (reusableCodes as Array<Record<string, unknown>>)
+
+  // Si el código elegido no corresponde al tipo de servicio, se limpia.
+  useEffect(() => {
+    const selected = String(formik.values.internalCode ?? '')
+    if (!selected || !formik.values.serviceType) return
+    if (!selected.startsWith(expectedPrefix)) {
+      formik.setFieldValue('internalCode', '')
+    }
+    // Solo cuando cambia el tipo de servicio.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.serviceType])
 
   const touched = (key: FieldKey) => formik.touched[key]
   const fieldError = (key: FieldKey) => formik.errors[key]
@@ -228,6 +256,36 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       maxWidth='md'
     >
       <FormDialogSection title='Datos del equipo'>
+        <TextField
+          select
+          fullWidth
+          label='Código interno'
+          name='internalCode'
+          value={formik.values.internalCode}
+          onChange={formik.handleChange}
+          sx={{ gridColumn: { sm: '1 / -1' } }}
+          helperText={
+            formik.values.serviceType
+              ? 'Automático usa el siguiente consecutivo. También puedes reutilizar un código liberado compatible con el tipo de servicio.'
+              : 'Selecciona el tipo de servicio para filtrar los códigos liberados. Mientras tanto se muestran todos.'
+          }
+        >
+          <MuiMenuItem value=''>Automático (siguiente)</MuiMenuItem>
+          {availableCodes.map((code) => {
+            const value = String(code.internalCode ?? '')
+            const name = String(code.equipmentName ?? 'Equipo anterior')
+            return (
+              <MuiMenuItem key={value} value={value}>
+                {value} · {name}
+              </MuiMenuItem>
+            )
+          })}
+          {availableCodes.length === 0 && (
+            <MuiMenuItem value='__sin_codigos__' disabled>
+              No hay códigos liberados
+            </MuiMenuItem>
+          )}
+        </TextField>
         {columns
           .filter(
             (column) =>

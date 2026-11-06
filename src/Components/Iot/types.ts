@@ -51,6 +51,27 @@ export interface DeviceIotConfig {
   // ... otras propiedades según tu API
 }
 
+/** Dispositivo como lo entrega el API, antes de normalizarlo a DeviceIot. */
+export interface DeviceIotRaw {
+  id?: number | string | null
+  imei?: string
+  name?: string
+  location?: string
+  lastLocation?: {
+    coordinates?: [number, number]
+  }
+  lastSeen?: string
+  isOnline?: boolean
+  customerId?: string | number | null
+  customer?: Customer | null
+  src?: string
+  lastHumidity?: string
+  lastTemperature?: string
+  deviceIotConfigs?: DeviceIotConfig[]
+  isInAlarm?: boolean
+  alarms?: DeviceAlarm[]
+}
+
 export interface SensorData {
   dev: string
   gps: number[]

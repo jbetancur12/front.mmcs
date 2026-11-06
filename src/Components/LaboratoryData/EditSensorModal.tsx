@@ -117,13 +117,13 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
           }
         )
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         // El tipo 'any' es temporal, idealmente tipar el error de Axios
         logger.error('Error updating sensor:', error)
         // Intentar extraer un mensaje de error más amigable de la respuesta de Axios
         const apiErrorMessage =
           getApiErrorReason(error) ||
-          error.message ||
+          (error instanceof Error ? error.message : '') ||
           'Ocurrió un error al actualizar el sensor.'
         // Establecer el error de la API en el estado de errores
         setFormErrors((prev) => ({ ...prev, apiError: apiErrorMessage }))

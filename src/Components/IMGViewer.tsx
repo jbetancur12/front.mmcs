@@ -9,7 +9,10 @@ const IMGViewer = ({
   path: string
   bucket: string
 }) => {
-  const imageUrl = useMemo(() => buildMinioObjectUrl(bucket, path), [bucket, path])
+  const imageUrl = useMemo(
+    () => buildMinioObjectUrl(bucket, path),
+    [bucket, path]
+  )
 
   return (
     <Avatar

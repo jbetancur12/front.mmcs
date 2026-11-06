@@ -43,7 +43,8 @@ export const ASSET_LIFE_SHEET_EXACT_FILTERS = [
 export const fetchAllAssetLifeSheets = async (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>
 ): Promise<AssetLifeSheet[]> => {
-  const response = await axiosPrivate.get<AssetLifeSheet[]>('/asset-life-sheets')
+  const response =
+    await axiosPrivate.get<AssetLifeSheet[]>('/asset-life-sheets')
   return response.data
 }
 

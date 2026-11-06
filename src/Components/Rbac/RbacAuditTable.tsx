@@ -107,8 +107,7 @@ const RbacAuditTable: React.FC = () => {
         header: 'Rol',
         id: 'role',
         size: 170,
-        accessorFn: (row) =>
-          row.roleName ? getRoleLabelEs(row.roleName) : '—'
+        accessorFn: (row) => (row.roleName ? getRoleLabelEs(row.roleName) : '—')
       },
       {
         header: 'Capacidad / detalle',

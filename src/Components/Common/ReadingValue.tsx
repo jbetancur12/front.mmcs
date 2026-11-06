@@ -37,7 +37,14 @@ const ReadingValue: React.FC<ReadingValueProps> = ({
   const hasValue = typeof value === 'number' && Number.isFinite(value)
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          color: 'text.secondary'
+        }}
+      >
         {icon && React.cloneElement(icon, { sx: { fontSize: 14 } })}
         <Typography variant='caption' sx={{ lineHeight: 1.3 }}>
           {label}
@@ -56,7 +63,12 @@ const ReadingValue: React.FC<ReadingValueProps> = ({
         {hasValue ? (value as number).toFixed(digits) : '--'}
         <Typography
           component='span'
-          sx={{ ml: 0.25, fontSize: size === 'large' ? '0.9rem' : '0.75rem', fontWeight: 500, color: 'text.secondary' }}
+          sx={{
+            ml: 0.25,
+            fontSize: size === 'large' ? '0.9rem' : '0.75rem',
+            fontWeight: 500,
+            color: 'text.secondary'
+          }}
         >
           {unit}
         </Typography>

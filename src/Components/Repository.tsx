@@ -95,12 +95,12 @@ const Repository = () => {
     [] // No hay dependencias específicas aquí
   )
 
-  const handleCreateNewRow = (values: FileData) => {
-    onCreateRepository(values)
+  const handleCreateNewRow = (formData: FormData) => {
+    onCreateRepository(formData)
     setCreateModalOpen(false)
   }
 
-  const onCreateRepository = async (repostoryData: FileData) => {
+  const onCreateRepository = async (repostoryData: FormData) => {
     try {
       const response = await createRepositoryMutation.mutateAsync(repostoryData)
 
@@ -181,7 +181,7 @@ const Repository = () => {
             duration: 4000,
             position: 'top-center'
           })
-          } else {
+        } else {
           toast.error('Error al eliminar archivo', {
             duration: 4000,
             position: 'top-center'
@@ -237,11 +237,11 @@ const Repository = () => {
               <Button onClick={(e) => handleClick(e, row.original.path)}>
                 <Visibility />
               </Button>
-{canManage && (
-              <Button onClick={() => handleDelete(row.original.id)}>
-                <Delete />
-              </Button>
-)}
+              {canManage && (
+                <Button onClick={() => handleDelete(row.original.id)}>
+                  <Delete />
+                </Button>
+              )}
             </Box>
           )
         }}
@@ -259,7 +259,7 @@ const Repository = () => {
 interface CreateModalProps {
   columns: MRT_ColumnDef<RepositoryData>[]
   onClose: () => void
-  onSubmit: (values: FileData) => void
+  onSubmit: (formData: FormData) => void
   open: boolean
 }
 
@@ -271,11 +271,11 @@ export const CreateNewRepositoryModal = ({
 }: CreateModalProps) => {
   const [file, setFile] = useState<File | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
-  const [values, setValues] = useState<any>(() =>
-    columns.reduce((acc, column) => {
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    columns.reduce<Record<string, string>>((acc, column) => {
       acc[column.accessorKey ?? ''] = ''
       return acc
-    }, {} as any)
+    }, {})
   )
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -294,7 +294,6 @@ export const CreateNewRepositoryModal = ({
     formData.append('version', values.version)
     formData.append('description', values.description)
     formData.append('date', values.date)
-    //@ts-ignore
     onSubmit(formData)
     onClose()
   }

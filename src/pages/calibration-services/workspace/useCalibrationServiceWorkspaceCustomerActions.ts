@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 import { toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import { CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY } from '../../../hooks/useCalibrationServices'
 import { CalibrationServiceCustomer } from '../../../types/calibrationService'
 import { CalibrationServiceCustomerDialogValues } from '../CalibrationServiceCustomerDialog'
@@ -9,44 +10,56 @@ import { CustomerDialogMode } from './calibrationServiceWorkspaceTypes'
 import { CalibrationServiceWorkspaceForm } from './useCalibrationServiceWorkspaceForm'
 
 /** Creación de cliente o sede desde el formulario; el resultado queda seleccionado. */
-const useCalibrationServiceWorkspaceCustomerActions = (form: CalibrationServiceWorkspaceForm) => {
+const useCalibrationServiceWorkspaceCustomerActions = (
+  form: CalibrationServiceWorkspaceForm
+) => {
   const queryClient = useQueryClient()
-  const { selectedCustomer, handleCustomerChange, handleCustomerSiteChange } = form
-  const [customerDialogMode, setCustomerDialogMode] = useState<CustomerDialogMode | null>(null)
+  const { selectedCustomer, handleCustomerChange, handleCustomerSiteChange } =
+    form
+  const [customerDialogMode, setCustomerDialogMode] =
+    useState<CustomerDialogMode | null>(null)
 
   const createCustomerMutation = useMutation({
     mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
-      const response = await axiosPrivate.post<{ customer: CalibrationServiceCustomer }>(
-        '/customers',
-        {
-          ...values.customer,
-          direccion: values.customer.direccion || values.site.address || '',
-          ciudad: values.customer.ciudad || values.site.city || '',
-          departamento: values.customer.departamento || values.site.department || '',
-          email: values.customer.email || values.site.contactEmail || '',
-          telefono: values.customer.telefono || values.site.contactPhone || '',
-          pais: values.customer.pais || values.site.country || 'Colombia',
-          sites: [values.site]
-        }
-      )
+      const response = await axiosPrivate.post<{
+        customer: CalibrationServiceCustomer
+      }>('/customers', {
+        ...values.customer,
+        direccion: values.customer.direccion || values.site.address || '',
+        ciudad: values.customer.ciudad || values.site.city || '',
+        departamento:
+          values.customer.departamento || values.site.department || '',
+        email: values.customer.email || values.site.contactEmail || '',
+        telefono: values.customer.telefono || values.site.contactPhone || '',
+        pais: values.customer.pais || values.site.country || 'Colombia',
+        sites: [values.site]
+      })
       return response.data.customer
     },
     onSuccess: (customer) => {
       queryClient.setQueryData<CalibrationServiceCustomer[]>(
         CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY,
         (previous = []) => {
-          const withoutDuplicate = previous.filter((item) => item.id !== customer.id)
+          const withoutDuplicate = previous.filter(
+            (item) => item.id !== customer.id
+          )
           return [...withoutDuplicate, customer].sort((left, right) =>
             left.nombre.localeCompare(right.nombre)
           )
         }
       )
+      queryClient.invalidateQueries(['customer-identification-check'])
       handleCustomerChange(customer)
       if (customer.sites?.[0]) {
         handleCustomerSiteChange(customer.sites[0])
       }
       setCustomerDialogMode(null)
       toast.success('Cliente creado y seleccionado.')
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, 'No se pudo crear el cliente comercial.')
+      )
     }
   })
 
@@ -78,7 +91,9 @@ const useCalibrationServiceWorkspaceCustomerActions = (form: CalibrationServiceW
     }
   })
 
-  const handleCustomerDialogSubmit = (values: CalibrationServiceCustomerDialogValues) => {
+  const handleCustomerDialogSubmit = (
+    values: CalibrationServiceCustomerDialogValues
+  ) => {
     if (customerDialogMode === 'site') {
       if (!values.site.name.trim()) {
         toast.error('Indica el nombre de la sede.')
@@ -104,7 +119,8 @@ const useCalibrationServiceWorkspaceCustomerActions = (form: CalibrationServiceW
   return {
     customerDialogMode,
     setCustomerDialogMode,
-    isSubmitting: createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading,
+    isSubmitting:
+      createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading,
     handleCustomerDialogSubmit
   }
 }

@@ -66,7 +66,10 @@ const CreatePurchaseVerificationModal: React.FC<
 
   const [error, setError] = React.useState('')
 
-  const handleChange = (field: keyof PurchaseVerificationData, value: any) => {
+  const handleChange = (
+    field: keyof PurchaseVerificationData,
+    value: PurchaseVerificationData[keyof PurchaseVerificationData]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -91,7 +94,7 @@ const CreatePurchaseVerificationModal: React.FC<
       )
       onSuccess(response.data)
       handleClose()
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error creating verification.')
       logger.error(err)
     }

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { MRT_ColumnDef } from 'material-react-table'
+import { MRT_ColumnDef, type MRT_Row } from 'material-react-table'
 import {
   Button,
   Checkbox,
@@ -318,7 +318,7 @@ const PurchaseOrders: React.FC = () => {
 export default PurchaseOrders
 
 interface RenderRowActionsProps {
-  row: any
+  row: MRT_Row<IPurchaseOrder>
   openVerificationModal: (purchaseOrder: IPurchaseOrder) => void
 }
 

@@ -39,6 +39,17 @@ export const InvoiceCell = ({ cell }: Pick<CellProps, 'cell'>) => (
 )
 
 export const StatusCell = ({ cell, row }: CellProps) => {
+  if (row.original.isRetired) {
+    return (
+      <Chip
+        size='small'
+        variant='outlined'
+        color='default'
+        label='Dado de baja'
+      />
+    )
+  }
+
   const isDue =
     row.original.isInspectionDueSoon || row.original.isCalibrationDueSoon
 

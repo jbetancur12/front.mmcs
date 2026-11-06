@@ -12,7 +12,7 @@ interface ImpersonationBarProps {
 const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
   impersonatorName,
   targetName,
-  onStop,
+  onStop
 }) => {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -50,7 +50,7 @@ const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 9999,
+        zIndex: 9999
       }}
     >
       <WarningAmberRoundedIcon sx={{ color: '#d97706', fontSize: 20 }} />
@@ -76,7 +76,7 @@ const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
           py: 0.25,
           bgcolor: '#b45309',
           color: '#fff',
-          '&:hover': { bgcolor: '#92400e' },
+          '&:hover': { bgcolor: '#92400e' }
         }}
       >
         Volver a mi sesión

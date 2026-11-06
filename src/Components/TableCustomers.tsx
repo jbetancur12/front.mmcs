@@ -62,7 +62,7 @@ const Table: React.FC = () => {
       }
     }
   )
-  const createCustomer = useCreateCustomer<CustomerData>()
+  const createCustomer = useCreateCustomer<Record<string, string>>()
   const updateCustomer = useUpdateCustomer<CustomerData>()
   const deleteCustomerMutation = useDeleteCustomer()
 
@@ -79,7 +79,7 @@ const Table: React.FC = () => {
   )
 
   // Create a new customer
-  const onCreateCustomer = async (customerData: CustomerData) => {
+  const onCreateCustomer = async (customerData: Record<string, string>) => {
     try {
       const updatedValues = { ...customerData }
       delete updatedValues.id
@@ -96,29 +96,6 @@ const Table: React.FC = () => {
     }
   }
 
-  // const updateCustomer = async (customerData: CustomerData) => {
-
-  //   try {
-  //     const response = await axiosPrivate.put(`/customers/${customerData.id}`, customerData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Cliente Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear cliente');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
-
   useEffect(() => {
     const savedFilters = sessionStorage.getItem('columnFiltersCustomers')
     if (savedFilters) {
@@ -134,7 +111,7 @@ const Table: React.FC = () => {
     )
   }, [columnFilters])
 
-  const handleCreateNewRow = (values: CustomerData) => {
+  const handleCreateNewRow = (values: Record<string, string>) => {
     onCreateCustomer(values)
     setCreateModalOpen(false)
   }
@@ -391,7 +368,7 @@ const Table: React.FC = () => {
 interface CreateModalProps {
   columns: MRT_ColumnDef<CustomerData>[]
   onClose: () => void
-  onSubmit: (values: CustomerData) => void
+  onSubmit: (values: Record<string, string>) => void
   open: boolean
 }
 
@@ -402,11 +379,11 @@ export const CreateNewAccountModal = ({
   onClose,
   onSubmit
 }: CreateModalProps) => {
-  const [values, setValues] = useState<any>(() =>
-    columns.reduce((acc, column) => {
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    columns.reduce<Record<string, string>>((acc, column) => {
       acc[column.accessorKey ?? ''] = ''
       return acc
-    }, {} as any)
+    }, {})
   )
 
   const handleSubmit = () => {

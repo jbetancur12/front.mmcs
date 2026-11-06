@@ -145,7 +145,10 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = ({
           endAdornment: (
             <InputAdornment position='end'>
               <Tooltip title='Agregar requisito'>
-                <IconButton onClick={addRequirement} aria-label='Agregar requisito'>
+                <IconButton
+                  onClick={addRequirement}
+                  aria-label='Agregar requisito'
+                >
                   <Add />
                 </IconButton>
               </Tooltip>

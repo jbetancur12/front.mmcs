@@ -102,7 +102,10 @@ const CalibrationServiceRemoteSignaturePage = () => {
       setIsSigned(true)
     } catch (submitError) {
       setError(
-        getErrorMessage(submitError, 'No pudimos guardar tu firma. Intenta nuevamente.')
+        getErrorMessage(
+          submitError,
+          'No pudimos guardar tu firma. Intenta nuevamente.'
+        )
       )
     } finally {
       setIsSubmitting(false)
@@ -134,8 +137,8 @@ const CalibrationServiceRemoteSignaturePage = () => {
               </Typography>
             </Stack>
             <Typography color='text.secondary' sx={{ mt: 1.5 }}>
-              Revisa la orden de servicio y firma como constancia de que recibiste
-              el servicio a satisfacción.
+              Revisa la orden de servicio y firma como constancia de que
+              recibiste el servicio a satisfacción.
             </Typography>
           </Box>
 
@@ -150,7 +153,8 @@ const CalibrationServiceRemoteSignaturePage = () => {
           {isSigned ? (
             <Alert severity='success'>
               ¡Gracias! Tu firma quedó registrada en la orden de servicio{' '}
-              <strong>{data?.serviceCode}</strong>. Ya puedes cerrar esta página.
+              <strong>{data?.serviceCode}</strong>. Ya puedes cerrar esta
+              página.
             </Alert>
           ) : null}
 
@@ -197,7 +201,9 @@ const CalibrationServiceRemoteSignaturePage = () => {
                           control={
                             <Checkbox
                               checked={hasReviewed}
-                              onChange={(event) => setHasReviewed(event.target.checked)}
+                              onChange={(event) =>
+                                setHasReviewed(event.target.checked)
+                              }
                             />
                           }
                           label='Revisé la orden de servicio y estoy de acuerdo'
@@ -225,10 +231,10 @@ const CalibrationServiceRemoteSignaturePage = () => {
                       helperText='Dibuja tu firma con el dedo o el mouse.'
                     />
                     <Typography variant='caption' color='text.secondary'>
-                      Al firmar confirmas que recibiste a satisfacción los servicios de la
-                      orden. El enlace vence el{' '}
-                      {new Date(data.expiresAt).toLocaleString('es-CO')} y solo puede
-                      usarse una vez.
+                      Al firmar confirmas que recibiste a satisfacción los
+                      servicios de la orden. El enlace vence el{' '}
+                      {new Date(data.expiresAt).toLocaleString('es-CO')} y solo
+                      puede usarse una vez.
                     </Typography>
                     <Button
                       type='submit'

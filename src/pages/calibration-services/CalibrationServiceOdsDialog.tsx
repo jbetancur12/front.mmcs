@@ -69,7 +69,9 @@ const CalibrationServiceOdsDialog = ({
       title='Emitir ODS'
       subtitle={serviceCode}
       submitLabel={
-        values.generatePdfImmediately ? 'Emitir ODS y generar PDF' : 'Emitir ODS'
+        values.generatePdfImmediately
+          ? 'Emitir ODS y generar PDF'
+          : 'Emitir ODS'
       }
       onSubmit={() => void onSubmit(values)}
       loading={isLoading}
@@ -124,7 +126,9 @@ const CalibrationServiceOdsDialog = ({
           label='Sede de ejecución'
           value={values.executionSiteName}
           disabled={isLoading}
-          onChange={(event) => setField('executionSiteName', event.target.value)}
+          onChange={(event) =>
+            setField('executionSiteName', event.target.value)
+          }
         />
       </FormDialogSection>
 

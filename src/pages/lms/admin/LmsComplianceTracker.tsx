@@ -1,4 +1,5 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import { getApiErrorReason } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import {
@@ -41,8 +42,13 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
+  type ChipProps
 } from '@mui/material'
-import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
+import {
+  MaterialReactTable,
+  type MRT_ColumnDef,
+  type MRT_RowSelectionState
+} from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -79,6 +85,11 @@ import {
 } from '../../../hooks/useLms'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { notify } from 'src/utils/notify'
+import type {
+  AssignmentReminderSummary,
+  MandatoryTrainingRecord,
+  MandatoryTrainingStatus
+} from '../../../services/lmsService'
 
 interface ComplianceRecord {
   id: number
@@ -88,32 +99,30 @@ interface ComplianceRecord {
   department: string
   courseId: number
   courseTitle: string
-  assignedDate: string
-  deadline: string
-  completedDate?: string
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue'
+  assignedDate: string | null
+  deadline: string | null
+  completedDate?: string | null
+  status: MandatoryTrainingStatus
   progress: number
   daysUntilDeadline: number | null
   isOverdue: boolean
-  reminderSummary?: {
-    totalNotifications: number
-    reminderNotifications: number
-    manualReminderNotifications: number
-    unreadReminderNotifications: number
-    lastNotificationAt: string | null
-    lastReminderAt: string | null
-    lastManualReminderAt: string | null
-    lastReminderType: string | null
-  }
+  reminderSummary?: AssignmentReminderSummary
 }
 
-const hasUpcomingDeadline = (record: Pick<ComplianceRecord, 'isOverdue' | 'daysUntilDeadline' | 'status'>) =>
-  !record.isOverdue
-  && record.status !== 'completed'
-  && typeof record.daysUntilDeadline === 'number'
-  && record.daysUntilDeadline <= 7
+const hasUpcomingDeadline = (
+  record: Pick<ComplianceRecord, 'isOverdue' | 'daysUntilDeadline' | 'status'>
+) =>
+  !record.isOverdue &&
+  record.status !== 'completed' &&
+  typeof record.daysUntilDeadline === 'number' &&
+  record.daysUntilDeadline <= 7
 
-const formatDeadlineLabel = (record: Pick<ComplianceRecord, 'deadline' | 'isOverdue' | 'daysUntilDeadline' | 'status'>) => {
+const formatDeadlineLabel = (
+  record: Pick<
+    ComplianceRecord,
+    'deadline' | 'isOverdue' | 'daysUntilDeadline' | 'status'
+  >
+) => {
   if (!record.deadline) {
     return 'Sin fecha límite'
   }
@@ -122,16 +131,22 @@ const formatDeadlineLabel = (record: Pick<ComplianceRecord, 'deadline' | 'isOver
     return `Vencido hace ${Math.abs(record.daysUntilDeadline)} días`
   }
 
-  if (hasUpcomingDeadline(record) && typeof record.daysUntilDeadline === 'number') {
+  if (
+    hasUpcomingDeadline(record) &&
+    typeof record.daysUntilDeadline === 'number'
+  ) {
     return `Vence en ${record.daysUntilDeadline} días`
   }
 
   return new Date(record.deadline).toLocaleDateString()
 }
 
-const formatFollowUpLabel = (record: Pick<ComplianceRecord, 'reminderSummary'>) => {
-  const lastReminder = record.reminderSummary?.lastReminderAt
-    || record.reminderSummary?.lastNotificationAt
+const formatFollowUpLabel = (
+  record: Pick<ComplianceRecord, 'reminderSummary'>
+) => {
+  const lastReminder =
+    record.reminderSummary?.lastReminderAt ||
+    record.reminderSummary?.lastNotificationAt
 
   if (!lastReminder) {
     return 'Sin seguimiento enviado'
@@ -149,13 +164,19 @@ const formatFollowUpLabel = (record: Pick<ComplianceRecord, 'reminderSummary'>) 
 const getCompliancePriority = (record: ComplianceRecord) => {
   if (record.status === 'overdue') return 0
   if (hasUpcomingDeadline(record)) return 1
-  if ((record.reminderSummary?.lastReminderAt || record.reminderSummary?.lastNotificationAt) == null && record.status !== 'completed') return 2
+  if (
+    (record.reminderSummary?.lastReminderAt ||
+      record.reminderSummary?.lastNotificationAt) == null &&
+    record.status !== 'completed'
+  )
+    return 2
   if (record.status === 'in_progress') return 3
   if (record.status === 'pending') return 4
   return 5
 }
 
-const recordKey = (record: Pick<ComplianceRecord, 'userId' | 'courseId'>) => `${record.userId}-${record.courseId}`
+const recordKey = (record: Pick<ComplianceRecord, 'userId' | 'courseId'>) =>
+  `${record.userId}-${record.courseId}`
 
 const DEFAULT_FILTERS: {
   status: string[]
@@ -186,26 +207,39 @@ const LmsComplianceTracker: React.FC = () => {
   // Vistas: registros (0), por curso (4) y por plan de formación (5).
   // ?tab=plan&planId=N abre directamente el cumplimiento de un plan.
   const [activeTab, setActiveTab] = useState(() => {
-    if (new URLSearchParams(window.location.search).get('tab') === 'plan') return 5
+    if (new URLSearchParams(window.location.search).get('tab') === 'plan')
+      return 5
     const raw = Number(sessionStorage.getItem('lms:compliance:tab'))
     return raw === 4 || raw === 5 ? raw : 0
   })
   type QuickFilter = 'all' | 'overdue' | 'soon' | 'pending' | 'completed'
   const [quick, setQuick] = useState<QuickFilter>(
-    () => (sessionStorage.getItem('lms:compliance:quick') as QuickFilter) || 'all'
+    () =>
+      (sessionStorage.getItem('lms:compliance:quick') as QuickFilter) || 'all'
   )
-  const [selectedRecord, setSelectedRecord] = useState<ComplianceRecord | null>(null)
+  const [selectedRecord, setSelectedRecord] = useState<ComplianceRecord | null>(
+    null
+  )
   const [openDialog, setOpenDialog] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false)
-  const [detailsRecord, setDetailsRecord] = useState<ComplianceRecord | null>(null)
+  const [detailsRecord, setDetailsRecord] = useState<ComplianceRecord | null>(
+    null
+  )
 
   // Filtros (persistidos en sessionStorage para sobrevivir la navegación)
-  const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLButtonElement | null>(null)
+  const [filterAnchorEl, setFilterAnchorEl] =
+    useState<HTMLButtonElement | null>(null)
   const [filters, setFilters] = useState(readStoredFilters)
 
   // Fetch mandatory training status from API
-  const { data: trainingData, isLoading, error, refetch, isFetching } = useMandatoryTrainingStatus({
+  const {
+    data: trainingData,
+    isLoading,
+    error,
+    refetch,
+    isFetching
+  } = useMandatoryTrainingStatus({
     includeCompleted: true
   })
   const triggerManualRemindersMutation = useTriggerManualReminders()
@@ -214,7 +248,9 @@ const LmsComplianceTracker: React.FC = () => {
   const resetProgressMutation = useResetUserCourseProgress()
 
   // Edición de fechas (modal detalle)
-  const [dateScope, setDateScope] = useState<'user' | 'group' | 'group-clear'>('user')
+  const [dateScope, setDateScope] = useState<'user' | 'group' | 'group-clear'>(
+    'user'
+  )
   const [editAssignedAt, setEditAssignedAt] = useState<Date | null>(null)
   const [editDeadline, setEditDeadline] = useState<Date | null>(null)
   const [editCompletedAt, setEditCompletedAt] = useState<Date | null>(null)
@@ -228,12 +264,13 @@ const LmsComplianceTracker: React.FC = () => {
   const [bulkDeadline, setBulkDeadline] = useState<Date | null>(null)
   const [bulkSaving, setBulkSaving] = useState(false)
 
-
   // Modo edición oculto por defecto: se habilita con ?show=true (se recuerda
   // en sessionStorage); ?show=false lo apaga. La protección real está en el backend.
   // El modo de edición cambia fechas de asignaciones
   const canEdit = useCan(PERMISSIONS.LMS_ASSIGNMENT_MANAGE)
-  const [editMode, setEditMode] = useState(() => sessionStorage.getItem('lms:compliance:edit') === '1')
+  const [editMode, setEditMode] = useState(
+    () => sessionStorage.getItem('lms:compliance:edit') === '1'
+  )
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
@@ -244,7 +281,6 @@ const LmsComplianceTracker: React.FC = () => {
     setEditMode(next)
     sessionStorage.setItem('lms:compliance:edit', next ? '1' : '0')
     if (!next) setSelectedKeys([])
-     
   }, [searchParams, canEdit])
 
   // Persistir filtros y tab entre navegaciones
@@ -259,8 +295,6 @@ const LmsComplianceTracker: React.FC = () => {
   useEffect(() => {
     sessionStorage.setItem('lms:compliance:quick', quick)
   }, [quick])
-
-
 
   const disableEditMode = () => {
     sessionStorage.setItem('lms:compliance:edit', '0')
@@ -277,32 +311,34 @@ const LmsComplianceTracker: React.FC = () => {
       return []
     }
 
-    const records = trainingData.mandatoryTraining.map((training: any, index: number) => ({
-      id: training.assignmentId || index,
-      userId: training.userId,
-      userName: training.userName,
-      userEmail: training.userEmail || 'N/A',
-      department: training.department || training.role || 'N/A',
-      courseId: training.courseId,
-      courseTitle: training.courseTitle,
-      assignedDate: training.assignedDate,
-      deadline: training.deadline,
-      completedDate: training.completedDate,
-      progress: training.progress || 0,
-      status: training.status,
-      daysUntilDeadline: training.daysUntilDeadline ?? null,
-      isOverdue: training.isOverdue || false,
-      reminderSummary: training.reminderSummary || {
-        totalNotifications: 0,
-        reminderNotifications: 0,
-        manualReminderNotifications: 0,
-        unreadReminderNotifications: 0,
-        lastNotificationAt: null,
-        lastReminderAt: null,
-        lastManualReminderAt: null,
-        lastReminderType: null
-      }
-    }))
+    const records = trainingData.mandatoryTraining.map(
+      (training: MandatoryTrainingRecord, index: number) => ({
+        id: training.assignmentId || index,
+        userId: training.userId,
+        userName: training.userName,
+        userEmail: training.userEmail || 'N/A',
+        department: training.department || training.role || 'N/A',
+        courseId: training.courseId,
+        courseTitle: training.courseTitle,
+        assignedDate: training.assignedDate,
+        deadline: training.deadline,
+        completedDate: training.completedDate,
+        progress: training.progress || 0,
+        status: training.status,
+        daysUntilDeadline: training.daysUntilDeadline ?? null,
+        isOverdue: training.isOverdue || false,
+        reminderSummary: training.reminderSummary || {
+          totalNotifications: 0,
+          reminderNotifications: 0,
+          manualReminderNotifications: 0,
+          unreadReminderNotifications: 0,
+          lastNotificationAt: null,
+          lastReminderAt: null,
+          lastManualReminderAt: null,
+          lastReminderType: null
+        }
+      })
+    )
 
     // Deduplicate by userId + courseId (in case backend returns duplicates)
     const seen = new Map<string, ComplianceRecord>()
@@ -328,7 +364,7 @@ const LmsComplianceTracker: React.FC = () => {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): ChipProps['color'] => {
     switch (status) {
       case 'completed':
         return 'success'
@@ -360,7 +396,9 @@ const LmsComplianceTracker: React.FC = () => {
 
   const handleSendReminder = (record: ComplianceRecord) => {
     setSelectedRecord(record)
-    setReminderMessage(`Recordatorio: El curso "${record.courseTitle}" ${record.isOverdue ? 'está vencido' : `vence el ${new Date(record.deadline).toLocaleDateString()}`}. Por favor, completa las lecciones restantes.`)
+    setReminderMessage(
+      `Recordatorio: El curso "${record.courseTitle}" ${record.isOverdue ? 'está vencido' : `vence el ${record.deadline ? new Date(record.deadline).toLocaleDateString() : 'sin fecha'}`}. Por favor, completa las lecciones restantes.`
+    )
     setOpenDialog(true)
   }
 
@@ -384,9 +422,13 @@ const LmsComplianceTracker: React.FC = () => {
   const handleViewDetails = (record: ComplianceRecord) => {
     setDetailsRecord(record)
     setDateScope('user')
-    setEditAssignedAt(record.assignedDate ? new Date(record.assignedDate) : null)
+    setEditAssignedAt(
+      record.assignedDate ? new Date(record.assignedDate) : null
+    )
     setEditDeadline(record.deadline ? new Date(record.deadline) : null)
-    setEditCompletedAt(record.completedDate ? new Date(record.completedDate) : null)
+    setEditCompletedAt(
+      record.completedDate ? new Date(record.completedDate) : null
+    )
     setOpenDetailsDialog(true)
   }
 
@@ -404,13 +446,15 @@ const LmsComplianceTracker: React.FC = () => {
       editAssignedAt &&
       editCompletedAt < editAssignedAt
     ) {
-      notify.error('La fecha de finalización no puede ser anterior a la fecha de asignación')
+      notify.error(
+        'La fecha de finalización no puede ser anterior a la fecha de asignación'
+      )
       return
     }
 
     setSavingDates(true)
     try {
-      const jobs: Promise<any>[] = [
+      const jobs: Promise<unknown>[] = [
         setUserDatesMutation.mutateAsync({
           scope: dateScope,
           userId: detailsRecord.userId,
@@ -434,8 +478,10 @@ const LmsComplianceTracker: React.FC = () => {
       await Promise.all(jobs)
       notify.success('Fechas actualizadas')
       handleCloseDetails()
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudieron actualizar las fechas')
+    } catch (e: unknown) {
+      notify.error(
+        getApiErrorReason(e) ?? 'No se pudieron actualizar las fechas'
+      )
     } finally {
       setSavingDates(false)
     }
@@ -452,8 +498,8 @@ const LmsComplianceTracker: React.FC = () => {
       })
       notify.success('Fechas restablecidas al grupo')
       handleCloseDetails()
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudo restablecer')
+    } catch (e: unknown) {
+      notify.error(getApiErrorReason(e) ?? 'No se pudo restablecer')
     } finally {
       setSavingDates(false)
     }
@@ -475,32 +521,41 @@ const LmsComplianceTracker: React.FC = () => {
       })
       notify.success('Curso reiniciado')
       handleCloseDetails()
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudo reiniciar el curso')
+    } catch (e: unknown) {
+      notify.error(getApiErrorReason(e) ?? 'No se pudo reiniciar el curso')
     }
   }
 
   const toggleSelect = (key: string) =>
-    setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
+    setSelectedKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
 
   const handleBulkApply = async () => {
-    const selected = filteredRecords.filter((r) => selectedKeys.includes(recordKey(r)))
+    const selected = filteredRecords.filter((r) =>
+      selectedKeys.includes(recordKey(r))
+    )
     if (selected.length === 0) return
 
     if (bulkCompletedAt && bulkAssignedAt && bulkCompletedAt < bulkAssignedAt) {
-      notify.error('La fecha de finalización no puede ser anterior a la fecha de asignación')
+      notify.error(
+        'La fecha de finalización no puede ser anterior a la fecha de asignación'
+      )
       return
     }
 
     setBulkSaving(true)
     try {
-      const jobs: Promise<any>[] = []
+      const jobs: Promise<unknown>[] = []
 
       if (bulkCompletedAt) {
         jobs.push(
           setCompletionMutation.mutateAsync({
             completedAt: bulkCompletedAt.toISOString(),
-            items: selected.map((r) => ({ userId: r.userId, courseId: r.courseId }))
+            items: selected.map((r) => ({
+              userId: r.userId,
+              courseId: r.courseId
+            }))
           })
         )
       }
@@ -512,7 +567,9 @@ const LmsComplianceTracker: React.FC = () => {
               scope: 'user',
               userId: r.userId,
               courseId: r.courseId,
-              assigned_at: bulkAssignedAt ? bulkAssignedAt.toISOString() : undefined,
+              assigned_at: bulkAssignedAt
+                ? bulkAssignedAt.toISOString()
+                : undefined,
               deadline: bulkDeadline ? bulkDeadline.toISOString() : undefined
             })
           )
@@ -526,83 +583,106 @@ const LmsComplianceTracker: React.FC = () => {
       setBulkCompletedAt(null)
       setBulkAssignedAt(null)
       setBulkDeadline(null)
-    } catch (e: any) {
-      notify.error(e?.message || 'No se pudo aplicar en lote')
+    } catch (e: unknown) {
+      notify.error(getApiErrorReason(e) ?? 'No se pudo aplicar en lote')
     } finally {
       setBulkSaving(false)
     }
   }
 
   // Helper function to apply user filters (memoized with useCallback)
-  const applyUserFilters = useCallback((records: ComplianceRecord[]) => {
-    let filtered = records
+  const applyUserFilters = useCallback(
+    (records: ComplianceRecord[]) => {
+      let filtered = records
 
-    // Filter by status
-    if (filters.status.length > 0) {
-      filtered = filtered.filter(r => filters.status.includes(r.status))
-    }
+      // Filter by status
+      if (filters.status.length > 0) {
+        filtered = filtered.filter((r) => filters.status.includes(r.status))
+      }
 
-    // Búsqueda por nombre, correo o curso (parcial, sin distinguir mayúsculas)
-    if (filters.userQuery.trim()) {
-      const term = filters.userQuery.trim().toLowerCase()
-      filtered = filtered.filter(r =>
-        (r.userName || '').toLowerCase().includes(term) ||
-        (r.userEmail || '').toLowerCase().includes(term) ||
-        (r.courseTitle || '').toLowerCase().includes(term)
-      )
-    }
+      // Búsqueda por nombre, correo o curso (parcial, sin distinguir mayúsculas)
+      if (filters.userQuery.trim()) {
+        const term = filters.userQuery.trim().toLowerCase()
+        filtered = filtered.filter(
+          (r) =>
+            (r.userName || '').toLowerCase().includes(term) ||
+            (r.userEmail || '').toLowerCase().includes(term) ||
+            (r.courseTitle || '').toLowerCase().includes(term)
+        )
+      }
 
-    // Filter by department
-    if (filters.department) {
-      filtered = filtered.filter(r => r.department === filters.department)
-    }
+      // Filter by department
+      if (filters.department) {
+        filtered = filtered.filter((r) => r.department === filters.department)
+      }
 
-    // Filter by course
-    if (filters.courseId) {
-      filtered = filtered.filter(r => r.courseId === filters.courseId)
-    }
+      // Filter by course
+      if (filters.courseId) {
+        filtered = filtered.filter((r) => r.courseId === filters.courseId)
+      }
 
-    // Filter by days until deadline
-    if (filters.daysUntilDeadline !== null) {
-      filtered = filtered.filter(
-        r => typeof r.daysUntilDeadline === 'number' && r.daysUntilDeadline <= filters.daysUntilDeadline!
-      )
-    }
+      // Filter by days until deadline
+      if (filters.daysUntilDeadline !== null) {
+        filtered = filtered.filter(
+          (r) =>
+            typeof r.daysUntilDeadline === 'number' &&
+            r.daysUntilDeadline <= filters.daysUntilDeadline!
+        )
+      }
 
-    return filtered
-  }, [filters])
+      return filtered
+    },
+    [filters]
+  )
 
   // Base categories (without user filters)
-  const baseOverdueRecords = useMemo(() =>
-    complianceRecords.filter(r => r.isOverdue),
+  const baseOverdueRecords = useMemo(
+    () => complianceRecords.filter((r) => r.isOverdue),
     [complianceRecords]
   )
 
-  const baseApproachingDeadline = useMemo(() =>
-    complianceRecords.filter(hasUpcomingDeadline),
+  const baseApproachingDeadline = useMemo(
+    () => complianceRecords.filter(hasUpcomingDeadline),
     [complianceRecords]
   )
 
-  const baseCompletedRecords = useMemo(() =>
-    complianceRecords.filter(r => r.status === 'completed'),
+  const baseCompletedRecords = useMemo(
+    () => complianceRecords.filter((r) => r.status === 'completed'),
     [complianceRecords]
   )
 
   // Apply user filters to each category
-  const filteredRecords = useMemo(() => applyUserFilters(complianceRecords), [complianceRecords, applyUserFilters])
+  const filteredRecords = useMemo(
+    () => applyUserFilters(complianceRecords),
+    [complianceRecords, applyUserFilters]
+  )
   const prioritizedRecords = useMemo(() => {
     return [...filteredRecords].sort((left, right) => {
-      const priorityDiff = getCompliancePriority(left) - getCompliancePriority(right)
+      const priorityDiff =
+        getCompliancePriority(left) - getCompliancePriority(right)
       if (priorityDiff !== 0) return priorityDiff
 
-      const leftDeadline = left.deadline ? new Date(left.deadline).getTime() : Number.MAX_SAFE_INTEGER
-      const rightDeadline = right.deadline ? new Date(right.deadline).getTime() : Number.MAX_SAFE_INTEGER
+      const leftDeadline = left.deadline
+        ? new Date(left.deadline).getTime()
+        : Number.MAX_SAFE_INTEGER
+      const rightDeadline = right.deadline
+        ? new Date(right.deadline).getTime()
+        : Number.MAX_SAFE_INTEGER
       return leftDeadline - rightDeadline
     })
   }, [filteredRecords])
-  const overdueRecords = useMemo(() => applyUserFilters(baseOverdueRecords), [baseOverdueRecords, applyUserFilters])
-  const approachingDeadline = useMemo(() => applyUserFilters(baseApproachingDeadline), [baseApproachingDeadline, applyUserFilters])
-  const completedRecords = useMemo(() => applyUserFilters(baseCompletedRecords), [baseCompletedRecords, applyUserFilters])
+  const overdueRecords = useMemo(
+    () => applyUserFilters(baseOverdueRecords),
+    [baseOverdueRecords, applyUserFilters]
+  )
+  const approachingDeadline = useMemo(
+    () => applyUserFilters(baseApproachingDeadline),
+    [baseApproachingDeadline, applyUserFilters]
+  )
+  const completedRecords = useMemo(
+    () => applyUserFilters(baseCompletedRecords),
+    [baseCompletedRecords, applyUserFilters]
+  )
 
   const pendingRecords = useMemo(
     () => filteredRecords.filter((r) => r.status === 'pending'),
@@ -630,8 +710,13 @@ const LmsComplianceTracker: React.FC = () => {
     [selectedKeys]
   )
 
-  const handleRowSelectionChange = (updater: any) => {
-    const next: Record<string, boolean> = typeof updater === 'function' ? updater(rowSelectionState) : updater
+  const handleRowSelectionChange = (
+    updater:
+      | MRT_RowSelectionState
+      | ((old: MRT_RowSelectionState) => MRT_RowSelectionState)
+  ) => {
+    const next: Record<string, boolean> =
+      typeof updater === 'function' ? updater(rowSelectionState) : updater
     setSelectedKeys(Object.keys(next).filter((key) => next[key]))
   }
 
@@ -667,7 +752,13 @@ const LmsComplianceTracker: React.FC = () => {
         accessorFn: (record) => getRoleLabelEs(record.department),
         filterVariant: 'select',
         size: 110,
-        Cell: ({ cell }) => <Chip label={cell.getValue<string>()} size='small' variant='outlined' />
+        Cell: ({ cell }) => (
+          <Chip
+            label={cell.getValue<string>()}
+            size='small'
+            variant='outlined'
+          />
+        )
       },
       {
         id: 'estado',
@@ -685,14 +776,20 @@ const LmsComplianceTracker: React.FC = () => {
             <Box>
               <Chip
                 label={getStatusLabel(record.status)}
-                color={getStatusColor(record.status) as any}
+                color={getStatusColor(record.status)}
                 size='small'
               />
               <Typography
                 variant='caption'
                 display='block'
                 sx={{ mt: 0.5 }}
-                color={record.isOverdue ? 'error.main' : hasUpcomingDeadline(record) ? 'warning.main' : 'text.secondary'}
+                color={
+                  record.isOverdue
+                    ? 'error.main'
+                    : hasUpcomingDeadline(record)
+                      ? 'warning.main'
+                      : 'text.secondary'
+                }
               >
                 {deadlineText}
                 {showLabel ? ` · ${formatDeadlineLabel(record)}` : ''}
@@ -708,7 +805,9 @@ const LmsComplianceTracker: React.FC = () => {
         enableColumnFilter: false,
         size: 130,
         Cell: ({ row }) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 90 }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 90 }}
+          >
             <LinearProgress
               variant='determinate'
               value={row.original.progress}
@@ -726,7 +825,7 @@ const LmsComplianceTracker: React.FC = () => {
         size: 170
       }
     ],
-     
+
     []
   )
 
@@ -737,9 +836,12 @@ const LmsComplianceTracker: React.FC = () => {
   )
   // Group records by course
   const recordsByCourse = useMemo(() => {
-    const grouped = new Map<number, { courseTitle: string; records: ComplianceRecord[] }>()
+    const grouped = new Map<
+      number,
+      { courseTitle: string; records: ComplianceRecord[] }
+    >()
 
-    filteredRecords.forEach(record => {
+    filteredRecords.forEach((record) => {
       if (!grouped.has(record.courseId)) {
         grouped.set(record.courseId, {
           courseTitle: record.courseTitle,
@@ -754,36 +856,55 @@ const LmsComplianceTracker: React.FC = () => {
       courseTitle: data.courseTitle,
       records: data.records,
       totalUsers: data.records.length,
-      completedUsers: data.records.filter(r => r.status === 'completed').length,
-      overdueUsers: data.records.filter(r => r.isOverdue).length,
-      completionRate: Math.round((data.records.filter(r => r.status === 'completed').length / data.records.length) * 100)
+      completedUsers: data.records.filter((r) => r.status === 'completed')
+        .length,
+      overdueUsers: data.records.filter((r) => r.isOverdue).length,
+      completionRate: Math.round(
+        (data.records.filter((r) => r.status === 'completed').length /
+          data.records.length) *
+          100
+      )
     }))
   }, [filteredRecords])
 
   // Export to CSV
   const handleExport = (records: ComplianceRecord[] = tableRecords) => {
-    const headers = ['Usuario', 'Email', 'Curso', 'Rol', 'Estado', 'Progreso', 'Fecha límite', 'Días restantes']
-    const rows = records.map(r => [
+    const headers = [
+      'Usuario',
+      'Email',
+      'Curso',
+      'Rol',
+      'Estado',
+      'Progreso',
+      'Fecha límite',
+      'Días restantes'
+    ]
+    const rows = records.map((r) => [
       r.userName,
       r.userEmail,
       r.courseTitle,
       r.department ? getRoleLabelEs(r.department) : 'N/A',
       getStatusLabel(r.status),
       `${r.progress}%`,
-      new Date(r.deadline).toLocaleDateString(),
+      r.deadline ? new Date(r.deadline).toLocaleDateString() : '',
       formatDeadlineLabel(r)
     ])
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(','))
     ].join('\n')
 
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(['\ufeff' + csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `compliance_tracker_${new Date().toISOString().split('T')[0]}.csv`)
+    link.setAttribute(
+      'download',
+      `compliance_tracker_${new Date().toISOString().split('T')[0]}.csv`
+    )
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -799,10 +920,10 @@ const LmsComplianceTracker: React.FC = () => {
   }
 
   const handleStatusFilterChange = (status: string) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       status: prev.status.includes(status)
-        ? prev.status.filter(s => s !== status)
+        ? prev.status.filter((s) => s !== status)
         : [...prev.status, status]
     }))
   }
@@ -817,12 +938,19 @@ const LmsComplianceTracker: React.FC = () => {
     })
   }
 
-
   const openFiltersPopover = Boolean(filterAnchorEl)
   // Loading state
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: 'grey.50',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <Box sx={{ textAlign: 'center' }}>
           <SignalLoader message='Cargando datos de cumplimiento...' />
         </Box>
@@ -833,16 +961,26 @@ const LmsComplianceTracker: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: 'grey.50',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <Box sx={{ textAlign: 'center', maxWidth: 500 }}>
           <ErrorIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-          <Typography variant="h5" color="error" gutterBottom>
+          <Typography variant='h5' color='error' gutterBottom>
             Error al cargar datos de cumplimiento
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            {error instanceof Error ? error.message : 'No se pudieron cargar los datos'}
+          <Typography variant='body1' color='text.secondary' sx={{ mb: 3 }}>
+            {error instanceof Error
+              ? error.message
+              : 'No se pudieron cargar los datos'}
           </Typography>
-          <Button variant="contained" onClick={() => window.location.reload()}>
+          <Button variant='contained' onClick={() => window.location.reload()}>
             Reintentar
           </Button>
         </Box>
@@ -867,7 +1005,10 @@ const LmsComplianceTracker: React.FC = () => {
                 <RefreshIcon
                   sx={{
                     animation: isFetching ? 'spin 1s linear infinite' : 'none',
-                    '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } }
+                    '@keyframes spin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' }
+                    }
                   }}
                 />
               </IconButton>
@@ -879,7 +1020,11 @@ const LmsComplianceTracker: React.FC = () => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            lg: 'repeat(5, 1fr)'
+          },
           gap: 3,
           mb: 4
         }}
@@ -942,12 +1087,28 @@ const LmsComplianceTracker: React.FC = () => {
       </Box>
 
       {prioritizedRecords[0] && (
-        <Alert severity={prioritizedRecords[0].isOverdue ? 'error' : hasUpcomingDeadline(prioritizedRecords[0]) ? 'warning' : 'info'} sx={{ mb: 3 }}>
-          Prioridad actual: <strong>{prioritizedRecords[0].userName}</strong> con <strong>{prioritizedRecords[0].courseTitle}</strong>. {formatDeadlineLabel(prioritizedRecords[0])}. Seguimiento: {formatFollowUpLabel(prioritizedRecords[0])}.
+        <Alert
+          severity={
+            prioritizedRecords[0].isOverdue
+              ? 'error'
+              : hasUpcomingDeadline(prioritizedRecords[0])
+                ? 'warning'
+                : 'info'
+          }
+          sx={{ mb: 3 }}
+        >
+          Prioridad actual: <strong>{prioritizedRecords[0].userName}</strong>{' '}
+          con <strong>{prioritizedRecords[0].courseTitle}</strong>.{' '}
+          {formatDeadlineLabel(prioritizedRecords[0])}. Seguimiento:{' '}
+          {formatFollowUpLabel(prioritizedRecords[0])}.
         </Alert>
       )}
 
-      <Tabs value={activeTab === 4 || activeTab === 5 ? activeTab : 0} onChange={handleTabChange} sx={{ mb: 2 }}>
+      <Tabs
+        value={activeTab === 4 || activeTab === 5 ? activeTab : 0}
+        onChange={handleTabChange}
+        sx={{ mb: 2 }}
+      >
         <Tab value={0} label='Registros' />
         <Tab value={4} label={`Por curso (${recordsByCourse.length})`} />
         <Tab value={5} label='Por plan' />
@@ -978,21 +1139,30 @@ const LmsComplianceTracker: React.FC = () => {
             state={{ rowSelection: rowSelectionState }}
             enableRowActions
             positionActionsColumn='last'
-            displayColumnDefOptions={{ 'mrt-row-actions': { header: 'Acciones', size: 120 } }}
+            displayColumnDefOptions={{
+              'mrt-row-actions': { header: 'Acciones', size: 120 }
+            }}
             renderRowActions={({ row }) => (
               <Box sx={{ display: 'flex', gap: 0.5 }}>
                 <Tooltip title='Ver detalle'>
                   <IconButton
                     size='small'
                     onClick={() => handleViewDetails(row.original)}
-                    sx={{ color: '#00BFA5', '&:hover': { bgcolor: 'rgba(0, 191, 165, 0.1)' } }}
+                    sx={{
+                      color: '#00BFA5',
+                      '&:hover': { bgcolor: 'rgba(0, 191, 165, 0.1)' }
+                    }}
                   >
                     <VisibilityIcon />
                   </IconButton>
                 </Tooltip>
                 {row.original.status !== 'completed' && (
                   <Tooltip title='Enviar recordatorio'>
-                    <IconButton size='small' color='primary' onClick={() => handleSendReminder(row.original)}>
+                    <IconButton
+                      size='small'
+                      color='primary'
+                      onClick={() => handleSendReminder(row.original)}
+                    >
                       <SendIcon />
                     </IconButton>
                   </Tooltip>
@@ -1000,13 +1170,30 @@ const LmsComplianceTracker: React.FC = () => {
               </Box>
             )}
             renderTopToolbarCustomActions={({ table }) => (
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  alignItems: 'center',
+                  flexWrap: 'wrap'
+                }}
+              >
                 <Button
                   size='small'
                   startIcon={<FilterListIcon />}
                   onClick={handleOpenFilters}
-                  variant={filters.status.length > 0 || filters.daysUntilDeadline !== null ? 'contained' : 'outlined'}
-                  color={filters.status.length > 0 || filters.daysUntilDeadline !== null ? 'primary' : 'inherit'}
+                  variant={
+                    filters.status.length > 0 ||
+                    filters.daysUntilDeadline !== null
+                      ? 'contained'
+                      : 'outlined'
+                  }
+                  color={
+                    filters.status.length > 0 ||
+                    filters.daysUntilDeadline !== null
+                      ? 'primary'
+                      : 'inherit'
+                  }
                 >
                   Más filtros
                 </Button>
@@ -1014,7 +1201,13 @@ const LmsComplianceTracker: React.FC = () => {
                   size='small'
                   startIcon={<DownloadIcon />}
                   variant='outlined'
-                  onClick={() => handleExport(table.getPrePaginationRowModel().rows.map((row) => row.original))}
+                  onClick={() =>
+                    handleExport(
+                      table
+                        .getPrePaginationRowModel()
+                        .rows.map((row) => row.original)
+                    )
+                  }
                 >
                   Exportar
                 </Button>
@@ -1030,7 +1223,12 @@ const LmsComplianceTracker: React.FC = () => {
                   </Button>
                 )}
                 {canEdit && editMode && (
-                  <Chip label='Modo edición — ocultar' color='secondary' variant='outlined' onClick={disableEditMode} />
+                  <Chip
+                    label='Modo edición — ocultar'
+                    color='secondary'
+                    variant='outlined'
+                    onClick={disableEditMode}
+                  />
                 )}
               </Box>
             )}
@@ -1052,10 +1250,15 @@ const LmsComplianceTracker: React.FC = () => {
             muiTableProps={{
               sx: {
                 '& .MuiTableHead-root': {
-                  '& .MuiTableCell-root': { backgroundColor: '#f5f5f5', fontWeight: 600 }
+                  '& .MuiTableCell-root': {
+                    backgroundColor: '#f5f5f5',
+                    fontWeight: 600
+                  }
                 },
                 '& .MuiTableBody-root': {
-                  '& .MuiTableRow-root:hover': { backgroundColor: 'rgba(0, 191, 165, 0.04)' }
+                  '& .MuiTableRow-root:hover': {
+                    backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                  }
                 }
               }
             }}
@@ -1080,14 +1283,14 @@ const LmsComplianceTracker: React.FC = () => {
       {activeTab === 4 && (
         <Card>
           <CardHeader
-            title="Cursos Obligatorios - Vista por Curso"
+            title='Cursos Obligatorios - Vista por Curso'
             subheader={`${recordsByCourse.length} cursos con asignaciones`}
             action={
               <Button
                 startIcon={<DownloadIcon />}
-                size="small"
+                size='small'
                 onClick={() => handleExport()}
-                variant="outlined"
+                variant='outlined'
               >
                 Exportar
               </Button>
@@ -1096,171 +1299,248 @@ const LmsComplianceTracker: React.FC = () => {
           <CardContent>
             {recordsByCourse.length === 0 ? (
               <Box sx={{ py: 8, textAlign: 'center' }}>
-                <SchoolIcon sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
+                <SchoolIcon
+                  sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }}
+                />
+                <Typography variant='h6' color='text.secondary'>
                   No hay cursos con asignaciones
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   No se encontraron cursos obligatorios con usuarios asignados
                 </Typography>
               </Box>
             ) : (
               recordsByCourse.map((course) => (
-              <Accordion key={course.courseId} sx={{ mb: 2 }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                    <SchoolIcon color="primary" />
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
-                        {course.courseTitle}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {course.totalUsers} usuarios asignados
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 2, mr: 2 }}>
-                      <Chip
-                        label={`${course.completionRate}% Completado`}
-                        color={course.completionRate >= 80 ? 'success' : course.completionRate >= 50 ? 'warning' : 'error'}
-                        size="small"
-                      />
-                      {course.overdueUsers > 0 && (
+                <Accordion key={course.courseId} sx={{ mb: 2 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        width: '100%'
+                      }}
+                    >
+                      <SchoolIcon color='primary' />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant='h6' sx={{ fontWeight: 'medium' }}>
+                          {course.courseTitle}
+                        </Typography>
+                        <Typography variant='body2' color='text.secondary'>
+                          {course.totalUsers} usuarios asignados
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 2, mr: 2 }}>
                         <Chip
-                          label={`${course.overdueUsers} Vencidos`}
-                          color="error"
-                          size="small"
-                          icon={<WarningIcon />}
+                          label={`${course.completionRate}% Completado`}
+                          color={
+                            course.completionRate >= 80
+                              ? 'success'
+                              : course.completionRate >= 50
+                                ? 'warning'
+                                : 'error'
+                          }
+                          size='small'
                         />
-                      )}
+                        {course.overdueUsers > 0 && (
+                          <Chip
+                            label={`${course.overdueUsers} Vencidos`}
+                            color='error'
+                            size='small'
+                            icon={<WarningIcon />}
+                          />
+                        )}
+                      </Box>
                     </Box>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          {editMode && (
-                            <TableCell padding="checkbox">
-                              <Checkbox
-                                checked={course.records.length > 0 && course.records.every((r) => selectedKeys.includes(recordKey(r)))}
-                                indeterminate={course.records.some((r) => selectedKeys.includes(recordKey(r))) && !course.records.every((r) => selectedKeys.includes(recordKey(r)))}
-                                onChange={() => {
-                                  const keys = course.records.map(recordKey)
-                                  const all = keys.every((k) => selectedKeys.includes(k))
-                                  setSelectedKeys((prev) => all
-                                    ? prev.filter((k) => !keys.includes(k))
-                                    : Array.from(new Set([...prev, ...keys])))
-                                }}
-                              />
-                            </TableCell>
-                          )}
-                          <TableCell>Usuario</TableCell>
-                          <TableCell>Rol</TableCell>
-                          <TableCell>Progreso</TableCell>
-                          <TableCell>Estado</TableCell>
-                          <TableCell>Fecha límite</TableCell>
-                          <TableCell>Seguimiento</TableCell>
-                          <TableCell>Acciones</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {course.records.map((record) => (
-                          <TableRow key={`${record.userId}-${record.courseId}`}>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <TableContainer>
+                      <Table size='small'>
+                        <TableHead>
+                          <TableRow>
                             {editMode && (
-                              <TableCell padding="checkbox">
+                              <TableCell padding='checkbox'>
                                 <Checkbox
-                                  checked={selectedKeys.includes(recordKey(record))}
-                                  onChange={() => toggleSelect(recordKey(record))}
+                                  checked={
+                                    course.records.length > 0 &&
+                                    course.records.every((r) =>
+                                      selectedKeys.includes(recordKey(r))
+                                    )
+                                  }
+                                  indeterminate={
+                                    course.records.some((r) =>
+                                      selectedKeys.includes(recordKey(r))
+                                    ) &&
+                                    !course.records.every((r) =>
+                                      selectedKeys.includes(recordKey(r))
+                                    )
+                                  }
+                                  onChange={() => {
+                                    const keys = course.records.map(recordKey)
+                                    const all = keys.every((k) =>
+                                      selectedKeys.includes(k)
+                                    )
+                                    setSelectedKeys((prev) =>
+                                      all
+                                        ? prev.filter((k) => !keys.includes(k))
+                                        : Array.from(
+                                            new Set([...prev, ...keys])
+                                          )
+                                    )
+                                  }}
                                 />
                               </TableCell>
                             )}
-                            <TableCell>
-                              <Box>
-                                <Typography variant="body2" fontWeight="medium">
-                                  {record.userName}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {record.userEmail}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              <Chip label={getRoleLabelEs(record.department)} size="small" variant="outlined" />
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 100 }}>
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={record.progress}
-                                  sx={{ flex: 1, height: 6, borderRadius: 3 }}
-                                />
-                                <Typography variant="caption">
-                                  {record.progress}%
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                label={getStatusLabel(record.status)}
-                                color={getStatusColor(record.status) as any}
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Typography
-                                variant="body2"
-                                color={record.isOverdue ? 'error.main' : hasUpcomingDeadline(record) ? 'warning.main' : 'text.primary'}
-                              >
-                                {record.deadline ? new Date(record.deadline).toLocaleDateString() : 'Sin fecha límite'}
-                              </Typography>
-                              {record.isOverdue && (
-                                <Typography variant="caption" color="error.main">
-                                  {formatDeadlineLabel(record)}
-                                </Typography>
-                              )}
-                              {hasUpcomingDeadline(record) && (
-                                <Typography variant="caption" color="warning.main">
-                                  {formatDeadlineLabel(record)}
-                                </Typography>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2">
-                                {record.reminderSummary?.reminderNotifications || 0} recordatorio(s)
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {formatFollowUpLabel(record)}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <IconButton
-                                  size="small"
-                                  title="Ver detalles"
-                                  onClick={() => handleViewDetails(record)}
-                                >
-                                  <VisibilityIcon />
-                                </IconButton>
-                                {record.status !== 'completed' && (
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleSendReminder(record)}
-                                    title="Enviar recordatorio"
-                                  >
-                                    <SendIcon />
-                                  </IconButton>
-                                )}
-                              </Box>
-                            </TableCell>
+                            <TableCell>Usuario</TableCell>
+                            <TableCell>Rol</TableCell>
+                            <TableCell>Progreso</TableCell>
+                            <TableCell>Estado</TableCell>
+                            <TableCell>Fecha límite</TableCell>
+                            <TableCell>Seguimiento</TableCell>
+                            <TableCell>Acciones</TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </AccordionDetails>
-              </Accordion>
-            ))
+                        </TableHead>
+                        <TableBody>
+                          {course.records.map((record) => (
+                            <TableRow
+                              key={`${record.userId}-${record.courseId}`}
+                            >
+                              {editMode && (
+                                <TableCell padding='checkbox'>
+                                  <Checkbox
+                                    checked={selectedKeys.includes(
+                                      recordKey(record)
+                                    )}
+                                    onChange={() =>
+                                      toggleSelect(recordKey(record))
+                                    }
+                                  />
+                                </TableCell>
+                              )}
+                              <TableCell>
+                                <Box>
+                                  <Typography
+                                    variant='body2'
+                                    fontWeight='medium'
+                                  >
+                                    {record.userName}
+                                  </Typography>
+                                  <Typography
+                                    variant='caption'
+                                    color='text.secondary'
+                                  >
+                                    {record.userEmail}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={getRoleLabelEs(record.department)}
+                                  size='small'
+                                  variant='outlined'
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    minWidth: 100
+                                  }}
+                                >
+                                  <LinearProgress
+                                    variant='determinate'
+                                    value={record.progress}
+                                    sx={{ flex: 1, height: 6, borderRadius: 3 }}
+                                  />
+                                  <Typography variant='caption'>
+                                    {record.progress}%
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={getStatusLabel(record.status)}
+                                  color={getStatusColor(record.status)}
+                                  size='small'
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Typography
+                                  variant='body2'
+                                  color={
+                                    record.isOverdue
+                                      ? 'error.main'
+                                      : hasUpcomingDeadline(record)
+                                        ? 'warning.main'
+                                        : 'text.primary'
+                                  }
+                                >
+                                  {record.deadline
+                                    ? new Date(
+                                        record.deadline
+                                      ).toLocaleDateString()
+                                    : 'Sin fecha límite'}
+                                </Typography>
+                                {record.isOverdue && (
+                                  <Typography
+                                    variant='caption'
+                                    color='error.main'
+                                  >
+                                    {formatDeadlineLabel(record)}
+                                  </Typography>
+                                )}
+                                {hasUpcomingDeadline(record) && (
+                                  <Typography
+                                    variant='caption'
+                                    color='warning.main'
+                                  >
+                                    {formatDeadlineLabel(record)}
+                                  </Typography>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant='body2'>
+                                  {record.reminderSummary
+                                    ?.reminderNotifications || 0}{' '}
+                                  recordatorio(s)
+                                </Typography>
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                >
+                                  {formatFollowUpLabel(record)}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                  <IconButton
+                                    size='small'
+                                    title='Ver detalles'
+                                    onClick={() => handleViewDetails(record)}
+                                  >
+                                    <VisibilityIcon />
+                                  </IconButton>
+                                  {record.status !== 'completed' && (
+                                    <IconButton
+                                      size='small'
+                                      onClick={() => handleSendReminder(record)}
+                                      title='Enviar recordatorio'
+                                    >
+                                      <SendIcon />
+                                    </IconButton>
+                                  )}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </AccordionDetails>
+                </Accordion>
+              ))
             )}
           </CardContent>
         </Card>
@@ -1273,17 +1553,24 @@ const LmsComplianceTracker: React.FC = () => {
         onClose={handleCloseFilters}
         anchorOrigin={{
           vertical: 'bottom',
-          horizontal: 'right',
+          horizontal: 'right'
         }}
         transformOrigin={{
           vertical: 'top',
-          horizontal: 'right',
+          horizontal: 'right'
         }}
       >
         <Box sx={{ p: 3, minWidth: 320 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Más filtros</Typography>
-            <IconButton size="small" onClick={handleCloseFilters}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2
+            }}
+          >
+            <Typography variant='h6'>Más filtros</Typography>
+            <IconButton size='small' onClick={handleCloseFilters}>
               <CloseIcon />
             </IconButton>
           </Box>
@@ -1292,7 +1579,10 @@ const LmsComplianceTracker: React.FC = () => {
 
           {/* Estado */}
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'medium' }}>
+            <Typography
+              variant='subtitle2'
+              sx={{ mb: 1, fontWeight: 'medium' }}
+            >
               Estado
             </Typography>
             <FormGroup>
@@ -1303,7 +1593,7 @@ const LmsComplianceTracker: React.FC = () => {
                     onChange={() => handleStatusFilterChange('pending')}
                   />
                 }
-                label="Pendiente"
+                label='Pendiente'
               />
               <FormControlLabel
                 control={
@@ -1312,7 +1602,7 @@ const LmsComplianceTracker: React.FC = () => {
                     onChange={() => handleStatusFilterChange('in_progress')}
                   />
                 }
-                label="En Progreso"
+                label='En Progreso'
               />
               <FormControlLabel
                 control={
@@ -1321,7 +1611,7 @@ const LmsComplianceTracker: React.FC = () => {
                     onChange={() => handleStatusFilterChange('completed')}
                   />
                 }
-                label="Completado"
+                label='Completado'
               />
               <FormControlLabel
                 control={
@@ -1330,7 +1620,7 @@ const LmsComplianceTracker: React.FC = () => {
                     onChange={() => handleStatusFilterChange('overdue')}
                   />
                 }
-                label="Vencido"
+                label='Vencido'
               />
             </FormGroup>
           </Box>
@@ -1339,11 +1629,22 @@ const LmsComplianceTracker: React.FC = () => {
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Días hasta vencimiento</InputLabel>
             <Select
-              value={filters.daysUntilDeadline !== null ? filters.daysUntilDeadline : ''}
-              onChange={(e) => setFilters(prev => ({ ...prev, daysUntilDeadline: e.target.value ? Number(e.target.value) : null }))}
-              label="Días hasta vencimiento"
+              value={
+                filters.daysUntilDeadline !== null
+                  ? filters.daysUntilDeadline
+                  : ''
+              }
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  daysUntilDeadline: e.target.value
+                    ? Number(e.target.value)
+                    : null
+                }))
+              }
+              label='Días hasta vencimiento'
             >
-              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value=''>Todos</MenuItem>
               <MenuItem value={7}>Próximos 7 días</MenuItem>
               <MenuItem value={14}>Próximos 14 días</MenuItem>
               <MenuItem value={30}>Próximos 30 días</MenuItem>
@@ -1353,10 +1654,18 @@ const LmsComplianceTracker: React.FC = () => {
           <Divider sx={{ mb: 2 }} />
 
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-            <Button onClick={handleClearFilters} variant="outlined" size="small">
+            <Button
+              onClick={handleClearFilters}
+              variant='outlined'
+              size='small'
+            >
               Limpiar
             </Button>
-            <Button onClick={handleCloseFilters} variant="contained" size="small">
+            <Button
+              onClick={handleCloseFilters}
+              variant='contained'
+              size='small'
+            >
               Aplicar
             </Button>
           </Box>
@@ -1364,17 +1673,20 @@ const LmsComplianceTracker: React.FC = () => {
       </Popover>
 
       {/* Dialog para enviar recordatorio */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Enviar Recordatorio
-        </DialogTitle>
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>Enviar Recordatorio</DialogTitle>
         <DialogContent>
           {selectedRecord && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
                 Para: {selectedRecord.userName} ({selectedRecord.userEmail})
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
                 Curso: {selectedRecord.courseTitle}
               </Typography>
             </Box>
@@ -1383,18 +1695,16 @@ const LmsComplianceTracker: React.FC = () => {
             fullWidth
             multiline
             rows={4}
-            label="Mensaje del recordatorio"
+            label='Mensaje del recordatorio'
             value={reminderMessage}
             onChange={(e) => setReminderMessage(e.target.value)}
-            placeholder="Escribe un mensaje personalizado..."
+            placeholder='Escribe un mensaje personalizado...'
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>
-            Cancelar
-          </Button>
+          <Button onClick={() => setOpenDialog(false)}>Cancelar</Button>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleSendReminderConfirm}
             startIcon={<SendIcon />}
             disabled={!reminderMessage.trim()}
@@ -1408,13 +1718,19 @@ const LmsComplianceTracker: React.FC = () => {
       <Dialog
         open={openDetailsDialog}
         onClose={handleCloseDetails}
-        maxWidth="md"
+        maxWidth='md'
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Detalles de Progreso</Typography>
-            <IconButton size="small" onClick={handleCloseDetails}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <Typography variant='h6'>Detalles de Progreso</Typography>
+            <IconButton size='small' onClick={handleCloseDetails}>
               <CloseIcon />
             </IconButton>
           </Box>
@@ -1426,33 +1742,47 @@ const LmsComplianceTracker: React.FC = () => {
               <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <PersonIcon color="primary" />
-                      <Typography variant="subtitle2" color="text.secondary">
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1
+                      }}
+                    >
+                      <PersonIcon color='primary' />
+                      <Typography variant='subtitle2' color='text.secondary'>
                         Usuario
                       </Typography>
                     </Box>
-                    <Typography variant="body1" fontWeight="medium">
+                    <Typography variant='body1' fontWeight='medium'>
                       {detailsRecord.userName}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       {detailsRecord.userEmail}
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <SchoolIcon color="primary" />
-                      <Typography variant="subtitle2" color="text.secondary">
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1
+                      }}
+                    >
+                      <SchoolIcon color='primary' />
+                      <Typography variant='subtitle2' color='text.secondary'>
                         Curso
                       </Typography>
                     </Box>
-                    <Typography variant="body1" fontWeight="medium">
+                    <Typography variant='body1' fontWeight='medium'>
                       {detailsRecord.courseTitle}
                     </Typography>
                     <Chip
                       label={getRoleLabelEs(detailsRecord.department)}
-                      size="small"
-                      variant="outlined"
+                      size='small'
+                      variant='outlined'
                       sx={{ mt: 0.5 }}
                     />
                   </Grid>
@@ -1461,63 +1791,130 @@ const LmsComplianceTracker: React.FC = () => {
 
               {/* Progreso y Estado */}
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
+                <Typography
+                  variant='subtitle1'
+                  fontWeight='medium'
+                  sx={{ mb: 2 }}
+                >
                   Progreso General
                 </Typography>
                 <Grid container spacing={3}>
                   <Grid item xs={12}>
-                    <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">
+                    <Box
+                      sx={{
+                        mb: 1,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Typography variant='body2' color='text.secondary'>
                         Avance del curso
                       </Typography>
-                      <Typography variant="h6" fontWeight="bold" color="primary">
+                      <Typography
+                        variant='h6'
+                        fontWeight='bold'
+                        color='primary'
+                      >
                         {detailsRecord.progress}%
                       </Typography>
                     </Box>
                     <LinearProgress
-                      variant="determinate"
+                      variant='determinate'
                       value={detailsRecord.progress}
                       sx={{ height: 10, borderRadius: 5 }}
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Box
+                      sx={{
+                        textAlign: 'center',
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mb: 1 }}
+                      >
                         Estado
                       </Typography>
                       <Chip
                         label={getStatusLabel(detailsRecord.status)}
-                        color={getStatusColor(detailsRecord.status) as any}
+                        color={getStatusColor(detailsRecord.status)}
                       />
                     </Box>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Box
+                      sx={{
+                        textAlign: 'center',
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mb: 1 }}
+                      >
                         Fecha Finalización
                       </Typography>
                       <Typography
-                        variant="body1"
-                        fontWeight="medium"
-                        color={detailsRecord.completedDate ? 'success.main' : 'text.secondary'}
+                        variant='body1'
+                        fontWeight='medium'
+                        color={
+                          detailsRecord.completedDate
+                            ? 'success.main'
+                            : 'text.secondary'
+                        }
                       >
                         {detailsRecord.completedDate
-                          ? new Date(detailsRecord.completedDate).toLocaleDateString()
+                          ? new Date(
+                              detailsRecord.completedDate
+                            ).toLocaleDateString()
                           : 'No finalizado'}
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Box
+                      sx={{
+                        textAlign: 'center',
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mb: 1 }}
+                      >
                         Fecha Límite
                       </Typography>
                       <Typography
-                        variant="body1"
-                        fontWeight="medium"
-                        color={detailsRecord.isOverdue ? 'error.main' : hasUpcomingDeadline(detailsRecord) ? 'warning.main' : 'inherit'}
+                        variant='body1'
+                        fontWeight='medium'
+                        color={
+                          detailsRecord.isOverdue
+                            ? 'error.main'
+                            : hasUpcomingDeadline(detailsRecord)
+                              ? 'warning.main'
+                              : 'inherit'
+                        }
                       >
-                        {detailsRecord.deadline ? new Date(detailsRecord.deadline).toLocaleDateString() : 'Sin fecha límite'}
+                        {detailsRecord.deadline
+                          ? new Date(
+                              detailsRecord.deadline
+                            ).toLocaleDateString()
+                          : 'Sin fecha límite'}
                       </Typography>
                     </Box>
                   </Grid>
@@ -1526,99 +1923,158 @@ const LmsComplianceTracker: React.FC = () => {
 
               {/* Fechas editables (calendario de cumplimiento) — visibles con ?show=true */}
               {editMode && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
-                  Editar fechas
-                </Typography>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <DatePicker
-                        label="Fecha de asignación"
-                        value={editAssignedAt}
-                        onChange={(newValue) => setEditAssignedAt(newValue)}
-                        slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <DatePicker
-                        label="Fecha límite"
-                        value={editDeadline}
-                        onChange={(newValue) => setEditDeadline(newValue)}
-                        slotProps={{ textField: { fullWidth: true, size: 'small', helperText: 'Vacío = sin fecha límite' } }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      {detailsRecord.status === 'completed' ? (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant='subtitle1'
+                    fontWeight='medium'
+                    sx={{ mb: 2 }}
+                  >
+                    Editar fechas
+                  </Typography>
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
                         <DatePicker
-                          label="Fecha de finalización"
-                          value={editCompletedAt}
-                          onChange={(newValue) => setEditCompletedAt(newValue)}
-                          minDate={editAssignedAt ?? undefined}
-                          maxDate={new Date()}
-                          slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                          label='Fecha de asignación'
+                          value={editAssignedAt}
+                          onChange={(newValue) => setEditAssignedAt(newValue)}
+                          slotProps={{
+                            textField: { fullWidth: true, size: 'small' }
+                          }}
                         />
-                      ) : (
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Fecha de finalización"
-                          value="Solo cursos completados"
-                          disabled
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <DatePicker
+                          label='Fecha límite'
+                          value={editDeadline}
+                          onChange={(newValue) => setEditDeadline(newValue)}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: 'small',
+                              helperText: 'Vacío = sin fecha límite'
+                            }
+                          }}
                         />
-                      )}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {detailsRecord.status === 'completed' ? (
+                          <DatePicker
+                            label='Fecha de finalización'
+                            value={editCompletedAt}
+                            onChange={(newValue) =>
+                              setEditCompletedAt(newValue)
+                            }
+                            minDate={editAssignedAt ?? undefined}
+                            maxDate={new Date()}
+                            slotProps={{
+                              textField: { fullWidth: true, size: 'small' }
+                            }}
+                          />
+                        ) : (
+                          <TextField
+                            fullWidth
+                            size='small'
+                            label='Fecha de finalización'
+                            value='Solo cursos completados'
+                            disabled
+                          />
+                        )}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth size='small'>
+                          <InputLabel>Aplicar a</InputLabel>
+                          <Select
+                            label='Aplicar a'
+                            value={dateScope}
+                            onChange={(e) =>
+                              setDateScope(
+                                e.target.value as
+                                  | 'user'
+                                  | 'group'
+                                  | 'group-clear'
+                              )
+                            }
+                          >
+                            <MenuItem value='user'>Solo este usuario</MenuItem>
+                            <MenuItem value='group'>
+                              Todo el grupo (asignación)
+                            </MenuItem>
+                            <MenuItem value='group-clear'>
+                              Todo el grupo + limpiar personalizados
+                            </MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Aplicar a</InputLabel>
-                        <Select
-                          label="Aplicar a"
-                          value={dateScope}
-                          onChange={(e) => setDateScope(e.target.value as any)}
-                        >
-                          <MenuItem value="user">Solo este usuario</MenuItem>
-                          <MenuItem value="group">Todo el grupo (asignación)</MenuItem>
-                          <MenuItem value="group-clear">Todo el grupo + limpiar personalizados</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                  </Grid>
-                </LocalizationProvider>
-                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 2 }}>
-                  <Button size="small" variant="outlined" onClick={handleResetToGroup} disabled={savingDates}>
-                    Restablecer al grupo
-                  </Button>
-                  <Button size="small" variant="contained" onClick={handleSaveDates} disabled={savingDates}>
-                    Guardar fechas
-                  </Button>
+                  </LocalizationProvider>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 1,
+                      justifyContent: 'flex-end',
+                      mt: 2
+                    }}
+                  >
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      onClick={handleResetToGroup}
+                      disabled={savingDates}
+                    >
+                      Restablecer al grupo
+                    </Button>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      onClick={handleSaveDates}
+                      disabled={savingDates}
+                    >
+                      Guardar fechas
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
               )}
 
               {/* Información de tiempo */}
               <Box sx={{ mb: 3 }}>
                 <Alert
-                  severity={detailsRecord.isOverdue ? 'error' : hasUpcomingDeadline(detailsRecord) ? 'warning' : 'info'}
-                  icon={detailsRecord.isOverdue ? <WarningIcon /> : <ScheduleIcon />}
+                  severity={
+                    detailsRecord.isOverdue
+                      ? 'error'
+                      : hasUpcomingDeadline(detailsRecord)
+                        ? 'warning'
+                        : 'info'
+                  }
+                  icon={
+                    detailsRecord.isOverdue ? <WarningIcon /> : <ScheduleIcon />
+                  }
                 >
                   {detailsRecord.isOverdue ? (
-                    <Typography variant="body2">
-                      <strong>{formatDeadlineLabel(detailsRecord)}</strong> - Se requiere acción inmediata
+                    <Typography variant='body2'>
+                      <strong>{formatDeadlineLabel(detailsRecord)}</strong> - Se
+                      requiere acción inmediata
                     </Typography>
                   ) : detailsRecord.status === 'completed' ? (
-                    <Typography variant="body2">
-                      <strong>Completado el {detailsRecord.completedDate ? new Date(detailsRecord.completedDate).toLocaleDateString() : 'N/A'}</strong>
+                    <Typography variant='body2'>
+                      <strong>
+                        Completado el{' '}
+                        {detailsRecord.completedDate
+                          ? new Date(
+                              detailsRecord.completedDate
+                            ).toLocaleDateString()
+                          : 'N/A'}
+                      </strong>
                     </Typography>
                   ) : (
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       {hasUpcomingDeadline(detailsRecord) ? (
                         <>
-                          <strong>{formatDeadlineLabel(detailsRecord)}</strong> - Fecha límite próxima
+                          <strong>{formatDeadlineLabel(detailsRecord)}</strong>{' '}
+                          - Fecha límite próxima
                         </>
                       ) : (
-                        <>
-                          {formatDeadlineLabel(detailsRecord)}
-                        </>
+                        <>{formatDeadlineLabel(detailsRecord)}</>
                       )}
                     </Typography>
                   )}
@@ -1626,36 +2082,78 @@ const LmsComplianceTracker: React.FC = () => {
               </Box>
 
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
+                <Typography
+                  variant='subtitle1'
+                  fontWeight='medium'
+                  sx={{ mb: 2 }}
+                >
                   Seguimiento enviado
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Box
+                      sx={{
+                        textAlign: 'center',
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mb: 1 }}
+                      >
                         Recordatorios
                       </Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        {detailsRecord.reminderSummary?.reminderNotifications || 0}
+                      <Typography variant='h6' fontWeight='bold'>
+                        {detailsRecord.reminderSummary?.reminderNotifications ||
+                          0}
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Box
+                      sx={{
+                        textAlign: 'center',
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mb: 1 }}
+                      >
                         Manuales
                       </Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        {detailsRecord.reminderSummary?.manualReminderNotifications || 0}
+                      <Typography variant='h6' fontWeight='bold'>
+                        {detailsRecord.reminderSummary
+                          ?.manualReminderNotifications || 0}
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Box
+                      sx={{
+                        textAlign: 'center',
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mb: 1 }}
+                      >
                         Último seguimiento
                       </Typography>
-                      <Typography variant="body2" fontWeight="medium">
+                      <Typography variant='body2' fontWeight='medium'>
                         {formatFollowUpLabel(detailsRecord)}
                       </Typography>
                     </Box>
@@ -1665,31 +2163,39 @@ const LmsComplianceTracker: React.FC = () => {
 
               {/* Información adicional */}
               <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
+                <Typography
+                  variant='subtitle1'
+                  fontWeight='medium'
+                  sx={{ mb: 2 }}
+                >
                   Información Adicional
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                      <AssignmentIcon fontSize="small" color="action" />
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}
+                    >
+                      <AssignmentIcon fontSize='small' color='action' />
                       <Box>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant='body2' color='text.secondary'>
                           ID de Asignación
                         </Typography>
-                        <Typography variant="body2" fontWeight="medium">
+                        <Typography variant='body2' fontWeight='medium'>
                           #{detailsRecord.id}
                         </Typography>
                       </Box>
                     </Box>
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                      <PersonIcon fontSize="small" color="action" />
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}
+                    >
+                      <PersonIcon fontSize='small' color='action' />
                       <Box>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant='body2' color='text.secondary'>
                           Rol
                         </Typography>
-                        <Typography variant="body2" fontWeight="medium">
+                        <Typography variant='body2' fontWeight='medium'>
                           {getRoleLabelEs(detailsRecord.department)}
                         </Typography>
                       </Box>
@@ -1701,22 +2207,21 @@ const LmsComplianceTracker: React.FC = () => {
               <Divider sx={{ my: 2 }} />
 
               {/* Nota informativa */}
-              <Alert severity="info" sx={{ mt: 2 }}>
-                <Typography variant="body2">
-                  Para ver el contenido detallado del curso y el progreso completo por módulos y lecciones,
-                  haz clic en "Ver Curso Completo" abajo.
+              <Alert severity='info' sx={{ mt: 2 }}>
+                <Typography variant='body2'>
+                  Para ver el contenido detallado del curso y el progreso
+                  completo por módulos y lecciones, haz clic en "Ver Curso
+                  Completo" abajo.
                 </Typography>
               </Alert>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDetails}>
-            Cerrar
-          </Button>
+          <Button onClick={handleCloseDetails}>Cerrar</Button>
           {detailsRecord && detailsRecord.status !== 'completed' && (
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<SendIcon />}
               onClick={() => {
                 handleCloseDetails()
@@ -1728,7 +2233,7 @@ const LmsComplianceTracker: React.FC = () => {
           )}
           {editMode && (
             <Button
-              color="error"
+              color='error'
               onClick={handleResetCourse}
               disabled={resetProgressMutation.isLoading}
             >
@@ -1736,11 +2241,13 @@ const LmsComplianceTracker: React.FC = () => {
             </Button>
           )}
           <Button
-            variant="contained"
+            variant='contained'
             startIcon={<SchoolIcon />}
             onClick={() => {
               if (detailsRecord) {
-                navigate(`/lms/admin/users/${detailsRecord.userId}/courses/${detailsRecord.courseId}/review`)
+                navigate(
+                  `/lms/admin/users/${detailsRecord.userId}/courses/${detailsRecord.courseId}/review`
+                )
               }
             }}
           >
@@ -1750,27 +2257,42 @@ const LmsComplianceTracker: React.FC = () => {
       </Dialog>
 
       {/* Diálogo de edición de fechas en lote */}
-      <Dialog open={bulkOpen} onClose={() => setBulkOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Cambiar fechas ({selectedRecords.length} registro(s))</DialogTitle>
+      <Dialog
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>
+          Cambiar fechas ({selectedRecords.length} registro(s))
+        </DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Solo se modifica la fecha de finalización de los registros ya completados; el resto se omite.
+          <Alert severity='info' sx={{ mb: 2 }}>
+            Solo se modifica la fecha de finalización de los registros ya
+            completados; el resto se omite.
           </Alert>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Grid container spacing={2} sx={{ mt: 0 }}>
               <Grid item xs={12}>
                 <DatePicker
-                  label="Fecha de finalización"
+                  label='Fecha de finalización'
                   value={bulkCompletedAt}
                   onChange={(newValue) => setBulkCompletedAt(newValue)}
                   minDate={bulkAssignedAt ?? undefined}
                   maxDate={new Date()}
-                  slotProps={{ textField: { fullWidth: true, size: 'small', helperText: 'Solo aplica a usuarios con el curso completado' } }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      helperText:
+                        'Solo aplica a usuarios con el curso completado'
+                    }
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <DatePicker
-                  label="Fecha de asignación (opcional)"
+                  label='Fecha de asignación (opcional)'
                   value={bulkAssignedAt}
                   onChange={(newValue) => setBulkAssignedAt(newValue)}
                   slotProps={{ textField: { fullWidth: true, size: 'small' } }}
@@ -1778,7 +2300,7 @@ const LmsComplianceTracker: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <DatePicker
-                  label="Fecha límite (opcional)"
+                  label='Fecha límite (opcional)'
                   value={bulkDeadline}
                   onChange={(newValue) => setBulkDeadline(newValue)}
                   slotProps={{ textField: { fullWidth: true, size: 'small' } }}
@@ -1790,15 +2312,17 @@ const LmsComplianceTracker: React.FC = () => {
         <DialogActions>
           <Button onClick={() => setBulkOpen(false)}>Cancelar</Button>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleBulkApply}
-            disabled={bulkSaving || (!bulkCompletedAt && !bulkAssignedAt && !bulkDeadline)}
+            disabled={
+              bulkSaving ||
+              (!bulkCompletedAt && !bulkAssignedAt && !bulkDeadline)
+            }
           >
             Aplicar
           </Button>
         </DialogActions>
       </Dialog>
-
     </Container>
   )
 }

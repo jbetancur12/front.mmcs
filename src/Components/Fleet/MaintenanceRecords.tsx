@@ -79,7 +79,12 @@ const MaintenanceRecords: React.FC = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/fleet')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver a flota
       </Button>
@@ -90,11 +95,29 @@ const MaintenanceRecords: React.FC = () => {
         icon={<Build />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<Plumbing />} onClick={() => navigate('/fleet/interventions')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<Plumbing />}
+              onClick={() => navigate('/fleet/interventions')}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Tipos de intervención
             </Button>
             {canManage && (
-              <Button variant='contained' startIcon={<Add />} onClick={() => setIsAddModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              <Button
+                variant='contained'
+                startIcon={<Add />}
+                onClick={() => setIsAddModalOpen(true)}
+                sx={{
+                  bgcolor: '#00BFA5',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#00ACC1' }
+                }}
+              >
                 Agregar intervención
               </Button>
             )}
@@ -103,7 +126,11 @@ const MaintenanceRecords: React.FC = () => {
       />
 
       <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable {...purchaseTableStyle} columns={columns} data={records || []} />
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={records || []}
+        />
       </Paper>
 
       {isAddModalOpen && interventionTypes && (

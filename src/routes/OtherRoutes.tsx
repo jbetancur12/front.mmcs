@@ -9,11 +9,6 @@ const Settings = lazy(() => import('../pages/Settings'))
 const Clientes = lazy(() => import('../pages/Clientes'))
 const Repository = lazy(() => import('../pages/Repository'))
 const WelcomeScreen = lazy(() => import('../pages/Welcome'))
-const ExcelManipulation = lazy(
-  () => import('../Components/ExcelManipulation/ExcelManipulation')
-)
-const ScriptGenerator = lazy(() => import('../Components/ScriptGenerator'))
-const Gotemberg = lazy(() => import('../Components/Gotemberg'))
 
 const OtherRoutes = (role: string[]) => {
   return (
@@ -46,20 +41,6 @@ const OtherRoutes = (role: string[]) => {
         }
       >
         <Route path='/repository' element={<Repository />} />
-      </Route>
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            permission={PERMISSIONS.TOOLS_UTILITY_USE}
-            fallbackRoute={true}
-          />
-        }
-      >
-        <Route path='/excel-manipulation' element={<ExcelManipulation />} />
-        <Route path='/pdf-script' element={<ScriptGenerator />} />
-        <Route path='/gotemberg' element={<Gotemberg />} />
       </Route>
 
       {/* Ajustes (usuarios y roles): quien puede listar los usuarios; si no, a /welcome */}

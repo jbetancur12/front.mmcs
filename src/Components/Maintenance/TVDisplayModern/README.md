@@ -23,18 +23,21 @@ TVDisplayModern/
 ## Características Principales
 
 ### 🎨 Diseño Moderno
+
 - **Fondo blanco limpio** (#ffffff) para mejor legibilidad
 - **Color primario de la empresa** (#7bff7f) como acento principal
 - **Tipografía de alto contraste** para visualización a distancia
 - **Sombras sutiles** y bordes limpios sin saturación excesiva
 
 ### 🏗️ Arquitectura Modular
+
 - **Componentes separados** para cada sección funcional
 - **Hooks compartidos** para lógica de estilos reutilizable
 - **Tipos TypeScript** centralizados para mejor mantenimiento
 - **Fácil escalabilidad** y modificación de componentes individuales
 
 ### 📱 Responsive y Optimizado
+
 - **Optimizado para pantallas TV** (1920x1080+)
 - **Grid responsive** que se adapta automáticamente
 - **Paginación inteligente** para grandes conjuntos de datos
@@ -43,42 +46,52 @@ TVDisplayModern/
 ## Componentes
 
 ### ModernHeader
+
 Header limpio con branding de MetroMedics, indicador de conexión y reloj digital.
 
 **Props:**
+
 - `currentTime`: Fecha y hora actual
 - `connectionStatus`: Estado de la conexión WebSocket
 - `companyName`: Nombre de la empresa (opcional)
 - `showLogo`: Mostrar/ocultar logo (opcional)
 
 ### MetricsDashboard
+
 Dashboard de métricas con cards modernas y iconos semánticos.
 
 **Props:**
+
 - `metrics`: Objeto con todas las métricas del sistema
 - `colors`: Paleta de colores moderna
 
 ### CriticalTicketsSection
+
 Sección especial para tickets críticos con diseño de alta visibilidad.
 
 **Props:**
+
 - `urgentTickets`: Array de tickets urgentes
 - `colors`: Paleta de colores
 - `getElapsedTime`: Función para calcular tiempo transcurrido
 
 ### RegularTicketsGrid
+
 Grid responsive para mostrar tickets regulares con paginación.
 
 **Props:**
+
 - `tickets`: Array de tickets a mostrar
 - `gridCalculation`: Configuración del grid responsive
 - `colors`: Paleta de colores
 - `getElapsedTime`: Función para calcular tiempo transcurrido
 
 ### PaginationProgress
+
 Indicador de progreso para la paginación de tickets.
 
 **Props:**
+
 - `slideIndex`: Índice de la página actual
 - `totalTickets`: Total de tickets
 - `ticketsPerPage`: Tickets por página
@@ -87,9 +100,11 @@ Indicador de progreso para la paginación de tickets.
 ## Hooks
 
 ### useModernStyles
+
 Hook que proporciona el sistema de estilos moderno compartido.
 
 **Retorna:**
+
 - `modernColors`: Paleta completa de colores
 - `cardStyles`: Estilos base para cards
 - `iconContainerStyles`: Estilos para contenedores de iconos
@@ -107,18 +122,20 @@ function App() {
 ## Personalización
 
 ### Colores
+
 Los colores se pueden personalizar modificando el hook `useModernStyles`:
 
 ```tsx
 const modernColors = {
-  primary: '#7bff7f',        // Color primario de la empresa
-  background: '#ffffff',     // Fondo principal
-  textPrimary: '#212529',    // Texto principal
+  primary: '#7bff7f', // Color primario de la empresa
+  background: '#ffffff', // Fondo principal
+  textPrimary: '#212529' // Texto principal
   // ... más colores
 }
 ```
 
 ### Componentes
+
 Cada componente es independiente y puede ser modificado sin afectar otros:
 
 ```tsx
@@ -126,7 +143,7 @@ Cada componente es independiente y puede ser modificado sin afectar otros:
 <ModernHeader
   currentTime={currentTime}
   connectionStatus={connectionStatus}
-  companyName="Mi Empresa"
+  companyName='Mi Empresa'
   showLogo={false}
 />
 ```

@@ -202,7 +202,11 @@ const Fleet = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<Vehicle>) => {
-      confirmDialog({ title: `¿Está seguro que desea eliminar la hoja de datos ${row.getValue('licensePlate')}?`, text: 'No podrá recuperar esta información una vez eliminada', confirmLabel: 'Sí' }).then((result) => {
+      confirmDialog({
+        title: `¿Está seguro que desea eliminar la hoja de datos ${row.getValue('licensePlate')}?`,
+        text: 'No podrá recuperar esta información una vez eliminada',
+        confirmLabel: 'Sí'
+      }).then((result) => {
         if (result.isConfirmed) {
           deleteVehicle.mutate(row.getValue('id'))
         }
@@ -347,9 +351,16 @@ const Fleet = () => {
     }
   })
 
-  const remindersCount = vehicles.filter((v: Vehicle) => v.upcomingReminders?.length > 0).length
+  const remindersCount = vehicles.filter(
+    (v: Vehicle) => v.upcomingReminders?.length > 0
+  ).length
   const avgMileage = vehicles.length
-    ? Math.round(vehicles.reduce((acc: number, v: Vehicle) => acc + (Number(v.currentMileage) || 0), 0) / vehicles.length)
+    ? Math.round(
+        vehicles.reduce(
+          (acc: number, v: Vehicle) => acc + (Number(v.currentMileage) || 0),
+          0
+        ) / vehicles.length
+      )
     : 0
 
   return (
@@ -360,11 +371,29 @@ const Fleet = () => {
         icon={<DirectionsCar />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<Plumbing />} onClick={() => navigate('/fleet/interventions')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<Plumbing />}
+              onClick={() => navigate('/fleet/interventions')}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Tipos de intervención
             </Button>
             {canManage && (
-              <Button variant='contained' startIcon={<Add />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              <Button
+                variant='contained'
+                startIcon={<Add />}
+                onClick={() => setCreateModalOpen(true)}
+                sx={{
+                  bgcolor: '#00BFA5',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#00ACC1' }
+                }}
+              >
                 Crear vehículo
               </Button>
             )}
@@ -374,7 +403,12 @@ const Fleet = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Vehículos' value={vehicles.length} icon={<DirectionsCar />} tone='teal' />
+          <LmsStatCard
+            label='Vehículos'
+            value={vehicles.length}
+            icon={<DirectionsCar />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
           <LmsStatCard
@@ -406,59 +440,70 @@ const Fleet = () => {
           onEditingRowSave={handleSaveRowEdits}
           onEditingRowCancel={() => setValidationErrors({})}
           enablePinning
-          initialState={{ columnVisibility: { id: false }, columnPinning: { right: ['mrt-row-actions'] } }}
-        renderRowActions={({ row, table }) => (
-          <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Tooltip arrow placement='right' title='Documentos'>
-              <Link to={`${row.original.id}/documents`}>
-                <IconButton>
-                  <Visibility
-                    sx={{
-                      color:
-                        row.original.upcomingReminders.length > 0 ? '#ef4444' : '#00BFA5'
-                    }}
-                  />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Viajes'>
-              <Link to={`${row.original.id}/trip`}>
-                <IconButton onClick={() => handleTrip(row.original)}>
-                  <Commute />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Inspecciones'>
-              <Link to={`${row.original.id}/inspections`}>
-                <IconButton onClick={() => handleTrip(row.original)}>
-                  <Summarize />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Intervenciones'>
-              <Link to={`${row.original.id}/interventions`}>
-                <IconButton>
-                  <BuildCircle />
-                </IconButton>
-              </Link>
-            </Tooltip>
-  {canManage && (
-  <>
-            <Divider orientation='vertical' flexItem />
-            <Tooltip arrow placement='right' title='Editar'>
-              <IconButton color='primary' onClick={() => table.setEditingRow(row)}>
-                <Edit />
-              </IconButton>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Eliminar'>
-              <IconButton color='error' onClick={() => handleDeleteRow(row)}>
-                <Delete />
-              </IconButton>
-            </Tooltip>
-  </>
-  )}
-          </Box>
-        )}
+          initialState={{
+            columnVisibility: { id: false },
+            columnPinning: { right: ['mrt-row-actions'] }
+          }}
+          renderRowActions={({ row, table }) => (
+            <Box sx={{ display: 'flex', gap: '1rem' }}>
+              <Tooltip arrow placement='right' title='Documentos'>
+                <Link to={`${row.original.id}/documents`}>
+                  <IconButton>
+                    <Visibility
+                      sx={{
+                        color:
+                          row.original.upcomingReminders.length > 0
+                            ? '#ef4444'
+                            : '#00BFA5'
+                      }}
+                    />
+                  </IconButton>
+                </Link>
+              </Tooltip>
+              <Tooltip arrow placement='right' title='Viajes'>
+                <Link to={`${row.original.id}/trip`}>
+                  <IconButton onClick={() => handleTrip(row.original)}>
+                    <Commute />
+                  </IconButton>
+                </Link>
+              </Tooltip>
+              <Tooltip arrow placement='right' title='Inspecciones'>
+                <Link to={`${row.original.id}/inspections`}>
+                  <IconButton onClick={() => handleTrip(row.original)}>
+                    <Summarize />
+                  </IconButton>
+                </Link>
+              </Tooltip>
+              <Tooltip arrow placement='right' title='Intervenciones'>
+                <Link to={`${row.original.id}/interventions`}>
+                  <IconButton>
+                    <BuildCircle />
+                  </IconButton>
+                </Link>
+              </Tooltip>
+              {canManage && (
+                <>
+                  <Divider orientation='vertical' flexItem />
+                  <Tooltip arrow placement='right' title='Editar'>
+                    <IconButton
+                      color='primary'
+                      onClick={() => table.setEditingRow(row)}
+                    >
+                      <Edit />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip arrow placement='right' title='Eliminar'>
+                    <IconButton
+                      color='error'
+                      onClick={() => handleDeleteRow(row)}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+            </Box>
+          )}
         />
       </Paper>
 

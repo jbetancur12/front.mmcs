@@ -1,6 +1,12 @@
 import React, { useEffect } from 'react'
 import { Button, Container, Grid, Paper } from '@mui/material'
-import { Add, Map as MapIcon, Sensors, Wifi, WifiOff } from '@mui/icons-material'
+import {
+  Add,
+  Map as MapIcon,
+  Sensors,
+  Wifi,
+  WifiOff
+} from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -36,7 +42,12 @@ const DeviceList = () => {
   }
 
   const handleDelete = (device: DeviceIot) => {
-    confirmDialog({ title: '¿Estás seguro?', text: '¡No podrás revertir esta acción!', confirmLabel: 'Sí, eliminar!', tone: 'danger' }).then((result) => {
+    confirmDialog({
+      title: '¿Estás seguro?',
+      text: '¡No podrás revertir esta acción!',
+      confirmLabel: 'Sí, eliminar!',
+      tone: 'danger'
+    }).then((result) => {
       if (result.isConfirmed) {
         deleteDevice.mutate(device.id, {
           onSuccess: () => {
@@ -58,11 +69,29 @@ const DeviceList = () => {
         icon={<Sensors />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<MapIcon />} onClick={() => navigate('/iot/map')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<MapIcon />}
+              onClick={() => navigate('/iot/map')}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Ver mapa
             </Button>
             {canManage && (
-              <Button variant='contained' startIcon={<Add />} onClick={() => setOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              <Button
+                variant='contained'
+                startIcon={<Add />}
+                onClick={() => setOpen(true)}
+                sx={{
+                  bgcolor: '#00BFA5',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#00ACC1' }
+                }}
+              >
                 Agregar dispositivo
               </Button>
             )}
@@ -72,13 +101,28 @@ const DeviceList = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Dispositivos' value={list.length} icon={<Sensors />} tone='teal' />
+          <LmsStatCard
+            label='Dispositivos'
+            value={list.length}
+            icon={<Sensors />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='En línea' value={onlineCount} icon={<Wifi />} tone='green' />
+          <LmsStatCard
+            label='En línea'
+            value={onlineCount}
+            icon={<Wifi />}
+            tone='green'
+          />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Sin conexión' value={list.length - onlineCount} icon={<WifiOff />} tone={list.length - onlineCount > 0 ? 'orange' : 'green'} />
+          <LmsStatCard
+            label='Sin conexión'
+            value={list.length - onlineCount}
+            icon={<WifiOff />}
+            tone={list.length - onlineCount > 0 ? 'orange' : 'green'}
+          />
         </Grid>
       </Grid>
 

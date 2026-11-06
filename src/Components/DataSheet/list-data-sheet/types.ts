@@ -44,6 +44,10 @@ export interface DataSheetData {
   isCalibrationDueSoon: boolean
   isInspectionDueSoon: boolean
   invoiceUrl: string
+  isRetired?: boolean
+  retiredAt?: string | null
+  retiredReason?: string | null
+  codeReleasedAt?: string | null
 }
 
 export interface MenuOption {

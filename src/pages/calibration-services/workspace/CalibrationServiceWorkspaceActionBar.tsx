@@ -3,7 +3,10 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
-import { tealButtonSx, tealOutlineSx } from './calibrationServiceWorkspaceConstants'
+import {
+  tealButtonSx,
+  tealOutlineSx
+} from './calibrationServiceWorkspaceConstants'
 import { CalibrationServiceWorkspaceSummary } from './calibrationServiceWorkspaceSummary'
 import { SaveTargetStatus } from './calibrationServiceWorkspaceTypes'
 
@@ -50,13 +53,26 @@ const CalibrationServiceWorkspaceActionBar = ({
       >
         {pendingRequirements.length ? (
           <Stack direction='row' alignItems='center' spacing={1.25}>
-            <ErrorOutlineOutlinedIcon sx={{ color: pendingForDraft.length ? '#d97706' : '#9ca3af' }} />
-            <Typography variant='body2' sx={{ color: '#374151', flex: 1, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+            <ErrorOutlineOutlinedIcon
+              sx={{ color: pendingForDraft.length ? '#d97706' : '#9ca3af' }}
+            />
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#374151',
+                flex: 1,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' }
+              }}
+            >
               {pendingForDraft.length
                 ? `Faltan ${pendingForDraft.length} dato${pendingForDraft.length === 1 ? '' : 's'} para guardar y ${pendingRequirements.length} para enviar`
                 : `Puedes guardar el borrador. Faltan ${pendingRequirements.length} dato${pendingRequirements.length === 1 ? '' : 's'} para enviar`}
             </Typography>
-            <Button size='small' onClick={() => goToSection(pendingRequirements[0].section)} sx={{ textTransform: 'none', fontWeight: 600, color: '#00897B' }}>
+            <Button
+              size='small'
+              onClick={() => goToSection(pendingRequirements[0].section)}
+              sx={{ textTransform: 'none', fontWeight: 600, color: '#00897B' }}
+            >
               Ver qué falta
             </Button>
           </Stack>
@@ -68,7 +84,19 @@ const CalibrationServiceWorkspaceActionBar = ({
             </Typography>
           </Stack>
         )}
-        <Stack direction='row' spacing={1} sx={{ '& .MuiButton-root': { flex: { xs: 1, sm: 'initial' }, whiteSpace: 'nowrap', px: { xs: 1, sm: 2 }, fontSize: { xs: '0.82rem', sm: '0.875rem' } }, '& .MuiButton-startIcon': { display: { xs: 'none', sm: 'inherit' } } }}>
+        <Stack
+          direction='row'
+          spacing={1}
+          sx={{
+            '& .MuiButton-root': {
+              flex: { xs: 1, sm: 'initial' },
+              whiteSpace: 'nowrap',
+              px: { xs: 1, sm: 2 },
+              fontSize: { xs: '0.82rem', sm: '0.875rem' }
+            },
+            '& .MuiButton-startIcon': { display: { xs: 'none', sm: 'inherit' } }
+          }}
+        >
           <Button
             variant='outlined'
             startIcon={<SaveOutlinedIcon />}
@@ -87,7 +115,12 @@ const CalibrationServiceWorkspaceActionBar = ({
             sx={tealButtonSx}
           >
             Guardar y enviar
-            <Box component='span' sx={{ display: { xs: 'none', sm: 'inline' } }}>&nbsp;cotización</Box>
+            <Box
+              component='span'
+              sx={{ display: { xs: 'none', sm: 'inline' } }}
+            >
+              &nbsp;cotización
+            </Box>
           </Button>
         </Stack>
       </Paper>

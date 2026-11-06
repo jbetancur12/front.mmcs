@@ -5,23 +5,23 @@ import { RANGE_OPTIONS } from 'src/Components/Iot/constants'
 import { RangeSelector } from '../parts/RangeSelector'
 import { StatsTable } from '../parts/StatsTable'
 
-import { RangeOption } from '../types'
+import { AggregateStats, CombinedDataPoint, RangeOption } from '../types'
 import { TextField, Typography } from '@mui/material'
 import MainChart from 'src/Components/Iot/GraphDrawer/parts/MainChart'
 import { useState } from 'react'
 import { DatePicker } from '@mui/x-date-pickers'
 
 interface HistoryTabProps {
-  combinedData: any[]
-  visibleSeries: any
-  onToggleSeries: any
-  temperatureAlarms: any
-  humidityAlarms: any
+  combinedData: CombinedDataPoint[]
+  visibleSeries: { temperature: boolean; humidity: boolean }
+  onToggleSeries: (series: 'temperature' | 'humidity') => void
+  temperatureAlarms?: { above?: number; below?: number }
+  humidityAlarms?: { above?: number; below?: number }
   selectedRange: RangeOption
   onSelectRange: (range: RangeOption) => void
-  aggregateStats: any
+  aggregateStats: AggregateStats | null
   isLoading: boolean
-  error: any
+  error: unknown
 }
 
 export const HistoryTab = ({
@@ -36,28 +36,27 @@ export const HistoryTab = ({
   isLoading,
   error
 }: HistoryTabProps) => {
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
 
   const handleCustomDateSelect = (date: Date | null) => {
-    if (!date) return;
-    
+    if (!date) return
+
     // Calcular rango de 24 horas (de 00:00 a 23:59)
-    const startDate = new Date(date);
-    startDate.setHours(0, 0, 0, 0);
-    
-    
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(date)
+    startDate.setHours(0, 0, 0, 0)
+
+    const endDate = new Date(date)
+    endDate.setHours(23, 59, 59, 999)
 
     onSelectRange({
       label: 'Personalizado',
       isCustom: true,
       startDate,
       endDate
-    });
-    
-    setDatePickerOpen(false);
-  };
+    })
+
+    setDatePickerOpen(false)
+  }
 
   return (
     <>
@@ -65,15 +64,15 @@ export const HistoryTab = ({
         selectedRange={selectedRange}
         onSelect={(range) => {
           if (range.isCustom) {
-            setDatePickerOpen(true);
+            setDatePickerOpen(true)
           } else {
-            onSelectRange(range);
+            onSelectRange(range)
           }
         }}
         options={RANGE_OPTIONS}
       />
 
-{datePickerOpen && (
+      {datePickerOpen && (
         <DatePicker
           open
           value={null}

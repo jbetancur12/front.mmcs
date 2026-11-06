@@ -13,8 +13,7 @@ type TripsPage = PaginatedResponse<Trip> & { lastTrip: Trip | null }
 export const tripKeys = {
   paginated: (vehicleId: string | undefined, params: ServerListParams) =>
     ['trips', vehicleId, 'paginated', params] as const,
-  last: (vehicleId: string | undefined) =>
-    ['trips', vehicleId, 'last'] as const
+  last: (vehicleId: string | undefined) => ['trips', vehicleId, 'last'] as const
 }
 
 /** Columnas que `GET /trip` acepta en `sortBy`. */

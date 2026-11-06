@@ -21,17 +21,37 @@ const LmsUserManagement = lazy(
   () => import('../pages/lms/admin/LmsUserManagement')
 )
 const LmsAnalytics = lazy(() => import('../pages/lms/admin/LmsAnalytics'))
-const LmsAdminNotifications = lazy(() => import('../pages/lms/admin/LmsAdminNotifications'))
+const LmsAdminNotifications = lazy(
+  () => import('../pages/lms/admin/LmsAdminNotifications')
+)
 const LmsReporting = lazy(() => import('../pages/lms/admin/LmsReporting'))
-const LmsCourseAssignments = lazy(() => import('../pages/lms/admin/LmsCourseAssignments'))
-const LmsQuizManagement = lazy(() => import('../pages/lms/admin/LmsQuizManagement'))
-const LmsCourseAssignmentInterface = lazy(() => import('../pages/lms/admin/LmsCourseAssignmentInterface'))
-const LmsComplianceTracker = lazy(() => import('../pages/lms/admin/LmsComplianceTracker'))
-const LmsTrainingPlans = lazy(() => import('../pages/lms/admin/LmsTrainingPlans'))
-const LmsUserCourseReview = lazy(() => import('../pages/lms/admin/LmsUserCourseReview'))
-const LmsCertificateTemplates = lazy(() => import('../pages/lms/admin/LmsCertificateTemplates'))
-const LmsIssuedCertificates = lazy(() => import('../pages/lms/admin/LmsIssuedCertificates'))
-const LmsCertificateView = lazy(() => import('../pages/lms/course/LmsCertificateView'))
+const LmsCourseAssignments = lazy(
+  () => import('../pages/lms/admin/LmsCourseAssignments')
+)
+const LmsQuizManagement = lazy(
+  () => import('../pages/lms/admin/LmsQuizManagement')
+)
+const LmsCourseAssignmentInterface = lazy(
+  () => import('../pages/lms/admin/LmsCourseAssignmentInterface')
+)
+const LmsComplianceTracker = lazy(
+  () => import('../pages/lms/admin/LmsComplianceTracker')
+)
+const LmsTrainingPlans = lazy(
+  () => import('../pages/lms/admin/LmsTrainingPlans')
+)
+const LmsUserCourseReview = lazy(
+  () => import('../pages/lms/admin/LmsUserCourseReview')
+)
+const LmsCertificateTemplates = lazy(
+  () => import('../pages/lms/admin/LmsCertificateTemplates')
+)
+const LmsIssuedCertificates = lazy(
+  () => import('../pages/lms/admin/LmsIssuedCertificates')
+)
+const LmsCertificateView = lazy(
+  () => import('../pages/lms/course/LmsCertificateView')
+)
 
 const LmsRoutes = (role: string[]) => {
   const isAuthenticated = localStorage.getItem('accessToken') !== null
@@ -45,7 +65,10 @@ const LmsRoutes = (role: string[]) => {
 
   return (
     <>
-      <Route path='lms/certificates/verify/:certificateNumber' element={<LmsCertificateView />} />
+      <Route
+        path='lms/certificates/verify/:certificateNumber'
+        element={<LmsCertificateView />}
+      />
 
       <Route
         element={
@@ -64,7 +87,10 @@ const LmsRoutes = (role: string[]) => {
           path='lms/course/:courseId/preview'
           element={<LmsCoursePreview />}
         />
-        <Route path='lms/certificate/:certificateId' element={<LmsCertificateView />} />
+        <Route
+          path='lms/certificate/:certificateId'
+          element={<LmsCertificateView />}
+        />
         <Route path='lms/certificates' element={<LmsCertificateView />} />
       </Route>
 
@@ -75,7 +101,10 @@ const LmsRoutes = (role: string[]) => {
           path='lms/admin/users/:userId/courses/:courseId/review'
           element={<LmsUserCourseReview />}
         />
-        <Route path='lms/admin/jobs' element={<Navigate to='/lms/admin' replace />} />
+        <Route
+          path='lms/admin/jobs'
+          element={<Navigate to='/lms/admin' replace />}
+        />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_COURSE_MANAGE)}>
         <Route path='lms/admin/courses' element={<LmsCourseManagement />} />
@@ -83,20 +112,38 @@ const LmsRoutes = (role: string[]) => {
           path='lms/admin/courses/:courseId/content'
           element={<LmsCourseContentEditor />}
         />
-        <Route path='lms/admin/dashboard' element={<Navigate to='/lms/admin/courses' replace />} />
-        <Route path='lms/admin/quiz-management' element={<LmsQuizManagement />} />
-        <Route path='lms/admin/question-bank' element={<Navigate to='/lms/admin/quiz-management' replace />} />
-        <Route path='lms/admin/quiz-validator' element={<Navigate to='/lms/admin/quiz-management' replace />} />
+        <Route
+          path='lms/admin/dashboard'
+          element={<Navigate to='/lms/admin/courses' replace />}
+        />
+        <Route
+          path='lms/admin/quiz-management'
+          element={<LmsQuizManagement />}
+        />
+        <Route
+          path='lms/admin/question-bank'
+          element={<Navigate to='/lms/admin/quiz-management' replace />}
+        />
+        <Route
+          path='lms/admin/quiz-validator'
+          element={<Navigate to='/lms/admin/quiz-management' replace />}
+        />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_USER_MANAGE)}>
         <Route path='lms/admin/users' element={<LmsUserManagement />} />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_DASHBOARD_VIEW)}>
         <Route path='lms/admin/analytics' element={<LmsAnalytics />} />
-        <Route path='lms/admin/quiz-analytics' element={<Navigate to='/lms/admin/analytics' replace />} />
+        <Route
+          path='lms/admin/quiz-analytics'
+          element={<Navigate to='/lms/admin/analytics' replace />}
+        />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_NOTIFICATION_MANAGE)}>
-        <Route path='lms/admin/notifications' element={<LmsAdminNotifications />} />
+        <Route
+          path='lms/admin/notifications'
+          element={<LmsAdminNotifications />}
+        />
         <Route path='lms/admin/compliance' element={<LmsComplianceTracker />} />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_REPORT_MANAGE)}>
@@ -104,15 +151,27 @@ const LmsRoutes = (role: string[]) => {
         <Route path='lms/admin/reports' element={<LmsReporting />} />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_ASSIGNMENT_MANAGE)}>
-        <Route path='lms/admin/courses/:courseId/assignments' element={<LmsCourseAssignments />} />
-        <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
+        <Route
+          path='lms/admin/courses/:courseId/assignments'
+          element={<LmsCourseAssignments />}
+        />
+        <Route
+          path='lms/admin/assignments'
+          element={<LmsCourseAssignmentInterface />}
+        />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_PLAN_MANAGE)}>
         <Route path='lms/admin/plans' element={<LmsTrainingPlans />} />
       </Route>
       <Route element={guard(PERMISSIONS.LMS_CERTIFICATE_MANAGE)}>
-        <Route path='lms/admin/certificate-templates' element={<LmsCertificateTemplates />} />
-        <Route path='lms/admin/certificates' element={<LmsIssuedCertificates />} />
+        <Route
+          path='lms/admin/certificate-templates'
+          element={<LmsCertificateTemplates />}
+        />
+        <Route
+          path='lms/admin/certificates'
+          element={<LmsIssuedCertificates />}
+        />
       </Route>
     </>
   )

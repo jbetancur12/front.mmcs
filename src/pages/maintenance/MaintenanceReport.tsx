@@ -19,7 +19,12 @@ import {
   Chip,
   Divider
 } from '@mui/material'
-import { Build, CheckCircle, Send, Error } from '@mui/icons-material'
+import {
+  Build,
+  CheckCircle,
+  Send,
+  Error as ErrorIcon
+} from '@mui/icons-material'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import {
@@ -111,13 +116,13 @@ const MaintenanceReport: React.FC = () => {
         formik.resetForm()
         setFiles([])
         setActiveStep(0)
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error('Maintenance form submission error:', error)
         let errorMessage = 'Error al enviar la solicitud. Intente nuevamente.'
 
         if (getApiErrorReason(error)) {
           errorMessage = getApiErrorReason(error) ?? errorMessage
-        } else if (error.message) {
+        } else if (error instanceof Error) {
           errorMessage = error.message
         }
 
@@ -536,7 +541,7 @@ const MaintenanceReport: React.FC = () => {
               </>
             ) : (
               <>
-                <Error color='error' sx={{ fontSize: 64, mb: 2 }} />
+                <ErrorIcon color='error' sx={{ fontSize: 64, mb: 2 }} />
                 <Typography variant='h4' gutterBottom color='error.main'>
                   Error al Enviar
                 </Typography>
@@ -560,7 +565,6 @@ const MaintenanceReport: React.FC = () => {
   return (
     <MaintenanceErrorBoundary>
       <Container maxWidth='md' sx={{ py: 4 }}>
-        {/* @ts-ignore - Material-UI Paper type compatibility issue */}
         <Paper elevation={3} sx={{ p: 4 }}>
           {/* Header */}
           <Box textAlign='center' mb={4}>

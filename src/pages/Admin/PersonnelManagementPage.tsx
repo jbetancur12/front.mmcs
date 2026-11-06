@@ -79,7 +79,7 @@ const PersonnelManagementPage: React.FC = () => {
         queryClient.invalidateQueries('personnelList') // Refrescar la tabla
         handleCloseModal()
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         notify.error(
           'Error',
           getApiErrorReason(err) || 'No se pudo guardar la información.'
@@ -97,7 +97,7 @@ const PersonnelManagementPage: React.FC = () => {
         notify.success('Eliminado', 'La persona ha sido eliminada.')
         queryClient.invalidateQueries('personnelList')
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         notify.error(
           'Error',
           getApiErrorReason(err) || 'No se pudo eliminar a la persona.'

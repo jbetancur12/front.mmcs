@@ -33,21 +33,27 @@ const useCalibrationServicesListActions = ({
   permissions,
   queryFilters
 }: CalibrationServicesListActionsParams) => {
-  const { canCreateServices, canManageSequenceConfig, canManageSlaConfig } = permissions
+  const { canCreateServices, canManageSequenceConfig, canManageSlaConfig } =
+    permissions
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { requestApproval, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, sendCertificate } =
-    useCalibrationServiceMutations()
+  const {
+    requestApproval,
+    upsertSequenceConfig,
+    upsertSlaConfig,
+    upsertQuoteTermsTemplate,
+    sendCertificate
+  } = useCalibrationServiceMutations()
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [isSlaConfigDialogOpen, setIsSlaConfigDialogOpen] = useState(false)
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
-  const [templateTerms, setTemplateTerms] = useState<CalibrationServiceQuoteTerms>({})
-  const { data: quoteTermsTemplate } = useCalibrationServiceQuoteTermsTemplate(canCreateServices)
+  const [templateTerms, setTemplateTerms] =
+    useState<CalibrationServiceQuoteTerms>({})
+  const { data: quoteTermsTemplate } =
+    useCalibrationServiceQuoteTermsTemplate(canCreateServices)
 
-  const {
-    data: sequenceConfig,
-    isLoading: isLoadingSequenceConfig
-  } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
+  const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
+    useCalibrationServiceSequenceConfig(canManageSequenceConfig)
   const { data: slaConfig } = useCalibrationServiceSlaConfig(canManageSlaConfig)
 
   useEffect(() => {
@@ -58,12 +64,18 @@ const useCalibrationServicesListActions = ({
     if (!sequenceConfig?.initialized) {
       setIsSequenceDialogOpen(true)
     }
-  }, [canManageSequenceConfig, isLoadingSequenceConfig, sequenceConfig?.initialized])
+  }, [
+    canManageSequenceConfig,
+    isLoadingSequenceConfig,
+    sequenceConfig?.initialized
+  ])
 
   const handleRequestApproval = async (service: CalibrationService) => {
     try {
       await requestApproval.mutateAsync({ serviceId: String(service.id) })
-      toast.success(`${service.serviceCode} quedó marcado como cotización enviada al cliente.`)
+      toast.success(
+        `${service.serviceCode} quedó marcado como cotización enviada al cliente.`
+      )
     } catch (requestError) {
       logger.error(requestError)
       toast.error('No pudimos marcar la cotización como enviada al cliente.')
@@ -73,7 +85,9 @@ const useCalibrationServicesListActions = ({
   const handleSendCertificate = async (service: CalibrationService) => {
     try {
       await sendCertificate.mutateAsync({ serviceId: String(service.id) })
-      toast.success(`Certificado de ${service.serviceCode} registrado como enviado.`)
+      toast.success(
+        `Certificado de ${service.serviceCode} registrado como enviado.`
+      )
     } catch (sendError) {
       logger.error(sendError)
       toast.error('No pudimos registrar el envío del certificado.')
@@ -106,15 +120,20 @@ const useCalibrationServicesListActions = ({
     }
   }
 
-  const handleSaveSlaConfig = async (values: CalibrationServiceSlaConfigPayload) => {
+  const handleSaveSlaConfig = async (
+    values: CalibrationServiceSlaConfigPayload
+  ) => {
     try {
       await upsertSlaConfig.mutateAsync(values)
       toast.success('Los tiempos SLA quedaron actualizados.')
       setIsSlaConfigDialogOpen(false)
       // Recarga la bandeja actual: los semáforos SLA dependen de la configuración
-      void queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, queryFilters], {
-        exact: true
-      })
+      void queryClient.invalidateQueries(
+        [CALIBRATION_SERVICE_QUERY_KEYS.all, queryFilters],
+        {
+          exact: true
+        }
+      )
     } catch (configError) {
       logger.error(configError)
       toast.error('No pudimos guardar los tiempos SLA.')

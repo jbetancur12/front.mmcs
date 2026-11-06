@@ -7,8 +7,7 @@ import {
   getCourseTotalLessons
 } from './lmsProgress'
 
-const course = (data: Record<string, unknown>) =>
-  data as unknown as Course
+const course = (data: Record<string, unknown>) => data as unknown as Course
 
 // 2 módulos: 3 + 1 lecciones = 4 en total
 const modules = [{ lessons: [{}, {}, {}] }, { lessons: [{}] }]
@@ -20,9 +19,9 @@ describe('getCourseTotalLessons', () => {
 
   it('sin módulos, o con módulos sin lecciones, es 0', () => {
     expect(getCourseTotalLessons(course({}))).toBe(0)
-    expect(getCourseTotalLessons(course({ modules: [{}, { lessons: [] }] }))).toBe(
-      0
-    )
+    expect(
+      getCourseTotalLessons(course({ modules: [{}, { lessons: [] }] }))
+    ).toBe(0)
   })
 })
 
@@ -57,7 +56,10 @@ describe('getCourseProgressPercentage', () => {
     expect(getCourseProgressPercentage(course({ modules }))).toBe(0)
     expect(
       getCourseProgressPercentage(
-        course({ modules: [], userProgress: [{ lesson_id: 1, status: 'completed' }] })
+        course({
+          modules: [],
+          userProgress: [{ lesson_id: 1, status: 'completed' }]
+        })
       )
     ).toBe(0)
   })
@@ -74,7 +76,10 @@ describe('getCourseProgressPercentage', () => {
     const oneOfThree = [{ lesson_id: 1, status: 'completed' }]
     expect(
       getCourseProgressPercentage(
-        course({ modules: [{ lessons: [{}, {}, {}] }], userProgress: oneOfThree })
+        course({
+          modules: [{ lessons: [{}, {}, {}] }],
+          userProgress: oneOfThree
+        })
       )
     ).toBe(33)
   })

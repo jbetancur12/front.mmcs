@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  Divider,
-  Stack,
-  Typography
-} from '@mui/material'
+import { Card, CardContent, Divider, Stack, Typography } from '@mui/material'
 import { CalibrationService } from '../../../types/calibrationService'
 import {
   currencyFormatter,
@@ -27,16 +21,8 @@ const CalibrationServiceCompactSummary = ({
   permissions,
   data
 }: CalibrationServiceCompactSummaryProps) => {
-  const {
-    isTechnicalOnlyView,
-    isAnalystOnlyView
-  } = permissions
-  const {
-    subtotal,
-    discountAmount,
-    taxTotal,
-    grandTotal
-  } = data
+  const { isTechnicalOnlyView, isAnalystOnlyView } = permissions
+  const { subtotal, discountAmount, taxTotal, grandTotal } = data
 
   return (
     <Card
@@ -93,8 +79,14 @@ const CalibrationServiceCompactSummary = ({
                 </Typography>
               </Stack>
               <Stack direction='row' justifyContent='space-between'>
-                <Typography variant='subtitle1' fontWeight={700}>Total</Typography>
-                <Typography variant='subtitle1' fontWeight={700} sx={{ color: '#00897B' }}>
+                <Typography variant='subtitle1' fontWeight={700}>
+                  Total
+                </Typography>
+                <Typography
+                  variant='subtitle1'
+                  fontWeight={700}
+                  sx={{ color: '#00897B' }}
+                >
                   {currencyFormatter.format(grandTotal)}
                 </Typography>
               </Stack>

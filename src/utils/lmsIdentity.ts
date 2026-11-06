@@ -36,7 +36,11 @@ export const normalizeLmsRoles = (roles: string[] = []): string[] => {
       return
     }
 
-    if (TRAINING_MANAGER_ALIASES.includes(role as (typeof TRAINING_MANAGER_ALIASES)[number])) {
+    if (
+      TRAINING_MANAGER_ALIASES.includes(
+        role as (typeof TRAINING_MANAGER_ALIASES)[number]
+      )
+    ) {
       normalizedRoles.add(TRAINING_MANAGER_ROLE)
       return
     }
@@ -53,10 +57,16 @@ export const hasTrainingManagerRole = (roles: string[] = []): boolean => {
 
 export const hasLmsAdminAccess = (roles: string[] = []): boolean => {
   const normalizedRoles = normalizeLmsRoles(roles)
-  return normalizedRoles.includes(ROLES.ADMIN) || normalizedRoles.includes(TRAINING_MANAGER_ROLE)
+  return (
+    normalizedRoles.includes(ROLES.ADMIN) ||
+    normalizedRoles.includes(TRAINING_MANAGER_ROLE)
+  )
 }
 
-export const isLmsOnlyUser = (roles: string[] = [], lmsOnly = false): boolean => {
+export const isLmsOnlyUser = (
+  roles: string[] = [],
+  lmsOnly = false
+): boolean => {
   return lmsOnly || normalizeLmsRoles(roles).includes(LMS_ONLY_ROLE)
 }
 
@@ -147,7 +157,11 @@ export const getPreferredPostLoginRoute = ({
     return lastLocation as string
   }
 
-  const preferredLmsHomeRoute = getPreferredLmsHomeRoute(roles, userType, lmsOnly)
+  const preferredLmsHomeRoute = getPreferredLmsHomeRoute(
+    roles,
+    userType,
+    lmsOnly
+  )
 
   if (preferredLmsHomeRoute) {
     return preferredLmsHomeRoute

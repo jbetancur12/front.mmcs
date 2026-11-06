@@ -39,3 +39,6 @@ stats.html
 rollback-output.log
 
 deploy.sh.bak
+
+eslint-report*.json
+any-*.json

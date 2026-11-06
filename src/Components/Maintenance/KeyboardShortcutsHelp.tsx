@@ -37,22 +37,22 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
 
   const renderShortcut = (key: string, description: string) => (
     <Box
-      display="flex"
-      justifyContent="space-between"
-      alignItems="center"
+      display='flex'
+      justifyContent='space-between'
+      alignItems='center'
       py={1}
       key={key}
     >
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant='body2' color='text.secondary'>
         {description}
       </Typography>
-      <Box display="flex" gap={0.5}>
+      <Box display='flex' gap={0.5}>
         {key.split(' + ').map((part, index, array) => (
           <React.Fragment key={part}>
             <Chip
               label={part}
-              size="small"
-              variant="outlined"
+              size='small'
+              variant='outlined'
               sx={{
                 fontFamily: 'monospace',
                 fontSize: '0.75rem',
@@ -60,7 +60,10 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
               }}
             />
             {index < array.length - 1 && (
-              <Typography variant="body2" sx={{ mx: 0.5, color: 'text.secondary' }}>
+              <Typography
+                variant='body2'
+                sx={{ mx: 0.5, color: 'text.secondary' }}
+              >
                 +
               </Typography>
             )}
@@ -74,7 +77,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth='sm'
       fullWidth
       PaperProps={{
         sx: {
@@ -85,17 +88,16 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
       }}
     >
       <DialogTitle sx={{ pb: 1 }}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Keyboard color="primary" />
-          <Typography variant="h6">
-            Atajos de Teclado
-          </Typography>
+        <Box display='flex' alignItems='center' gap={1}>
+          <Keyboard color='primary' />
+          <Typography variant='h6'>Atajos de Teclado</Typography>
         </Box>
       </DialogTitle>
 
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          Usa estos atajos para navegar más rápido en el sistema de mantenimiento.
+        <Typography variant='body2' color='text.secondary' mb={3}>
+          Usa estos atajos para navegar más rápido en el sistema de
+          mantenimiento.
         </Typography>
 
         {/* Global Shortcuts */}
@@ -109,10 +111,15 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
             borderRadius: '8px'
           }}
         >
-          <Typography variant="subtitle2" gutterBottom color="primary.main">
+          <Typography variant='subtitle2' gutterBottom color='primary.main'>
             Atajos Globales
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            display='block'
+            mb={2}
+          >
             Funcionan en cualquier parte del sistema
           </Typography>
 
@@ -131,10 +138,19 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
             borderRadius: '8px'
           }}
         >
-          <Typography variant="subtitle2" gutterBottom sx={{ color: '#ff9800' }}>
+          <Typography
+            variant='subtitle2'
+            gutterBottom
+            sx={{ color: '#ff9800' }}
+          >
             Atajos Contextuales
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            display='block'
+            mb={2}
+          >
             Solo funcionan cuando estás viendo un ticket específico
           </Typography>
 
@@ -143,9 +159,14 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           )}
         </Paper>
 
-        <Box mt={2} p={2} sx={{ background: 'rgba(33, 150, 243, 0.05)', borderRadius: '8px' }}>
-          <Typography variant="caption" color="text.secondary">
-            💡 <strong>Tip:</strong> Los atajos contextuales (E, C) no funcionan cuando estás escribiendo en un campo de texto.
+        <Box
+          mt={2}
+          p={2}
+          sx={{ background: 'rgba(33, 150, 243, 0.05)', borderRadius: '8px' }}
+        >
+          <Typography variant='caption' color='text.secondary'>
+            💡 <strong>Tip:</strong> Los atajos contextuales (E, C) no funcionan
+            cuando estás escribiendo en un campo de texto.
           </Typography>
         </Box>
       </DialogContent>
@@ -153,7 +174,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button
           onClick={onClose}
-          variant="contained"
+          variant='contained'
           startIcon={<Close />}
           sx={{
             borderRadius: '8px',

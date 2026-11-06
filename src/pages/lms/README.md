@@ -34,16 +34,19 @@ El módulo está configurado con las siguientes rutas:
 ## Roles y Permisos
 
 ### Administrador
+
 - Acceso completo al sistema
 - Gestión de cursos, usuarios y analíticas
 - Estadísticas detalladas del sistema
 
 ### Empleado
+
 - Acceso a cursos internos
 - Seguimiento de progreso personal
 - Certificados obtenidos
 
 ### Cliente
+
 - Acceso a cursos públicos
 - Progreso limitado
 - Certificados básicos
@@ -51,6 +54,7 @@ El módulo está configurado con las siguientes rutas:
 ## Características Implementadas
 
 ### ✅ Completado
+
 - [x] Estructura de rutas y navegación
 - [x] Dashboards para cada rol
 - [x] Gestión de cursos (CRUD)
@@ -63,6 +67,7 @@ El módulo está configurado con las siguientes rutas:
 - [x] Mock data para demostración
 
 ### 🔄 En Desarrollo
+
 - [ ] Integración con API real
 - [ ] Sistema de autenticación específico para LMS
 - [ ] Gestión de contenido de cursos
@@ -82,17 +87,20 @@ El módulo está configurado con las siguientes rutas:
 ## Uso
 
 ### Para Administradores
+
 1. Navegar a `/lms/admin`
 2. Gestionar cursos desde `/lms/admin/courses`
 3. Gestionar usuarios desde `/lms/admin/users`
 4. Ver analíticas desde `/lms/admin/analytics`
 
 ### Para Empleados
+
 1. Navegar a `/lms/employee`
 2. Ver progreso en cursos
 3. Acceder a certificados
 
 ### Para Clientes
+
 1. Navegar a `/lms/client`
 2. Explorar cursos públicos
 3. Seguir progreso personal
@@ -140,4 +148,4 @@ Para agregar nuevas funcionalidades:
 - Actualmente usa mock data para demostración
 - Los componentes están preparados para integrar con API real
 - El diseño es responsive y accesible
-- Se mantiene consistencia con el resto del proyecto 
+- Se mantiene consistencia con el resto del proyecto

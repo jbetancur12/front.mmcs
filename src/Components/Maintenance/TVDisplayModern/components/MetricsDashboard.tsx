@@ -122,7 +122,12 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
               }}
             >
               <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 0.65 }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.25,
+                  mb: 0.65
+                }}
               >
                 <Box
                   sx={{

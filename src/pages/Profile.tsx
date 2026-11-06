@@ -190,7 +190,6 @@ const Profile: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
-
       <LmsPageHeader
         title={profile.name}
         subtitle='Metrólogo del laboratorio'

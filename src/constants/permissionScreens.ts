@@ -73,11 +73,13 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'calibration:datasheet:create': [
     { path: "/datasheets", label: "Inventario › Hoja de vida", kind: 'action' },
-    { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'action' }
+    { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'action' },
+    { path: "/datasheets/alerts", label: "Inventario › Alertas", kind: 'related' }
   ],
   'calibration:datasheet:delete': [
     { path: "/datasheets", label: "Inventario › Hoja de vida", kind: 'action' },
-    { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'action' }
+    { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'action' },
+    { path: "/datasheets/alerts", label: "Inventario › Alertas", kind: 'related' }
   ],
   'calibration:datasheet:detail': [
     { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'screen' },
@@ -89,11 +91,18 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/datasheets/:id/inspection-maintenance", label: "Hojas de datos › Inspección y mantenimiento", kind: 'related' },
     { path: "/datasheets/:id/new-calibration", label: "Hojas de datos › Nueva calibración", kind: 'related' },
     { path: "/datasheets/:id/new-maintenance", label: "Hojas de datos › Nuevo mantenimiento", kind: 'related' },
+    { path: "/datasheets/alerts", label: "Inventario › Alertas", kind: 'related' },
     { path: "/datasheets/devices-on-loan", label: "Hojas de datos › Equipos en préstamo", kind: 'related' }
+  ],
+  'calibration:datasheet:retire': [
+    { path: "/datasheets", label: "Inventario › Hoja de vida", kind: 'action' },
+    { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'action' },
+    { path: "/datasheets/alerts", label: "Inventario › Alertas", kind: 'action' }
   ],
   'calibration:datasheet:update': [
     { path: "/datasheets", label: "Inventario › Hoja de vida", kind: 'action' },
-    { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'action' }
+    { path: "/datasheets/:id", label: "Inventario › Hoja de vida", kind: 'action' },
+    { path: "/datasheets/alerts", label: "Inventario › Alertas", kind: 'related' }
   ],
   'calibration:datasheet:view': [
     { path: "/datasheets", label: "Inventario › Hoja de vida", kind: 'screen' },
@@ -1046,11 +1055,6 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'system:settings:view': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }
   ],
-  'tools:utility:use': [
-    { path: "/excel-manipulation", label: "Manipulación de Excel", kind: 'screen' },
-    { path: "/gotemberg", label: "Gotemberg", kind: 'screen' },
-    { path: "/pdf-script", label: "Script de PDF", kind: 'screen' }
-  ],
   'users:profile:manage': [
     { path: "/datasheets/:id/edit-calibration", label: "Hojas de datos › Editar calibración", kind: 'action' },
     { path: "/datasheets/:id/edit-maintenance", label: "Hojas de datos › Editar mantenimiento", kind: 'action' },
@@ -1096,6 +1100,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/lms/admin/courses/:courseId/content", label: "Academia › Administración › Cursos › Contenido", kind: 'related' },
     { path: "/lms/admin/notifications", label: "Academia › Mis notificaciones", kind: 'related' },
     { path: "/lms/admin/plans", label: "Academia › Planes de formación", kind: 'related' },
+    { path: "/lms/admin/quiz-management", label: "Academia › Administración › Banco de preguntas", kind: 'related' },
     { path: "/lms/admin/users/:userId/courses/:courseId/review", label: "Academia › Administración › Usuarios › Cursos › Revisión", kind: 'related' },
     { path: "/lms/certificate/:certificateId", label: "Academia › Certificado", kind: 'related' },
     { path: "/lms/certificates", label: "Academia › Mis certificados", kind: 'related' },

@@ -50,17 +50,24 @@ const EquipmentSalesSequenceConfigDialog = ({
 
   const quotePreview = `${config?.quotePrefix || 'VT-'}${String(nextQuoteNumber).padStart(4, '0')}`
   const hasQuoteChanged =
-    isAlreadyInitialized && Number(nextQuoteNumber) !== (config?.nextQuoteNumber ?? 0)
+    isAlreadyInitialized &&
+    Number(nextQuoteNumber) !== (config?.nextQuoteNumber ?? 0)
 
   const handleEnableEdit = async () => {
-    const result = await confirmDialog({ title: 'Habilitar edición', html: `
+    const result = await confirmDialog({
+      title: 'Habilitar edición',
+      html: `
         <p style="text-align:left;margin-bottom:12px">Vas a habilitar la edición de los consecutivos. Esta operación tiene <strong>riesgos</strong>:</p>
         <ul style="text-align:left;margin-bottom:12px">
           <li>Modificar consecutivos puede generar saltos en la numeración</li>
           <li>Las cotizaciones ya emitidas mantienen su código actual</li>
         </ul>
         <p style="text-align:left;font-weight:600">¿Confirmas que deseas habilitar la edición?</p>
-      `, confirmLabel: 'Sí, habilitar edición', cancelLabel: 'Cancelar', tone: 'danger' })
+      `,
+      confirmLabel: 'Sí, habilitar edición',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    })
     if (result.isConfirmed) {
       setEditMode(true)
     }
@@ -71,13 +78,18 @@ const EquipmentSalesSequenceConfigDialog = ({
 
     if (isAlreadyInitialized) {
       if (newQuote < (config?.nextQuoteNumber ?? 0)) {
-        notify.error('Consecutivo inválido', `El consecutivo no puede ser menor al actual (${config?.nextQuoteNumber}). Ya se emitieron cotizaciones hasta ese número.`)
+        notify.error(
+          'Consecutivo inválido',
+          `El consecutivo no puede ser menor al actual (${config?.nextQuoteNumber}). Ya se emitieron cotizaciones hasta ese número.`
+        )
         return
       }
     }
 
     if (hasQuoteChanged) {
-      const result = await confirmDialog({ title: '¿Cambiar consecutivo?', html: `
+      const result = await confirmDialog({
+        title: '¿Cambiar consecutivo?',
+        html: `
           <p style="text-align:left;margin-bottom:12px">Vas a modificar el consecutivo de cotizaciones. Esta operación tiene <strong>riesgos</strong>:</p>
           <ul style="text-align:left;margin-bottom:12px">
             <li>Las cotizaciones ya emitidas mantienen su código actual</li>
@@ -85,7 +97,11 @@ const EquipmentSalesSequenceConfigDialog = ({
             <li>Pueden generarse saltos en la numeración</li>
           </ul>
           <p style="text-align:left;font-weight:600">¿Confirmas que deseas continuar?</p>
-        `, confirmLabel: 'Sí, cambiar consecutivo', cancelLabel: 'Cancelar', tone: 'danger' })
+        `,
+        confirmLabel: 'Sí, cambiar consecutivo',
+        cancelLabel: 'Cancelar',
+        tone: 'danger'
+      })
       if (!result.isConfirmed) return
     }
 
@@ -96,7 +112,12 @@ const EquipmentSalesSequenceConfigDialog = ({
   const fieldsDisabled = isLoading || (isAlreadyInitialized && !editMode)
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} maxWidth='sm' fullWidth>
+    <Dialog
+      open={open}
+      onClose={isLoading ? undefined : onClose}
+      maxWidth='sm'
+      fullWidth
+    >
       <DialogTitle>
         {isAlreadyInitialized
           ? 'Configuración de consecutivos'
@@ -106,9 +127,9 @@ const EquipmentSalesSequenceConfigDialog = ({
         <Stack spacing={2} sx={{ pt: 1 }}>
           {!isAlreadyInitialized ? (
             <Typography variant='body2' color='text.secondary'>
-              Antes de guardar la primera cotización, define desde qué número debe
-              arrancar el consecutivo. Sin esta configuración el sistema deriva el
-              código automáticamente.
+              Antes de guardar la primera cotización, define desde qué número
+              debe arrancar el consecutivo. Sin esta configuración el sistema
+              deriva el código automáticamente.
             </Typography>
           ) : (
             <Typography variant='body2' color='text.secondary'>
@@ -144,7 +165,11 @@ const EquipmentSalesSequenceConfigDialog = ({
           </Typography>
 
           {!canResetSequence && isAlreadyInitialized ? (
-            <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ fontStyle: 'italic' }}
+            >
               Solo un administrador puede modificar esta configuración.
             </Typography>
           ) : null}
@@ -157,7 +182,11 @@ const EquipmentSalesSequenceConfigDialog = ({
         <Button
           variant='contained'
           onClick={() => void handleSubmit()}
-          disabled={isLoading || (isAlreadyInitialized && !editMode) || Number(nextQuoteNumber) < 1}
+          disabled={
+            isLoading ||
+            (isAlreadyInitialized && !editMode) ||
+            Number(nextQuoteNumber) < 1
+          }
         >
           Guardar configuración
         </Button>

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { axiosPrivate, axiosPublic } from '../utils/api'
+import { parseApiError } from '../utils/apiError'
 import {
   MaintenanceTicket,
   MaintenanceCreateRequest,
@@ -12,6 +13,8 @@ import {
   MaintenanceFile,
   MaintenanceTrackingResponse,
   MaintenanceTimelineResponse,
+  MaintenanceTicketCreateResponse,
+  MaintenancePagination,
   BackendTimelineEntry,
   MaintenanceTimelineEntry,
   MaintenanceAction,
@@ -25,9 +28,17 @@ import {
 } from '../types/maintenance'
 
 // API functions
+
+/** Ticket tal como lo devuelve el seguimiento público (timeline del backend). */
+type BackendTrackedTicket = Omit<MaintenanceTicket, 'timeline'> & {
+  timeline?: BackendTimelineEntry[]
+}
+
 const maintenanceAPI = {
   // Public endpoints (no auth required)
-  createTicket: async (data: MaintenanceCreateRequest): Promise<any> => {
+  createTicket: async (
+    data: MaintenanceCreateRequest
+  ): Promise<MaintenanceTicketCreateResponse> => {
     const formData = new FormData()
 
     // Add text fields
@@ -44,7 +55,7 @@ const maintenanceAPI = {
       })
     }
 
-    const response = await axiosPublic.post<any>(
+    const response = await axiosPublic.post<MaintenanceTicketCreateResponse>(
       `/public/maintenance/tickets`,
       formData
     )
@@ -55,19 +66,19 @@ const maintenanceAPI = {
     ticketNumber: string
   ): Promise<MaintenanceTrackingResponse> => {
     try {
-      const response = await axiosPublic.get<any>(
+      const response = await axiosPublic.get<BackendTrackedTicket>(
         `public/maintenance/tickets/${ticketNumber}`
       )
 
       // Map backend timeline format to frontend format
       const mappedTimeline =
-        response.data.timeline?.map((entry: any) => ({
+        response.data.timeline?.map((entry: BackendTimelineEntry) => ({
           id: entry.id,
           ticketId: response.data.id,
           action: mapBackendTypeToAction(entry.type),
           description: entry.description || entry.title,
           performedBy: entry.author || 'Sistema',
-          performedAt: entry.timestamp || entry.createdAt,
+          performedAt: entry.timestamp,
           metadata: {
             title: entry.title,
             icon: entry.icon,
@@ -85,8 +96,8 @@ const maintenanceAPI = {
         found: true,
         message: 'Ticket encontrado'
       }
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (parseApiError(error).status === 404) {
         return {
           ticket: null,
           found: false,
@@ -141,7 +152,7 @@ const maintenanceAPI = {
     data: MaintenanceUpdateRequest
   ): Promise<MaintenanceTicket> => {
     // Map frontend field names to backend field names
-    const requestData: Record<string, any> = {
+    const requestData: Record<string, unknown> = {
       ...data
     }
 
@@ -270,7 +281,7 @@ const maintenanceAPI = {
   getTechnicians: async (): Promise<MaintenanceTechnician[]> => {
     const response = await axiosPrivate.get<{
       technicians: MaintenanceTechnician[]
-      pagination: any
+      pagination: MaintenancePagination
     }>(`/maintenance/technicians`)
     return response.data.technicians
   },
@@ -283,8 +294,8 @@ const maintenanceAPI = {
         technician: MaintenanceTechnician
       }>(`/maintenance/technicians/by-email/${encodeURIComponent(email)}`)
       return response.data.technician
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (parseApiError(error).status === 404) {
         return null
       }
       throw error
@@ -435,7 +446,7 @@ const maintenanceAPI = {
     return response.data
   },
 
-  getPDFOptions: async (ticketId: string): Promise<any> => {
+  getPDFOptions: async (ticketId: string): Promise<Record<string, unknown>> => {
     const response = await axiosPrivate.get(
       `/maintenance/tickets/${ticketId}/pdf/options`
     )
@@ -609,8 +620,9 @@ export const useMaintenanceTechnicians = (enabled: boolean = true) => {
     queryFn: maintenanceAPI.getTechnicians,
     enabled: enabled,
     staleTime: 300000, // 5 minutes
-    retry: (failureCount, error: any) => {
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
+    retry: (failureCount, error: unknown) => {
+      const status = parseApiError(error).status
+      if (status === 401 || status === 403) {
         return false
       }
       return failureCount < 3

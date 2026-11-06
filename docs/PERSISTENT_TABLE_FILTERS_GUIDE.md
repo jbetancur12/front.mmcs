@@ -35,7 +35,11 @@ src/
 
 ```typescript
 import { usePersistentTableState } from '../../hooks/usePersistentTableState'
-import { createTableStateHandlers, generateTableId, getModuleTableConfig } from '../../utils/tableStateUtils'
+import {
+  createTableStateHandlers,
+  generateTableId,
+  getModuleTableConfig
+} from '../../utils/tableStateUtils'
 ```
 
 ### 2. Configurar el hook en tu componente
@@ -91,14 +95,14 @@ Las configuraciones están definidas en `src/utils/tableStateUtils.ts`:
 
 ### Módulos Disponibles
 
-| Módulo | Página por defecto | Propiedades persistidas | Densidad | Visibilidad |
-|--------|-------------------|------------------------|----------|-------------|
-| `purchases` | 10 | filters, sorting, pagination | ✅ | ❌ |
-| `fleet` | 15 | filters, sorting, pagination, visibility | ✅ | ✅ |
-| `lms` | 20 | filters, sorting, pagination | ❌ | ❌ |
-| `laboratory` | 10 | filters, sorting, pagination, density | ✅ | ❌ |
-| `iot` | 25 | ALL | ✅ | ✅ |
-| `quotations` | 10 | filters, sorting, pagination | ✅ | ❌ |
+| Módulo       | Página por defecto | Propiedades persistidas                  | Densidad | Visibilidad |
+| ------------ | ------------------ | ---------------------------------------- | -------- | ----------- |
+| `purchases`  | 10                 | filters, sorting, pagination             | ✅       | ❌          |
+| `fleet`      | 15                 | filters, sorting, pagination, visibility | ✅       | ✅          |
+| `lms`        | 20                 | filters, sorting, pagination             | ❌       | ❌          |
+| `laboratory` | 10                 | filters, sorting, pagination, density    | ✅       | ❌          |
+| `iot`        | 25                 | ALL                                      | ✅       | ✅          |
+| `quotations` | 10                 | filters, sorting, pagination             | ✅       | ❌          |
 
 ### Agregar un Nuevo Módulo
 
@@ -109,7 +113,12 @@ const MODULE_TABLE_CONFIGS: Record<string, ModuleTableConfig> = {
 
   'mi-nuevo-modulo': {
     defaultPageSize: 15,
-    persistedProperties: ['columnFilters', 'sorting', 'pagination', 'columnVisibility'],
+    persistedProperties: [
+      'columnFilters',
+      'sorting',
+      'pagination',
+      'columnVisibility'
+    ],
     enableDensity: true,
     enableColumnVisibility: true
   }
@@ -294,30 +303,36 @@ const tableHandlers = createTableStateHandlers(persistentTableState)
 ## 🐛 Troubleshooting
 
 ### Los filtros no se guardan
+
 - Verifica que el `tableId` sea único
 - Asegúrate de que las `persistedProperties` incluyan `'columnFilters'`
 - Revisa la consola para errores de localStorage
 
 ### Los filtros se comparten entre tablas
+
 - Cada tabla debe tener un `tableId` único
 - Usa `generateTableId('modulo', 'tabla-nombre')` para evitar conflictos
 
 ### La página se resetea al navegar
+
 - Verifica que `'pagination'` esté en `persistedProperties`
 - Asegúrate de no tener múltiples estados de paginación en conflicto
 
 ### TypeScript errors
+
 - Importa correctamente `TableState` desde `usePersistentTableState`
 - Verifica que las interfaces de datos sean compatibles con MaterialReactTable
 
 ## 👁️ Indicadores Visuales de Filtros Activos
 
 ### Problema Resuelto
+
 Uno de los problemas más comunes es que los usuarios no se dan cuenta de que hay filtros aplicados cuando regresan a una tabla. Esto puede causar confusión al ver resultados limitados sin saber por qué.
 
 ### Soluciones Implementadas
 
 #### 1. **Indicador Principal** (Encima de la tabla)
+
 ```typescript
 <ActiveFiltersIndicator
   tableState={persistentTableState.tableState}
@@ -327,12 +342,14 @@ Uno de los problemas más comunes es que los usuarios no se dan cuenta de que ha
 ```
 
 **Características:**
+
 - 🟠 **Banner naranja** muy visible cuando hay filtros activos
 - 📊 **Cuenta de filtros** - "3 filtro(s) activo(s)"
 - 📝 **Resumen expandible** - Lista todos los filtros aplicados
 - 🗑️ **Botón "Limpiar Filtros"** - Un click para eliminar todo
 
 #### 2. **Badge Compacto** (En la barra de herramientas)
+
 ```typescript
 <ActiveFiltersIndicator
   tableState={persistentTableState.tableState}
@@ -342,6 +359,7 @@ Uno de los problemas más comunes es que los usuarios no se dan cuenta de que ha
 ```
 
 **Características:**
+
 - 🏷️ **Chip pequeño** con ícono de filtro y número
 - 💡 **Tooltip informativo** al hacer hover
 - ⚡ **Click para limpiar** directamente desde el badge

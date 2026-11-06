@@ -31,9 +31,13 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   const normalizeSignatureImage = React.useCallback(
     (source: HTMLCanvasElement | HTMLImageElement) => {
       const sourceWidth =
-        source instanceof HTMLCanvasElement ? source.width : source.naturalWidth || source.width
+        source instanceof HTMLCanvasElement
+          ? source.width
+          : source.naturalWidth || source.width
       const sourceHeight =
-        source instanceof HTMLCanvasElement ? source.height : source.naturalHeight || source.height
+        source instanceof HTMLCanvasElement
+          ? source.height
+          : source.naturalHeight || source.height
 
       if (!sourceWidth || !sourceHeight) {
         return null
@@ -43,7 +47,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
       workCanvas.width = sourceWidth
       workCanvas.height = sourceHeight
 
-      const workContext = workCanvas.getContext('2d', { willReadFrequently: true })
+      const workContext = workCanvas.getContext('2d', {
+        willReadFrequently: true
+      })
       if (!workContext) {
         return null
       }
@@ -51,7 +57,12 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
       workContext.clearRect(0, 0, sourceWidth, sourceHeight)
       workContext.drawImage(source, 0, 0, sourceWidth, sourceHeight)
 
-      const imageData = workContext.getImageData(0, 0, sourceWidth, sourceHeight)
+      const imageData = workContext.getImageData(
+        0,
+        0,
+        sourceWidth,
+        sourceHeight
+      )
       const pixels = imageData.data
       let minX = sourceWidth
       let minY = sourceHeight
@@ -90,8 +101,14 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
       const padding = 8
       const cropX = Math.max(0, minX - padding)
       const cropY = Math.max(0, minY - padding)
-      const cropWidth = Math.min(sourceWidth - cropX, maxX - minX + padding * 2 + 1)
-      const cropHeight = Math.min(sourceHeight - cropY, maxY - minY + padding * 2 + 1)
+      const cropWidth = Math.min(
+        sourceWidth - cropX,
+        maxX - minX + padding * 2 + 1
+      )
+      const cropHeight = Math.min(
+        sourceHeight - cropY,
+        maxY - minY + padding * 2 + 1
+      )
 
       const outputCanvas = document.createElement('canvas')
       outputCanvas.width = cropWidth
@@ -127,8 +144,10 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
     const ratio = window.devicePixelRatio || 1
     const width = container.clientWidth || 400
-    const normalizedValue = typeof value === 'string' && value.trim().length > 0 ? value : null
-    const previousData = normalizedValue || (hasSignature ? canvas.toDataURL('image/png') : null)
+    const normalizedValue =
+      typeof value === 'string' && value.trim().length > 0 ? value : null
+    const previousData =
+      normalizedValue || (hasSignature ? canvas.toDataURL('image/png') : null)
 
     canvas.width = width * ratio
     canvas.height = height * ratio
@@ -322,7 +341,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
             }}
           >
             <BorderColor fontSize='small' />
-            <Typography variant='body2'>Firma aquí con mouse o touch</Typography>
+            <Typography variant='body2'>
+              Firma aquí con mouse o touch
+            </Typography>
           </Stack>
         )}
       </Box>

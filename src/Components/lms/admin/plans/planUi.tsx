@@ -43,7 +43,9 @@ export const formatPlanDate = (value?: string | Date | null) => {
   return format(new Date(value), "d 'de' MMM yyyy", { locale: es })
 }
 
-export const describeTarget = (target?: Pick<PlanTarget, 'type' | 'role' | 'user_ids'> | null) => {
+export const describeTarget = (
+  target?: Pick<PlanTarget, 'type' | 'role' | 'user_ids'> | null
+) => {
   if (!target) return ''
   if (target.type === 'all') return 'Todos los empleados'
   if (target.type === 'role') return `Rol: ${getRoleLabelEs(target.role)}`
@@ -57,12 +59,16 @@ export const translateTargetText = (text: string) =>
 
 export const describeDeadlineSource = (source?: DeadlineSource | null) => {
   if (!source) return null
-  if (source.type === 'plan') return source.plan_name ? `Plan ${source.plan_name}` : 'Plan de formación'
+  if (source.type === 'plan')
+    return source.plan_name ? `Plan ${source.plan_name}` : 'Plan de formación'
   if (source.type === 'override') return 'Fecha personalizada'
   return 'Asignación directa'
 }
 
-export const describePlanDeadline = (deadline?: string | null, days?: number | null) => {
+export const describePlanDeadline = (
+  deadline?: string | null,
+  days?: number | null
+) => {
   const parts: string[] = []
   if (days) parts.push(`${days} días desde la asignación`)
   if (deadline) parts.push(`fecha fija ${formatPlanDate(deadline)}`)
@@ -77,7 +83,12 @@ interface PlanDialogHeaderProps {
 }
 
 /** Cabecera de diálogo con el degradado esmeralda de los formularios. */
-export const PlanDialogHeader: React.FC<PlanDialogHeaderProps> = ({ title, subtitle, icon, onClose }) => (
+export const PlanDialogHeader: React.FC<PlanDialogHeaderProps> = ({
+  title,
+  subtitle,
+  icon,
+  onClose
+}) => (
   <Box
     sx={{
       position: 'relative',

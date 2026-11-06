@@ -303,7 +303,9 @@ export const DialogHost: React.FC = () => {
         fullWidth
         PaperProps={{ sx: { borderRadius: 4 } }}
       >
-        <DialogTitle sx={{ fontWeight: 700, pt: 3 }}>{choice?.title}</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, pt: 3 }}>
+          {choice?.title}
+        </DialogTitle>
         <DialogContent>
           {choice?.text && (
             <Typography
@@ -324,7 +326,9 @@ export const DialogHost: React.FC = () => {
                 key={option.value}
                 value={option.value}
                 label={option.label}
-                control={<Radio sx={{ '&.Mui-checked': { color: '#00BFA5' } }} />}
+                control={
+                  <Radio sx={{ '&.Mui-checked': { color: '#00BFA5' } }} />
+                }
               />
             ))}
           </RadioGroup>
@@ -358,16 +362,10 @@ export const DialogHost: React.FC = () => {
         PaperProps={{ sx: { borderRadius: 4 } }}
         aria-busy
       >
-        <DialogContent
-          sx={{ py: 2 }}
-        >
+        <DialogContent sx={{ py: 2 }}>
           <SignalLoader message={busy?.title} />
           {busy?.text && (
-            <Typography
-              variant='body2'
-              color='text.secondary'
-              align='center'
-            >
+            <Typography variant='body2' color='text.secondary' align='center'>
               {busy.text}
             </Typography>
           )}

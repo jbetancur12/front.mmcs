@@ -11,7 +11,12 @@ const ProductosServicios = () => {
       <Button
         startIcon={<ArrowBackOutlinedIcon />}
         onClick={() => navigate('/calibration-services')}
-        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         Volver a servicios
       </Button>

@@ -46,9 +46,18 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
-import { useAvailableCourses, useMyPlans, useUserAssignments, useUserCertificates } from '../../../hooks/useLms'
+import {
+  useAvailableCourses,
+  useMyPlans,
+  useUserAssignments,
+  useUserCertificates
+} from '../../../hooks/useLms'
 import MyTrainingPlans from './MyTrainingPlans'
-import type { Certificate, Course } from '../../../services/lmsService'
+import type {
+  Certificate,
+  Course,
+  CourseAssignment
+} from '../../../services/lmsService'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import {
   getCourseCompletedLessons,
@@ -77,10 +86,18 @@ const getDaysUntilDeadline = (deadline?: string): number | undefined => {
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
-const getMandatoryPriority = (course: { isOverdue?: boolean; daysUntilDeadline?: number; progress?: number }) => {
+const getMandatoryPriority = (course: {
+  isOverdue?: boolean
+  daysUntilDeadline?: number
+  progress?: number
+}) => {
   if (course.progress === 100) return 4
   if (course.isOverdue) return 0
-  if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) return 1
+  if (
+    typeof course.daysUntilDeadline === 'number' &&
+    course.daysUntilDeadline <= 7
+  )
+    return 1
   if (typeof course.daysUntilDeadline === 'number') return 2
   return 3
 }
@@ -94,7 +111,9 @@ const formatLastAccess = (lastAccessedAt?: string | null) => {
   })
 }
 
-const getNextLessonLabel = (course: Course & { learningContinuity?: Course['learningContinuity'] }) => {
+const getNextLessonLabel = (
+  course: Course & { learningContinuity?: Course['learningContinuity'] }
+) => {
   const nextLesson = course.learningContinuity?.nextLesson
   if (!nextLesson) return null
 
@@ -147,19 +166,48 @@ type CourseTone = {
   icon: React.ReactElement
 }
 
-const getCourseTone = (course: any): CourseTone => {
-  if (course.progress === 100) return { color: 'success', icon: <CheckCircleIcon /> }
+/** Curso con los datos de asignación y progreso ya combinados para la vista. */
+interface HomeCourse extends Course {
+  progress: number
+  totalLessons: number
+  completedLessons: number
+  category: string
+  instructor: string
+  duration: string
+  earnedCertificate?: Certificate
+  isAssigned: boolean
+  deadline?: string
+  daysUntilDeadline?: number
+  isOverdue: boolean
+  isMandatory?: boolean
+  homeKind?: 'mandatory' | 'assigned'
+  nextLessonLabel: string | null
+  lastAccessLabel: string | null
+  completedAt: string | null
+}
+
+const getCourseTone = (course: HomeCourse): CourseTone => {
+  if (course.progress === 100)
+    return { color: 'success', icon: <CheckCircleIcon /> }
   if (course.isOverdue) return { color: 'error', icon: <EventBusyIcon /> }
-  if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) {
+  if (
+    typeof course.daysUntilDeadline === 'number' &&
+    course.daysUntilDeadline <= 7
+  ) {
     return { color: 'warning', icon: <ScheduleIcon /> }
   }
   if (course.progress > 0) return { color: 'primary', icon: <BookOpenIcon /> }
-  if (course.has_certificate) return { color: 'secondary', icon: <PremiumIcon /> }
+  if (course.has_certificate)
+    return { color: 'secondary', icon: <PremiumIcon /> }
   return { color: 'secondary', icon: <StoriesIcon /> }
 }
 
-const getCourseKind = (course: any) =>
-  course.isMandatory ? 'Obligatorio' : course.isAssigned ? 'Asignado' : 'Opcional'
+const getCourseKind = (course: HomeCourse) =>
+  course.isMandatory
+    ? 'Obligatorio'
+    : course.isAssigned
+      ? 'Asignado'
+      : 'Opcional'
 
 const formatLearnedTime = (minutes: number) => {
   if (!minutes || minutes < 1) return '0 min'
@@ -172,18 +220,31 @@ const formatLearnedTime = (minutes: number) => {
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [courseSearch, setCourseSearch] = useState('')
-  const [courseFilter, setCourseFilter] = useState<'all' | 'mandatory' | 'optional' | 'completed'>('all')
+  const [courseFilter, setCourseFilter] = useState<
+    'all' | 'mandatory' | 'optional' | 'completed'
+  >('all')
   const normalizedSearch = courseSearch.trim().toLowerCase()
-  const matchesSearch = (course: any) =>
-    !normalizedSearch || String(course.title || '').toLowerCase().includes(normalizedSearch)
+  const matchesSearch = (course: HomeCourse) =>
+    !normalizedSearch ||
+    String(course.title || '')
+      .toLowerCase()
+      .includes(normalizedSearch)
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
 
   // Fetch available courses from API
   const { data: coursesData, isLoading, error } = useAvailableCourses()
-  const { data: userAssignments, isLoading: assignmentsLoading, error: assignmentsError } = useUserAssignments()
+  const {
+    data: userAssignments,
+    isLoading: assignmentsLoading,
+    error: assignmentsError
+  } = useUserAssignments()
   const { data: userCertificates = [] } = useUserCertificates()
-  const { data: myPlans, isLoading: myPlansLoading, error: myPlansError } = useMyPlans()
+  const {
+    data: myPlans,
+    isLoading: myPlansLoading,
+    error: myPlansError
+  } = useMyPlans()
   const hasPlans = (myPlans?.plans.length ?? 0) > 0
 
   // Usar el usuario del store si no se proporciona uno
@@ -195,7 +256,13 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   }
 
   // Process courses data
-  const { mandatoryCourses, optionalCourses, assignedOptionalCourses, completedCourses, stats } = useMemo(() => {
+  const {
+    mandatoryCourses,
+    optionalCourses,
+    assignedOptionalCourses,
+    completedCourses,
+    stats
+  } = useMemo(() => {
     if (!coursesData) {
       return {
         mandatoryCourses: [],
@@ -219,15 +286,18 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     // Extract courses array from response
     const courses = coursesData
     const allAssignments = [
-      ...(userAssignments?.mandatory || []),
-      ...(userAssignments?.optional || [])
+      ...(userAssignments?.assignments?.mandatory || []),
+      ...(userAssignments?.assignments?.optional || [])
     ]
     const certificatesByCourseId = new Map(
-      userCertificates.map((certificate: Certificate) => [certificate.course_id, certificate])
+      userCertificates.map((certificate: Certificate) => [
+        certificate.course_id,
+        certificate
+      ])
     )
     // Un curso puede tener varias asignaciones (rol + usuario): se usa la de fecha límite más próxima
-    const assignmentsByCourseId = new Map<number, any>()
-    allAssignments.forEach((assignment: any) => {
+    const assignmentsByCourseId = new Map<number, CourseAssignment>()
+    allAssignments.forEach((assignment: CourseAssignment) => {
       const current = assignmentsByCourseId.get(assignment.course_id)
       const time = (value?: string | null) =>
         value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER
@@ -237,23 +307,24 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     })
 
     // Separar cursos obligatorios y opcionales
-    const mandatory: any[] = []
-    const optional: any[] = []
+    const mandatory: HomeCourse[] = []
+    const optional: HomeCourse[] = []
 
     courses.forEach((course: Course) => {
       const assignment = assignmentsByCourseId.get(course.id)
       const earnedCertificate = certificatesByCourseId.get(course.id)
-      const { progress, totalLessons, completedLessons } = getAssignmentBackedProgress(
-        course,
-        assignment,
-        earnedCertificate
-      )
-      const courseIsMandatory = assignment?.course?.is_mandatory ?? course.is_mandatory ?? false
+      const { progress, totalLessons, completedLessons } =
+        getAssignmentBackedProgress(course, assignment, earnedCertificate)
+      const courseIsMandatory =
+        assignment?.course?.is_mandatory ?? course.is_mandatory ?? false
       const deadline = assignment?.deadline
       const daysUntilDeadline = getDaysUntilDeadline(deadline)
       const isOverdue =
         progress < 100 &&
-        Boolean(assignment?.isOverdue ?? (daysUntilDeadline !== undefined && daysUntilDeadline < 0))
+        Boolean(
+          assignment?.isOverdue ??
+            (daysUntilDeadline !== undefined && daysUntilDeadline < 0)
+        )
 
       const enrichedCourse = {
         ...course,
@@ -269,8 +340,13 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         daysUntilDeadline,
         isOverdue,
         nextLessonLabel: getNextLessonLabel(course),
-        lastAccessLabel: formatLastAccess(course.learningContinuity?.lastAccessedAt),
-        completedAt: course.learningContinuity?.completedAt || earnedCertificate?.completionDate || null
+        lastAccessLabel: formatLastAccess(
+          course.learningContinuity?.lastAccessedAt
+        ),
+        completedAt:
+          course.learningContinuity?.completedAt ||
+          earnedCertificate?.completionDate ||
+          null
       }
 
       if (courseIsMandatory) {
@@ -290,30 +366,50 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
     // Calcular estadísticas
     mandatory.sort((a, b) => {
-      const priorityDifference = getMandatoryPriority(a) - getMandatoryPriority(b)
+      const priorityDifference =
+        getMandatoryPriority(a) - getMandatoryPriority(b)
       if (priorityDifference !== 0) return priorityDifference
 
-      const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Number.MAX_SAFE_INTEGER
-      const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Number.MAX_SAFE_INTEGER
+      const aDeadline = a.deadline
+        ? new Date(a.deadline).getTime()
+        : Number.MAX_SAFE_INTEGER
+      const bDeadline = b.deadline
+        ? new Date(b.deadline).getTime()
+        : Number.MAX_SAFE_INTEGER
       return aDeadline - bDeadline
     })
 
     const totalCourses = courses.length
     const allEnrichedCourses = [...mandatory, ...optional]
-    const completedCourses = allEnrichedCourses.filter((course) => course.progress === 100).length
-    const inProgressCourses = allEnrichedCourses.filter((course) => course.progress > 0 && course.progress < 100).length
+    const completedCourses = allEnrichedCourses.filter(
+      (course) => course.progress === 100
+    ).length
+    const inProgressCourses = allEnrichedCourses.filter(
+      (course) => course.progress > 0 && course.progress < 100
+    ).length
 
-    const totalProgress = allEnrichedCourses.reduce((sum: number, course) => sum + course.progress, 0)
-    const averageProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
+    const totalProgress = allEnrichedCourses.reduce(
+      (sum: number, course) => sum + course.progress,
+      0
+    )
+    const averageProgress =
+      totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
 
-    const mandatoryCompleted = mandatory.filter(c => c.progress === 100).length
-    const overdueTraining = mandatory.filter(c => c.isOverdue && c.progress < 100).length
+    const mandatoryCompleted = mandatory.filter(
+      (c) => c.progress === 100
+    ).length
+    const overdueTraining = mandatory.filter(
+      (c) => c.isOverdue && c.progress < 100
+    ).length
 
     // Calcular certificados reales: solo cursos completados que emiten certificado
     const certificatesEarned = userCertificates.length
-    const totalHoursLearned = courses.reduce((totalHours: number, course: Course) => {
-      return totalHours + getCourseTimeSpentMinutes(course)
-    }, 0)
+    const totalHoursLearned = courses.reduce(
+      (totalHours: number, course: Course) => {
+        return totalHours + getCourseTimeSpentMinutes(course)
+      },
+      0
+    )
 
     return {
       mandatoryCourses: mandatory,
@@ -321,7 +417,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       assignedOptionalCourses: optional.filter(
         (course) => course.isAssigned && course.progress < 100
       ),
-      completedCourses: allEnrichedCourses.filter((course) => course.progress === 100),
+      completedCourses: allEnrichedCourses.filter(
+        (course) => course.progress === 100
+      ),
       stats: {
         totalCourses,
         completedCourses,
@@ -337,23 +435,28 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   }, [coursesData, userAssignments, userCertificates])
 
   const recentRecognitions = useMemo(() => {
-    const certificateRecognitions = userCertificates.slice(0, 3).map((certificate: Certificate) => ({
-      id: `certificate-${certificate.id}`,
-      icon: <AwardIcon color="warning" />,
-      primary: 'Certificado obtenido',
-      secondary: certificate.courseTitle
-    }))
+    const certificateRecognitions = userCertificates
+      .slice(0, 3)
+      .map((certificate: Certificate) => ({
+        id: `certificate-${certificate.id}`,
+        icon: <AwardIcon color='warning' />,
+        primary: 'Certificado obtenido',
+        secondary: certificate.courseTitle
+      }))
 
     if (certificateRecognitions.length > 0) {
       return certificateRecognitions
     }
 
-    const completedCourseRecognitions = [...mandatoryCourses, ...optionalCourses]
+    const completedCourseRecognitions = [
+      ...mandatoryCourses,
+      ...optionalCourses
+    ]
       .filter((course) => course.progress === 100)
       .slice(0, 3)
       .map((course) => ({
         id: `course-${course.id}`,
-        icon: <CheckCircleIcon color="success" />,
+        icon: <CheckCircleIcon color='success' />,
         primary: 'Curso completado',
         secondary: course.title
       }))
@@ -363,31 +466,54 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
   // Inicio: una sola lista de prioridad (sin repetir cursos entre bloques)
   const homeFeed = useMemo(() => {
-    const urgency = (course: any) => {
+    const urgency = (course: HomeCourse) => {
       if (course.isOverdue) return 0
-      if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) return 1
+      if (
+        typeof course.daysUntilDeadline === 'number' &&
+        course.daysUntilDeadline <= 7
+      )
+        return 1
       return 2
     }
-    const deadlineTime = (course: any) =>
-      typeof course.daysUntilDeadline === 'number' ? course.daysUntilDeadline : Number.MAX_SAFE_INTEGER
+    const deadlineTime = (course: HomeCourse) =>
+      typeof course.daysUntilDeadline === 'number'
+        ? course.daysUntilDeadline
+        : Number.MAX_SAFE_INTEGER
 
     const attention = [
       ...mandatoryCourses
-        .filter((course: any) => course.progress < 100)
-        .map((course: any) => ({ ...course, homeKind: 'mandatory' as const })),
-      ...assignedOptionalCourses.map((course: any) => ({ ...course, homeKind: 'assigned' as const }))
-    ].sort((left: any, right: any) => {
+        .filter((course: HomeCourse) => course.progress < 100)
+        .map((course: HomeCourse) => ({
+          ...course,
+          homeKind: 'mandatory' as const
+        })),
+      ...assignedOptionalCourses.map((course: HomeCourse) => ({
+        ...course,
+        homeKind: 'assigned' as const
+      }))
+    ].sort((left: HomeCourse, right: HomeCourse) => {
       const byUrgency = urgency(left) - urgency(right)
       if (byUrgency !== 0) return byUrgency
-      const byMandatory = Number(right.homeKind === 'mandatory') - Number(left.homeKind === 'mandatory')
+      const byMandatory =
+        Number(right.homeKind === 'mandatory') -
+        Number(left.homeKind === 'mandatory')
       if (byMandatory !== 0) return byMandatory
       return deadlineTime(left) - deadlineTime(right)
     })
 
-    const attentionIds = new Set(attention.map((course: any) => course.id))
+    const attentionIds = new Set(
+      attention.map((course: HomeCourse) => course.id)
+    )
     const resume = optionalCourses
-      .filter((course: any) => course.progress > 0 && course.progress < 100 && !attentionIds.has(course.id))
-      .sort((left: any, right: any) => right.progress - left.progress)
+      .filter(
+        (course: HomeCourse) =>
+          course.progress > 0 &&
+          course.progress < 100 &&
+          !attentionIds.has(course.id)
+      )
+      .sort(
+        (left: HomeCourse, right: HomeCourse) => right.progress - left.progress
+      )
       .slice(0, 3)
 
     return { attention, resume }
@@ -405,7 +531,15 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   // Loading state
   if (isLoading || assignmentsLoading) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: 'grey.50',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <Box sx={{ textAlign: 'center' }}>
           <SignalLoader message='Cargando tus cursos...' />
         </Box>
@@ -416,18 +550,26 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   // Error state
   if (error || assignmentsError) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: 'grey.50',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <Box sx={{ textAlign: 'center', maxWidth: 500 }}>
           <ErrorIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-          <Typography variant="h5" color="error" gutterBottom>
+          <Typography variant='h5' color='error' gutterBottom>
             Error al cargar los cursos
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant='body1' color='text.secondary' sx={{ mb: 3 }}>
             {(error instanceof Error && error.message) ||
               (assignmentsError instanceof Error && assignmentsError.message) ||
               'No se pudieron cargar los datos del LMS'}
           </Typography>
-          <Button variant="contained" onClick={() => window.location.reload()}>
+          <Button variant='contained' onClick={() => window.location.reload()}>
             Reintentar
           </Button>
         </Box>
@@ -435,9 +577,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     )
   }
 
-  const renderCourseGrid = (list: any[], options: { showKind?: boolean } = {}) => (
+  const renderCourseGrid = (
+    list: HomeCourse[],
+    options: { showKind?: boolean } = {}
+  ) => (
     <Grid container spacing={2.5}>
-      {list.map((course: any) => {
+      {list.map((course: HomeCourse) => {
         const tone = getCourseTone(course)
         const done = course.progress === 100
         const overdue = !done && Boolean(course.isOverdue)
@@ -474,19 +619,30 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 })}
               >
                 {React.cloneElement(tone.icon, { sx: { fontSize: 38 } })}
-                {done && <Chip size='small' color='success' label='Completado' />}
+                {done && (
+                  <Chip size='small' color='success' label='Completado' />
+                )}
                 {overdue && (
                   <Chip
                     size='small'
                     color='error'
-                    label={`Vencido hace ${Math.abs(course.daysUntilDeadline)} d`}
+                    label={`Vencido hace ${Math.abs(course.daysUntilDeadline ?? 0)} d`}
                   />
                 )}
                 {soon && (
-                  <Chip size='small' color='warning' label={`Vence en ${course.daysUntilDeadline} d`} />
+                  <Chip
+                    size='small'
+                    color='warning'
+                    label={`Vence en ${course.daysUntilDeadline} d`}
+                  />
                 )}
                 {!done && !overdue && !soon && options.showKind && (
-                  <Chip size='small' variant='outlined' color={tone.color} label={getCourseKind(course)} />
+                  <Chip
+                    size='small'
+                    variant='outlined'
+                    color={tone.color}
+                    label={getCourseKind(course)}
+                  />
                 )}
               </Box>
               <CardContent sx={{ flex: 1, pb: 1 }}>
@@ -504,9 +660,13 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 >
                   {course.title}
                 </Typography>
-                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.75 }}>
-                  {course.isMandatory ? 'Obligatorio' : getCourseKind(course)} · {course.completedLessons}/
-                  {course.totalLessons} lecciones
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block', mt: 0.75 }}
+                >
+                  {course.isMandatory ? 'Obligatorio' : getCourseKind(course)} ·{' '}
+                  {course.completedLessons}/{course.totalLessons} lecciones
                   {!done &&
                     !overdue &&
                     !soon &&
@@ -520,7 +680,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       value={course.progress}
                       sx={{ height: 8, borderRadius: 4 }}
                     />
-                    <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      sx={{ display: 'block', mt: 0.5 }}
+                    >
                       {course.progress}% completado
                     </Typography>
                   </Box>
@@ -539,7 +703,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                     handleCourseClick(course.id)
                   }}
                 >
-                  {done ? 'Repasar' : course.progress > 0 ? 'Retomar' : 'Comenzar'}
+                  {done
+                    ? 'Repasar'
+                    : course.progress > 0
+                      ? 'Retomar'
+                      : 'Comenzar'}
                 </Button>
               </Box>
             </Card>
@@ -552,14 +720,32 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Box
-        sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, md: 3 } }}
+        sx={{
+          maxWidth: 'xl',
+          mx: 'auto',
+          px: { xs: 2, sm: 3, lg: 4 },
+          py: { xs: 2, md: 3 }
+        }}
       >
         <LmsPageHeader
-          title={`Hola, ${String(currentUser.name || '').split(' ')[0].charAt(0).toUpperCase() + String(currentUser.name || '').split(' ')[0].slice(1).toLowerCase()}`}
+          title={`Hola, ${
+            String(currentUser.name || '')
+              .split(' ')[0]
+              .charAt(0)
+              .toUpperCase() +
+            String(currentUser.name || '')
+              .split(' ')[0]
+              .slice(1)
+              .toLowerCase()
+          }`}
           subtitle={`Llevas ${formatLearnedTime(stats.totalMinutesLearned)} de aprendizaje registrado`}
           icon={<SchoolIcon />}
           actions={
-            <Button variant='outlined' startIcon={<NotificationsNoneIcon />} onClick={() => setActiveTab(4)}>
+            <Button
+              variant='outlined'
+              startIcon={<NotificationsNoneIcon />}
+              onClick={() => setActiveTab(4)}
+            >
               Notificaciones
             </Button>
           }
@@ -622,191 +808,270 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           <Tab label='Mis Certificados' value={3} />
         </Tabs>
 
-        {activeTab === 0 && (() => {
-          const hero = homeFeed.attention[0] || homeFeed.resume[0]
-          const restAttention = homeFeed.attention.slice(hero && homeFeed.attention[0] ? 1 : 0)
-          const heroTone = hero ? getCourseTone(hero) : null
-          const heroDone = hero ? hero.progress === 100 : false
-          return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {stats.mandatoryCourses > 0 && (() => {
-                const missing = stats.mandatoryCourses - stats.mandatoryCompleted
-                const percent = Math.round((stats.mandatoryCompleted / stats.mandatoryCourses) * 100)
-                return (
-                  <Card variant='outlined' sx={{ borderRadius: 3, p: 2.5 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'baseline',
-                        flexWrap: 'wrap',
-                        gap: 1,
-                        mb: 1.5
-                      }}
-                    >
-                      <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-                        {missing === 0
-                          ? '¡Estás al día con tus cursos obligatorios!'
-                          : missing === 1
-                            ? 'Te falta 1 curso obligatorio para estar al día'
-                            : `Te faltan ${missing} cursos obligatorios para estar al día`}
-                      </Typography>
-                      <Typography variant='body2' color='text.secondary'>
-                        {stats.mandatoryCompleted} de {stats.mandatoryCourses} completados
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant='determinate'
-                      value={percent}
-                      color={stats.overdueTraining > 0 ? 'error' : 'success'}
-                      sx={{ height: 10, borderRadius: 5 }}
-                    />
-                    {stats.overdueTraining > 0 && (
-                      <Typography variant='caption' color='error.main' sx={{ display: 'block', mt: 1 }}>
-                        {stats.overdueTraining === 1
-                          ? '1 está vencido: empieza por ese.'
-                          : `${stats.overdueTraining} están vencidos: empieza por esos.`}
-                      </Typography>
-                    )}
-                  </Card>
-                )
-              })()}
-
-              {hero && heroTone && (
-                <Card
-                  variant='outlined'
-                  sx={(theme) => ({
-                    borderRadius: 3,
-                    p: { xs: 2, sm: 3 },
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 3,
-                    flexWrap: 'wrap',
-                    bgcolor: alpha(theme.palette[heroTone.color].main, 0.08),
-                    borderColor: alpha(theme.palette[heroTone.color].main, 0.35)
-                  })}
-                >
-                  <Box sx={{ position: 'relative', width: 88, height: 88, flex: 'none' }}>
-                    <CircularProgress
-                      variant='determinate'
-                      value={100}
-                      size={88}
-                      thickness={4}
-                      sx={{ position: 'absolute', color: 'action.hover' }}
-                    />
-                    <CircularProgress
-                      variant='determinate'
-                      value={hero.progress || 0}
-                      size={88}
-                      thickness={4}
-                      color={heroTone.color}
-                      sx={{ position: 'absolute' }}
-                    />
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: `${heroTone.color}.main`
-                      }}
-                    >
-                      {hero.progress > 0 ? (
-                        <Typography variant='h6'>{hero.progress}%</Typography>
-                      ) : (
-                        React.cloneElement(heroTone.icon, { sx: { fontSize: 38 } })
-                      )}
-                    </Box>
-                  </Box>
-                  <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
-                    <Typography variant='overline' color='text.secondary'>
-                      {hero.progress > 0 ? 'Continúa donde quedaste' : 'Tu siguiente paso'}
-                    </Typography>
-                    <Typography variant='h5' sx={{ fontWeight: 600, lineHeight: 1.25 }}>
-                      {hero.title}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {hero.isOverdue && !heroDone && (
-                        <Chip
-                          size='small'
-                          color='error'
-                          label={`Vencido hace ${Math.abs(hero.daysUntilDeadline)} d`}
+        {activeTab === 0 &&
+          (() => {
+            const hero = homeFeed.attention[0] || homeFeed.resume[0]
+            const restAttention = homeFeed.attention.slice(
+              hero && homeFeed.attention[0] ? 1 : 0
+            )
+            const heroTone = hero ? getCourseTone(hero) : null
+            const heroDone = hero ? hero.progress === 100 : false
+            return (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {stats.mandatoryCourses > 0 &&
+                  (() => {
+                    const missing =
+                      stats.mandatoryCourses - stats.mandatoryCompleted
+                    const percent = Math.round(
+                      (stats.mandatoryCompleted / stats.mandatoryCourses) * 100
+                    )
+                    return (
+                      <Card variant='outlined' sx={{ borderRadius: 3, p: 2.5 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'baseline',
+                            flexWrap: 'wrap',
+                            gap: 1,
+                            mb: 1.5
+                          }}
+                        >
+                          <Typography
+                            variant='subtitle1'
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {missing === 0
+                              ? '¡Estás al día con tus cursos obligatorios!'
+                              : missing === 1
+                                ? 'Te falta 1 curso obligatorio para estar al día'
+                                : `Te faltan ${missing} cursos obligatorios para estar al día`}
+                          </Typography>
+                          <Typography variant='body2' color='text.secondary'>
+                            {stats.mandatoryCompleted} de{' '}
+                            {stats.mandatoryCourses} completados
+                          </Typography>
+                        </Box>
+                        <LinearProgress
+                          variant='determinate'
+                          value={percent}
+                          color={
+                            stats.overdueTraining > 0 ? 'error' : 'success'
+                          }
+                          sx={{ height: 10, borderRadius: 5 }}
                         />
-                      )}
-                      {!hero.isOverdue &&
-                        typeof hero.daysUntilDeadline === 'number' &&
-                        hero.daysUntilDeadline <= 7 && (
-                          <Chip size='small' color='warning' label={`Vence en ${hero.daysUntilDeadline} d`} />
+                        {stats.overdueTraining > 0 && (
+                          <Typography
+                            variant='caption'
+                            color='error.main'
+                            sx={{ display: 'block', mt: 1 }}
+                          >
+                            {stats.overdueTraining === 1
+                              ? '1 está vencido: empieza por ese.'
+                              : `${stats.overdueTraining} están vencidos: empieza por esos.`}
+                          </Typography>
                         )}
-                      <Typography variant='body2' color='text.secondary'>
-                        {hero.homeKind === 'assigned' ? 'Asignado' : hero.isMandatory ? 'Obligatorio' : 'Opcional'}
-                        {hero.nextLessonLabel ? ` · Sigue: ${hero.nextLessonLabel}` : ''}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Button
-                    size='large'
-                    variant='contained'
-                    color={heroTone.color === 'secondary' ? 'primary' : heroTone.color}
-                    startIcon={<PlayArrowIcon />}
-                    onClick={() => handleCourseClick(hero.id)}
+                      </Card>
+                    )
+                  })()}
+
+                {hero && heroTone && (
+                  <Card
+                    variant='outlined'
+                    sx={(theme) => ({
+                      borderRadius: 3,
+                      p: { xs: 2, sm: 3 },
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 3,
+                      flexWrap: 'wrap',
+                      bgcolor: alpha(theme.palette[heroTone.color].main, 0.08),
+                      borderColor: alpha(
+                        theme.palette[heroTone.color].main,
+                        0.35
+                      )
+                    })}
                   >
-                    {hero.progress > 0 ? 'Retomar' : 'Comenzar'}
-                  </Button>
-                </Card>
-              )}
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: 88,
+                        height: 88,
+                        flex: 'none'
+                      }}
+                    >
+                      <CircularProgress
+                        variant='determinate'
+                        value={100}
+                        size={88}
+                        thickness={4}
+                        sx={{ position: 'absolute', color: 'action.hover' }}
+                      />
+                      <CircularProgress
+                        variant='determinate'
+                        value={hero.progress || 0}
+                        size={88}
+                        thickness={4}
+                        color={heroTone.color}
+                        sx={{ position: 'absolute' }}
+                      />
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: `${heroTone.color}.main`
+                        }}
+                      >
+                        {hero.progress > 0 ? (
+                          <Typography variant='h6'>{hero.progress}%</Typography>
+                        ) : (
+                          React.cloneElement(heroTone.icon, {
+                            sx: { fontSize: 38 }
+                          })
+                        )}
+                      </Box>
+                    </Box>
+                    <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
+                      <Typography variant='overline' color='text.secondary'>
+                        {hero.progress > 0
+                          ? 'Continúa donde quedaste'
+                          : 'Tu siguiente paso'}
+                      </Typography>
+                      <Typography
+                        variant='h5'
+                        sx={{ fontWeight: 600, lineHeight: 1.25 }}
+                      >
+                        {hero.title}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          flexWrap: 'wrap',
+                          mt: 1
+                        }}
+                      >
+                        {hero.isOverdue && !heroDone && (
+                          <Chip
+                            size='small'
+                            color='error'
+                            label={`Vencido hace ${Math.abs(hero.daysUntilDeadline ?? 0)} d`}
+                          />
+                        )}
+                        {!hero.isOverdue &&
+                          typeof hero.daysUntilDeadline === 'number' &&
+                          hero.daysUntilDeadline <= 7 && (
+                            <Chip
+                              size='small'
+                              color='warning'
+                              label={`Vence en ${hero.daysUntilDeadline} d`}
+                            />
+                          )}
+                        <Typography variant='body2' color='text.secondary'>
+                          {hero.homeKind === 'assigned'
+                            ? 'Asignado'
+                            : hero.isMandatory
+                              ? 'Obligatorio'
+                              : 'Opcional'}
+                          {hero.nextLessonLabel
+                            ? ` · Sigue: ${hero.nextLessonLabel}`
+                            : ''}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Button
+                      size='large'
+                      variant='contained'
+                      color={
+                        heroTone.color === 'secondary'
+                          ? 'primary'
+                          : heroTone.color
+                      }
+                      startIcon={<PlayArrowIcon />}
+                      onClick={() => handleCourseClick(hero.id)}
+                    >
+                      {hero.progress > 0 ? 'Retomar' : 'Comenzar'}
+                    </Button>
+                  </Card>
+                )}
 
-              {restAttention.length > 0 && (
-                <Box>
-                  <Typography variant='h6' sx={{ mb: 2 }}>
-                    Pendientes ({restAttention.length})
+                {restAttention.length > 0 && (
+                  <Box>
+                    <Typography variant='h6' sx={{ mb: 2 }}>
+                      Pendientes ({restAttention.length})
+                    </Typography>
+                    {renderCourseGrid(restAttention, { showKind: true })}
+                  </Box>
+                )}
+
+                {homeFeed.attention.length > 0 &&
+                  homeFeed.resume.length > 0 && (
+                    <Box>
+                      <Typography variant='h6' sx={{ mb: 2 }}>
+                        Continúa donde quedaste
+                      </Typography>
+                      {renderCourseGrid(homeFeed.resume, { showKind: true })}
+                    </Box>
+                  )}
+
+                {!hero && (
+                  <Card
+                    variant='outlined'
+                    sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}
+                  >
+                    <CheckCircleIcon
+                      sx={{ fontSize: 56, color: 'success.main', mb: 1 }}
+                    />
+                    <Typography variant='h6'>Estás al día</Typography>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 2 }}
+                    >
+                      No tienes cursos pendientes ni en progreso por ahora.
+                    </Typography>
+                    <Button variant='outlined' onClick={() => setActiveTab(2)}>
+                      Ver todos mis cursos
+                    </Button>
+                  </Card>
+                )}
+
+                {recentRecognitions[0] && (
+                  <Typography variant='caption' color='text.secondary'>
+                    Último logro: {recentRecognitions[0].secondary}
                   </Typography>
-                  {renderCourseGrid(restAttention, { showKind: true })}
-                </Box>
-              )}
-
-              {homeFeed.attention.length > 0 && homeFeed.resume.length > 0 && (
-                <Box>
-                  <Typography variant='h6' sx={{ mb: 2 }}>
-                    Continúa donde quedaste
-                  </Typography>
-                  {renderCourseGrid(homeFeed.resume, { showKind: true })}
-                </Box>
-              )}
-
-              {!hero && (
-                <Card variant='outlined' sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
-                  <CheckCircleIcon sx={{ fontSize: 56, color: 'success.main', mb: 1 }} />
-                  <Typography variant='h6'>Estás al día</Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    No tienes cursos pendientes ni en progreso por ahora.
-                  </Typography>
-                  <Button variant='outlined' onClick={() => setActiveTab(2)}>
-                    Ver todos mis cursos
-                  </Button>
-                </Card>
-              )}
-
-              {recentRecognitions[0] && (
-                <Typography variant='caption' color='text.secondary'>
-                  Último logro: {recentRecognitions[0].secondary}
-                </Typography>
-              )}
-            </Box>
-          )
-        })()}
+                )}
+              </Box>
+            )
+          })()}
 
         {activeTab === 1 && (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1,
+                mb: 2
+              }}
+            >
               <Typography variant='h6'>Cursos Obligatorios</Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 {stats.overdueTraining > 0 && (
-                  <Chip label={`${stats.overdueTraining} vencidos`} color='error' size='small' />
+                  <Chip
+                    label={`${stats.overdueTraining} vencidos`}
+                    color='error'
+                    size='small'
+                  />
                 )}
                 <Chip
-                  label={`${mandatoryCourses.filter(course => typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7 && course.progress < 100 && !course.isOverdue).length} próximos`}
+                  label={`${mandatoryCourses.filter((course) => typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7 && course.progress < 100 && !course.isOverdue).length} próximos`}
                   color='warning'
                   size='small'
                   variant='outlined'
@@ -821,7 +1086,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
             </Box>
 
             {mandatoryCourses.length === 0 ? (
-              <Alert severity='success'>No tienes cursos obligatorios activos en este momento.</Alert>
+              <Alert severity='success'>
+                No tienes cursos obligatorios activos en este momento.
+              </Alert>
             ) : (
               renderCourseGrid(mandatoryCourses)
             )}
@@ -869,27 +1136,33 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           </Box>
         )}
 
-        {activeTab === 2 && courseFilter !== 'completed' && (() => {
-          const pool =
-            courseFilter === 'mandatory'
-              ? mandatoryCourses
-              : courseFilter === 'optional'
-                ? optionalCourses
-                : [...mandatoryCourses, ...optionalCourses]
-          const visible = pool.filter((course: any) => course.progress < 100).filter(matchesSearch)
+        {activeTab === 2 &&
+          courseFilter !== 'completed' &&
+          (() => {
+            const pool =
+              courseFilter === 'mandatory'
+                ? mandatoryCourses
+                : courseFilter === 'optional'
+                  ? optionalCourses
+                  : [...mandatoryCourses, ...optionalCourses]
+            const visible = pool
+              .filter((course: HomeCourse) => course.progress < 100)
+              .filter(matchesSearch)
 
-          if (visible.length === 0) {
-            return (
-              <Alert severity='info'>
-                {normalizedSearch
-                  ? `No hay cursos que coincidan con «${courseSearch.trim()}».`
-                  : 'No tienes cursos pendientes en esta categoría. Si esperabas un curso, escribe al área de Gestión Humana para confirmar que te lo asignaron y que está publicado.'}
-              </Alert>
-            )
-          }
+            if (visible.length === 0) {
+              return (
+                <Alert severity='info'>
+                  {normalizedSearch
+                    ? `No hay cursos que coincidan con «${courseSearch.trim()}».`
+                    : 'No tienes cursos pendientes en esta categoría. Si esperabas un curso, escribe al área de Gestión Humana para confirmar que te lo asignaron y que está publicado.'}
+                </Alert>
+              )
+            }
 
-          return renderCourseGrid(visible, { showKind: courseFilter === 'all' })
-        })()}
+            return renderCourseGrid(visible, {
+              showKind: courseFilter === 'all'
+            })
+          })()}
 
         {activeTab === 3 && (
           <Box>
@@ -914,15 +1187,32 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       borderRadius: 2
                     }}
                   >
-                    <AwardIcon sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }} />
-                    <Typography variant='h6' color='text.secondary' gutterBottom>
+                    <AwardIcon
+                      sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }}
+                    />
+                    <Typography
+                      variant='h6'
+                      color='text.secondary'
+                      gutterBottom
+                    >
                       Aún no has obtenido certificados
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
                       Completa cursos que otorgan certificados para verlos aquí
                     </Typography>
-                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-                      <Button variant='contained' onClick={() => setActiveTab(2)}>
+                    <Box
+                      sx={{
+                        mt: 3,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 1,
+                        flexWrap: 'wrap'
+                      }}
+                    >
+                      <Button
+                        variant='contained'
+                        onClick={() => setActiveTab(2)}
+                      >
                         Ver mis cursos
                       </Button>
                     </Box>
@@ -942,8 +1232,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                           flexDirection: 'column',
                           borderRadius: 3,
                           overflow: 'hidden',
-                          transition: 'transform .15s ease, box-shadow .15s ease',
-                          '&:hover': { transform: 'translateY(-3px)', boxShadow: 4 }
+                          transition:
+                            'transform .15s ease, box-shadow .15s ease',
+                          '&:hover': {
+                            transform: 'translateY(-3px)',
+                            boxShadow: 4
+                          }
                         }}
                       >
                         <Box
@@ -958,7 +1252,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                           })}
                         >
                           <PremiumIcon sx={{ fontSize: 40 }} />
-                          <Chip size='small' color='success' icon={<VerifiedIcon />} label='Verificado' />
+                          <Chip
+                            size='small'
+                            color='success'
+                            icon={<VerifiedIcon />}
+                            label='Verificado'
+                          />
                         </Box>
                         <CardContent sx={{ flex: 1 }}>
                           <Typography
@@ -974,10 +1273,20 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                           >
                             {certificate.courseTitle}
                           </Typography>
-                          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.75 }}>
-                            Emitido {new Date(certificate.issuedAt || certificate.issued_at || '').toLocaleDateString('es-ES')}
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            sx={{ display: 'block', mt: 0.75 }}
+                          >
+                            Emitido{' '}
+                            {new Date(
+                              certificate.issuedAt ||
+                                certificate.issued_at ||
+                                ''
+                            ).toLocaleDateString('es-ES')}
                             {' · '}
-                            {certificate.certificateNumber || certificate.certificate_number}
+                            {certificate.certificateNumber ||
+                              certificate.certificate_number}
                           </Typography>
                         </CardContent>
                         <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1 }}>
@@ -986,7 +1295,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                             color='warning'
                             startIcon={<DownloadIcon />}
                             fullWidth
-                            onClick={() => navigate(`/lms/certificate/${certificate.id}`)}
+                            onClick={() =>
+                              navigate(`/lms/certificate/${certificate.id}`)
+                            }
                           >
                             Ver certificado
                           </Button>
@@ -1012,36 +1323,51 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         )}
 
         {activeTab === 5 && (
-          <MyTrainingPlans data={myPlans} isLoading={myPlansLoading} error={myPlansError} />
+          <MyTrainingPlans
+            data={myPlans}
+            isLoading={myPlansLoading}
+            error={myPlansError}
+          />
         )}
 
         {activeTab === 4 && (
           <Box>
-            <LmsNotificationCenter userRole="employee" userId={currentUser.id} />
+            <LmsNotificationCenter
+              userRole='employee'
+              userId={currentUser.id}
+            />
           </Box>
         )}
 
-        {activeTab === 2 && courseFilter === 'completed' && (() => {
-          const visible = completedCourses.filter(matchesSearch)
-          if (visible.length === 0) {
-            return (
-              <Card variant='outlined' sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
-                <CheckCircleIcon sx={{ fontSize: 56, color: 'success.main', mb: 1 }} />
-                <Typography variant='h6' color='text.secondary'>
-                  {normalizedSearch ? 'Ningún curso finalizado coincide con la búsqueda' : 'Aún no tienes cursos finalizados'}
-                </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  Cuando completes un curso aparecerá aquí.
-                </Typography>
-              </Card>
-            )
-          }
-          return renderCourseGrid(visible, { showKind: true })
-        })()}
+        {activeTab === 2 &&
+          courseFilter === 'completed' &&
+          (() => {
+            const visible = completedCourses.filter(matchesSearch)
+            if (visible.length === 0) {
+              return (
+                <Card
+                  variant='outlined'
+                  sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}
+                >
+                  <CheckCircleIcon
+                    sx={{ fontSize: 56, color: 'success.main', mb: 1 }}
+                  />
+                  <Typography variant='h6' color='text.secondary'>
+                    {normalizedSearch
+                      ? 'Ningún curso finalizado coincide con la búsqueda'
+                      : 'Aún no tienes cursos finalizados'}
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Cuando completes un curso aparecerá aquí.
+                  </Typography>
+                </Card>
+              )
+            }
+            return renderCourseGrid(visible, { showKind: true })
+          })()}
       </Box>
     </Box>
   )
 }
 
 export default LmsEmployee
-// @ts-nocheck

@@ -33,7 +33,12 @@ import {
 } from '@mui/icons-material'
 import { useAssignTrainingPlan, useInternalUsers } from 'src/hooks/useLms'
 import { lmsService } from 'src/services/lmsService'
-import type { PlanAssignmentInput, PlanAssignmentPreview, PlanCourseAction, PlanTargetType } from 'src/services/lmsService'
+import type {
+  PlanAssignmentInput,
+  PlanAssignmentPreview,
+  PlanCourseAction,
+  PlanTargetType
+} from 'src/services/lmsService'
 import { getRoleLabelEs } from 'src/constants/roles'
 import { notify as appNotify } from 'src/utils/notify'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
@@ -55,12 +60,22 @@ interface PlanAssignDialogProps {
 }
 
 const ACTION_CHIP: Record<PlanCourseAction, { label: string; sx: object }> = {
-  crear: { label: 'Se crea', sx: { bgcolor: PLAN_TEAL_SOFT, color: '#00695C' } },
-  reutilizar: { label: 'Ya asignado', sx: { bgcolor: '#E3F2FD', color: '#1565C0' } },
+  crear: {
+    label: 'Se crea',
+    sx: { bgcolor: PLAN_TEAL_SOFT, color: '#00695C' }
+  },
+  reutilizar: {
+    label: 'Ya asignado',
+    sx: { bgcolor: '#E3F2FD', color: '#1565C0' }
+  },
   omitir: { label: 'Se omite', sx: { bgcolor: '#FFF3E0', color: '#E65100' } }
 }
 
-const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose }) => {
+const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({
+  open,
+  plan,
+  onClose
+}) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
   const { data: users = [] } = useInternalUsers({ enabled: open })
@@ -101,7 +116,9 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
   })
 
   const targetReady =
-    (targetType === 'role' && role) || targetType === 'all' || (targetType === 'users' && userIds.length > 0)
+    (targetType === 'role' && role) ||
+    targetType === 'all' ||
+    (targetType === 'users' && userIds.length > 0)
 
   const handlePreview = async () => {
     if (!plan) return
@@ -109,7 +126,12 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
     try {
       setPreview(await lmsService.previewPlanAssignment(plan.id, buildInput()))
     } catch (error) {
-      appNotify.error(getStructuredApiErrorMessage(error, 'No se pudo calcular la vista previa.'))
+      appNotify.error(
+        getStructuredApiErrorMessage(
+          error,
+          'No se pudo calcular la vista previa.'
+        )
+      )
     } finally {
       setPreviewLoading(false)
     }
@@ -118,21 +140,43 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
   const handleAssign = async () => {
     if (!plan || !preview) return
     try {
-      const result = await assignMutation.mutateAsync({ id: plan.id, data: { ...buildInput(), send_notification: notify } })
-      appNotify.success(result.merged ? 'Usuarios agregados al destino existente' : 'Plan asignado', result.merged
+      const result = await assignMutation.mutateAsync({
+        id: plan.id,
+        data: { ...buildInput(), send_notification: notify }
+      })
+      appNotify.success(
+        result.merged
+          ? 'Usuarios agregados al destino existente'
+          : 'Plan asignado',
+        result.merged
           ? `${result.affected_users_count} usuario(s) agregado(s); no se creó un destino nuevo`
-          : `${result.summary.created} asignaciones nuevas, ${result.summary.reused} reutilizadas · ${result.affected_users_count} usuario(s)`)
+          : `${result.summary.created} asignaciones nuevas, ${result.summary.reused} reutilizadas · ${result.affected_users_count} usuario(s)`
+      )
       onClose()
     } catch (error) {
-      appNotify.error(getStructuredApiErrorMessage(error, 'No se pudo asignar el plan.'))
+      appNotify.error(
+        getStructuredApiErrorMessage(error, 'No se pudo asignar el plan.')
+      )
     }
   }
 
   const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth fullScreen={fullScreen} PaperProps={planDialogPaperProps}>
-      <PlanDialogHeader title={`Asignar plan: ${plan?.name ?? ''}`} subtitle='Elige el destino y el plazo; revisa la vista previa antes de confirmar' icon={<AssignIcon />} onClose={onClose} />
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth='md'
+      fullWidth
+      fullScreen={fullScreen}
+      PaperProps={planDialogPaperProps}
+    >
+      <PlanDialogHeader
+        title={`Asignar plan: ${plan?.name ?? ''}`}
+        subtitle='Elige el destino y el plazo; revisa la vista previa antes de confirmar'
+        icon={<AssignIcon />}
+        onClose={onClose}
+      />
       <DialogContent sx={{ pt: 3 }}>
         <Grid container spacing={2.5} sx={{ mt: 0 }}>
           <Grid item xs={12} sm={5}>
@@ -175,7 +219,10 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
               </FormControl>
             )}
             {targetType === 'all' && (
-              <Alert severity='info' sx={{ height: '100%', alignItems: 'center' }}>
+              <Alert
+                severity='info'
+                sx={{ height: '100%', alignItems: 'center' }}
+              >
                 Reemplaza las asignaciones de este plan por rol.
               </Alert>
             )}
@@ -190,7 +237,13 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
                   invalidate()
                 }}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderInput={(params) => <TextField {...params} label='Usuarios' placeholder='Buscar por nombre o correo' />}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Usuarios'
+                    placeholder='Buscar por nombre o correo'
+                  />
+                )}
               />
             )}
           </Grid>
@@ -242,50 +295,102 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
                 {preview.merge_into.current_users.length > 0
                   ? ` (${preview.merge_into.current_users.map((user) => user.nombre).join(', ')})`
                   : ''}
-                . Se agregarán a ese destino en lugar de crear uno nuevo; quienes ya estaban conservan su fecha.
+                . Se agregarán a ese destino en lugar de crear uno nuevo;
+                quienes ya estaban conservan su fecha.
               </Alert>
             )}
             {preview.replaces.length > 0 && (
               <Alert severity='warning' sx={{ mb: 2 }}>
-                Se reemplazará: {preview.replaces.map((item) => translateTargetText(item.target)).join(', ')}.
+                Se reemplazará:{' '}
+                {preview.replaces
+                  .map((item) => translateTargetText(item.target))
+                  .join(', ')}
+                .
               </Alert>
             )}
             {preview.warnings.map((warning) => (
-              <Alert key={`${warning.code}-${warning.course_id ?? ''}`} severity='info' sx={{ mb: 1 }}>
+              <Alert
+                key={`${warning.code}-${warning.course_id ?? ''}`}
+                severity='info'
+                sx={{ mb: 1 }}
+              >
                 {warning.message}
               </Alert>
             ))}
 
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', my: 2 }}>
-              <Chip label={`${preview.summary.create} se crean`} sx={ACTION_CHIP.crear.sx} />
-              <Chip label={`${preview.summary.reuse} ya asignados`} sx={ACTION_CHIP.reutilizar.sx} />
-              {preview.summary.skip > 0 && <Chip label={`${preview.summary.skip} se omiten`} sx={ACTION_CHIP.omitir.sx} />}
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 1,
+                alignItems: 'center',
+                my: 2
+              }}
+            >
+              <Chip
+                label={`${preview.summary.create} se crean`}
+                sx={ACTION_CHIP.crear.sx}
+              />
+              <Chip
+                label={`${preview.summary.reuse} ya asignados`}
+                sx={ACTION_CHIP.reutilizar.sx}
+              />
+              {preview.summary.skip > 0 && (
+                <Chip
+                  label={`${preview.summary.skip} se omiten`}
+                  sx={ACTION_CHIP.omitir.sx}
+                />
+              )}
               <Chip
                 variant='outlined'
                 clickable
                 onClick={() => setShowUsers((value) => !value)}
                 label={`${preview.affected_users.count} usuario(s) afectado(s)`}
               />
-              <Typography variant='body2' color='text.secondary' sx={{ ml: { sm: 'auto' } }}>
-                Plazo: {describePlanDeadline(preview.deadline, preview.deadline_days)}
+              <Typography
+                variant='body2'
+                color='text.secondary'
+                sx={{ ml: { sm: 'auto' } }}
+              >
+                Plazo:{' '}
+                {describePlanDeadline(preview.deadline, preview.deadline_days)}
               </Typography>
             </Box>
 
             <Collapse in={showUsers}>
-              <Paper variant='outlined' sx={{ borderRadius: 2, p: 1.5, mb: 2, maxHeight: 160, overflow: 'auto' }}>
+              <Paper
+                variant='outlined'
+                sx={{
+                  borderRadius: 2,
+                  p: 1.5,
+                  mb: 2,
+                  maxHeight: 160,
+                  overflow: 'auto'
+                }}
+              >
                 {preview.affected_users.count === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>Hoy nadie tiene este destino; quienes lo reciban después verán el plan.</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Hoy nadie tiene este destino; quienes lo reciban después
+                    verán el plan.
+                  </Typography>
                 ) : (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                     {preview.affected_users.users.map((user) => (
-                      <Chip key={user.id} size='small' label={user.nombre || user.email} />
+                      <Chip
+                        key={user.id}
+                        size='small'
+                        label={user.nombre || user.email}
+                      />
                     ))}
                   </Box>
                 )}
               </Paper>
             </Collapse>
 
-            <Paper variant='outlined' sx={{ borderRadius: 2, maxHeight: 300, overflow: 'auto' }}>
+            <Paper
+              variant='outlined'
+              sx={{ borderRadius: 2, maxHeight: 300, overflow: 'auto' }}
+            >
               <List dense disablePadding>
                 {preview.courses.map((course, index) => (
                   <React.Fragment key={course.course_id}>
@@ -293,19 +398,34 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
                     <ListItem sx={{ gap: 1 }}>
                       <ListItemText
                         primary={course.title ?? `Curso ${course.course_id}`}
-                        secondary={[
-                          course.inherited ? `De ${course.source_plan_name}` : null,
-                          course.deadline_days ? `${course.deadline_days} días propios` : null,
-                          course.reason ? SKIP_REASON_LABELS[course.reason] ?? course.reason : null,
-                          course.warning === 'NOT_PUBLISHED' ? 'No publicado' : null
-                        ].filter(Boolean).join(' · ') || null}
+                        secondary={
+                          [
+                            course.inherited
+                              ? `De ${course.source_plan_name}`
+                              : null,
+                            course.deadline_days
+                              ? `${course.deadline_days} días propios`
+                              : null,
+                            course.reason
+                              ? SKIP_REASON_LABELS[course.reason] ??
+                                course.reason
+                              : null,
+                            course.warning === 'NOT_PUBLISHED'
+                              ? 'No publicado'
+                              : null
+                          ]
+                            .filter(Boolean)
+                            .join(' · ') || null
+                        }
                         sx={{ minWidth: 0 }}
                       />
                       <Chip
                         size='small'
                         label={
                           course.action === 'reutilizar'
-                            ? course.existing_is_manual ? 'Ya asignado (directo)' : 'Ya en otro plan'
+                            ? course.existing_is_manual
+                              ? 'Ya asignado (directo)'
+                              : 'Ya en otro plan'
                             : ACTION_CHIP[course.action].label
                         }
                         sx={ACTION_CHIP[course.action].sx}
@@ -318,7 +438,12 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
 
             <FormControlLabel
               sx={{ mt: 1.5 }}
-              control={<Checkbox checked={notify} onChange={(event) => setNotify(event.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={notify}
+                  onChange={(event) => setNotify(event.target.checked)}
+                />
+              }
               label='Enviar un aviso resumen a cada persona'
             />
           </Box>
@@ -333,7 +458,13 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
             variant='contained'
             onClick={handlePreview}
             disabled={!targetReady || previewLoading}
-            startIcon={previewLoading ? <CircularProgress size={16} color='inherit' /> : <PreviewIcon />}
+            startIcon={
+              previewLoading ? (
+                <CircularProgress size={16} color='inherit' />
+              ) : (
+                <PreviewIcon />
+              )
+            }
             sx={primaryButtonSx}
           >
             Ver vista previa
@@ -342,9 +473,22 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
           <Button
             variant='contained'
             onClick={handleAssign}
-            disabled={preview.already_assigned || preview.summary.create + preview.summary.reuse === 0 || assignMutation.isLoading}
-            startIcon={assignMutation.isLoading ? <CircularProgress size={16} color='inherit' /> : <AssignIcon />}
-            sx={{ ...primaryButtonSx, '&.Mui-disabled': { bgcolor: 'action.disabledBackground' } }}
+            disabled={
+              preview.already_assigned ||
+              preview.summary.create + preview.summary.reuse === 0 ||
+              assignMutation.isLoading
+            }
+            startIcon={
+              assignMutation.isLoading ? (
+                <CircularProgress size={16} color='inherit' />
+              ) : (
+                <AssignIcon />
+              )
+            }
+            sx={{
+              ...primaryButtonSx,
+              '&.Mui-disabled': { bgcolor: 'action.disabledBackground' }
+            }}
           >
             Asignar plan
           </Button>

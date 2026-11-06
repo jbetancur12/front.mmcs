@@ -9,14 +9,19 @@ import { CalibrationServiceDetailDialogs } from './useCalibrationServiceDetailDi
 import { DetailTab } from './calibrationServiceDetailUtils'
 
 import { logger } from 'src/utils/logger'
-type CalibrationServiceMutations = ReturnType<typeof useCalibrationServiceMutations>
+type CalibrationServiceMutations = ReturnType<
+  typeof useCalibrationServiceMutations
+>
 
 interface CalibrationServiceLogisticsActionsParams {
   service: CalibrationService
   mutations: CalibrationServiceMutations
   dialogs: CalibrationServiceDetailDialogs
   setActiveTab: (tab: DetailTab) => void
-  handleDownloadDocument: (documentId: number, fileName: string) => Promise<void>
+  handleDownloadDocument: (
+    documentId: number,
+    fileName: string
+  ) => Promise<void>
 }
 
 /** Acciones de logística: trazabilidad física, ficha de control, PDF y envío por correo. */
@@ -64,7 +69,12 @@ const useCalibrationServiceLogisticsActions = ({
       setActiveTab('logistics')
     } catch (traceabilityError) {
       logger.error(traceabilityError)
-      toast.error(getApiErrorMessage(traceabilityError, 'No pudimos registrar la trazabilidad física.'))
+      toast.error(
+        getApiErrorMessage(
+          traceabilityError,
+          'No pudimos registrar la trazabilidad física.'
+        )
+      )
     }
   }
 
@@ -82,7 +92,12 @@ const useCalibrationServiceLogisticsActions = ({
       setActiveTab('logistics')
     } catch (logisticsError) {
       logger.error(logisticsError)
-      toast.error(getApiErrorMessage(logisticsError, 'No pudimos guardar la ficha logística.'))
+      toast.error(
+        getApiErrorMessage(
+          logisticsError,
+          'No pudimos guardar la ficha logística.'
+        )
+      )
     }
   }
 
@@ -100,7 +115,12 @@ const useCalibrationServiceLogisticsActions = ({
       setActiveTab('logistics')
     } catch (logisticsPdfError) {
       logger.error(logisticsPdfError)
-      toast.error(getApiErrorMessage(logisticsPdfError, 'No pudimos generar el PDF de control de ingreso y entrega.'))
+      toast.error(
+        getApiErrorMessage(
+          logisticsPdfError,
+          'No pudimos generar el PDF de control de ingreso y entrega.'
+        )
+      )
     }
   }
 
@@ -150,7 +170,12 @@ const useCalibrationServiceLogisticsActions = ({
       setActiveTab('logistics')
     } catch (logisticsEmailError) {
       logger.error(logisticsEmailError)
-      toast.error(getApiErrorMessage(logisticsEmailError, 'No pudimos enviar el formato logístico por correo.'))
+      toast.error(
+        getApiErrorMessage(
+          logisticsEmailError,
+          'No pudimos enviar el formato logístico por correo.'
+        )
+      )
     }
   }
 

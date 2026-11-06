@@ -14,6 +14,8 @@ interface GridCalculation {
   containerHeight: number
 }
 
+export type { GridCalculation }
+
 /**
  * Hook para calcular automáticamente la disposición óptima de tickets
  * basada en el tamaño de pantalla disponible
@@ -150,7 +152,10 @@ export const useResponsiveTicketGrid = () => {
     // Maximizar filas según la pantalla
     rows = Math.max(
       1,
-      Math.min(rows, height >= 2160 ? 6 : height >= 1440 ? 5 : height >= 1080 ? 4 : 3)
+      Math.min(
+        rows,
+        height >= 2160 ? 6 : height >= 1440 ? 5 : height >= 1080 ? 4 : 3
+      )
     )
 
     const ticketsPerPage = columns * rows

@@ -12,7 +12,7 @@ export const useDeviceNotifications = () => {
       // --- MANEJAR CONFIRMACIÓN DE ÉXITO ---
       if (lastMessage.type === 'DEVICE_CONFIG_CONFIRMED') {
         // Asumiendo que tu WebSocket envía este evento
-        const payload = lastMessage.data
+        const payload = lastMessage.data as { patternId?: string | number }
         notify.success(
           'Dispositivo Actualizado',
           `El dispositivo confirmó la nueva configuración para el patrón ${payload.patternId}.`
@@ -22,7 +22,7 @@ export const useDeviceNotifications = () => {
       // --- MANEJAR TIMEOUT ---
       if (lastMessage.type === 'DEVICE_CONFIG_TIMEOUT') {
         logger.log('Timeout de configuración del dispositivo:', lastMessage)
-        const payload = lastMessage.data
+        const payload = lastMessage.data as { patternId?: string | number }
         notify.warning(
           'Sin Confirmación del Dispositivo',
           `El dispositivo del patrón ${payload.patternId} no respondió.`,

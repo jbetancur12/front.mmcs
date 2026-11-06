@@ -102,7 +102,7 @@ const entryForPath = (pathname: string, entries: CommandEntry[]) =>
     )
     .sort((a, b) => b.path.length - a.path.length)[0]
 
-const getLinkToCustomer =(to: string, $userStore: UserData) => {
+const getLinkToCustomer = (to: string, $userStore: UserData) => {
   if (!$userStore.customer) {
     return '/' // Ruta predeterminada para usuarios sin cliente
   } else {
@@ -370,23 +370,6 @@ const sidebarItems = ($userStore: UserData) => [
       } // Sub-item Patrones
     ]
   },
-  // {
-  //   type: 'dropdown',
-  //   buttonText: 'Telemetría',
-  //   roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
-  //   moduleName: 'Iot',
-  //   pathData:
-  //     'M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7 0-1.66.56-3.19 1.5-4.39l9.89 9.89C15.19 18.44 13.66 19 12 19zm4.5-2.61L6.61 7.5C7.81 6.56 9.34 6 11 6c3.87 0 7 3.13 7 7 0 1.66-.56 3.19-1.5 4.39z',
-  //   menuItems: [
-  //     { label: 'Lista', url: 'iot', roles: [ROLES.ADMIN] },
-  //     { label: 'Map', url: 'iot/map', roles: ROLE_GROUPS.ADMIN_AND_CLIENT },
-  //     {
-  //       label: 'Gestión de Clientes',
-  //       url: 'iot/customers-management',
-  //       roles: [ROLES.ADMIN]
-  //     }
-  //   ]
-  // },
   {
     type: 'dropdown',
     buttonText: 'Calibraciones',
@@ -828,36 +811,38 @@ const SideBar = ({
         : section?.title
     }
 
-    const fromMenu = items.filter(canSeeItem).flatMap((item): CommandEntry[] => {
-      if (item.type === 'link' && item.to) {
-        const path = toRoutePath(item.to)
-        return [
-          {
-            id: path,
-            label: item.label ?? '',
-            path,
+    const fromMenu = items
+      .filter(canSeeItem)
+      .flatMap((item): CommandEntry[] => {
+        if (item.type === 'link' && item.to) {
+          const path = toRoutePath(item.to)
+          return [
+            {
+              id: path,
+              label: item.label ?? '',
+              path,
+              hint: sectionTitle(item),
+              icon: item.icon
+            }
+          ]
+        }
+
+        const roles = rolesFor(item)
+        return (item.menuItems ?? [])
+          .filter((menuItem: SearchableMenuItem) =>
+            menuItem.permission
+              ? hasPermission($userStore.permissions, menuItem.permission)
+              : (menuItem.roles ?? []).some((role) => roles.includes(role))
+          )
+          .map((menuItem: SearchableMenuItem) => ({
+            id: toRoutePath(menuItem.url),
+            label: menuItem.label,
+            path: toRoutePath(menuItem.url),
+            parents: [item.buttonText ?? ''],
             hint: sectionTitle(item),
             icon: item.icon
-          }
-        ]
-      }
-
-      const roles = rolesFor(item)
-      return (item.menuItems ?? [])
-        .filter((menuItem: SearchableMenuItem) =>
-          menuItem.permission
-            ? hasPermission($userStore.permissions, menuItem.permission)
-            : (menuItem.roles ?? []).some((role) => roles.includes(role))
-        )
-        .map((menuItem: SearchableMenuItem) => ({
-          id: toRoutePath(menuItem.url),
-          label: menuItem.label,
-          path: toRoutePath(menuItem.url),
-          parents: [item.buttonText ?? ''],
-          hint: sectionTitle(item),
-          icon: item.icon
-        }))
-    })
+          }))
+      })
 
     // Pantallas con ruta pero sin ítem de menú (ver quickSearchPages).
     const known = new Set(fromMenu.map((entry) => entry.id))
@@ -993,7 +978,9 @@ const SideBar = ({
       {/* En móvil no hay nada que minimizar: el pie solo existe en escritorio. */}
       <div className='hidden lg:block flex-shrink-0 border-t border-gray-200 px-3 py-2'>
         {isLmsRoute && !minimized && !isLmsHintDismissed && (
-          <div className={`mb-3 flex items-start gap-2 rounded-lg bg-[${brand.soft}] p-3`}>
+          <div
+            className={`mb-3 flex items-start gap-2 rounded-lg bg-[${brand.soft}] p-3`}
+          >
             <p className={`flex-1 text-xs leading-5 text-[${brand.ink}]`}>
               <span className='block font-semibold'>
                 Gana espacio en Academia

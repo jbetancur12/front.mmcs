@@ -16,8 +16,8 @@ Que un archivo salga en la lista no prueba que sobre. Antes de borrar uno, busca
 
 `knip` sigue listando estos archivos; no se borraron porque pueden ser trabajo a medio hacer. Pregunta antes de borrarlos.
 
-| Archivo | Motivo |
-|---|---|
+| Archivo                                                                   | Motivo                                                       |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | `src/utils/apiError.test.ts`, `src/test/lms/LmsCourseManagement.test.tsx` | Son tests; `knip` los marca porque no hay runner configurado |
 
 El 2026-10-30 se borraron además `useDashboardNotifications` y `LmsAdminPendingFeature` (confirmado sin uso), los hooks viejos de notificaciones del LMS (`useNotifications`, `useHybridNotifications`, `useNotificationPolling`, `useLmsWebSocket`), `LazyModals`, `ModalSuspense`, `AutoComplete`, `scripts/build.js` y `scripts/update-version.cjs` (vacío). `src/constants/version.ts` sigue vivo: lo leen los scripts de versión; `knip.json` lo declara como entrada.

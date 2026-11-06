@@ -63,22 +63,23 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
 
 // Borde = estado alcanzado o en espera; relleno = en curso o terminado.
 // Tono de StatusPill por estado: fondo suave y texto oscuro, legibles sobre blanco.
-export const CALIBRATION_SERVICE_STATUS_TONES: Record<string, StatusPillTone> = {
-  draft: 'idle',
-  pending_approval: 'warning',
-  expired: 'idle',
-  rejected: 'error',
-  approved: 'success',
-  ods_issued: 'live',
-  pending_programming: 'live',
-  scheduled: 'live',
-  in_execution: 'live',
-  technically_completed: 'success',
-  cancelled: 'idle',
-  closed: 'idle',
-  ready_for_invoicing: 'warning',
-  invoiced: 'success'
-}
+export const CALIBRATION_SERVICE_STATUS_TONES: Record<string, StatusPillTone> =
+  {
+    draft: 'idle',
+    pending_approval: 'warning',
+    expired: 'idle',
+    rejected: 'error',
+    approved: 'success',
+    ods_issued: 'live',
+    pending_programming: 'live',
+    scheduled: 'live',
+    in_execution: 'live',
+    technically_completed: 'success',
+    cancelled: 'idle',
+    closed: 'idle',
+    ready_for_invoicing: 'warning',
+    invoiced: 'success'
+  }
 
 /** Traduce un color de Chip de MUI al tono equivalente de StatusPill. */
 export const chipColorToStatusTone = (
@@ -131,8 +132,7 @@ const CHIP_ACCENT_HEX: Record<string, string> = {
 // Color de la barra lateral de las tarjetas: sale del mismo mapa que el chip.
 export const getCalibrationServiceStatusAccent = (
   status: CalibrationServiceStatus
-) =>
-  CHIP_ACCENT_HEX[CALIBRATION_SERVICE_STATUS_COLORS[status] || 'default']
+) => CHIP_ACCENT_HEX[CALIBRATION_SERVICE_STATUS_COLORS[status] || 'default']
 
 const normalizeChipLabel = (value: string) =>
   value

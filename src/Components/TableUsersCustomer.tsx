@@ -43,6 +43,21 @@ import ConfirmDialog from './Common/ConfirmDialog'
 import DataTable from './Common/DataTable'
 import EmptyState from './Common/EmptyState'
 import FormDialog from './Common/FormDialog'
+
+/** Campos que captura el diálogo de alta de usuario de un cliente. */
+interface NewCustomerUserForm {
+  nombre: string
+  email: string
+}
+
+interface CustomerUserCreateRequest extends NewCustomerUserForm {
+  roles: Array<{ id: number }>
+  customerId: number
+}
+
+interface NewCustomerUserPayload extends CustomerUserCreateRequest {
+  contraseña: string
+}
 import { notify } from 'src/utils/notify'
 import ResetPasswordModal from './ResetPasswordModal'
 
@@ -92,13 +107,13 @@ const Table: React.FC = () => {
         logger.error('Error fetching user data:', error)
       }
     })
-  const registerUser = useRegisterUser<UserData>()
+  const registerUser = useRegisterUser<NewCustomerUserPayload>()
   const resetUserPassword = useResetUserPassword()
   const updateUserById = useUpdateUserById()
   const deleteUserById = useDeleteUserById()
 
   // Create a new user
-  const onCreateUser = async (userData: UserData) => {
+  const onCreateUser = async (userData: NewCustomerUserPayload) => {
     try {
       const response = await registerUser.mutateAsync(userData)
 
@@ -163,10 +178,9 @@ const Table: React.FC = () => {
     }
   }
 
-  const handleCreateNewRow = (values: any) => {
+  const handleCreateNewRow = (values: CustomerUserCreateRequest) => {
     onCreateUser({
       ...values,
-      customerId: parseInt(id || '0'),
       contraseña: 'NewUser@123'
     })
     setCreateModalOpen(false)
@@ -174,7 +188,7 @@ const Table: React.FC = () => {
 
   const handleEditUser = async (userData: UserData) => {
     try {
-      const updatedValues: any = { ...userData }
+      const updatedValues: Partial<UserData> = { ...userData }
       delete updatedValues.id
 
       const response = await updateUserById.mutateAsync({
@@ -454,7 +468,7 @@ const Table: React.FC = () => {
 
 interface CreateModalProps {
   onClose: () => void
-  onSubmit: (values: any) => void
+  onSubmit: (values: CustomerUserCreateRequest) => void
   open: boolean
 }
 

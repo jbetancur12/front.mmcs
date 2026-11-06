@@ -50,7 +50,15 @@ const LmsPageHeader: React.FC<LmsPageHeaderProps> = ({
       </Box>
     </Box>
     {actions && (
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center', width: { xs: '100%', md: 'auto' } }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 1.5,
+          alignItems: 'center',
+          width: { xs: '100%', md: 'auto' }
+        }}
+      >
         {actions}
       </Box>
     )}

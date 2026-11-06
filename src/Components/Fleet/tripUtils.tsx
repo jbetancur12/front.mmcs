@@ -1,4 +1,4 @@
-import { Trip } from './types'
+import { Inspection, Trip } from './types'
 import { isAxiosError, type AxiosInstance } from 'axios'
 
 import { logger } from 'src/utils/logger'
@@ -21,7 +21,7 @@ export const updateTrip = async (axiosPrivate: AxiosInstance, trip: Trip) => {
 export const addTripWithInspection = async (
   axiosPrivate: AxiosInstance,
   trip: Trip,
-  inspection: any
+  inspection: Omit<Inspection, 'id' | 'tripId'>
 ) => {
   try {
     const formattedStartDate = trip.startDate
@@ -68,7 +68,7 @@ export const addTripWithInspection = async (
 export const updateTripWithInspection = async (
   axiosPrivate: AxiosInstance,
   trip: Trip,
-  inspection: any
+  inspection: Omit<Inspection, 'id' | 'tripId'>
 ) => {
   const formattedStartDate = trip.startDate ? formatDate(trip.startDate) : null
   const formattedEndDate = trip.endDate ? formatDate(trip.endDate) : null

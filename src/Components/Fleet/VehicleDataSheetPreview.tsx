@@ -155,7 +155,6 @@ const VehicleDataSheetPreview = ({
     }
   })
 
-
   const Footer = () => (
     <View
       style={{
@@ -495,7 +494,11 @@ const VehicleDataSheetPreview = ({
               }
             ]}
           >
-            {imageUrl ? <Image src={imageUrl} /> : <Image src='/images/no-img.jpg' />}
+            {imageUrl ? (
+              <Image src={imageUrl} />
+            ) : (
+              <Image src='/images/no-img.jpg' />
+            )}
           </View>
           <Data2 />
           <Footer />

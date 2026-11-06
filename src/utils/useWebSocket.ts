@@ -54,22 +54,6 @@ const useWebSocket = () => {
 
         const type = message.type // Aquí se obtiene el tipo del mensaje
 
-        // updateDeviceIotStatus(deviceIotId, 'online');
-        if (type === 'REAL_TIME_DATA') {
-          // Se asume que el payload para sensor data tiene esta estructura:
-          // { type: "data", data: { dev, gps, ts, sen } }
-          // const data: DataPayload = message
-          // const deviceIotId = data.data.dev
-          // const gps = data.data.gps // Ejemplo: [lat, lng]
-          // const timestamp = data.timestamp // Ejemplo: timestamp en segundos
-          // const sen = data.data.sen
-          // const src = data.data.pwr.src // Ejemplo: { t: valor, h: valor }
-          // updateDeviceIotLocation(deviceIotId, gps)
-          // updateDeviceIotSensorData(deviceIotId, timestamp, sen)
-          // addRealTimeData(data)
-          // setLatestRealTimeData(data)
-          // updateDeviceIotStatus(deviceIotId, 'online', true, src)
-        }
         if (type === 'ALARM_UPDATE') {
           updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
         }

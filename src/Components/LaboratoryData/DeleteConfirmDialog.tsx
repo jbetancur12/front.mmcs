@@ -65,12 +65,12 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           }
         )
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         // El tipo 'any' es temporal
         logger.error(`Error deleting sensor with ID ${sensorId}:`, error)
         const apiErrorMessage =
           getApiErrorReason(error) ||
-          error.message ||
+          (error instanceof Error ? error.message : '') ||
           'Ocurrió un error al eliminar el sensor.'
         // Mostrar el error en el diálogo mismo
         // Puedes usar un estado local para mostrar este error si quieres.

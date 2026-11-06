@@ -51,11 +51,18 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
       borderColor: '#e5e7eb',
       cursor: onClick ? 'pointer' : 'default',
       transition: 'border-color 0.15s, background-color 0.15s',
-      '&:hover': onClick ? { borderColor: '#00BFA5', bgcolor: '#E0F7F4' } : undefined,
+      '&:hover': onClick
+        ? { borderColor: '#00BFA5', bgcolor: '#E0F7F4' }
+        : undefined,
       '&:focus-visible': { outline: '3px solid #00897B', outlineOffset: 2 }
     }}
   >
-    <Stack direction='row' justifyContent='space-between' alignItems='flex-start' spacing={1}>
+    <Stack
+      direction='row'
+      justifyContent='space-between'
+      alignItems='flex-start'
+      spacing={1}
+    >
       <Box sx={{ minWidth: 0 }}>
         <Typography variant='body2' fontWeight={700}>
           {title}
@@ -79,7 +86,12 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
         <Typography
           key={index}
           variant='caption'
-          sx={{ display: 'block', mt: index === 0 && !highlight ? 0.5 : 0, color: warn ? '#b45309' : 'text.secondary', fontWeight: warn ? 600 : 400 }}
+          sx={{
+            display: 'block',
+            mt: index === 0 && !highlight ? 0.5 : 0,
+            color: warn ? '#b45309' : 'text.secondary',
+            fontWeight: warn ? 600 : 400
+          }}
         >
           {line}
         </Typography>

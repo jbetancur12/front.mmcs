@@ -50,7 +50,9 @@ const formatDateTime = (value?: string | null) =>
     : 'Sin registrar'
 
 const formatDate = (value?: string | null) =>
-  value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-CO') : 'Sin registrar'
+  value
+    ? new Date(`${value}T12:00:00`).toLocaleDateString('es-CO')
+    : 'Sin registrar'
 
 const formatYesNo = (value?: boolean | null) =>
   value === true ? 'Sí' : value === false ? 'No' : 'Sin definir'
@@ -90,11 +92,17 @@ const CalibrationServiceLogisticsPanel = ({
             Control de ingreso y entrega
           </Typography>
           <Typography variant='body2' color='text.secondary'>
-            Aquí diligencias el formato formal que usa el laboratorio al recibir y
-            entregar equipos.
+            Aquí diligencias el formato formal que usa el laboratorio al recibir
+            y entregar equipos.
           </Typography>
         </Box>
-        <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap' alignItems='center'>
+        <Stack
+          direction='row'
+          spacing={1}
+          useFlexGap
+          flexWrap='wrap'
+          alignItems='center'
+        >
           {deliveryAction}
           {canGeneratePdf ? (
             <Button
@@ -102,7 +110,14 @@ const CalibrationServiceLogisticsPanel = ({
               startIcon={<PictureAsPdfOutlinedIcon />}
               onClick={onGeneratePdf}
               disabled={isBusy}
-              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               Generar PDF
             </Button>
@@ -113,7 +128,14 @@ const CalibrationServiceLogisticsPanel = ({
               startIcon={<EmailOutlinedIcon />}
               onClick={onSendEmail}
               disabled={isBusy}
-              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               Enviar formato
             </Button>
@@ -124,7 +146,14 @@ const CalibrationServiceLogisticsPanel = ({
               startIcon={<LocalShippingOutlinedIcon />}
               onClick={onRegisterMovement}
               disabled={isBusy}
-              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               Registrar movimiento
             </Button>
@@ -135,7 +164,13 @@ const CalibrationServiceLogisticsPanel = ({
               startIcon={<DescriptionOutlinedIcon />}
               onClick={onEditControl}
               disabled={isBusy}
-              sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+              sx={{
+                bgcolor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
             >
               Diligenciar formato
             </Button>
@@ -171,9 +206,15 @@ const CalibrationServiceLogisticsPanel = ({
                 Solicitante
               </Typography>
               <Stack spacing={1.5}>
-                <DetailField label='Empresa'>{controlSheet.requesterCompanyName || 'Sin registrar'}</DetailField>
-                <DetailField label='Oferta'>{controlSheet.requesterOfferNumber || 'Sin registrar'}</DetailField>
-                <DetailField label='Contacto'>{controlSheet.requesterContactName || 'Sin registrar'}</DetailField>
+                <DetailField label='Empresa'>
+                  {controlSheet.requesterCompanyName || 'Sin registrar'}
+                </DetailField>
+                <DetailField label='Oferta'>
+                  {controlSheet.requesterOfferNumber || 'Sin registrar'}
+                </DetailField>
+                <DetailField label='Contacto'>
+                  {controlSheet.requesterContactName || 'Sin registrar'}
+                </DetailField>
               </Stack>
             </Grid>
             <Grid item xs={12} md={4}>
@@ -181,9 +222,15 @@ const CalibrationServiceLogisticsPanel = ({
                 Validaciones
               </Typography>
               <Stack spacing={1.5}>
-                <DetailField label='Autoriza codificación'>{formatYesNo(controlSheet.noSerialAuthorization)}</DetailField>
-                <DetailField label='Define puntos de calibración'>{formatYesNo(controlSheet.calibrationPointsRequested)}</DetailField>
-                <DetailField label='Condición especial'>{formatYesNo(controlSheet.specialCondition)}</DetailField>
+                <DetailField label='Autoriza codificación'>
+                  {formatYesNo(controlSheet.noSerialAuthorization)}
+                </DetailField>
+                <DetailField label='Define puntos de calibración'>
+                  {formatYesNo(controlSheet.calibrationPointsRequested)}
+                </DetailField>
+                <DetailField label='Condición especial'>
+                  {formatYesNo(controlSheet.specialCondition)}
+                </DetailField>
               </Stack>
             </Grid>
             <Grid item xs={12} md={4}>
@@ -191,9 +238,15 @@ const CalibrationServiceLogisticsPanel = ({
                 Documentos
               </Typography>
               <Stack spacing={1.5}>
-                <DetailField label='Certificado'>{formatYesNo(controlSheet.calibrationCertificateIncluded)}</DetailField>
-                <DetailField label='Estampilla'>{formatYesNo(controlSheet.stampIncluded)}</DetailField>
-                <DetailField label='Última actualización'>{formatDateTime(controlSheet.lastUpdatedAt)}</DetailField>
+                <DetailField label='Certificado'>
+                  {formatYesNo(controlSheet.calibrationCertificateIncluded)}
+                </DetailField>
+                <DetailField label='Estampilla'>
+                  {formatYesNo(controlSheet.stampIncluded)}
+                </DetailField>
+                <DetailField label='Última actualización'>
+                  {formatDateTime(controlSheet.lastUpdatedAt)}
+                </DetailField>
               </Stack>
             </Grid>
           </Grid>
@@ -217,17 +270,25 @@ const CalibrationServiceLogisticsPanel = ({
                 </TableHead>
                 <TableBody>
                   {filledRows.map((item) => (
-                    <TableRow key={`${item.serviceItemId || 'manual'}-${item.rowNumber}`}>
+                    <TableRow
+                      key={`${item.serviceItemId || 'manual'}-${item.rowNumber}`}
+                    >
                       <TableCell>{item.rowNumber}</TableCell>
-                      <TableCell>{item.equipmentName || 'Sin registrar'}</TableCell>
+                      <TableCell>
+                        {item.equipmentName || 'Sin registrar'}
+                      </TableCell>
                       <TableCell>{item.brand || '—'}</TableCell>
                       <TableCell>{item.model || '—'}</TableCell>
                       <TableCell>{item.serialNumber || '—'}</TableCell>
                       <TableCell>{item.serviceScope || '—'}</TableCell>
                       <TableCell>{item.physicalInspectionIn || '—'}</TableCell>
                       <TableCell>{item.physicalInspectionOut || '—'}</TableCell>
-                      <TableCell>{item.operationalInspectionIn || '—'}</TableCell>
-                      <TableCell>{item.operationalInspectionOut || '—'}</TableCell>
+                      <TableCell>
+                        {item.operationalInspectionIn || '—'}
+                      </TableCell>
+                      <TableCell>
+                        {item.operationalInspectionOut || '—'}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -235,8 +296,8 @@ const CalibrationServiceLogisticsPanel = ({
             </Box>
           ) : (
             <Alert severity='info'>
-              Aún no se ha diligenciado la ficha formal de ingreso y entrega para este
-              servicio.
+              Aún no se ha diligenciado la ficha formal de ingreso y entrega
+              para este servicio.
             </Alert>
           )}
 
@@ -258,8 +319,8 @@ const CalibrationServiceLogisticsPanel = ({
           Movimientos físicos rápidos
         </Typography>
         <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-          Este historial sigue sirviendo como bitácora operativa corta de recogidas y
-          entregas.
+          Este historial sigue sirviendo como bitácora operativa corta de
+          recogidas y entregas.
         </Typography>
         {entries.length ? (
           <Box sx={{ overflowX: 'auto' }}>
@@ -280,8 +341,16 @@ const CalibrationServiceLogisticsPanel = ({
                     <TableCell>
                       <Chip
                         size='small'
-                        color={entry.movementType === 'pickup' ? 'warning' : 'success'}
-                        label={entry.movementType === 'pickup' ? 'Recogida' : 'Entrega'}
+                        color={
+                          entry.movementType === 'pickup'
+                            ? 'warning'
+                            : 'success'
+                        }
+                        label={
+                          entry.movementType === 'pickup'
+                            ? 'Recogida'
+                            : 'Entrega'
+                        }
                       />
                     </TableCell>
                     <TableCell>{formatDateTime(entry.occurredAt)}</TableCell>
@@ -299,7 +368,8 @@ const CalibrationServiceLogisticsPanel = ({
           </Box>
         ) : (
           <Alert severity='info'>
-            Aún no hay movimientos físicos rápidos registrados para este servicio.
+            Aún no hay movimientos físicos rápidos registrados para este
+            servicio.
           </Alert>
         )}
       </Paper>

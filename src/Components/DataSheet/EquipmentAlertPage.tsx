@@ -11,6 +11,7 @@ import {
   Typography
 } from '@mui/material'
 import {
+  Block,
   Build as BuildIcon,
   Engineering as EngineeringIcon,
   NotificationsActive as NotificationsActiveIcon,
@@ -25,6 +26,7 @@ import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { intent } from 'src/theme/designTokens'
 import DataTable from '../Common/DataTable'
 import EmptyState from '../Common/EmptyState'
 import StatusPill from '../Common/StatusPill'
@@ -40,6 +42,10 @@ import {
   toAlertRows,
   useEquipmentAlerts
 } from './equipmentAlerts'
+import DataSheetLifecycleDialog, {
+  type DataSheetLifecycleTarget
+} from './list-data-sheet/DataSheetLifecycleDialog'
+import { useDataSheetActions } from './list-data-sheet/useDataSheetActions'
 
 type AlertFilter = 'all' | 'calibration' | 'inspection'
 
@@ -75,6 +81,10 @@ const EquipmentAlertsPage: React.FC = () => {
   const canRegisterInspection = useCan(
     PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_MANAGE
   )
+  const canRetire = useCan(PERMISSIONS.CALIBRATION_DATASHEET_RETIRE)
+  const actions = useDataSheetActions()
+  const [retireTarget, setRetireTarget] =
+    useState<DataSheetLifecycleTarget | null>(null)
 
   // Al abrir la página las alertas quedan vistas: la campana se apaga hasta que aparezca algo nuevo
   useEffect(() => {
@@ -344,19 +354,40 @@ const EquipmentAlertsPage: React.FC = () => {
           sx: { cursor: 'pointer' }
         })}
         renderRowActions={({ row }) => (
-          <Tooltip title='Ver hoja de vida'>
-            <IconButton
-              size='small'
-              aria-label={`Ver hoja de vida de ${row.original.equipmentName}`}
-              sx={{ color: '#00695C' }}
-              onClick={(event) => {
-                event.stopPropagation()
-                navigate(`/datasheets/${row.original.id}`)
-              }}
-            >
-              <VisibilityOutlined fontSize='small' />
-            </IconButton>
-          </Tooltip>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Tooltip title='Ver hoja de vida'>
+              <IconButton
+                size='small'
+                aria-label={`Ver hoja de vida de ${row.original.equipmentName}`}
+                sx={{ color: '#00695C' }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  navigate(`/datasheets/${row.original.id}`)
+                }}
+              >
+                <VisibilityOutlined fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {canRetire && (
+              <Tooltip title='Dar de baja'>
+                <IconButton
+                  size='small'
+                  aria-label={`Dar de baja ${row.original.equipmentName}`}
+                  sx={{ color: intent.warningInk }}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setRetireTarget({
+                      id: row.original.id,
+                      internalCode: row.original.internalCode,
+                      equipmentName: row.original.equipmentName
+                    })
+                  }}
+                >
+                  <Block fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         )}
         renderEmptyRowsFallback={() => (
           <EmptyState
@@ -371,6 +402,21 @@ const EquipmentAlertsPage: React.FC = () => {
             }
           />
         )}
+      />
+
+      <DataSheetLifecycleDialog
+        open={Boolean(retireTarget)}
+        mode='retire'
+        dataSheet={retireTarget}
+        onClose={() => setRetireTarget(null)}
+        onRetire={async ({ reason, releaseCode }) => {
+          if (!retireTarget) return
+          await actions.retireDataSheetWithReason(
+            retireTarget.id,
+            reason,
+            releaseCode
+          )
+        }}
       />
     </Container>
   )

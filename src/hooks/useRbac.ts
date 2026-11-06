@@ -67,12 +67,9 @@ export const useRefreshRbac = () => {
 
 export const useCreateRole = () => {
   const refresh = useRefreshRbac()
-  return useMutation<
-    RbacRole,
-    unknown,
-    { name: string; description?: string }
-  >(
-    async (input) => (await axiosPrivate.post<RbacRole>('/rbac/roles', input)).data,
+  return useMutation<RbacRole, unknown, { name: string; description?: string }>(
+    async (input) =>
+      (await axiosPrivate.post<RbacRole>('/rbac/roles', input)).data,
     { onSuccess: () => refresh() }
   )
 }

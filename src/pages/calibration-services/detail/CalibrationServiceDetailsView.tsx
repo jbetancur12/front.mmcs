@@ -31,10 +31,7 @@ import CalibrationDeliveryReadyAction from './CalibrationDeliveryReadyAction'
 import { CalibrationServiceReleaseCertificatesAlert } from '../CalibrationServiceReleaseCertificates'
 import CalibrationServiceStageTracker from '../CalibrationServiceStageTracker'
 import { DetailTabPanel } from './CalibrationServiceDetailLayout'
-import {
-  DetailTab,
-  getEmailSendPreview
-} from './calibrationServiceDetailUtils'
+import { DetailTab, getEmailSendPreview } from './calibrationServiceDetailUtils'
 import CalibrationServiceCompactSummary from './CalibrationServiceCompactSummary'
 import CalibrationServiceCutsTab from './CalibrationServiceCutsTab'
 import CalibrationServiceDetailDialogsHost from './CalibrationServiceDetailDialogs'
@@ -82,7 +79,10 @@ const CalibrationServiceDetailsView = ({
   const canResetSequence = useCan(PERMISSIONS.CALIBRATION_CONFIG_SEQUENCE_RESET)
   const mutations = useCalibrationServiceMutations()
   const dialogs = useCalibrationServiceDetailDialogs()
-  const permissions = useCalibrationServiceDetailPermissions(service, sequenceConfig)
+  const permissions = useCalibrationServiceDetailPermissions(
+    service,
+    sequenceConfig
+  )
   const { data: assignableMetrologists = [] } =
     useCalibrationAssignableMetrologists(permissions.canScheduleServiceRole)
   const data = getCalibrationServiceDetailData(service)
@@ -245,7 +245,10 @@ const CalibrationServiceDetailsView = ({
     isUpdatingCustomerSignature: updateCustomerSignature.isLoading
   }
 
-  const documentActions = useCalibrationServiceDocumentActions({ service, mutations })
+  const documentActions = useCalibrationServiceDocumentActions({
+    service,
+    mutations
+  })
   const documentViewer = useCalibrationServiceDocumentViewer(service.id)
   const workflowActions = useCalibrationServiceWorkflowActions({
     service,
@@ -372,8 +375,8 @@ const CalibrationServiceDetailsView = ({
 
       {isTechnicalOnlyView ? (
         <Alert severity='info' sx={{ mb: 2 }}>
-          Vista técnica activa: aquí solo ves la ODS, el semáforo y los
-          datos operativos del servicio.
+          Vista técnica activa: aquí solo ves la ODS, el semáforo y los datos
+          operativos del servicio.
         </Alert>
       ) : null}
       <CalibrationServiceReleaseCertificatesAlert
@@ -397,8 +400,17 @@ const CalibrationServiceDetailsView = ({
                 sx={{
                   mb: 2,
                   borderBottom: '1px solid #e5e7eb',
-                  '& .MuiTabs-indicator': { backgroundColor: '#00BFA5', height: 3 },
-                  '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minWidth: 0, px: 1.1, fontSize: '0.85rem' },
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: '#00BFA5',
+                    height: 3
+                  },
+                  '& .MuiTab-root': {
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    minWidth: 0,
+                    px: 1.1,
+                    fontSize: '0.85rem'
+                  },
                   '& .Mui-selected': { color: '#00695C' }
                 }}
               >
@@ -475,7 +487,9 @@ const CalibrationServiceDetailsView = ({
                       deliveryRole={deliveryRole}
                       deliverySignatureData={deliverySignatureData}
                       onUpdateDeliverySignature={handleUpdateDeliverySignature}
-                      isUpdatingDeliverySignature={updateDeliverySignature.isLoading}
+                      isUpdatingDeliverySignature={
+                        updateDeliverySignature.isLoading
+                      }
                     />
                   </>
                 ) : (

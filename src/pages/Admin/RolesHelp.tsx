@@ -214,9 +214,7 @@ const RolesHelp: React.FC = () => {
           No se pudo cargar la guía. Intenta de nuevo.
         </Alert>
       )}
-      {isLoading && (
-        <SignalLoader message='Cargando guía...' />
-      )}
+      {isLoading && <SignalLoader message='Cargando guía...' />}
       {matrix && groups.length === 0 && (
         <Paper
           elevation={0}

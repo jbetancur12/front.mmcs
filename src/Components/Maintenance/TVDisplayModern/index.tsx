@@ -1,12 +1,6 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect, useMemo } from 'react'
-import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  Chip
-} from '@mui/material'
+import { Box, Typography, Container, Card, Chip } from '@mui/material'
 import { TrendingUp, Error as ErrorIcon } from '@mui/icons-material'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -263,7 +257,8 @@ const MaintenanceTVDisplayModern: React.FC = () => {
     const totalPages = Math.max(
       1,
       Math.ceil(
-        organizedTickets.paginatedTickets.length / gridCalculation.ticketsPerPage
+        organizedTickets.paginatedTickets.length /
+          gridCalculation.ticketsPerPage
       )
     )
     const isLastPage = slideIndex === totalPages - 1
@@ -288,9 +283,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       )
 
       const growthFactor =
-        currentPageTickets.length <= displayColumns
-          ? 1.24
-          : 1.14
+        currentPageTickets.length <= displayColumns ? 1.24 : 1.14
 
       sparseCardHeight = Math.round(gridCalculation.cardHeight * growthFactor)
     }
@@ -301,7 +294,12 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       centerSparsePage: Boolean(shouldRebalance),
       sparseCardHeight
     }
-  }, [organizedTickets.paginatedTickets.length, gridCalculation, slideIndex, currentPageTickets.length])
+  }, [
+    organizedTickets.paginatedTickets.length,
+    gridCalculation,
+    slideIndex,
+    currentPageTickets.length
+  ])
 
   // Calculate elapsed time since ticket creation
   const getElapsedTime = (createdAt: string) => {
@@ -407,7 +405,10 @@ const MaintenanceTVDisplayModern: React.FC = () => {
           gap: 4
         }}
       >
-        <SignalLoader size='large' message='Cargando Dashboard de Mantenimiento' />
+        <SignalLoader
+          size='large'
+          message='Cargando Dashboard de Mantenimiento'
+        />
         <Typography
           variant='body1'
           sx={{
@@ -539,7 +540,8 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                     letterSpacing: '0.15px'
                   }}
                 >
-                  {metrics.pendingTechnicalReport} pendiente(s) de reporte técnico
+                  {metrics.pendingTechnicalReport} pendiente(s) de reporte
+                  técnico
                 </Typography>
               )}
             </Box>

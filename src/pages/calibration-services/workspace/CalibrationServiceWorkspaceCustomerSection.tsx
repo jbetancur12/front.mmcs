@@ -33,13 +33,25 @@ import {
   REQUEST_CHANNEL_OPTIONS,
   sectionCardSx
 } from './calibrationServiceWorkspaceConstants'
-import { CustomerDialogMode, FormState } from './calibrationServiceWorkspaceTypes'
+import {
+  CustomerDialogMode,
+  FormState
+} from './calibrationServiceWorkspaceTypes'
 import { getSiteDisplayLabel } from './calibrationServiceWorkspaceUtils'
 import { CalibrationServiceWorkspaceForm } from './useCalibrationServiceWorkspaceForm'
 
 // La lista del selector de clientes es más ancha que el campo: los nombres largos se leen en una o dos líneas
 const WideListPopper = (props: PopperProps) => (
-  <Popper {...props} placement='bottom-start' style={{ ...props.style, width: 'fit-content', minWidth: 380, maxWidth: 'min(640px, 92vw)' }} />
+  <Popper
+    {...props}
+    placement='bottom-start'
+    style={{
+      ...props.style,
+      width: 'fit-content',
+      minWidth: 380,
+      maxWidth: 'min(640px, 92vw)'
+    }}
+  />
 )
 
 interface CalibrationServiceWorkspaceCustomerSectionProps {
@@ -78,7 +90,12 @@ const CalibrationServiceWorkspaceCustomerSection = ({
   return (
     <Card elevation={0} sx={sectionCardSx}>
       <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-        <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+        <Stack
+          direction='row'
+          alignItems='center'
+          spacing={1.5}
+          sx={{ mb: 2.5 }}
+        >
           <GroupOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
           <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
             Cliente y alcance
@@ -86,61 +103,91 @@ const CalibrationServiceWorkspaceCustomerSection = ({
         </Stack>
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'flex-start' }}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={2}
+              alignItems={{ md: 'flex-start' }}
+            >
               <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Autocomplete
-                fullWidth
-                PopperComponent={WideListPopper}
-                options={customerOptions}
-                value={selectedCustomer}
-                getOptionLabel={(option) =>
-                  [option.nombre, option.identificacion].filter(Boolean).join(' · ')
-                }
-                onChange={(_, value) => handleCustomerChange(value)}
-                disabled={
-                  !canEdit ||
-                  isBusy ||
-                  (hasCustomersError && customerOptions.length === 0)
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Cliente'
-                    required
-                    inputProps={{ ...params.inputProps, title: params.inputProps.value ? String(params.inputProps.value) : undefined }}
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Autocomplete
+                    fullWidth
+                    PopperComponent={WideListPopper}
+                    options={customerOptions}
+                    value={selectedCustomer}
+                    getOptionLabel={(option) =>
+                      [option.nombre, option.identificacion]
+                        .filter(Boolean)
+                        .join(' · ')
+                    }
+                    onChange={(_, value) => handleCustomerChange(value)}
+                    disabled={
+                      !canEdit ||
+                      isBusy ||
+                      (hasCustomersError && customerOptions.length === 0)
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label='Cliente'
+                        required
+                        inputProps={{
+                          ...params.inputProps,
+                          title: params.inputProps.value
+                            ? String(params.inputProps.value)
+                            : undefined
+                        }}
+                      />
+                    )}
                   />
-                )}
-              />
-              <Tooltip title='Nuevo cliente'>
-                <span>
-                  <Button
-                    variant='outlined'
-                    aria-label='Nuevo cliente'
-                    startIcon={<PersonAddAltOutlinedIcon />}
-                    sx={{ height: 56, minWidth: { xs: '100%', sm: 56 }, width: { xs: '100%', sm: 56 }, px: { xs: 2, sm: 0 }, '& .MuiButton-startIcon': { mr: { xs: 1, sm: 0 }, ml: { sm: 0 } } }}
-                    disabled={!canEdit || isBusy}
-                    onClick={() => setCustomerDialogMode('customer')}
-                  >
-                    <Box component='span' sx={{ display: { xs: 'inline', sm: 'none' } }}>Nuevo cliente</Box>
-                  </Button>
-                </span>
-              </Tooltip>
-            </Stack>
+                  <Tooltip title='Nuevo cliente'>
+                    <span>
+                      <Button
+                        variant='outlined'
+                        aria-label='Nuevo cliente'
+                        startIcon={<PersonAddAltOutlinedIcon />}
+                        sx={{
+                          height: 56,
+                          minWidth: { xs: '100%', sm: 56 },
+                          width: { xs: '100%', sm: 56 },
+                          px: { xs: 2, sm: 0 },
+                          '& .MuiButton-startIcon': {
+                            mr: { xs: 1, sm: 0 },
+                            ml: { sm: 0 }
+                          }
+                        }}
+                        disabled={!canEdit || isBusy}
+                        onClick={() => setCustomerDialogMode('customer')}
+                      >
+                        <Box
+                          component='span'
+                          sx={{ display: { xs: 'inline', sm: 'none' } }}
+                        >
+                          Nuevo cliente
+                        </Box>
+                      </Button>
+                    </span>
+                  </Tooltip>
+                </Stack>
               </Box>
               <Box sx={{ width: { xs: '100%', md: 190 }, flexShrink: 0 }}>
-            <FormControl fullWidth>
-              <InputLabel>Alcance</InputLabel>
-              <Select
-                value={formState.scopeType || 'general'}
-                label='Alcance'
-                disabled={!canEdit || isBusy}
-                onChange={(event) => setField('scopeType', event.target.value as FormState['scopeType'])}
-              >
-                <MenuItem value='general'>Cliente general</MenuItem>
-                <MenuItem value='site'>Sede específica</MenuItem>
-              </Select>
-            </FormControl>
+                <FormControl fullWidth>
+                  <InputLabel>Alcance</InputLabel>
+                  <Select
+                    value={formState.scopeType || 'general'}
+                    label='Alcance'
+                    disabled={!canEdit || isBusy}
+                    onChange={(event) =>
+                      setField(
+                        'scopeType',
+                        event.target.value as FormState['scopeType']
+                      )
+                    }
+                  >
+                    <MenuItem value='general'>Cliente general</MenuItem>
+                    <MenuItem value='site'>Sede específica</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
             </Stack>
           </Grid>
@@ -184,7 +231,9 @@ const CalibrationServiceWorkspaceCustomerSection = ({
                     label='Sede'
                     value={formState.customerSite || ''}
                     disabled={!canEdit || isBusy}
-                    onChange={(event) => setField('customerSite', event.target.value)}
+                    onChange={(event) =>
+                      setField('customerSite', event.target.value)
+                    }
                   />
                   <Button
                     variant='outlined'
@@ -205,7 +254,9 @@ const CalibrationServiceWorkspaceCustomerSection = ({
                 value={formState.requestChannel || ''}
                 label='Vía de solicitud'
                 disabled={!canEdit || isBusy}
-                onChange={(event) => setField('requestChannel', event.target.value)}
+                onChange={(event) =>
+                  setField('requestChannel', event.target.value)
+                }
               >
                 {REQUEST_CHANNEL_OPTIONS.map((option) => (
                   <MenuItem key={option} value={option}>
@@ -220,36 +271,83 @@ const CalibrationServiceWorkspaceCustomerSection = ({
         <Divider sx={{ my: 2 }} />
         <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
           <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 20 }} />
-          <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#374151' }}>
+          <Typography
+            variant='subtitle2'
+            fontWeight={700}
+            sx={{ color: '#374151' }}
+          >
             Evidencia de solicitud *
           </Typography>
           {requestEvidenceFile || requestEvidenceDocuments.length ? (
-            <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Adjunta' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+            <Chip
+              icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />}
+              size='small'
+              label='Adjunta'
+              color='success'
+              variant='outlined'
+              sx={{
+                height: 22,
+                '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 },
+                '& .MuiChip-icon': { fontSize: 14, ml: 0.5 }
+              }}
+            />
           ) : (
-            <Chip size='small' label='Obligatorio' color='error' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 } }} />
+            <Chip
+              size='small'
+              label='Obligatorio'
+              color='error'
+              variant='outlined'
+              sx={{
+                height: 22,
+                '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }
+              }}
+            />
           )}
         </Stack>
         <Stack spacing={2}>
-          <TextField fullWidth label='Título de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} required />
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
-            <Button component='label' variant='outlined' startIcon={<UploadFileOutlinedIcon />} disabled={!canEdit || isBusy}>
+          <TextField
+            fullWidth
+            label='Título de la evidencia'
+            value={requestEvidenceTitle}
+            disabled={!canEdit || isBusy}
+            onChange={(event) => setRequestEvidenceTitle(event.target.value)}
+            required
+          />
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'flex-start', md: 'center' }}
+          >
+            <Button
+              component='label'
+              variant='outlined'
+              startIcon={<UploadFileOutlinedIcon />}
+              disabled={!canEdit || isBusy}
+            >
               Seleccionar archivo
               <input
                 hidden
                 type='file'
                 accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
-                onChange={(event) => setRequestEvidenceFile(event.target.files?.[0] || null)}
+                onChange={(event) =>
+                  setRequestEvidenceFile(event.target.files?.[0] || null)
+                }
               />
             </Button>
             <Typography variant='body2' color='text.secondary'>
-              {requestEvidenceFile ? requestEvidenceFile.name : 'Adjunta PDF, imagen o soporte documental de la solicitud.'}
+              {requestEvidenceFile
+                ? requestEvidenceFile.name
+                : 'Adjunta PDF, imagen o soporte documental de la solicitud.'}
             </Typography>
           </Stack>
           {requestEvidenceDocuments.length ? (
             <List dense disablePadding>
               {requestEvidenceDocuments.map((document) => (
                 <ListItem key={document.id} disableGutters>
-                  <ListItemText primary={document.title || document.originalFileName} secondary={`Version ${document.version}`} />
+                  <ListItemText
+                    primary={document.title || document.originalFileName}
+                    secondary={`Version ${document.version}`}
+                  />
                 </ListItem>
               ))}
             </List>

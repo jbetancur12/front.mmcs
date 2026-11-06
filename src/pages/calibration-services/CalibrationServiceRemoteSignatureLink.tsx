@@ -38,11 +38,13 @@ const CalibrationServiceRemoteSignatureLink = ({
   // Misma capacidad que el backend exige para generar o anular el enlace.
   const canManageLink = useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTE)
   // El enlace completo solo se conoce al generarlo (en el servidor se guarda su hash).
-  const [generated, setGenerated] = useState<{ url: string; expiresAt: string } | null>(
-    null
-  )
+  const [generated, setGenerated] = useState<{
+    url: string
+    expiresAt: string
+  } | null>(null)
 
-  const remote = (otherFields?.remoteSignature as RemoteSignatureState | undefined) ?? null
+  const remote =
+    (otherFields?.remoteSignature as RemoteSignatureState | undefined) ?? null
   const signedAt = formatDateTime(remote?.usedAt)
   const signerName = remote?.signerName
   const hasActiveLink = Boolean(
@@ -50,7 +52,8 @@ const CalibrationServiceRemoteSignatureLink = ({
       !remote.usedAt &&
       new Date(remote.expiresAt).getTime() > Date.now()
   )
-  const isBusy = createRemoteSignatureLink.isLoading || revokeRemoteSignatureLink.isLoading
+  const isBusy =
+    createRemoteSignatureLink.isLoading || revokeRemoteSignatureLink.isLoading
   const signedViaLink = hasSignature && Boolean(remote?.usedAt)
   const signedInPlatform = hasSignature && !signedViaLink
 
@@ -63,13 +66,17 @@ const CalibrationServiceRemoteSignatureLink = ({
       toast.success('Enlace de firma generado.')
     } catch (error) {
       logger.error(error)
-      toast.error(getApiErrorMessage(error, 'No pudimos generar el enlace de firma.'))
+      toast.error(
+        getApiErrorMessage(error, 'No pudimos generar el enlace de firma.')
+      )
     }
   }
 
   const handleRevoke = async () => {
     try {
-      await revokeRemoteSignatureLink.mutateAsync({ serviceId: String(serviceId) })
+      await revokeRemoteSignatureLink.mutateAsync({
+        serviceId: String(serviceId)
+      })
       setGenerated(null)
       toast.success('Enlace revocado.')
     } catch (error) {
@@ -102,8 +109,8 @@ const CalibrationServiceRemoteSignatureLink = ({
   if (signedViaLink) {
     return (
       <Alert severity='success'>
-        Recepción conforme firmada a distancia por {signerName || 'el cliente'} el{' '}
-        {signedAt}. Ya no puede firmarse ni modificarse desde la plataforma.
+        Recepción conforme firmada a distancia por {signerName || 'el cliente'}{' '}
+        el {signedAt}. Ya no puede firmarse ni modificarse desde la plataforma.
       </Alert>
     )
   }
@@ -131,8 +138,9 @@ const CalibrationServiceRemoteSignatureLink = ({
           </Typography>
         </Stack>
         <Typography variant='caption' color='text.secondary'>
-          Genera un enlace temporal (72 horas, un solo uso) para que el cliente vea la ODS y firme la
-          recepción conforme de la orden de servicio desde su celular o computador, sin iniciar sesión.
+          Genera un enlace temporal (72 horas, un solo uso) para que el cliente
+          vea la ODS y firme la recepción conforme de la orden de servicio desde
+          su celular o computador, sin iniciar sesión.
         </Typography>
 
         {generated ? (
@@ -145,8 +153,8 @@ const CalibrationServiceRemoteSignatureLink = ({
               fullWidth
             />
             <Typography variant='caption' color='text.secondary'>
-              Vence el {formatDateTime(generated.expiresAt)}. Compártelo solo con el
-              contacto del cliente: quien tenga el enlace puede firmar.
+              Vence el {formatDateTime(generated.expiresAt)}. Compártelo solo
+              con el contacto del cliente: quien tenga el enlace puede firmar.
             </Typography>
             <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
               <Button
@@ -173,9 +181,9 @@ const CalibrationServiceRemoteSignatureLink = ({
           </Stack>
         ) : hasActiveLink ? (
           <Typography variant='caption' color='text.secondary'>
-            Hay un enlace activo (vence el {formatDateTime(remote?.expiresAt)}). Por
-            seguridad solo se muestra al generarlo; genera uno nuevo para obtenerlo otra
-            vez (el anterior dejará de funcionar).
+            Hay un enlace activo (vence el {formatDateTime(remote?.expiresAt)}).
+            Por seguridad solo se muestra al generarlo; genera uno nuevo para
+            obtenerlo otra vez (el anterior dejará de funcionar).
           </Typography>
         ) : null}
 
@@ -191,7 +199,9 @@ const CalibrationServiceRemoteSignatureLink = ({
               textTransform: 'none'
             }}
           >
-            {hasActiveLink || generated ? 'Generar nuevo enlace' : 'Generar enlace de firma'}
+            {hasActiveLink || generated
+              ? 'Generar nuevo enlace'
+              : 'Generar enlace de firma'}
           </Button>
           {hasActiveLink || generated ? (
             <Button

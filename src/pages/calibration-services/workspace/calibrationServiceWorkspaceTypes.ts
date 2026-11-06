@@ -5,9 +5,12 @@ import {
 import { CATALOG_PRICE_SOURCE_OPTIONS } from './calibrationServiceWorkspaceConstants'
 
 export type FormItem = CalibrationServiceItemPayload & { localId: string }
-export type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] }
+export type FormState = Omit<CalibrationServicePayload, 'items'> & {
+  items: FormItem[]
+}
 
-export type CatalogPriceSource = (typeof CATALOG_PRICE_SOURCE_OPTIONS)[number]['value']
+export type CatalogPriceSource =
+  (typeof CATALOG_PRICE_SOURCE_OPTIONS)[number]['value']
 
 // Lo que falta para poder guardar (borrador) o enviar la cotización, y en qué paso se corrige
 export interface Requirement {

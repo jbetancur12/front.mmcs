@@ -18,8 +18,10 @@ export const RangeSelector = ({
       <Button
         key={rangeOption.label}
         variant={
-          (rangeOption.isCustom && selectedRange.isCustom) || 
-          rangeOption.label === selectedRange.label ? 'contained' : 'outlined'
+          (rangeOption.isCustom && selectedRange.isCustom) ||
+          rangeOption.label === selectedRange.label
+            ? 'contained'
+            : 'outlined'
         }
         onClick={() => onSelect(rangeOption)}
       >

@@ -43,4 +43,3 @@ Si validas este documento, la siguiente pasada haría:
 1. Editar `src/routes/CustomerRoutes.tsx` para quitar `Customer` y `':id/legacy'`.
 2. Borrar `src/pages/Customer.tsx`.
 3. Correr `npm run check`.
-

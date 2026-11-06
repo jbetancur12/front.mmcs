@@ -58,16 +58,43 @@ import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from 'src/utils/lmsAudience'
-import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from 'src/services/lmsService'
+import {
+  buildLessonResourceDownloadUrl,
+  buildLmsVideoStreamUrl
+} from 'src/services/lmsService'
+import type {
+  Course as ApiCourse,
+  CourseProgressResponse,
+  LessonResource as ApiLessonResource
+} from 'src/services/lmsService'
 import PDFViewer from 'src/Components/PDFViewer'
 import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
-
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { busyDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
+interface MappedResource {
+  id: number
+  title: string
+  description: string
+  resourceType: 'pdf' | 'document' | 'link'
+  href: string
+  original_filename?: string
+  external_url?: string
+}
+
+interface MappedQuestion {
+  id: number
+  question: string
+  type: 'single-choice' | 'multiple-choice' | 'true-false'
+  options: string[]
+  correctAnswer: number | number[]
+  explanation?: string
+  points: number
+}
+
 interface CourseUnit {
   id: number
   title: string
@@ -84,17 +111,9 @@ interface CourseUnit {
     quizId?: number
     maxAttempts?: number
     currentAttempt?: number
-    questions?: any[]
+    questions?: MappedQuestion[]
     description?: string
-    resources?: Array<{
-      id: number
-      title: string
-      description?: string
-      resourceType: 'pdf' | 'document' | 'link'
-      href: string
-      original_filename?: string
-      external_url?: string
-    }>
+    resources?: MappedResource[]
   }
 }
 
@@ -111,17 +130,22 @@ interface Course {
   status: 'draft' | 'published' | 'archived'
 }
 
-const getResourceHref = (resource: any) =>
+const getResourceHref = (resource: ApiLessonResource): string =>
   resource.external_url ||
   resource.download_url ||
-  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
+  (resource.object_key
+    ? buildLessonResourceDownloadUrl(resource.id)
+    : resource.file_url) ||
+  ''
 
 // ==================== HELPER FUNCTIONS ====================
 
 /**
  * Mapea tipos de quiz del backend al formato del frontend
  */
-const mapQuizType = (backendType: string): 'single-choice' | 'multiple-choice' | 'true-false' => {
+const mapQuizType = (
+  backendType: string
+): 'single-choice' | 'multiple-choice' | 'true-false' => {
   switch (backendType) {
     case 'single':
       return 'single-choice'
@@ -155,37 +179,58 @@ const convertToEmbedUrl = (url: string): string => {
   return url
 }
 
-const resolveLessonVideoUrl = (lesson: any): string => {
+interface VideoSourceLesson {
+  video_url?: string
+  video_source?: 'youtube' | 'minio' | 'gdrive'
+}
+
+const resolveLessonVideoUrl = (lesson: VideoSourceLesson): string => {
   if (!lesson?.video_url) return ''
-  if (lesson.video_source === 'minio') return buildLmsVideoStreamUrl(lesson.video_url)
-  if (lesson.video_source === 'gdrive') return buildGDriveEmbedUrl(lesson.video_url)
+  if (lesson.video_source === 'minio')
+    return buildLmsVideoStreamUrl(lesson.video_url)
+  if (lesson.video_source === 'gdrive')
+    return buildGDriveEmbedUrl(lesson.video_url)
   return convertToEmbedUrl(lesson.video_url)
 }
 
 /**
  * Transforma datos de preview (modo admin) al formato Course
  */
-const transformPreviewDataToCourse = (previewData: any): Course => {
-  const units = previewData.modules.flatMap((module: any, moduleIndex: number) =>
-    module.lessons.map((lesson: any, lessonIndex: number) => {
+const transformPreviewDataToCourse = (previewData: ApiCourse): Course => {
+  const units = (previewData.modules ?? []).flatMap((module, moduleIndex) =>
+    (module.lessons ?? []).map((lesson, lessonIndex): CourseUnit => {
       // Transformar quiz questions si existen
-      let questions: any[] = []
-      if (lesson.quiz && lesson.quiz.questions && Array.isArray(lesson.quiz.questions)) {
-        questions = lesson.quiz.questions.map((q: any) => ({
-          id: q.id,
-          question: q.question,
-          type: mapQuizType(q.type),
-          options: q.options || [],
-          correctAnswer: q.type === 'multiple' ? q.correct_answers : q.correct_answers[0],
-          explanation: q.explanation,
-          points: q.points
-        }))
+      let questions: MappedQuestion[] = []
+      if (
+        lesson.quiz &&
+        lesson.quiz.questions &&
+        Array.isArray(lesson.quiz.questions)
+      ) {
+        questions = lesson.quiz.questions.map(
+          (q): MappedQuestion => ({
+            id: q.id,
+            question: q.question,
+            type: mapQuizType(q.type),
+            options: q.options || [],
+            correctAnswer:
+              q.type === 'multiple'
+                ? q.correct_answers ?? []
+                : q.correct_answers?.[0] ?? 0,
+            explanation: q.explanation ?? undefined,
+            points: q.points
+          })
+        )
       }
 
       return {
         id: lesson.id,
         title: lesson.title,
-        type: lesson.type === 'video' ? 'video' : lesson.type === 'quiz' ? 'quiz' : 'text',
+        type:
+          lesson.type === 'video'
+            ? 'video'
+            : lesson.type === 'quiz'
+              ? 'quiz'
+              : 'text',
         duration: `${lesson.estimated_minutes || 30} min`,
         order: moduleIndex * 100 + lessonIndex + 1,
         completed: false, // Nada completado en preview admin
@@ -196,18 +241,23 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
           text: lesson.content,
           quizId: lesson.quiz?.id,
           maxAttempts: lesson.quiz?.max_attempts,
-          currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           resources: (lesson.resources || [])
-            .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
-            .map((resource: any) => ({
+            .filter(
+              (resource) =>
+                resource.external_url ||
+                resource.download_url ||
+                resource.object_key ||
+                resource.file_url
+            )
+            .map((resource) => ({
               id: resource.id,
               title: resource.title,
               description: resource.description || '',
               resourceType: resource.resource_type,
               href: getResourceHref(resource),
-              original_filename: resource.original_filename,
-              external_url: resource.external_url
+              original_filename: resource.original_filename ?? undefined,
+              external_url: resource.external_url ?? undefined
             })),
           questions: questions
         }
@@ -221,7 +271,7 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
     description: previewData.description,
     category: getCourseAudienceLabel(previewData.audience),
     instructor: previewData.instructor || 'Instructor',
-    duration: previewData.duration || '8 horas',
+    duration: previewData.duration ? String(previewData.duration) : '8 horas',
     audience: normalizeCourseAudience(previewData.audience),
     thumbnail: previewData.thumbnail || '/placeholder.svg?height=400&width=600',
     status: previewData.status,
@@ -232,39 +282,58 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
 /**
  * Transforma datos de progreso (modo estudiante) al formato Course
  */
-const transformProgressDataToCourse = (progressData: any): Course => {
-  const hasReviewAccess = progressData?.progress?.isCompleted === true ||
-    Number(progressData?.progress?.progressPercentage ?? progressData?.progress?.progress_percentage ?? 0) >= 100
+const transformProgressDataToCourse = (
+  progressData: CourseProgressResponse
+): Course => {
+  const hasReviewAccess =
+    progressData?.progress?.isCompleted === true ||
+    Number(progressData?.progress?.progressPercentage ?? 0) >= 100
 
   let previousLessonCompleted = true
 
-  const units = progressData.modules.flatMap((module: any, moduleIndex: number) =>
-    module.lessons.map((lesson: any, lessonIndex: number) => {
+  const units = progressData.modules.flatMap((module, moduleIndex) =>
+    (module.lessons ?? []).map((lesson, lessonIndex): CourseUnit => {
       const isCompleted = lesson.progress?.status === 'completed'
-      const isUnlocked = hasReviewAccess || (moduleIndex === 0 && lessonIndex === 0
-        ? true
-        : previousLessonCompleted)
+      const isUnlocked =
+        hasReviewAccess ||
+        (moduleIndex === 0 && lessonIndex === 0
+          ? true
+          : previousLessonCompleted)
 
       previousLessonCompleted = hasReviewAccess || isCompleted
 
       // Transformar quiz questions si existen
-      let questions: any[] = []
-      if (lesson.quiz && lesson.quiz.questions && Array.isArray(lesson.quiz.questions)) {
-        questions = lesson.quiz.questions.map((q: any) => ({
-          id: q.id,
-          question: q.question,
-          type: mapQuizType(q.type),
-          options: q.options || [],
-          correctAnswer: q.type === 'multiple' ? q.correct_answers : q.correct_answers[0],
-          explanation: q.explanation,
-          points: q.points
-        }))
+      let questions: MappedQuestion[] = []
+      if (
+        lesson.quiz &&
+        lesson.quiz.questions &&
+        Array.isArray(lesson.quiz.questions)
+      ) {
+        questions = lesson.quiz.questions.map(
+          (q): MappedQuestion => ({
+            id: q.id,
+            question: q.question,
+            type: mapQuizType(q.type),
+            options: q.options || [],
+            correctAnswer:
+              q.type === 'multiple'
+                ? q.correct_answers ?? []
+                : q.correct_answers?.[0] ?? 0,
+            explanation: q.explanation ?? undefined,
+            points: q.points
+          })
+        )
       }
 
       return {
         id: lesson.id,
         title: lesson.title,
-        type: lesson.type === 'video' ? 'video' : lesson.type === 'quiz' ? 'quiz' : 'text',
+        type:
+          lesson.type === 'video'
+            ? 'video'
+            : lesson.type === 'quiz'
+              ? 'quiz'
+              : 'text',
         duration: `${lesson.estimated_minutes || 30} min`,
         order: moduleIndex * 100 + lessonIndex + 1,
         completed: hasReviewAccess || isCompleted,
@@ -275,18 +344,23 @@ const transformProgressDataToCourse = (progressData: any): Course => {
           text: lesson.content,
           quizId: lesson.quiz?.id,
           maxAttempts: lesson.quiz?.max_attempts,
-          currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           resources: (lesson.resources || [])
-            .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
-            .map((resource: any) => ({
+            .filter(
+              (resource) =>
+                resource.external_url ||
+                resource.download_url ||
+                resource.object_key ||
+                resource.file_url
+            )
+            .map((resource) => ({
               id: resource.id,
               title: resource.title,
               description: resource.description || '',
               resourceType: resource.resource_type,
               href: getResourceHref(resource),
-              original_filename: resource.original_filename,
-              external_url: resource.external_url
+              original_filename: resource.original_filename ?? undefined,
+              external_url: resource.external_url ?? undefined
             })),
           questions: questions
         }
@@ -295,9 +369,9 @@ const transformProgressDataToCourse = (progressData: any): Course => {
   )
 
   return {
-    id: progressData.course?.id || progressData.id,
-    title: progressData.course?.title || progressData.title,
-    description: progressData.course?.description || progressData.description,
+    id: progressData.course.id,
+    title: progressData.course.title,
+    description: progressData.course.description,
     category: getCourseAudienceLabel(progressData.course?.audience),
     instructor: 'Instructor',
     duration: `${Math.ceil((progressData.progress?.totalTimeSpent || 0) / 60)} horas`,
@@ -315,7 +389,8 @@ const LmsCoursePreview: React.FC = () => {
 
   const [previewMode, setPreviewMode] = useState<'student' | 'admin'>('student')
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
-  const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
+  const [pdfViewerResource, setPdfViewerResource] =
+    useState<MappedResource | null>(null)
 
   const storeUser = useStore(userStore)
   // La vista previa es para quien gestiona cursos (capacidad de la administración del LMS), no solo para "admin"
@@ -335,17 +410,25 @@ const LmsCoursePreview: React.FC = () => {
   const completeLessonMutation = useCompleteLesson()
   const submitQuizMutation = useSubmitQuiz()
 
-  const isLoading = previewMode === 'admin'
-    ? previewQuery.isLoading
-    : studentProgressQuery.isLoading
+  const isLoading =
+    previewMode === 'admin'
+      ? previewQuery.isLoading
+      : studentProgressQuery.isLoading
 
-  const courseData = previewMode === 'admin'
-    ? (previewQuery.data
-      ? { course: transformPreviewDataToCourse(previewQuery.data), isPreview: true }
-      : null)
-    : (studentProgressQuery.data
-      ? { course: transformProgressDataToCourse(studentProgressQuery.data), isPreview: false }
-      : null)
+  const courseData =
+    previewMode === 'admin'
+      ? previewQuery.data
+        ? {
+            course: transformPreviewDataToCourse(previewQuery.data),
+            isPreview: true
+          }
+        : null
+      : studentProgressQuery.data
+        ? {
+            course: transformProgressDataToCourse(studentProgressQuery.data),
+            isPreview: false
+          }
+        : null
 
   useEffect(() => {
     // Verificar que el usuario está autenticado
@@ -361,7 +444,7 @@ const LmsCoursePreview: React.FC = () => {
     }
   }, [navigate, storeUser, canPreviewCourse])
 
-  const handleOpenResource = (resource: any) => {
+  const handleOpenResource = (resource: MappedResource) => {
     if (resource.external_url) {
       window.open(resource.external_url, '_blank', 'noopener,noreferrer')
       return
@@ -395,8 +478,8 @@ const LmsCoursePreview: React.FC = () => {
     )
   }
 
-  const course = courseData?.course;
-  const isPreview = courseData?.isPreview || false;
+  const course = courseData?.course
+  const isPreview = courseData?.isPreview || false
 
   if (!course) {
     return (
@@ -410,7 +493,7 @@ const LmsCoursePreview: React.FC = () => {
       </Box>
     )
   }
-  
+
   const completedUnits = course.units.filter((unit) => unit.completed).length
   const progressPercentage = (completedUnits / course.units.length) * 100
   const currentUnitData = course.units[currentUnit]
@@ -418,9 +501,12 @@ const LmsCoursePreview: React.FC = () => {
   const handleUnitComplete = async (unitId: number) => {
     if (isPreview || previewMode === 'admin') {
       // En modo preview admin, solo simular
-      logger.log('✅ Unidad completada (preview):', unitId);
-      notify.info('Modo Preview', 'En modo administrador el progreso no se guarda');
-      return;
+      logger.log('✅ Unidad completada (preview):', unitId)
+      notify.info(
+        'Modo Preview',
+        'En modo administrador el progreso no se guarda'
+      )
+      return
     }
 
     try {
@@ -434,17 +520,28 @@ const LmsCoursePreview: React.FC = () => {
       })
 
       // Refrescar datos para actualizar el progreso y desbloqueos
-      await queryClient.invalidateQueries(queryKeys.progress.course(parsedCourseId, undefined))
-      await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
+      await queryClient.invalidateQueries(
+        queryKeys.progress.course(parsedCourseId, undefined)
+      )
+      await queryClient.invalidateQueries(
+        queryKeys.certificates.user(undefined)
+      )
 
-      logger.log('✅ Lección completada exitosamente');
+      logger.log('✅ Lección completada exitosamente')
 
       // Mostrar éxito
-      notify.success('¡Lección completada!', 'Tu progreso ha sido guardado. La siguiente lección está desbloqueada.');
-    } catch (error: any) {
-      logger.error('❌ Error al completar lección:', error);
+      notify.success(
+        '¡Lección completada!',
+        'Tu progreso ha sido guardado. La siguiente lección está desbloqueada.'
+      )
+    } catch (error: unknown) {
+      logger.error('❌ Error al completar lección:', error)
 
-      notify.error('Error al guardar progreso', getApiErrorReason(error) || 'No se pudo marcar la lección como completada');
+      notify.error(
+        'Error al guardar progreso',
+        getApiErrorReason(error) ||
+          'No se pudo marcar la lección como completada'
+      )
     } finally {
       busyDialog.hide()
     }
@@ -456,15 +553,20 @@ const LmsCoursePreview: React.FC = () => {
 
       // Validar que nextUnit existe
       if (!nextUnit) {
-        logger.error('❌ La siguiente unidad no existe');
-        return;
+        logger.error('❌ La siguiente unidad no existe')
+        return
       }
 
       if (nextUnit.unlocked || isPreview || previewMode === 'admin') {
         setCurrentUnit(currentUnit + 1)
       } else {
-        logger.log('⚠️ La siguiente unidad está bloqueada. Completa la unidad actual primero.');
-        notify.warning('Lección bloqueada', 'Completa la lección actual antes de continuar');
+        logger.log(
+          '⚠️ La siguiente unidad está bloqueada. Completa la unidad actual primero.'
+        )
+        notify.warning(
+          'Lección bloqueada',
+          'Completa la lección actual antes de continuar'
+        )
       }
     }
   }
@@ -478,17 +580,17 @@ const LmsCoursePreview: React.FC = () => {
   const canNavigateToUnit = (unitIndex: number) => {
     // Validar que el índice esté dentro del rango
     if (unitIndex < 0 || unitIndex >= course.units.length) {
-      return false;
+      return false
     }
 
     // En modo preview admin, permitir navegación libre
     if (isPreview || previewMode === 'admin') {
-      return true;
+      return true
     }
 
     // Verificar que la unidad existe y está desbloqueada
-    const unit = course.units[unitIndex];
-    return unit && unit.unlocked;
+    const unit = course.units[unitIndex]
+    return unit && unit.unlocked
   }
 
   const getUnitIcon = (type: string) => {
@@ -597,7 +699,10 @@ const LmsCoursePreview: React.FC = () => {
                   <ScheduleIcon fontSize='small' />
                   <Typography variant='body2'>{course.duration}</Typography>
                 </Box>
-                <Chip label={`Instructor: ${course.instructor}`} variant='outlined' />
+                <Chip
+                  label={`Instructor: ${course.instructor}`}
+                  variant='outlined'
+                />
               </Box>
 
               <Box sx={{ mb: 2 }}>
@@ -627,10 +732,9 @@ const LmsCoursePreview: React.FC = () => {
                   {Math.round(progressPercentage)}% Completado
                 </Typography>
                 <Alert severity={isPreview ? 'info' : 'success'} sx={{ mb: 2 }}>
-                  {isPreview 
+                  {isPreview
                     ? 'Modo de vista previa - Los cambios no se guardan'
-                    : 'Progreso real del estudiante'
-                  }
+                    : 'Progreso real del estudiante'}
                 </Alert>
               </Box>
             </Grid>
@@ -699,7 +803,9 @@ const LmsCoursePreview: React.FC = () => {
                     <Box sx={{ mb: 3 }}>
                       <LmsVideoPlayer
                         src={currentUnitData.content.videoUrl}
-                        videoSource={currentUnitData.content.videoSource || 'youtube'}
+                        videoSource={
+                          currentUnitData.content.videoSource || 'youtube'
+                        }
                         title={currentUnitData.title}
                       />
                       {currentUnitData.content.transcript && (
@@ -723,9 +829,24 @@ const LmsCoursePreview: React.FC = () => {
                         p: 3,
                         backgroundColor: 'grey.50',
                         borderRadius: 1,
-                        '& h1': { fontSize: '2rem', fontWeight: 'bold', mt: 2, mb: 1 },
-                        '& h2': { fontSize: '1.5rem', fontWeight: 'bold', mt: 2, mb: 1 },
-                        '& h3': { fontSize: '1.25rem', fontWeight: 'bold', mt: 2, mb: 1 },
+                        '& h1': {
+                          fontSize: '2rem',
+                          fontWeight: 'bold',
+                          mt: 2,
+                          mb: 1
+                        },
+                        '& h2': {
+                          fontSize: '1.5rem',
+                          fontWeight: 'bold',
+                          mt: 2,
+                          mb: 1
+                        },
+                        '& h3': {
+                          fontSize: '1.25rem',
+                          fontWeight: 'bold',
+                          mt: 2,
+                          mb: 1
+                        },
                         '& p': { mb: 1, lineHeight: 1.7 },
                         '& ul, & ol': { pl: 3, mb: 2 },
                         '& li': { mb: 0.5 },
@@ -766,7 +887,9 @@ const LmsCoursePreview: React.FC = () => {
                           )}
                         />
                       ) : (
-                        <ReactMarkdown>{currentUnitData.content.text}</ReactMarkdown>
+                        <ReactMarkdown>
+                          {currentUnitData.content.text}
+                        </ReactMarkdown>
                       )}
                     </Box>
                   )}
@@ -777,30 +900,51 @@ const LmsCoursePreview: React.FC = () => {
                       questions={currentUnitData.content.questions}
                       isPreview={isPreview || previewMode === 'admin'}
                       maxAttempts={currentUnitData.content.maxAttempts || 3}
-                      currentAttempt={currentUnitData.content.currentAttempt || 1}
+                      currentAttempt={
+                        currentUnitData.content.currentAttempt || 1
+                      }
                       onComplete={async (score, totalPoints, answers) => {
-                        const percentage = Math.round((score / totalPoints) * 100);
+                        const percentage = Math.round(
+                          (score / totalPoints) * 100
+                        )
 
                         if (isPreview || previewMode === 'admin') {
-                          logger.log('✅ Quiz completado en preview:', { score, totalPoints, percentage });
-                          notify.info('Quiz Completado (Preview)', `Puntuación: ${score}/${totalPoints} (${percentage}%). Modo administrador: el progreso no se guarda`)
-                          return;
+                          logger.log('✅ Quiz completado en preview:', {
+                            score,
+                            totalPoints,
+                            percentage
+                          })
+                          notify.info(
+                            'Quiz Completado (Preview)',
+                            `Puntuación: ${score}/${totalPoints} (${percentage}%). Modo administrador: el progreso no se guarda`
+                          )
+                          return
                         }
 
                         // Completar quiz real
                         try {
                           if (!currentUnitData.content.quizId) {
-                            throw new Error('No se encontró la configuración del quiz para esta lección')
+                            throw new Error(
+                              'No se encontró la configuración del quiz para esta lección'
+                            )
                           }
 
                           busyDialog.show('Guardando resultados del quiz...')
 
-                          const formattedAnswers = (currentUnitData.content.questions ?? []).reduce(
-                            (acc: Record<number, number[]>, question: any, index: number) => {
+                          const formattedAnswers = (
+                            currentUnitData.content.questions ?? []
+                          ).reduce(
+                            (
+                              acc: Record<number, number[]>,
+                              question: MappedQuestion,
+                              index: number
+                            ) => {
                               const answer = answers[index]
 
                               if (answer !== undefined) {
-                                acc[question.id] = Array.isArray(answer) ? answer : [answer]
+                                acc[question.id] = Array.isArray(answer)
+                                  ? answer
+                                  : [answer]
                               }
 
                               return acc
@@ -808,17 +952,19 @@ const LmsCoursePreview: React.FC = () => {
                             {}
                           )
 
-                          const quizResult = await submitQuizMutation.mutateAsync({
-                            quizId: currentUnitData.content.quizId,
-                            data: {
-                              answers: formattedAnswers,
-                              timeSpent: 15 * 60
-                            }
-                          })
+                          const quizResult =
+                            await submitQuizMutation.mutateAsync({
+                              quizId: currentUnitData.content.quizId,
+                              data: {
+                                answers: formattedAnswers,
+                                timeSpent: 15 * 60
+                              }
+                            })
 
                           busyDialog.hide()
                           const passed = quizResult.results.passed
-                          const backendPercentage = quizResult.results.percentage ?? percentage
+                          const backendPercentage =
+                            quizResult.results.percentage ?? percentage
 
                           if (passed) {
                             await completeLessonMutation.mutateAsync({
@@ -827,23 +973,30 @@ const LmsCoursePreview: React.FC = () => {
                             })
                           }
 
-                          await queryClient.invalidateQueries(queryKeys.progress.course(parsedCourseId, undefined))
-                          await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
+                          await queryClient.invalidateQueries(
+                            queryKeys.progress.course(parsedCourseId, undefined)
+                          )
+                          await queryClient.invalidateQueries(
+                            queryKeys.certificates.user(undefined)
+                          )
 
                           logger.log('✅ Quiz completado exitosamente', {
                             passed,
                             percentage: backendPercentage
-                          });
-
-                          (passed ? notify.success : notify.warning)(
+                          })
+                          ;(passed ? notify.success : notify.warning)(
                             passed ? '¡Quiz Aprobado!' : 'Quiz Completado',
                             `Puntuación: ${score}/${totalPoints} (${backendPercentage}%). ${passed ? 'La siguiente lección está desbloqueada' : 'Necesitas 70% o más para aprobar'}`
                           )
-                        } catch (error: any) {
+                        } catch (error: unknown) {
                           busyDialog.hide()
-                          logger.error('❌ Error al completar quiz:', error);
+                          logger.error('❌ Error al completar quiz:', error)
 
-                          notify.error('Error al guardar resultados', getApiErrorReason(error) || 'No se pudo guardar el quiz');
+                          notify.error(
+                            'Error al guardar resultados',
+                            getApiErrorReason(error) ||
+                              'No se pudo guardar el quiz'
+                          )
                         }
                       }}
                     />
@@ -872,9 +1025,14 @@ const LmsCoursePreview: React.FC = () => {
                             alignItems={{ xs: 'flex-start', sm: 'center' }}
                           >
                             <Box>
-                              <Typography variant='subtitle2'>{resource.title}</Typography>
+                              <Typography variant='subtitle2'>
+                                {resource.title}
+                              </Typography>
                               {resource.description && (
-                                <Typography variant='body2' color='text.secondary'>
+                                <Typography
+                                  variant='body2'
+                                  color='text.secondary'
+                                >
                                   {resource.description}
                                 </Typography>
                               )}
@@ -906,10 +1064,9 @@ const LmsCoursePreview: React.FC = () => {
                         variant='contained'
                         onClick={() => handleUnitComplete(currentUnitData.id)}
                       >
-                        {isPreview || previewMode === 'admin' 
+                        {isPreview || previewMode === 'admin'
                           ? 'Marcar como Completado (Preview)'
-                          : 'Marcar como Completado'
-                        }
+                          : 'Marcar como Completado'}
                       </Button>
                     </Box>
                   )}
@@ -934,10 +1091,13 @@ const LmsCoursePreview: React.FC = () => {
                     selected={currentUnit === index}
                     onClick={() => {
                       if (canNavigateToUnit(index)) {
-                        setCurrentUnit(index);
+                        setCurrentUnit(index)
                       } else if (!isPreview && previewMode !== 'admin') {
                         // Solo mostrar alerta en modo estudiante
-                        notify.warning('Lección bloqueada', 'Completa las lecciones anteriores para desbloquear esta lección');
+                        notify.warning(
+                          'Lección bloqueada',
+                          'Completa las lecciones anteriores para desbloquear esta lección'
+                        )
                       }
                     }}
                     sx={{
@@ -951,11 +1111,17 @@ const LmsCoursePreview: React.FC = () => {
                       borderRadius: 1,
                       mb: 1,
                       opacity: canNavigateToUnit(index) ? 1 : 0.6,
-                      cursor: canNavigateToUnit(index) ? 'pointer' : 'not-allowed'
+                      cursor: canNavigateToUnit(index)
+                        ? 'pointer'
+                        : 'not-allowed'
                     }}
                   >
                     <ListItemIcon>
-                      {canNavigateToUnit(index) ? getUnitIcon(unit.type) : <LockIcon />}
+                      {canNavigateToUnit(index) ? (
+                        getUnitIcon(unit.type)
+                      ) : (
+                        <LockIcon />
+                      )}
                     </ListItemIcon>
                     <ListItemText
                       disableTypography
@@ -991,12 +1157,16 @@ const LmsCoursePreview: React.FC = () => {
       <Dialog
         open={pdfViewerOpen}
         onClose={() => setPdfViewerOpen(false)}
-        maxWidth="lg"
+        maxWidth='lg'
         fullWidth
       >
         <DialogTitle sx={{ m: 0, p: 2 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Stack
+            direction='row'
+            alignItems='center'
+            justifyContent='space-between'
+          >
+            <Typography variant='h6' sx={{ fontWeight: 700 }}>
               {pdfViewerResource?.title || 'Documento PDF'}
             </Typography>
             <IconButton onClick={() => setPdfViewerOpen(false)}>
@@ -1017,7 +1187,7 @@ const LmsCoursePreview: React.FC = () => {
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', p: 2 }}>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={() => setPdfViewerOpen(false)}
             sx={{ borderRadius: 999, px: 3 }}
           >
@@ -1025,7 +1195,6 @@ const LmsCoursePreview: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
     </Box>
   )
 }

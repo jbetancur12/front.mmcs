@@ -89,9 +89,14 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
     setIsSaving(false)
   }, [open, adjustments])
 
-  const setDecisionFor = (adjustmentId: number, decision: 'approved' | 'rejected' | 'changes_requested') => {
+  const setDecisionFor = (
+    adjustmentId: number,
+    decision: 'approved' | 'rejected' | 'changes_requested'
+  ) => {
     setEntries((prev) =>
-      prev.map((e) => (e.adjustmentId === adjustmentId ? { ...e, decision } : e))
+      prev.map((e) =>
+        e.adjustmentId === adjustmentId ? { ...e, decision } : e
+      )
     )
   }
 
@@ -113,7 +118,12 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isSaving ? undefined : onClose} fullWidth maxWidth='md'>
+    <Dialog
+      open={open}
+      onClose={isSaving ? undefined : onClose}
+      fullWidth
+      maxWidth='md'
+    >
       <DialogTitle>
         {adjustments.length > 1
           ? `Registrar respuesta del cliente/calidad (${adjustments.length} novedades)`
@@ -134,7 +144,11 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
           >
             <Typography variant='subtitle2' fontWeight={800}>
               Datos comunes
-              <Typography variant='caption' color='text.secondary' sx={{ ml: 1 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ ml: 1 }}
+              >
                 (aplica a todas las novedades)
               </Typography>
             </Typography>
@@ -147,7 +161,9 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
               helperText='Indica cómo confirmaron la respuesta.'
             >
               {Object.entries(CHANNEL_LABELS).map(([value, label]) => (
-                <MenuItem key={value} value={value}>{label}</MenuItem>
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
               ))}
             </TextField>
             <TextField
@@ -205,11 +221,17 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
                 }}
               >
                 <Stack direction='row' spacing={1} alignItems='center'>
-                  <Typography variant='body2' fontWeight={700} color='primary.main'>
+                  <Typography
+                    variant='body2'
+                    fontWeight={700}
+                    color='primary.main'
+                  >
                     {adjustment.itemName}
                   </Typography>
                   <Typography variant='caption' color='text.secondary'>
-                    · {TYPE_LABELS[adjustment.changeType] || adjustment.changeType}
+                    ·{' '}
+                    {TYPE_LABELS[adjustment.changeType] ||
+                      adjustment.changeType}
                   </Typography>
                 </Stack>
                 <TextField
@@ -221,19 +243,26 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
                   onChange={(event) =>
                     setDecisionFor(
                       adjustment.id,
-                      event.target.value as 'approved' | 'rejected' | 'changes_requested'
+                      event.target.value as
+                        | 'approved'
+                        | 'rejected'
+                        | 'changes_requested'
                     )
                   }
                 >
                   {Object.entries(DECISION_LABELS).map(([value, label]) => (
-                    <MenuItem key={value} value={value}>{label}</MenuItem>
+                    <MenuItem key={value} value={value}>
+                      {label}
+                    </MenuItem>
                   ))}
                 </TextField>
               </Stack>
             )
           })}
 
-          {isSaving ? <SignalLoader size='small' message='Guardando...' /> : null}
+          {isSaving ? (
+            <SignalLoader size='small' message='Guardando...' />
+          ) : null}
         </Stack>
       </DialogContent>
       <DialogActions>

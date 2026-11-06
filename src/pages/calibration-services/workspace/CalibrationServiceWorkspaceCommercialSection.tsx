@@ -39,7 +39,12 @@ const CalibrationServiceWorkspaceCommercialSection = ({
   return (
     <Card elevation={0} sx={sectionCardSx}>
       <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-        <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+        <Stack
+          direction='row'
+          alignItems='center'
+          spacing={1.5}
+          sx={{ mb: 2.5 }}
+        >
           <ReceiptLongOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
           <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
             Condiciones comerciales
@@ -53,7 +58,9 @@ const CalibrationServiceWorkspaceCommercialSection = ({
                 value={String(formState.validityDays || 30)}
                 label='Validez'
                 disabled={!canEdit || isBusy}
-                onChange={(event) => setField('validityDays', Number(event.target.value))}
+                onChange={(event) =>
+                  setField('validityDays', Number(event.target.value))
+                }
               >
                 {VALIDITY_DAY_OPTIONS.map((days) => (
                   <MenuItem key={days} value={String(days)}>
@@ -71,7 +78,9 @@ const CalibrationServiceWorkspaceCommercialSection = ({
                 label='Forma de pago'
                 required
                 disabled={!canEdit || isBusy}
-                onChange={(event) => setField('paymentMethod', event.target.value)}
+                onChange={(event) =>
+                  setField('paymentMethod', event.target.value)
+                }
               >
                 {PAYMENT_METHOD_OPTIONS.map((option) => (
                   <MenuItem key={option} value={option}>
@@ -88,7 +97,9 @@ const CalibrationServiceWorkspaceCommercialSection = ({
                 value={formState.hasDiscount ? 'yes' : 'no'}
                 label='Aplica descuento'
                 disabled={!canEdit || isBusy}
-                onChange={(event) => setField('hasDiscount', event.target.value === 'yes')}
+                onChange={(event) =>
+                  setField('hasDiscount', event.target.value === 'yes')
+                }
               >
                 <MenuItem value='no'>No</MenuItem>
                 <MenuItem value='yes'>Si</MenuItem>
@@ -104,7 +115,9 @@ const CalibrationServiceWorkspaceCommercialSection = ({
                     value={formState.discountType || 'fixed'}
                     label='Tipo descuento'
                     disabled={!canEdit || isBusy}
-                    onChange={(event) => setField('discountType', event.target.value)}
+                    onChange={(event) =>
+                      setField('discountType', event.target.value)
+                    }
                   >
                     {DISCOUNT_TYPE_OPTIONS.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
@@ -140,7 +153,9 @@ const CalibrationServiceWorkspaceCommercialSection = ({
                 label='Entrega instrumento'
                 required
                 disabled={!canEdit || isBusy}
-                onChange={(event) => setField('instrumentDeliveryTime', event.target.value)}
+                onChange={(event) =>
+                  setField('instrumentDeliveryTime', event.target.value)
+                }
               >
                 {DELIVERY_TIME_OPTIONS.map((option) => (
                   <MenuItem key={option} value={option}>
@@ -158,7 +173,9 @@ const CalibrationServiceWorkspaceCommercialSection = ({
                 label='Entrega certificado'
                 required
                 disabled={!canEdit || isBusy}
-                onChange={(event) => setField('certificateDeliveryTime', event.target.value)}
+                onChange={(event) =>
+                  setField('certificateDeliveryTime', event.target.value)
+                }
               >
                 {DELIVERY_TIME_OPTIONS.map((option) => (
                   <MenuItem key={option} value={option}>
@@ -171,8 +188,9 @@ const CalibrationServiceWorkspaceCommercialSection = ({
           <Grid item xs={12}>
             <Alert severity='info'>
               El perfil sugerido de precio se usa para precargar el valor al
-              seleccionar un producto del catálogo. Luego cada ítem puede cambiar
-              su precio de catálogo o editar manualmente el valor unitario.
+              seleccionar un producto del catálogo. Luego cada ítem puede
+              cambiar su precio de catálogo o editar manualmente el valor
+              unitario.
             </Alert>
           </Grid>
         </Grid>

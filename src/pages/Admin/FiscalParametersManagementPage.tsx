@@ -182,10 +182,18 @@ const FiscalParametersManagementPage: React.FC = () => {
     let errorMessage = `Error durante ${operationMessage}.`
     if (isAxiosError(err) && err.response?.data) {
       const data = err.response.data
+      const fieldErrors: Array<{ message?: string }> = Array.isArray(
+        data.errors
+      )
+        ? data.errors
+        : []
       errorMessage =
         getApiErrorReason(err) ??
-        (Array.isArray(data.errors)
-          ? data.errors.map((e: any) => e.message).join(', ')
+        (fieldErrors.length
+          ? fieldErrors
+              .map((e) => e.message)
+              .filter(Boolean)
+              .join(', ')
           : JSON.stringify(data))
     } else if (err instanceof Error) {
       errorMessage = err.message
@@ -393,7 +401,7 @@ const FiscalParametersManagementPage: React.FC = () => {
           )
       }
     ],
-     
+
     []
   )
 

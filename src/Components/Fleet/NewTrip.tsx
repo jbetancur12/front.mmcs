@@ -18,6 +18,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { ArrowBack } from '@mui/icons-material'
 
 import { logger } from 'src/utils/logger'
+import { getApiErrorReason } from 'src/utils/apiError'
 const NewTrip = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -67,9 +68,9 @@ const NewTrip = () => {
         }
 
         navigate(-1)
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.log(error)
-        notify.error(error.error)
+        notify.error(getApiErrorReason(error) ?? 'No se pudo crear el viaje')
       }
     }
   }

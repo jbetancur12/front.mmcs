@@ -202,40 +202,43 @@ const CustomerProfileBanner = ({
             >
               {customerData?.nombre}
             </Typography>
-            {/* Status Switch */}
-            <Box
-              sx={{
-                position: { xs: 'static', md: 'absolute' },
-                top: 20,
-                right: 20,
-                mt: { xs: 2, md: 0 },
-                zIndex: 2,
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '12px',
-                padding: '8px 16px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5
-              }}
-            >
-              <Typography
-                variant='body2'
+            {/* Estado: solo lo ve quien puede cambiarlo; para el cliente es evidente por su acceso */}
+            {canUpdateCustomer && (
+              <Box
                 sx={{
-                  color: 'white',
-                  fontWeight: 600,
-                  letterSpacing: '0.5px'
+                  position: { xs: 'static', md: 'absolute' },
+                  top: 20,
+                  right: 20,
+                  mt: { xs: 2, md: 0 },
+                  zIndex: 2,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '12px',
+                  padding: '8px 16px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5
                 }}
               >
-                {customerData?.isActive ? 'Cliente Activo' : 'Cliente Inactivo'}
-              </Typography>
-              <ModernSwitch
-                checked={customerData?.isActive || false}
-                onChange={handleStatusChange}
-                disabled={!canUpdateCustomer}
-              />
-            </Box>{' '}
+                <Typography
+                  variant='body2'
+                  sx={{
+                    color: 'white',
+                    fontWeight: 600,
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  {customerData?.isActive
+                    ? 'Cliente Activo'
+                    : 'Cliente Inactivo'}
+                </Typography>
+                <ModernSwitch
+                  checked={customerData?.isActive || false}
+                  onChange={handleStatusChange}
+                />
+              </Box>
+            )}{' '}
           </Box>
         </Grid>
 

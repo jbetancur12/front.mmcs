@@ -178,23 +178,46 @@ const CalibrationServiceDocumentsPanel = ({
                 opacity: hasVersions && !isLatest ? 0.7 : 1
               }}
             >
-              <PictureAsPdfOutlinedIcon sx={{ color: '#00897B', flexShrink: 0 }} />
+              <PictureAsPdfOutlinedIcon
+                sx={{ color: '#00897B', flexShrink: 0 }}
+              />
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant='body2' fontWeight={600} sx={{ wordBreak: 'break-word' }}>
+                <Typography
+                  variant='body2'
+                  fontWeight={600}
+                  sx={{ wordBreak: 'break-word' }}
+                >
                   {document.title || document.originalFileName}
                 </Typography>
-                <Stack direction='row' spacing={1} alignItems='center' useFlexGap flexWrap='wrap' sx={{ mt: 0.5 }}>
+                <Stack
+                  direction='row'
+                  spacing={1}
+                  alignItems='center'
+                  useFlexGap
+                  flexWrap='wrap'
+                  sx={{ mt: 0.5 }}
+                >
                   <Typography variant='caption' color='text.secondary'>
                     {`v${document.version} · ${formatDateValue(document.uploadedAt)}`}
                   </Typography>
-                  {(document as CalibrationServiceDocument).otherFields?.wasDraft ? (
-                    <Chip size='small' variant='outlined' color='warning' label='Borrador' />
+                  {(document as CalibrationServiceDocument).otherFields
+                    ?.wasDraft ? (
+                    <Chip
+                      size='small'
+                      variant='outlined'
+                      color='warning'
+                      label='Borrador'
+                    />
                   ) : null}
                   <Chip
                     size='small'
                     variant='outlined'
-                    color={CALIBRATION_SERVICE_DOCUMENT_COLORS[document.documentType]}
-                    label={CALIBRATION_SERVICE_DOCUMENT_LABELS[document.documentType]}
+                    color={
+                      CALIBRATION_SERVICE_DOCUMENT_COLORS[document.documentType]
+                    }
+                    label={
+                      CALIBRATION_SERVICE_DOCUMENT_LABELS[document.documentType]
+                    }
                   />
                   {hasVersions ? (
                     <Chip
@@ -225,7 +248,9 @@ const CalibrationServiceDocumentsPanel = ({
                     <IconButton
                       size='small'
                       aria-label={`Descargar ${document.title || fileName}`}
-                      onClick={() => void onDownloadDocument(document.id, fileName)}
+                      onClick={() =>
+                        void onDownloadDocument(document.id, fileName)
+                      }
                       disabled={isBusy}
                       sx={{ color: '#00897B' }}
                     >
@@ -253,7 +278,13 @@ const CalibrationServiceDocumentsPanel = ({
               disabled={
                 isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf
               }
-              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               Generar cotización PDF
             </Button>
@@ -264,7 +295,13 @@ const CalibrationServiceDocumentsPanel = ({
               startIcon={<PictureAsPdfOutlinedIcon />}
               onClick={() => void onGenerateOdsPdf()}
               disabled={isBusy || !hasOds || !canGenerateOdsPdf}
-              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
             >
               Generar ODS PDF
             </Button>
@@ -349,7 +386,13 @@ const CalibrationServiceDocumentsPanel = ({
                 variant='outlined'
                 startIcon={<UploadFileOutlinedIcon />}
                 disabled={isBusy}
-                sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+                sx={{
+                  color: '#00897B',
+                  borderColor: '#00BFA5',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                }}
               >
                 Seleccionar archivo
                 <input
@@ -371,7 +414,12 @@ const CalibrationServiceDocumentsPanel = ({
               variant='contained'
               onClick={() => void handleUpload()}
               disabled={isBusy || !selectedFile}
-              sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#00ACC1' } }}
+              sx={{
+                bgcolor: '#00BFA5',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
             >
               Subir documento
             </Button>

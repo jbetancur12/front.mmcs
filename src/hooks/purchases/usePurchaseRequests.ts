@@ -55,7 +55,10 @@ export const PURCHASE_REQUEST_SORTABLE_FIELDS = [
 ] as const
 
 /** Filtros exactos de `GET /purchaseRequests` (id de columna = parámetro). */
-export const PURCHASE_REQUEST_EXACT_FILTERS = ['status', 'purchaseType'] as const
+export const PURCHASE_REQUEST_EXACT_FILTERS = [
+  'status',
+  'purchaseType'
+] as const
 
 /** Página de solicitudes de compra (`?page=&limit=...`). */
 export const usePurchaseRequestsPaginated = (

@@ -189,7 +189,7 @@ export interface MaintenanceTimelineEntry {
   description: string
   performedBy: string
   performedAt: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface MaintenanceTechnician {
@@ -248,10 +248,19 @@ interface StatusStat {
   count: string
 }
 
+export interface MaintenanceTechnicianStats {
+  id: number
+  name: string
+  workload: number
+  totalTicketsCompleted: number
+  rating?: number | null
+  isAvailable: boolean
+}
+
 export interface MaintenanceStats {
   statusStats: StatusStat[]
   priorityStats: PriorityStat[]
-  technicianStats: any[]
+  technicianStats: MaintenanceTechnicianStats[]
   recentTickets: RecentTicket[]
   metrics: Metrics
 }
@@ -529,7 +538,7 @@ export interface TechnicianFormErrors {
 }
 
 // API Response types
-export interface MaintenanceApiResponse<T = any> {
+export interface MaintenanceApiResponse<T = unknown> {
   success: boolean
   data: T
   message?: string

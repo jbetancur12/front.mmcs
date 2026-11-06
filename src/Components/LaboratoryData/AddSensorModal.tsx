@@ -80,13 +80,13 @@ const AddSensorModal: React.FC<AddSensorModalProps> = ({
           }
         )
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         // El tipo 'any' es temporal, idealmente tipar el error de Axios
         logger.error('Error creating sensor:', error)
         // Puedes intentar extraer un mensaje de error más amigable de la respuesta de Axios
         const apiErrorMessage =
           getApiErrorReason(error) ||
-          error.message ||
+          (error instanceof Error ? error.message : '') ||
           'Ocurrió un error al crear el sensor.'
         // Establecer un error genérico en el formulario o en un estado separado
         setFormErrors({ name: apiErrorMessage }) // Mostrarlo bajo el campo name o en otro lugar

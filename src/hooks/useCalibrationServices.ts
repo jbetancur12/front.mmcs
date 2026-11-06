@@ -63,8 +63,12 @@ export const CALIBRATION_SERVICE_QUERY_KEYS = {
 } as const
 
 /** Claves de los catálogos de clientes y productos usados por el formulario de cotización. */
-export const CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY = ['calibration-service-customers'] as const
-export const CALIBRATION_SERVICE_PRODUCTS_QUERY_KEY = ['calibration-service-products'] as const
+export const CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY = [
+  'calibration-service-customers'
+] as const
+export const CALIBRATION_SERVICE_PRODUCTS_QUERY_KEY = [
+  'calibration-service-products'
+] as const
 
 const calibrationServiceApi = {
   getLoanEquipment: async (
@@ -79,10 +83,11 @@ const calibrationServiceApi = {
   getAvailableLoanEquipment: async (
     search: string
   ): Promise<CalibrationServiceLoanEquipmentOption[]> => {
-    const response = await axiosPrivate.get<CalibrationServiceLoanEquipmentOption[]>(
-      '/calibration-services/loan-equipment/available',
-      { params: { search: search || undefined } }
-    )
+    const response = await axiosPrivate.get<
+      CalibrationServiceLoanEquipmentOption[]
+    >('/calibration-services/loan-equipment/available', {
+      params: { search: search || undefined }
+    })
     return response.data
   },
 
@@ -136,12 +141,14 @@ const calibrationServiceApi = {
     return response.data
   },
 
-  getQuoteTermsTemplate: async (): Promise<CalibrationServiceQuoteTermsTemplate> => {
-    const response = await axiosPrivate.get<CalibrationServiceQuoteTermsTemplate>(
-      '/calibration-services/config/quote-terms'
-    )
-    return response.data
-  },
+  getQuoteTermsTemplate:
+    async (): Promise<CalibrationServiceQuoteTermsTemplate> => {
+      const response =
+        await axiosPrivate.get<CalibrationServiceQuoteTermsTemplate>(
+          '/calibration-services/config/quote-terms'
+        )
+      return response.data
+    },
 
   getServices: async (
     filters?: CalibrationServiceFilters
@@ -158,12 +165,13 @@ const calibrationServiceApi = {
   getAnalytics: async (
     filters?: CalibrationServiceAnalyticsFilters
   ): Promise<CalibrationServiceAnalyticsResponse> => {
-    const response = await axiosPrivate.get<CalibrationServiceAnalyticsResponse>(
-      '/calibration-services/analytics',
-      {
-        params: filters
-      }
-    )
+    const response =
+      await axiosPrivate.get<CalibrationServiceAnalyticsResponse>(
+        '/calibration-services/analytics',
+        {
+          params: filters
+        }
+      )
     return response.data
   },
 
@@ -174,7 +182,9 @@ const calibrationServiceApi = {
     return response.data
   },
 
-  getAssignableMetrologists: async (): Promise<CalibrationServiceUserSummary[]> => {
+  getAssignableMetrologists: async (): Promise<
+    CalibrationServiceUserSummary[]
+  > => {
     const response = await axiosPrivate.get<CalibrationServiceUserSummary[]>(
       '/calibration-services/assignable-metrologists'
     )
@@ -574,10 +584,11 @@ const calibrationServiceApi = {
     adjustmentId,
     ...payload
   }: CalibrationServiceSendAdjustmentToCustomerPayload): Promise<CalibrationServiceAdjustmentSendResult> => {
-    const response = await axiosPrivate.post<CalibrationServiceAdjustmentSendResult>(
-      `/calibration-services/${serviceId}/adjustments/${adjustmentId}/send-to-customer`,
-      payload
-    )
+    const response =
+      await axiosPrivate.post<CalibrationServiceAdjustmentSendResult>(
+        `/calibration-services/${serviceId}/adjustments/${adjustmentId}/send-to-customer`,
+        payload
+      )
     return response.data
   },
 
@@ -590,8 +601,14 @@ const calibrationServiceApi = {
     recipientEmail?: string | null
     recipientName?: string | null
     sentAt?: string
-  }): Promise<{ service: CalibrationService; delivery: CalibrationServiceAdjustmentSendResult['delivery'] }> => {
-    const response = await axiosPrivate.post<{ service: CalibrationService; delivery: CalibrationServiceAdjustmentSendResult['delivery'] }>(
+  }): Promise<{
+    service: CalibrationService
+    delivery: CalibrationServiceAdjustmentSendResult['delivery']
+  }> => {
+    const response = await axiosPrivate.post<{
+      service: CalibrationService
+      delivery: CalibrationServiceAdjustmentSendResult['delivery']
+    }>(
       `/calibration-services/${serviceId}/adjustments/batch/send-to-customer`,
       payload
     )
@@ -636,7 +653,7 @@ const calibrationServiceApi = {
 
   registerCutPayment: async ({
     serviceId,
-    cutId,
+    cutId
   }: CalibrationServiceRegisterCutPaymentPayload): Promise<CalibrationService> => {
     const response = await axiosPrivate.post<CalibrationService>(
       `/calibration-services/${serviceId}/cuts/${cutId}/payment`
@@ -715,10 +732,11 @@ const calibrationServiceApi = {
     serviceId,
     ...payload
   }: CalibrationServiceSendLogisticsControlEmailPayload): Promise<CalibrationServiceLogisticsEmailSendResult> => {
-    const response = await axiosPrivate.post<CalibrationServiceLogisticsEmailSendResult>(
-      `/calibration-services/${serviceId}/logistics-control/send-email`,
-      payload
-    )
+    const response =
+      await axiosPrivate.post<CalibrationServiceLogisticsEmailSendResult>(
+        `/calibration-services/${serviceId}/logistics-control/send-email`,
+        payload
+      )
     return response.data
   },
 
@@ -729,10 +747,11 @@ const calibrationServiceApi = {
     serviceId: string
     method?: string
   }): Promise<CalibrationServiceCertificateSendResult> => {
-    const response = await axiosPrivate.post<CalibrationServiceCertificateSendResult>(
-      `/calibration-services/${serviceId}/certificate/send`,
-      { method }
-    )
+    const response =
+      await axiosPrivate.post<CalibrationServiceCertificateSendResult>(
+        `/calibration-services/${serviceId}/certificate/send`,
+        { method }
+      )
     return response.data
   },
 
@@ -757,10 +776,12 @@ const calibrationServiceApi = {
     serviceId: string
     expiresInHours?: number
   }): Promise<{ url: string; expiresAt: string }> => {
-    const response = await axiosPrivate.post<{ url: string; expiresAt: string }>(
-      `/calibration-services/${serviceId}/remote-signature-link`,
-      { expiresInHours }
-    )
+    const response = await axiosPrivate.post<{
+      url: string
+      expiresAt: string
+    }>(`/calibration-services/${serviceId}/remote-signature-link`, {
+      expiresInHours
+    })
     return response.data
   },
 
@@ -845,10 +866,11 @@ const calibrationServiceApi = {
   upsertQuoteTermsTemplate: async (
     terms: CalibrationServiceQuoteTerms
   ): Promise<CalibrationServiceQuoteTermsTemplate> => {
-    const response = await axiosPrivate.put<CalibrationServiceQuoteTermsTemplate>(
-      '/calibration-services/config/quote-terms',
-      { terms }
-    )
+    const response =
+      await axiosPrivate.put<CalibrationServiceQuoteTermsTemplate>(
+        '/calibration-services/config/quote-terms',
+        { terms }
+      )
     return response.data
   }
 }
@@ -999,13 +1021,21 @@ export const useCalibrationServiceLoanMutations = () => {
   // Un préstamo cambia la lista del servicio, los equipos disponibles y el reporte de préstamos.
   const refresh = () => {
     queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.loans])
-    queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.availableLoans])
+    queryClient.invalidateQueries([
+      CALIBRATION_SERVICE_QUERY_KEYS.availableLoans
+    ])
   }
 
   return {
-    createLoan: useMutation(calibrationServiceApi.createLoanEquipment, { onSuccess: refresh }),
-    returnLoan: useMutation(calibrationServiceApi.returnLoanEquipment, { onSuccess: refresh }),
-    cancelLoan: useMutation(calibrationServiceApi.cancelLoanEquipment, { onSuccess: refresh })
+    createLoan: useMutation(calibrationServiceApi.createLoanEquipment, {
+      onSuccess: refresh
+    }),
+    returnLoan: useMutation(calibrationServiceApi.returnLoanEquipment, {
+      onSuccess: refresh
+    }),
+    cancelLoan: useMutation(calibrationServiceApi.cancelLoanEquipment, {
+      onSuccess: refresh
+    })
   }
 }
 
@@ -1024,9 +1054,12 @@ export const useCalibrationServiceCustomerOptions = (enabled = true) => {
   return useQuery({
     queryKey: CALIBRATION_SERVICE_CUSTOMERS_QUERY_KEY,
     queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers', {
-        params: { scope: 'calibration' }
-      })
+      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>(
+        '/customers',
+        {
+          params: { scope: 'calibration' }
+        }
+      )
       return response.data
     },
     enabled,
@@ -1039,7 +1072,8 @@ export const useCalibrationServiceProductOptions = (enabled = true) => {
   return useQuery({
     queryKey: CALIBRATION_SERVICE_PRODUCTS_QUERY_KEY,
     queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationServiceProductSummary[]>('/products')
+      const response =
+        await axiosPrivate.get<CalibrationServiceProductSummary[]>('/products')
       return response.data
     },
     enabled,
@@ -1061,8 +1095,14 @@ const invalidateAll = (queryClient: ReturnType<typeof useQueryClient>) => {
   queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
 }
 
-const invalidateDetail = (queryClient: ReturnType<typeof useQueryClient>, id: string | number) => {
-  queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail, String(id)])
+const invalidateDetail = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: string | number
+) => {
+  queryClient.invalidateQueries([
+    CALIBRATION_SERVICE_QUERY_KEYS.detail,
+    String(id)
+  ])
 }
 
 export interface CalibrationServiceCutCorrectionPayload {
@@ -1076,60 +1116,444 @@ export const useCalibrationServiceMutations = () => {
   const iA = () => invalidateAll(queryClient)
   const iD = (id: string | number) => invalidateDetail(queryClient, id)
 
-  const createService = useMutation(calibrationServiceApi.createService, { onSuccess: iA })
-  const updateService = useMutation(calibrationServiceApi.updateService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const uploadDocument = useMutation(calibrationServiceApi.uploadDocument, { onSuccess: (_: any, v: any) => { iA(); iD(v.serviceId) } })
-  const requestApproval = useMutation(calibrationServiceApi.requestApproval, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const approveService = useMutation(calibrationServiceApi.approveService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const rejectService = useMutation(calibrationServiceApi.rejectService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const reopenQuote = useMutation(calibrationServiceApi.reopenQuote, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const reissueOds = useMutation(calibrationServiceApi.reissueOds, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const duplicateService = useMutation(calibrationServiceApi.duplicateService, { onSuccess: iA })
-  const updateDraftCut = useMutation(calibrationServiceApi.updateDraftCut, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const voidCut = useMutation(calibrationServiceApi.voidCut, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const revertCutToDraft = useMutation(calibrationServiceApi.revertCutToDraft, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const correctCutInvoice = useMutation(calibrationServiceApi.correctCutInvoice, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const requestChanges = useMutation(calibrationServiceApi.requestChanges, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const issueOds = useMutation(calibrationServiceApi.issueOds, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const scheduleService = useMutation(calibrationServiceApi.scheduleService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const rescheduleService = useMutation(calibrationServiceApi.rescheduleService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const reassignService = useMutation(calibrationServiceApi.reassignService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const pauseService = useMutation(calibrationServiceApi.pauseService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const resumeService = useMutation(calibrationServiceApi.resumeService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const cancelService = useMutation(calibrationServiceApi.cancelService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const startExecution = useMutation(calibrationServiceApi.startExecution, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const completeExecution = useMutation(calibrationServiceApi.completeExecution, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const closeService = useMutation(calibrationServiceApi.closeService, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const updateItemProgress = useMutation(calibrationServiceApi.updateItemProgress, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const registerPhysicalTraceability = useMutation(calibrationServiceApi.registerPhysicalTraceability, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const updateLogisticsControl = useMutation(calibrationServiceApi.updateLogisticsControl, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const createCut = useMutation(calibrationServiceApi.createCut, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const createAdjustment = useMutation(calibrationServiceApi.createAdjustment, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const reviewAdjustment = useMutation(calibrationServiceApi.reviewAdjustment, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const sendAdjustmentToCustomer = useMutation(calibrationServiceApi.sendAdjustmentToCustomer, { onSuccess: ({ service }: any) => { iA(); iD(service.id) } })
-  const batchSendAdjustmentsToCustomer = useMutation(calibrationServiceApi.batchSendAdjustmentsToCustomer, { onSuccess: ({ service }: any) => { iA(); iD(service.id) } })
-  const respondAdjustment = useMutation(calibrationServiceApi.respondAdjustment, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const markCutReadyForInvoicing = useMutation(calibrationServiceApi.markCutReadyForInvoicing, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const markCutInvoiced = useMutation(calibrationServiceApi.markCutInvoiced, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const registerCutPayment = useMutation(calibrationServiceApi.registerCutPayment, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const updateCutDocumentControl = useMutation(calibrationServiceApi.updateCutDocumentControl, { onSuccess: (s: any) => { iA(); iD(s.id) } })
-  const generateQuotePdf = useMutation(calibrationServiceApi.generateQuotePdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const generateOdsPdf = useMutation(calibrationServiceApi.generateOdsPdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const generateAdjustmentPdf = useMutation(calibrationServiceApi.generateAdjustmentPdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const generateAdjustmentSummaryPdf = useMutation(calibrationServiceApi.generateAdjustmentSummaryPdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const generateLogisticsPdf = useMutation(calibrationServiceApi.generateLogisticsPdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const generateTechnicalProgressPdf = useMutation(calibrationServiceApi.generateTechnicalProgressPdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const sendLogisticsControlEmail = useMutation(calibrationServiceApi.sendLogisticsControlEmail, { onSuccess: (r: any, v: any) => { queryClient.setQueryData([CALIBRATION_SERVICE_QUERY_KEYS.detail, v.serviceId], r.service); iD(v.serviceId) } })
-  const sendCertificate = useMutation(calibrationServiceApi.sendCertificate, { onSuccess: (_: any, v: any) => { iA(); iD(v.serviceId) } })
+  const createService = useMutation(calibrationServiceApi.createService, {
+    onSuccess: iA
+  })
+  const updateService = useMutation(calibrationServiceApi.updateService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const uploadDocument = useMutation(calibrationServiceApi.uploadDocument, {
+    onSuccess: (_, v) => {
+      iA()
+      iD(v.serviceId)
+    }
+  })
+  const requestApproval = useMutation(calibrationServiceApi.requestApproval, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const approveService = useMutation(calibrationServiceApi.approveService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const rejectService = useMutation(calibrationServiceApi.rejectService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const reopenQuote = useMutation(calibrationServiceApi.reopenQuote, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const reissueOds = useMutation(calibrationServiceApi.reissueOds, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const duplicateService = useMutation(calibrationServiceApi.duplicateService, {
+    onSuccess: iA
+  })
+  const updateDraftCut = useMutation(calibrationServiceApi.updateDraftCut, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const voidCut = useMutation(calibrationServiceApi.voidCut, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const revertCutToDraft = useMutation(calibrationServiceApi.revertCutToDraft, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const correctCutInvoice = useMutation(
+    calibrationServiceApi.correctCutInvoice,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const requestChanges = useMutation(calibrationServiceApi.requestChanges, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const issueOds = useMutation(calibrationServiceApi.issueOds, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const scheduleService = useMutation(calibrationServiceApi.scheduleService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const rescheduleService = useMutation(
+    calibrationServiceApi.rescheduleService,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const reassignService = useMutation(calibrationServiceApi.reassignService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const pauseService = useMutation(calibrationServiceApi.pauseService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const resumeService = useMutation(calibrationServiceApi.resumeService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const cancelService = useMutation(calibrationServiceApi.cancelService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const startExecution = useMutation(calibrationServiceApi.startExecution, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const completeExecution = useMutation(
+    calibrationServiceApi.completeExecution,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const closeService = useMutation(calibrationServiceApi.closeService, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const updateItemProgress = useMutation(
+    calibrationServiceApi.updateItemProgress,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const registerPhysicalTraceability = useMutation(
+    calibrationServiceApi.registerPhysicalTraceability,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const updateLogisticsControl = useMutation(
+    calibrationServiceApi.updateLogisticsControl,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const createCut = useMutation(calibrationServiceApi.createCut, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const createAdjustment = useMutation(calibrationServiceApi.createAdjustment, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const reviewAdjustment = useMutation(calibrationServiceApi.reviewAdjustment, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const sendAdjustmentToCustomer = useMutation(
+    calibrationServiceApi.sendAdjustmentToCustomer,
+    {
+      onSuccess: ({ service }) => {
+        iA()
+        iD(service.id)
+      }
+    }
+  )
+  const batchSendAdjustmentsToCustomer = useMutation(
+    calibrationServiceApi.batchSendAdjustmentsToCustomer,
+    {
+      onSuccess: ({ service }) => {
+        iA()
+        iD(service.id)
+      }
+    }
+  )
+  const respondAdjustment = useMutation(
+    calibrationServiceApi.respondAdjustment,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const markCutReadyForInvoicing = useMutation(
+    calibrationServiceApi.markCutReadyForInvoicing,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const markCutInvoiced = useMutation(calibrationServiceApi.markCutInvoiced, {
+    onSuccess: (s) => {
+      iA()
+      iD(s.id)
+    }
+  })
+  const registerCutPayment = useMutation(
+    calibrationServiceApi.registerCutPayment,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const updateCutDocumentControl = useMutation(
+    calibrationServiceApi.updateCutDocumentControl,
+    {
+      onSuccess: (s) => {
+        iA()
+        iD(s.id)
+      }
+    }
+  )
+  const generateQuotePdf = useMutation(calibrationServiceApi.generateQuotePdf, {
+    onSuccess: (_, v) => {
+      iD(v.serviceId)
+    }
+  })
+  const generateOdsPdf = useMutation(calibrationServiceApi.generateOdsPdf, {
+    onSuccess: (_, v) => {
+      iD(v.serviceId)
+    }
+  })
+  const generateAdjustmentPdf = useMutation(
+    calibrationServiceApi.generateAdjustmentPdf,
+    {
+      onSuccess: (_, v) => {
+        iD(v.serviceId)
+      }
+    }
+  )
+  const generateAdjustmentSummaryPdf = useMutation(
+    calibrationServiceApi.generateAdjustmentSummaryPdf,
+    {
+      onSuccess: (_, v) => {
+        iD(v.serviceId)
+      }
+    }
+  )
+  const generateLogisticsPdf = useMutation(
+    calibrationServiceApi.generateLogisticsPdf,
+    {
+      onSuccess: (_, v) => {
+        iD(v.serviceId)
+      }
+    }
+  )
+  const generateTechnicalProgressPdf = useMutation(
+    calibrationServiceApi.generateTechnicalProgressPdf,
+    {
+      onSuccess: (_, v) => {
+        iD(v.serviceId)
+      }
+    }
+  )
+  const sendLogisticsControlEmail = useMutation(
+    calibrationServiceApi.sendLogisticsControlEmail,
+    {
+      onSuccess: (r, v) => {
+        queryClient.setQueryData(
+          [CALIBRATION_SERVICE_QUERY_KEYS.detail, v.serviceId],
+          r.service
+        )
+        iD(v.serviceId)
+      }
+    }
+  )
+  const sendCertificate = useMutation(calibrationServiceApi.sendCertificate, {
+    onSuccess: (_, v) => {
+      iA()
+      iD(v.serviceId)
+    }
+  })
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
-  const upsertSequenceConfig = useMutation(calibrationServiceApi.upsertSequenceConfig, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config']) } })
-  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'sla-config']) } })
-  const updateCustomerSignature = useMutation(calibrationServiceApi.updateCustomerSignature, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
-  const createRemoteSignatureLink = useMutation(calibrationServiceApi.createRemoteSignatureLink, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const revokeRemoteSignatureLink = useMutation(calibrationServiceApi.revokeRemoteSignatureLink, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
-  const updateDeliverySignature = useMutation(calibrationServiceApi.updateDeliverySignature, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
-  const updateExecutionCustomer = useMutation(calibrationServiceApi.updateExecutionCustomer, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
-  const upsertQuoteTermsTemplate = useMutation(calibrationServiceApi.upsertQuoteTermsTemplate, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']) } })
+  const upsertSequenceConfig = useMutation(
+    calibrationServiceApi.upsertSequenceConfig,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.all,
+          'sequence-config'
+        ])
+      }
+    }
+  )
+  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig, {
+    onSuccess: () => {
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.all,
+        'sla-config'
+      ])
+    }
+  })
+  const updateCustomerSignature = useMutation(
+    calibrationServiceApi.updateCustomerSignature,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+      }
+    }
+  )
+  const createRemoteSignatureLink = useMutation(
+    calibrationServiceApi.createRemoteSignatureLink,
+    {
+      onSuccess: (_, v) => {
+        iD(v.serviceId)
+      }
+    }
+  )
+  const revokeRemoteSignatureLink = useMutation(
+    calibrationServiceApi.revokeRemoteSignatureLink,
+    {
+      onSuccess: (_, v) => {
+        iD(v.serviceId)
+      }
+    }
+  )
+  const updateDeliverySignature = useMutation(
+    calibrationServiceApi.updateDeliverySignature,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+      }
+    }
+  )
+  const updateExecutionCustomer = useMutation(
+    calibrationServiceApi.updateExecutionCustomer,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+      }
+    }
+  )
+  const upsertQuoteTermsTemplate = useMutation(
+    calibrationServiceApi.upsertQuoteTermsTemplate,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.all,
+          'quote-terms-template'
+        ])
+      }
+    }
+  )
 
-  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, reopenQuote, updateDraftCut, reissueOds, duplicateService, voidCut, revertCutToDraft, correctCutInvoice, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
+  return {
+    createService,
+    updateService,
+    uploadDocument,
+    requestApproval,
+    approveService,
+    rejectService,
+    reopenQuote,
+    updateDraftCut,
+    reissueOds,
+    duplicateService,
+    voidCut,
+    revertCutToDraft,
+    correctCutInvoice,
+    requestChanges,
+    issueOds,
+    scheduleService,
+    rescheduleService,
+    reassignService,
+    pauseService,
+    resumeService,
+    cancelService,
+    startExecution,
+    completeExecution,
+    closeService,
+    updateItemProgress,
+    registerPhysicalTraceability,
+    updateLogisticsControl,
+    createCut,
+    createAdjustment,
+    reviewAdjustment,
+    sendAdjustmentToCustomer,
+    batchSendAdjustmentsToCustomer,
+    respondAdjustment,
+    markCutReadyForInvoicing,
+    markCutInvoiced,
+    registerCutPayment,
+    updateCutDocumentControl,
+    generateQuotePdf,
+    generateOdsPdf,
+    generateAdjustmentPdf,
+    generateAdjustmentSummaryPdf,
+    generateLogisticsPdf,
+    generateTechnicalProgressPdf,
+    sendLogisticsControlEmail,
+    sendCertificate,
+    downloadDocument,
+    upsertSequenceConfig,
+    upsertSlaConfig,
+    upsertQuoteTermsTemplate,
+    updateCustomerSignature,
+    createRemoteSignatureLink,
+    revokeRemoteSignatureLink,
+    updateDeliverySignature,
+    updateExecutionCustomer
+  }
 }

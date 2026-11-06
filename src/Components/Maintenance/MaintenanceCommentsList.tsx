@@ -12,7 +12,8 @@ import {
   Checkbox,
   Tooltip,
   Alert,
-  IconButton
+  IconButton,
+  type ChipProps
 } from '@mui/material'
 import {
   Send,
@@ -118,7 +119,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       .slice(0, 2)
   }
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string): ChipProps['color'] => {
     switch (role) {
       case 'admin':
         return 'error'
@@ -190,7 +191,11 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
     if (!editingContent.trim()) return
 
     try {
-      await onUpdateComment(comment.id, editingContent.trim(), comment.isInternal)
+      await onUpdateComment(
+        comment.id,
+        editingContent.trim(),
+        comment.isInternal
+      )
       handleCancelEdit()
     } catch (error) {
       logger.error('Error updating comment:', error)
@@ -207,8 +212,8 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
 
   return (
     <Box>
-      <Typography 
-        variant='h6' 
+      <Typography
+        variant='h6'
         gutterBottom
         sx={{
           fontWeight: 600,
@@ -220,28 +225,28 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       </Typography>
 
       {/* Comments List */}
-      <Box 
-        sx={{ 
-          maxHeight: 400, 
-          overflowY: 'auto', 
+      <Box
+        sx={{
+          maxHeight: 400,
+          overflowY: 'auto',
           mb: 3,
           '&::-webkit-scrollbar': {
-            width: '6px',
+            width: '6px'
           },
           '&::-webkit-scrollbar-track': {
             background: '#e2e8f0',
-            borderRadius: '3px',
+            borderRadius: '3px'
           },
           '&::-webkit-scrollbar-thumb': {
             background: '#94a3b8',
-            borderRadius: '3px',
-          },
+            borderRadius: '3px'
+          }
         }}
       >
         {sortedComments.length === 0 ? (
-          <Alert 
-            severity='info' 
-            sx={{ 
+          <Alert
+            severity='info'
+            sx={{
               mb: 2,
               backgroundColor: '#ffffff',
               borderRadius: '12px',
@@ -260,8 +265,8 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 p: 2,
                 mb: 2,
                 backgroundColor: comment.isInternal ? '#fffbeb' : '#ffffff',
-                border: comment.isInternal 
-                  ? '1px solid #fde68a' 
+                border: comment.isInternal
+                  ? '1px solid #fde68a'
                   : '1px solid #e5e7eb',
                 transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                 '&:hover': {
@@ -273,7 +278,12 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
               }}
             >
               {/* Comment Header */}
-              <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
+              <Box
+                display='flex'
+                alignItems='center'
+                justifyContent='space-between'
+                mb={1}
+              >
                 <Box display='flex' alignItems='center' gap={1}>
                   <Avatar
                     sx={{
@@ -281,23 +291,37 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       height: 32,
                       fontSize: '0.875rem',
                       backgroundColor:
-                        getRoleColor(comment.authorType || comment.userRole) === 'primary'
+                        getRoleColor(comment.authorType || comment.userRole) ===
+                        'primary'
                           ? '#e8f7ef'
-                          : getRoleColor(comment.authorType || comment.userRole) === 'error'
+                          : getRoleColor(
+                                comment.authorType || comment.userRole
+                              ) === 'error'
                             ? '#fef2f2'
-                            : getRoleColor(comment.authorType || comment.userRole) === 'success'
+                            : getRoleColor(
+                                  comment.authorType || comment.userRole
+                                ) === 'success'
                               ? '#ecfdf5'
-                              : getRoleColor(comment.authorType || comment.userRole) === 'info'
+                              : getRoleColor(
+                                    comment.authorType || comment.userRole
+                                  ) === 'info'
                                 ? '#eff6ff'
                                 : '#f1f5f9',
                       color:
-                        getRoleColor(comment.authorType || comment.userRole) === 'primary'
+                        getRoleColor(comment.authorType || comment.userRole) ===
+                        'primary'
                           ? '#00A651'
-                          : getRoleColor(comment.authorType || comment.userRole) === 'error'
+                          : getRoleColor(
+                                comment.authorType || comment.userRole
+                              ) === 'error'
                             ? '#dc2626'
-                            : getRoleColor(comment.authorType || comment.userRole) === 'success'
+                            : getRoleColor(
+                                  comment.authorType || comment.userRole
+                                ) === 'success'
                               ? '#059669'
-                              : getRoleColor(comment.authorType || comment.userRole) === 'info'
+                              : getRoleColor(
+                                    comment.authorType || comment.userRole
+                                  ) === 'info'
                                 ? '#2563eb'
                                 : '#475569'
                     }}
@@ -318,22 +342,35 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                         sx={{
                           borderRadius: '6px',
                           fontWeight: 500,
-                          background: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
-                            ? '#e8f7ef'
-                            : undefined,
-                          color: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
-                            ? '#00A651' 
-                            : undefined,
-                          border: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
-                            ? 'none' 
-                            : undefined
+                          background:
+                            getRoleColor(
+                              comment.authorType || comment.userRole
+                            ) === 'primary'
+                              ? '#e8f7ef'
+                              : undefined,
+                          color:
+                            getRoleColor(
+                              comment.authorType || comment.userRole
+                            ) === 'primary'
+                              ? '#00A651'
+                              : undefined,
+                          border:
+                            getRoleColor(
+                              comment.authorType || comment.userRole
+                            ) === 'primary'
+                              ? 'none'
+                              : undefined
                         }}
-                        color={
+                        color={getRoleColor(
+                          comment.authorType || comment.userRole
+                        )}
+                        variant={
                           getRoleColor(
                             comment.authorType || comment.userRole
-                          ) as any
+                          ) === 'primary'
+                            ? 'filled'
+                            : 'outlined'
                         }
-                        variant={getRoleColor(comment.authorType || comment.userRole) === 'primary' ? 'filled' : 'outlined'}
                       />
                       {comment.isInternal && (
                         <Tooltip title='Comentario interno - Solo visible para técnicos y administradores'>
@@ -431,8 +468,12 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                   sx={{
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
-                    fontStyle: comment.isVisible === false ? 'italic' : 'normal',
-                    color: comment.isVisible === false ? 'text.secondary' : 'text.primary'
+                    fontStyle:
+                      comment.isVisible === false ? 'italic' : 'normal',
+                    color:
+                      comment.isVisible === false
+                        ? 'text.secondary'
+                        : 'text.primary'
                   }}
                 >
                   {comment.content}
@@ -447,14 +488,14 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
 
       {/* Add Comment Form */}
       {!disabled && (
-        <Paper 
-          sx={{ 
+        <Paper
+          sx={{
             ...surfaceSx,
-            p: 2,
+            p: 2
           }}
         >
-          <Typography 
-            variant='subtitle2' 
+          <Typography
+            variant='subtitle2'
             gutterBottom
             sx={{
               fontWeight: 600,
@@ -473,19 +514,19 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
               onChange={(e) => setNewComment(e.target.value)}
               placeholder='Escribe tu comentario aquí...'
               disabled={submitting || loading}
-              sx={{ 
+              sx={{
                 mb: 2,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#86c88a',
+                    borderColor: '#86c88a'
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#00A651',
-                  },
+                    borderColor: '#00A651'
+                  }
                 },
                 '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#00A651',
+                  color: '#00A651'
                 }
               }}
             />

@@ -36,15 +36,15 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Ruta para el nuevo TV Display moderno */}
-      <Route 
-        path="/maintenance/tv-display-modern" 
-        element={<MaintenanceTVDisplayModern />} 
+      <Route
+        path='/maintenance/tv-display-modern'
+        element={<MaintenanceTVDisplayModern />}
       />
-      
+
       {/* Mantener la ruta anterior para compatibilidad */}
-      <Route 
-        path="/maintenance/tv-display" 
-        element={<MaintenanceTVDisplayPublic />} 
+      <Route
+        path='/maintenance/tv-display'
+        element={<MaintenanceTVDisplayPublic />}
       />
     </Routes>
   )
@@ -77,8 +77,8 @@ const customConfig = createCustomConfig({
 const tvConfig = createCustomConfig({
   tv: {
     containerMaxWidth: false, // Usar ancho completo
-    metricsColumns: 5,        // 5 columnas de métricas
-    regularTicketsColumns: 4   // 4 columnas de tickets
+    metricsColumns: 5, // 5 columnas de métricas
+    regularTicketsColumns: 4 // 4 columnas de tickets
   }
 })
 ```
@@ -87,34 +87,37 @@ const tvConfig = createCustomConfig({
 
 ### Diferencias Principales
 
-| Aspecto | Componente Anterior | Componente Moderno |
-|---------|-------------------|-------------------|
-| **Tema** | Oscuro (#1a1a1a) | Blanco (#ffffff) |
-| **Color Principal** | #2FB158 | #7bff7f (configurable) |
-| **Arquitectura** | Monolítico | Modular |
-| **Tamaño del Archivo** | ~800 líneas | ~200 líneas (principal) |
-| **Mantenibilidad** | Difícil | Fácil |
-| **Personalización** | Limitada | Altamente configurable |
+| Aspecto                | Componente Anterior | Componente Moderno      |
+| ---------------------- | ------------------- | ----------------------- |
+| **Tema**               | Oscuro (#1a1a1a)    | Blanco (#ffffff)        |
+| **Color Principal**    | #2FB158             | #7bff7f (configurable)  |
+| **Arquitectura**       | Monolítico          | Modular                 |
+| **Tamaño del Archivo** | ~800 líneas         | ~200 líneas (principal) |
+| **Mantenibilidad**     | Difícil             | Fácil                   |
+| **Personalización**    | Limitada            | Altamente configurable  |
 
 ### Pasos de Migración
 
 1. **Backup del Componente Actual**
+
    ```bash
    # Crear backup del componente actual
    cp MaintenanceTVDisplayPublic.tsx MaintenanceTVDisplayPublic.backup.tsx
    ```
 
 2. **Probar el Nuevo Componente**
+
    - Usar una ruta diferente inicialmente
    - Verificar que todos los datos se muestren correctamente
    - Probar en diferentes resoluciones de pantalla
 
 3. **Actualizar Referencias**
+
    ```tsx
    // Cambiar todas las importaciones
    // De:
    import MaintenanceTVDisplayPublic from './MaintenanceTVDisplayPublic'
-   
+
    // A:
    import MaintenanceTVDisplayModern from './TVDisplayModern'
    ```
@@ -153,21 +156,27 @@ test('renders without crashing', () => {
 ### Problemas Comunes
 
 #### 1. Error de Importación de Componentes
+
 ```
 Error: Cannot resolve './MaintenancePriorityBadge'
 ```
+
 **Solución**: Verificar que los componentes de badges existan en la ruta correcta.
 
 #### 2. Hooks No Encontrados
+
 ```
 Error: Cannot resolve '../../hooks/useMaintenancePublic'
 ```
+
 **Solución**: Verificar que los hooks estén en la ruta correcta relativa al nuevo componente.
 
 #### 3. Tipos TypeScript
+
 ```
 Error: Property 'ticketCode' does not exist on type...
 ```
+
 **Solución**: Verificar que los tipos de datos coincidan con la API.
 
 ### Logs de Debug
@@ -182,6 +191,7 @@ console.log('Organized Tickets:', organizedTickets)
 ## 📱 Configuración para Diferentes Dispositivos
 
 ### TV 1920x1080 (Recomendado)
+
 ```tsx
 const tvConfig = {
   metricsColumns: 5,
@@ -191,6 +201,7 @@ const tvConfig = {
 ```
 
 ### TV 4K (3840x2160)
+
 ```tsx
 const tv4kConfig = {
   metricsColumns: 6,
@@ -200,6 +211,7 @@ const tv4kConfig = {
 ```
 
 ### Pantalla Más Pequeña (1366x768)
+
 ```tsx
 const smallScreenConfig = {
   metricsColumns: 4,

@@ -1,2 +1,6 @@
 d96f8614fa9881d4425449722c01ee46b53a22fb
 # Line-ending normalization commit (see git config blame.ignoreRevsFile or pass --ignore-rev)
+
+# Formato global con Prettier (solo whitespace)
+fa008805625b61726f60fa1579567ebb94ac91d6
+a9fefb22cc90b9f17b41b333ed157aea8a47389b

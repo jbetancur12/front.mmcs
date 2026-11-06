@@ -31,7 +31,10 @@ const files = []
     if (entry.isDirectory()) {
       if (full === path.join(SRC, 'theme')) continue
       walk(full)
-    } else if (/\.(tsx?|jsx?)$/.test(entry.name) && !/\.test\./.test(entry.name)) {
+    } else if (
+      /\.(tsx?|jsx?)$/.test(entry.name) &&
+      !/\.test\./.test(entry.name)
+    ) {
       files.push(full)
     }
   }
@@ -48,19 +51,30 @@ for (const file of files) {
 }
 
 const hasBaseline = fs.existsSync(BASELINE)
-const baseline = hasBaseline ? JSON.parse(fs.readFileSync(BASELINE, 'utf8')) : {}
+const baseline = hasBaseline
+  ? JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
+  : {}
 const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0)
 
-const worse = Object.entries(counts).filter(([file, n]) => n > (baseline[file] ?? 0))
-const better = Object.entries(baseline).filter(([file, n]) => (counts[file] ?? 0) < n)
+const worse = Object.entries(counts).filter(
+  ([file, n]) => n > (baseline[file] ?? 0)
+)
+const better = Object.entries(baseline).filter(
+  ([file, n]) => (counts[file] ?? 0) < n
+)
 
 if (update) {
   if (hasBaseline && worse.length && !force) {
-    console.error('No se actualiza: hay archivos con MÁS colores que su tope (arréglalos primero):')
-    for (const [file, n] of worse) console.error(`  ${file}: ${n} (tope ${baseline[file] ?? 0})`)
+    console.error(
+      'No se actualiza: hay archivos con MÁS colores que su tope (arréglalos primero):'
+    )
+    for (const [file, n] of worse)
+      console.error(`  ${file}: ${n} (tope ${baseline[file] ?? 0})`)
     process.exit(1)
   }
-  const sorted = Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)))
+  const sorted = Object.fromEntries(
+    Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))
+  )
   fs.writeFileSync(BASELINE, JSON.stringify(sorted, null, 2) + '\n')
   console.log(
     `Baseline actualizado: ${Object.keys(sorted).length} archivos, ${sum(sorted)} colores tolerados.`
@@ -69,15 +83,21 @@ if (update) {
 }
 
 if (!hasBaseline) {
-  console.error('Falta scripts/colors-baseline.json. Créalo con: npm run colors:check -- --update --force')
+  console.error(
+    'Falta scripts/colors-baseline.json. Créalo con: npm run colors:check -- --update --force'
+  )
   process.exit(1)
 }
 
 if (worse.length) {
-  console.error('Colores de la paleta escritos a mano (usa los tokens de src/theme/designTokens.ts):\n')
+  console.error(
+    'Colores de la paleta escritos a mano (usa los tokens de src/theme/designTokens.ts):\n'
+  )
   for (const [file, n] of worse) {
     const tope = baseline[file] ?? 0
-    console.error(`  ${file}: ${n} colores${tope ? ` (tope ${tope})` : ' (archivo nuevo: tope 0)'}`)
+    console.error(
+      `  ${file}: ${n} colores${tope ? ` (tope ${tope})` : ' (archivo nuevo: tope 0)'}`
+    )
   }
   console.error(
     '\nEjemplos: brand.main, brand.hover, brand.ink, brand.soft, neutral.border, neutral.textBody, intent.danger.' +
@@ -87,7 +107,9 @@ if (worse.length) {
   process.exit(1)
 }
 
-console.log(`Colores OK: ${sum(counts)} tolerados en ${Object.keys(counts).length} archivos (baseline ${sum(baseline)}).`)
+console.log(
+  `Colores OK: ${sum(counts)} tolerados en ${Object.keys(counts).length} archivos (baseline ${sum(baseline)}).`
+)
 if (better.length) {
   console.log(
     `Bajaron en ${better.length} archivo(s): ejecuta "npm run colors:check -- --update" para bajar el tope.`

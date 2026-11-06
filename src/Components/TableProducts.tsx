@@ -36,7 +36,10 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import React, { useEffect, useMemo, useState } from 'react'
 import { NumericFormatCustom } from './NumericFormatCustom'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { useProductMutations, useProducts } from 'src/hooks/purchases/useProducts'
+import {
+  useProductMutations,
+  useProducts
+} from 'src/hooks/purchases/useProducts'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
@@ -185,7 +188,9 @@ const TableProducts: React.FC = () => {
   }
 
   const handleDeleteProduct = async (product: ProductData) => {
-    const result = await confirmDialog({ title: '¿Eliminar producto?', html: `
+    const result = await confirmDialog({
+      title: '¿Eliminar producto?',
+      html: `
         <div style="text-align: left;">
           <p><strong>Producto:</strong> ${product.name}</p>
           <p style="color: #6b7280; font-size: 0.9rem; margin-top: 12px;">
@@ -195,7 +200,11 @@ const TableProducts: React.FC = () => {
           </p>
           <p style="color: #dc2626; font-size: 0.85rem;"><strong>Esta acción no se puede deshacer.</strong></p>
         </div>
-      `, confirmLabel: 'Sí, eliminar', cancelLabel: 'Cancelar', tone: 'danger' })
+      `,
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger'
+    })
     if (!result.isConfirmed) return
     try {
       await deleteProduct.mutateAsync(product.id)
@@ -295,13 +304,40 @@ const TableProducts: React.FC = () => {
         icon={<Inventory2OutlinedIcon />}
         actions={
           <>
-            <Button variant='outlined' startIcon={<DownloadOutlinedIcon />} onClick={handleDownloadTemplate} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<DownloadOutlinedIcon />}
+              onClick={handleDownloadTemplate}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Plantilla
             </Button>
-            <Button variant='outlined' startIcon={<CloudUploadOutlinedIcon />} onClick={() => setImportDialogOpen(true)} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+            <Button
+              variant='outlined'
+              startIcon={<CloudUploadOutlinedIcon />}
+              onClick={() => setImportDialogOpen(true)}
+              sx={{
+                color: '#00897B',
+                borderColor: '#00BFA5',
+                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              }}
+            >
               Importar
             </Button>
-            <Button variant='contained' startIcon={<AddCircleOutlineOutlinedIcon />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            <Button
+              variant='contained'
+              startIcon={<AddCircleOutlineOutlinedIcon />}
+              onClick={() => setCreateModalOpen(true)}
+              sx={{
+                bgcolor: '#00BFA5',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#00ACC1' }
+              }}
+            >
               Nuevo producto
             </Button>
           </>
@@ -310,10 +346,20 @@ const TableProducts: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={6} sm={4}>
-          <LmsStatCard label='Productos' value={totalProducts} icon={<Inventory2OutlinedIcon />} tone='teal' />
+          <LmsStatCard
+            label='Productos'
+            value={totalProducts}
+            icon={<Inventory2OutlinedIcon />}
+            tone='teal'
+          />
         </Grid>
         <Grid item xs={6} sm={4}>
-          <LmsStatCard label='Variantes' value={totalVariants} icon={<LayersOutlinedIcon />} tone='blue' />
+          <LmsStatCard
+            label='Variantes'
+            value={totalVariants}
+            icon={<LayersOutlinedIcon />}
+            tone='blue'
+          />
         </Grid>
       </Grid>
 
@@ -339,7 +385,9 @@ const TableProducts: React.FC = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position='start'>
-                <SearchOutlinedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                <SearchOutlinedIcon
+                  sx={{ color: 'text.secondary', fontSize: 20 }}
+                />
               </InputAdornment>
             )
           }}
@@ -359,7 +407,13 @@ const TableProducts: React.FC = () => {
           variant='contained'
           startIcon={<PercentOutlinedIcon />}
           onClick={() => setConfirmationDialogOpen(true)}
-          sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, height: 36, '&:hover': { bgcolor: '#00ACC1' } }}
+          sx={{
+            bgcolor: '#00BFA5',
+            textTransform: 'none',
+            fontWeight: 600,
+            height: 36,
+            '&:hover': { bgcolor: '#00ACC1' }
+          }}
         >
           Actualizar precios
         </Button>
@@ -367,13 +421,51 @@ const TableProducts: React.FC = () => {
 
       <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <Box sx={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+          <table
+            style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}
+          >
             <thead>
-              <tr style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: '#f5f5f5' }}>
+              <tr
+                style={{
+                  borderBottom: '1px solid #e5e7eb',
+                  backgroundColor: '#f5f5f5'
+                }}
+              >
                 <th style={{ width: 40, padding: '12px 8px' }}></th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 600, fontSize: '0.85rem', color: '#374151', }}>Producto</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 600, fontSize: '0.85rem', color: '#374151', width: 200 }}>Alcance</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 600, fontSize: '0.85rem', color: '#374151', }}>Variantes</th>
+                <th
+                  style={{
+                    textAlign: 'left',
+                    padding: '12px 8px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    color: '#374151'
+                  }}
+                >
+                  Producto
+                </th>
+                <th
+                  style={{
+                    textAlign: 'left',
+                    padding: '12px 8px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    color: '#374151',
+                    width: 200
+                  }}
+                >
+                  Alcance
+                </th>
+                <th
+                  style={{
+                    textAlign: 'left',
+                    padding: '12px 8px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    color: '#374151'
+                  }}
+                >
+                  Variantes
+                </th>
                 <th style={{ width: 100, padding: '12px 8px' }}></th>
               </tr>
             </thead>
@@ -382,14 +474,24 @@ const TableProducts: React.FC = () => {
                 <React.Fragment key={product.id}>
                   <tr
                     style={{ borderBottom: '1px solid #e5e7eb' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0, 191, 165, 0.04)' }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
+                    onMouseEnter={(e) => {
+                      ;(e.currentTarget as HTMLElement).style.backgroundColor =
+                        'rgba(0, 191, 165, 0.04)'
+                    }}
+                    onMouseLeave={(e) => {
+                      ;(e.currentTarget as HTMLElement).style.backgroundColor =
+                        ''
+                    }}
                   >
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                       <IconButton
                         size='small'
                         onClick={() => toggleRow(product.id)}
-                        sx={{ color: expandedRows.has(product.id) ? '#00BFA5' : '#9ca3af' }}
+                        sx={{
+                          color: expandedRows.has(product.id)
+                            ? '#00BFA5'
+                            : '#9ca3af'
+                        }}
                       >
                         {expandedRows.has(product.id) ? (
                           <ExpandLessIcon fontSize='small' />
@@ -409,7 +511,12 @@ const TableProducts: React.FC = () => {
                       </Typography>
                     </td>
                     <td style={{ padding: '12px 8px' }}>
-                      <Stack direction='row' spacing={0.5} flexWrap='wrap' useFlexGap>
+                      <Stack
+                        direction='row'
+                        spacing={0.5}
+                        flexWrap='wrap'
+                        useFlexGap
+                      >
                         {product.variants.map((v) => (
                           <Chip
                             key={v.id}
@@ -420,16 +527,25 @@ const TableProducts: React.FC = () => {
                               borderRadius: '6px',
                               fontWeight: 600,
                               fontSize: '0.75rem',
-                              borderColor: (SERVICE_TYPE_COLORS[v.serviceType] || '#d1d5db') + '40',
-                              color: SERVICE_TYPE_COLORS[v.serviceType] || '#6b7280',
-                              backgroundColor: (SERVICE_TYPE_COLORS[v.serviceType] || '#d1d5db') + '10'
+                              borderColor:
+                                (SERVICE_TYPE_COLORS[v.serviceType] ||
+                                  '#d1d5db') + '40',
+                              color:
+                                SERVICE_TYPE_COLORS[v.serviceType] || '#6b7280',
+                              backgroundColor:
+                                (SERVICE_TYPE_COLORS[v.serviceType] ||
+                                  '#d1d5db') + '10'
                             }}
                           />
                         ))}
                       </Stack>
                     </td>
                     <td style={{ padding: '12px 8px' }}>
-                      <Stack direction='row' spacing={0.5} justifyContent='flex-end'>
+                      <Stack
+                        direction='row'
+                        spacing={0.5}
+                        justifyContent='flex-end'
+                      >
                         <Tooltip title='Editar'>
                           <IconButton
                             size='small'
@@ -457,29 +573,86 @@ const TableProducts: React.FC = () => {
                   {expandedRows.has(product.id) && (
                     <tr style={{ backgroundColor: '#f9fafb' }}>
                       <td colSpan={5} style={{ padding: '8px 16px 16px 56px' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <table
+                          style={{ width: '100%', borderCollapse: 'collapse' }}
+                        >
                           <thead>
                             <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                              <th style={{ textAlign: 'left', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Tipo</th>
-                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Valor médica</th>
-                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Valor industrial</th>
-                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Valor subcontratados</th>
+                              <th
+                                style={{
+                                  textAlign: 'left',
+                                  padding: '8px',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  color: '#6b7280'
+                                }}
+                              >
+                                Tipo
+                              </th>
+                              <th
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '8px',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  color: '#6b7280'
+                                }}
+                              >
+                                Valor médica
+                              </th>
+                              <th
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '8px',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  color: '#6b7280'
+                                }}
+                              >
+                                Valor industrial
+                              </th>
+                              <th
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '8px',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  color: '#6b7280'
+                                }}
+                              >
+                                Valor subcontratados
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
                             {product.variants.map((v) => (
-                              <tr key={v.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                              <tr
+                                key={v.id}
+                                style={{ borderBottom: '1px solid #f3f4f6' }}
+                              >
                                 <td style={{ padding: '8px' }}>
                                   <ServiceTypeBadge type={v.serviceType} />
                                 </td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>
-                                  <Typography variant='body2' fontWeight={600}>{formatMoney(v.medicalPrice)}</Typography>
+                                <td
+                                  style={{ padding: '8px', textAlign: 'right' }}
+                                >
+                                  <Typography variant='body2' fontWeight={600}>
+                                    {formatMoney(v.medicalPrice)}
+                                  </Typography>
                                 </td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>
-                                  <Typography variant='body2' fontWeight={600}>{formatMoney(v.industrialPrice)}</Typography>
+                                <td
+                                  style={{ padding: '8px', textAlign: 'right' }}
+                                >
+                                  <Typography variant='body2' fontWeight={600}>
+                                    {formatMoney(v.industrialPrice)}
+                                  </Typography>
                                 </td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>
-                                  <Typography variant='body2' fontWeight={600}>{formatMoney(v.thirdPartyPrice)}</Typography>
+                                <td
+                                  style={{ padding: '8px', textAlign: 'right' }}
+                                >
+                                  <Typography variant='body2' fontWeight={600}>
+                                    {formatMoney(v.thirdPartyPrice)}
+                                  </Typography>
                                 </td>
                               </tr>
                             ))}
@@ -517,7 +690,10 @@ const TableProducts: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmationDialogOpen(false)} color='inherit'>
+          <Button
+            onClick={() => setConfirmationDialogOpen(false)}
+            color='inherit'
+          >
             Cancelar
           </Button>
           <Button onClick={updateAllPrices} variant='contained'>
@@ -540,7 +716,8 @@ const TableProducts: React.FC = () => {
           setEditingProduct(null)
         }}
         onSubmit={(name, intervalText, variants) =>
-          editingProduct && handleEditProduct(editingProduct.id, name, intervalText, variants)
+          editingProduct &&
+          handleEditProduct(editingProduct.id, name, intervalText, variants)
         }
         mode='edit'
         initialProduct={editingProduct || undefined}
@@ -548,7 +725,10 @@ const TableProducts: React.FC = () => {
 
       <Dialog
         open={importDialogOpen}
-        onClose={() => { setImportDialogOpen(false); setImportFile(null) }}
+        onClose={() => {
+          setImportDialogOpen(false)
+          setImportFile(null)
+        }}
         maxWidth='sm'
         fullWidth
       >
@@ -578,7 +758,10 @@ const TableProducts: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={() => { setImportDialogOpen(false); setImportFile(null) }}
+            onClick={() => {
+              setImportDialogOpen(false)
+              setImportFile(null)
+            }}
             color='inherit'
           >
             Cancelar
@@ -599,7 +782,11 @@ const TableProducts: React.FC = () => {
 interface ProductFormModalProps {
   open: boolean
   onClose: () => void
-  onSubmit: (name: string, intervalText: string, variants: VariantFormEntry[]) => void
+  onSubmit: (
+    name: string,
+    intervalText: string,
+    variants: VariantFormEntry[]
+  ) => void
   mode: 'create' | 'edit'
   initialProduct?: ProductData
 }
@@ -717,7 +904,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             Variantes de precio
           </Typography>
 
-          <Stack direction='row' spacing={1.5} alignItems='flex-end' flexWrap='wrap'>
+          <Stack
+            direction='row'
+            spacing={1.5}
+            alignItems='flex-end'
+            flexWrap='wrap'
+          >
             <FormControl size='small' sx={{ minWidth: 180 }}>
               <InputLabel>Tipo</InputLabel>
               <Select
@@ -767,7 +959,13 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               variant='outlined'
               startIcon={<AddCircleOutlineOutlinedIcon />}
               onClick={addVariant}
-              sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, height: 36, flexShrink: 0 }}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                height: 36,
+                flexShrink: 0
+              }}
               disabled={availableTypes.length === 0}
             >
               Agregar
@@ -784,11 +982,56 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             >
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                    <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Tipo</th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Médica</th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Industrial</th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Subcontratados</th>
+                  <tr
+                    style={{
+                      backgroundColor: '#f9fafb',
+                      borderBottom: '1px solid #e5e7eb'
+                    }}
+                  >
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '8px 12px',
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        color: '#6b7280'
+                      }}
+                    >
+                      Tipo
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'right',
+                        padding: '8px 12px',
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        color: '#6b7280'
+                      }}
+                    >
+                      Médica
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'right',
+                        padding: '8px 12px',
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        color: '#6b7280'
+                      }}
+                    >
+                      Industrial
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'right',
+                        padding: '8px 12px',
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        color: '#6b7280'
+                      }}
+                    >
+                      Subcontratados
+                    </th>
                     <th style={{ width: 48, padding: '8px 12px' }}></th>
                   </tr>
                 </thead>
@@ -833,8 +1076,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               color='text.disabled'
               sx={{ textAlign: 'center', py: 2 }}
             >
-              No has agregado variantes. Agrega al menos un tipo de servicio
-              con sus precios.
+              No has agregado variantes. Agrega al menos un tipo de servicio con
+              sus precios.
             </Typography>
           )}
         </Stack>

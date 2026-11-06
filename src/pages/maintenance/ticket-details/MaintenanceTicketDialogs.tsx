@@ -9,12 +9,7 @@ import {
   DialogActions,
   Alert
 } from '@mui/material'
-import {
-  Error,
-  Warning,
-  Info,
-  Download
-} from '@mui/icons-material'
+import { Error, Warning, Info, Download } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import CompletionCostsDialog from '../../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceSignaturesDialog from '../../../Components/Maintenance/MaintenanceSignaturesDialog'
@@ -33,7 +28,10 @@ interface MaintenanceTicketDialogsProps {
 }
 
 /** Barra de carga, vista previa de archivos, confirmación, diálogos de cierre/firmas/costos/informe técnico y avisos. */
-const MaintenanceTicketDialogs = ({ ticket, details }: MaintenanceTicketDialogsProps) => {
+const MaintenanceTicketDialogs = ({
+  ticket,
+  details
+}: MaintenanceTicketDialogsProps) => {
   const {
     isMobile,
     isTechnician,
@@ -302,8 +300,7 @@ const MaintenanceTicketDialogs = ({ ticket, details }: MaintenanceTicketDialogsP
             )
           }
           loading={
-            updateTicketMutation.isLoading ||
-            updateTechnicianMutation.isLoading
+            updateTicketMutation.isLoading || updateTechnicianMutation.isLoading
           }
         />
       )}
@@ -328,7 +325,6 @@ const MaintenanceTicketDialogs = ({ ticket, details }: MaintenanceTicketDialogsP
         onSave={handleSaveTechnicalReport}
         onGeneratePdf={handleGenerateTechnicalReport}
       />
-
     </>
   )
 }

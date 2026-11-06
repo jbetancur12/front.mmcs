@@ -42,7 +42,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
 
         setStatus({ success: true })
         onSuccess?.()
-      } catch (error: any) {
+      } catch (error: unknown) {
         const errorMessage =
           getApiErrorReason(error) || 'Error al procesar el módulo'
         setStatus({ success: false, error: errorMessage })

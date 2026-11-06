@@ -51,7 +51,9 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [resolvedSrc, setResolvedSrc] = useState(videoSource === 'minio' ? '' : src)
+  const [resolvedSrc, setResolvedSrc] = useState(
+    videoSource === 'minio' ? '' : src
+  )
 
   // YouTube video handling
   const getYouTubeEmbedUrl = (url: string): string => {
@@ -65,7 +67,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
       /youtube\.com\/watch\?.*v=([^&\n?#]+)/
     ]
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern)
       if (match) return match[1]
@@ -92,9 +94,9 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
     if (videoRef.current) {
       const current = videoRef.current.currentTime
       const total = videoRef.current.duration
-      
+
       setCurrentTime(current)
-      
+
       if (onProgress) {
         onProgress(current, total)
       }
@@ -188,7 +190,9 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
         setResolvedSrc('')
 
         const response = await axiosPrivate.get<ArrayBuffer>(
-          src.startsWith('http') ? src : `${api()}${src.startsWith('/') ? src : `/${src}`}`,
+          src.startsWith('http')
+            ? src
+            : `${api()}${src.startsWith('/') ? src : `/${src}`}`,
           {
             responseType: 'arraybuffer',
             withCredentials: true
@@ -211,7 +215,11 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
         }
       } catch (loadError) {
         if (!isCancelled) {
-          setError(loadError instanceof Error ? loadError.message : 'Error al cargar el video')
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : 'Error al cargar el video'
+          )
           setIsLoading(false)
         }
       }
@@ -253,7 +261,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
         }}
       >
         <Box
-          component="iframe"
+          component='iframe'
           src={embedUrl}
           title={title || 'Video de Google Drive'}
           sx={{
@@ -264,7 +272,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
             height: '100%',
             border: 'none'
           }}
-          allow="autoplay"
+          allow='autoplay'
           allowFullScreen
         />
       </Box>
@@ -274,11 +282,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
   // YouTube iframe for YouTube videos
   if (videoSource === 'youtube') {
     if (!validateYouTubeUrl(src)) {
-      return (
-        <Alert severity="error">
-          URL de YouTube no válida: {src}
-        </Alert>
-      )
+      return <Alert severity='error'>URL de YouTube no válida: {src}</Alert>
     }
 
     return (
@@ -293,7 +297,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
         }}
       >
         <Box
-          component="iframe"
+          component='iframe'
           src={getYouTubeEmbedUrl(src)}
           title={title || 'Video de YouTube'}
           sx={{
@@ -304,7 +308,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
             height: '100%',
             border: 'none'
           }}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
           allowFullScreen
         />
       </Box>
@@ -323,7 +327,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
       }}
     >
       {error ? (
-        <Alert severity="error" sx={{ m: 2 }}>
+        <Alert severity='error' sx={{ m: 2 }}>
           {error}
         </Alert>
       ) : (
@@ -344,7 +348,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
               onLoadedMetadata={handleLoadedMetadata}
               onError={handleError}
               autoPlay={autoPlay}
-              preload="metadata"
+              preload='metadata'
             />
           ) : null}
 
@@ -392,17 +396,17 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
                   {isPlaying ? <PauseIcon /> : <PlayIcon />}
                 </IconButton>
 
-                <Typography variant="caption" sx={{ color: 'white', minWidth: 80 }}>
+                <Typography
+                  variant='caption'
+                  sx={{ color: 'white', minWidth: 80 }}
+                >
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </Typography>
 
                 <Box sx={{ flexGrow: 1 }} />
 
                 {/* Volume Control */}
-                <IconButton
-                  onClick={handleMute}
-                  sx={{ color: 'white' }}
-                >
+                <IconButton onClick={handleMute} sx={{ color: 'white' }}>
                   {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
                 </IconButton>
 
@@ -422,10 +426,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
                   />
                 </Box>
 
-                <IconButton
-                  onClick={handleFullscreen}
-                  sx={{ color: 'white' }}
-                >
+                <IconButton onClick={handleFullscreen} sx={{ color: 'white' }}>
                   {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                 </IconButton>
               </Box>

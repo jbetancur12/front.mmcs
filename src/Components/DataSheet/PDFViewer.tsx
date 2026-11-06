@@ -1,13 +1,7 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useEffect, useState } from 'react'
 import { ArrowBack, Download } from '@mui/icons-material'
-import {
-  Alert,
-  Box,
-  Button,
-  Container,
-  Typography
-} from '@mui/material'
+import { Alert, Box, Button, Container, Typography } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 

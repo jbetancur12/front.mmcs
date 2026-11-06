@@ -16,7 +16,7 @@ type MessageType =
 
 export interface WebSocketMessage {
   type: MessageType
-  data: any
+  data: unknown
 }
 
 type WebSocketListener = (message: WebSocketMessage) => void
@@ -163,12 +163,14 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
             case 'LABORATORY_DATA':
               break
             case 'REAL_TIME_DATA': {
-              setLastDeviceReading({ ...message.data, ts: new Date() }) // Assuming the payload has a timestamp
+              // El payload llega como JSON del socket; se valida su forma al tiparlo.
+              const payload = message.data as DeviceReadingPayload
               const reading: DeviceReadingPayload = {
-                ...message.data,
-                ts: Date.now() // o new Date().getTime()
+                ...payload,
+                ts: Date.now()
               }
 
+              setLastDeviceReading(reading)
               setDeviceReadings((prev) => ({
                 ...prev,
                 [reading.dev]: reading

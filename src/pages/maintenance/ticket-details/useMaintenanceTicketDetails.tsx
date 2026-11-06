@@ -22,7 +22,6 @@ import {
   useGenerateStatusReport,
   useGenerateServiceCertificate,
   useGenerateServiceInvoice
-  // useGetPDFOptions
 } from '../../../hooks/useMaintenance'
 import {
   MaintenanceStatus,
@@ -30,6 +29,7 @@ import {
 } from '../../../types/maintenance'
 import { maintenanceSignaturesEnabled } from '../../../features/maintenanceFlags'
 import type {
+  CompletionCost,
   CompletionPhotoInput,
   CompletionSignatureInput
 } from '../../../Components/Maintenance/CompletionCostsDialog'
@@ -58,7 +58,6 @@ const useMaintenanceTicketDetails = () => {
   const [showComments, setShowComments] = useState(true)
   const [showFiles, setShowFiles] = useState(true)
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<null | HTMLElement>(null)
-  // const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [signaturesDialogOpen, setSignaturesDialogOpen] = useState(false)
   const [briefCostsDialogOpen, setBriefCostsDialogOpen] = useState(false)
@@ -115,13 +114,8 @@ const useMaintenanceTicketDetails = () => {
     isCustomerApprovalLocked,
     showToast
   })
-  const {
-    editMode,
-    setEditMode,
-    editData,
-    setEditErrors,
-    validateEditData
-  } = editing
+  const { editMode, setEditMode, editData, setEditErrors, validateEditData } =
+    editing
 
   const { data: technicians } = useMaintenanceTechnicians(canManageTechnicians)
   const {
@@ -149,7 +143,6 @@ const useMaintenanceTicketDetails = () => {
   const generateStatusReportMutation = useGenerateStatusReport()
   const generateServiceCertificateMutation = useGenerateServiceCertificate()
   const generateServiceInvoiceMutation = useGenerateServiceInvoice()
-  // const { data: pdfOptions } = useGetPDFOptions(ticketId || '')
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
@@ -250,11 +243,10 @@ const useMaintenanceTicketDetails = () => {
       await refetchTicket()
       await refetchTimeline()
       showToast('Ticket actualizado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al actualizar el ticket'
+        getApiErrorReason(error) || 'Error al actualizar el ticket'
       showToast(errorMessage, 'error')
     }
   }
@@ -262,7 +254,7 @@ const useMaintenanceTicketDetails = () => {
   const handleCompleteWithCosts = async (
     workPerformed: string,
     technicianWorkMinutes: number,
-    costs: any[],
+    costs: CompletionCost[],
     completionPhotos: CompletionPhotoInput[],
     technicianSignature: {
       technicianSignatureData?: string | null
@@ -293,7 +285,10 @@ const useMaintenanceTicketDetails = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             technicianWorkMinutes,
-            costs,
+            costs: costs.map((cost) => ({
+              ...cost,
+              amount: Number(cost.amount)
+            })),
             technicianSignatureData:
               technicianSignature.technicianSignatureData ||
               ticket.technicianSignatureData ||
@@ -306,7 +301,10 @@ const useMaintenanceTicketDetails = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             technicianWorkMinutes,
-            costs,
+            costs: costs.map((cost) => ({
+              ...cost,
+              amount: Number(cost.amount)
+            })),
             technicianSignatureData:
               technicianSignature.technicianSignatureData ||
               ticket.technicianSignatureData ||
@@ -344,11 +342,10 @@ const useMaintenanceTicketDetails = () => {
           : 'Ticket completado exitosamente',
         'success'
       )
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al completar el ticket'
+        getApiErrorReason(error) || 'Error al completar el ticket'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -369,11 +366,10 @@ const useMaintenanceTicketDetails = () => {
       await refetchTicket()
       await refetchTimeline()
       showToast('Ticket completado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error completing ticket:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al completar el ticket'
+        getApiErrorReason(error) || 'Error al completar el ticket'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -439,11 +435,10 @@ const useMaintenanceTicketDetails = () => {
       await refetchTicket()
       await refetchTimeline()
       showToast('Firmas registradas exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error saving signatures:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al guardar las firmas'
+        getApiErrorReason(error) || 'Error al guardar las firmas'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -468,11 +463,10 @@ const useMaintenanceTicketDetails = () => {
         'La firma del cliente fue revocada. El contenido técnico vuelve a estar editable.',
         'success'
       )
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error revoking customer signature:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al revocar la firma del cliente'
+        getApiErrorReason(error) || 'Error al revocar la firma del cliente'
       showToast(errorMessage, 'error')
     }
   }
@@ -610,73 +604,14 @@ const useMaintenanceTicketDetails = () => {
       await refetchTechnicalReport()
       await refetchTicket()
       showToast('Reporte técnico guardado exitosamente', 'success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error saving technical report:', error)
       const errorMessage =
-        getApiErrorReason(error) ||
-        'Error al guardar el reporte técnico'
+        getApiErrorReason(error) || 'Error al guardar el reporte técnico'
       showToast(errorMessage, 'error')
       throw error
     }
   }
-
-  // const handleGenerateStatusReport = () => {
-  //   if (!ticketId) return
-  //   generateStatusReportMutation.mutate(ticketId, {
-  //     onSuccess: () => {
-  //       showToast('Reporte de estado generado exitosamente', 'success')
-  //       setPdfMenuAnchor(null)
-  //     },
-  //     onError: (error) => {
-  //       console.error('Error generating status report:', error)
-  //       showToast('Error al generar reporte de estado', 'error')
-  //     }
-  //   })
-  // }
-
-  // const handleGenerateServiceCertificate = () => {
-  //   if (ticket?.status !== MaintenanceStatus.COMPLETED) {
-  //     showToast(
-  //       'El certificado solo se puede generar para tickets completados',
-  //       'warning'
-  //     )
-  //     return
-  //   }
-
-  //   if (!ticketId) return
-  //   generateServiceCertificateMutation.mutate(ticketId, {
-  //     onSuccess: () => {
-  //       showToast('Certificado de servicio generado exitosamente', 'success')
-  //       setPdfMenuAnchor(null)
-  //     },
-  //     onError: (error) => {
-  //       console.error('Error generating service certificate:', error)
-  //       showToast('Error al generar certificado de servicio', 'error')
-  //     }
-  //   })
-  // }
-
-  // const handleGenerateInvoice = () => {
-  //   if (!ticket?.actualCost && !ticket?.estimatedCost) {
-  //     showToast(
-  //       'Debe haber un costo especificado para generar factura',
-  //       'warning'
-  //     )
-  //     return
-  //   }
-
-  //   if (!ticketId) return
-  //   generateServiceInvoiceMutation.mutate(ticketId, {
-  //     onSuccess: () => {
-  //       showToast('Factura generada exitosamente', 'success')
-  //       setPdfMenuAnchor(null)
-  //     },
-  //     onError: (error) => {
-  //       console.error('Error generating invoice:', error)
-  //       showToast('Error al generar factura', 'error')
-  //     }
-  //   })
-  // }
 
   const handlePdfMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setPdfMenuAnchor(event.currentTarget)

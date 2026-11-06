@@ -1,6 +1,10 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
-import { MRT_ColumnDef, MRT_Row } from 'material-react-table'
+import {
+  MRT_ColumnDef,
+  MRT_Row,
+  type MRT_TableInstance
+} from 'material-react-table'
 import {
   Avatar,
   Box,
@@ -220,8 +224,8 @@ const PurchaseVerificationsTable: React.FC = () => {
   }: {
     exitEditingMode: () => void
     row: MRT_Row<PurchaseVerification>
-    table: any // puedes ajustar el tipo según tus necesidades
-    values: Record<string, any>
+    table: MRT_TableInstance<PurchaseVerification>
+    values: Record<string, unknown>
   }) => {
     try {
       const updatedData = { ...row.original, ...values }
@@ -256,7 +260,8 @@ const PurchaseVerificationsTable: React.FC = () => {
       stats={
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard variant='quiet'
+            <LmsStatCard
+              variant='quiet'
               label='Verificaciones'
               value={verifications.length}
               icon={<ListAlt />}
@@ -264,7 +269,8 @@ const PurchaseVerificationsTable: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard variant='quiet'
+            <LmsStatCard
+              variant='quiet'
               label='Recibidas este mes'
               value={thisMonth}
               icon={<CalendarMonth />}
@@ -272,7 +278,8 @@ const PurchaseVerificationsTable: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <LmsStatCard variant='quiet'
+            <LmsStatCard
+              variant='quiet'
               label='Con observaciones'
               value={withNotes}
               icon={<SpeakerNotes />}

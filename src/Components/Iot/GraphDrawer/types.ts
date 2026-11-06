@@ -27,10 +27,31 @@ export interface AlarmThreshold {
 
 export interface WarningThreshold extends AlarmThreshold {}
 
-export interface DeviceData {
-  id: number
-  deviceIotConfigs: ModuleConfig[]
-  [key: string]: any
+/** Punto que devuelve /devicesIot/dataPoints. */
+export interface DeviceDataPoint {
+  timestamp: string
+  avg_temperature: number
+  avg_humidity: number
+  min_temperature: number
+  max_temperature: number
+  min_humidity: number
+  max_humidity: number
+}
+
+/** Punto ya normalizado para las gráficas. */
+export interface CombinedDataPoint {
+  timestamp: number
+  temperature: number
+  humidity: number
+}
+
+export interface AggregateStats {
+  avgTemp: number
+  minTemp: number
+  maxTemp: number
+  avgHum: number
+  minHum: number
+  maxHum: number
 }
 
 export interface AlarmValues {
@@ -53,27 +74,6 @@ export interface GraphDrawerProps {
   isInAlarm?: boolean
 }
 
-export interface TabComponentProps {
-  deviceId: number | string
-  deviceName: string
-  currentDevice?: DeviceData
-  combinedData: Array<{
-    timestamp: number
-    temperature: number
-    humidity: number
-  }>
-  aggregateStats: {
-    avgTemp: number
-    minTemp: number
-    maxTemp: number
-    avgHum: number
-    minHum: number
-    maxHum: number
-  } | null
-  realTimeDataFlat: any[]
-  lastEntry?: any
-}
-
 export interface GaugeConfig {
   absoluteMin: number
   absoluteMax: number
@@ -85,9 +85,9 @@ export interface GaugeConfig {
 }
 
 export interface RangeOption {
-  label: string;
-  hours?: number;
-  isCustom?: boolean;
-  startDate?: Date;
-  endDate?: Date;
+  label: string
+  hours?: number
+  isCustom?: boolean
+  startDate?: Date
+  endDate?: Date
 }

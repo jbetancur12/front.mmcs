@@ -43,7 +43,10 @@ interface EquipmentSalesDocumentsPanelProps {
   supportDocuments: EquipmentQuotationDocument[]
   isBusy?: boolean
   onGenerateQuotePdf: () => Promise<void> | void
-  onDownloadDocument: (documentId: number, fileName: string) => Promise<void> | void
+  onDownloadDocument: (
+    documentId: number,
+    fileName: string
+  ) => Promise<void> | void
   onViewDocument: (documentId: number, fileName: string) => Promise<void> | void
   onUploadDocument: (payload: {
     file: File
@@ -158,8 +161,12 @@ const EquipmentSalesDocumentsPanel = ({
                   ) : null}
                   <Chip
                     size='small'
-                    color={EQUIPMENT_QUOTATION_DOCUMENT_COLORS[document.documentType]}
-                    label={EQUIPMENT_QUOTATION_DOCUMENT_LABELS[document.documentType]}
+                    color={
+                      EQUIPMENT_QUOTATION_DOCUMENT_COLORS[document.documentType]
+                    }
+                    label={
+                      EQUIPMENT_QUOTATION_DOCUMENT_LABELS[document.documentType]
+                    }
                   />
                 </Stack>
               }
@@ -173,20 +180,30 @@ const EquipmentSalesDocumentsPanel = ({
 
   return (
     <Stack spacing={3}>
-      {canGenerateQuotePdf || officialPdfDocuments.some((d) => d.documentType === 'quote_pdf') ? (
+      {canGenerateQuotePdf ||
+      officialPdfDocuments.some((d) => d.documentType === 'quote_pdf') ? (
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
           <Button
             variant='outlined'
             startIcon={<PictureAsPdfOutlinedIcon />}
             onClick={() => void onGenerateQuotePdf()}
-            disabled={isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf}
+            disabled={
+              isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf
+            }
           >
             Generar cotización PDF
           </Button>
         </Stack>
       ) : null}
 
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          p: 3
+        }}
+      >
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           PDFs oficiales
         </Typography>
@@ -200,7 +217,14 @@ const EquipmentSalesDocumentsPanel = ({
       </Box>
 
       {canUploadDocuments ? (
-        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+        <Box
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            p: 3
+          }}
+        >
           <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
             Cargar evidencia o soporte
           </Typography>
@@ -211,7 +235,9 @@ const EquipmentSalesDocumentsPanel = ({
               label='Tipo documental'
               value={selectedType}
               onChange={(event) =>
-                setSelectedType(event.target.value as EquipmentQuotationDocumentType)
+                setSelectedType(
+                  event.target.value as EquipmentQuotationDocumentType
+                )
               }
               disabled={isBusy}
             >
@@ -280,7 +306,14 @@ const EquipmentSalesDocumentsPanel = ({
         </Alert>
       )}
 
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          p: 3
+        }}
+      >
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           Evidencias de decisión del cliente
         </Typography>
@@ -288,12 +321,20 @@ const EquipmentSalesDocumentsPanel = ({
           renderDocumentList(decisionDocuments)
         ) : (
           <Alert severity='info'>
-            Aquí aparecen las evidencias de aprobación o rechazo de la cotización.
+            Aquí aparecen las evidencias de aprobación o rechazo de la
+            cotización.
           </Alert>
         )}
       </Box>
 
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          p: 3
+        }}
+      >
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           Evidencias y soportes
         </Typography>

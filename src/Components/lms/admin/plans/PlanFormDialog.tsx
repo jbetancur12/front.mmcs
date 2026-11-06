@@ -34,9 +34,18 @@ import {
   AccountTree as PlanIcon,
   WarningAmber as WarningIcon
 } from '@mui/icons-material'
-import { useCourses, useSaveTrainingPlan, useTrainingPlan, useTrainingPlans } from 'src/hooks/useLms'
+import {
+  useCourses,
+  useSaveTrainingPlan,
+  useTrainingPlan,
+  useTrainingPlans
+} from 'src/hooks/useLms'
 import { lmsService } from 'src/services/lmsService'
-import type { Course, PlanImpact, SaveTrainingPlanRequest } from 'src/services/lmsService'
+import type {
+  Course,
+  PlanImpact,
+  SaveTrainingPlanRequest
+} from 'src/services/lmsService'
 import { queryKeys } from 'src/config/queryClient'
 import { notify as appNotify } from 'src/utils/notify'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
@@ -68,14 +77,23 @@ interface EffectiveRow {
   status: string | null
 }
 
-const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }) => {
+const PlanFormDialog: React.FC<PlanFormDialogProps> = ({
+  open,
+  planId,
+  onClose
+}) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
   const isEdit = Boolean(planId)
 
-  const { data: plan, isLoading: planLoading } = useTrainingPlan(open ? planId : null)
+  const { data: plan, isLoading: planLoading } = useTrainingPlan(
+    open ? planId : null
+  )
   const { data: plans = [] } = useTrainingPlans({ enabled: open })
-  const { data: coursesResponse, isLoading: coursesLoading } = useCourses({ limit: 100 }, { enabled: open })
+  const { data: coursesResponse, isLoading: coursesLoading } = useCourses(
+    { limit: 100 },
+    { enabled: open }
+  )
   const saveMutation = useSaveTrainingPlan()
 
   const [name, setName] = useState('')
@@ -89,7 +107,11 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
 
   // El impacto queda al final del formulario: llevarlo a la vista al calcularlo
   useEffect(() => {
-    if (impact) impactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    if (impact)
+      impactRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      })
   }, [impact])
 
   // Cargar el plan al abrir (o limpiar al crear)
@@ -105,16 +127,27 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
     } else if (plan) {
       setName(plan.name)
       setDescription(plan.description ?? '')
-      setCourses(plan.courses.map((item) => ({ course_id: item.course_id, deadline_days: item.deadline_days })))
+      setCourses(
+        plan.courses.map((item) => ({
+          course_id: item.course_id,
+          deadline_days: item.deadline_days
+        }))
+      )
       setIncludeIds(plan.includes.map((item) => item.id))
     }
   }, [open, isEdit, plan])
 
   const catalog = useMemo(
-    () => ((coursesResponse?.courses ?? []) as Course[]).filter((course) => course.audience !== 'client'),
+    () =>
+      ((coursesResponse?.courses ?? []) as Course[]).filter(
+        (course) => course.audience !== 'client'
+      ),
     [coursesResponse]
   )
-  const courseById = useMemo(() => new Map(catalog.map((course) => [course.id, course])), [catalog])
+  const courseById = useMemo(
+    () => new Map(catalog.map((course) => [course.id, course])),
+    [catalog]
+  )
 
   // Planes que no se pueden incluir: el propio y los que ya lo incluyen (evita ciclos obvios)
   const blockedPlanIds = useMemo(() => {
@@ -143,7 +176,8 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
       seen.add(item.course_id)
       rows.push({
         course_id: item.course_id,
-        title: courseById.get(item.course_id)?.title ?? `Curso ${item.course_id}`,
+        title:
+          courseById.get(item.course_id)?.title ?? `Curso ${item.course_id}`,
         source: null,
         status: courseById.get(item.course_id)?.status ?? null
       })
@@ -164,9 +198,13 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
   }, [courses, includedQueries, courseById])
 
   // Propios y heredados: un curso en borrador se asigna pero no es visible
-  const draftCourses = effectiveRows.filter((row) => row.status && row.status !== 'published')
+  const draftCourses = effectiveRows.filter(
+    (row) => row.status && row.status !== 'published'
+  )
 
-  const availableCourses = catalog.filter((course) => !courses.some((item) => item.course_id === course.id))
+  const availableCourses = catalog.filter(
+    (course) => !courses.some((item) => item.course_id === course.id)
+  )
   const includesLoading = includedQueries.some((query) => query.isLoading)
 
   const moveCourse = (index: number, direction: -1 | 1) => {
@@ -182,14 +220,22 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
 
   const updateCourseDays = (courseId: number, value: string) => {
     const days = value === '' ? null : Math.max(1, parseInt(value, 10) || 1)
-    setCourses((current) => current.map((item) => (item.course_id === courseId ? { ...item, deadline_days: days } : item)))
+    setCourses((current) =>
+      current.map((item) =>
+        item.course_id === courseId ? { ...item, deadline_days: days } : item
+      )
+    )
     setImpact(null)
   }
 
   const buildPayload = (): SaveTrainingPlanRequest => ({
     name: name.trim(),
     description: description.trim() || null,
-    courses: courses.map((item, index) => ({ course_id: item.course_id, position: index, deadline_days: item.deadline_days })),
+    courses: courses.map((item, index) => ({
+      course_id: item.course_id,
+      position: index,
+      deadline_days: item.deadline_days
+    })),
     include_plan_ids: includeIds
   })
 
@@ -199,7 +245,10 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
 
   const save = async (withNotify: boolean) => {
     try {
-      await saveMutation.mutateAsync({ id: planId ?? undefined, data: { ...buildPayload(), ...(isEdit ? { notify: withNotify } : {}) } })
+      await saveMutation.mutateAsync({
+        id: planId ?? undefined,
+        data: { ...buildPayload(), ...(isEdit ? { notify: withNotify } : {}) }
+      })
       appNotify.success(isEdit ? 'Plan actualizado' : 'Plan creado')
       onClose()
     } catch (error) {
@@ -215,7 +264,11 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
     }
     setCheckingImpact(true)
     try {
-      const result = await lmsService.updateTrainingPlan(planId as number, buildPayload(), true)
+      const result = await lmsService.updateTrainingPlan(
+        planId as number,
+        buildPayload(),
+        true
+      )
       if (result.impact.destinations_count > 0) {
         setImpact(result.impact)
       } else {
@@ -228,14 +281,31 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
     }
   }
 
-  const addedCourses = impact ? [...new Set(impact.destinations.flatMap((item) => item.added_course_ids))] : []
-  const canSave = name.trim().length > 0 && effectiveRows.length > 0 && !saveMutation.isLoading && !checkingImpact
+  const addedCourses = impact
+    ? [...new Set(impact.destinations.flatMap((item) => item.added_course_ids))]
+    : []
+  const canSave =
+    name.trim().length > 0 &&
+    effectiveRows.length > 0 &&
+    !saveMutation.isLoading &&
+    !checkingImpact
   const loading = (isEdit && planLoading) || coursesLoading
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='lg' fullWidth fullScreen={fullScreen} PaperProps={planDialogPaperProps}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth='lg'
+      fullWidth
+      fullScreen={fullScreen}
+      PaperProps={planDialogPaperProps}
+    >
       <PlanDialogHeader
-        title={isEdit ? `Editar plan: ${plan?.name ?? ''}` : 'Nuevo plan de formación'}
+        title={
+          isEdit
+            ? `Editar plan: ${plan?.name ?? ''}`
+            : 'Nuevo plan de formación'
+        }
         subtitle='Agrupa cursos y reutiliza otros planes'
         icon={<PlanIcon />}
         onClose={onClose}
@@ -298,28 +368,53 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
                 value={null}
                 onChange={(_, course) => {
                   if (!course) return
-                  setCourses((current) => [...current, { course_id: course.id, deadline_days: null }])
+                  setCourses((current) => [
+                    ...current,
+                    { course_id: course.id, deadline_days: null }
+                  ])
                   setImpact(null)
                 }}
                 renderOption={(props, option) => (
                   <li {...props} key={option.id}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        gap: 1
+                      }}
+                    >
                       <span>{option.title}</span>
                       {option.status !== 'published' && (
-                        <Chip size='small' label={COURSE_STATUS_LABELS[option.status] ?? option.status} />
+                        <Chip
+                          size='small'
+                          label={
+                            COURSE_STATUS_LABELS[option.status] ?? option.status
+                          }
+                        />
                       )}
                     </Box>
                   </li>
                 )}
-                renderInput={(params) => <TextField {...params} label='Agregar curso' size='small' />}
+                renderInput={(params) => (
+                  <TextField {...params} label='Agregar curso' size='small' />
+                )}
                 blurOnSelect
                 clearOnBlur
                 sx={{ mb: 1.5 }}
               />
-              <Paper variant='outlined' sx={{ borderRadius: 2, maxHeight: 360, overflow: 'auto' }}>
+              <Paper
+                variant='outlined'
+                sx={{ borderRadius: 2, maxHeight: 360, overflow: 'auto' }}
+              >
                 {courses.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary' sx={{ p: 2 }}>
-                    Aún no hay cursos propios. Puedes agregar cursos o solo incluir otros planes.
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ p: 2 }}
+                  >
+                    Aún no hay cursos propios. Puedes agregar cursos o solo
+                    incluir otros planes.
                   </Typography>
                 ) : (
                   <List dense disablePadding>
@@ -328,18 +423,40 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
                       return (
                         <React.Fragment key={item.course_id}>
                           {index > 0 && <Divider component='li' />}
-                          <ListItem sx={{ gap: 1, pr: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                              <IconButton size='small' aria-label='Subir' disabled={index === 0} onClick={() => moveCourse(index, -1)}>
+                          <ListItem
+                            sx={{
+                              gap: 1,
+                              pr: 1,
+                              flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                            }}
+                          >
+                            <Box
+                              sx={{ display: 'flex', flexDirection: 'column' }}
+                            >
+                              <IconButton
+                                size='small'
+                                aria-label='Subir'
+                                disabled={index === 0}
+                                onClick={() => moveCourse(index, -1)}
+                              >
                                 <ArrowUpIcon fontSize='inherit' />
                               </IconButton>
-                              <IconButton size='small' aria-label='Bajar' disabled={index === courses.length - 1} onClick={() => moveCourse(index, 1)}>
+                              <IconButton
+                                size='small'
+                                aria-label='Bajar'
+                                disabled={index === courses.length - 1}
+                                onClick={() => moveCourse(index, 1)}
+                              >
                                 <ArrowDownIcon fontSize='inherit' />
                               </IconButton>
                             </Box>
                             <ListItemText
                               primary={`${index + 1}. ${course?.title ?? `Curso ${item.course_id}`}`}
-                              secondary={course && course.status !== 'published' ? COURSE_STATUS_LABELS[course.status] : null}
+                              secondary={
+                                course && course.status !== 'published'
+                                  ? COURSE_STATUS_LABELS[course.status]
+                                  : null
+                              }
                               sx={{ minWidth: 0 }}
                             />
                             <Tooltip title='Plazo propio de este curso; si se deja vacío usa el plazo de la asignación del plan'>
@@ -347,10 +464,24 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
                                 size='small'
                                 type='number'
                                 value={item.deadline_days ?? ''}
-                                onChange={(event) => updateCourseDays(item.course_id, event.target.value)}
+                                onChange={(event) =>
+                                  updateCourseDays(
+                                    item.course_id,
+                                    event.target.value
+                                  )
+                                }
                                 placeholder='General'
-                                inputProps={{ min: 1, 'aria-label': 'Días de plazo' }}
-                                InputProps={{ endAdornment: <InputAdornment position='end'>días</InputAdornment> }}
+                                inputProps={{
+                                  min: 1,
+                                  'aria-label': 'Días de plazo'
+                                }}
+                                InputProps={{
+                                  endAdornment: (
+                                    <InputAdornment position='end'>
+                                      días
+                                    </InputAdornment>
+                                  )
+                                }}
                                 sx={{ width: 150, flexShrink: 0 }}
                               />
                             </Tooltip>
@@ -359,7 +490,12 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
                               color='error'
                               aria-label='Quitar curso'
                               onClick={() => {
-                                setCourses((current) => current.filter((entry) => entry.course_id !== item.course_id))
+                                setCourses((current) =>
+                                  current.filter(
+                                    (entry) =>
+                                      entry.course_id !== item.course_id
+                                  )
+                                )
                                 setImpact(null)
                               }}
                             >
@@ -376,11 +512,26 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
 
             <Grid item xs={12} md={5}>
               <Typography variant='subtitle1' fontWeight={700} gutterBottom>
-                Cursos efectivos ({effectiveRows.length}) {includesLoading && <CircularProgress size={14} sx={{ ml: 1 }} />}
+                Cursos efectivos ({effectiveRows.length}){' '}
+                {includesLoading && (
+                  <CircularProgress size={14} sx={{ ml: 1 }} />
+                )}
               </Typography>
-              <Paper variant='outlined' sx={{ borderRadius: 2, bgcolor: '#fafafa', maxHeight: 412, overflow: 'auto' }}>
+              <Paper
+                variant='outlined'
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: '#fafafa',
+                  maxHeight: 412,
+                  overflow: 'auto'
+                }}
+              >
                 {effectiveRows.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary' sx={{ p: 2 }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ p: 2 }}
+                  >
                     El plan necesita al menos un curso, propio o heredado.
                   </Typography>
                 ) : (
@@ -389,12 +540,19 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
                       <React.Fragment key={row.course_id}>
                         {index > 0 && <Divider component='li' />}
                         <ListItem sx={{ gap: 1 }}>
-                          <ListItemText primary={row.title} sx={{ minWidth: 0 }} />
+                          <ListItemText
+                            primary={row.title}
+                            sx={{ minWidth: 0 }}
+                          />
                           <Chip
                             size='small'
                             label={row.source ?? 'Propio'}
                             variant={row.source ? 'outlined' : 'filled'}
-                            sx={row.source ? { maxWidth: 160 } : { bgcolor: PLAN_TEAL_SOFT, color: '#00695C' }}
+                            sx={
+                              row.source
+                                ? { maxWidth: 160 }
+                                : { bgcolor: PLAN_TEAL_SOFT, color: '#00695C' }
+                            }
                           />
                         </ListItem>
                       </React.Fragment>
@@ -409,7 +567,11 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
                 <Alert severity='info'>
                   {draftCourses.length === 1 ? 'El curso' : 'Los cursos'}{' '}
                   {draftCourses.map((course) => `"${course.title}"`).join(', ')}{' '}
-                  no {draftCourses.length === 1 ? 'está publicado' : 'están publicados'}: se asignan, pero no serán visibles hasta publicarse.
+                  no{' '}
+                  {draftCourses.length === 1
+                    ? 'está publicado'
+                    : 'están publicados'}
+                  : se asignan, pero no serán visibles hasta publicarse.
                 </Alert>
               </Grid>
             )}
@@ -424,21 +586,36 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
                     {impact.destinations.map((item) => (
                       <li key={item.plan_assignment_id}>
                         <Typography variant='body2'>
-                          {item.plan_name} · {translateTargetText(item.target)}: {item.users_count} usuario(s)
-                          {item.added_course_ids.length > 0 && ` · +${item.added_course_ids.length} curso(s)`}
-                          {item.removed_course_ids.length > 0 && ` · −${item.removed_course_ids.length} curso(s)`}
-                          {item.deadline_changed_course_ids.length > 0 && ` · ${item.deadline_changed_course_ids.length} plazo(s) cambiado(s)`}
+                          {item.plan_name} · {translateTargetText(item.target)}:{' '}
+                          {item.users_count} usuario(s)
+                          {item.added_course_ids.length > 0 &&
+                            ` · +${item.added_course_ids.length} curso(s)`}
+                          {item.removed_course_ids.length > 0 &&
+                            ` · −${item.removed_course_ids.length} curso(s)`}
+                          {item.deadline_changed_course_ids.length > 0 &&
+                            ` · ${item.deadline_changed_course_ids.length} plazo(s) cambiado(s)`}
                         </Typography>
                       </li>
                     ))}
                   </Box>
-                  <Typography variant='caption' display='block' sx={{ mt: 0.5 }}>
-                    Al quitar cursos solo se retiran las asignaciones que ningún otro plan ni asignación directa sostiene. El progreso y los certificados se conservan.
+                  <Typography
+                    variant='caption'
+                    display='block'
+                    sx={{ mt: 0.5 }}
+                  >
+                    Al quitar cursos solo se retiran las asignaciones que ningún
+                    otro plan ni asignación directa sostiene. El progreso y los
+                    certificados se conservan.
                   </Typography>
                   {addedCourses.length > 0 && (
                     <FormControlLabel
                       sx={{ mt: 0.5 }}
-                      control={<Checkbox checked={notify} onChange={(event) => setNotify(event.target.checked)} />}
+                      control={
+                        <Checkbox
+                          checked={notify}
+                          onChange={(event) => setNotify(event.target.checked)}
+                        />
+                      }
                       label='Notificar a los usuarios los cursos agregados'
                     />
                   )}
@@ -457,9 +634,17 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
           onClick={handleSave}
           disabled={!canSave}
           sx={primaryButtonSx}
-          startIcon={saveMutation.isLoading || checkingImpact ? <CircularProgress size={16} color='inherit' /> : undefined}
+          startIcon={
+            saveMutation.isLoading || checkingImpact ? (
+              <CircularProgress size={16} color='inherit' />
+            ) : undefined
+          }
         >
-          {impact ? 'Confirmar y guardar' : isEdit ? 'Guardar cambios' : 'Crear plan'}
+          {impact
+            ? 'Confirmar y guardar'
+            : isEdit
+              ? 'Guardar cambios'
+              : 'Crear plan'}
         </Button>
       </DialogActions>
     </Dialog>

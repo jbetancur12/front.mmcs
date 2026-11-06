@@ -210,8 +210,10 @@ export const PERMISSIONS = {
   NONCONFORM_REPORT_VIEW: 'nonconform:report:view',
   /** Crear, editar y eliminar informes de trabajo no conforme */
   NONCONFORM_REPORT_MANAGE: 'nonconform:report:manage',
-  /** Consultar y descargar los documentos de gestión y técnicos de la biblioteca */
+  /** Consultar los documentos vigentes de la biblioteca en el visor */
   LIBRARY_DOCUMENT_VIEW: 'library:document:view',
+  /** Descargar el PDF de los documentos de la biblioteca */
+  LIBRARY_DOCUMENT_DOWNLOAD: 'library:document:download',
   /** Agregar, actualizar versión, editar y eliminar documentos de la biblioteca */
   LIBRARY_DOCUMENT_MANAGE: 'library:document:manage',
   /** Descargar los archivos originales editables (Word o Excel) de los documentos de la biblioteca */
@@ -363,7 +365,9 @@ export const PERMISSIONS = {
   CALIBRATION_DATASHEET_CREATE: 'calibration:datasheet:create',
   /** Editar hojas de datos de equipos, su estado, imagen y factura */
   CALIBRATION_DATASHEET_UPDATE: 'calibration:datasheet:update',
-  /** Eliminar hojas de datos de equipos */
+  /** Dar de baja una hoja de datos y liberar su código interno */
+  CALIBRATION_DATASHEET_RETIRE: 'calibration:datasheet:retire',
+  /** Eliminar definitivamente una hoja de datos (solo administración) */
   CALIBRATION_DATASHEET_DELETE: 'calibration:datasheet:delete',
   /** Ver el listado de equipos */
   CALIBRATION_DEVICE_VIEW: 'calibration:device:view',
@@ -475,8 +479,6 @@ export const PERMISSIONS = {
   REPOSITORIES_REPOSITORY_VIEW: 'repositories:repository:view',
   /** Subir, editar y eliminar archivos del repositorio */
   REPOSITORIES_REPOSITORY_MANAGE: 'repositories:repository:manage',
-  /** Usar las utilidades de administración: procesar Excel, generar y convertir PDF, generar scripts y agregar módulos */
-  TOOLS_UTILITY_USE: 'tools:utility:use',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Otorgar o quitar capacidades sensibles desde el panel de roles */

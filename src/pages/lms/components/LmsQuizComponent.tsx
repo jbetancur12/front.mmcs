@@ -96,7 +96,8 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
 
             logger.log(`   Arrays:`, { userArray, correctArray })
 
-            const isCorrect = userArray.length === correctArray.length &&
+            const isCorrect =
+              userArray.length === correctArray.length &&
               userArray.every((answer) => correctArray.includes(answer))
 
             logger.log(`   ✓ Correct:`, isCorrect)
@@ -206,7 +207,9 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
             </Typography>
 
             {!isPreview && (
-              <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box
+                sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}
+              >
                 <Chip
                   label={`Intento ${currentAttempt} de ${maxAttempts}`}
                   color='primary'
@@ -214,7 +217,8 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
                 />
                 {hasAttemptsLeft && (
                   <Typography variant='body2' color='text.secondary'>
-                    Te quedan {remainingAttempts} intento{remainingAttempts !== 1 ? 's' : ''}
+                    Te quedan {remainingAttempts} intento
+                    {remainingAttempts !== 1 ? 's' : ''}
                   </Typography>
                 )}
               </Box>
@@ -224,8 +228,8 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
           {!isPreview && hasAttemptsLeft && percentage < 70 && (
             <Alert severity='warning' sx={{ mb: 2 }}>
               <Typography variant='body2'>
-                <strong>No aprobaste el quiz.</strong> Necesitas al menos 70% para aprobar.
-                Puedes intentarlo de nuevo.
+                <strong>No aprobaste el quiz.</strong> Necesitas al menos 70%
+                para aprobar. Puedes intentarlo de nuevo.
               </Typography>
             </Alert>
           )}
@@ -241,18 +245,15 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
           {!isPreview && !hasAttemptsLeft && percentage < 70 && (
             <Alert severity='error' sx={{ mb: 2 }}>
               <Typography variant='body2'>
-                <strong>No hay más intentos disponibles.</strong> Has agotado tus {maxAttempts} intentos.
+                <strong>No hay más intentos disponibles.</strong> Has agotado
+                tus {maxAttempts} intentos.
               </Typography>
             </Alert>
           )}
 
           {!isPreview && hasAttemptsLeft && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-              <Button
-                variant='contained'
-                color='primary'
-                onClick={handleRetry}
-              >
+              <Button variant='contained' color='primary' onClick={handleRetry}>
                 Reintentar Quiz
               </Button>
             </Box>
