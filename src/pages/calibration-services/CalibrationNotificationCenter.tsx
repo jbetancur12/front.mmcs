@@ -217,7 +217,7 @@ const CalibrationNotificationCenter = () => {
                 transition: 'all 0.15s',
                 '&:hover': {
                   borderColor: withAlpha(brand.main, 0.3),
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                  boxShadow: `0 2px 8px ${withAlpha(neutral.black, 0.04)}`
                 }
               }}
               onClick={() => handleNavigate(notification)}

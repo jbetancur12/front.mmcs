@@ -105,7 +105,7 @@ export const ui = {
   border: neutral.border,
   surface: neutral.surfaceHead,
   white: '#ffffff',
-  glass: 'rgba(255, 255, 255, 0.75)'
+  glass: withAlpha(neutral.surface, 0.75)
 }
 
 // Tarjeta del sistema de diseño: blanca, borde gris, sin vidrio ni brillo

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box, Card, CardContent, Tooltip, Typography } from '@mui/material'
 import { HelpOutline } from '@mui/icons-material'
-import { neutral } from 'src/theme/designTokens'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 interface ProfileStatCardProps {
   label: string
@@ -61,7 +61,7 @@ const ProfileStatCard: React.FC<ProfileStatCardProps> = ({
         cursor: 'pointer',
         transition: 'box-shadow 0.2s, transform 0.2s',
         '&:hover': {
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          boxShadow: `0 4px 12px ${withAlpha(neutral.black, 0.1)}`,
           transform: 'translateY(-2px)'
         },
         '&:focus-visible': { outline: `3px solid ${color}55`, outlineOffset: 2 }

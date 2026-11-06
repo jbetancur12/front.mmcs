@@ -40,11 +40,11 @@ const files = []
   }
 })(SRC)
 
-// Además del hex de la paleta se vigilan: rgba() de un color que no sea negro, blanco ni el dorado del certificado
+// Además del hex de la paleta se vigilan: rgba() de cualquier color (negro y blanco incluidos: withAlpha(neutral.black, 0.1)) salvo el dorado del certificado
 // (se escribe withAlpha(token, opacidad)), hex de 3 dígitos (salvo #fff y #F00 de ejemplo), colores CSS con nombre
 // y clases de color de Tailwind (bg-gray-50, text-red-600...; se usan bg-neutral-alt, text-intent-danger...).
 const RGBA_RE = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g
-const RGBA_OK = new Set(['0,0,0', '255,255,255', '201,168,76'])
+const RGBA_OK = new Set(['201,168,76'])
 const HEX3_RE = /#[0-9a-fA-F]{3}(?![0-9a-fA-F])/g
 const NAMED_RE =
   /(?:color|bgcolor|backgroundColor|borderColor|fill|stroke)['"]?\s*[:=]\s*\{?['"](?:red|blue|green|black|gray|grey|orange|yellow|purple|navy|pink|brown|cyan)['"]/g

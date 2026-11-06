@@ -116,7 +116,7 @@ const NotificationBell = () => {
             maxHeight: 420,
             borderRadius: '14px',
             overflow: 'hidden',
-            border: '1px solid rgba(0,0,0,0.08)',
+            border: `1px solid ${withAlpha(neutral.black, 0.08)}`,
             display: 'flex',
             flexDirection: 'column'
           }}

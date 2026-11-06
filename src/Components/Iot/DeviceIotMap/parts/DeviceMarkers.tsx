@@ -11,7 +11,7 @@ import { DeviceStatus } from '../constants'
 import { Sensors } from '@mui/icons-material'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { divIcon } from 'leaflet'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface DeviceMarkersProps {
   devices: DeviceIot[]
@@ -66,7 +66,7 @@ const DeviceMarker = memo(
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+          boxShadow: `0 2px 4px ${withAlpha(neutral.black, 0.3)}`
         }}
       >
         <Sensors style={{ width: '16px', height: '16px', color: 'white' }} />

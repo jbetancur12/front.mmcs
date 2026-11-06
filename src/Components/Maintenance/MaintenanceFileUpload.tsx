@@ -232,7 +232,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             size='small'
             label='Vista previa en modal'
             sx={{
-              backgroundColor: 'rgba(255,255,255,0.85)',
+              backgroundColor: withAlpha(neutral.surface, 0.85),
               color: accent.ink
             }}
           />
@@ -264,7 +264,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           size='small'
           label={getFileExtension(file)}
           sx={{
-            backgroundColor: 'rgba(255,255,255,0.85)',
+            backgroundColor: withAlpha(neutral.surface, 0.85),
             color: isPdfFile(file) ? intent.danger : neutral.textBody,
             fontWeight: 700
           }}
@@ -545,8 +545,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                                   backgroundColor: intent.warningSoft
                                 },
                                 '&:disabled': {
-                                  background: 'rgba(0, 0, 0, 0.12)',
-                                  color: 'rgba(0, 0, 0, 0.26)'
+                                  background: withAlpha(neutral.black, 0.12),
+                                  color: withAlpha(neutral.black, 0.26)
                                 }
                               }}
                             >
@@ -587,8 +587,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                                 backgroundColor: intent.dangerSoft
                               },
                               '&:disabled': {
-                                background: 'rgba(0, 0, 0, 0.12)',
-                                color: 'rgba(0, 0, 0, 0.26)'
+                                background: withAlpha(neutral.black, 0.12),
+                                color: withAlpha(neutral.black, 0.26)
                               }
                             }}
                           >

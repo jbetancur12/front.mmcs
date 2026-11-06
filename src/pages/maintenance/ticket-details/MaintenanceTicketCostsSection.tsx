@@ -57,10 +57,10 @@ const MaintenanceTicketCostsSection = ({
         sx={{ 
           p: 3, 
           mb: 3,
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: withAlpha(neutral.surface, 0.95),
           backdropFilter: 'blur(10px)',
           borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          boxShadow: `0 4px 20px ${withAlpha(neutral.black, 0.08)}`,
           border: `1px solid ${withAlpha(intent.success, 0.1)}`,
           transition: 'all 0.3s ease-in-out',
           '&:hover': {

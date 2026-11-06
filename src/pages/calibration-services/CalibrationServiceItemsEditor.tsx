@@ -247,13 +247,13 @@ const CalibrationServiceItemsEditor = ({
             borderColor: hasError ? intent.danger : withAlpha(brand.main, 0.3),
             boxShadow: hasError
               ? `0 2px 8px ${withAlpha(intent.danger, 0.15)}`
-              : '0 2px 8px rgba(0,0,0,0.04)'
+              : `0 2px 8px ${withAlpha(neutral.black, 0.04)}`
           },
           '&.Mui-expanded': {
             borderColor: hasError ? intent.danger : withAlpha(brand.main, 0.4),
             boxShadow: hasError
               ? `0 4px 16px ${withAlpha(intent.danger, 0.2)}`
-              : '0 4px 16px rgba(0,0,0,0.06)'
+              : `0 4px 16px ${withAlpha(neutral.black, 0.06)}`
           }
         }}
       >
@@ -962,7 +962,7 @@ const CalibrationServiceItemsEditor = ({
         sx={{
           p: 1.5,
           borderRadius: '10px',
-          border: '1px solid rgba(0,0,0,0.06)',
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
           background: withAlpha(brand.main, 0.03),
           display: 'flex',
           flexWrap: 'wrap',
@@ -1107,7 +1107,9 @@ const CalibrationServiceItemsEditor = ({
           <TableContainer>
             <Table size='small'>
               <TableHead>
-                <TableRow sx={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                <TableRow
+                  sx={{ backgroundColor: withAlpha(neutral.black, 0.02) }}
+                >
                   <TableCell
                     sx={{
                       fontWeight: 700,

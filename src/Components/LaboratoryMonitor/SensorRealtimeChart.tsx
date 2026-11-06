@@ -12,7 +12,7 @@ import {
 } from 'recharts'
 import { Box, Typography } from '@mui/material'
 import { SensorDataPoint, SensorType } from './types'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface SensorRealtimeChartProps {
   data: SensorDataPoint[]
@@ -52,7 +52,7 @@ const ChartTooltip: React.FC<{
         bgcolor: neutral.surface,
         border: `1px solid ${neutral.border}`,
         borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        boxShadow: `0 4px 12px ${withAlpha(neutral.black, 0.08)}`,
         px: 1.5,
         py: 1
       }}

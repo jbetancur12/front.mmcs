@@ -37,7 +37,7 @@ import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import ListItemCard from 'src/Components/Common/ListItemCard'
 import { CalibrationService } from '../../types/calibrationService'
 import { getOperationsSummary } from './calibrationServiceOtherFields'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
@@ -251,7 +251,7 @@ const CalibrationServiceSchedulePage = () => {
                       height: 14,
                       borderRadius: '4px',
                       bgcolor: step.bg,
-                      border: '1px solid rgba(0,0,0,0.08)'
+                      border: `1px solid ${withAlpha(neutral.black, 0.08)}`
                     }}
                   />
                   <Typography variant='caption' color='text.secondary'>

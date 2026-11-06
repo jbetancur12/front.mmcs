@@ -217,7 +217,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
                     label={`${question.successRate}%`}
                     size='small'
                     sx={{
-                      bgcolor: 'rgba(255,255,255,0.2)',
+                      bgcolor: withAlpha(neutral.surface, 0.2),
                       color: 'white',
                       fontWeight: 700
                     }}

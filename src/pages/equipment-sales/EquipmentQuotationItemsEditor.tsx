@@ -226,11 +226,11 @@ const EquipmentQuotationItemsEditor = ({
           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
             borderColor: withAlpha(brand.main, 0.3),
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            boxShadow: `0 2px 8px ${withAlpha(neutral.black, 0.04)}`
           },
           '&.Mui-expanded': {
             borderColor: withAlpha(brand.main, 0.4),
-            boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+            boxShadow: `0 4px 16px ${withAlpha(neutral.black, 0.06)}`
           }
         }}
       >
@@ -835,7 +835,7 @@ const EquipmentQuotationItemsEditor = ({
         sx={{
           p: 1.5,
           borderRadius: '10px',
-          border: '1px solid rgba(0,0,0,0.06)',
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
           background: withAlpha(brand.main, 0.03),
           display: 'flex',
           flexWrap: 'wrap',
@@ -980,7 +980,9 @@ const EquipmentQuotationItemsEditor = ({
           <TableContainer>
             <Table size='small'>
               <TableHead>
-                <TableRow sx={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                <TableRow
+                  sx={{ backgroundColor: withAlpha(neutral.black, 0.02) }}
+                >
                   <TableCell
                     sx={{
                       fontWeight: 700,

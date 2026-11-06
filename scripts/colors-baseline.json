@@ -1,5 +1,5 @@
 {
   "src/Components/DataSheet/DataSheetPDF.tsx": 15,
   "src/Components/Fleet/VehicleDataSheetPreview.tsx": 8,
-  "src/pages/lms/admin/LmsCertificateTemplates.tsx": 36
+  "src/pages/lms/admin/LmsCertificateTemplates.tsx": 25
 }

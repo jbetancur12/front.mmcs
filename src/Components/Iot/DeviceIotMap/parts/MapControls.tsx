@@ -1,7 +1,7 @@
 // components/DeviceIotMap/parts/MapControls.tsx
 import { IconButton, Box } from '@mui/material'
 import { Menu as MenuIcon } from '@mui/icons-material'
-import { neutral } from 'src/theme/designTokens'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 export const MapControls = ({
   isSidebarOpen,
@@ -15,7 +15,7 @@ export const MapControls = ({
       <IconButton
         sx={{
           backgroundColor: neutral.surface,
-          border: '2px solid rgba(0,0,0,0.2)',
+          border: `2px solid ${withAlpha(neutral.black, 0.2)}`,
           '&:hover': { backgroundColor: neutral.surfaceHead }
         }}
         onClick={onToggleSidebar}

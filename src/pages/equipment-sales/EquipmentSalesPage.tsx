@@ -72,7 +72,7 @@ import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDi
 import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -653,8 +653,10 @@ const EquipmentSalesPage = () => {
                     sx={{
                       cursor: 'pointer',
                       borderRadius: '12px',
-                      border: '1px solid rgba(0,0,0,0.06)',
-                      '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }
+                      border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
+                      '&:hover': {
+                        boxShadow: `0 4px 12px ${withAlpha(neutral.black, 0.1)}`
+                      }
                     }}
                   >
                     <CardContent sx={{ p: 2 }}>

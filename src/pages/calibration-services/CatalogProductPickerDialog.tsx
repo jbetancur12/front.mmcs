@@ -325,8 +325,10 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                           cursor: 'pointer'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            'rgba(0,0,0,0.02)'
+                          e.currentTarget.style.backgroundColor = withAlpha(
+                            neutral.black,
+                            0.02
+                          )
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = ''
@@ -512,7 +514,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                       onMouseEnter={(e) => {
                                         if (!isSelected)
                                           e.currentTarget.style.backgroundColor =
-                                            'rgba(0,0,0,0.015)'
+                                            withAlpha(neutral.black, 0.015)
                                       }}
                                       onMouseLeave={(e) => {
                                         if (!isSelected)

@@ -7,7 +7,7 @@ import { FilterPanel } from './FilterPanel'
 import { DeviceList } from './DeviceList'
 import { DeviceIot } from '../../types'
 import Logo from '/images/sense.png'
-import { intent, neutral } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export const DeviceSidebar = ({
   isOpen,
@@ -48,7 +48,7 @@ export const DeviceSidebar = ({
               justifyContent: 'space-between',
               padding: theme.spacing(1, 2),
               background: `linear-gradient(135deg, ${intent.infoInk} 30%, ${intent.info} 100%)`, // Gradiente para mayor impacto visual
-              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+              boxShadow: `0px 4px 12px ${withAlpha(neutral.black, 0.15)}`,
               borderRadius: '12px',
               color: 'white'
             }}
@@ -62,7 +62,7 @@ export const DeviceSidebar = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0px 3px 8px rgba(0, 0, 0, 0.25)'
+                  boxShadow: `0px 3px 8px ${withAlpha(neutral.black, 0.25)}`
                 }}
               >
                 <img src={Logo} alt='SenseWave Logo' style={{ height: 42 }} />

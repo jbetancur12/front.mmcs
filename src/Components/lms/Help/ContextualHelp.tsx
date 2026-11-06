@@ -54,7 +54,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
       componentsProps={{
         tooltip: {
           sx: {
-            bgcolor: 'rgba(0,0,0,0.9)',
+            bgcolor: withAlpha(neutral.black, 0.9),
             backdropFilter: 'blur(8px)',
             borderRadius: '8px',
             maxWidth: size === 'small' ? 200 : size === 'large' ? 400 : 300,
@@ -63,7 +63,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
         },
         arrow: {
           sx: {
-            color: 'rgba(0,0,0,0.9)'
+            color: withAlpha(neutral.black, 0.9)
           }
         }
       }}
@@ -139,8 +139,8 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
         PaperProps={{
           sx: {
             borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-            border: '1px solid rgba(0,0,0,0.1)',
+            boxShadow: `0 8px 32px ${withAlpha(neutral.black, 0.12)}`,
+            border: `1px solid ${withAlpha(neutral.black, 0.1)}`,
             maxWidth: 350
           }
         }}
@@ -359,7 +359,7 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
           maxWidth: 400,
           width: '90vw',
           borderRadius: '16px',
-          boxShadow: '0 20px 64px rgba(0,0,0,0.2)'
+          boxShadow: `0 20px 64px ${withAlpha(neutral.black, 0.2)}`
         }}
       >
         <CardContent sx={{ p: 3 }}>

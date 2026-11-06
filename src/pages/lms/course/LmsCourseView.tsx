@@ -969,7 +969,7 @@ const LmsCourseView: React.FC = () => {
           px: 3,
           pt: 4,
           pb: 4,
-          borderBottom: '1px solid rgba(255,255,255,0.08)'
+          borderBottom: `1px solid ${withAlpha(neutral.surface, 0.08)}`
         }}
       >
         {/* Badge */}
@@ -1041,7 +1041,7 @@ const LmsCourseView: React.FC = () => {
             sx={{
               height: 8,
               borderRadius: 999,
-              bgcolor: 'rgba(255,255,255,0.08)',
+              bgcolor: withAlpha(neutral.surface, 0.08),
               '& .MuiLinearProgress-bar': {
                 borderRadius: 999,
                 bgcolor: brand.main,
@@ -1075,7 +1075,9 @@ const LmsCourseView: React.FC = () => {
           return (
             <Box
               key={module.id}
-              sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+              sx={{
+                borderBottom: `1px solid ${withAlpha(neutral.surface, 0.05)}`
+              }}
             >
               {/* Module header */}
               <Box
@@ -1088,7 +1090,7 @@ const LmsCourseView: React.FC = () => {
                   py: 2,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' }
+                  '&:hover': { bgcolor: withAlpha(neutral.surface, 0.04) }
                 }}
               >
                 <Box>
@@ -1176,7 +1178,7 @@ const LmsCourseView: React.FC = () => {
                             ? {
                                 bgcolor: isCurrent
                                   ? withAlpha(brand.main, 0.25)
-                                  : 'rgba(255,255,255,0.04)'
+                                  : withAlpha(neutral.surface, 0.04)
                               }
                             : {}
                         }}

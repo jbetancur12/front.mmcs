@@ -365,7 +365,7 @@ const LmsAdmin: React.FC = () => {
                 <Chip
                   label={roleInfo.label}
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.2)',
+                    bgcolor: withAlpha(neutral.surface, 0.2),
                     color: 'white',
                     fontWeight: 600
                   }}
@@ -374,7 +374,7 @@ const LmsAdmin: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.2)',
+                    bgcolor: withAlpha(neutral.surface, 0.2),
                     width: 48,
                     height: 48,
                     fontSize: '1.25rem',
@@ -387,7 +387,7 @@ const LmsAdmin: React.FC = () => {
                   onClick={handleLogout}
                   sx={{
                     color: 'white',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                    '&:hover': { bgcolor: withAlpha(neutral.surface, 0.1) }
                   }}
                 >
                   <LogoutIcon />
@@ -842,7 +842,7 @@ const LmsAdmin: React.FC = () => {
                         overflow: 'visible',
                         '&:hover': {
                           borderColor: action.color,
-                          boxShadow: `0 12px 30px rgba(0,0,0,0.1)`,
+                          boxShadow: `0 12px 30px ${withAlpha(neutral.black, 0.1)}`,
                           transform: 'translateY(-6px)',
                           '& .action-icon': {
                             transform: 'scale(1.1)'

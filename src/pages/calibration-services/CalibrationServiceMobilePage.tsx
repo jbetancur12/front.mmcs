@@ -79,7 +79,13 @@ import {
   useCalibrationService
 } from '../../hooks/useCalibrationServices'
 import { useCalibrationDeviceSearch } from '../../hooks/calibration/useCalibrationDeviceSearch'
-import { brand, neutral, intent, detail } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 // Figma design palette
 const G = {
@@ -127,7 +133,7 @@ const chipSx = {
   px: 1.25,
   py: 0.3,
   borderRadius: '999px',
-  border: '1px solid rgba(255,255,255,0.6)',
+  border: `1px solid ${withAlpha(neutral.surface, 0.6)}`,
   color: 'white'
 } as const
 
@@ -704,7 +710,7 @@ const MobilePage = () => {
               </Typography>
               <Box
                 component='span'
-                sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}
+                sx={{ ...chipSx, bgcolor: withAlpha(neutral.surface, 0.22) }}
               >
                 {paused
                   ? 'En pausa'
@@ -1620,7 +1626,7 @@ const MobilePage = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.25)'
+                  boxShadow: `0 8px 24px ${withAlpha(neutral.black, 0.25)}`
                 }}
               >
                 <Typography variant='body2' sx={{ flex: 1 }}>
@@ -1735,7 +1741,7 @@ const MobilePage = () => {
                     aria-label='Volver'
                     onClick={() => setShowLogistics(false)}
                     sx={{
-                      bgcolor: 'rgba(255,255,255,0.15)',
+                      bgcolor: withAlpha(neutral.surface, 0.15),
                       borderRadius: '50%',
                       width: 32,
                       height: 32
@@ -1768,13 +1774,16 @@ const MobilePage = () => {
                   </Typography>
                   <Typography
                     variant='caption'
-                    sx={{ color: 'rgba(255,255,255,0.85)' }}
+                    sx={{ color: withAlpha(neutral.surface, 0.85) }}
                   >
                     {s.customer?.nombre || ''}
                   </Typography>
                   <Box
                     component='span'
-                    sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}
+                    sx={{
+                      ...chipSx,
+                      bgcolor: withAlpha(neutral.surface, 0.22)
+                    }}
                   >
                     {
                       CALIBRATION_SERVICE_STATUS_LABELS[
@@ -1814,7 +1823,7 @@ const MobilePage = () => {
                     sx={{
                       borderRadius: '16px',
                       border: `1px solid ${G.gray100}`,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      boxShadow: `0 1px 3px ${withAlpha(neutral.black, 0.04)}`
                     }}
                   >
                     <CardContent
@@ -1889,7 +1898,7 @@ const MobilePage = () => {
                     sx={{
                       borderRadius: '16px',
                       border: `1px solid ${G.gray100}`,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      boxShadow: `0 1px 3px ${withAlpha(neutral.black, 0.04)}`
                     }}
                   >
                     <CardContent
@@ -2395,7 +2404,7 @@ const MobilePage = () => {
                     sx={{
                       borderRadius: '16px',
                       border: `1px solid ${G.gray100}`,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      boxShadow: `0 1px 3px ${withAlpha(neutral.black, 0.04)}`
                     }}
                   >
                     <CardContent

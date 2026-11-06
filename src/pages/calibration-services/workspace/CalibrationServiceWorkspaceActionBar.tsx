@@ -9,7 +9,7 @@ import {
 } from './calibrationServiceWorkspaceConstants'
 import { CalibrationServiceWorkspaceSummary } from './calibrationServiceWorkspaceSummary'
 import { SaveTargetStatus } from './calibrationServiceWorkspaceTypes'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface CalibrationServiceWorkspaceActionBarProps {
   summary: CalibrationServiceWorkspaceSummary
@@ -44,7 +44,7 @@ const CalibrationServiceWorkspaceActionBar = ({
           py: 1.5,
           borderRadius: '16px',
           border: `1px solid ${neutral.border}`,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+          boxShadow: `0 8px 24px ${withAlpha(neutral.black, 0.08)}`,
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
           alignItems: { xs: 'stretch', sm: 'center' },

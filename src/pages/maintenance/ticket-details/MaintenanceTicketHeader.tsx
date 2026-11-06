@@ -394,7 +394,7 @@ const MaintenanceTicketHeader = ({
                   '&:hover': {
                     background: ticket.status === MaintenanceStatus.COMPLETED
                       ? withAlpha(intent.success, 0.1)
-                      : 'rgba(0, 0, 0, 0.04)',
+                      : withAlpha(neutral.black, 0.04),
                     transform: ticket.status === MaintenanceStatus.COMPLETED
                       ? 'translateX(4px)'
                       : 'none'
@@ -439,7 +439,7 @@ const MaintenanceTicketHeader = ({
                   '&:hover': {
                     background: (ticket.actualCost || ticket.estimatedCost)
                       ? withAlpha(intent.success, 0.1)
-                      : 'rgba(0, 0, 0, 0.04)',
+                      : withAlpha(neutral.black, 0.04),
                     transform: (ticket.actualCost || ticket.estimatedCost)
                       ? 'translateX(4px)'
                       : 'none'
@@ -522,8 +522,8 @@ const MaintenanceTicketHeader = ({
                     boxShadow: `0 6px 20px ${withAlpha(intent.success, 0.4)}`
                   },
                   '&:disabled': {
-                    background: 'rgba(0, 0, 0, 0.12)',
-                    color: 'rgba(0, 0, 0, 0.26)'
+                    background: withAlpha(neutral.black, 0.12),
+                    color: withAlpha(neutral.black, 0.26)
                   }
                 }}
               >

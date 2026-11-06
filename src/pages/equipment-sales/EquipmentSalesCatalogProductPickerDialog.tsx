@@ -252,8 +252,10 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected)
-                            e.currentTarget.style.backgroundColor =
-                              'rgba(0,0,0,0.02)'
+                            e.currentTarget.style.backgroundColor = withAlpha(
+                              neutral.black,
+                              0.02
+                            )
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected)

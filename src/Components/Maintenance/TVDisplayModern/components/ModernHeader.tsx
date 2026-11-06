@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { ModernHeaderProps } from '../types'
 import { useModernStyles } from '../hooks/useModernStyles'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 const ModernHeader: React.FC<ModernHeaderProps> = ({
   currentTime,
@@ -50,7 +51,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        boxShadow: `0 2px 8px ${withAlpha(neutral.black, 0.1)}`,
         minHeight: '68px'
       }}
     >

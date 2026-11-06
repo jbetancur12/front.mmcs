@@ -51,7 +51,13 @@ import {
 } from 'src/Components/Common/DetailBlocks'
 import { confirmDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent, detail } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -442,13 +448,13 @@ const EquipmentSalesDetailPage = () => {
               onClick={() => navigate('/equipment-sales')}
               sx={{
                 mb: 1,
-                color: 'rgba(255,255,255,0.8)',
+                color: withAlpha(neutral.surface, 0.8),
                 textTransform: 'none',
                 fontWeight: 600,
                 borderRadius: '10px',
                 fontSize: '0.85rem',
                 '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.10)',
+                  backgroundColor: withAlpha(neutral.surface, 0.1),
                   color: '#fff'
                 }
               }}
@@ -471,7 +477,7 @@ const EquipmentSalesDetailPage = () => {
               variant='body2'
               sx={{
                 mt: 1,
-                color: 'rgba(255,255,255,0.75)',
+                color: withAlpha(neutral.surface, 0.75),
                 lineHeight: 1.5,
                 fontSize: '0.9rem'
               }}
@@ -495,7 +501,7 @@ const EquipmentSalesDetailPage = () => {
             {quotation.otherFields?.quoteRevision ? (
               <Typography
                 variant='caption'
-                sx={{ color: 'rgba(255,255,255,0.7)' }}
+                sx={{ color: withAlpha(neutral.surface, 0.7) }}
               >
                 Revisión {String(quotation.otherFields.quoteRevision)}
               </Typography>
@@ -567,7 +573,10 @@ const EquipmentSalesDetailPage = () => {
         <Grid item xs={12} lg={8}>
           <Card
             elevation={0}
-            sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}
+            sx={{
+              borderRadius: '16px',
+              border: `1px solid ${withAlpha(neutral.black, 0.06)}`
+            }}
           >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Tabs
@@ -691,7 +700,7 @@ const EquipmentSalesDetailPage = () => {
                       <Box
                         key={item.id ?? index}
                         sx={{
-                          border: '1px solid rgba(0,0,0,0.06)',
+                          border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
                           borderRadius: '12px',
                           p: 2
                         }}
@@ -805,7 +814,7 @@ const EquipmentSalesDetailPage = () => {
                         </Typography>
                         <Box
                           sx={{
-                            border: '1px solid rgba(0,0,0,0.08)',
+                            border: `1px solid ${withAlpha(neutral.black, 0.08)}`,
                             borderRadius: '8px',
                             p: 1.5,
                             backgroundColor: neutral.surfaceAlt
@@ -857,8 +866,8 @@ const EquipmentSalesDetailPage = () => {
               position: 'sticky',
               top: 24,
               borderRadius: '16px',
-              border: '1px solid rgba(0,0,0,0.06)',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+              border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
+              boxShadow: `0 4px 16px ${withAlpha(neutral.black, 0.06)}`
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -900,7 +909,7 @@ const EquipmentSalesDetailPage = () => {
                 ) : null}
                 <Box
                   sx={{
-                    borderTop: '1px dashed rgba(0,0,0,0.12)',
+                    borderTop: `1px dashed ${withAlpha(neutral.black, 0.12)}`,
                     pt: 1.5,
                     display: 'flex',
                     justifyContent: 'space-between'

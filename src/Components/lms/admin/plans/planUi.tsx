@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { getRoleLabelEs } from 'src/constants/roles'
 import type { DeadlineSource, PlanTarget } from 'src/services/lmsService'
-import { brand, detail } from 'src/theme/designTokens'
+import { brand, neutral, detail, withAlpha } from 'src/theme/designTokens'
 
 export const PLAN_TEAL = brand.main
 export const PLAN_TEAL_HOVER = brand.hover
@@ -107,7 +107,7 @@ export const PlanDialogHeader: React.FC<PlanDialogHeaderProps> = ({
         width: 44,
         height: 44,
         borderRadius: '50%',
-        bgcolor: 'rgba(255,255,255,0.2)',
+        bgcolor: withAlpha(neutral.surface, 0.2),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

@@ -28,7 +28,7 @@ import {
   clearSessionEnded,
   peekSessionEndedMessage
 } from 'src/utils/sessionEnd'
-import { brand } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: unknown): obj is AxiosError {
@@ -413,7 +413,7 @@ const Login: React.FC = () => {
               fontSize: 15,
               fontWeight: 700,
               textTransform: 'none',
-              boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
+              boxShadow: `0 1px 2px 0 ${withAlpha(neutral.black, 0.05)}`,
               '&:hover': { bgcolor: brand.hover },
               '&.Mui-disabled': {
                 bgcolor: brand.main,

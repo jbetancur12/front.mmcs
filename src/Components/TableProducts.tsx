@@ -377,7 +377,7 @@ const TableProducts: React.FC = () => {
           p: 2,
           borderRadius: '12px',
           mb: 2.5,
-          border: '1px solid rgba(0,0,0,0.06)',
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
           display: 'flex',
           flexWrap: 'wrap',
           gap: 1.5,

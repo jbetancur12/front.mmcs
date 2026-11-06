@@ -21,7 +21,7 @@ import {
   getFilePreviewType
 } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral } from 'src/theme/designTokens'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketDialogsProps {
   ticket: MaintenanceTicket
@@ -90,7 +90,7 @@ const MaintenanceTicketDialogs = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(255,255,255,0.6)'
+            bgcolor: withAlpha(neutral.surface, 0.6)
           }}
         >
           <SignalLoader message='Guardando...' />

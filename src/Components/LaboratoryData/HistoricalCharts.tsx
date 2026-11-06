@@ -19,7 +19,7 @@ import { format, parseISO, isValid } from 'date-fns'
 import { Alert } from '@mui/material'
 
 import { logger } from 'src/utils/logger'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 // --- Interfaces (sin cambios) ---
 interface ChartDataPoint {
   timestamp: string
@@ -259,7 +259,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               labelFormatter={formatTooltipTimestamp}
               formatter={formatTooltipValue}
               contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: withAlpha(neutral.surface, 0.9),
                 borderRadius: '4px',
                 borderColor: neutral.borderStrong
               }} // Estilo tooltip
@@ -343,7 +343,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               labelFormatter={formatTooltipTimestamp}
               formatter={formatTooltipValue}
               contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: withAlpha(neutral.surface, 0.9),
                 borderRadius: '4px',
                 borderColor: neutral.borderStrong
               }}

@@ -78,7 +78,13 @@ import {
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent, accent } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  withAlpha
+} from 'src/theme/designTokens'
 
 type FormState = Omit<
   EquipmentQuotationPayload,
@@ -1656,8 +1662,8 @@ const EquipmentSalesWorkspacePage = () => {
               position: 'sticky',
               top: 24,
               borderRadius: '16px',
-              border: '1px solid rgba(0,0,0,0.06)',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+              border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
+              boxShadow: `0 4px 16px ${withAlpha(neutral.black, 0.06)}`
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1703,7 +1709,7 @@ const EquipmentSalesWorkspacePage = () => {
                 ) : null}
                 <Box
                   sx={{
-                    borderTop: '1px dashed rgba(0,0,0,0.12)',
+                    borderTop: `1px dashed ${withAlpha(neutral.black, 0.12)}`,
                     pt: 1.5,
                     display: 'flex',
                     justifyContent: 'space-between'

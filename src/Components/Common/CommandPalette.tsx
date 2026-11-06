@@ -6,7 +6,7 @@ import {
   History,
   SearchOutlined
 } from '@mui/icons-material'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 export interface CommandEntry {
   /** Identificador estable (la ruta). */
@@ -226,7 +226,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
           width: { xs: 'calc(100% - 16px)', sm: '100%' },
           borderRadius: '12px',
           border: `1px solid ${neutral.border}`,
-          boxShadow: '0 20px 40px rgba(0,0,0,0.12)'
+          boxShadow: `0 20px 40px ${withAlpha(neutral.black, 0.12)}`
         }
       }}
     >

@@ -6,6 +6,7 @@ export {
   intent,
   accent,
   detail,
+  certificate,
   withAlpha
 } from './designTokens'
 // Following the emerald green color palette and modern UI principles

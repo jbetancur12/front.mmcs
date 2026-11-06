@@ -39,7 +39,9 @@ export const neutral = {
   /** Fondo de página y barras de herramientas. */
   surfaceAlt: '#f9fafb',
   /** Encabezados de tabla. */
-  surfaceHead: '#f3f4f6'
+  surfaceHead: '#f3f4f6',
+  /** Negro puro SOLO para sombras y velos: `withAlpha(neutral.black, 0.12)`. No es un color de texto (usa `text`). */
+  black: '#000000'
 } as const
 
 /** Colores por significado (no decoración): acción, peligro, aviso, éxito, información. */
@@ -81,6 +83,20 @@ export const withAlpha = (hex: string, opacity: number): string => {
   const b = parseInt(value.slice(4, 6), 16)
   return `rgba(${r}, ${g}, ${b}, ${opacity})`
 }
+
+/**
+ * Colores propios del certificado de la Academia (documento que se entrega al cliente): dorado de marcos y sellos
+ * y grises de texto del diseño. No se usan en la interfaz; cambiarlos cambia el certificado.
+ */
+export const certificate = {
+  gold: '#c9a84c',
+  goldLight: '#e8c96a',
+  text: '#222222',
+  textBody: '#444444',
+  textMuted: '#555555',
+  textSoft: '#777777',
+  textFaint: '#888888'
+} as const
 
 /** RESERVADO: degradado del banner de las fichas de detalle (esmeralda). No usar en otras pantallas. */
 export const detail = {

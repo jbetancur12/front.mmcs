@@ -498,7 +498,7 @@ const PurchaseStatistics = () => {
                     contentStyle={{
                       borderRadius: 12,
                       border: `1px solid ${neutral.border}`,
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                      boxShadow: `0 4px 12px ${withAlpha(neutral.black, 0.08)}`
                     }}
                     formatter={(value: number, name: string) => [
                       name === 'Monto'

@@ -24,7 +24,13 @@ import { notify } from 'src/utils/notify'
 
 import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 import { logger } from 'src/utils/logger'
-import { neutral, intent, brand, detail } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 export interface Certificate {
   id: number
   name: string
@@ -183,7 +189,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 12px 24px rgba(0,0,0,0.1)',
+            boxShadow: `0 12px 24px ${withAlpha(neutral.black, 0.1)}`,
             borderColor: brand.main
           }
         }}
@@ -439,7 +445,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
         PaperProps={{
           sx: {
             borderRadius: '16px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+            boxShadow: `0 20px 25px -5px ${withAlpha(neutral.black, 0.1)}`
           }
         }}
       >

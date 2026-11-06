@@ -597,8 +597,8 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                     backgroundColor: intent.successInk
                   },
                   '&:disabled': {
-                    background: 'rgba(0, 0, 0, 0.12)',
-                    color: 'rgba(0, 0, 0, 0.26)'
+                    background: withAlpha(neutral.black, 0.12),
+                    color: withAlpha(neutral.black, 0.26)
                   }
                 }}
               >

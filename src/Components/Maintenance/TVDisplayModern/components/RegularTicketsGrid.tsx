@@ -245,7 +245,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                     fontSize: '0.8rem',
                     lineHeight: 1.2,
                     borderLeft: '1px solid',
-                    borderColor: colors.border || 'rgba(0, 0, 0, 0.1)',
+                    borderColor: colors.border,
                     pl: 2,
                     mb: 0.5
                   }}

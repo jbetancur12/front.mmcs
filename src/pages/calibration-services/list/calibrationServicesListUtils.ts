@@ -60,35 +60,35 @@ export const getSlaVisualTone = (
     case 'red':
       return {
         accent: intent.danger,
-        background: `linear-gradient(180deg, ${withAlpha(intent.danger, 0.14)} 0%, rgba(255,255,255,0.96) 28%)`,
+        background: `linear-gradient(180deg, ${withAlpha(intent.danger, 0.14)} 0%, ${withAlpha(neutral.surface, 0.96)} 28%)`,
         border: withAlpha(intent.danger, 0.24),
         glow: `0 6px 18px ${withAlpha(intent.danger, 0.12)}`
       }
     case 'yellow':
       return {
         accent: intent.warning,
-        background: `linear-gradient(180deg, ${withAlpha(intent.warning, 0.14)} 0%, rgba(255,255,255,0.96) 28%)`,
+        background: `linear-gradient(180deg, ${withAlpha(intent.warning, 0.14)} 0%, ${withAlpha(neutral.surface, 0.96)} 28%)`,
         border: withAlpha(intent.warning, 0.24),
         glow: `0 6px 18px ${withAlpha(intent.warning, 0.12)}`
       }
     case 'green':
       return {
         accent: brand.main,
-        background: `linear-gradient(180deg, ${withAlpha(brand.main, 0.1)} 0%, rgba(255,255,255,0.96) 28%)`,
+        background: `linear-gradient(180deg, ${withAlpha(brand.main, 0.1)} 0%, ${withAlpha(neutral.surface, 0.96)} 28%)`,
         border: withAlpha(brand.main, 0.18),
         glow: `0 6px 18px ${withAlpha(brand.main, 0.08)}`
       }
     case 'blue':
       return {
         accent: intent.info,
-        background: `linear-gradient(180deg, ${withAlpha(intent.info, 0.1)} 0%, rgba(255,255,255,0.96) 28%)`,
+        background: `linear-gradient(180deg, ${withAlpha(intent.info, 0.1)} 0%, ${withAlpha(neutral.surface, 0.96)} 28%)`,
         border: withAlpha(intent.info, 0.18),
         glow: `0 6px 18px ${withAlpha(intent.info, 0.08)}`
       }
     default:
       return {
         accent: neutral.textFaint,
-        background: `linear-gradient(180deg, ${withAlpha(neutral.textFaint, 0.08)} 0%, rgba(255,255,255,0.96) 28%)`,
+        background: `linear-gradient(180deg, ${withAlpha(neutral.textFaint, 0.08)} 0%, ${withAlpha(neutral.surface, 0.96)} 28%)`,
         border: withAlpha(neutral.textFaint, 0.16),
         glow: `0 4px 12px ${withAlpha(neutral.textFaint, 0.08)}`
       }

@@ -45,7 +45,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { confirmDialog } from 'src/utils/confirm'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 const Documents: React.FC = () => {
   const canUpload = useCan(PERMISSIONS.FLEET_VEHICLE_DOCUMENT_UPLOAD)
@@ -299,7 +299,7 @@ const Documents: React.FC = () => {
               padding: '16px',
               borderRadius: '8px',
               margin: 'auto',
-              boxShadow: '0px 4px 8px rgba(0,0,0,0.3)' // Sombra para un efecto retro
+              boxShadow: `0px 4px 8px ${withAlpha(neutral.black, 0.3)}` // Sombra para un efecto retro
             }}
           >
             <Typography

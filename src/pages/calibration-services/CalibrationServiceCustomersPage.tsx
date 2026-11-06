@@ -335,7 +335,7 @@ const CalibrationServiceCustomersPage = () => {
         sx={{
           borderRadius: '12px',
           mb: 2.5,
-          border: '1px solid rgba(0,0,0,0.06)',
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
           overflow: 'hidden'
         }}
       >
@@ -373,13 +373,13 @@ const CalibrationServiceCustomersPage = () => {
             elevation={0}
             sx={{
               borderRadius: '14px',
-              border: '1px solid rgba(0,0,0,0.06)',
+              border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
               background: neutral.surface,
               overflow: 'hidden',
               transition: 'box-shadow 0.2s, border-color 0.2s',
               '&:hover': {
                 borderColor: withAlpha(brand.main, 0.2),
-                boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+                boxShadow: `0 4px 12px ${withAlpha(neutral.black, 0.04)}`
               }
             }}
           >
@@ -626,7 +626,7 @@ const CalibrationServiceCustomersPage = () => {
                                 borderRadius: '10px',
                                 p: 1.5,
                                 border: '1px solid',
-                                borderColor: 'rgba(0,0,0,0.05)',
+                                borderColor: withAlpha(neutral.black, 0.05),
                                 transition: 'background-color 0.15s',
                                 '&:hover': {
                                   backgroundColor: neutral.surfaceHead
@@ -738,7 +738,7 @@ const CalibrationServiceCustomersPage = () => {
         sx={{
           mt: 2.5,
           borderRadius: '12px',
-          border: '1px solid rgba(0,0,0,0.06)'
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`
         }}
       >
         <TablePagination

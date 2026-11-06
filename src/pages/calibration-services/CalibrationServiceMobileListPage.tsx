@@ -31,7 +31,13 @@ import {
   getOperationsSummary
 } from './calibrationServiceOtherFields'
 import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
-import { brand, neutral, intent, detail } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 // Misma paleta del detalle móvil
 const C = {
@@ -222,7 +228,7 @@ const MobileListPage = () => {
     <Box
       sx={{
         flex: 1,
-        bgcolor: 'rgba(255,255,255,0.18)',
+        bgcolor: withAlpha(neutral.surface, 0.18),
         borderRadius: '14px',
         px: 1.5,
         py: 1
@@ -238,7 +244,10 @@ const MobileListPage = () => {
       >
         {value}
       </Typography>
-      <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.9)' }}>
+      <Typography
+        variant='caption'
+        sx={{ color: withAlpha(neutral.surface, 0.9) }}
+      >
         {label}
       </Typography>
     </Box>
@@ -267,7 +276,7 @@ const MobileListPage = () => {
               </Typography>
               <Typography
                 variant='body2'
-                sx={{ color: 'rgba(255,255,255,0.9)' }}
+                sx={{ color: withAlpha(neutral.surface, 0.9) }}
               >
                 {formatDay(new Date())}
               </Typography>
@@ -276,7 +285,7 @@ const MobileListPage = () => {
               aria-label='Actualizar lista'
               onClick={() => void refetch()}
               disabled={isFetching}
-              sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.18)' }}
+              sx={{ color: '#fff', bgcolor: withAlpha(neutral.surface, 0.18) }}
             >
               {isFetching ? (
                 <CircularProgress size={22} sx={{ color: '#fff' }} />

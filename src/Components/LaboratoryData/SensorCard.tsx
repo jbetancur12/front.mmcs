@@ -95,7 +95,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
               onClick={() => onEditClick(sensor)}
               aria-label='editar sensor'
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                backgroundColor: withAlpha(neutral.surface, 0.7),
                 '&:hover': {
                   backgroundColor: withAlpha(neutral.borderStrong, 0.8)
                 }
@@ -110,7 +110,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
               onClick={() => onDeleteClick(sensor.id)}
               aria-label='eliminar sensor'
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                backgroundColor: withAlpha(neutral.surface, 0.7),
                 '&:hover': {
                   backgroundColor: withAlpha(neutral.borderStrong, 0.8)
                 }

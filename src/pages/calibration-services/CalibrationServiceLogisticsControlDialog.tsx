@@ -42,6 +42,7 @@ import {
   CalibrationServiceLogisticsControlItem,
   CalibrationServiceLogisticsControlSheet
 } from '../../types/calibrationService'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 export interface CalibrationServiceLogisticsControlDialogValues
   extends CalibrationServiceLogisticsControlSheet {}
@@ -215,7 +216,7 @@ const CalibrationServiceLogisticsControlDialog = ({
       border: '1px solid',
       borderColor: 'divider',
       bgcolor: 'background.paper',
-      boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.02)'
+      boxShadow: `0px 4px 20px ${withAlpha(neutral.black, 0.02)}`
     }
   }
 

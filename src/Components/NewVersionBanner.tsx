@@ -1,6 +1,12 @@
 import { Box, Button, Typography } from '@mui/material'
 import { useNewVersion } from '../hooks/useNewVersion'
-import { brand, neutral, intent, detail } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 const NewVersionBanner = () => {
   const hasNewVersion = useNewVersion()
@@ -23,7 +29,7 @@ const NewVersionBanner = () => {
         justifyContent: 'center',
         gap: 2,
         flexWrap: 'wrap',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+        boxShadow: `0 -4px 20px ${withAlpha(neutral.black, 0.15)}`,
         animation: 'slideUp 0.3s ease-out',
         '@keyframes slideUp': {
           from: { transform: 'translateY(100%)' },

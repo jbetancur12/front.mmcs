@@ -312,7 +312,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
           border: `1px solid ${neutral.borderStrong}`,
           borderRadius: 2,
           overflow: 'hidden',
-          background: `linear-gradient(180deg, rgba(255,255,255,0.92) 0%, ${withAlpha(neutral.surfaceAlt, 0.88)} 100%)`,
+          background: `linear-gradient(180deg, ${withAlpha(neutral.surface, 0.92)} 0%, ${withAlpha(neutral.surfaceAlt, 0.88)} 100%)`,
           position: 'relative'
         }}
       >

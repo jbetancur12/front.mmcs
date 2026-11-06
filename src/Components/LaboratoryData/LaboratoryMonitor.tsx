@@ -50,7 +50,7 @@ import { FileDownloadOutlined } from '@mui/icons-material'
 import LaboratoryMqttGuide from '../LaboratoryMqttGuide'
 
 import { logger } from 'src/utils/logger'
-import { brand, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 // --- INTERFACES (MANTENEMOS LAS EXISTENTES Y AÑADIMOS NUEVAS) ---
 
 // Interfaz para los datos del sensor (sin cambios)
@@ -807,7 +807,10 @@ const LaboratoryMonitor: React.FC = () => {
                                 key={stats.id}
                                 sx={{
                                   '&:hover': {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                    backgroundColor: withAlpha(
+                                      neutral.black,
+                                      0.04
+                                    )
                                   }, // Hover más sutil
                                   '& td, & th': { py: 1.5, px: 2 }, // Padding consistente
                                   // Quitar borde inferior de la última fila para limpieza

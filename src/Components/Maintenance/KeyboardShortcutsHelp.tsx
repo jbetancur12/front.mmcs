@@ -11,7 +11,7 @@ import {
   Paper
 } from '@mui/material'
 import { Keyboard, Close } from '@mui/icons-material'
-import { intent, withAlpha } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface KeyboardShortcutsHelpProps {
   open: boolean
@@ -83,7 +83,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
       PaperProps={{
         sx: {
           borderRadius: '12px',
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: withAlpha(neutral.surface, 0.95),
           backdropFilter: 'blur(10px)'
         }
       }}
