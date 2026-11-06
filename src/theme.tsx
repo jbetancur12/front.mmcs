@@ -52,7 +52,20 @@ export const theme = createTheme({
       dark: colors.success[600],
       contrastText: '#fff'
     },
-    grey: colors.gray,
+    // Escala gris de MUI (`grey.50`, `grey.300`...) sacada de los tokens: 600 y 700 son el mismo gris de cuerpo,
+    // 800 y 900 el de títulos (la escala de Tailwind traía grises intermedios que ya no existen en el sistema)
+    grey: {
+      50: neutral.surfaceAlt,
+      100: neutral.surfaceHead,
+      200: neutral.border,
+      300: neutral.borderStrong,
+      400: neutral.textFaint,
+      500: neutral.textMuted,
+      600: neutral.textBody,
+      700: neutral.textBody,
+      800: neutral.text,
+      900: neutral.text
+    },
     background: {
       default: neutral.surfaceAlt,
       paper: neutral.surface

@@ -13,7 +13,6 @@ import CircularProgress from '@mui/material/CircularProgress' // Indicador de ca
 import { useMutation, useQueryClient } from 'react-query' // Importar useMutation y useQueryClient
 import useAxiosPrivate from '@utils/use-axios-private' // Tu hook de Axios privado
 import { logger } from 'src/utils/logger'
-import { intent } from 'src/theme/designTokens'
 
 // Definir la interfaz para los datos que enviamos al backend para crear
 interface CreateSensorData {
@@ -174,7 +173,7 @@ const AddSensorModal: React.FC<AddSensorModalProps> = ({
           <TextField
             margin='dense'
             name='color'
-            label={`Color (ej: blue, red, ${intent.danger})`}
+            label='Color (ej: blue, red, #F00)'
             type='text'
             fullWidth
             variant='outlined'

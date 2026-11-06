@@ -17,7 +17,6 @@ import useAxiosPrivate from '@utils/use-axios-private' // Tu hook de Axios priva
 import { ApiDeviceData } from './LaboratoryMonitor'
 
 import { logger } from 'src/utils/logger'
-import { intent } from 'src/theme/designTokens'
 // Interfaz para los datos que enviamos al backend para actualizar
 // name es obligatorio, location y color son opcionales al enviar
 interface UpdateSensorData {
@@ -235,7 +234,7 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
           <TextField
             margin='dense'
             name='color'
-            label={`Color (ej: blue, red, ${intent.danger})`}
+            label='Color (ej: blue, red, #F00)'
             type='text'
             fullWidth
             variant='outlined'
