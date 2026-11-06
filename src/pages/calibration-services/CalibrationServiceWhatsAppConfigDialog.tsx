@@ -19,6 +19,7 @@ import {
   WHATSAPP_CONFIG_OPTIONS,
   WhatsAppConfig
 } from '../../hooks/useCalibrationWhatsAppConfig'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface Props {
   open: boolean
@@ -56,7 +57,9 @@ const ConfigSection = ({
   }
 
   return (
-    <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: '12px' }}>
+    <Box
+      sx={{ p: 2, border: `1px solid ${neutral.border}`, borderRadius: '12px' }}
+    >
       <Stack
         direction='row'
         alignItems='center'
@@ -186,7 +189,7 @@ const CalibrationServiceWhatsAppConfigDialog = ({ open, onClose }: Props) => {
     >
       {isLoading ? (
         <Box display='flex' justifyContent='center' py={4}>
-          <CircularProgress size={24} sx={{ color: '#00BFA5' }} />
+          <CircularProgress size={24} sx={{ color: brand.main }} />
         </Box>
       ) : (
         <Stack spacing={2}>

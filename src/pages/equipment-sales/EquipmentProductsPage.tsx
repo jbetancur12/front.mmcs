@@ -34,6 +34,7 @@ import {
 } from '../../types/equipmentSales'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand, intent } from 'src/theme/designTokens'
 
 const emptyProduct: EquipmentProductPayload = {
   name: '',
@@ -192,9 +193,9 @@ const EquipmentProductsPage = () => {
             startIcon={<Add />}
             onClick={openCreate}
             sx={{
-              bgcolor: '#00BFA5',
+              bgcolor: brand.main,
               whiteSpace: 'nowrap',
-              '&:hover': { bgcolor: '#00ACC1' }
+              '&:hover': { bgcolor: brand.hover }
             }}
           >
             Nuevo producto
@@ -236,7 +237,7 @@ const EquipmentProductsPage = () => {
               <IconButton
                 size='small'
                 aria-label={`Editar ${row.original.name}`}
-                sx={{ color: '#2563eb' }}
+                sx={{ color: intent.action }}
                 onClick={() => openEdit(row.original)}
               >
                 <Edit fontSize='small' />

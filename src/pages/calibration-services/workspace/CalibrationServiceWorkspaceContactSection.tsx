@@ -13,6 +13,7 @@ import {
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import { sectionCardSx } from './calibrationServiceWorkspaceConstants'
 import { CalibrationServiceWorkspaceForm } from './useCalibrationServiceWorkspaceForm'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceWorkspaceContactSectionProps {
   form: CalibrationServiceWorkspaceForm
@@ -42,8 +43,12 @@ const CalibrationServiceWorkspaceContactSection = ({
           spacing={1.5}
           sx={{ mb: 2.5 }}
         >
-          <Inventory2OutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-          <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+          <Inventory2OutlinedIcon sx={{ color: brand.hover, fontSize: 22 }} />
+          <Typography
+            variant='h6'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Contacto y destino del servicio
           </Typography>
         </Stack>

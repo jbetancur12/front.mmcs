@@ -13,6 +13,7 @@ import {
   CalibrationServiceDetailData,
   CalibrationServiceDetailDialogs
 } from './calibrationServiceDetailTypes'
+import { brand } from 'src/theme/designTokens'
 
 interface CalibrationServiceSummaryTabProps {
   service: CalibrationService
@@ -95,7 +96,7 @@ const CalibrationServiceSummaryTab = ({
                       setExecutionSiteDraft(rawExecutionSiteName ?? '')
                       setIsExecutionCustomerDialogOpen(true)
                     }}
-                    sx={{ color: '#00897B' }}
+                    sx={{ color: brand.hover }}
                   >
                     <EditOutlinedIcon fontSize='small' />
                   </IconButton>

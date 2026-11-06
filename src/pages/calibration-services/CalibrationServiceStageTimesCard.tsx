@@ -14,6 +14,7 @@ import {
 } from '@mui/material'
 import { getRoleLabelEs } from 'src/constants/roles'
 import { useCalibrationServiceStageTimes } from '../../hooks/useCalibrationServices'
+import { neutral } from 'src/theme/designTokens'
 
 /** Horas a un texto corto: menos de 48 h en horas, más en días. */
 const formatDuration = (hours: number | null) => {
@@ -34,7 +35,11 @@ const CalibrationServiceStageTimesCard = () => {
   return (
     <Card
       elevation={0}
-      sx={{ mb: 3, borderRadius: '16px', border: '1px solid #e5e7eb' }}
+      sx={{
+        mb: 3,
+        borderRadius: '16px',
+        border: `1px solid ${neutral.border}`
+      }}
     >
       <CardContent>
         <Typography variant='h6' sx={{ fontWeight: 700 }}>

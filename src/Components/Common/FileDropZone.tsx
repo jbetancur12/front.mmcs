@@ -116,7 +116,7 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({
       }}
       sx={{
         border: '1.5px dashed',
-        borderColor: isDragOver ? brand.main : '#d1d5db',
+        borderColor: isDragOver ? brand.main : neutral.borderStrong,
         bgcolor: isDragOver ? brand.soft : neutral.surfaceAlt,
         borderRadius: '12px',
         px: 2,

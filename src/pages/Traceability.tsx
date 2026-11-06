@@ -42,12 +42,13 @@ import FileDropZone from 'src/Components/Common/FileDropZone'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 const TEAL_BUTTON_SX = {
   textTransform: 'none',
   fontWeight: 600,
-  bgcolor: '#00BFA5',
+  bgcolor: brand.main,
   whiteSpace: 'nowrap',
-  '&:hover': { bgcolor: '#00897B' }
+  '&:hover': { bgcolor: brand.hover }
 } as const
 
 const Traceability: React.FC = () => {
@@ -173,7 +174,7 @@ const Traceability: React.FC = () => {
         Cell: ({ cell }: { cell: MRT_Cell<TraceabilityDocument> }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
-              sx={{ width: 32, height: 32, bgcolor: '#00BFA5' }}
+              sx={{ width: 32, height: 32, bgcolor: brand.main }}
               aria-hidden
             >
               <PictureAsPdf sx={{ fontSize: 18 }} />
@@ -267,7 +268,7 @@ const Traceability: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Ver documento ${row.original.name}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => setPreviewTarget(row.original)}
               >
                 <Visibility fontSize='small' />
@@ -279,7 +280,7 @@ const Traceability: React.FC = () => {
                   <IconButton
                     size='small'
                     aria-label={`Reemplazar el PDF de ${row.original.name}`}
-                    sx={{ color: '#2563eb' }}
+                    sx={{ color: intent.action }}
                     onClick={() => setUpdateTarget(row.original)}
                   >
                     <Edit fontSize='small' />
@@ -351,8 +352,8 @@ const Traceability: React.FC = () => {
                 sx={{
                   height: 6,
                   borderRadius: 3,
-                  bgcolor: '#E0F7F4',
-                  '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' }
+                  bgcolor: brand.soft,
+                  '& .MuiLinearProgress-bar': { bgcolor: brand.main }
                 }}
               />
               <Typography variant='caption' color='text.secondary'>
@@ -397,8 +398,8 @@ const Traceability: React.FC = () => {
                 sx={{
                   height: 6,
                   borderRadius: 3,
-                  bgcolor: '#E0F7F4',
-                  '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' }
+                  bgcolor: brand.soft,
+                  '& .MuiLinearProgress-bar': { bgcolor: brand.main }
                 }}
               />
               <Typography variant='caption' color='text.secondary'>

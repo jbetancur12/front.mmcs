@@ -79,34 +79,41 @@ import {
   useCalibrationService
 } from '../../hooks/useCalibrationServices'
 import { useCalibrationDeviceSearch } from '../../hooks/calibration/useCalibrationDeviceSearch'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 // Figma design palette
 const G = {
-  green: '#00BFA5',
-  greenLight: '#E0F7F4',
-  greenDark: '#00897B',
-  yellow: '#F5A623',
-  yellowLight: '#fff8ec',
-  red: '#e53e3e',
-  gray50: '#f0f2f5',
-  gray100: '#e8eaed',
-  gray200: '#d1d5db',
-  gray300: '#b0b7c3',
-  gray400: '#9ca3af',
-  gray600: '#4b5563',
-  gray800: '#1f2937',
-  dark: '#1a1a2e',
+  green: brand.main,
+  greenLight: brand.soft,
+  greenDark: brand.hover,
+  yellow: intent.warning,
+  yellowLight: intent.warningSoft,
+  red: intent.danger,
+  gray50: neutral.surfaceHead,
+  gray100: neutral.border,
+  gray200: neutral.borderStrong,
+  gray300: neutral.textFaint,
+  gray400: neutral.textFaint,
+  gray600: neutral.textBody,
+  gray800: neutral.text,
+  dark: neutral.text,
   white: '#ffffff'
 }
 
-const BANNER_BG = 'linear-gradient(135deg, #10b981, #059669)'
+const BANNER_BG = `linear-gradient(135deg, ${detail.from}, ${detail.to})`
 const primarySx = {
   borderRadius: '12px',
   py: 1.5,
   textTransform: 'none',
   fontWeight: 600,
   bgcolor: G.green,
-  '&:hover': { bgcolor: '#00ACC1' },
+  '&:hover': { bgcolor: brand.hover },
   '&.Mui-disabled': { bgcolor: G.gray100, color: G.gray400 },
   '&:active': { transform: 'scale(0.97)' }
 } as const
@@ -126,7 +133,7 @@ const chipSx = {
   px: 1.25,
   py: 0.3,
   borderRadius: '999px',
-  border: '1px solid rgba(255,255,255,0.6)',
+  border: `1px solid ${withAlpha(neutral.surface, 0.6)}`,
   color: 'white'
 } as const
 
@@ -137,7 +144,7 @@ const STATUS_FLOW: CalibrationServiceOperationalItemStatus[] = [
   'completed'
 ]
 const CUT_STATUSES: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Borrador', color: '#b45309' },
+  draft: { label: 'Borrador', color: intent.warningInk },
   ready_for_invoicing: { label: 'Listo para facturar', color: G.greenDark },
   invoiced: { label: 'Facturado', color: G.gray600 }
 }
@@ -663,7 +670,7 @@ const MobilePage = () => {
     fontSize: '0.75rem',
     color: G.greenDark,
     bgcolor: G.greenLight,
-    '&:hover': { bgcolor: '#c9efe9' },
+    '&:hover': { bgcolor: brand.soft },
     '&.Mui-disabled': { color: G.gray300, bgcolor: G.gray50 }
   } as const
 
@@ -703,7 +710,7 @@ const MobilePage = () => {
               </Typography>
               <Box
                 component='span'
-                sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}
+                sx={{ ...chipSx, bgcolor: withAlpha(neutral.surface, 0.22) }}
               >
                 {paused
                   ? 'En pausa'
@@ -743,8 +750,8 @@ const MobilePage = () => {
                     elevation={0}
                     sx={{
                       ...cardSx,
-                      borderColor: '#f59e0b',
-                      bgcolor: '#fffbeb'
+                      borderColor: intent.warning,
+                      bgcolor: intent.warningSoft
                     }}
                   >
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
@@ -1523,7 +1530,7 @@ const MobilePage = () => {
                     {cuts.map((cut: CalibrationServiceCut) => {
                       const cs = CUT_STATUSES[cut.status] || {
                         label: cut.status,
-                        color: '#6b7280'
+                        color: neutral.textMuted
                       }
                       return (
                         <Card key={cut.id} elevation={0} sx={cardSx}>
@@ -1619,7 +1626,7 @@ const MobilePage = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.25)'
+                  boxShadow: `0 8px 24px ${withAlpha(neutral.black, 0.25)}`
                 }}
               >
                 <Typography variant='body2' sx={{ flex: 1 }}>
@@ -1734,7 +1741,7 @@ const MobilePage = () => {
                     aria-label='Volver'
                     onClick={() => setShowLogistics(false)}
                     sx={{
-                      bgcolor: 'rgba(255,255,255,0.15)',
+                      bgcolor: withAlpha(neutral.surface, 0.15),
                       borderRadius: '50%',
                       width: 32,
                       height: 32
@@ -1767,13 +1774,16 @@ const MobilePage = () => {
                   </Typography>
                   <Typography
                     variant='caption'
-                    sx={{ color: 'rgba(255,255,255,0.85)' }}
+                    sx={{ color: withAlpha(neutral.surface, 0.85) }}
                   >
                     {s.customer?.nombre || ''}
                   </Typography>
                   <Box
                     component='span'
-                    sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}
+                    sx={{
+                      ...chipSx,
+                      bgcolor: withAlpha(neutral.surface, 0.22)
+                    }}
                   >
                     {
                       CALIBRATION_SERVICE_STATUS_LABELS[
@@ -1813,7 +1823,7 @@ const MobilePage = () => {
                     sx={{
                       borderRadius: '16px',
                       border: `1px solid ${G.gray100}`,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      boxShadow: `0 1px 3px ${withAlpha(neutral.black, 0.04)}`
                     }}
                   >
                     <CardContent
@@ -1888,7 +1898,7 @@ const MobilePage = () => {
                     sx={{
                       borderRadius: '16px',
                       border: `1px solid ${G.gray100}`,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      boxShadow: `0 1px 3px ${withAlpha(neutral.black, 0.04)}`
                     }}
                   >
                     <CardContent
@@ -2394,7 +2404,7 @@ const MobilePage = () => {
                     sx={{
                       borderRadius: '16px',
                       border: `1px solid ${G.gray100}`,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      boxShadow: `0 1px 3px ${withAlpha(neutral.black, 0.04)}`
                     }}
                   >
                     <CardContent
@@ -3056,7 +3066,9 @@ const DeviceSearch = ({ onSelect }: { onSelect: (name: string) => void }) => {
           InputProps={{
             ...p.InputProps,
             startAdornment: (
-              <SearchIcon sx={{ mr: 0.5, color: '#9ca3af', fontSize: 20 }} />
+              <SearchIcon
+                sx={{ mr: 0.5, color: neutral.textFaint, fontSize: 20 }}
+              />
             )
           }}
         />

@@ -32,6 +32,7 @@ import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
 import type { AxiosResponse } from 'axios'
+import { brand, intent } from 'src/theme/designTokens'
 export interface Personnel {
   id: number | string
   name: string
@@ -197,9 +198,9 @@ const PersonnelManagementPage: React.FC = () => {
             startIcon={<Add />}
             onClick={() => handleOpenModal()}
             sx={{
-              bgcolor: '#00BFA5',
+              bgcolor: brand.main,
               whiteSpace: 'nowrap',
-              '&:hover': { bgcolor: '#00ACC1' }
+              '&:hover': { bgcolor: brand.hover }
             }}
           >
             Agregar persona
@@ -249,7 +250,7 @@ const PersonnelManagementPage: React.FC = () => {
               <IconButton
                 onClick={() => handleOpenModal(row.original)}
                 aria-label={`Editar a ${row.original.name}`}
-                sx={{ color: '#2563eb' }}
+                sx={{ color: intent.action }}
                 size='small'
               >
                 <Edit />

@@ -29,6 +29,7 @@ import {
 } from 'src/Components/Common/DetailBlocks'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 export interface CalibrationData {
   equipmentId: string | number
   date: string
@@ -286,7 +287,7 @@ const CalibrationForm: React.FC = () => {
             sx={{
               p: { xs: 2, md: 3 },
               borderRadius: '16px',
-              border: '1px solid #e5e7eb'
+              border: `1px solid ${neutral.border}`
             }}
           >
             <DetailSection title='Datos del equipo'>

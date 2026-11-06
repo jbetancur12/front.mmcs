@@ -1,4 +1,5 @@
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 /**
  * Props de Material React Table compartidas por las tablas de Compras
@@ -11,17 +12,17 @@ export const purchaseTableStyle = {
   muiTableProps: {
     sx: {
       '& .MuiTableHead-root .MuiTableCell-root': {
-        backgroundColor: '#f5f5f5',
+        backgroundColor: neutral.surfaceHead,
         fontWeight: 600
       },
       '& .MuiTableBody-root .MuiTableRow-root:hover': {
-        backgroundColor: 'rgba(0, 191, 165, 0.04)'
+        backgroundColor: withAlpha(brand.main, 0.04)
       }
     }
   },
   muiTableBodyCellProps: { sx: { textAlign: 'left' as const } },
-  muiTopToolbarProps: { sx: { backgroundColor: '#fafafa' } },
-  muiBottomToolbarProps: { sx: { backgroundColor: '#fafafa' } },
+  muiTopToolbarProps: { sx: { backgroundColor: neutral.surfaceAlt } },
+  muiBottomToolbarProps: { sx: { backgroundColor: neutral.surfaceAlt } },
   muiTableContainerProps: { sx: { maxHeight: '600px' } },
   muiSearchTextFieldProps: {
     placeholder: 'Buscar...',
@@ -30,5 +31,5 @@ export const purchaseTableStyle = {
   }
 }
 
-export const PURCHASE_TEAL = '#00BFA5'
-export const PURCHASE_TEAL_HOVER = '#00ACC1'
+export const PURCHASE_TEAL = brand.main
+export const PURCHASE_TEAL_HOVER = brand.hover

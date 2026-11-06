@@ -26,6 +26,7 @@ import {
 } from '../../types/maintenance'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
 import MaintenancePriorityBadge from './MaintenancePriorityBadge'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceFiltersProps {
   filters: IMaintenanceFilters
@@ -106,10 +107,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
     <Card
       sx={{
         p: { xs: 2, md: 2.5 },
-        backgroundColor: '#ffffff',
+        backgroundColor: neutral.surface,
         borderRadius: '14px',
-        border: '1px solid #e5e7eb',
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+        border: `1px solid ${neutral.border}`,
+        boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
       }}
     >
       {/* Header */}
@@ -122,10 +123,10 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
         flexWrap='wrap'
       >
         <Box display='flex' alignItems='center' gap={1}>
-          <FilterList sx={{ color: '#00A651' }} />
+          <FilterList sx={{ color: intent.successInk }} />
           <Typography
             variant='h6'
-            sx={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}
+            sx={{ fontSize: '1.125rem', fontWeight: 600, color: neutral.text }}
           >
             Filtros
           </Typography>
@@ -136,7 +137,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               sx={{
                 height: 24,
                 fontWeight: 700,
-                backgroundColor: '#10b981',
+                backgroundColor: brand.main,
                 color: '#ffffff'
               }}
             />
@@ -174,7 +175,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '12px',
-                backgroundColor: '#ffffff'
+                backgroundColor: neutral.surface
               }
             }}
           />
@@ -256,8 +257,8 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
           p={1.5}
           sx={{
             borderRadius: '12px',
-            backgroundColor: '#f8fafc',
-            border: '1px solid #e5e7eb'
+            backgroundColor: neutral.surfaceAlt,
+            border: `1px solid ${neutral.border}`
           }}
         >
           <Box
@@ -270,14 +271,14 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
           >
             <Typography
               variant='body2'
-              sx={{ fontWeight: 600, color: '#334155' }}
+              sx={{ fontWeight: 600, color: neutral.textBody }}
             >
               Filtros activos
             </Typography>
             {resultsCount !== undefined && (
               <Typography
                 variant='caption'
-                sx={{ color: '#64748b', fontWeight: 500 }}
+                sx={{ color: neutral.textMuted, fontWeight: 500 }}
                 role='status'
                 aria-live='polite'
               >
@@ -292,7 +293,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 onDelete={() => handleFilterChange('search', '')}
                 size='small'
                 variant='outlined'
-                sx={{ backgroundColor: '#ffffff' }}
+                sx={{ backgroundColor: neutral.surface }}
               />
             )}
             {prioritySummary && (
@@ -301,7 +302,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 onDelete={() => handleFilterChange('priority', [])}
                 size='small'
                 variant='outlined'
-                sx={{ backgroundColor: '#ffffff' }}
+                sx={{ backgroundColor: neutral.surface }}
               />
             )}
             {statusSummary && (
@@ -310,7 +311,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 onDelete={() => handleFilterChange('status', [])}
                 size='small'
                 variant='outlined'
-                sx={{ backgroundColor: '#ffffff' }}
+                sx={{ backgroundColor: neutral.surface }}
               />
             )}
             {localFilters.assignedTechnician?.length ? (
@@ -319,7 +320,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 onDelete={() => handleFilterChange('assignedTechnician', [])}
                 size='small'
                 variant='outlined'
-                sx={{ backgroundColor: '#ffffff' }}
+                sx={{ backgroundColor: neutral.surface }}
               />
             ) : null}
             {localFilters.equipmentType?.length ? (
@@ -328,7 +329,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 onDelete={() => handleFilterChange('equipmentType', [])}
                 size='small'
                 variant='outlined'
-                sx={{ backgroundColor: '#ffffff' }}
+                sx={{ backgroundColor: neutral.surface }}
               />
             ) : null}
             {localFilters.customerEmail && (
@@ -337,7 +338,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 onDelete={() => handleFilterChange('customerEmail', '')}
                 size='small'
                 variant='outlined'
-                sx={{ backgroundColor: '#ffffff' }}
+                sx={{ backgroundColor: neutral.surface }}
               />
             )}
           </Box>
@@ -350,8 +351,8 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
         sx={{
           mt: 1,
           borderRadius: '12px !important',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#fcfcfd',
+          border: `1px solid ${neutral.border}`,
+          backgroundColor: neutral.surfaceAlt,
           '&:before': { display: 'none' }
         }}
       >
@@ -369,11 +370,11 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
           <Box>
             <Typography
               variant='body2'
-              sx={{ color: '#334155', fontWeight: 600 }}
+              sx={{ color: neutral.textBody, fontWeight: 600 }}
             >
               Filtros avanzados
             </Typography>
-            <Typography variant='caption' sx={{ color: '#64748b' }}>
+            <Typography variant='caption' sx={{ color: neutral.textMuted }}>
               Técnico, equipo, cliente y rango de fechas
             </Typography>
           </Box>

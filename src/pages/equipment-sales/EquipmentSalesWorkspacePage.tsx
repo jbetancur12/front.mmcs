@@ -78,6 +78,13 @@ import {
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
 import { logger } from 'src/utils/logger'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  withAlpha
+} from 'src/theme/designTokens'
 
 type FormState = Omit<
   EquipmentQuotationPayload,
@@ -827,7 +834,7 @@ const EquipmentSalesWorkspacePage = () => {
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         minHeight: '100vh',
-        backgroundColor: '#f8fafb'
+        backgroundColor: neutral.surfaceAlt
       }}
     >
       <Button
@@ -839,7 +846,12 @@ const EquipmentSalesWorkspacePage = () => {
               : '/equipment-sales'
           )
         }
-        sx={{ mb: 1, color: '#4b5563', textTransform: 'none', fontWeight: 600 }}
+        sx={{
+          mb: 1,
+          color: neutral.textBody,
+          textTransform: 'none',
+          fontWeight: 600
+        }}
       >
         {isEditing ? 'Volver a la cotización' : 'Volver a cotizaciones'}
       </Button>
@@ -915,7 +927,7 @@ const EquipmentSalesWorkspacePage = () => {
         sx={{
           mb: 3,
           borderRadius: '14px',
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${neutral.border}`,
           overflow: 'hidden'
         }}
       >
@@ -936,10 +948,10 @@ const EquipmentSalesWorkspacePage = () => {
               px: 2,
               gap: 1,
               color: 'text.secondary',
-              '&.Mui-selected': { color: '#00695C' }
+              '&.Mui-selected': { color: brand.ink }
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: '#00695C',
+              backgroundColor: brand.ink,
               height: 3,
               borderRadius: '3px 3px 0 0'
             }
@@ -956,7 +968,7 @@ const EquipmentSalesWorkspacePage = () => {
                   {sectionCompletion[index] >= 1 ? (
                     <CheckCircleRoundedIcon
                       aria-label='completa'
-                      sx={{ fontSize: 16, color: '#047857' }}
+                      sx={{ fontSize: 16, color: intent.successInk }}
                     />
                   ) : null}
                 </Stack>
@@ -975,8 +987,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid #e5e7eb',
-                bgcolor: '#fff'
+                border: `1px solid ${neutral.border}`,
+                bgcolor: neutral.surface
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -986,11 +998,11 @@ const EquipmentSalesWorkspacePage = () => {
                   spacing={1.5}
                   sx={{ mb: 2.5 }}
                 >
-                  <GroupOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />
+                  <GroupOutlinedIcon sx={{ color: brand.ink, fontSize: 22 }} />
                   <Typography
                     variant='h6'
                     fontWeight={800}
-                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                    sx={{ color: neutral.text, letterSpacing: '-0.01em' }}
                   >
                     Cliente y alcance
                   </Typography>
@@ -1089,8 +1101,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid #e5e7eb',
-                bgcolor: '#fff'
+                border: `1px solid ${neutral.border}`,
+                bgcolor: neutral.surface
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1101,12 +1113,12 @@ const EquipmentSalesWorkspacePage = () => {
                   sx={{ mb: 2 }}
                 >
                   <UploadFileOutlinedIcon
-                    sx={{ color: '#7c3aed', fontSize: 20 }}
+                    sx={{ color: accent.main, fontSize: 20 }}
                   />
                   <Typography
                     variant='subtitle2'
                     fontWeight={700}
-                    sx={{ color: '#374151' }}
+                    sx={{ color: neutral.textBody }}
                   >
                     Evidencia de solicitud *
                   </Typography>
@@ -1192,8 +1204,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid #e5e7eb',
-                bgcolor: '#fff'
+                border: `1px solid ${neutral.border}`,
+                bgcolor: neutral.surface
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1204,12 +1216,12 @@ const EquipmentSalesWorkspacePage = () => {
                   sx={{ mb: 2.5 }}
                 >
                   <Inventory2OutlinedIcon
-                    sx={{ color: '#d97706', fontSize: 22 }}
+                    sx={{ color: intent.warning, fontSize: 22 }}
                   />
                   <Typography
                     variant='h6'
                     fontWeight={800}
-                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                    sx={{ color: neutral.text, letterSpacing: '-0.01em' }}
                   >
                     Contacto y destino
                   </Typography>
@@ -1308,8 +1320,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid #e5e7eb',
-                bgcolor: '#fff'
+                border: `1px solid ${neutral.border}`,
+                bgcolor: neutral.surface
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1320,12 +1332,12 @@ const EquipmentSalesWorkspacePage = () => {
                   sx={{ mb: 2.5 }}
                 >
                   <UploadFileOutlinedIcon
-                    sx={{ color: '#4f46e5', fontSize: 22 }}
+                    sx={{ color: intent.info, fontSize: 22 }}
                   />
                   <Typography
                     variant='h6'
                     fontWeight={800}
-                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                    sx={{ color: neutral.text, letterSpacing: '-0.01em' }}
                   >
                     Términos de la cotización
                   </Typography>
@@ -1334,14 +1346,14 @@ const EquipmentSalesWorkspacePage = () => {
                   sx={{
                     mb: 3,
                     p: 2,
-                    bgcolor: '#f0fdf4',
-                    border: '1px solid #bbf7d0',
+                    bgcolor: intent.successSoft,
+                    border: `1px solid ${intent.successSoft}`,
                     borderRadius: 2
                   }}
                 >
                   <Typography
                     variant='subtitle2'
-                    sx={{ mb: 1, color: '#166534' }}
+                    sx={{ mb: 1, color: intent.successInk }}
                   >
                     Variables disponibles:
                   </Typography>
@@ -1373,7 +1385,7 @@ const EquipmentSalesWorkspacePage = () => {
                   </Box>
                   <Typography
                     variant='caption'
-                    sx={{ mt: 1, display: 'block', color: '#15803d' }}
+                    sx={{ mt: 1, display: 'block', color: intent.successInk }}
                   >
                     Escribe estas variables en el texto y serán reemplazadas
                     automáticamente al generar el PDF.
@@ -1442,8 +1454,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid #e5e7eb',
-                bgcolor: '#fff'
+                border: `1px solid ${neutral.border}`,
+                bgcolor: neutral.surface
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1465,8 +1477,8 @@ const EquipmentSalesWorkspacePage = () => {
               sx={{
                 borderRadius: '16px',
                 mb: 3,
-                border: '1px solid #e5e7eb',
-                bgcolor: '#fff'
+                border: `1px solid ${neutral.border}`,
+                bgcolor: neutral.surface
               }}
             >
               <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1477,12 +1489,12 @@ const EquipmentSalesWorkspacePage = () => {
                   sx={{ mb: 2.5 }}
                 >
                   <ReceiptLongOutlinedIcon
-                    sx={{ color: '#0284c7', fontSize: 22 }}
+                    sx={{ color: intent.infoInk, fontSize: 22 }}
                   />
                   <Typography
                     variant='h6'
                     fontWeight={800}
-                    sx={{ color: '#111827', letterSpacing: '-0.01em' }}
+                    sx={{ color: neutral.text, letterSpacing: '-0.01em' }}
                   >
                     Condiciones comerciales
                   </Typography>
@@ -1650,8 +1662,8 @@ const EquipmentSalesWorkspacePage = () => {
               position: 'sticky',
               top: 24,
               borderRadius: '16px',
-              border: '1px solid rgba(0,0,0,0.06)',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+              border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
+              boxShadow: `0 4px 16px ${withAlpha(neutral.black, 0.06)}`
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -1689,7 +1701,7 @@ const EquipmentSalesWorkspacePage = () => {
                     <Typography
                       variant='body2'
                       fontWeight={700}
-                      sx={{ color: '#dc2626' }}
+                      sx={{ color: intent.danger }}
                     >
                       -{currencyFormatter.format(discountTotal)}
                     </Typography>
@@ -1697,7 +1709,7 @@ const EquipmentSalesWorkspacePage = () => {
                 ) : null}
                 <Box
                   sx={{
-                    borderTop: '1px dashed rgba(0,0,0,0.12)',
+                    borderTop: `1px dashed ${withAlpha(neutral.black, 0.12)}`,
                     pt: 1.5,
                     display: 'flex',
                     justifyContent: 'space-between'
@@ -1709,7 +1721,7 @@ const EquipmentSalesWorkspacePage = () => {
                   <Typography
                     variant='h6'
                     fontWeight={800}
-                    sx={{ color: '#059669' }}
+                    sx={{ color: brand.ink }}
                   >
                     {currencyFormatter.format(grandTotal)}
                   </Typography>
@@ -1753,8 +1765,8 @@ const EquipmentSalesWorkspacePage = () => {
                     borderRadius: '10px',
                     textTransform: 'none',
                     fontWeight: 700,
-                    bgcolor: '#047857',
-                    '&:hover': { bgcolor: '#065f46' }
+                    bgcolor: intent.successInk,
+                    '&:hover': { bgcolor: intent.successInk }
                   }}
                 >
                   Guardar y enviar cotización
@@ -1768,9 +1780,12 @@ const EquipmentSalesWorkspacePage = () => {
                     borderRadius: '10px',
                     textTransform: 'none',
                     fontWeight: 600,
-                    color: '#047857',
-                    borderColor: '#047857',
-                    '&:hover': { borderColor: '#065f46', bgcolor: '#ecfdf5' }
+                    color: intent.successInk,
+                    borderColor: intent.successInk,
+                    '&:hover': {
+                      borderColor: intent.successInk,
+                      bgcolor: intent.successSoft
+                    }
                   }}
                 >
                   Guardar borrador

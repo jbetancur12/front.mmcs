@@ -16,9 +16,10 @@ import { getPermissionHelp } from 'src/constants/permissionHelp'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacPermission, RbacRole } from '../../types/rbac'
 import { requirementName } from './requirements'
+import { brand } from 'src/theme/designTokens'
 
-const TEAL = '#00BFA5'
-const TEAL_DARK = '#00897B'
+const TEAL = brand.main
+const TEAL_DARK = brand.hover
 
 /** Texto sencillo de una capacidad: lo escrito a mano y, si falta, la descripción técnica del catálogo. */
 export const permissionPlainText = (permission: RbacPermission) => {

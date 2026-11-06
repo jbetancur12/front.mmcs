@@ -4,6 +4,7 @@ import {
   TRACKED_SECTIONS,
   WORKSPACE_SECTIONS
 } from './calibrationServiceWorkspaceSections'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface CalibrationServiceWorkspaceSectionTabsProps {
   activeSection: number
@@ -22,7 +23,7 @@ const CalibrationServiceWorkspaceSectionTabs = ({
     sx={{
       mb: 3,
       borderRadius: '14px',
-      border: '1px solid rgba(0,0,0,0.06)',
+      border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
       overflow: 'hidden'
     }}
   >
@@ -42,10 +43,10 @@ const CalibrationServiceWorkspaceSectionTabs = ({
           px: 2,
           gap: 1,
           color: 'text.secondary',
-          '&.Mui-selected': { color: '#00897B' }
+          '&.Mui-selected': { color: brand.hover }
         },
         '& .MuiTabs-indicator': {
-          backgroundColor: '#00BFA5',
+          backgroundColor: brand.main,
           height: 3,
           borderRadius: '3px 3px 0 0'
         }
@@ -79,7 +80,7 @@ const CalibrationServiceWorkspaceSectionTabs = ({
               ) : TRACKED_SECTIONS.includes(index) ? (
                 <CheckCircleOutlineOutlinedIcon
                   aria-label='Completo'
-                  sx={{ fontSize: 16, color: '#00897B' }}
+                  sx={{ fontSize: 16, color: brand.hover }}
                 />
               ) : null}
             </Stack>

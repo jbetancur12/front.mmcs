@@ -3,6 +3,7 @@ import { Button, Stack, Typography } from '@mui/material'
 import FormDialog from 'src/Components/Common/FormDialog'
 import type { SessionPrompt } from 'src/hooks/useSessions'
 import SessionDeviceRow from './SessionDeviceRow'
+import { brand } from 'src/theme/designTokens'
 
 interface ActiveSessionDialogProps {
   /** null = cerrado. */
@@ -80,7 +81,7 @@ const ActiveSessionDialog: React.FC<ActiveSessionDialogProps> = ({
           <Button
             onClick={onKeep}
             disabled={loading}
-            sx={{ color: '#00695c', textTransform: 'none', fontWeight: 600 }}
+            sx={{ color: brand.ink, textTransform: 'none', fontWeight: 600 }}
           >
             Mantenerlas e ingresar
           </Button>

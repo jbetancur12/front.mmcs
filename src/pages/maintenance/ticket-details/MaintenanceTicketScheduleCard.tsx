@@ -6,6 +6,7 @@ import {
 } from '../../../types/maintenance'
 import { formatDate } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketScheduleCardProps {
   ticket: MaintenanceTicket
@@ -27,22 +28,22 @@ const MaintenanceTicketScheduleCard = ({
         sx={{
           p: 3,
           mb: 3,
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: withAlpha(neutral.surface, 0.95),
           backdropFilter: 'blur(10px)',
           borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)',
+          boxShadow: `0 4px 20px ${withAlpha(neutral.black, 0.08)}`,
+          border: `1px solid ${withAlpha(intent.success, 0.1)}`,
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+            boxShadow: `0 8px 30px ${withAlpha(intent.success, 0.12)}`
           }
         }}
       >
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+              background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -56,7 +57,7 @@ const MaintenanceTicketScheduleCard = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#00bf75'
+              color: intent.successInk
             }}
           >
             Programación

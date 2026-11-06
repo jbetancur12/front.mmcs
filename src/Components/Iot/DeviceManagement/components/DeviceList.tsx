@@ -21,6 +21,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand } from 'src/theme/designTokens'
 
 const DeviceList = () => {
   const { data: devices } = useDevices()
@@ -74,9 +75,9 @@ const DeviceList = () => {
               startIcon={<MapIcon />}
               onClick={() => navigate('/iot/map')}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Ver mapa
@@ -87,9 +88,9 @@ const DeviceList = () => {
                 startIcon={<Add />}
                 onClick={() => setOpen(true)}
                 sx={{
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   whiteSpace: 'nowrap',
-                  '&:hover': { bgcolor: '#00ACC1' }
+                  '&:hover': { bgcolor: brand.hover }
                 }}
               >
                 Agregar dispositivo

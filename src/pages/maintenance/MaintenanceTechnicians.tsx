@@ -55,6 +55,7 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { notify } from 'src/utils/notify'
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 const validationSchema = Yup.object({
   name: Yup.string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -263,7 +264,7 @@ const MaintenanceTechnicians: React.FC = () => {
           <Box display='flex' alignItems='center' gap={1.5}>
             <Avatar
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 color: '#fff',
                 fontWeight: 600,
                 width: 36,
@@ -416,9 +417,9 @@ const MaintenanceTechnicians: React.FC = () => {
             startIcon={<Add />}
             onClick={() => setDialogOpen(true)}
             sx={{
-              bgcolor: '#00BFA5',
+              bgcolor: brand.main,
               whiteSpace: 'nowrap',
-              '&:hover': { bgcolor: '#00ACC1' }
+              '&:hover': { bgcolor: brand.hover }
             }}
           >
             Agregar Técnico
@@ -520,7 +521,7 @@ const MaintenanceTechnicians: React.FC = () => {
                       color:
                         technician.status === 'active'
                           ? 'warning.main'
-                          : '#00BFA5'
+                          : brand.main
                     }}
                   >
                     {technician.status === 'active' ? (

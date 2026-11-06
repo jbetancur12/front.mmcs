@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Button, Alert } from '@mui/material'
 import { Error as ErrorIcon, Refresh } from '@mui/icons-material'
 
 import { logger } from 'src/utils/logger'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 interface Props {
   children: ReactNode
 }
@@ -48,7 +49,7 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
           minHeight='400px'
           p={3}
           sx={{
-            backgroundColor: '#f8fafc'
+            backgroundColor: neutral.surfaceAlt
           }}
         >
           <Paper
@@ -57,15 +58,15 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
               textAlign: 'center',
               maxWidth: 500,
               width: '100%',
-              backgroundColor: '#ffffff',
+              backgroundColor: neutral.surface,
               borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
-              border: '1px solid #e5e7eb'
+              boxShadow: `0 4px 12px ${withAlpha(neutral.text, 0.08)}`,
+              border: `1px solid ${neutral.border}`
             }}
           >
             <Box
               sx={{
-                backgroundColor: '#fef2f2',
+                backgroundColor: intent.dangerSoft,
                 borderRadius: '50%',
                 width: 80,
                 height: 80,
@@ -75,13 +76,13 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 margin: '0 auto 16px'
               }}
             >
-              <ErrorIcon sx={{ fontSize: 40, color: '#dc2626' }} />
+              <ErrorIcon sx={{ fontSize: 40, color: intent.danger }} />
             </Box>
             <Typography
               variant='h5'
               gutterBottom
               sx={{
-                color: '#f44336',
+                color: intent.danger,
                 fontWeight: 700
               }}
             >
@@ -103,9 +104,9 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 sx={{
                   mb: 2,
                   textAlign: 'left',
-                  background: 'rgba(244, 67, 54, 0.05)',
+                  background: withAlpha(intent.danger, 0.05),
                   borderRadius: '12px',
-                  border: '1px solid rgba(244, 67, 54, 0.2)'
+                  border: `1px solid ${withAlpha(intent.danger, 0.2)}`
                 }}
               >
                 <Typography
@@ -114,7 +115,7 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                   sx={{
                     fontFamily: 'monospace',
                     fontSize: '0.75rem',
-                    color: '#d32f2f'
+                    color: intent.danger
                   }}
                 >
                   {this.state.error.message}
@@ -128,10 +129,10 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRetry}
                 startIcon={<Refresh />}
                 sx={{
-                  backgroundColor: '#00A651',
+                  backgroundColor: intent.successInk,
                   borderRadius: '12px',
                   '&:hover': {
-                    backgroundColor: '#27672a'
+                    backgroundColor: intent.successInk
                   }
                 }}
               >
@@ -141,12 +142,12 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 variant='outlined'
                 onClick={() => window.location.reload()}
                 sx={{
-                  borderColor: '#f44336',
-                  color: '#f44336',
+                  borderColor: intent.danger,
+                  color: intent.danger,
                   borderRadius: '12px',
                   '&:hover': {
-                    borderColor: '#d32f2f',
-                    backgroundColor: '#fef2f2'
+                    borderColor: intent.danger,
+                    backgroundColor: intent.dangerSoft
                   }
                 }}
               >

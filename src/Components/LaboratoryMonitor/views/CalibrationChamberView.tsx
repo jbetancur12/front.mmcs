@@ -52,6 +52,7 @@ import { useStabilityAlerts } from '@hooks/useStabilityAlerts'
 import { notify } from 'src/utils/notify'
 import { notify as appNotify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand, neutral } from 'src/theme/designTokens'
 
 // Función para generar el resumen de sensores
 export const generateSensorSummary = (
@@ -544,9 +545,9 @@ const CalibrationChamberView: React.FC = () => {
                   onClick={handleOpenCreateModal}
                   disabled={createChamberMutation.isLoading}
                   sx={{
-                    bgcolor: '#00BFA5',
+                    bgcolor: brand.main,
                     whiteSpace: 'nowrap',
-                    '&:hover': { bgcolor: '#00ACC1' }
+                    '&:hover': { bgcolor: brand.hover }
                   }}
                 >
                   {createChamberMutation.isLoading
@@ -618,7 +619,7 @@ const CalibrationChamberView: React.FC = () => {
           ) : (
             <Paper
               variant='outlined'
-              sx={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
+              sx={{ borderRadius: '12px', borderColor: neutral.border }}
             >
               <EmptyState
                 icon={<AcUnit />}
@@ -630,7 +631,7 @@ const CalibrationChamberView: React.FC = () => {
                       variant='outlined'
                       startIcon={<AddCircleOutlineIcon />}
                       onClick={handleOpenCreateModal}
-                      sx={{ color: '#00897B', borderColor: '#00BFA5' }}
+                      sx={{ color: brand.hover, borderColor: brand.main }}
                     >
                       Agregar cámara
                     </Button>

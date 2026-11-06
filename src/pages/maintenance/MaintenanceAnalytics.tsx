@@ -43,6 +43,7 @@ import { MaintenanceAnalyticsFilters } from '../../types/maintenance'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 const getDefaultDateRange = () => {
   const today = new Date()
   const start = new Date()
@@ -85,10 +86,10 @@ const formatHours = (value: number) => {
 }
 
 const surfaceSx = {
-  backgroundColor: '#ffffff',
+  backgroundColor: neutral.surface,
   borderRadius: '16px',
-  border: '1px solid #e5e7eb',
-  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+  border: `1px solid ${neutral.border}`,
+  boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
 }
 
 const MaintenanceAnalytics: React.FC = () => {
@@ -201,9 +202,9 @@ const MaintenanceAnalytics: React.FC = () => {
               startIcon={<ArrowBack />}
               onClick={() => navigate('/maintenance')}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Volver
@@ -214,9 +215,9 @@ const MaintenanceAnalytics: React.FC = () => {
               onClick={() => refetch()}
               disabled={isFetching}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Actualizar
@@ -227,9 +228,9 @@ const MaintenanceAnalytics: React.FC = () => {
               onClick={exportToExcel}
               disabled={!analytics}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Descargar Excel
@@ -345,7 +346,7 @@ const MaintenanceAnalytics: React.FC = () => {
                 <Box sx={{ p: 2.5 }}>
                   <Typography
                     variant='h6'
-                    sx={{ fontWeight: 700, color: '#0f172a' }}
+                    sx={{ fontWeight: 700, color: neutral.text }}
                   >
                     Desempeño por técnico
                   </Typography>
@@ -442,7 +443,7 @@ const MaintenanceAnalytics: React.FC = () => {
                 <Paper sx={{ ...surfaceSx, p: 2.5 }}>
                   <Typography
                     variant='h6'
-                    sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                    sx={{ fontWeight: 700, color: neutral.text, mb: 1.5 }}
                   >
                     Top técnicos por tickets cerrados
                   </Typography>
@@ -475,9 +476,9 @@ const MaintenanceAnalytics: React.FC = () => {
                             sx={{
                               height: 8,
                               borderRadius: 999,
-                              backgroundColor: '#e2e8f0',
+                              backgroundColor: neutral.border,
                               '& .MuiLinearProgress-bar': {
-                                backgroundColor: '#00A651',
+                                backgroundColor: intent.successInk,
                                 borderRadius: 999
                               }
                             }}
@@ -491,7 +492,7 @@ const MaintenanceAnalytics: React.FC = () => {
                 <Paper sx={{ ...surfaceSx, p: 2.5 }}>
                   <Typography
                     variant='h6'
-                    sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                    sx={{ fontWeight: 700, color: neutral.text, mb: 1.5 }}
                   >
                     Estado de tickets
                   </Typography>
@@ -520,9 +521,9 @@ const MaintenanceAnalytics: React.FC = () => {
                             sx={{
                               height: 7,
                               borderRadius: 999,
-                              backgroundColor: '#e2e8f0',
+                              backgroundColor: neutral.border,
                               '& .MuiLinearProgress-bar': {
-                                backgroundColor: '#0f766e',
+                                backgroundColor: brand.ink,
                                 borderRadius: 999
                               }
                             }}
@@ -539,7 +540,7 @@ const MaintenanceAnalytics: React.FC = () => {
               <Paper sx={{ ...surfaceSx, p: 2.5 }}>
                 <Typography
                   variant='h6'
-                  sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                  sx={{ fontWeight: 700, color: neutral.text, mb: 1.5 }}
                 >
                   Tendencia diaria
                 </Typography>
@@ -574,7 +575,7 @@ const MaintenanceAnalytics: React.FC = () => {
               <Paper sx={{ ...surfaceSx, p: 2.5 }}>
                 <Typography
                   variant='h6'
-                  sx={{ fontWeight: 700, color: '#0f172a', mb: 1.5 }}
+                  sx={{ fontWeight: 700, color: neutral.text, mb: 1.5 }}
                 >
                   Equipos más frecuentes
                 </Typography>
@@ -605,10 +606,10 @@ const MaintenanceAnalytics: React.FC = () => {
             <Grid item xs={12}>
               <Paper sx={{ ...surfaceSx, p: 2.5 }}>
                 <Box display='flex' alignItems='center' gap={1} mb={1.5}>
-                  <Engineering sx={{ color: '#0f766e' }} />
+                  <Engineering sx={{ color: brand.ink }} />
                   <Typography
                     variant='h6'
-                    sx={{ fontWeight: 700, color: '#0f172a' }}
+                    sx={{ fontWeight: 700, color: neutral.text }}
                   >
                     Envejecimiento y facturación
                   </Typography>
@@ -618,7 +619,7 @@ const MaintenanceAnalytics: React.FC = () => {
                     <Grid item xs={12} sm={6} md={3} key={bucket.bucket}>
                       <Card
                         sx={{
-                          backgroundColor: '#f8fafc',
+                          backgroundColor: neutral.surfaceAlt,
                           borderRadius: '14px',
                           boxShadow: 'none'
                         }}
@@ -626,13 +627,13 @@ const MaintenanceAnalytics: React.FC = () => {
                         <CardContent>
                           <Typography
                             variant='overline'
-                            sx={{ color: '#64748b', fontWeight: 700 }}
+                            sx={{ color: neutral.textMuted, fontWeight: 700 }}
                           >
                             {bucket.bucket}
                           </Typography>
                           <Typography
                             variant='h5'
-                            sx={{ fontWeight: 700, color: '#0f172a' }}
+                            sx={{ fontWeight: 700, color: neutral.text }}
                           >
                             {bucket.count}
                           </Typography>
@@ -646,7 +647,7 @@ const MaintenanceAnalytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Card
                       sx={{
-                        backgroundColor: '#f8fafc',
+                        backgroundColor: neutral.surfaceAlt,
                         borderRadius: '14px',
                         boxShadow: 'none'
                       }}
@@ -654,13 +655,13 @@ const MaintenanceAnalytics: React.FC = () => {
                       <CardContent>
                         <Typography
                           variant='overline'
-                          sx={{ color: '#64748b', fontWeight: 700 }}
+                          sx={{ color: neutral.textMuted, fontWeight: 700 }}
                         >
                           Facturación
                         </Typography>
                         <Typography
                           variant='h5'
-                          sx={{ fontWeight: 700, color: '#0f172a' }}
+                          sx={{ fontWeight: 700, color: neutral.text }}
                         >
                           {analytics.overview.notInvoicedCompletedTickets}
                         </Typography>

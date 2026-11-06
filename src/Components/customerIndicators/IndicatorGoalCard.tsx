@@ -15,6 +15,7 @@ import {
   emeraldButtonSx
 } from './indicatorFormat'
 import { confirmDialog } from 'src/utils/confirm'
+import { neutral } from 'src/theme/designTokens'
 
 interface Props {
   customerId: number | string
@@ -48,7 +49,7 @@ const IndicatorGoalCard: React.FC<Props> = ({ customerId, year, goal }) => {
   return (
     <Card
       elevation={0}
-      sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+      sx={{ borderRadius: '16px', border: `1px solid ${neutral.border}` }}
     >
       <CardContent sx={{ p: 3 }}>
         <Box

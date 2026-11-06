@@ -8,6 +8,7 @@ import {
   CalibrationServiceDetailPermissions,
   CalibrationServiceDetailData
 } from './calibrationServiceDetailTypes'
+import { brand } from 'src/theme/designTokens'
 
 interface CalibrationServiceCompactSummaryProps {
   service: CalibrationService
@@ -85,7 +86,7 @@ const CalibrationServiceCompactSummary = ({
                 <Typography
                   variant='subtitle1'
                   fontWeight={700}
-                  sx={{ color: '#00897B' }}
+                  sx={{ color: brand.hover }}
                 >
                   {currencyFormatter.format(grandTotal)}
                 </Typography>

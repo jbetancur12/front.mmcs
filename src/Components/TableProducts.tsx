@@ -42,6 +42,13 @@ import {
 } from 'src/hooks/purchases/useProducts'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  withAlpha
+} from 'src/theme/designTokens'
 
 export interface ProductVariant {
   id: number
@@ -75,17 +82,17 @@ const SERVICE_TYPE_OPTIONS = [
 ]
 
 const SERVICE_TYPE_COLORS: Record<string, string> = {
-  Acreditado: '#059669',
-  Trazable: '#2563eb',
-  'Subcontratado ONAC': '#7c3aed',
-  Especial: '#d97706'
+  Acreditado: brand.hover,
+  Trazable: intent.action,
+  'Subcontratado ONAC': accent.main,
+  Especial: intent.warning
 }
 
 const SERVICE_TYPE_BG: Record<string, string> = {
-  Acreditado: 'rgba(16,185,129,0.08)',
-  Trazable: 'rgba(59,130,246,0.08)',
-  'Subcontratado ONAC': 'rgba(139,92,246,0.08)',
-  Especial: 'rgba(245,158,11,0.08)'
+  Acreditado: withAlpha(brand.main, 0.08),
+  Trazable: withAlpha(intent.info, 0.08),
+  'Subcontratado ONAC': withAlpha(accent.main, 0.08),
+  Especial: withAlpha(intent.warning, 0.08)
 }
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat('es-CO', {
@@ -111,8 +118,9 @@ const ServiceTypeBadge: React.FC<{ type: string }> = ({ type }) => (
       py: 0.25,
       borderRadius: '6px',
       display: 'inline-block',
-      backgroundColor: SERVICE_TYPE_BG[type] || 'rgba(107,114,128,0.08)',
-      color: SERVICE_TYPE_COLORS[type] || '#6b7280',
+      backgroundColor:
+        SERVICE_TYPE_BG[type] || withAlpha(neutral.textMuted, 0.08),
+      color: SERVICE_TYPE_COLORS[type] || neutral.textMuted,
       fontWeight: 600,
       fontSize: '0.78rem'
     }}
@@ -193,12 +201,12 @@ const TableProducts: React.FC = () => {
       html: `
         <div style="text-align: left;">
           <p><strong>Producto:</strong> ${product.name}</p>
-          <p style="color: #6b7280; font-size: 0.9rem; margin-top: 12px;">
+          <p style="color: ${neutral.textMuted}; font-size: 0.9rem; margin-top: 12px;">
             Se eliminarán todas sus variantes de precio.
             Los servicios ya cotizados conservarán sus datos,
             pero perderán la referencia al catálogo.
           </p>
-          <p style="color: #dc2626; font-size: 0.85rem;"><strong>Esta acción no se puede deshacer.</strong></p>
+          <p style="color: ${intent.danger}; font-size: 0.85rem;"><strong>Esta acción no se puede deshacer.</strong></p>
         </div>
       `,
       confirmLabel: 'Sí, eliminar',
@@ -309,9 +317,9 @@ const TableProducts: React.FC = () => {
               startIcon={<DownloadOutlinedIcon />}
               onClick={handleDownloadTemplate}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Plantilla
@@ -321,9 +329,9 @@ const TableProducts: React.FC = () => {
               startIcon={<CloudUploadOutlinedIcon />}
               onClick={() => setImportDialogOpen(true)}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Importar
@@ -333,9 +341,9 @@ const TableProducts: React.FC = () => {
               startIcon={<AddCircleOutlineOutlinedIcon />}
               onClick={() => setCreateModalOpen(true)}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Nuevo producto
@@ -369,7 +377,7 @@ const TableProducts: React.FC = () => {
           p: 2,
           borderRadius: '12px',
           mb: 2.5,
-          border: '1px solid rgba(0,0,0,0.06)',
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
           display: 'flex',
           flexWrap: 'wrap',
           gap: 1.5,
@@ -408,11 +416,11 @@ const TableProducts: React.FC = () => {
           startIcon={<PercentOutlinedIcon />}
           onClick={() => setConfirmationDialogOpen(true)}
           sx={{
-            bgcolor: '#00BFA5',
+            bgcolor: brand.main,
             textTransform: 'none',
             fontWeight: 600,
             height: 36,
-            '&:hover': { bgcolor: '#00ACC1' }
+            '&:hover': { bgcolor: brand.hover }
           }}
         >
           Actualizar precios
@@ -427,8 +435,8 @@ const TableProducts: React.FC = () => {
             <thead>
               <tr
                 style={{
-                  borderBottom: '1px solid #e5e7eb',
-                  backgroundColor: '#f5f5f5'
+                  borderBottom: `1px solid ${neutral.border}`,
+                  backgroundColor: neutral.surfaceHead
                 }}
               >
                 <th style={{ width: 40, padding: '12px 8px' }}></th>
@@ -438,7 +446,7 @@ const TableProducts: React.FC = () => {
                     padding: '12px 8px',
                     fontWeight: 600,
                     fontSize: '0.85rem',
-                    color: '#374151'
+                    color: neutral.textBody
                   }}
                 >
                   Producto
@@ -449,7 +457,7 @@ const TableProducts: React.FC = () => {
                     padding: '12px 8px',
                     fontWeight: 600,
                     fontSize: '0.85rem',
-                    color: '#374151',
+                    color: neutral.textBody,
                     width: 200
                   }}
                 >
@@ -461,7 +469,7 @@ const TableProducts: React.FC = () => {
                     padding: '12px 8px',
                     fontWeight: 600,
                     fontSize: '0.85rem',
-                    color: '#374151'
+                    color: neutral.textBody
                   }}
                 >
                   Variantes
@@ -473,10 +481,10 @@ const TableProducts: React.FC = () => {
               {filteredData.map((product) => (
                 <React.Fragment key={product.id}>
                   <tr
-                    style={{ borderBottom: '1px solid #e5e7eb' }}
+                    style={{ borderBottom: `1px solid ${neutral.border}` }}
                     onMouseEnter={(e) => {
                       ;(e.currentTarget as HTMLElement).style.backgroundColor =
-                        'rgba(0, 191, 165, 0.04)'
+                        withAlpha(brand.main, 0.04)
                     }}
                     onMouseLeave={(e) => {
                       ;(e.currentTarget as HTMLElement).style.backgroundColor =
@@ -489,8 +497,8 @@ const TableProducts: React.FC = () => {
                         onClick={() => toggleRow(product.id)}
                         sx={{
                           color: expandedRows.has(product.id)
-                            ? '#00BFA5'
-                            : '#9ca3af'
+                            ? brand.main
+                            : neutral.textFaint
                         }}
                       >
                         {expandedRows.has(product.id) ? (
@@ -529,12 +537,13 @@ const TableProducts: React.FC = () => {
                               fontSize: '0.75rem',
                               borderColor:
                                 (SERVICE_TYPE_COLORS[v.serviceType] ||
-                                  '#d1d5db') + '40',
+                                  neutral.borderStrong) + '40',
                               color:
-                                SERVICE_TYPE_COLORS[v.serviceType] || '#6b7280',
+                                SERVICE_TYPE_COLORS[v.serviceType] ||
+                                neutral.textMuted,
                               backgroundColor:
                                 (SERVICE_TYPE_COLORS[v.serviceType] ||
-                                  '#d1d5db') + '10'
+                                  neutral.borderStrong) + '10'
                             }}
                           />
                         ))}
@@ -571,20 +580,24 @@ const TableProducts: React.FC = () => {
                     </td>
                   </tr>
                   {expandedRows.has(product.id) && (
-                    <tr style={{ backgroundColor: '#f9fafb' }}>
+                    <tr style={{ backgroundColor: neutral.surfaceAlt }}>
                       <td colSpan={5} style={{ padding: '8px 16px 16px 56px' }}>
                         <table
                           style={{ width: '100%', borderCollapse: 'collapse' }}
                         >
                           <thead>
-                            <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                            <tr
+                              style={{
+                                borderBottom: `1px solid ${neutral.border}`
+                              }}
+                            >
                               <th
                                 style={{
                                   textAlign: 'left',
                                   padding: '8px',
                                   fontWeight: 600,
                                   fontSize: '0.75rem',
-                                  color: '#6b7280'
+                                  color: neutral.textMuted
                                 }}
                               >
                                 Tipo
@@ -595,7 +608,7 @@ const TableProducts: React.FC = () => {
                                   padding: '8px',
                                   fontWeight: 600,
                                   fontSize: '0.75rem',
-                                  color: '#6b7280'
+                                  color: neutral.textMuted
                                 }}
                               >
                                 Valor médica
@@ -606,7 +619,7 @@ const TableProducts: React.FC = () => {
                                   padding: '8px',
                                   fontWeight: 600,
                                   fontSize: '0.75rem',
-                                  color: '#6b7280'
+                                  color: neutral.textMuted
                                 }}
                               >
                                 Valor industrial
@@ -617,7 +630,7 @@ const TableProducts: React.FC = () => {
                                   padding: '8px',
                                   fontWeight: 600,
                                   fontSize: '0.75rem',
-                                  color: '#6b7280'
+                                  color: neutral.textMuted
                                 }}
                               >
                                 Valor subcontratados
@@ -628,7 +641,9 @@ const TableProducts: React.FC = () => {
                             {product.variants.map((v) => (
                               <tr
                                 key={v.id}
-                                style={{ borderBottom: '1px solid #f3f4f6' }}
+                                style={{
+                                  borderBottom: `1px solid ${neutral.surfaceHead}`
+                                }}
                               >
                                 <td style={{ padding: '8px' }}>
                                   <ServiceTypeBadge type={v.serviceType} />
@@ -896,7 +911,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             variant='caption'
             fontWeight={700}
             sx={{
-              color: '#6b7280',
+              color: neutral.textMuted,
               textTransform: 'uppercase',
               letterSpacing: '0.04em'
             }}
@@ -975,7 +990,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {variants.length > 0 ? (
             <Box
               sx={{
-                border: '1px solid #e5e7eb',
+                border: `1px solid ${neutral.border}`,
                 borderRadius: '8px',
                 overflow: 'hidden'
               }}
@@ -984,8 +999,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <thead>
                   <tr
                     style={{
-                      backgroundColor: '#f9fafb',
-                      borderBottom: '1px solid #e5e7eb'
+                      backgroundColor: neutral.surfaceAlt,
+                      borderBottom: `1px solid ${neutral.border}`
                     }}
                   >
                     <th
@@ -994,7 +1009,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         padding: '8px 12px',
                         fontWeight: 600,
                         fontSize: '0.75rem',
-                        color: '#6b7280'
+                        color: neutral.textMuted
                       }}
                     >
                       Tipo
@@ -1005,7 +1020,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         padding: '8px 12px',
                         fontWeight: 600,
                         fontSize: '0.75rem',
-                        color: '#6b7280'
+                        color: neutral.textMuted
                       }}
                     >
                       Médica
@@ -1016,7 +1031,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         padding: '8px 12px',
                         fontWeight: 600,
                         fontSize: '0.75rem',
-                        color: '#6b7280'
+                        color: neutral.textMuted
                       }}
                     >
                       Industrial
@@ -1027,7 +1042,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         padding: '8px 12px',
                         fontWeight: 600,
                         fontSize: '0.75rem',
-                        color: '#6b7280'
+                        color: neutral.textMuted
                       }}
                     >
                       Subcontratados
@@ -1037,7 +1052,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 </thead>
                 <tbody>
                   {variants.map((v, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <tr
+                      key={i}
+                      style={{
+                        borderBottom: `1px solid ${neutral.surfaceHead}`
+                      }}
+                    >
                       <td style={{ padding: '8px 12px' }}>
                         <ServiceTypeBadge type={v.serviceType} />
                       </td>

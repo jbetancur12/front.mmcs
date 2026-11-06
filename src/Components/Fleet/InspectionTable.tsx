@@ -1,3 +1,4 @@
+import { intent } from 'src/theme/designTokens'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 
@@ -31,12 +32,12 @@ import { useVehicleInspections } from '@hooks/fleet/useFleetQueries'
 const getConditionIcon = (condition: string) => {
   switch (condition) {
     case 'good':
-      return <CheckCircle sx={{ color: 'green' }} />
+      return <CheckCircle sx={{ color: intent.success }} />
     case 'fair':
-      return <Warning sx={{ color: 'orange' }} />
+      return <Warning sx={{ color: intent.warning }} />
     case 'poor':
     case 'low':
-      return <Error sx={{ color: 'red' }} />
+      return <Error sx={{ color: intent.danger }} />
     default:
       return null
   }

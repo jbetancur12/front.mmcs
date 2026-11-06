@@ -26,7 +26,7 @@ import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { intent } from 'src/theme/designTokens'
+import { intent, brand, neutral } from 'src/theme/designTokens'
 import DataTable from '../Common/DataTable'
 import EmptyState from '../Common/EmptyState'
 import StatusPill from '../Common/StatusPill'
@@ -52,11 +52,11 @@ type AlertFilter = 'all' | 'calibration' | 'inspection'
 const registerButtonSx = {
   textTransform: 'none',
   fontWeight: 700,
-  color: '#00695C',
+  color: brand.ink,
   minWidth: 0,
   py: 0,
   ml: 'auto',
-  '&:hover': { backgroundColor: '#E0F7F4' }
+  '&:hover': { backgroundColor: brand.soft }
 } as const
 
 const formatDate = (value?: string) =>
@@ -139,7 +139,7 @@ const EquipmentAlertsPage: React.FC = () => {
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 fontSize: 14,
                 fontWeight: 700
               }}
@@ -284,7 +284,10 @@ const EquipmentAlertsPage: React.FC = () => {
                 aria-label='Actualizar alertas'
                 onClick={handleRefresh}
                 disabled={refreshing}
-                sx={{ border: '1px solid #e5e7eb', borderRadius: '10px' }}
+                sx={{
+                  border: `1px solid ${neutral.border}`,
+                  borderRadius: '10px'
+                }}
               >
                 <RefreshIcon />
               </IconButton>
@@ -359,7 +362,7 @@ const EquipmentAlertsPage: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Ver hoja de vida de ${row.original.equipmentName}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={(event) => {
                   event.stopPropagation()
                   navigate(`/datasheets/${row.original.id}`)

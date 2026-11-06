@@ -234,7 +234,7 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
           <TextField
             margin='dense'
             name='color'
-            label='Color (ej: blue, red, #FF0000)'
+            label='Color (ej: blue, red, #F00)'
             type='text'
             fullWidth
             variant='outlined'

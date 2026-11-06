@@ -24,6 +24,7 @@ import CalibrationNotificationBell from '../CalibrationNotificationBell'
 import { GuideDialog as BillingGuideDialog } from '../CalibrationBillingGuide'
 import { CalibrationServicesListPermissions } from './useCalibrationServicesListPermissions'
 import { CalibrationServicesListActions } from './useCalibrationServicesListActions'
+import { brand } from 'src/theme/designTokens'
 
 interface CalibrationServicesHeaderActionsProps {
   permissions: CalibrationServicesListPermissions
@@ -31,10 +32,10 @@ interface CalibrationServicesHeaderActionsProps {
 }
 
 const OUTLINED_SX = {
-  color: '#00897B',
-  borderColor: '#00BFA5',
+  color: brand.hover,
+  borderColor: brand.main,
   whiteSpace: 'nowrap',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 
 /**
@@ -184,9 +185,9 @@ const CalibrationServicesHeaderActions = ({
           onClick={() => navigate('/calibration-services/new')}
           disabled={canManageSequenceConfig && !sequenceConfig?.initialized}
           sx={{
-            bgcolor: '#00BFA5',
+            bgcolor: brand.main,
             whiteSpace: 'nowrap',
-            '&:hover': { bgcolor: '#00ACC1' }
+            '&:hover': { bgcolor: brand.hover }
           }}
         >
           Nuevo servicio

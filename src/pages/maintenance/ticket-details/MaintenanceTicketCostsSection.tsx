@@ -25,6 +25,7 @@ import {
   surfaceSx
 } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCostsSectionProps {
   ticket: MaintenanceTicket
@@ -56,22 +57,22 @@ const MaintenanceTicketCostsSection = ({
         sx={{ 
           p: 3, 
           mb: 3,
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: withAlpha(neutral.surface, 0.95),
           backdropFilter: 'blur(10px)',
           borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)',
+          boxShadow: `0 4px 20px ${withAlpha(neutral.black, 0.08)}`,
+          border: `1px solid ${withAlpha(intent.success, 0.1)}`,
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+            boxShadow: `0 8px 30px ${withAlpha(intent.success, 0.12)}`
           }
         }}
       >
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+              background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -85,7 +86,7 @@ const MaintenanceTicketCostsSection = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#00bf75'
+              color: intent.successInk
             }}
           >
             Costos
@@ -228,8 +229,8 @@ const MaintenanceTicketCostsSection = ({
             p: 3,
             mb: 3,
             '&:hover': {
-              borderColor: '#cbd5e1',
-              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+              borderColor: neutral.borderStrong,
+              boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
             },
             cursor: 'pointer'
           }}
@@ -245,8 +246,8 @@ const MaintenanceTicketCostsSection = ({
             {/* 1. Avatar (Ícono) */}
             <Avatar
               sx={{
-                backgroundColor: '#dcfce7',
-                color: '#166534',
+                backgroundColor: intent.successSoft,
+                color: intent.successInk,
                 width: 48,
                 height: 48,
                 flexShrink: 0
@@ -261,7 +262,7 @@ const MaintenanceTicketCostsSection = ({
                   variant='body1'
                   sx={{
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: neutral.text,
                     lineHeight: 1
                   }}
                 >
@@ -291,8 +292,8 @@ const MaintenanceTicketCostsSection = ({
                 )
               )}
               sx={{
-                backgroundColor: '#ecfdf5',
-                color: '#166534',
+                backgroundColor: intent.successSoft,
+                color: intent.successInk,
                 fontWeight: 700,
                 fontSize: '0.9rem',
                 height: 40,
@@ -315,8 +316,8 @@ const MaintenanceTicketCostsSection = ({
               p: 3,
               mb: 3,
               '&:hover': {
-                borderColor: '#cbd5e1',
-                boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+                borderColor: neutral.borderStrong,
+                boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
               },
               cursor: 'pointer'
             }}
@@ -330,8 +331,8 @@ const MaintenanceTicketCostsSection = ({
             >
               <Avatar
                 sx={{
-                  backgroundColor: '#fef3c7',
-                  color: '#92400e',
+                  backgroundColor: intent.warningSoft,
+                  color: intent.warningInk,
                   width: 48,
                   height: 48,
                   flexShrink: 0
@@ -342,7 +343,7 @@ const MaintenanceTicketCostsSection = ({
               <Box flexGrow={1} minWidth={0}>
                 <Typography
                   variant='body1'
-                  sx={{ fontWeight: 700, color: '#0f172a', lineHeight: 1 }}
+                  sx={{ fontWeight: 700, color: neutral.text, lineHeight: 1 }}
                 >
                   Sin costos de materiales
                 </Typography>
@@ -360,8 +361,8 @@ const MaintenanceTicketCostsSection = ({
                 label='Solo tiempo técnico'
                 size='small'
                 sx={{
-                  backgroundColor: '#fef3c7',
-                  color: '#92400e',
+                  backgroundColor: intent.warningSoft,
+                  color: intent.warningInk,
                   fontWeight: 600,
                   fontSize: '0.75rem',
                   flexShrink: 0
@@ -377,7 +378,7 @@ const MaintenanceTicketCostsSection = ({
             ...surfaceSx,
             p: 3,
             mb: 3,
-            borderColor: '#bfdbfe'
+            borderColor: intent.infoSoft
           }}
         >
           <Box
@@ -390,7 +391,7 @@ const MaintenanceTicketCostsSection = ({
             <Box>
               <Typography
                 variant='h6'
-                sx={{ fontWeight: 600, color: '#0f172a' }}
+                sx={{ fontWeight: 600, color: neutral.text }}
               >
                 Reporte técnico de mantenimiento
               </Typography>

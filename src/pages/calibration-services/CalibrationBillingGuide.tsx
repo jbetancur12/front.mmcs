@@ -14,6 +14,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
+import { brand, neutral } from 'src/theme/designTokens'
 
 const IMAGES = '/ayuda/facturacion'
 
@@ -195,7 +196,7 @@ export const GuideDialog = ({
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 color: '#fff',
                 fontWeight: 700,
                 display: 'grid',
@@ -241,7 +242,7 @@ export const GuideDialog = ({
                           width: '100%',
                           height: 'auto',
                           borderRadius: '12px',
-                          border: '1px solid #e5e7eb'
+                          border: `1px solid ${neutral.border}`
                         }}
                       />
                       <Typography
@@ -293,9 +294,9 @@ const CalibrationBillingGuide = ({
           textTransform: 'none',
           fontWeight: 600,
           whiteSpace: 'nowrap',
-          color: '#00897B',
-          borderColor: '#00BFA5',
-          '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+          color: brand.hover,
+          borderColor: brand.main,
+          '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
         }}
       >
         Guía de facturación

@@ -17,6 +17,7 @@ import {
   internalAuditServiceRequirements
 } from 'src/utils/requirements'
 import { RequirementsSectionProps } from '../types/PurchaseRequestTypes'
+import { neutral } from 'src/theme/designTokens'
 
 const RequirementsSection: React.FC<RequirementsSectionProps> = ({
   formData,
@@ -170,7 +171,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = ({
               width: '100%',
               borderBottom:
                 index < (formData.requirements?.length ?? 0) - 1
-                  ? '1px solid #eee'
+                  ? `1px solid ${neutral.border}`
                   : 'none'
             }}
           >

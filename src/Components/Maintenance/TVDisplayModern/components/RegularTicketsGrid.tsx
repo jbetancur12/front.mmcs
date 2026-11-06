@@ -9,6 +9,7 @@ import { RegularTicketsGridProps } from '../types'
 import { useModernStyles } from '../hooks/useModernStyles'
 import MaintenancePriorityBadge from '../../MaintenancePriorityBadge'
 import MaintenanceStatusBadge from '../../MaintenanceStatusBadge'
+import { intent, withAlpha } from 'src/theme/designTokens'
 
 const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
   tickets,
@@ -84,8 +85,8 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                 ...cardStyles.regular,
                 ...(requiresTechnicalReport && {
                   border: `2px solid ${colors.warning}`,
-                  backgroundColor: 'rgba(255, 193, 7, 0.06)',
-                  boxShadow: '0 4px 16px rgba(255, 193, 7, 0.18)',
+                  backgroundColor: withAlpha(intent.warning, 0.06),
+                  boxShadow: `0 4px 16px ${withAlpha(intent.warning, 0.18)}`,
                   position: 'relative',
                   '&::before': {
                     content: '""',
@@ -244,7 +245,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                     fontSize: '0.8rem',
                     lineHeight: 1.2,
                     borderLeft: '1px solid',
-                    borderColor: colors.border || 'rgba(0, 0, 0, 0.1)',
+                    borderColor: colors.border,
                     pl: 2,
                     mb: 0.5
                   }}

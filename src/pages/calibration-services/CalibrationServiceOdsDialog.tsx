@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import FormDialog, {
   FormDialogSection
 } from '../../Components/Common/FormDialog'
+import { brand } from 'src/theme/designTokens'
 
 export interface CalibrationServiceOdsDialogValues {
   issuedAt: string
@@ -202,7 +203,7 @@ const CalibrationServiceOdsDialog = ({
               onChange={(event) =>
                 setField('generatePdfImmediately', event.target.checked)
               }
-              sx={{ '&.Mui-checked': { color: '#00BFA5' } }}
+              sx={{ '&.Mui-checked': { color: brand.main } }}
             />
           }
           label='Generar el PDF oficial de la ODS en este mismo paso'

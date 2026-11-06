@@ -28,6 +28,7 @@ import MaintenancePriorityBadge from './MaintenancePriorityBadge'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import useRelativeTime from '../../hooks/useRelativeTime'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCardProps {
   ticket: MaintenanceTicket
@@ -99,7 +100,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
     fontWeight: 700,
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
-    color: '#64748b',
+    color: neutral.textMuted,
     mb: 0.75
   }
 
@@ -110,10 +111,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         display: 'flex',
         flexDirection: 'column',
         minHeight: { xs: 'auto', md: 320 },
-        backgroundColor: '#ffffff',
+        backgroundColor: neutral.surface,
         borderRadius: '14px',
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-        border: '1px solid #e5e7eb',
+        boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
+        border: `1px solid ${neutral.border}`,
         position: 'relative',
         overflow: 'hidden',
         transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
@@ -124,12 +125,12 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           left: 0,
           right: 0,
           height: '3px',
-          background: '#00A651',
+          background: intent.successInk,
           opacity: 0.8
         },
         '&:hover': {
-          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
-          border: '1px solid #cbd5e1',
+          boxShadow: `0 4px 12px ${withAlpha(neutral.text, 0.08)}`,
+          border: `1px solid ${neutral.borderStrong}`,
           '&::before': {
             opacity: 1
           }
@@ -151,7 +152,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           <Box display='flex' alignItems='center' gap={1.5}>
             <Box
               sx={{
-                backgroundColor: '#e8f7ef',
+                backgroundColor: intent.successSoft,
                 borderRadius: '8px',
                 p: 1,
                 display: 'flex',
@@ -161,7 +162,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 minHeight: 36
               }}
             >
-              <Build sx={{ color: '#00A651', fontSize: 18 }} />
+              <Build sx={{ color: intent.successInk, fontSize: 18 }} />
             </Box>
             <Box>
               <Typography
@@ -170,7 +171,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 sx={{
                   fontSize: { xs: '1.2rem', sm: compact ? '1.3rem' : '1.4rem' },
                   fontWeight: 700,
-                  color: '#0f172a',
+                  color: neutral.text,
                   mb: 0.2
                 }}
               >
@@ -195,8 +196,8 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                   size='small'
                   label='Reporte técnico'
                   sx={{
-                    backgroundColor: '#eff6ff',
-                    color: '#1d4ed8',
+                    backgroundColor: intent.infoSoft,
+                    color: intent.info,
                     fontWeight: 600
                   }}
                 />
@@ -268,7 +269,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         </Box>
 
         {/* Assigned technician - MINIMAL */}
-        <Divider sx={{ my: 2, borderColor: '#eef2f7' }} />
+        <Divider sx={{ my: 2, borderColor: neutral.surfaceHead }} />
 
         <Box mb={0.5}>
           <Typography variant='subtitle2' gutterBottom sx={sectionLabelSx}>
@@ -281,8 +282,8 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                   width: 24,
                   height: 24,
                   fontSize: '0.75rem',
-                  backgroundColor: '#eef2f7',
-                  color: '#475569'
+                  backgroundColor: neutral.surfaceHead,
+                  color: neutral.textBody
                 }}
                 src={undefined}
                 aria-hidden='true'
@@ -479,7 +480,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             sx={{
               textTransform: 'none',
               fontSize: { xs: '0.75rem', sm: '0.8rem' },
-              color: '#00A651',
+              color: intent.successInk,
               borderRadius: '6px',
               fontWeight: 500,
               minHeight: { xs: 28, sm: 32 },
@@ -493,7 +494,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 }
               },
               '&:hover': {
-                backgroundColor: '#f8fafc'
+                backgroundColor: neutral.surfaceAlt
               }
             }}
             aria-expanded={expanded}
@@ -524,7 +525,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 startIcon={<Visibility />}
                 aria-label={`Ver detalles del ticket ${safeText(ticket.ticketCode, 'sin código')}`}
                 sx={{
-                  color: '#00A651',
+                  color: intent.successInk,
                   borderRadius: '6px',
                   fontWeight: 500,
                   fontSize: { xs: '0.75rem', sm: '0.8rem' },
@@ -540,7 +541,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                     }
                   },
                   '&:hover': {
-                    backgroundColor: '#f8fafc'
+                    backgroundColor: neutral.surfaceAlt
                   }
                 }}
               >
@@ -562,7 +563,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 startIcon={<Edit />}
                 aria-label={`Editar ticket ${safeText(ticket.ticketCode, 'sin código')}`}
                 sx={{
-                  color: '#ff9800',
+                  color: intent.warning,
                   borderRadius: '6px',
                   fontWeight: 500,
                   fontSize: { xs: '0.75rem', sm: '0.8rem' },
@@ -578,7 +579,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                     }
                   },
                   '&:hover': {
-                    backgroundColor: '#fff7ed'
+                    backgroundColor: intent.warningSoft
                   }
                 }}
               >
@@ -600,7 +601,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 startIcon={<Delete />}
                 aria-label={`Eliminar ticket ${safeText(ticket.ticketCode, 'sin código')}`}
                 sx={{
-                  color: '#f44336',
+                  color: intent.danger,
                   borderRadius: '6px',
                   fontWeight: 500,
                   fontSize: { xs: '0.75rem', sm: '0.8rem' },
@@ -616,7 +617,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                     }
                   },
                   '&:hover': {
-                    backgroundColor: '#fef2f2'
+                    backgroundColor: intent.dangerSoft
                   }
                 }}
               >

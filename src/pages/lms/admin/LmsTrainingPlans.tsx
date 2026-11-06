@@ -43,6 +43,7 @@ import {
   getStructuredApiErrorMessage
 } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 type PlanFilter = 'all' | 'assigned' | 'unassigned'
 
@@ -220,7 +221,7 @@ const LmsTrainingPlans: React.FC = () => {
               clickable
               onClick={() => setDestinations({ plan: row.original })}
               label={`${row.original.assignment_count} destino(s)`}
-              sx={{ bgcolor: '#E0F7F4', color: '#00695C', fontWeight: 600 }}
+              sx={{ bgcolor: brand.soft, color: brand.ink, fontWeight: 600 }}
             />
           ) : (
             <Chip size='small' variant='outlined' label='Sin asignar' />
@@ -390,16 +391,18 @@ const LmsTrainingPlans: React.FC = () => {
             muiTableProps={{
               sx: {
                 '& .MuiTableHead-root .MuiTableCell-root': {
-                  backgroundColor: '#f5f5f5',
+                  backgroundColor: neutral.surfaceHead,
                   fontWeight: 600
                 },
                 '& .MuiTableBody-root .MuiTableRow-root:hover': {
-                  backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                  backgroundColor: withAlpha(brand.main, 0.04)
                 }
               }
             }}
-            muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
-            muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+            muiTopToolbarProps={{ sx: { backgroundColor: neutral.surfaceAlt } }}
+            muiBottomToolbarProps={{
+              sx: { backgroundColor: neutral.surfaceAlt }
+            }}
             muiTablePaginationProps={{ rowsPerPageOptions: [10, 25, 50] }}
             enablePinning
             initialState={{

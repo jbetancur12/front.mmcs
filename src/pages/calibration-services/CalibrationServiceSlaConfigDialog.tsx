@@ -17,6 +17,7 @@ import {
   CalibrationServiceSlaConfig,
   CalibrationServiceSlaConfigPayload
 } from '../../types/calibrationService'
+import { brand, intent } from 'src/theme/designTokens'
 
 type SlaConfigKey = keyof CalibrationServiceSlaConfigPayload
 
@@ -206,7 +207,7 @@ const CalibrationServiceSlaConfigDialog = ({
                       width: 10,
                       height: 10,
                       borderRadius: '50%',
-                      bgcolor: '#f59e0b',
+                      bgcolor: intent.warning,
                       mr: 0.75
                     }}
                   />
@@ -220,7 +221,7 @@ const CalibrationServiceSlaConfigDialog = ({
                       width: 10,
                       height: 10,
                       borderRadius: '50%',
-                      bgcolor: '#ef4444',
+                      bgcolor: intent.danger,
                       mr: 0.75
                     }}
                   />
@@ -247,21 +248,21 @@ const CalibrationServiceSlaConfigDialog = ({
                       >
                         <Box
                           component='span'
-                          sx={{ color: '#00897B', fontWeight: 600 }}
+                          sx={{ color: brand.hover, fontWeight: 600 }}
                         >
                           Verde
                         </Box>{' '}
                         hasta el día {greenEnd},{' '}
                         <Box
                           component='span'
-                          sx={{ color: '#b45309', fontWeight: 600 }}
+                          sx={{ color: intent.warningInk, fontWeight: 600 }}
                         >
                           amarillo
                         </Box>{' '}
                         del {warning} al {target},{' '}
                         <Box
                           component='span'
-                          sx={{ color: '#dc2626', fontWeight: 600 }}
+                          sx={{ color: intent.danger, fontWeight: 600 }}
                         >
                           rojo
                         </Box>{' '}

@@ -19,6 +19,7 @@ import {
   useEquipmentAlerts,
   useNewAlerts
 } from './equipmentAlerts'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface AlertsBellProps {
   email?: string | null
@@ -88,8 +89,10 @@ const AlertsBell: React.FC<AlertsBellProps> = ({ email }) => {
           aria-haspopup='dialog'
           onClick={(event) => setAnchorEl(event.currentTarget)}
           sx={{
-            color: hasNew ? '#b91c1c' : '#4b5563',
-            '&:hover': { bgcolor: hasNew ? '#fef2f2' : '#f3f4f6' }
+            color: hasNew ? intent.dangerInk : neutral.textBody,
+            '&:hover': {
+              bgcolor: hasNew ? intent.dangerSoft : neutral.surfaceHead
+            }
           }}
         >
           <Badge
@@ -97,7 +100,7 @@ const AlertsBell: React.FC<AlertsBellProps> = ({ email }) => {
             max={99}
             sx={{
               '& .MuiBadge-badge': {
-                bgcolor: '#dc2626',
+                bgcolor: intent.danger,
                 color: '#ffffff',
                 fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums'
@@ -138,7 +141,11 @@ const AlertsBell: React.FC<AlertsBellProps> = ({ email }) => {
         }}
       >
         <Box sx={{ p: 2.5 }} role='dialog' aria-label='Alertas de equipos'>
-          <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+          <Typography
+            variant='h6'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Alertas de equipos
           </Typography>
           <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
@@ -176,7 +183,7 @@ const AlertsBell: React.FC<AlertsBellProps> = ({ email }) => {
                 variant='caption'
                 fontWeight={700}
                 sx={{
-                  color: '#6b7280',
+                  color: neutral.textMuted,
                   textTransform: 'uppercase',
                   letterSpacing: 0.5
                 }}
@@ -208,9 +215,9 @@ const AlertsBell: React.FC<AlertsBellProps> = ({ email }) => {
                       mx: -1,
                       borderRadius: '8px',
                       cursor: 'pointer',
-                      '&:hover': { bgcolor: '#f6fcfb' },
+                      '&:hover': { bgcolor: brand.softer },
                       '&:focus-visible': {
-                        outline: '2px solid #00BFA5',
+                        outline: `2px solid ${brand.main}`,
                         outlineOffset: -2
                       }
                     }}
@@ -226,7 +233,7 @@ const AlertsBell: React.FC<AlertsBellProps> = ({ email }) => {
                     <Typography
                       variant='caption'
                       sx={{
-                        color: '#b91c1c',
+                        color: intent.dangerInk,
                         fontWeight: 600,
                         whiteSpace: 'nowrap',
                         pt: 0.25
@@ -245,12 +252,12 @@ const AlertsBell: React.FC<AlertsBellProps> = ({ email }) => {
             variant='contained'
             onClick={goToAlerts}
             sx={{
-              bgcolor: '#00BFA5',
+              bgcolor: brand.main,
               borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 700,
               boxShadow: 'none',
-              '&:hover': { bgcolor: '#00ACC1', boxShadow: 'none' }
+              '&:hover': { bgcolor: brand.hover, boxShadow: 'none' }
             }}
           >
             Ver todas las alertas

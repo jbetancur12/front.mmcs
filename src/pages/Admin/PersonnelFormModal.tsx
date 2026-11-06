@@ -8,6 +8,7 @@ import {
   TextField
 } from '@mui/material'
 import FormDialog from '../../Components/Common/FormDialog'
+import { brand } from 'src/theme/designTokens'
 import { Personnel } from './PersonnelManagementPage' // Asumiendo que el tipo está en la página
 
 interface PersonnelFormModalProps {
@@ -117,8 +118,8 @@ const PersonnelFormModal: React.FC<PersonnelFormModalProps> = ({
               onChange={handleChange}
               name='isActive'
               sx={{
-                '& .Mui-checked': { color: '#00BFA5' },
-                '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#00BFA5' }
+                '& .Mui-checked': { color: brand.main },
+                '& .Mui-checked + .MuiSwitch-track': { bgcolor: brand.main }
               }}
             />
           }

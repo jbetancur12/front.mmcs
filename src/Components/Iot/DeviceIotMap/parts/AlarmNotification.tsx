@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { OnFilterChange } from '../types'
 import { $hasAlarms } from '@stores/deviceIotStore'
 import { useStore } from '@nanostores/react'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 // import { $hasAlarms } from 'src/store/alertsStore' // Ajusta la importación de tu store
 
 const AlarmNotification = ({
@@ -34,7 +35,7 @@ const AlarmNotification = ({
           display: 'flex',
           alignItems: 'center',
           gap: 2,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          boxShadow: `0 2px 8px ${withAlpha(neutral.black, 0.2)}`
         }}
       >
         <Typography variant='body1' fontWeight='bold'>
@@ -55,7 +56,7 @@ const AlarmNotification = ({
             mr: 1,
             '&:hover': {
               transform: 'translateY(-2px)',
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+              boxShadow: `0 4px 8px ${withAlpha(neutral.black, 0.2)}`
             },
             transition: 'all 0.3s ease'
           }}

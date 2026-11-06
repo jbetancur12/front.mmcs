@@ -28,20 +28,30 @@ export const neutral = {
   textBody: '#374151',
   /** Pistas y leyendas (4,83:1 sobre blanco). NO sobre `surfaceHead` (4,39:1). */
   textMuted: '#6b7280',
+  /** Íconos y texto desactivado o decorativo (2,5:1: no usar para texto que haya que leer). */
+  textFaint: '#9ca3af',
   /** Bordes de tarjetas y tablas. */
   border: '#e5e7eb',
+  /** Bordes y divisores más marcados (controles, zonas de arrastre). */
+  borderStrong: '#d1d5db',
   /** Tarjetas y diálogos. */
   surface: '#ffffff',
   /** Fondo de página y barras de herramientas. */
   surfaceAlt: '#f9fafb',
   /** Encabezados de tabla. */
-  surfaceHead: '#f3f4f6'
+  surfaceHead: '#f3f4f6',
+  /** Negro puro SOLO para sombras y velos: `withAlpha(neutral.black, 0.12)`. No es un color de texto (usa `text`). */
+  black: '#000000'
 } as const
 
 /** Colores por significado (no decoración): acción, peligro, aviso, éxito, información. */
 export const intent = {
   /** Acción "editar". */
   action: '#2563eb',
+  /** Tonos medios por significado: íconos, bordes de acento y rellenos. Para texto usa los `*Ink`. */
+  success: '#22c55e',
+  warning: '#f59e0b',
+  info: '#3b82f6',
   danger: '#dc2626',
   dangerInk: '#b91c1c',
   dangerSoft: '#fee2e2',
@@ -51,6 +61,41 @@ export const intent = {
   successSoft: '#e8f5e9',
   infoInk: '#1565c0',
   infoSoft: '#e3f2fd'
+} as const
+
+/** Violeta: categorías y estados que deben distinguirse de los azules (p. ej. "asignado", "subcontratado"). */
+export const accent = {
+  main: '#7c3aed',
+  /** Texto e íconos violeta sobre blanco. */
+  ink: '#6d28d9',
+  soft: '#f3e8ff'
+} as const
+
+/**
+ * Un color de token con transparencia: `withAlpha(brand.main, 0.12)` -> "rgba(0, 191, 165, 0.12)".
+ * Para sombras, anillos de foco y fondos translúcidos de color de marca; así siguen al token si la marca cambia.
+ * (No se llama `alpha` para no chocar con la de MUI.)
+ */
+export const withAlpha = (hex: string, opacity: number): string => {
+  const value = hex.replace('#', '')
+  const r = parseInt(value.slice(0, 2), 16)
+  const g = parseInt(value.slice(2, 4), 16)
+  const b = parseInt(value.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
+/**
+ * Colores propios del certificado de la Academia (documento que se entrega al cliente): dorado de marcos y sellos
+ * y grises de texto del diseño. No se usan en la interfaz; cambiarlos cambia el certificado.
+ */
+export const certificate = {
+  gold: '#c9a84c',
+  goldLight: '#e8c96a',
+  text: '#222222',
+  textBody: '#444444',
+  textMuted: '#555555',
+  textSoft: '#777777',
+  textFaint: '#888888'
 } as const
 
 /** RESERVADO: degradado del banner de las fichas de detalle (esmeralda). No usar en otras pantallas. */

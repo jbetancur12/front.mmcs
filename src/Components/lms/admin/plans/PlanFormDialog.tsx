@@ -57,6 +57,7 @@ import {
   translateTargetText,
   primaryButtonSx
 } from './planUi'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface PlanFormDialogProps {
   open: boolean
@@ -521,7 +522,7 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({
                 variant='outlined'
                 sx={{
                   borderRadius: 2,
-                  bgcolor: '#fafafa',
+                  bgcolor: neutral.surfaceAlt,
                   maxHeight: 412,
                   overflow: 'auto'
                 }}
@@ -551,7 +552,7 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({
                             sx={
                               row.source
                                 ? { maxWidth: 160 }
-                                : { bgcolor: PLAN_TEAL_SOFT, color: '#00695C' }
+                                : { bgcolor: PLAN_TEAL_SOFT, color: brand.ink }
                             }
                           />
                         </ListItem>

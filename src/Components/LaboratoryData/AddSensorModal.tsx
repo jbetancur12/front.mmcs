@@ -173,7 +173,7 @@ const AddSensorModal: React.FC<AddSensorModalProps> = ({
           <TextField
             margin='dense'
             name='color'
-            label='Color (ej: blue, red, #FF0000)'
+            label='Color (ej: blue, red, #F00)'
             type='text'
             fullWidth
             variant='outlined'

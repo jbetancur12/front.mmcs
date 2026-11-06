@@ -6,6 +6,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { buildMinioObjectUrl } from '@utils/minio'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 const PDFViewer = ({
   path,
   bucket = 'first-bucket',
@@ -104,8 +105,8 @@ const PDFViewer = ({
           minHeight: 220,
           p: 3,
           borderRadius: 2,
-          border: '1px solid #e0e0e0',
-          bgcolor: '#fafafa',
+          border: `1px solid ${neutral.borderStrong}`,
+          bgcolor: neutral.surfaceAlt,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -124,8 +125,8 @@ const PDFViewer = ({
         sx={{
           p: 3,
           borderRadius: 2,
-          border: '1px solid #e0e0e0',
-          bgcolor: '#fafafa',
+          border: `1px solid ${neutral.borderStrong}`,
+          bgcolor: neutral.surfaceAlt,
           textAlign: 'center'
         }}
       >
@@ -163,17 +164,17 @@ const PDFViewer = ({
             gap: 2,
             mb: 2,
             p: 2,
-            bgcolor: '#f8f9fa',
+            bgcolor: neutral.surfaceAlt,
             borderRadius: 3,
-            border: '1px solid #e0e0e0',
+            border: `1px solid ${neutral.borderStrong}`,
             flexWrap: 'wrap'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PictureAsPdf sx={{ color: '#d32f2f' }} />
+            <PictureAsPdf sx={{ color: intent.danger }} />
             <Typography
               variant='body2'
-              sx={{ fontWeight: 600, color: '#424242' }}
+              sx={{ fontWeight: 600, color: neutral.textBody }}
             >
               Vista previa del documento
             </Typography>
@@ -202,9 +203,9 @@ const PDFViewer = ({
                 startIcon={<Download />}
                 sx={{
                   textTransform: 'none',
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   '&:hover': {
-                    bgcolor: '#00ACC1'
+                    bgcolor: brand.hover
                   }
                 }}
               >
@@ -251,9 +252,9 @@ const PDFViewer = ({
               startIcon={<Download />}
               sx={{
                 textTransform: 'none',
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 '&:hover': {
-                  bgcolor: '#00ACC1'
+                  bgcolor: brand.hover
                 }
               }}
             >
@@ -267,10 +268,10 @@ const PDFViewer = ({
         sx={{
           position: 'relative',
           width: '100%',
-          border: '1px solid #e0e0e0',
+          border: `1px solid ${neutral.borderStrong}`,
           borderRadius: 2,
           overflow: 'hidden',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          boxShadow: `0 4px 12px ${withAlpha(neutral.black, 0.08)}`,
           bgcolor: 'white'
         }}
       >
@@ -283,7 +284,7 @@ const PDFViewer = ({
               pointerEvents: 'none',
               zIndex: 1,
               opacity: 0.18,
-              backgroundImage: `repeating-linear-gradient(-28deg, transparent 0 110px, rgba(0,0,0,0.02) 110px 220px), url("data:image/svg+xml,${encodeURIComponent(
+              backgroundImage: `repeating-linear-gradient(-28deg, transparent 0 110px, ${withAlpha(neutral.black, 0.02)} 110px 220px), url("data:image/svg+xml,${encodeURIComponent(
                 `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='260' viewBox='0 0 420 260'><g transform='rotate(-24 210 130)'><text x='36' y='130' fill='%23000' fill-opacity='1' font-family='Arial, sans-serif' font-size='26' font-weight='700'>${watermarkText}</text></g></svg>`
               )}")`,
               backgroundRepeat: 'repeat',
@@ -310,7 +311,7 @@ const PDFViewer = ({
               gap: 2
             }}
           >
-            <PictureAsPdf sx={{ fontSize: 48, color: '#d32f2f' }} />
+            <PictureAsPdf sx={{ fontSize: 48, color: intent.danger }} />
             <Typography variant='body1'>
               No es posible visualizar el PDF en este dispositivo.
             </Typography>
@@ -323,9 +324,9 @@ const PDFViewer = ({
                 startIcon={<Download />}
                 sx={{
                   textTransform: 'none',
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   '&:hover': {
-                    bgcolor: '#00ACC1'
+                    bgcolor: brand.hover
                   }
                 }}
               >

@@ -20,6 +20,7 @@ import {
   getRoleDisplayInfo
 } from '../../../utils/roleUtils'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 interface RoleBasedDataFilterProps {
   scope?: LmsDashboardScope
@@ -30,13 +31,13 @@ interface RoleBasedDataFilterProps {
 }
 
 const colors = {
-  primary: '#10b981',
-  primaryLight: '#f0fdf4',
-  info: '#3b82f6',
-  warning: '#d97706',
+  primary: brand.main,
+  primaryLight: intent.successSoft,
+  info: intent.info,
+  warning: intent.warning,
   gray: {
-    500: '#6b7280',
-    600: '#4b5563'
+    500: neutral.textMuted,
+    600: neutral.textBody
   }
 }
 

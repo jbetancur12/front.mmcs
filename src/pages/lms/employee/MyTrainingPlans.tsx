@@ -35,6 +35,7 @@ import {
   describeDeadlineSource,
   formatPlanDate
 } from 'src/Components/lms/admin/plans/planUi'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface MyTrainingPlansProps {
   data?: MyPlansResponse
@@ -91,7 +92,7 @@ const PlanCard: React.FC<{ plan: MyPlan }> = ({ plan }) => {
   return (
     <Card
       elevation={0}
-      sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+      sx={{ borderRadius: '16px', border: `1px solid ${neutral.border}` }}
     >
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
@@ -101,7 +102,7 @@ const PlanCard: React.FC<{ plan: MyPlan }> = ({ plan }) => {
               height: 48,
               borderRadius: 2,
               bgcolor: PLAN_TEAL_SOFT,
-              color: '#00695C',
+              color: brand.ink,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -157,7 +158,7 @@ const PlanCard: React.FC<{ plan: MyPlan }> = ({ plan }) => {
             sx={{
               height: 10,
               borderRadius: 5,
-              bgcolor: '#e0f2f1',
+              bgcolor: brand.soft,
               '& .MuiLinearProgress-bar': {
                 borderRadius: 5,
                 bgcolor: PLAN_TEAL
@@ -203,7 +204,7 @@ const PlanCard: React.FC<{ plan: MyPlan }> = ({ plan }) => {
             size='small'
             onClick={() => setExpanded((value) => !value)}
             endIcon={expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            sx={{ color: '#00897B', textTransform: 'none', fontWeight: 600 }}
+            sx={{ color: brand.hover, textTransform: 'none', fontWeight: 600 }}
             aria-expanded={expanded}
           >
             {expanded ? 'Ocultar cursos' : 'Ver cursos'}
@@ -261,12 +262,12 @@ const PlanCard: React.FC<{ plan: MyPlan }> = ({ plan }) => {
                         course.is_completed
                           ? {
                               borderColor: PLAN_TEAL,
-                              color: '#00897B',
+                              color: brand.hover,
                               flexShrink: 0
                             }
                           : {
                               bgcolor: PLAN_TEAL,
-                              '&:hover': { bgcolor: '#00897B' },
+                              '&:hover': { bgcolor: brand.hover },
                               flexShrink: 0
                             }
                       }

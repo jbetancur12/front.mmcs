@@ -41,6 +41,7 @@ import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
+import { intent, neutral } from 'src/theme/designTokens'
 // Tipos e interfaces para los datos de Trip
 
 const TripsTable = () => {
@@ -250,8 +251,8 @@ const TripsTable = () => {
           sx={{
             width: '200px',
             height: 'auto',
-            backgroundColor: 'yellow',
-            border: '2px solid black',
+            backgroundColor: intent.warningSoft,
+            border: `2px solid ${neutral.text}`,
             borderRadius: 1,
             textAlign: 'center',
             mt: 1 // Añadido margen superior para separar la placa del nombre
@@ -278,7 +279,7 @@ const TripsTable = () => {
           <CardContent>
             <Box
               sx={{
-                backgroundColor: 'red',
+                backgroundColor: intent.danger,
                 color: 'white',
                 padding: 1,
                 borderRadius: 1,
@@ -318,7 +319,7 @@ const TripsTable = () => {
                   onClick={handleCreateTrip}
                   sx={{
                     fontWeight: 'bold',
-                    color: '#DCFCE7'
+                    color: intent.successSoft
                   }}
                 >
                   Terminar Viaje
@@ -375,7 +376,7 @@ const TripsTable = () => {
             <Button
               variant='contained'
               onClick={handleCreateTrip}
-              sx={{ fontWeight: 'bold', color: '#DCFCE7' }}
+              sx={{ fontWeight: 'bold', color: intent.successSoft }}
             >
               Crear Nuevo Viaje
             </Button>

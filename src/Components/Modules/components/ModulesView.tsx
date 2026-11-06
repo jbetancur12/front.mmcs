@@ -12,6 +12,7 @@ import { ModuleAudience } from 'src/types/customerModules'
 import { useQueryClient } from 'react-query'
 import { modulesKeys, useModules } from 'src/hooks/modules/useModules'
 import { notify } from 'src/utils/notify'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const AUDIENCE_LABELS: Record<
   ModuleAudience,
@@ -85,10 +86,10 @@ const ModulesView = () => {
             startIcon={<Add />}
             onClick={() => setOpenModal(true)}
             sx={{
-              bgcolor: '#00BFA5',
+              bgcolor: brand.main,
               whiteSpace: 'nowrap',
               textTransform: 'none',
-              '&:hover': { bgcolor: '#00ACC1' }
+              '&:hover': { bgcolor: brand.hover }
             }}
           >
             Crear módulo
@@ -116,11 +117,11 @@ const ModulesView = () => {
             sx={{
               border: 0,
               '& .MuiDataGrid-columnHeaders': {
-                backgroundColor: '#f5f5f5',
+                backgroundColor: neutral.surfaceHead,
                 fontWeight: 600
               },
               '& .MuiDataGrid-row:hover': {
-                backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                backgroundColor: withAlpha(brand.main, 0.04)
               }
             }}
           />
@@ -136,7 +137,7 @@ const ModulesView = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: withAlpha(neutral.black, 0.5),
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',

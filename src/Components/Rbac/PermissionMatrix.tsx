@@ -40,6 +40,7 @@ import {
   permissionPlainText
 } from './PermissionHelp'
 import { missingRequirements, requirementName } from './requirements'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 /** Nombre legible de cada módulo del catálogo; si falta, se muestra la clave. */
 export const RBAC_MODULE_LABELS: Record<string, string> = {
@@ -97,9 +98,9 @@ export const ScreenInfo: React.FC<{ permissionKey: string }> = ({
               height: 22,
               fontSize: 11,
               borderStyle: s.kind === 'related' ? 'dashed' : 'solid',
-              borderColor: s.kind === 'screen' ? '#00BFA5' : 'divider',
-              color: s.kind === 'screen' ? '#00897B' : 'text.secondary',
-              bgcolor: s.kind === 'screen' ? '#E0F7F4' : 'transparent'
+              borderColor: s.kind === 'screen' ? brand.main : 'divider',
+              color: s.kind === 'screen' ? brand.hover : 'text.secondary',
+              bgcolor: s.kind === 'screen' ? brand.soft : 'transparent'
             }}
           />
         </Tooltip>
@@ -137,7 +138,7 @@ export const roleDisplayName = (role: Pick<RbacRole, 'name' | 'description'>) =>
 const shownRolesSelected = (roles: RbacRole[], ids: number[]) =>
   roles.filter((r) => ids.includes(r.id))
 
-const TEAL = '#00BFA5'
+const TEAL = brand.main
 const FIRST_COL_WIDTH = 340
 
 interface PermissionMatrixProps {
@@ -250,7 +251,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
       sx={{
         minWidth: 118,
         fontWeight: 600,
-        bgcolor: '#f5f5f5',
+        bgcolor: neutral.surfaceHead,
         opacity: role.isActive ? 1 : 0.55
       }}
     >
@@ -300,8 +301,8 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
           flexWrap: 'wrap',
           gap: 2,
           alignItems: 'center',
-          bgcolor: '#fafafa',
-          borderBottom: '1px solid #eee'
+          bgcolor: neutral.surfaceAlt,
+          borderBottom: `1px solid ${neutral.border}`
         }}
       >
         <Autocomplete
@@ -378,7 +379,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                 ? {
                     bgcolor: TEAL,
                     color: '#fff',
-                    '&:hover': { bgcolor: '#00897B' }
+                    '&:hover': { bgcolor: brand.hover }
                   }
                 : undefined
             }
@@ -395,7 +396,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                   ? {
                       bgcolor: TEAL,
                       color: '#fff',
-                      '&:hover': { bgcolor: '#00897B' }
+                      '&:hover': { bgcolor: brand.hover }
                     }
                   : undefined
               }
@@ -419,7 +420,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                   left: 0,
                   zIndex: 3,
                   minWidth: FIRST_COL_WIDTH,
-                  bgcolor: '#f5f5f5',
+                  bgcolor: neutral.surfaceHead,
                   fontWeight: 600
                 }}
               >
@@ -448,8 +449,8 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                   <TableCell
                     colSpan={shownRoles.length + 1}
                     sx={{
-                      bgcolor: '#E0F7F4',
-                      color: '#00695C',
+                      bgcolor: brand.soft,
+                      color: brand.ink,
                       fontWeight: 700,
                       letterSpacing: 0.3
                     }}
@@ -461,14 +462,14 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                   <TableRow
                     key={permission.key}
                     hover
-                    sx={{ '&:hover': { bgcolor: 'rgba(0,191,165,0.04)' } }}
+                    sx={{ '&:hover': { bgcolor: withAlpha(brand.main, 0.04) } }}
                   >
                     <TableCell
                       sx={{
                         position: 'sticky',
                         left: 0,
                         zIndex: 2,
-                        bgcolor: '#fff',
+                        bgcolor: neutral.surface,
                         minWidth: FIRST_COL_WIDTH
                       }}
                     >
@@ -537,7 +538,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                           sx={{
                             opacity: role.isActive ? 1 : 0.55,
                             bgcolor: changed
-                              ? 'rgba(255,152,0,0.16)'
+                              ? withAlpha(intent.warning, 0.16)
                               : undefined
                           }}
                         >
@@ -558,7 +559,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                                       right: -2,
                                       zIndex: 1,
                                       fontSize: 15,
-                                      color: '#d97706'
+                                      color: intent.warning
                                     }}
                                   />
                                 </Tooltip>
@@ -577,10 +578,10 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                                   'aria-label': `${permission.key} para ${roleDisplayName(role)}`
                                 }}
                                 sx={{
-                                  color: '#bdbdbd',
+                                  color: neutral.textFaint,
                                   '&.Mui-checked': { color: TEAL },
                                   '&.Mui-checked.Mui-disabled': {
-                                    color: 'rgba(0,191,165,0.55)'
+                                    color: withAlpha(brand.main, 0.55)
                                   }
                                 }}
                               />

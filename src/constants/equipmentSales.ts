@@ -1,5 +1,6 @@
 import { ChipProps } from '@mui/material'
 import type { StatusPillTone } from 'src/Components/Common/StatusPill'
+import { neutral, intent } from 'src/theme/designTokens'
 
 export const EQUIPMENT_QUOTATION_STATUS_LABELS: Record<string, string> = {
   draft: 'Borrador',
@@ -12,13 +13,13 @@ export const EQUIPMENT_QUOTATION_STATUS_LABELS: Record<string, string> = {
 }
 
 export const EQUIPMENT_QUOTATION_STATUS_COLORS: Record<string, string> = {
-  draft: '#9e9e9e',
-  pending_approval: '#ff9800',
-  approved: '#4caf50',
-  ready_for_invoicing: '#2196f3',
-  rejected: '#f44336',
-  invoiced: '#1565c0',
-  cancelled: '#757575'
+  draft: neutral.textFaint,
+  pending_approval: intent.warning,
+  approved: intent.success,
+  ready_for_invoicing: intent.info,
+  rejected: intent.danger,
+  invoiced: intent.infoInk,
+  cancelled: neutral.textMuted
 }
 
 // Tono de StatusPill por estado: fondo suave y texto oscuro, legibles sobre blanco.

@@ -3,6 +3,7 @@ import {
   CalibrationServiceCustomerResponseType,
   CalibrationServiceSendPreviewResult
 } from '../../../types/calibrationService'
+import { brand, neutral } from 'src/theme/designTokens'
 
 export type DetailTab =
   | 'summary'
@@ -222,17 +223,17 @@ export const primaryActionSx = {
   borderRadius: 2,
   textTransform: 'none',
   fontWeight: 600,
-  bgcolor: '#00BFA5',
-  '&:hover': { bgcolor: '#00ACC1' },
-  '&.Mui-disabled': { bgcolor: '#e5e7eb', color: '#9ca3af' }
+  bgcolor: brand.main,
+  '&:hover': { bgcolor: brand.hover },
+  '&.Mui-disabled': { bgcolor: neutral.border, color: neutral.textFaint }
 } as const
 export const secondaryActionSx = {
   borderRadius: 2,
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00897B',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.hover,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 export const cautionActionSx = {
   borderRadius: 2,

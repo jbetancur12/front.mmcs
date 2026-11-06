@@ -137,27 +137,29 @@ const getAssignmentBackedProgress = (
   const courseCompletedLessons = getCourseCompletedLessons(course)
   const assignmentProgress = assignment?.userProgress
 
-  const progress = assignmentProgress?.isCompleted
-    ? 100
-    : assignmentProgress?.completionPercentage ?? courseProgress
-
   const totalLessons = assignmentProgress?.totalLessons || courseTotalLessons
-  const completedLessons = assignmentProgress?.isCompleted
-    ? totalLessons
-    : assignmentProgress?.completedLessons ?? courseCompletedLessons
+  const realCompletedLessons =
+    assignmentProgress?.completedLessons ?? courseCompletedLessons
+  const realProgress =
+    assignmentProgress?.completionPercentage ?? courseProgress
 
-  if (earnedCertificate && progress === 0) {
-    return {
-      progress: 100,
-      totalLessons,
-      completedLessons: totalLessons
-    }
-  }
+  // Con certificado el curso está finalizado aunque después se hayan agregado
+  // lecciones: no queda pendiente ni vencido y se avisa cuántas son nuevas.
+  const certified = Boolean(earnedCertificate)
+  const finished = certified || Boolean(assignmentProgress?.isCompleted)
+  const newLessonsPending =
+    certified && realProgress < 100
+      ? Math.max(totalLessons - realCompletedLessons, 0)
+      : 0
+
+  // Con lecciones nuevas se muestran las reales (14/26); sin ellas, completo.
+  const showAllDone = finished && newLessonsPending === 0
 
   return {
-    progress,
+    progress: finished ? 100 : realProgress,
     totalLessons,
-    completedLessons
+    completedLessons: showAllDone ? totalLessons : realCompletedLessons,
+    newLessonsPending
   }
 }
 
@@ -171,6 +173,8 @@ interface HomeCourse extends Course {
   progress: number
   totalLessons: number
   completedLessons: number
+  /** Lecciones agregadas después de finalizar el curso con certificado. */
+  newLessonsPending: number
   category: string
   instructor: string
   duration: string
@@ -313,7 +317,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     courses.forEach((course: Course) => {
       const assignment = assignmentsByCourseId.get(course.id)
       const earnedCertificate = certificatesByCourseId.get(course.id)
-      const { progress, totalLessons, completedLessons } =
+      const { progress, totalLessons, completedLessons, newLessonsPending } =
         getAssignmentBackedProgress(course, assignment, earnedCertificate)
       const courseIsMandatory =
         assignment?.course?.is_mandatory ?? course.is_mandatory ?? false
@@ -331,6 +335,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         progress,
         totalLessons,
         completedLessons,
+        newLessonsPending,
         category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
@@ -667,6 +672,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 >
                   {course.isMandatory ? 'Obligatorio' : getCourseKind(course)} ·{' '}
                   {course.completedLessons}/{course.totalLessons} lecciones
+                  {course.newLessonsPending > 0 &&
+                    ` · ${course.newLessonsPending} ${
+                      course.newLessonsPending === 1
+                        ? 'lección nueva'
+                        : 'lecciones nuevas'
+                    }`}
                   {!done &&
                     !overdue &&
                     !soon &&

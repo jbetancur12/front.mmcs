@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom'
 import EmptyState from '../Common/EmptyState'
 import StatusPill from '../Common/StatusPill'
 import { CustomerSummary } from './dashboardCertificates'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface DashboardCardsProps {
   customers: CustomerSummary[]
@@ -68,7 +69,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ customers }) => {
           InputProps={{
             startAdornment: (
               <InputAdornment position='start'>
-                <SearchIcon sx={{ color: '#6b7280' }} />
+                <SearchIcon sx={{ color: neutral.textMuted }} />
               </InputAdornment>
             )
           }}
@@ -76,7 +77,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ customers }) => {
           sx={{
             minWidth: { xs: 0, sm: 340 },
             '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
-              { borderColor: '#00897B', borderWidth: 2 }
+              { borderColor: brand.hover, borderWidth: 2 }
           }}
         />
         <Typography variant='body2' color='text.secondary' aria-live='polite'>
@@ -102,7 +103,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ customers }) => {
                   display: 'flex',
                   flexDirection: 'column',
                   borderRadius: '16px',
-                  border: '1px solid #e5e7eb',
+                  border: `1px solid ${neutral.border}`,
                   boxShadow: 'none'
                 }}
               >
@@ -110,7 +111,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ customers }) => {
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Avatar
                       sx={{
-                        bgcolor: '#00BFA5',
+                        bgcolor: brand.main,
                         mr: 1.5,
                         width: 40,
                         height: 40,
@@ -145,7 +146,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ customers }) => {
                         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                       >
                         {React.cloneElement(icon, {
-                          sx: { fontSize: 16, color: '#6b7280' }
+                          sx: { fontSize: 16, color: neutral.textMuted }
                         })}
                         <Typography
                           variant='body2'
@@ -198,12 +199,12 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ customers }) => {
                       borderRadius: '10px',
                       textTransform: 'none',
                       fontWeight: 600,
-                      borderColor: '#e5e7eb',
-                      color: '#374151',
+                      borderColor: neutral.border,
+                      color: neutral.textBody,
                       '&:hover': {
-                        borderColor: '#00897B',
-                        color: '#00695C',
-                        backgroundColor: '#E0F7F4'
+                        borderColor: brand.hover,
+                        color: brand.ink,
+                        backgroundColor: brand.soft
                       }
                     }}
                   >

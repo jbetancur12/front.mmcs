@@ -3,6 +3,7 @@ import { Grid } from '@mui/material'
 
 import ProfileStatCard from '../Common/ProfileStatCard'
 import { CustomerStats, StatusFilter } from './types'
+import { intent } from 'src/theme/designTokens'
 
 interface CustomerStatsCardsProps {
   stats: CustomerStats
@@ -22,8 +23,8 @@ const CustomerStatsCards = ({
         label='Total Equipos'
         value={stats.total}
         icon={<Devices />}
-        color='#1976d2'
-        background='#e3f2fd'
+        color={intent.info}
+        background={intent.infoSoft}
         valueColor='primary.main'
         help='Número total de equipos registrados para este cliente'
       />
@@ -33,8 +34,8 @@ const CustomerStatsCards = ({
         label='Vencidos'
         value={stats.expired}
         icon={<Warning />}
-        color='#d32f2f'
-        background='#ffebee'
+        color={intent.danger}
+        background={intent.dangerSoft}
         valueColor='error.main'
         help='Calibraciones que ya han vencido y requieren atención inmediata'
         selected={statusFilter === 'expired'}
@@ -46,8 +47,8 @@ const CustomerStatsCards = ({
         label='Próximos'
         value={stats.upcoming}
         icon={<Schedule />}
-        color='#f57c00'
-        background='#fff3e0'
+        color={intent.warning}
+        background={intent.warningSoft}
         valueColor='warning.main'
         help='Calibraciones próximas a vencer (dentro de 30 días) que requieren programación'
         selected={statusFilter === 'upcoming'}
@@ -59,8 +60,8 @@ const CustomerStatsCards = ({
         label='Activos'
         value={stats.active}
         icon={<CheckCircle />}
-        color='#2e7d32'
-        background='#e8f5e8'
+        color={intent.successInk}
+        background={intent.successSoft}
         valueColor='success.main'
         help='Calibraciones vigentes con más de 30 días restantes hasta su vencimiento'
         selected={statusFilter === 'active'}

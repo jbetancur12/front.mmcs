@@ -34,6 +34,7 @@ import {
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
+import { intent, neutral } from 'src/theme/designTokens'
 // Define interfaces
 export interface CustomerData {
   id?: number
@@ -338,16 +339,16 @@ const Table: React.FC = () => {
             </Tooltip>
           </Box>
         )}
-        // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Cliente</button>
+        // <button onClick={() => setIsModalOpen(true)} className="bg-intent-info hover:bg-intent-info-ink text-white font-bold py-2 px-4 rounded">Crear Cliente</button>
         renderTopToolbarCustomActions={() => (
           <Button
             variant='contained'
             onClick={() => setCreateModalOpen(true)}
             sx={{
-              backgroundColor: '#9CF08B',
-              color: '#000',
+              backgroundColor: intent.success,
+              color: neutral.text,
               '&:hover': {
-                backgroundColor: '#6DC662' // Azul más oscuro en hover
+                backgroundColor: intent.success // Azul más oscuro en hover
               }
             }}
           >
@@ -423,13 +424,13 @@ export const CreateNewAccountModal = ({
       </DialogContent>
       <DialogActions sx={{ p: '1.25rem' }}>
         <button
-          className='bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10'
+          className='bg-neutral-faint hover:bg-neutral-body text-white font-bold py-2 px-4 rounded mr-10'
           onClick={onClose}
         >
           Cancelar
         </button>
         <button
-          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+          className='bg-intent-info hover:bg-intent-info-ink text-white font-bold py-2 px-4 rounded'
           onClick={handleSubmit}
         >
           Crear Cuenta

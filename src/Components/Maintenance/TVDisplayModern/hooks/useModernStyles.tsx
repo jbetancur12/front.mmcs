@@ -1,24 +1,25 @@
 import { useMemo } from 'react'
 import { ModernColors } from '../types'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export const useModernStyles = () => {
   const modernColors: ModernColors = useMemo(
     () => ({
-      primary: '#5ed65a', // Verde más oscuro como solicitaste
-      primaryLight: '#7bff7f',
-      primaryDark: '#4caf50',
-      background: '#ffffff',
+      primary: intent.success, // Verde más oscuro como solicitaste
+      primaryLight: intent.success,
+      primaryDark: intent.success,
+      background: neutral.surface,
       cardBackground: '#ffffff',
-      secondaryBackground: '#f8f9fa',
-      textPrimary: '#000000', // Negro puro para mejor contraste
-      textSecondary: '#333333', // Más oscuro para mejor legibilidad
-      textMuted: '#666666',
-      success: '#28a745',
-      warning: '#ffc107',
-      danger: '#dc3545',
-      info: '#17a2b8',
-      border: '#e9ecef',
-      borderLight: '#f1f3f4'
+      secondaryBackground: neutral.surfaceAlt,
+      textPrimary: neutral.text, // Negro puro para mejor contraste
+      textSecondary: neutral.textBody, // Más oscuro para mejor legibilidad
+      textMuted: neutral.textMuted,
+      success: intent.successInk,
+      warning: intent.warning,
+      danger: intent.danger,
+      info: brand.main,
+      border: neutral.border,
+      borderLight: neutral.surfaceHead
     }),
     []
   )
@@ -29,10 +30,10 @@ export const useModernStyles = () => {
         backgroundColor: modernColors.cardBackground,
         border: `3px solid ${modernColors.borderLight}`, // Borde más grueso para TV
         borderRadius: '20px', // Más redondeado
-        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12)', // Sombra más pronunciada
+        boxShadow: `0 6px 20px ${withAlpha(neutral.black, 0.12)}`, // Sombra más pronunciada
         transition: 'all 0.3s ease',
         '&:hover': {
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.18)',
+          boxShadow: `0 10px 30px ${withAlpha(neutral.black, 0.18)}`,
           transform: 'translateY(-3px)'
         }
       },
@@ -44,10 +45,10 @@ export const useModernStyles = () => {
         justifyContent: 'center'
       },
       urgent: {
-        backgroundColor: '#ffebee', // Fondo más visible para TV
+        backgroundColor: intent.dangerSoft, // Fondo más visible para TV
         border: `4px solid ${modernColors.danger}`, // Borde más grueso
         borderLeft: `8px solid ${modernColors.danger}`, // Borde izquierdo más prominente
-        boxShadow: '0 6px 20px rgba(220, 53, 69, 0.2)',
+        boxShadow: `0 6px 20px ${withAlpha(intent.danger, 0.2)}`,
         position: 'relative',
         '&::before': {
           content: '""',
@@ -62,7 +63,7 @@ export const useModernStyles = () => {
           animation: 'subtlePulse 3s infinite'
         },
         '&:hover': {
-          boxShadow: '0 10px 30px rgba(220, 53, 69, 0.3)',
+          boxShadow: `0 10px 30px ${withAlpha(intent.danger, 0.3)}`,
           transform: 'translateY(-3px)'
         }
       },
@@ -70,10 +71,10 @@ export const useModernStyles = () => {
         backgroundColor: modernColors.cardBackground,
         border: `2px solid ${modernColors.border}`,
         borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        boxShadow: `0 2px 8px ${withAlpha(neutral.black, 0.1)}`,
         height: '154px',
         '&:hover': {
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+          boxShadow: `0 4px 16px ${withAlpha(neutral.black, 0.15)}`,
           transform: 'translateY(-2px)'
         }
       }
@@ -115,18 +116,18 @@ export const useModernStyles = () => {
       ticketCode: {
         fontSize: '2.2rem', // Más grande para TV
         fontWeight: 900,
-        textShadow: '1px 1px 2px rgba(0,0,0,0.3)', // Sombra para legibilidad
+        textShadow: `1px 1px 2px ${withAlpha(neutral.black, 0.3)}`, // Sombra para legibilidad
         letterSpacing: '0.02em'
       },
       equipmentName: {
         fontSize: '1.6rem', // Más prominente
         fontWeight: 700,
-        textShadow: '1px 1px 1px rgba(0,0,0,0.2)'
+        textShadow: `1px 1px 1px ${withAlpha(neutral.black, 0.2)}`
       },
       metricNumber: {
         fontSize: '4rem', // Números gigantes para métricas
         fontWeight: 800,
-        textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+        textShadow: `2px 2px 4px ${withAlpha(neutral.black, 0.2)}`
       },
       timeElapsed: {
         fontSize: '1.3rem', // Más visible
@@ -145,9 +146,9 @@ export const useModernStyles = () => {
     () => ({
       subtlePulse: {
         '@keyframes subtlePulse': {
-          '0%': { boxShadow: '0 0 0 0 rgba(244, 67, 54, 0.4)' },
-          '70%': { boxShadow: '0 0 0 15px rgba(244, 67, 54, 0)' },
-          '100%': { boxShadow: '0 0 0 0 rgba(244, 67, 54, 0)' }
+          '0%': { boxShadow: `0 0 0 0 ${withAlpha(intent.danger, 0.4)}` },
+          '70%': { boxShadow: `0 0 0 15px ${withAlpha(intent.danger, 0)}` },
+          '100%': { boxShadow: `0 0 0 0 ${withAlpha(intent.danger, 0)}` }
         }
       },
       fadeInUp: {

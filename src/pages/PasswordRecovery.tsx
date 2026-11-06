@@ -10,6 +10,7 @@ import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
 
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 const apiUrl = api()
 
 const PasswordRecovery: React.FC = () => {
@@ -116,7 +117,7 @@ const PasswordRecovery: React.FC = () => {
           component={Link}
           to='/login'
           underline='hover'
-          sx={{ fontWeight: 600, color: '#00695c' }}
+          sx={{ fontWeight: 600, color: brand.ink }}
         >
           Volver a iniciar sesión
         </MuiLink>
@@ -148,14 +149,14 @@ const PasswordRecovery: React.FC = () => {
             sx={{
               height: 48,
               borderRadius: '12px',
-              bgcolor: '#00bfa5',
+              bgcolor: brand.main,
               color: '#ffffff',
               fontSize: 15,
               fontWeight: 700,
               textTransform: 'none',
-              '&:hover': { bgcolor: '#00acc1' },
+              '&:hover': { bgcolor: brand.hover },
               '&.Mui-disabled': {
-                bgcolor: '#00bfa5',
+                bgcolor: brand.main,
                 color: '#ffffff',
                 opacity: 0.6
               }

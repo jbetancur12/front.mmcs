@@ -27,6 +27,7 @@ import FormDialog from './Common/FormDialog'
 import StatusPill from './Common/StatusPill'
 import { useCustomerOverview } from './customer-profile/useCustomerProfileData'
 import SelectedHq from './SelectedHq'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface HeadquartersProps {
   customerId?: string
@@ -45,13 +46,13 @@ interface SedeRow {
 }
 
 const primaryButtonSx = {
-  bgcolor: '#00BFA5',
+  bgcolor: brand.main,
   borderRadius: '10px',
   textTransform: 'none',
   fontWeight: 700,
   boxShadow: 'none',
   whiteSpace: 'nowrap',
-  '&:hover': { bgcolor: '#00ACC1', boxShadow: 'none' }
+  '&:hover': { bgcolor: brand.hover, boxShadow: 'none' }
 } as const
 
 /** Sedes del cliente en una tabla; agregar y editar con un diálogo. */
@@ -95,7 +96,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
         Cell: ({ cell }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
-              sx={{ width: 32, height: 32, bgcolor: '#00BFA5', fontSize: 14 }}
+              sx={{ width: 32, height: 32, bgcolor: brand.main, fontSize: 14 }}
             >
               <Business fontSize='small' />
             </Avatar>
@@ -148,13 +149,20 @@ const Headquarters: React.FC<HeadquartersProps> = ({
             <IconButton
               aria-label='Volver a las sedes'
               onClick={() => setSelectedSede(null)}
-              sx={{ border: '1px solid #e5e7eb', color: '#374151' }}
+              sx={{
+                border: `1px solid ${neutral.border}`,
+                color: neutral.textBody
+              }}
             >
               <ArrowBack />
             </IconButton>
           </Tooltip>
           <Box>
-            <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+            <Typography
+              variant='h5'
+              fontWeight={700}
+              sx={{ color: neutral.text }}
+            >
               {selectedSedeString}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
@@ -185,7 +193,11 @@ const Headquarters: React.FC<HeadquartersProps> = ({
         }}
       >
         <Box>
-          <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+          <Typography
+            variant='h5'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Sedes
           </Typography>
           <Typography variant='body2' color='text.secondary'>
@@ -227,7 +239,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
               <IconButton
                 size='small'
                 aria-label={`Ver detalles de ${row.original.name}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => openSede(row.original.name)}
               >
                 <VisibilityOutlined fontSize='small' />
@@ -239,7 +251,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                   <IconButton
                     size='small'
                     aria-label={`Editar ${row.original.name}`}
-                    sx={{ color: '#2563eb' }}
+                    sx={{ color: intent.action }}
                     onClick={() => {
                       setDraft(row.original.name)
                       setDialogSede(row.original.name)

@@ -27,6 +27,7 @@ import { CheckCircle, Settings, Sensors } from '@mui/icons-material'
 import StatusPill from 'src/Components/Common/StatusPill'
 import EmptyState from 'src/Components/Common/EmptyState'
 import { isPatternStable, StabilityAlertState } from './ChamberDetails'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface PatternItemProps {
   pattern: PatternType
@@ -91,7 +92,7 @@ export const PatternItem: React.FC<PatternItemProps> = ({
       sx={{
         p: { xs: 1.5, md: 2 },
         borderRadius: '12px',
-        borderColor: '#e5e7eb'
+        borderColor: neutral.border
       }}
     >
       <Box
@@ -127,7 +128,7 @@ export const PatternItem: React.FC<PatternItemProps> = ({
               startIcon={<AddIcon />}
               onClick={handleOpenAddSensorModal}
               disabled={isLoadingAddSensor}
-              sx={{ color: '#00897B', borderColor: '#00BFA5', mr: 0.5 }}
+              sx={{ color: brand.hover, borderColor: brand.main, mr: 0.5 }}
             >
               Sensor
             </Button>
@@ -136,7 +137,7 @@ export const PatternItem: React.FC<PatternItemProps> = ({
                 aria-label='Configurar visualización de datos'
                 onClick={() => onConfigurePattern(pattern)}
                 size='small'
-                sx={{ color: '#4b5563' }}
+                sx={{ color: neutral.textBody }}
               >
                 <Settings />
               </IconButton>
@@ -148,7 +149,10 @@ export const PatternItem: React.FC<PatternItemProps> = ({
                   onClick={() => onDeletePattern(pattern.id)}
                   size='small'
                   disabled={isLoadingDeletePattern}
-                  sx={{ color: '#4b5563', '&:hover': { color: 'error.main' } }}
+                  sx={{
+                    color: neutral.textBody,
+                    '&:hover': { color: 'error.main' }
+                  }}
                 >
                   {isLoadingDeletePattern ? (
                     <CircularProgress size={20} color='inherit' />

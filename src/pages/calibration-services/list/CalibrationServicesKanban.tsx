@@ -5,6 +5,7 @@ import { ui } from './calibrationServicesListConstants'
 import { CalibrationServicesKanbanColumn } from './calibrationServicesListTypes'
 import { getCompactColumnTitle } from './calibrationServicesListUtils'
 import CalibrationServiceKanbanCard from './CalibrationServiceKanbanCard'
+import { neutral } from 'src/theme/designTokens'
 
 interface CalibrationServicesKanbanProps {
   columns: CalibrationServicesKanbanColumn[]
@@ -91,8 +92,8 @@ const CalibrationServicesKanban = ({
                   width: isEmptyColumn ? 172 : 312,
                   minWidth: isEmptyColumn ? 172 : 312,
                   borderRadius: '16px',
-                  border: '1px solid #e5e7eb',
-                  backgroundColor: '#f9fafb',
+                  border: `1px solid ${neutral.border}`,
+                  backgroundColor: neutral.surfaceAlt,
                   display: 'flex',
                   flexDirection: 'column',
                   maxHeight: 'calc(100vh - 220px)',

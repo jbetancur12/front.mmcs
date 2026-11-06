@@ -22,6 +22,7 @@ import { busyDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
 import { headerText } from 'src/utils/responseHeaders'
+import { brand } from 'src/theme/designTokens'
 interface SupplierPurchaseHistoryTableProps {
   supplierId: string | number
 }
@@ -138,7 +139,7 @@ const SupplierPurchaseHistoryTable: React.FC<
             onClick={() =>
               handleViewOrderReportPDF(row.original.id, row.original.code)
             }
-            sx={{ color: '#00695C', fontWeight: 600, textAlign: 'left' }}
+            sx={{ color: brand.ink, fontWeight: 600, textAlign: 'left' }}
           >
             {cell.getValue<string>()}
           </Link>

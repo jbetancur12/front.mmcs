@@ -34,6 +34,7 @@ import EmptyState from './Common/EmptyState'
 import StatusPill from './Common/StatusPill'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 interface CustomerModulesProps {
   customerId?: string | number
 }
@@ -148,8 +149,8 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
                 sx={{
                   height: '100%',
                   borderRadius: '16px',
-                  border: `1px solid ${isActive ? '#00BFA5' : '#e5e7eb'}`,
-                  bgcolor: '#fff',
+                  border: `1px solid ${isActive ? '${brand.main}' : '${neutral.border}'}`,
+                  bgcolor: neutral.surface,
                   boxShadow: 'none',
                   opacity: isUpdating ? 0.7 : 1
                 }}
@@ -175,8 +176,8 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
                           borderRadius: '12px',
                           display: 'grid',
                           placeItems: 'center',
-                          bgcolor: isActive ? '#E0F7F4' : '#f3f4f6',
-                          color: isActive ? '#00695C' : '#6b7280'
+                          bgcolor: isActive ? brand.soft : neutral.surfaceHead,
+                          color: isActive ? brand.ink : neutral.textMuted
                         }}
                       >
                         <IconComponent sx={{ fontSize: 22 }} />
@@ -184,7 +185,7 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
                       <Typography
                         variant='subtitle1'
                         fontWeight={700}
-                        sx={{ color: '#111827' }}
+                        sx={{ color: neutral.text }}
                       >
                         {module.label}
                       </Typography>
@@ -216,10 +217,10 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
                       }}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
-                          color: '#00BFA5'
+                          color: brand.main
                         },
                         '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
-                          { backgroundColor: '#00BFA5' }
+                          { backgroundColor: brand.main }
                       }}
                     />
                   </Box>

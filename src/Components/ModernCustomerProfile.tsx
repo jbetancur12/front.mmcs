@@ -60,6 +60,7 @@ import {
 } from './customer-profile/useCustomerProfileData'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 export type { Certificate } from './customer-profile/types'
 
 // Modern Customer Profile Component
@@ -408,7 +409,7 @@ const ModernCustomerProfile: React.FC = () => {
               }
             : {
                 borderRadius: '16px',
-                border: '1px solid #e5e7eb',
+                border: `1px solid ${neutral.border}`,
                 minHeight: '400px'
               }
         }

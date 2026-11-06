@@ -11,6 +11,7 @@ import { isFutureDay } from 'src/utils/dateOnly'
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 interface UpdateCertificateModalProps {
   open: boolean
   onClose: () => void
@@ -180,7 +181,10 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
             />
           </LocalizationProvider>
           {periodYears !== null ? (
-            <Typography variant='body2' sx={{ ...FULL_ROW, color: '#4b5563' }}>
+            <Typography
+              variant='body2'
+              sx={{ ...FULL_ROW, color: neutral.textBody }}
+            >
               Periodo de calibración: <strong>{periodYears} año(s)</strong>
             </Typography>
           ) : null}

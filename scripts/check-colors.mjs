@@ -40,14 +40,41 @@ const files = []
   }
 })(SRC)
 
+// Además del hex de la paleta se vigilan: rgba() de cualquier color (negro y blanco incluidos: withAlpha(neutral.black, 0.1)) salvo el dorado del certificado
+// (se escribe withAlpha(token, opacidad)), hex de 3 dígitos (salvo #fff y #F00 de ejemplo), colores CSS con nombre
+// y clases de color de Tailwind (bg-gray-50, text-red-600...; se usan bg-neutral-alt, text-intent-danger...).
+const RGBA_RE = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g
+const RGBA_OK = new Set(['201,168,76'])
+const HEX3_RE = /#[0-9a-fA-F]{3}(?![0-9a-fA-F])/g
+const NAMED_RE =
+  /(?:color|bgcolor|backgroundColor|borderColor|fill|stroke)['"]?\s*[:=]\s*\{?['"](?:red|blue|green|black|gray|grey|orange|yellow|purple|navy|pink|brown|cyan)['"]/g
+const TW_RE =
+  /(?:bg|text|border|ring|from|to|via|divide|outline|fill|stroke)-(?:gray|slate|zinc|neutral|red|green|blue|yellow|amber|emerald|teal|indigo|purple|orange)-\d{2,3}/g
+const extras = (text) => {
+  const rgba = [...text.matchAll(RGBA_RE)].filter(
+    (m) => !RGBA_OK.has(`${m[1]},${m[2]},${m[3]}`)
+  ).length
+  const hex3 = (text.match(HEX3_RE) ?? []).filter(
+    (h) => !['#fff', '#f00'].includes(h.toLowerCase())
+  ).length
+  return (
+    rgba +
+    hex3 +
+    (text.match(NAMED_RE) ?? []).length +
+    (text.match(TW_RE) ?? []).length
+  )
+}
+
 const rel = (file) => path.relative(ROOT, file).split(path.sep).join('/')
 
 const counts = {}
 for (const file of files) {
-  const found = (fs.readFileSync(file, 'utf8').match(HEX_RE) ?? []).filter(
+  const text = fs.readFileSync(file, 'utf8')
+  const found = (text.match(HEX_RE) ?? []).filter(
     (hex) => WATCHED[hex.toLowerCase()]
   )
-  if (found.length) counts[rel(file)] = found.length
+  const n = found.length + extras(text)
+  if (n) counts[rel(file)] = n
 }
 
 const hasBaseline = fs.existsSync(BASELINE)

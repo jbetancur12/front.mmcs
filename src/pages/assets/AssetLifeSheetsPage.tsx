@@ -90,6 +90,7 @@ import {
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 const emptyAccessory = (): AssetLifeSheetAccessory => ({ accessoryType: '' })
 const emptyMaintenanceTask = (): AssetLifeSheetMaintenanceTask => ({
@@ -144,22 +145,22 @@ const formatDate = (value?: string | null) => {
 const EMPTY_ASSETS: AssetLifeSheet[] = []
 
 const tealSwitchSx = {
-  '& .MuiSwitch-switchBase.Mui-checked': { color: '#00BFA5' },
+  '& .MuiSwitch-switchBase.Mui-checked': { color: brand.main },
   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-    bgcolor: '#00BFA5'
+    bgcolor: brand.main
   }
 }
 const tealOutlineSx = {
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00695C',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.ink,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 const subCardSx = {
   p: 2,
   borderRadius: '12px',
-  border: '1px solid #e5e7eb'
+  border: `1px solid ${neutral.border}`
 }
 const subCardGridSx = {
   display: 'grid',
@@ -698,9 +699,9 @@ const AssetLifeSheetsPage: React.FC = () => {
               startIcon={<Download />}
               onClick={exportAssetsExcel}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Excel
@@ -710,9 +711,9 @@ const AssetLifeSheetsPage: React.FC = () => {
               startIcon={<CalendarMonth />}
               onClick={downloadSchedulePdf}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Cronograma PDF
@@ -723,9 +724,9 @@ const AssetLifeSheetsPage: React.FC = () => {
                 startIcon={<Add />}
                 onClick={openCreate}
                 sx={{
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   whiteSpace: 'nowrap',
-                  '&:hover': { bgcolor: '#00897B' }
+                  '&:hover': { bgcolor: brand.hover }
                 }}
               >
                 Nuevo activo
@@ -788,7 +789,7 @@ const AssetLifeSheetsPage: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Ver ${row.original.assetCode}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => setSelectedAsset(row.original)}
               >
                 <Visibility fontSize='small' />
@@ -799,7 +800,7 @@ const AssetLifeSheetsPage: React.FC = () => {
                 <IconButton
                   size='small'
                   aria-label={`Editar ${row.original.assetCode}`}
-                  sx={{ color: '#2563eb' }}
+                  sx={{ color: intent.action }}
                   onClick={() => openEdit(row.original)}
                 >
                   <Edit fontSize='small' />
@@ -810,7 +811,7 @@ const AssetLifeSheetsPage: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Descargar PDF de ${row.original.assetCode}`}
-                sx={{ color: '#4b5563' }}
+                sx={{ color: neutral.textBody }}
                 onClick={() => downloadPdf(row.original)}
               >
                 <Download fontSize='small' />
@@ -1168,7 +1169,7 @@ const AssetLifeSheetsPage: React.FC = () => {
             height: '100%',
             // Mismo foco turquesa que los demás formularios
             '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
-              { borderColor: '#00897B' }
+              { borderColor: brand.hover }
           }}
         >
           <Box
@@ -1180,7 +1181,7 @@ const AssetLifeSheetsPage: React.FC = () => {
               px: 3,
               pt: 2.5,
               pb: 2,
-              borderBottom: '1px solid #e5e7eb'
+              borderBottom: `1px solid ${neutral.border}`
             }}
           >
             <Stack
@@ -1198,8 +1199,8 @@ const AssetLifeSheetsPage: React.FC = () => {
                     width: 56,
                     height: 56,
                     borderRadius: '12px',
-                    border: '1px solid #e5e7eb',
-                    bgcolor: '#f3f4f6'
+                    border: `1px solid ${neutral.border}`,
+                    bgcolor: neutral.surfaceHead
                   }}
                 />
               )}
@@ -1281,8 +1282,8 @@ const AssetLifeSheetsPage: React.FC = () => {
                   sx={{
                     textTransform: 'none',
                     fontWeight: 600,
-                    bgcolor: '#00BFA5',
-                    '&:hover': { bgcolor: '#00897B' }
+                    bgcolor: brand.main,
+                    '&:hover': { bgcolor: brand.hover }
                   }}
                   onClick={() => setInterventionDialogOpen(true)}
                 >
@@ -1354,8 +1355,8 @@ const AssetLifeSheetsPage: React.FC = () => {
                         sx={{
                           p: 1.5,
                           borderRadius: '12px',
-                          border: '1px solid #e5e7eb',
-                          bgcolor: '#f9fafb'
+                          border: `1px solid ${neutral.border}`,
+                          bgcolor: neutral.surfaceAlt
                         }}
                       >
                         <Stack
@@ -1415,7 +1416,7 @@ const AssetLifeSheetsPage: React.FC = () => {
                         sx={{
                           p: 1.5,
                           borderRadius: '12px',
-                          border: '1px solid #e5e7eb'
+                          border: `1px solid ${neutral.border}`
                         }}
                       >
                         <Typography fontWeight={600}>
@@ -1456,7 +1457,7 @@ const AssetLifeSheetsPage: React.FC = () => {
                           sx={{
                             p: 1.5,
                             borderRadius: '12px',
-                            border: '1px solid #e5e7eb'
+                            border: `1px solid ${neutral.border}`
                           }}
                         >
                           <Stack

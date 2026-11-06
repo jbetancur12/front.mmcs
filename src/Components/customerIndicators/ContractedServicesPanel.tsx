@@ -21,6 +21,7 @@ import {
   formatShortDate,
   formatSigned
 } from './indicatorFormat'
+import { neutral, intent } from 'src/theme/designTokens'
 
 type RowProps = { row: MRT_Row<ContractedServiceRow> }
 type CellProps = { cell: MRT_Cell<ContractedServiceRow> }
@@ -33,7 +34,7 @@ interface Props {
 }
 
 const signedColor = (value: number) =>
-  value > 0 ? '#2e7d32' : value < 0 ? '#c62828' : '#6b7280'
+  value > 0 ? intent.successInk : value < 0 ? intent.danger : neutral.textMuted
 
 /** Solo personal interno: ODS del año con cotización y novedades; de aquí sale la meta. */
 const ContractedServicesPanel: React.FC<Props> = ({
@@ -129,7 +130,7 @@ const ContractedServicesPanel: React.FC<Props> = ({
               {pendingAdjustments > 0 && (
                 <Typography
                   variant='caption'
-                  sx={{ color: '#b45309', fontWeight: 600 }}
+                  sx={{ color: intent.warningInk, fontWeight: 600 }}
                 >
                   {pendingAdjustments} por aprobar
                 </Typography>
@@ -151,7 +152,7 @@ const ContractedServicesPanel: React.FC<Props> = ({
               {!!totals?.pendingAdjustments && (
                 <Typography
                   variant='caption'
-                  sx={{ color: '#b45309', fontWeight: 600 }}
+                  sx={{ color: intent.warningInk, fontWeight: 600 }}
                 >
                   {totals.pendingAdjustments} por aprobar
                 </Typography>

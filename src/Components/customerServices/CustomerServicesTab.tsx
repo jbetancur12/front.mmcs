@@ -28,6 +28,7 @@ import {
   formatSigned
 } from '../customerIndicators/indicatorFormat'
 import ServiceDocumentButtons from './ServiceDocumentButtons'
+import { neutral } from 'src/theme/designTokens'
 
 interface Props {
   customerId: number | string
@@ -170,7 +171,7 @@ const CustomerServicesTab: React.FC<Props> = ({ customerId }) => {
   return (
     <Box>
       <Box sx={{ mb: 3 }}>
-        <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+        <Typography variant='h5' fontWeight={700} sx={{ color: neutral.text }}>
           Servicios
         </Typography>
         <Typography variant='body2' color='text.secondary'>

@@ -30,6 +30,7 @@ import {
 
 import { DetailField } from './CalibrationServiceDetailBlocks'
 import CalibrationServiceCutCorrectionMenu from './CalibrationServiceCutCorrectionMenu'
+import { brand, neutral } from 'src/theme/designTokens'
 interface CalibrationServiceCutsPanelProps {
   cuts: CalibrationServiceCut[]
   canMarkReady?: boolean
@@ -129,7 +130,7 @@ const CalibrationServiceCutsPanel = ({
             <Paper
               key={cut.id}
               variant='outlined'
-              sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}
+              sx={{ p: 2, borderRadius: '12px', borderColor: neutral.border }}
             >
               <Stack
                 direction='row'
@@ -362,7 +363,7 @@ const CalibrationServiceCutsPanel = ({
                             variant='text'
                             onClick={() => onRegisterPayment(cut)}
                             disabled={isBusy}
-                            sx={{ textTransform: 'none', color: '#00695C' }}
+                            sx={{ textTransform: 'none', color: brand.ink }}
                           >
                             Registrar pago
                           </Button>

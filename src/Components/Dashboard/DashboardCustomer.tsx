@@ -37,6 +37,7 @@ import LmsPageHeader from '../lms/admin/LmsPageHeader'
 import LmsStatCard from '../lms/admin/LmsStatCard'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 type FilterType = 'all' | 'warning' | 'expired'
 
 const FILTER_FILE_SUFFIX: Record<FilterType, string> = {
@@ -193,7 +194,7 @@ const Dashboard: React.FC = () => {
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   fontSize: 14,
                   fontWeight: 700
                 }}
@@ -286,7 +287,7 @@ const Dashboard: React.FC = () => {
       <IconButton
         aria-label='Volver'
         onClick={() => navigate(-1)}
-        sx={{ border: '1px solid #e5e7eb', borderRadius: '10px' }}
+        sx={{ border: `1px solid ${neutral.border}`, borderRadius: '10px' }}
       >
         <ArrowBackIcon />
       </IconButton>
@@ -328,13 +329,13 @@ const Dashboard: React.FC = () => {
                 borderRadius: '10px',
                 textTransform: 'none',
                 fontWeight: 600,
-                borderColor: '#e5e7eb',
-                color: '#374151',
-                bgcolor: '#fff',
+                borderColor: neutral.border,
+                color: neutral.textBody,
+                bgcolor: neutral.surface,
                 '&:hover': {
-                  borderColor: '#00897B',
-                  color: '#00695C',
-                  bgcolor: '#E0F7F4'
+                  borderColor: brand.hover,
+                  color: brand.ink,
+                  bgcolor: brand.soft
                 }
               }}
             >
@@ -410,7 +411,7 @@ const Dashboard: React.FC = () => {
             <IconButton
               size='small'
               aria-label={`Ver certificado de ${row.original.device?.name || 'equipo'}`}
-              sx={{ color: '#00695C' }}
+              sx={{ color: brand.ink }}
               onClick={(event) => {
                 event.stopPropagation()
                 navigate(`/calibraciones/certificados/${row.original.id}`)

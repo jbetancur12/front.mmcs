@@ -17,6 +17,7 @@ import {
   CalibrationServiceCut,
   CalibrationServiceCutType
 } from '../../types/calibrationService'
+import { brand, neutral } from 'src/theme/designTokens'
 
 type CalibrationServiceCutDialogItem = NonNullable<
   CalibrationService['items']
@@ -342,8 +343,8 @@ const CalibrationServiceCutDialog = ({
                     gap: 1.5,
                     p: 1.5,
                     border: '1px solid',
-                    borderColor: item.selected ? '#00BFA5' : '#e5e7eb',
-                    bgcolor: item.selected ? '#E0F7F4' : '#fff',
+                    borderColor: item.selected ? brand.main : neutral.border,
+                    bgcolor: item.selected ? brand.soft : '#fff',
                     borderRadius: '12px'
                   }}
                 >
@@ -356,7 +357,7 @@ const CalibrationServiceCutDialog = ({
                         sx={{
                           p: 0.5,
                           mr: 0.5,
-                          '&.Mui-checked': { color: '#00BFA5' }
+                          '&.Mui-checked': { color: brand.main }
                         }}
                       />
                     }

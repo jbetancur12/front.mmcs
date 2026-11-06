@@ -67,6 +67,7 @@
     "material-react-table": "^1.14.0",
     "monaco-editor": "^0.55.1",
     "nanostores": "^0.9.3",
+    "pdfjs-dist": "3.11.174",
     "postcss": "^8.4.44",
     "posthog-js": "^1.131.4",
     "prettier": "^3.2.5",

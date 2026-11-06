@@ -30,6 +30,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { getRoleLabelEs } from 'src/constants/roles'
 import { useCalibrationServiceStepRoles } from '../../hooks/useCalibrationServices'
 import { CalibrationServiceSlaConfig } from '../../types/calibrationService'
+import { neutral, intent } from 'src/theme/designTokens'
 
 type FlowBranchTone = 'success' | 'warning' | 'error' | 'info'
 
@@ -158,22 +159,22 @@ const flowStages: readonly FlowStage[] = [
 const branchToneStyles = {
   success: {
     borderColor: 'success.light',
-    backgroundColor: '#eef9f1',
+    backgroundColor: neutral.surfaceHead,
     chipColor: 'success' as const
   },
   warning: {
     borderColor: 'warning.light',
-    backgroundColor: '#fff7ea',
+    backgroundColor: intent.warningSoft,
     chipColor: 'warning' as const
   },
   error: {
     borderColor: 'error.light',
-    backgroundColor: '#fef0f0',
+    backgroundColor: intent.dangerSoft,
     chipColor: 'error' as const
   },
   info: {
     borderColor: 'info.light',
-    backgroundColor: '#eef6ff',
+    backgroundColor: intent.infoSoft,
     chipColor: 'info' as const
   }
 } as const
@@ -503,8 +504,8 @@ const CalibrationServiceGuidePanel = ({
                       px: 1.5,
                       py: 1.25,
                       backgroundColor: stage.branches?.length
-                        ? '#f4fbf7'
-                        : '#f8fbf9',
+                        ? neutral.surfaceHead
+                        : neutral.surfaceAlt,
                       cursor: stage.branches?.length ? 'pointer' : 'default',
                       transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                       '&:hover': stage.branches?.length

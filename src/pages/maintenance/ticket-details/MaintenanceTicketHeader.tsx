@@ -34,6 +34,7 @@ import {
 } from '../../../types/maintenance'
 import { formatDate } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketHeaderProps {
   ticket: MaintenanceTicket
@@ -75,11 +76,11 @@ const MaintenanceTicketHeader = ({
     <Box
       mb={{ xs: 2, sm: 3 }}
       sx={{
-        backgroundColor: '#ffffff',
+        backgroundColor: neutral.surface,
         borderRadius: '14px',
         p: { xs: 2, sm: 3 },
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-        border: '1px solid #e5e7eb'
+        boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
+        border: `1px solid ${neutral.border}`
       }}
     >
       <Breadcrumbs
@@ -88,7 +89,7 @@ const MaintenanceTicketHeader = ({
           mb: 2,
           display: { xs: 'none', sm: 'flex' },
           '& .MuiBreadcrumbs-separator': {
-            color: '#94a3b8'
+            color: neutral.textFaint
           }
         }}
       >
@@ -100,9 +101,9 @@ const MaintenanceTicketHeader = ({
             display: 'flex',
             alignItems: 'center',
             cursor: 'pointer',
-            color: '#475569',
+            color: neutral.textBody,
             '&:hover': {
-              color: '#0f172a'
+              color: neutral.text
             }
           }}
           onClick={(e) => {
@@ -114,7 +115,7 @@ const MaintenanceTicketHeader = ({
         </Link>
         <Typography
           sx={{
-            color: '#0f172a',
+            color: neutral.text,
             fontWeight: 600
           }}
         >
@@ -141,12 +142,12 @@ const MaintenanceTicketHeader = ({
             sx={{
               minWidth: 48,
               minHeight: 48,
-              backgroundColor: '#ffffff',
-              color: '#475569',
+              backgroundColor: neutral.surface,
+              color: neutral.textBody,
               borderRadius: '12px',
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${neutral.border}`,
               '&:hover': {
-                backgroundColor: '#f8fafc'
+                backgroundColor: neutral.surfaceAlt
               }
             }}
           >
@@ -159,7 +160,7 @@ const MaintenanceTicketHeader = ({
               sx={{
                 fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' },
                 fontWeight: 700,
-                color: '#0f172a',
+                color: neutral.text,
                 letterSpacing: '-0.02em'
               }}
             >
@@ -221,13 +222,13 @@ const MaintenanceTicketHeader = ({
               sx={{
                 minWidth: 48,
                 minHeight: 48,
-                backgroundColor: '#ffffff',
-                color: '#475569',
+                backgroundColor: neutral.surface,
+                color: neutral.textBody,
                 borderRadius: '12px',
-                border: '1px solid #e5e7eb',
+                border: `1px solid ${neutral.border}`,
                 '&:hover': {
-                  backgroundColor: '#f8fafc',
-                  color: '#0f172a'
+                  backgroundColor: neutral.surfaceAlt,
+                  color: neutral.text
                 }
               }}
             >
@@ -265,12 +266,12 @@ const MaintenanceTicketHeader = ({
             sx={{
               minHeight: 48,
               fontSize: { xs: '0.813rem', sm: '0.875rem' },
-              borderColor: '#d1d5db',
-              color: '#334155',
+              borderColor: neutral.borderStrong,
+              color: neutral.textBody,
               borderRadius: '12px',
               '&:hover': {
-                borderColor: '#94a3b8',
-                backgroundColor: '#f8fafc'
+                borderColor: neutral.textFaint,
+                backgroundColor: neutral.surfaceAlt
               }
             }}
           >
@@ -293,10 +294,10 @@ const MaintenanceTicketHeader = ({
             aria-labelledby='pdf-menu-button'
             sx={{
               '& .MuiPaper-root': {
-                backgroundColor: '#ffffff',
+                backgroundColor: neutral.surface,
                 borderRadius: '12px',
-                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)',
-                border: '1px solid #e5e7eb',
+                boxShadow: `0 8px 24px ${withAlpha(neutral.text, 0.12)}`,
+                border: `1px solid ${neutral.border}`,
                 mt: 1
               }
             }}
@@ -311,7 +312,7 @@ const MaintenanceTicketHeader = ({
                   mx: 1,
                   mb: 0.5,
                   '&:hover': {
-                    backgroundColor: '#f8fafc'
+                    backgroundColor: neutral.surfaceAlt
                   }
                 }}
               >
@@ -319,7 +320,7 @@ const MaintenanceTicketHeader = ({
                   <Print
                     fontSize='small'
                     aria-hidden='true'
-                    sx={{ color: '#00bf75' }}
+                    sx={{ color: intent.successInk }}
                   />
                 </ListItemIcon>
                 <ListItemText
@@ -337,7 +338,7 @@ const MaintenanceTicketHeader = ({
                     mx: 1,
                     mb: 0.5,
                     '&:hover': {
-                      backgroundColor: '#f8fafc'
+                      backgroundColor: neutral.surfaceAlt
                     }
                   }}
                 >
@@ -345,7 +346,7 @@ const MaintenanceTicketHeader = ({
                     <Science
                       fontSize='small'
                       aria-hidden='true'
-                      sx={{ color: '#2563eb' }}
+                      sx={{ color: intent.action }}
                     />
                   </ListItemIcon>
                   <ListItemText
@@ -365,13 +366,13 @@ const MaintenanceTicketHeader = ({
                   mb: 0.5,
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    background: 'rgba(109, 198, 98, 0.1)',
+                    background: withAlpha(intent.success, 0.1),
                     transform: 'translateX(4px)'
                   }
                 }}
               >
                 <ListItemIcon>
-                  <Assessment fontSize='small' aria-hidden='true' sx={{ color: '#00bf75' }} />
+                  <Assessment fontSize='small' aria-hidden='true' sx={{ color: intent.successInk }} />
                 </ListItemIcon>
                 <ListItemText
                   primary='Reporte de Estado'
@@ -392,8 +393,8 @@ const MaintenanceTicketHeader = ({
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     background: ticket.status === MaintenanceStatus.COMPLETED
-                      ? 'rgba(109, 198, 98, 0.1)'
-                      : 'rgba(0, 0, 0, 0.04)',
+                      ? withAlpha(intent.success, 0.1)
+                      : withAlpha(neutral.black, 0.04),
                     transform: ticket.status === MaintenanceStatus.COMPLETED
                       ? 'translateX(4px)'
                       : 'none'
@@ -409,7 +410,7 @@ const MaintenanceTicketHeader = ({
                     aria-hidden='true'
                     sx={{
                       color: ticket.status === MaintenanceStatus.COMPLETED
-                        ? '#00bf75'
+                        ? intent.successInk
                         : 'text.disabled'
                     }}
                   />
@@ -437,8 +438,8 @@ const MaintenanceTicketHeader = ({
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     background: (ticket.actualCost || ticket.estimatedCost)
-                      ? 'rgba(109, 198, 98, 0.1)'
-                      : 'rgba(0, 0, 0, 0.04)',
+                      ? withAlpha(intent.success, 0.1)
+                      : withAlpha(neutral.black, 0.04),
                     transform: (ticket.actualCost || ticket.estimatedCost)
                       ? 'translateX(4px)'
                       : 'none'
@@ -454,7 +455,7 @@ const MaintenanceTicketHeader = ({
                     aria-hidden='true'
                     sx={{
                       color: (ticket.actualCost || ticket.estimatedCost)
-                        ? '#00bf75'
+                        ? intent.successInk
                         : 'text.disabled'
                     }}
                   />
@@ -482,13 +483,13 @@ const MaintenanceTicketHeader = ({
                 sx={{
                   minHeight: 48,
                   fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                  borderColor: '#ff5722',
-                  color: '#ff5722',
+                  borderColor: intent.danger,
+                  color: intent.danger,
                   borderRadius: '12px',
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    borderColor: '#d84315',
-                    background: 'rgba(255, 87, 34, 0.1)',
+                    borderColor: intent.danger,
+                    background: withAlpha(intent.danger, 0.1),
                     transform: 'translateY(-1px)'
                   }
                 }}
@@ -511,20 +512,18 @@ const MaintenanceTicketHeader = ({
                 sx={{
                   minHeight: 48,
                   fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                  background:
-                    'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+                  background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
                   borderRadius: '12px',
-                  boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                  boxShadow: `0 4px 12px ${withAlpha(intent.success, 0.3)}`,
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    background:
-                      'linear-gradient(135deg, #008f4f 0%, #4a9642 100%)',
+                    background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.success} 100%)`,
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                    boxShadow: `0 6px 20px ${withAlpha(intent.success, 0.4)}`
                   },
                   '&:disabled': {
-                    background: 'rgba(0, 0, 0, 0.12)',
-                    color: 'rgba(0, 0, 0, 0.26)'
+                    background: withAlpha(neutral.black, 0.12),
+                    color: withAlpha(neutral.black, 0.26)
                   }
                 }}
               >
@@ -547,15 +546,14 @@ const MaintenanceTicketHeader = ({
               sx={{
                 minHeight: 48,
                 fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+                background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
                 borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                boxShadow: `0 4px 12px ${withAlpha(intent.success, 0.3)}`,
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  background:
-                    'linear-gradient(135deg, #008f4f 0%, #4a9642 100%)',
+                  background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.success} 100%)`,
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                  boxShadow: `0 6px 20px ${withAlpha(intent.success, 0.4)}`
                 }
               }}
             >

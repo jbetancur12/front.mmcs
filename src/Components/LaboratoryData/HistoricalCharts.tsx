@@ -19,6 +19,7 @@ import { format, parseISO, isValid } from 'date-fns'
 import { Alert } from '@mui/material'
 
 import { logger } from 'src/utils/logger'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 // --- Interfaces (sin cambios) ---
 interface ChartDataPoint {
   timestamp: string
@@ -146,7 +147,9 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               onClick={() => toggleSensor(sensor.id)}
               style={{
                 // Usar el color del sensor
-                color: isDisabled ? '#aaa' : sensor.color || '#666',
+                color: isDisabled
+                  ? neutral.textFaint
+                  : sensor.color || neutral.textMuted,
                 cursor: 'pointer',
                 textDecoration: isDisabled ? 'line-through' : 'none',
                 opacity: isDisabled ? 0.5 : 1, // Atenuar si está deshabilitado
@@ -160,7 +163,9 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                   display: 'inline-block',
                   width: '10px',
                   height: '10px',
-                  backgroundColor: isDisabled ? '#aaa' : sensor.color || '#666',
+                  backgroundColor: isDisabled
+                    ? neutral.textFaint
+                    : sensor.color || neutral.textMuted,
                   marginRight: '5px',
                   borderRadius: '50%', // Círculo
                   verticalAlign: 'middle'
@@ -195,7 +200,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
   // Mostrar mensaje si no hay datos DESPUÉS de que la carga terminó y no hubo error
   if (!isLoading && !isError && (!sortedData || sortedData.length === 0)) {
     return (
-      <Typography className='text-center text-gray-500 mt-10'>
+      <Typography className='text-center text-neutral-muted mt-10'>
         No hay datos históricos disponibles para la selección actual.
       </Typography>
     )
@@ -223,12 +228,15 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
           <LineChart data={sortedData} syncId='historicalSync'>
             {' '}
             {/* syncId para sincronizar tooltips/brush */}
-            <CartesianGrid strokeDasharray='3 3' stroke='#e0e0e0' />
+            <CartesianGrid
+              strokeDasharray='3 3'
+              stroke={neutral.borderStrong}
+            />
             {/* Formato de hora/minuto para el eje X principal */}
             <XAxis
               dataKey='timestamp'
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
             />
             <YAxis
@@ -236,11 +244,11 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                 value: '°C',
                 angle: -90,
                 position: 'insideLeft',
-                fill: '#666',
+                fill: neutral.textMuted,
                 fontSize: 12,
                 dy: -10
               }}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
               // Ajustar dominio dinámicamente con algo de padding
               domain={['dataMin - 2', 'dataMax + 2']} // Menor padding que antes
@@ -251,9 +259,9 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               labelFormatter={formatTooltipTimestamp}
               formatter={formatTooltipValue}
               contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: withAlpha(neutral.surface, 0.9),
                 borderRadius: '4px',
-                borderColor: '#ccc'
+                borderColor: neutral.borderStrong
               }} // Estilo tooltip
               itemStyle={{ fontSize: 12 }}
               labelStyle={{ fontSize: 12, fontWeight: 'bold' }}
@@ -267,7 +275,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                   <Line
                     key={`temp_${sensor.id}`}
                     dataKey={`temp_${sensor.id}`}
-                    stroke={sensor.color || '#8884d8'}
+                    stroke={sensor.color || intent.info}
                     name={`${sensor.name} (${sensor.location || 'N/A'})`}
                     dot={false} // Sin puntos para datos densos
                     strokeWidth={1} // Grosor de línea
@@ -280,7 +288,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
             <Brush
               dataKey='timestamp'
               height={30}
-              stroke='#8884d8' // Color del brush
+              stroke={intent.info} // Color del brush
               // Formato más simple para los ticks del brush
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
               // --- Pasar el estado para controlar el rango ---
@@ -306,11 +314,14 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
         <ResponsiveContainer width='100%' height={400}>
           {/* Usar sortedData y el mismo syncId */}
           <LineChart data={sortedData} syncId='historicalSync'>
-            <CartesianGrid strokeDasharray='3 3' stroke='#e0e0e0' />
+            <CartesianGrid
+              strokeDasharray='3 3'
+              stroke={neutral.borderStrong}
+            />
             <XAxis
               dataKey='timestamp'
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
             />
             <YAxis
@@ -318,11 +329,11 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                 value: '%',
                 angle: -90,
                 position: 'insideLeft',
-                fill: '#666',
+                fill: neutral.textMuted,
                 fontSize: 12,
                 dy: -10
               }}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
               // Dominio con padding para humedad
               domain={['dataMin - 5', 'dataMax + 5']} // Padding diferente para humedad
@@ -332,9 +343,9 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               labelFormatter={formatTooltipTimestamp}
               formatter={formatTooltipValue}
               contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: withAlpha(neutral.surface, 0.9),
                 borderRadius: '4px',
-                borderColor: '#ccc'
+                borderColor: neutral.borderStrong
               }}
               itemStyle={{ fontSize: 12 }}
               labelStyle={{ fontSize: 12, fontWeight: 'bold' }}
@@ -348,7 +359,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                   <Line
                     key={`hum_${sensor.id}`}
                     dataKey={`hum_${sensor.id}`}
-                    stroke={sensor.color || '#82ca9d'} // Color diferente para humedad
+                    stroke={sensor.color || intent.success} // Color diferente para humedad
                     name={`${sensor.name} (${sensor.location || 'N/A'})`}
                     dot={false}
                     strokeWidth={1}
@@ -362,8 +373,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
             <Brush
               dataKey='timestamp'
               height={30}
-              stroke='#82ca9d' // Color diferente para el brush de humedad? O usar el mismo? Usemos el mismo para consistencia visual del control.
-              // stroke="#8884d8" // O usar el mismo color que el de temperatura
+              stroke={intent.success} // Color diferente para el brush de humedad? O usar el mismo? Usemos el mismo para consistencia visual del control.
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
               // --- Pasar el MISMO estado para controlar el rango ---
               startIndex={brushRange.startIndex}

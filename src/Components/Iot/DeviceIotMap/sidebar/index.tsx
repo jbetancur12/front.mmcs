@@ -7,6 +7,7 @@ import { FilterPanel } from './FilterPanel'
 import { DeviceList } from './DeviceList'
 import { DeviceIot } from '../../types'
 import Logo from '/images/sense.png'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export const DeviceSidebar = ({
   isOpen,
@@ -38,16 +39,16 @@ export const DeviceSidebar = ({
         }
       }}
     >
-      <Box className='h-full flex flex-col bg-white'>
-        <Box className='p-4 border-b border-gray-200'>
+      <Box className='h-full flex flex-col bg-neutral-surface'>
+        <Box className='p-4 border-b border-neutral-border'>
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: theme.spacing(1, 2),
-              background: 'linear-gradient(135deg, #1E40AF 30%, #3B82F6 100%)', // Gradiente para mayor impacto visual
-              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+              background: `linear-gradient(135deg, ${intent.infoInk} 30%, ${intent.info} 100%)`, // Gradiente para mayor impacto visual
+              boxShadow: `0px 4px 12px ${withAlpha(neutral.black, 0.15)}`,
               borderRadius: '12px',
               color: 'white'
             }}
@@ -61,7 +62,7 @@ export const DeviceSidebar = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0px 3px 8px rgba(0, 0, 0, 0.25)'
+                  boxShadow: `0px 3px 8px ${withAlpha(neutral.black, 0.25)}`
                 }}
               >
                 <img src={Logo} alt='SenseWave Logo' style={{ height: 42 }} />
@@ -91,7 +92,7 @@ export const DeviceSidebar = ({
           >
             <Typography
               variant='subtitle2'
-              sx={{ color: 'gray', fontWeight: 'bold' }}
+              sx={{ color: neutral.textMuted, fontWeight: 'bold' }}
             >
               Total: {filteredDevices.length}
             </Typography>

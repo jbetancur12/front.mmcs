@@ -18,6 +18,7 @@ import {
 } from '../utils/activationLink'
 
 import FormDialog from './Common/FormDialog'
+import { brand } from 'src/theme/designTokens'
 
 interface ActivationLinkDialogProps {
   open: boolean
@@ -71,7 +72,7 @@ const ActivationLinkDialog = ({
           sx={{
             textTransform: 'none',
             fontWeight: 600,
-            color: '#00695C'
+            color: brand.ink
           }}
         >
           Enviar por WhatsApp
@@ -128,7 +129,7 @@ const ActivationLinkDialog = ({
                 : undefined
           }
           FormHelperTextProps={{
-            sx: { color: copied === false ? 'error.main' : '#00695C' }
+            sx: { color: copied === false ? 'error.main' : brand.ink }
           }}
         />
       </Stack>

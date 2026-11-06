@@ -75,6 +75,7 @@ import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { busyDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 interface MappedResource {
   id: number
   title: string
@@ -1174,7 +1175,7 @@ const LmsCoursePreview: React.FC = () => {
             </IconButton>
           </Stack>
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+        <DialogContent dividers sx={{ p: 0, bgcolor: neutral.surfaceHead }}>
           {pdfViewerResource && (
             <PDFViewer
               downloadUrl={`/lms/content/resources/${pdfViewerResource.id}/download`}

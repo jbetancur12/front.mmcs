@@ -7,8 +7,8 @@ export type StatusPillTone = 'live' | 'idle' | 'success' | 'warning' | 'error'
 const TONES: Record<StatusPillTone, { color: string; bg: string }> = {
   live: { color: brand.ink, bg: brand.soft },
   idle: { color: neutral.textBody, bg: neutral.surfaceHead },
-  success: { color: '#166534', bg: '#dcfce7' },
-  warning: { color: '#92400e', bg: '#fef3c7' },
+  success: { color: intent.successInk, bg: intent.successSoft },
+  warning: { color: intent.warningInk, bg: intent.warningSoft },
   error: { color: intent.dangerInk, bg: intent.dangerSoft }
 }
 

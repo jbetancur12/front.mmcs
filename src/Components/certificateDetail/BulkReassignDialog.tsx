@@ -22,6 +22,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 interface PreviewData {
   totalAffected: number
   sourceDevice: { name: string }
@@ -200,7 +201,7 @@ const BulkReassignDialog: React.FC<BulkReassignDialogProps> = ({
               setError('')
             }}
             disabled={busy}
-            sx={{ textTransform: 'none', color: '#4b5563' }}
+            sx={{ textTransform: 'none', color: neutral.textBody }}
           >
             Cambiar selección
           </Button>

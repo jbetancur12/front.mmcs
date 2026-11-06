@@ -54,6 +54,7 @@ import {
 import { LmsQuizAnalyticsPanel } from './LmsQuizAnalytics'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import type { ComprehensiveDashboard } from '../../../services/lmsService'
+import { brand, intent } from 'src/theme/designTokens'
 
 type DashboardFilters = {
   startDate?: string
@@ -72,7 +73,7 @@ const getAnalyticsTabIndex = (value: string | null) => {
   return tabIndex >= 0 ? tabIndex : 0
 }
 
-const CHART_COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626']
+const CHART_COLORS = [brand.hover, intent.action, intent.warning, intent.danger]
 
 const safeNumber = (value: unknown, fallback = 0) =>
   typeof value === 'number' && Number.isFinite(value) ? value : fallback

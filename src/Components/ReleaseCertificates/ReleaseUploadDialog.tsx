@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -22,15 +22,26 @@ import {
 } from '@mui/icons-material'
 import { useUploadReleaseCertificates } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { getApiErrorReason } from 'src/utils/apiError'
-import { ReleaseUploadResult } from './ReleaseCertificates.types'
+import ReleaseServicePicker from './ReleaseServicePicker'
+import {
+  ReleaseServiceOption,
+  ReleaseUploadResult
+} from './ReleaseCertificates.types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 const MAX_FILES = 50
 const MAX_SIZE_MB = 20
-const BUTTON_SX = { bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }
+const BUTTON_SX = { bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }
 
 interface ReleaseUploadDialogProps {
   open: boolean
   onClose: () => void
+  /** Servicio preelegido (cuando se abre desde un servicio). */
+  initialService?: ReleaseServiceOption | null
+  /** Corte preelegido (cuando se abre desde el control documental de un corte). */
+  initialCutId?: number | null
+  /** Se llama cuando al menos un PDF quedó registrado. */
+  onUploaded?: () => void
 }
 
 const isPdf = (file: File) =>
@@ -50,7 +61,10 @@ const resultDetail = (result: ReleaseUploadResult) => {
 /** Carga masiva: se sueltan los PDF y el sistema los lee; no se diligencia nada más. */
 const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   open,
-  onClose
+  onClose,
+  initialService = null,
+  initialCutId = null,
+  onUploaded
 }) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
@@ -60,13 +74,19 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   const [results, setResults] = useState<ReleaseUploadResult[] | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
+  const [service, setService] = useState<ReleaseServiceOption | null>(null)
   const upload = useUploadReleaseCertificates()
+
+  useEffect(() => {
+    if (open) setService(initialService)
+  }, [open, initialService])
 
   const reset = () => {
     setFiles([])
     setRejected([])
     setResults(null)
     setFailure(null)
+    setService(null)
   }
 
   const close = () => {
@@ -99,11 +119,24 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
 
   const send = () => {
     setFailure(null)
-    upload.mutate(files, {
-      onSuccess: (data) => setResults(data),
-      onError: (error) =>
-        setFailure(getApiErrorReason(error) ?? 'No se pudo completar la carga')
-    })
+    upload.mutate(
+      {
+        files,
+        serviceId: service?.id ?? null,
+        // El corte solo vale mientras siga el servicio con el que se abrió.
+        cutId: service?.id === initialService?.id ? initialCutId : null
+      },
+      {
+        onSuccess: (data) => {
+          setResults(data)
+          if (data.some((result) => result.ok)) onUploaded?.()
+        },
+        onError: (error) =>
+          setFailure(
+            getApiErrorReason(error) ?? 'No se pudo completar la carga'
+          )
+      }
+    )
   }
 
   const okCount = results?.filter((r) => r.ok).length ?? 0
@@ -141,12 +174,12 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
                   {result.ok ? (
                     <CheckCircleOutline
                       fontSize='small'
-                      sx={{ color: '#2e7d32', mt: 0.25 }}
+                      sx={{ color: intent.successInk, mt: 0.25 }}
                     />
                   ) : (
                     <ErrorOutline
                       fontSize='small'
-                      sx={{ color: '#b91c1c', mt: 0.25 }}
+                      sx={{ color: intent.dangerInk, mt: 0.25 }}
                     />
                   )}
                   <Box sx={{ minWidth: 0 }}>
@@ -169,6 +202,13 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
           </Box>
         ) : (
           <>
+            <Box sx={{ mb: 2 }}>
+              <ReleaseServicePicker
+                value={service}
+                onChange={setService}
+                helperText='Opcional. Si eliges uno, el cliente se toma del servicio.'
+              />
+            </Box>
             <Box
               role='button'
               tabIndex={0}
@@ -192,16 +232,16 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
               }}
               sx={{
                 border: '2px dashed',
-                borderColor: dragOver ? '#00BFA5' : '#d1d5db',
-                bgcolor: dragOver ? '#f0fbf9' : '#fafafa',
+                borderColor: dragOver ? brand.main : neutral.borderStrong,
+                bgcolor: dragOver ? brand.softer : neutral.surfaceAlt,
                 borderRadius: 2,
                 p: 4,
                 textAlign: 'center',
                 cursor: 'pointer',
-                '&:focus-visible': { outline: '2px solid #00BFA5' }
+                '&:focus-visible': { outline: `2px solid ${brand.main}` }
               }}
             >
-              <CloudUploadOutlined sx={{ fontSize: 40, color: '#00897B' }} />
+              <CloudUploadOutlined sx={{ fontSize: 40, color: brand.hover }} />
               <Typography fontWeight={600}>
                 Suelta aquí los PDF o haz clic para elegirlos
               </Typography>
@@ -258,7 +298,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
                   >
                     <PictureAsPdfOutlined
                       fontSize='small'
-                      sx={{ color: '#b91c1c' }}
+                      sx={{ color: intent.dangerInk }}
                     />
                     <Typography
                       variant='body2'
@@ -283,7 +323,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
             {upload.isLoading && (
               <Box sx={{ mt: 2 }}>
                 <LinearProgress
-                  sx={{ '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' } }}
+                  sx={{ '& .MuiLinearProgress-bar': { bgcolor: brand.main } }}
                 />
                 <Typography variant='caption' color='text.secondary'>
                   Cargando y leyendo los certificados…

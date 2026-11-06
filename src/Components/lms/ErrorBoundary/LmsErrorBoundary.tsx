@@ -21,6 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 import { logger } from 'src/utils/logger'
+import { neutral, intent } from 'src/theme/designTokens'
 interface Props {
   children: ReactNode
   fallback?: ReactNode
@@ -197,8 +198,8 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
     <Card
       sx={{
         borderRadius: '16px',
-        border: '2px solid #fee2e2',
-        bgcolor: '#fef2f2',
+        border: `2px solid ${intent.dangerSoft}`,
+        bgcolor: intent.dangerSoft,
         minHeight: '200px'
       }}
     >
@@ -206,15 +207,15 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
         <Stack spacing={3}>
           {/* Error Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <ErrorIcon sx={{ color: '#dc2626', fontSize: 32 }} />
+            <ErrorIcon sx={{ color: intent.danger, fontSize: 32 }} />
             <Box>
               <Typography
                 variant='h6'
-                sx={{ color: '#dc2626', fontWeight: 700 }}
+                sx={{ color: intent.danger, fontWeight: 700 }}
               >
                 Error en {sectionName}
               </Typography>
-              <Typography variant='body2' sx={{ color: '#7f1d1d' }}>
+              <Typography variant='body2' sx={{ color: intent.dangerInk }}>
                 Se produjo un error inesperado al cargar este componente
               </Typography>
             </Box>
@@ -229,7 +230,7 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                 <Chip
                   size='small'
                   label={`Intento ${retryCount}/${maxRetries}`}
-                  sx={{ bgcolor: '#fee2e2', color: '#dc2626' }}
+                  sx={{ bgcolor: intent.dangerSoft, color: intent.danger }}
                 />
               </Box>
             )}
@@ -243,8 +244,8 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                 startIcon={<RefreshIcon />}
                 onClick={onRetry}
                 sx={{
-                  bgcolor: '#dc2626',
-                  '&:hover': { bgcolor: '#b91c1c' }
+                  bgcolor: intent.danger,
+                  '&:hover': { bgcolor: intent.dangerInk }
                 }}
               >
                 Reintentar
@@ -256,11 +257,11 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
               startIcon={<RefreshIcon />}
               onClick={handleReload}
               sx={{
-                borderColor: '#dc2626',
-                color: '#dc2626',
+                borderColor: intent.danger,
+                color: intent.danger,
                 '&:hover': {
-                  borderColor: '#b91c1c',
-                  bgcolor: '#fee2e2'
+                  borderColor: intent.dangerInk,
+                  bgcolor: intent.dangerSoft
                 }
               }}
             >
@@ -273,11 +274,11 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                 startIcon={<HomeIcon />}
                 onClick={handleGoHome}
                 sx={{
-                  borderColor: '#6b7280',
-                  color: '#6b7280',
+                  borderColor: neutral.textMuted,
+                  color: neutral.textMuted,
                   '&:hover': {
-                    borderColor: '#4b5563',
-                    bgcolor: '#f9fafb'
+                    borderColor: neutral.textBody,
+                    bgcolor: neutral.surfaceAlt
                   }
                 }}
               >
@@ -295,7 +296,7 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                   showDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />
                 }
                 onClick={onToggleDetails}
-                sx={{ color: '#6b7280', textTransform: 'none' }}
+                sx={{ color: neutral.textMuted, textTransform: 'none' }}
               >
                 {showDetails ? 'Ocultar' : 'Mostrar'} detalles técnicos
               </Button>
@@ -305,9 +306,9 @@ const ErrorBoundaryFallback: React.FC<FallbackProps> = ({
                   sx={{
                     mt: 2,
                     p: 2,
-                    bgcolor: '#f9fafb',
+                    bgcolor: neutral.surfaceAlt,
                     borderRadius: '8px',
-                    border: '1px solid #e5e7eb'
+                    border: `1px solid ${neutral.border}`
                   }}
                 >
                   <Typography

@@ -22,6 +22,7 @@ import {
 import FormDialog, { FormDialogSection } from './Common/FormDialog'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 const apiUrl = api()
 
 interface ModalPasswordFormProps {
@@ -173,7 +174,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     py: 0.5,
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: `1px solid ${neutral.border}`
                   }}
                 >
                   <Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -195,7 +196,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
                 size='small'
                 startIcon={showPassword ? <VisibilityOff /> : <Visibility />}
                 onClick={() => setShowPassword((value) => !value)}
-                sx={{ mt: 1, color: '#00695C' }}
+                sx={{ mt: 1, color: brand.ink }}
               >
                 {showPassword ? 'Ocultar' : 'Mostrar'}
               </Button>
@@ -260,7 +261,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
             size='small'
             startIcon={<AddOutlined />}
             onClick={handleAddPassword}
-            sx={{ color: '#00695C' }}
+            sx={{ color: brand.ink }}
           >
             Agregar otra
           </Button>

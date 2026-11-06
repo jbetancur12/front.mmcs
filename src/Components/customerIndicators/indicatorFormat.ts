@@ -1,3 +1,4 @@
+import { brand, neutral, detail } from 'src/theme/designTokens'
 /** Formato es-CO de los indicadores: "1.000", "64 %", "5 de octubre de 2026". */
 export const formatCount = (value: number): string =>
   value.toLocaleString('es-CO')
@@ -64,14 +65,14 @@ export const cleanTypeLabel = (label: string): string =>
     .replace(/^calibraci[oó]n\s+(del?\s+)?/i, '')
     .replace(/^./, (c) => c.toUpperCase())
 
-export const TEAL_TEXT = '#00695c'
-export const TEAL = '#00BFA5'
-export const EMERALD_GRADIENT = 'linear-gradient(135deg, #10b981, #059669)'
+export const TEAL_TEXT = brand.ink
+export const TEAL = brand.main
+export const EMERALD_GRADIENT = `linear-gradient(135deg, ${detail.from}, ${detail.to})`
 
 /** Botón primario del perfil (degradado esmeralda); apagado se ve gris, no verde. */
 export const emeraldButtonSx = {
   textTransform: 'none',
   fontWeight: 600,
   background: EMERALD_GRADIENT,
-  '&.Mui-disabled': { background: '#e5e7eb', color: '#9ca3af' }
+  '&.Mui-disabled': { background: neutral.border, color: neutral.textFaint }
 } as const

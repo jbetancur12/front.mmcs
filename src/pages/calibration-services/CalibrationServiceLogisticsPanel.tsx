@@ -25,6 +25,7 @@ import {
 } from '../../types/calibrationService'
 
 import { DetailField } from './CalibrationServiceDetailBlocks'
+import { brand } from 'src/theme/designTokens'
 interface Props {
   controlSheet: CalibrationServiceLogisticsControlSheet
   entries: CalibrationServicePhysicalTraceabilityEntry[]
@@ -111,12 +112,12 @@ const CalibrationServiceLogisticsPanel = ({
               onClick={onGeneratePdf}
               disabled={isBusy}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
+                color: brand.hover,
+                borderColor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Generar PDF
@@ -129,12 +130,12 @@ const CalibrationServiceLogisticsPanel = ({
               onClick={onSendEmail}
               disabled={isBusy}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
+                color: brand.hover,
+                borderColor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Enviar formato
@@ -147,12 +148,12 @@ const CalibrationServiceLogisticsPanel = ({
               onClick={onRegisterMovement}
               disabled={isBusy}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
+                color: brand.hover,
+                borderColor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Registrar movimiento
@@ -165,11 +166,11 @@ const CalibrationServiceLogisticsPanel = ({
               onClick={onEditControl}
               disabled={isBusy}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Diligenciar formato

@@ -5,6 +5,7 @@ import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { moduleLabel } from '../Rbac/PermissionMatrix'
 import { requirementName } from '../Rbac/requirements'
 import { AssignableRole, Role } from './types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface RoleChangePreviewProps {
   /** Roles que tiene hoy la persona (vacío al crear la cuenta). */
@@ -55,8 +56,8 @@ const ChangeBlock: React.FC<ChangeBlockProps> = ({ title, keys, tone }) => {
   const groups = useMemo(() => byModule(keys), [keys])
   if (keys.length === 0) return null
 
-  const color = tone === 'gain' ? '#00695C' : '#b45309'
-  const bg = tone === 'gain' ? '#E0F7F4' : '#fff7ed'
+  const color = tone === 'gain' ? brand.ink : intent.warningInk
+  const bg = tone === 'gain' ? brand.soft : intent.warningSoft
 
   return (
     <Box sx={{ mt: 1.5 }}>
@@ -157,7 +158,7 @@ const RoleChangePreview: React.FC<RoleChangePreviewProps> = ({
   return (
     <Paper
       variant='outlined'
-      sx={{ p: 1.5, mt: 2, borderRadius: 2, borderColor: '#e5e7eb' }}
+      sx={{ p: 1.5, mt: 2, borderRadius: 2, borderColor: neutral.border }}
       aria-label='Qué cambia con estos roles'
     >
       <Typography variant='subtitle2' fontWeight={700}>

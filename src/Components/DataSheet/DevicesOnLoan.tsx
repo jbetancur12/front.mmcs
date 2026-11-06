@@ -23,6 +23,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import EmptyState from 'src/Components/Common/EmptyState'
 import React, { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { brand } from 'src/theme/designTokens'
 
 interface Device {
   id: number
@@ -166,9 +167,9 @@ const DevicesOnLoan: React.FC = () => {
             sx={{
               textTransform: 'none',
               fontWeight: 600,
-              color: '#00695C',
-              borderColor: '#00BFA5',
-              '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              color: brand.ink,
+              borderColor: brand.main,
+              '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
             }}
           >
             Volver
@@ -210,7 +211,7 @@ const DevicesOnLoan: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Registrar entrada de ${row.original.internalCode}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => goToInOut(row.original)}
               >
                 <LoginOutlined fontSize='small' />

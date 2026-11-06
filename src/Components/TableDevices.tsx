@@ -50,6 +50,7 @@ import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 // Define interfaces
 export interface DeviceData {
   id: number
@@ -297,9 +298,9 @@ const Table: React.FC = () => {
               startIcon={<Add />}
               onClick={() => setCreateModalOpen(true)}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Crear equipo
@@ -344,7 +345,7 @@ const Table: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label='Editar'
-                sx={{ color: '#2563eb' }}
+                sx={{ color: intent.action }}
                 onClick={() => table.setEditingRow(row)}
               >
                 <EditOutlined fontSize='small' />

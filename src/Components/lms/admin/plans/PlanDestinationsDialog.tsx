@@ -51,6 +51,7 @@ import {
   primaryButtonSx
 } from './planUi'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface PlanDestinationsDialogProps {
   open: boolean
@@ -77,7 +78,7 @@ const ProgressCell: React.FC<{ value: number }> = ({ value }) => (
         flex: 1,
         height: 8,
         borderRadius: 4,
-        bgcolor: '#e0f2f1',
+        bgcolor: brand.soft,
         '& .MuiLinearProgress-bar': { bgcolor: PLAN_TEAL }
       }}
     />
@@ -216,7 +217,7 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
               onClick={() =>
                 navigate(`/lms/admin/compliance?tab=plan&planId=${plan.id}`)
               }
-              sx={{ borderColor: PLAN_TEAL, color: '#00897B' }}
+              sx={{ borderColor: PLAN_TEAL, color: brand.hover }}
             >
               Ver cumplimiento por persona
             </Button>
@@ -268,7 +269,7 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
             sx={{ borderRadius: 2 }}
           >
             <Table size='small'>
-              <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+              <TableHead sx={{ bgcolor: neutral.surfaceHead }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600 }}>Destino</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Plazo</TableCell>

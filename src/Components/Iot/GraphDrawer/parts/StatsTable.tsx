@@ -9,6 +9,7 @@ import {
   Box,
   Typography
 } from '@mui/material'
+import { neutral } from 'src/theme/designTokens'
 
 interface StatsTableProps {
   stats: {
@@ -34,7 +35,7 @@ export const StatsTable = ({ stats }: StatsTableProps) => (
       sx={{
         maxWidth: 500,
         width: '100%',
-        border: '1px solid #e0e0e0',
+        border: `1px solid ${neutral.borderStrong}`,
         borderRadius: 1,
         overflow: 'hidden'
       }}
@@ -43,7 +44,7 @@ export const StatsTable = ({ stats }: StatsTableProps) => (
         Estadisticas
       </Typography>
       <Table size='small' sx={{ width: '100%' }}>
-        <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+        <TableHead sx={{ backgroundColor: neutral.surfaceHead }}>
           <TableRow>
             <TableCell sx={{ width: '40%', padding: '8px' }}></TableCell>
             <TableCell align='center' sx={{ padding: '8px' }}>

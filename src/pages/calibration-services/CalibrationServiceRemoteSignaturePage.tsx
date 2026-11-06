@@ -18,6 +18,7 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import { useSearchParams } from 'react-router-dom'
 import { axiosPublic } from '@utils/api'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
+import { brand } from 'src/theme/designTokens'
 
 interface PublicSignatureData {
   serviceCode: string
@@ -123,8 +124,8 @@ const CalibrationServiceRemoteSignaturePage = () => {
                   width: 44,
                   height: 44,
                   borderRadius: '50%',
-                  bgcolor: '#E0F7F4',
-                  color: '#00BFA5',
+                  bgcolor: brand.soft,
+                  color: brand.main,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -247,8 +248,8 @@ const CalibrationServiceRemoteSignaturePage = () => {
                         isSubmitting
                       }
                       sx={{
-                        bgcolor: '#00BFA5',
-                        '&:hover': { bgcolor: '#00897B' },
+                        bgcolor: brand.main,
+                        '&:hover': { bgcolor: brand.hover },
                         textTransform: 'none',
                         fontWeight: 700
                       }}

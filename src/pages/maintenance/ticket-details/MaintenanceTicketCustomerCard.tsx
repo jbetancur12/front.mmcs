@@ -17,6 +17,7 @@ import {
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCustomerCardProps {
   ticket: MaintenanceTicket
@@ -50,7 +51,7 @@ const MaintenanceTicketCustomerCard = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#0f172a'
+              color: neutral.text
             }}
           >
             Información del Cliente
@@ -64,11 +65,11 @@ const MaintenanceTicketCustomerCard = ({
                 }
                 aria-label={`Enviar email a ${ticket.customerEmail}`}
                 sx={{
-                  backgroundColor: '#e8f7ef',
-                  color: '#00A651',
+                  backgroundColor: intent.successSoft,
+                  color: intent.successInk,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: '#dbeedb'
+                    backgroundColor: intent.successSoft
                   }
                 }}
               >
@@ -83,11 +84,11 @@ const MaintenanceTicketCustomerCard = ({
                 }
                 aria-label={`Llamar al cliente ${ticket.customerPhone}`}
                 sx={{
-                  backgroundColor: '#e8f7ef',
-                  color: '#00A651',
+                  backgroundColor: intent.successSoft,
+                  color: intent.successInk,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: '#dbeedb'
+                    backgroundColor: intent.successSoft
                   }
                 }}
               >
@@ -184,7 +185,7 @@ const MaintenanceTicketCustomerCard = ({
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              backgroundColor: '#fff7ed',
+              backgroundColor: intent.warningSoft,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -193,7 +194,7 @@ const MaintenanceTicketCustomerCard = ({
             }}
           >
             <Assignment
-              sx={{ color: '#c2410c', fontSize: 20 }}
+              sx={{ color: intent.dangerInk, fontSize: 20 }}
               aria-hidden='true'
             />
           </Box>
@@ -201,7 +202,7 @@ const MaintenanceTicketCustomerCard = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#0f172a'
+              color: neutral.text
             }}
           >
             Condición Inicial del Equipo

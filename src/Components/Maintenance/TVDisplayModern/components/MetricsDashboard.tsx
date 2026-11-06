@@ -11,6 +11,7 @@ import {
 } from '@mui/icons-material'
 import { MetricsDashboardProps } from '../types'
 import { useModernStyles } from '../hooks/useModernStyles'
+import { brand, intent, withAlpha } from 'src/theme/designTokens'
 
 const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
   metrics,
@@ -97,16 +98,15 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
               borderLeft: `6px solid ${metric.borderColor}`,
               ...(metric.isActive && {
                 border: `2px solid ${colors.info}`,
-                background:
-                  'linear-gradient(135deg, rgba(23, 162, 184, 0.08), rgba(23, 162, 184, 0.02))',
-                boxShadow: '0 4px 16px rgba(23, 162, 184, 0.18)'
+                background: `linear-gradient(135deg, ${withAlpha(brand.main, 0.08)}, ${withAlpha(brand.main, 0.02)})`,
+                boxShadow: `0 4px 16px ${withAlpha(brand.main, 0.18)}`
               }),
               ...(metric.isUrgent && {
                 border: `2px solid ${colors.danger}`,
-                backgroundColor: 'rgba(220, 53, 69, 0.02)',
-                boxShadow: '0 4px 16px rgba(220, 53, 69, 0.15)',
+                backgroundColor: withAlpha(intent.danger, 0.02),
+                boxShadow: `0 4px 16px ${withAlpha(intent.danger, 0.15)}`,
                 '&:hover': {
-                  boxShadow: '0 8px 24px rgba(220, 53, 69, 0.25)',
+                  boxShadow: `0 8px 24px ${withAlpha(intent.danger, 0.25)}`,
                   transform: 'translateY(-2px)'
                 }
               })

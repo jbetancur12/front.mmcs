@@ -39,6 +39,7 @@ import { NumericFormat } from 'react-number-format'
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 interface AssignedItem {
   purchaseRequestItemId: string
   description: string
@@ -583,7 +584,9 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
               <Table size='small'>
                 <TableHead>
                   <TableRow
-                    sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}
+                    sx={{
+                      '& th': { bgcolor: neutral.surfaceHead, fontWeight: 600 }
+                    }}
                   >
                     <TableCell>Descripción</TableCell>
                     <TableCell sx={{ minWidth: 120 }}>Tipo</TableCell>
@@ -721,7 +724,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
               {sectionTitle('Resumen')}
               <Box
                 sx={{
-                  border: '1px solid #e5e7eb',
+                  border: `1px solid ${neutral.border}`,
                   borderRadius: 2,
                   p: 2
                 }}

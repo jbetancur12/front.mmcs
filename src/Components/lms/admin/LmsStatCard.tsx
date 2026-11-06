@@ -1,30 +1,30 @@
 import React from 'react'
 import { Box, Card, CardContent, Typography } from '@mui/material'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export type LmsStatTone = 'blue' | 'green' | 'orange' | 'red' | 'teal'
 
 // Mismos degradados de las tarjetas del inicio de la aplicación
 const GRADIENTS: Record<LmsStatTone, { background: string; ring: string }> = {
   blue: {
-    background: 'linear-gradient(135deg, #2196f3 0%, #42a5f5 100%)',
-    ring: 'rgba(33,150,243,0.35)'
+    background: `linear-gradient(135deg, ${intent.info} 0%, ${intent.info} 100%)`,
+    ring: withAlpha(intent.info, 0.35)
   },
   green: {
-    background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-    ring: 'rgba(76,175,80,0.35)'
+    background: `linear-gradient(135deg, ${intent.success} 0%, ${intent.success} 100%)`,
+    ring: withAlpha(intent.success, 0.35)
   },
   orange: {
-    background: 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)',
-    ring: 'rgba(255,152,0,0.35)'
+    background: `linear-gradient(135deg, ${intent.warning} 0%, ${intent.warning} 100%)`,
+    ring: withAlpha(intent.warning, 0.35)
   },
   red: {
-    background: 'linear-gradient(135deg, #f44336 0%, #ef5350 100%)',
-    ring: 'rgba(244,67,54,0.35)'
+    background: `linear-gradient(135deg, ${intent.danger} 0%, ${intent.danger} 100%)`,
+    ring: withAlpha(intent.danger, 0.35)
   },
   teal: {
-    background: `linear-gradient(135deg, ${brand.hover} 0%, #26c6da 100%)`,
-    ring: 'rgba(0,172,193,0.35)'
+    background: `linear-gradient(135deg, ${brand.hover} 0%, ${brand.main} 100%)`,
+    ring: withAlpha(brand.main, 0.35)
   }
 }
 
@@ -101,15 +101,15 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
         borderColor: active ? brand.ink : neutral.border,
         // El borde de 2px del filtro activo no debe mover el contenido
         boxShadow: active ? `inset 0 0 0 1px ${brand.ink}` : 'none',
-        bgcolor: active ? '#f0fbf9' : '#fff',
+        bgcolor: active ? brand.softer : '#fff',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'border-color .15s, box-shadow .15s, background-color .15s',
         '&:hover': onClick
           ? {
-              borderColor: active ? brand.ink : '#9ca3af',
+              borderColor: active ? brand.ink : neutral.textFaint,
               boxShadow: active
                 ? `inset 0 0 0 1px ${brand.ink}`
-                : '0 4px 12px rgba(17,24,39,0.08)'
+                : `0 4px 12px ${withAlpha(neutral.text, 0.08)}`
             }
           : undefined,
         '&:focus-visible': {

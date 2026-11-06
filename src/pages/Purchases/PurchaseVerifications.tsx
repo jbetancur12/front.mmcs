@@ -34,6 +34,7 @@ import { PURCHASE_TEAL } from 'src/Components/Purchases/purchaseTableStyle'
 import { PurchaseVerification } from './Types'
 
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 /* Interfaces de Tipos */
 
 /* Función para obtener las verificaciones */
@@ -317,7 +318,7 @@ const PurchaseVerificationsTable: React.FC = () => {
                   to={`${row?.original?.id ?? ''}`}
                   size='small'
                   aria-label={`Ver verificación de ${row.original.purchaseOrder.code}`}
-                  sx={{ color: '#00695C' }}
+                  sx={{ color: brand.ink }}
                 >
                   <Visibility />
                 </IconButton>
@@ -326,7 +327,7 @@ const PurchaseVerificationsTable: React.FC = () => {
                 <IconButton
                   size='small'
                   aria-label={`Editar verificación de ${row.original.purchaseOrder.code}`}
-                  sx={{ color: '#2563eb' }}
+                  sx={{ color: intent.action }}
                   onClick={() => table.setEditingRow(row)}
                 >
                   <Edit />

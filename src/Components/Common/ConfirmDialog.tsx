@@ -63,7 +63,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             borderRadius: 2,
             display: 'grid',
             placeItems: 'center',
-            bgcolor: danger ? '#fef2f2' : brand.soft,
+            bgcolor: danger ? intent.dangerSoft : brand.soft,
             color: accent,
             flexShrink: 0
           }}

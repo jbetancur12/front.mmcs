@@ -21,6 +21,7 @@ import {
   ConnectionStatus
 } from './types'
 import { useModernStyles } from './hooks/useModernStyles'
+import { intent, withAlpha } from 'src/theme/designTokens'
 
 /**
  * MaintenanceTVDisplayModern - Modern TV display component for maintenance tickets
@@ -28,7 +29,7 @@ import { useModernStyles } from './hooks/useModernStyles'
  * Optimized for large screens (1920x1080+) with real-time WebSocket updates
  *
  * Key Features:
- * - Clean white background with company primary color (#7bff7f)
+ * - Clean white background with company primary color
  * - Modular component architecture for better maintainability
  * - Modern card design with subtle shadows
  * - High contrast typography for better readability
@@ -47,7 +48,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
   //   slideInterval: 30, // seconds
   //   showAnimations: true,
   //   compactView: false,
-  //   primaryColor: '#7bff7f'
+  //   primaryColor: intent.success
   // })
 
   // Smart Pagination System
@@ -361,7 +362,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
             textAlign: 'center',
             border: `2px solid ${modernColors.danger}`,
             borderRadius: '16px',
-            boxShadow: `0 8px 32px rgba(220, 53, 69, 0.15)`
+            boxShadow: `0 8px 32px ${withAlpha(intent.danger, 0.15)}`
           }}
         >
           <ErrorIcon
@@ -447,9 +448,9 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       <style>
         {`
           @keyframes subtlePulse {
-            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(244, 67, 54, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+            0% { box-shadow: 0 0 0 0 ${withAlpha(intent.danger, 0.4)}; }
+            70% { box-shadow: 0 0 0 15px ${withAlpha(intent.danger, 0)}; }
+            100% { box-shadow: 0 0 0 0 ${withAlpha(intent.danger, 0)}; }
           }
 
           @keyframes shimmer {
@@ -534,7 +535,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                     display: 'block',
                     mt: 0.15,
                     ml: '2.45rem',
-                    color: '#8a5a00',
+                    color: intent.warningInk,
                     fontWeight: 600,
                     fontSize: '0.72rem',
                     letterSpacing: '0.15px'

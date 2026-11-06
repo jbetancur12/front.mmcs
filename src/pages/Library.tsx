@@ -52,6 +52,7 @@ import {
 import { userStore } from 'src/store/userStore'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
+import { brand, intent } from 'src/theme/designTokens'
 
 const CATEGORIES: LibraryCategory[] = [
   'management',
@@ -157,7 +158,7 @@ const Library: React.FC = () => {
       variant='contained'
       startIcon={<AddRounded />}
       onClick={() => setDialog({ mode: 'create', document: null })}
-      sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00ACC1' } }}
+      sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
     >
       Agregar documento
     </Button>
@@ -180,7 +181,7 @@ const Library: React.FC = () => {
         allowScrollButtonsMobile
         sx={{
           mb: 2,
-          '& .MuiTabs-indicator': { backgroundColor: '#00BFA5' },
+          '& .MuiTabs-indicator': { backgroundColor: brand.main },
           '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }
         }}
       >
@@ -242,7 +243,7 @@ const Library: React.FC = () => {
                 <Tooltip title='Ver'>
                   <IconButton
                     aria-label={`Ver ${document.name}`}
-                    sx={{ color: '#00695C' }}
+                    sx={{ color: brand.ink }}
                     onClick={() => setViewing(document)}
                   >
                     <VisibilityOutlined fontSize='small' />
@@ -262,7 +263,7 @@ const Library: React.FC = () => {
                   <Tooltip title='Descargar archivo original (Word o Excel)'>
                     <IconButton
                       aria-label={`Descargar archivo original de ${document.name}`}
-                      sx={{ color: '#2563eb' }}
+                      sx={{ color: intent.action }}
                       onClick={() => downloadLibrarySource(document)}
                     >
                       <DescriptionOutlined fontSize='small' />
@@ -274,7 +275,7 @@ const Library: React.FC = () => {
                     <Tooltip title='Subir nueva versión'>
                       <IconButton
                         aria-label={`Subir nueva versión de ${document.name}`}
-                        sx={{ color: '#00897B' }}
+                        sx={{ color: brand.hover }}
                         onClick={() => setDialog({ mode: 'version', document })}
                       >
                         <UploadFileOutlined fontSize='small' />
@@ -291,7 +292,7 @@ const Library: React.FC = () => {
                     <Tooltip title='Editar'>
                       <IconButton
                         aria-label={`Editar ${document.name}`}
-                        sx={{ color: '#2563eb' }}
+                        sx={{ color: intent.action }}
                         onClick={() => setDialog({ mode: 'edit', document })}
                       >
                         <EditOutlined fontSize='small' />

@@ -26,6 +26,14 @@ import {
   CalibrationServiceProductSummary,
   ProductVariantSummary
 } from '../../types/calibrationService'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 type CatalogPriceSource = 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice'
 
@@ -59,16 +67,16 @@ const PRICE_SOURCE_OPTIONS: { value: CatalogPriceSource; label: string }[] = [
 ]
 
 const PRICE_COLORS: Record<CatalogPriceSource, string> = {
-  medicalPrice: '#059669',
-  industrialPrice: '#2563eb',
-  thirdPartyPrice: '#7c3aed'
+  medicalPrice: brand.hover,
+  industrialPrice: intent.action,
+  thirdPartyPrice: accent.main
 }
 
 const SERVICE_TYPE_COLORS: Record<string, string> = {
-  Acreditado: '#059669',
-  Trazable: '#2563eb',
-  'Subcontratado ONAC': '#7c3aed',
-  Especial: '#d97706'
+  Acreditado: brand.hover,
+  Trazable: intent.action,
+  'Subcontratado ONAC': accent.main,
+  Especial: intent.warning
 }
 
 const getPriceValue = (
@@ -263,8 +271,8 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
               <thead>
                 <tr
                   style={{
-                    backgroundColor: '#f9fafb',
-                    borderBottom: '2px solid #e5e7eb'
+                    backgroundColor: neutral.surfaceAlt,
+                    borderBottom: `2px solid ${neutral.border}`
                   }}
                 >
                   <th style={{ width: 40, padding: '10px 8px' }}></th>
@@ -274,7 +282,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                       padding: '10px 8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280',
+                      color: neutral.textMuted,
                       textTransform: 'uppercase'
                     }}
                   >
@@ -286,7 +294,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                       padding: '10px 8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280',
+                      color: neutral.textMuted,
                       textTransform: 'uppercase'
                     }}
                   >
@@ -298,7 +306,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                       padding: '10px 8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280',
+                      color: neutral.textMuted,
                       textTransform: 'uppercase'
                     }}
                   >
@@ -313,12 +321,14 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                     <React.Fragment key={product.id}>
                       <tr
                         style={{
-                          borderBottom: '1px solid #e5e7eb',
+                          borderBottom: `1px solid ${neutral.border}`,
                           cursor: 'pointer'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            'rgba(0,0,0,0.02)'
+                          e.currentTarget.style.backgroundColor = withAlpha(
+                            neutral.black,
+                            0.02
+                          )
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = ''
@@ -330,7 +340,11 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                         >
                           <IconButton
                             size='small'
-                            sx={{ color: isExpanded ? '#059669' : '#9ca3af' }}
+                            sx={{
+                              color: isExpanded
+                                ? brand.hover
+                                : neutral.textFaint
+                            }}
                           >
                             {isExpanded ? (
                               <ExpandLessIcon fontSize='small' />
@@ -368,13 +382,13 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                   fontSize: '0.7rem',
                                   borderColor:
                                     (SERVICE_TYPE_COLORS[v.serviceType] ||
-                                      '#d1d5db') + '40',
+                                      neutral.borderStrong) + '40',
                                   color:
                                     SERVICE_TYPE_COLORS[v.serviceType] ||
-                                    '#6b7280',
+                                    neutral.textMuted,
                                   backgroundColor:
                                     (SERVICE_TYPE_COLORS[v.serviceType] ||
-                                      '#d1d5db') + '10'
+                                      neutral.borderStrong) + '10'
                                 }}
                               />
                             ))}
@@ -382,7 +396,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr style={{ backgroundColor: '#f9fafb' }}>
+                        <tr style={{ backgroundColor: neutral.surfaceAlt }}>
                           <td
                             colSpan={4}
                             style={{ padding: '8px 16px 16px 56px' }}
@@ -412,7 +426,10 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                               <Typography
                                 variant='caption'
                                 fontWeight={600}
-                                sx={{ color: '#6b7280', cursor: 'pointer' }}
+                                sx={{
+                                  color: neutral.textMuted,
+                                  cursor: 'pointer'
+                                }}
                                 onClick={() => selectAllVariants(product)}
                               >
                                 Seleccionar todos
@@ -427,7 +444,9 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                             >
                               <thead>
                                 <tr
-                                  style={{ borderBottom: '1px solid #e5e7eb' }}
+                                  style={{
+                                    borderBottom: `1px solid ${neutral.border}`
+                                  }}
                                 >
                                   <th
                                     style={{ width: 40, padding: '8px' }}
@@ -438,7 +457,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                       padding: '8px',
                                       fontWeight: 600,
                                       fontSize: '0.7rem',
-                                      color: '#6b7280',
+                                      color: neutral.textMuted,
                                       textTransform: 'uppercase'
                                     }}
                                   >
@@ -452,7 +471,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                         padding: '8px',
                                         fontWeight: 600,
                                         fontSize: '0.7rem',
-                                        color: '#6b7280',
+                                        color: neutral.textMuted,
                                         textTransform: 'uppercase'
                                       }}
                                     >
@@ -465,7 +484,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                       padding: '8px',
                                       fontWeight: 600,
                                       fontSize: '0.7rem',
-                                      color: '#6b7280',
+                                      color: neutral.textMuted,
                                       textTransform: 'uppercase',
                                       width: 150
                                     }}
@@ -486,16 +505,16 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                     <tr
                                       key={v.id}
                                       style={{
-                                        borderBottom: '1px solid #f3f4f6',
+                                        borderBottom: `1px solid ${neutral.surfaceHead}`,
                                         backgroundColor: isSelected
-                                          ? 'rgba(16,185,129,0.04)'
+                                          ? withAlpha(brand.main, 0.04)
                                           : undefined,
                                         cursor: 'pointer'
                                       }}
                                       onMouseEnter={(e) => {
                                         if (!isSelected)
                                           e.currentTarget.style.backgroundColor =
-                                            'rgba(0,0,0,0.015)'
+                                            withAlpha(neutral.black, 0.015)
                                       }}
                                       onMouseLeave={(e) => {
                                         if (!isSelected)
@@ -516,9 +535,9 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                           onClick={(e) => e.stopPropagation()}
                                           onChange={() => toggleVariant(v.id)}
                                           sx={{
-                                            color: '#d1d5db',
+                                            color: neutral.borderStrong,
                                             '&.Mui-checked': {
-                                              color: '#059669'
+                                              color: brand.ink
                                             }
                                           }}
                                         />
@@ -531,7 +550,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                             color:
                                               SERVICE_TYPE_COLORS[
                                                 v.serviceType
-                                              ] || '#374151'
+                                              ] || neutral.textBody
                                           }}
                                         >
                                           {v.serviceType}
@@ -560,7 +579,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                                   : 400,
                                                 color: isActive
                                                   ? PRICE_COLORS[opt.value]
-                                                  : '#6b7280'
+                                                  : neutral.textMuted
                                               }}
                                             >
                                               {price !== null
@@ -682,12 +701,12 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
             disabled={totalSelected === 0}
             onClick={handleAddItems}
             sx={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: `linear-gradient(135deg, ${detail.from} 0%, ${detail.to} 100%)`,
               borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 700,
               '&:hover': {
-                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                background: `linear-gradient(135deg, ${detail.to} 0%, ${intent.successInk} 100%)`
               }
             }}
           >

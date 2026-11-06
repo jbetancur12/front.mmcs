@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { userStore } from 'src/store/userStore'
 import { useStore } from '@nanostores/react'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { brand, neutral } from 'src/theme/designTokens'
 
 const Welcome: React.FC = () => {
   const $userStore = useStore(userStore)
@@ -43,7 +44,7 @@ const Welcome: React.FC = () => {
           sx={{
             p: 3,
             borderRadius: 4,
-            border: '1px solid #e5e7eb',
+            border: `1px solid ${neutral.border}`,
             display: 'flex',
             alignItems: 'center',
             gap: 2
@@ -54,8 +55,8 @@ const Welcome: React.FC = () => {
               width: 48,
               height: 48,
               borderRadius: 3,
-              bgcolor: '#E0F7F4',
-              color: '#00BFA5',
+              bgcolor: brand.soft,
+              color: brand.main,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -77,7 +78,7 @@ const Welcome: React.FC = () => {
             sx={{
               p: 3,
               borderRadius: 4,
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${neutral.border}`,
               display: 'flex',
               alignItems: 'center',
               gap: 2
@@ -88,8 +89,8 @@ const Welcome: React.FC = () => {
                 width: 48,
                 height: 48,
                 borderRadius: 3,
-                bgcolor: '#E0F7F4',
-                color: '#00BFA5',
+                bgcolor: brand.soft,
+                color: brand.main,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -108,9 +109,9 @@ const Welcome: React.FC = () => {
               variant='contained'
               onClick={() => navigate('/lms')}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 textTransform: 'none',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Ir a Mi Aprendizaje

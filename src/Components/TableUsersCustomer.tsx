@@ -62,6 +62,7 @@ import { notify } from 'src/utils/notify'
 import ResetPasswordModal from './ResetPasswordModal'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 // Define interfaces
 export interface UserData {
   id: number
@@ -79,13 +80,13 @@ export interface UserData {
 }
 
 const primaryButtonSx = {
-  bgcolor: '#00BFA5',
+  bgcolor: brand.main,
   borderRadius: '10px',
   textTransform: 'none',
   fontWeight: 700,
   boxShadow: 'none',
   whiteSpace: 'nowrap',
-  '&:hover': { bgcolor: '#00ACC1', boxShadow: 'none' }
+  '&:hover': { bgcolor: brand.hover, boxShadow: 'none' }
 } as const
 
 // Main component
@@ -252,7 +253,7 @@ const Table: React.FC = () => {
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 fontSize: 14,
                 fontWeight: 700
               }}
@@ -284,9 +285,9 @@ const Table: React.FC = () => {
                 onChange={() => handleToggleActive(row.original)}
                 disabled={!canUpdateUsers}
                 sx={{
-                  '& .MuiSwitch-switchBase.Mui-checked': { color: '#00BFA5' },
+                  '& .MuiSwitch-switchBase.Mui-checked': { color: brand.main },
                   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                    backgroundColor: '#00BFA5'
+                    backgroundColor: brand.main
                   }
                 }}
               />
@@ -318,7 +319,11 @@ const Table: React.FC = () => {
         }}
       >
         <Box>
-          <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+          <Typography
+            variant='h5'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Usuarios
           </Typography>
           <Typography variant='body2' color='text.secondary'>
@@ -353,7 +358,7 @@ const Table: React.FC = () => {
                 <IconButton
                   size='small'
                   aria-label={`Editar ${user.nombre}`}
-                  sx={{ color: '#2563eb' }}
+                  sx={{ color: intent.action }}
                   onClick={() => setEditingUser(user)}
                 >
                   <EditOutlined fontSize='small' />
@@ -365,7 +370,7 @@ const Table: React.FC = () => {
                     <IconButton
                       size='small'
                       aria-label={`Enlace de activación de ${user.nombre}`}
-                      sx={{ color: '#00695C' }}
+                      sx={{ color: brand.ink }}
                       onClick={() => handleActivationLink(user)}
                     >
                       <LinkIcon fontSize='small' />
@@ -375,7 +380,7 @@ const Table: React.FC = () => {
                     <IconButton
                       size='small'
                       aria-label={`Reenviar activación a ${user.nombre}`}
-                      sx={{ color: '#00695C' }}
+                      sx={{ color: brand.ink }}
                       onClick={() => handleResendActivation(user)}
                     >
                       <ForwardToInbox fontSize='small' />
@@ -388,7 +393,7 @@ const Table: React.FC = () => {
                   <IconButton
                     size='small'
                     aria-label={`Restablecer contraseña de ${user.nombre}`}
-                    sx={{ color: '#b45309' }}
+                    sx={{ color: intent.warningInk }}
                     onClick={() => {
                       setSelectedUser(user)
                       setResetPasswordModalOpen(true)

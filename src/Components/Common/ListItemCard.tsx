@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, Paper, Stack, Typography } from '@mui/material'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface ListItemCardProps {
   /** Código o nombre del elemento, en negrita. */
@@ -48,13 +49,16 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
     sx={{
       p: 1.5,
       borderRadius: '12px',
-      borderColor: '#e5e7eb',
+      borderColor: neutral.border,
       cursor: onClick ? 'pointer' : 'default',
       transition: 'border-color 0.15s, background-color 0.15s',
       '&:hover': onClick
-        ? { borderColor: '#00BFA5', bgcolor: '#E0F7F4' }
+        ? { borderColor: brand.main, bgcolor: brand.soft }
         : undefined,
-      '&:focus-visible': { outline: '3px solid #00897B', outlineOffset: 2 }
+      '&:focus-visible': {
+        outline: `3px solid ${brand.hover}`,
+        outlineOffset: 2
+      }
     }}
   >
     <Stack
@@ -89,7 +93,7 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
           sx={{
             display: 'block',
             mt: index === 0 && !highlight ? 0.5 : 0,
-            color: warn ? '#b45309' : 'text.secondary',
+            color: warn ? intent.warningInk : 'text.secondary',
             fontWeight: warn ? 600 : 400
           }}
         >

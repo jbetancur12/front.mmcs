@@ -12,6 +12,7 @@ import {
   CalibrationServiceAdjustment,
   CalibrationServiceSendPreviewResult
 } from '../../types/calibrationService'
+import { brand } from 'src/theme/designTokens'
 
 interface CalibrationServiceSendAdjustmentToCustomerDialogProps {
   open: boolean
@@ -166,8 +167,8 @@ const CalibrationServiceSendAdjustmentToCustomerDialog = ({
               variant='determinate'
               value={(progress.current / progress.total) * 100}
               sx={{
-                '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' },
-                bgcolor: '#E0F7F4'
+                '& .MuiLinearProgress-bar': { bgcolor: brand.main },
+                bgcolor: brand.soft
               }}
             />
             <Typography

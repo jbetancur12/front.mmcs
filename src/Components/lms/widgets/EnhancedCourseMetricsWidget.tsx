@@ -41,25 +41,26 @@ import {
   Visibility as VisibilityIcon
 } from '@mui/icons-material'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 // Modern color palette
 const colors = {
-  primary: '#10b981',
-  primaryLight: '#f0fdf4',
-  success: '#059669',
-  warning: '#d97706',
-  error: '#dc2626',
-  info: '#3b82f6',
+  primary: brand.main,
+  primaryLight: intent.successSoft,
+  success: brand.hover,
+  warning: intent.warning,
+  error: intent.danger,
+  info: intent.info,
   gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937'
+    50: neutral.surfaceAlt,
+    100: neutral.surfaceHead,
+    200: neutral.border,
+    300: neutral.borderStrong,
+    400: neutral.textFaint,
+    500: neutral.textMuted,
+    600: neutral.textBody,
+    700: neutral.textBody,
+    800: neutral.text
   }
 }
 
@@ -248,7 +249,7 @@ const EnhancedCourseMetricsWidget: React.FC<
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           borderColor: colors.primary,
-          boxShadow: `0 8px 25px rgba(16, 185, 129, 0.15)`,
+          boxShadow: `0 8px 25px ${withAlpha(brand.main, 0.15)}`,
           transform: 'translateY(-2px)'
         }
       }}
@@ -608,7 +609,7 @@ const EnhancedCourseMetricsWidget: React.FC<
             <Box
               sx={{
                 p: 2,
-                bgcolor: '#fef3c7',
+                bgcolor: intent.warningSoft,
                 borderRadius: 2,
                 border: `1px solid ${colors.warning}`
               }}

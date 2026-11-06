@@ -3,7 +3,7 @@ import { Box, Button, Paper, Typography } from '@mui/material'
 import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
 import { useLocation } from 'react-router-dom'
 import { usePostHog } from 'posthog-js/react'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 import {
   OPEN_ANALYTICS_CONSENT_EVENT,
   getAnalyticsConsent,
@@ -78,7 +78,7 @@ const AnalyticsConsentBanner = () => {
         p: 2.25,
         borderRadius: '16px',
         border: `1px solid ${neutral.border}`,
-        boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)'
+        boxShadow: `0 18px 40px ${withAlpha(neutral.text, 0.18)}`
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25 }}>

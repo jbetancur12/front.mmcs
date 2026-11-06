@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Typography } from '@mui/material'
 import { keyframes } from '@emotion/react'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface AuthLayoutProps {
   /** Lo que la persona hace en esta pantalla: "Ingresa a la plataforma". */
@@ -63,7 +64,7 @@ const CalibrationScale: React.FC<{ compact?: boolean }> = ({ compact }) => (
       x2={SCALE_START + SCALE_STEP * (TICKS - 1)}
       y1={compact ? 44 : 50}
       y2={compact ? 44 : 50}
-      stroke='#e0f7f4'
+      stroke={brand.soft}
       strokeOpacity={0.6}
     />
     {Array.from({ length: TICKS }, (_, i) => {
@@ -79,7 +80,7 @@ const CalibrationScale: React.FC<{ compact?: boolean }> = ({ compact }) => (
             x2={x}
             y1={base - length}
             y2={base}
-            stroke='#e0f7f4'
+            stroke={brand.soft}
             strokeOpacity={major ? 1 : 0.7}
             strokeWidth={major ? 2 : 1.2}
           />
@@ -88,7 +89,7 @@ const CalibrationScale: React.FC<{ compact?: boolean }> = ({ compact }) => (
               x={x}
               y={base + 22}
               textAnchor='middle'
-              fill='#e0f7f4'
+              fill={brand.soft}
               fontSize={12}
               style={{ fontVariantNumeric: 'tabular-nums' }}
             >
@@ -117,7 +118,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
       minHeight: '100dvh',
       display: 'grid',
       gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '44% minmax(0, 1fr)' },
-      bgcolor: '#ffffff'
+      bgcolor: neutral.surface
     }}
   >
     <Box
@@ -126,13 +127,13 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         display: { xs: 'none', md: 'flex' },
         flexDirection: 'column',
         justifyContent: 'space-between',
-        bgcolor: '#00695c',
+        bgcolor: brand.ink,
         color: '#ffffff',
         px: { md: 6, lg: 8 },
         py: 6
       }}
     >
-      <Typography sx={{ fontWeight: 600, fontSize: 15, color: '#e0f7f4' }}>
+      <Typography sx={{ fontWeight: 600, fontSize: 15, color: brand.soft }}>
         Ingeniería y laboratorio de metrología
       </Typography>
 
@@ -149,7 +150,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         >
           Tus equipos y certificados de calibración, en un solo lugar.
         </Typography>
-        <Typography sx={{ fontSize: 16, lineHeight: 1.6, color: '#e0f7f4' }}>
+        <Typography sx={{ fontSize: 16, lineHeight: 1.6, color: brand.soft }}>
           Consulta el estado de cada equipo, descarga certificados y sigue los
           servicios en curso.
         </Typography>
@@ -162,7 +163,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
       <Box
         sx={{
           display: { xs: 'block', md: 'none' },
-          bgcolor: '#00695c',
+          bgcolor: brand.ink,
           px: 2,
           pt: 1.5
         }}
@@ -194,7 +195,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               fontSize: 26,
               fontWeight: 700,
               lineHeight: 1.25,
-              color: '#111827',
+              color: neutral.text,
               mb: subtitle ? 1 : 4
             }}
           >
@@ -202,7 +203,12 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           </Typography>
           {subtitle && (
             <Typography
-              sx={{ fontSize: 15, lineHeight: 1.6, color: '#4b5563', mb: 4 }}
+              sx={{
+                fontSize: 15,
+                lineHeight: 1.6,
+                color: neutral.textBody,
+                mb: 4
+              }}
             >
               {subtitle}
             </Typography>
@@ -211,7 +217,9 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           {children}
 
           {footer && (
-            <Box sx={{ mt: 4, fontSize: 14, color: '#4b5563' }}>{footer}</Box>
+            <Box sx={{ mt: 4, fontSize: 14, color: neutral.textBody }}>
+              {footer}
+            </Box>
           )}
         </Box>
       </Box>
@@ -221,7 +229,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           px: 2,
           pb: 3,
           fontSize: 12,
-          color: '#4b5563',
+          color: neutral.textBody,
           textAlign: 'center'
         }}
       >

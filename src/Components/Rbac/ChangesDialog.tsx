@@ -14,6 +14,7 @@ import {
 import { RbacMatrix } from '../../types/rbac'
 import { roleDisplayName } from './PermissionMatrix'
 import { requirementName } from './requirements'
+import { brand } from 'src/theme/designTokens'
 
 export interface PendingChange {
   roleId: number
@@ -209,8 +210,8 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
           }
           sx={{
             textTransform: 'none',
-            bgcolor: '#00BFA5',
-            '&:hover': { bgcolor: '#00897B' }
+            bgcolor: brand.main,
+            '&:hover': { bgcolor: brand.hover }
           }}
         >
           {saving ? 'Guardando…' : 'Confirmar y guardar'}

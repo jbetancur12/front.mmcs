@@ -27,9 +27,10 @@ import { requirementName } from '../../Components/Rbac/requirements'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { useRbacMatrix } from '../../hooks/useRbac'
 import { RbacPermission } from '../../types/rbac'
+import { brand, neutral } from 'src/theme/designTokens'
 
-const TEAL = '#00BFA5'
-const TEAL_DARK = '#00897B'
+const TEAL = brand.main
+const TEAL_DARK = brand.hover
 
 /** Minúsculas y sin tildes, para que "calibracion" encuentre "calibración". */
 const normalize = (text: string) =>
@@ -152,7 +153,12 @@ const RolesHelp: React.FC = () => {
 
       <Paper
         elevation={0}
-        sx={{ p: 2, mb: 3, borderRadius: 2, border: '1px solid #e5e7eb' }}
+        sx={{
+          p: 2,
+          mb: 3,
+          borderRadius: 2,
+          border: `1px solid ${neutral.border}`
+        }}
       >
         <TextField
           fullWidth
@@ -222,7 +228,7 @@ const RolesHelp: React.FC = () => {
             p: 4,
             textAlign: 'center',
             borderRadius: 2,
-            border: '1px solid #e5e7eb'
+            border: `1px solid ${neutral.border}`
           }}
         >
           <Typography color='text.secondary'>
@@ -242,7 +248,7 @@ const RolesHelp: React.FC = () => {
           <Typography
             variant='h6'
             fontWeight={700}
-            sx={{ color: '#00695C', mb: 1.5 }}
+            sx={{ color: brand.ink, mb: 1.5 }}
           >
             {moduleLabel(group.module)}
           </Typography>
@@ -264,7 +270,7 @@ const RolesHelp: React.FC = () => {
                 sx={{
                   p: 2,
                   borderRadius: 2,
-                  border: '1px solid #e5e7eb',
+                  border: `1px solid ${neutral.border}`,
                   scrollMarginTop: 80
                 }}
               >
@@ -327,7 +333,7 @@ const RolesHelp: React.FC = () => {
                           color:
                             s.kind === 'screen' ? TEAL_DARK : 'text.secondary',
                           bgcolor:
-                            s.kind === 'screen' ? '#E0F7F4' : 'transparent'
+                            s.kind === 'screen' ? brand.soft : 'transparent'
                         }}
                       />
                     ))}

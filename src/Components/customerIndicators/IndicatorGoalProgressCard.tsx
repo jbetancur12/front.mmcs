@@ -14,6 +14,7 @@ import {
   formatDate,
   formatPct
 } from './indicatorFormat'
+import { neutral } from 'src/theme/designTokens'
 
 const RING_SIZE = 148
 const RING_STROKE = 14
@@ -53,7 +54,11 @@ const IndicatorGoalProgressCard: React.FC<Props> = ({ indicators }) => {
   return (
     <Card
       elevation={0}
-      sx={{ height: '100%', borderRadius: '16px', border: '1px solid #e5e7eb' }}
+      sx={{
+        height: '100%',
+        borderRadius: '16px',
+        border: `1px solid ${neutral.border}`
+      }}
     >
       <CardContent sx={{ p: 3 }}>
         <Typography variant='h6' fontWeight='bold' gutterBottom>
@@ -88,7 +93,7 @@ const IndicatorGoalProgressCard: React.FC<Props> = ({ indicators }) => {
                 cy={RING_SIZE / 2}
                 r={RADIUS}
                 fill='none'
-                stroke='#e5e7eb'
+                stroke={neutral.border}
                 strokeWidth={RING_STROKE}
               />
               <circle
@@ -151,7 +156,7 @@ const IndicatorGoalProgressCard: React.FC<Props> = ({ indicators }) => {
               sx={{
                 height: 10,
                 borderRadius: 5,
-                bgcolor: '#e5e7eb',
+                bgcolor: neutral.border,
                 '& .MuiLinearProgress-bar': { bgcolor: TEAL, borderRadius: 5 }
               }}
             />

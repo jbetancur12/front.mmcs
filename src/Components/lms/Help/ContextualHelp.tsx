@@ -20,6 +20,7 @@ import {
   Warning as WarningIcon,
   Close as CloseIcon
 } from '@mui/icons-material'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface HelpTooltipProps {
   title: string
@@ -53,7 +54,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
       componentsProps={{
         tooltip: {
           sx: {
-            bgcolor: 'rgba(0,0,0,0.9)',
+            bgcolor: withAlpha(neutral.black, 0.9),
             backdropFilter: 'blur(8px)',
             borderRadius: '8px',
             maxWidth: size === 'small' ? 200 : size === 'large' ? 400 : 300,
@@ -62,7 +63,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
         },
         arrow: {
           sx: {
-            color: 'rgba(0,0,0,0.9)'
+            color: withAlpha(neutral.black, 0.9)
           }
         }
       }}
@@ -113,10 +114,10 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
         size={size}
         onClick={handleClick}
         sx={{
-          color: '#6b7280',
+          color: neutral.textMuted,
           '&:hover': {
-            color: '#3b82f6',
-            bgcolor: 'rgba(59, 130, 246, 0.1)'
+            color: intent.info,
+            bgcolor: withAlpha(intent.info, 0.1)
           }
         }}
       >
@@ -138,8 +139,8 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
         PaperProps={{
           sx: {
             borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-            border: '1px solid rgba(0,0,0,0.1)',
+            boxShadow: `0 8px 32px ${withAlpha(neutral.black, 0.12)}`,
+            border: `1px solid ${withAlpha(neutral.black, 0.1)}`,
             maxWidth: 350
           }
         }}
@@ -157,13 +158,13 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
               <Box>
                 <Typography
                   variant='h6'
-                  sx={{ fontWeight: 700, color: '#1f2937' }}
+                  sx={{ fontWeight: 700, color: neutral.text }}
                 >
                   {metric}
                 </Typography>
                 <Typography
                   variant='h4'
-                  sx={{ fontWeight: 700, color: '#3b82f6', mt: 0.5 }}
+                  sx={{ fontWeight: 700, color: intent.info, mt: 0.5 }}
                 >
                   {value}
                 </Typography>
@@ -173,7 +174,10 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
               </IconButton>
             </Box>
 
-            <Typography variant='body2' sx={{ color: '#6b7280', mb: 2 }}>
+            <Typography
+              variant='body2'
+              sx={{ color: neutral.textMuted, mb: 2 }}
+            >
               {description}
             </Typography>
 
@@ -183,7 +187,7 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
                 <Box sx={{ mb: 2 }}>
                   <Typography
                     variant='subtitle2'
-                    sx={{ fontWeight: 600, mb: 1, color: '#374151' }}
+                    sx={{ fontWeight: 600, mb: 1, color: neutral.textBody }}
                   >
                     Cálculo
                   </Typography>
@@ -191,7 +195,7 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
                     variant='body2'
                     sx={{
                       fontFamily: 'monospace',
-                      bgcolor: '#f9fafb',
+                      bgcolor: neutral.surfaceAlt,
                       p: 1,
                       borderRadius: 1,
                       fontSize: '0.8rem'
@@ -209,14 +213,14 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
                 <Box sx={{ mb: 2 }}>
                   <Typography
                     variant='subtitle2'
-                    sx={{ fontWeight: 600, mb: 1, color: '#374151' }}
+                    sx={{ fontWeight: 600, mb: 1, color: neutral.textBody }}
                   >
                     Interpretación
                   </Typography>
                   <Stack spacing={1}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <CheckIcon
-                        sx={{ color: '#10b981', fontSize: 16, mr: 1 }}
+                        sx={{ color: brand.main, fontSize: 16, mr: 1 }}
                       />
                       <Typography variant='body2' sx={{ fontSize: '0.8rem' }}>
                         <strong>Bueno:</strong> {interpretation.good}
@@ -224,7 +228,7 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <WarningIcon
-                        sx={{ color: '#f59e0b', fontSize: 16, mr: 1 }}
+                        sx={{ color: intent.warning, fontSize: 16, mr: 1 }}
                       />
                       <Typography variant='body2' sx={{ fontSize: '0.8rem' }}>
                         <strong>Atención:</strong> {interpretation.warning}
@@ -232,7 +236,7 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <WarningIcon
-                        sx={{ color: '#ef4444', fontSize: 16, mr: 1 }}
+                        sx={{ color: intent.danger, fontSize: 16, mr: 1 }}
                       />
                       <Typography variant='body2' sx={{ fontSize: '0.8rem' }}>
                         <strong>Crítico:</strong> {interpretation.critical}
@@ -249,7 +253,7 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
                 <Box>
                   <Typography
                     variant='subtitle2'
-                    sx={{ fontWeight: 600, mb: 1, color: '#374151' }}
+                    sx={{ fontWeight: 600, mb: 1, color: neutral.textBody }}
                   >
                     Métricas Relacionadas
                   </Typography>
@@ -263,8 +267,8 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
                         sx={{
                           fontSize: '0.7rem',
                           height: 24,
-                          borderColor: '#d1d5db',
-                          color: '#6b7280'
+                          borderColor: neutral.borderStrong,
+                          color: neutral.textMuted
                         }}
                       />
                     ))}
@@ -329,12 +333,12 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
         size='small'
         onClick={() => setOpen(true)}
         sx={{
-          borderColor: '#d1d5db',
-          color: '#6b7280',
+          borderColor: neutral.borderStrong,
+          color: neutral.textMuted,
           textTransform: 'none',
           '&:hover': {
-            borderColor: '#3b82f6',
-            color: '#3b82f6'
+            borderColor: intent.info,
+            color: intent.info
           }
         }}
       >
@@ -355,7 +359,7 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
           maxWidth: 400,
           width: '90vw',
           borderRadius: '16px',
-          boxShadow: '0 20px 64px rgba(0,0,0,0.2)'
+          boxShadow: `0 20px 64px ${withAlpha(neutral.black, 0.2)}`
         }}
       >
         <CardContent sx={{ p: 3 }}>
@@ -378,7 +382,7 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
           <Box sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               {steps[currentStep].icon && (
-                <Box sx={{ mr: 2, color: '#3b82f6' }}>
+                <Box sx={{ mr: 2, color: intent.info }}>
                   {steps[currentStep].icon}
                 </Box>
               )}
@@ -388,7 +392,7 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
             </Box>
             <Typography
               variant='body2'
-              sx={{ color: '#6b7280', lineHeight: 1.6 }}
+              sx={{ color: neutral.textMuted, lineHeight: 1.6 }}
             >
               {steps[currentStep].description}
             </Typography>
@@ -403,7 +407,10 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    bgcolor: index === currentStep ? '#3b82f6' : '#d1d5db',
+                    bgcolor:
+                      index === currentStep
+                        ? intent.info
+                        : neutral.borderStrong,
                     transition: 'background-color 0.2s'
                   }}
                 />
@@ -424,7 +431,7 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
               variant='body2'
               sx={{
                 alignSelf: 'center',
-                color: '#6b7280',
+                color: neutral.textMuted,
                 fontSize: '0.8rem'
               }}
             >
@@ -435,8 +442,8 @@ export const FeatureGuide: React.FC<FeatureGuideProps> = ({
               onClick={handleNext}
               sx={{
                 textTransform: 'none',
-                bgcolor: '#3b82f6',
-                '&:hover': { bgcolor: '#2563eb' }
+                bgcolor: intent.info,
+                '&:hover': { bgcolor: intent.action }
               }}
             >
               {currentStep === steps.length - 1 ? 'Finalizar' : 'Siguiente'}

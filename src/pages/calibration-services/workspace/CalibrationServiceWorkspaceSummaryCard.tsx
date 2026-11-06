@@ -11,6 +11,7 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import { currencyFormatter } from './calibrationServiceWorkspaceConstants'
 import { CalibrationServiceWorkspaceSummary } from './calibrationServiceWorkspaceSummary'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface CalibrationServiceWorkspaceSummaryCardProps {
   summary: CalibrationServiceWorkspaceSummary
@@ -37,8 +38,8 @@ const CalibrationServiceWorkspaceSummaryCard = ({
       elevation={0}
       sx={{
         borderRadius: '16px',
-        border: '1px solid #e5e7eb',
-        bgcolor: '#fff',
+        border: `1px solid ${neutral.border}`,
+        bgcolor: neutral.surface,
         boxShadow: 'none',
         position: { lg: 'sticky' },
         top: { lg: 24 }
@@ -54,33 +55,39 @@ const CalibrationServiceWorkspaceSummaryCard = ({
             spacing={1.5}
             sx={{ mb: 2 }}
           >
-            <ReceiptLongOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-            <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+            <ReceiptLongOutlinedIcon
+              sx={{ color: brand.hover, fontSize: 22 }}
+            />
+            <Typography
+              variant='h6'
+              fontWeight={700}
+              sx={{ color: neutral.text }}
+            >
               Resumen económico
             </Typography>
           </Stack>
           <Stack spacing={1.5}>
             <Stack direction='row' justifyContent='space-between'>
-              <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>
+              <Typography sx={{ color: neutral.textMuted, fontWeight: 500 }}>
                 Subtotal
               </Typography>
-              <Typography fontWeight={600} sx={{ color: '#111827' }}>
+              <Typography fontWeight={600} sx={{ color: neutral.text }}>
                 {currencyFormatter.format(subtotal)}
               </Typography>
             </Stack>
             <Stack direction='row' justifyContent='space-between'>
-              <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>
+              <Typography sx={{ color: neutral.textMuted, fontWeight: 500 }}>
                 IVA
               </Typography>
-              <Typography fontWeight={600} sx={{ color: '#111827' }}>
+              <Typography fontWeight={600} sx={{ color: neutral.text }}>
                 {currencyFormatter.format(taxTotal)}
               </Typography>
             </Stack>
             <Stack direction='row' justifyContent='space-between'>
-              <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>
+              <Typography sx={{ color: neutral.textMuted, fontWeight: 500 }}>
                 Descuento
               </Typography>
-              <Typography fontWeight={600} sx={{ color: '#111827' }}>
+              <Typography fontWeight={600} sx={{ color: neutral.text }}>
                 {currencyFormatter.format(discountTotal)}
               </Typography>
             </Stack>
@@ -92,14 +99,14 @@ const CalibrationServiceWorkspaceSummaryCard = ({
             >
               <Typography
                 variant='h6'
-                sx={{ color: '#111827', fontWeight: 700 }}
+                sx={{ color: neutral.text, fontWeight: 700 }}
               >
                 Total
               </Typography>
               <Typography
                 variant='h6'
                 fontWeight={800}
-                sx={{ color: '#059669' }}
+                sx={{ color: brand.ink }}
               >
                 {currencyFormatter.format(grandTotal)}
               </Typography>
@@ -112,7 +119,7 @@ const CalibrationServiceWorkspaceSummaryCard = ({
             <Typography
               variant='subtitle2'
               fontWeight={700}
-              sx={{ color: '#111827' }}
+              sx={{ color: neutral.text }}
             >
               {pendingRequirements.length
                 ? `Faltan ${pendingRequirements.length} para enviar`
@@ -146,26 +153,33 @@ const CalibrationServiceWorkspaceSummaryCard = ({
                         font: 'inherit',
                         cursor: 'pointer',
                         borderRadius: '8px',
-                        '&:hover': { bgcolor: '#f3f4f6' },
-                        '&:focus-visible': { outline: '2px solid #00BFA5' }
+                        '&:hover': { bgcolor: neutral.surfaceHead },
+                        '&:focus-visible': {
+                          outline: `2px solid ${brand.main}`
+                        }
                       }}
                     >
                       <ErrorOutlineOutlinedIcon
                         sx={{
                           fontSize: 18,
-                          color: requirement.forDraft ? '#d97706' : '#9ca3af'
+                          color: requirement.forDraft
+                            ? intent.warning
+                            : neutral.textFaint
                         }}
                       />
                       <Typography
                         variant='body2'
-                        sx={{ color: '#374151', flex: 1 }}
+                        sx={{ color: neutral.textBody, flex: 1 }}
                       >
                         {requirement.label}
                       </Typography>
                       {!requirement.forDraft ? (
                         <Typography
                           variant='caption'
-                          sx={{ color: '#9ca3af', whiteSpace: 'nowrap' }}
+                          sx={{
+                            color: neutral.textFaint,
+                            whiteSpace: 'nowrap'
+                          }}
                         >
                           al enviar
                         </Typography>
@@ -177,7 +191,7 @@ const CalibrationServiceWorkspaceSummaryCard = ({
             ) : (
               <Stack direction='row' spacing={1} alignItems='flex-start'>
                 <CheckCircleOutlineOutlinedIcon
-                  sx={{ color: '#00897B', fontSize: 20, mt: 0.1 }}
+                  sx={{ color: brand.hover, fontSize: 20, mt: 0.1 }}
                 />
                 <Typography variant='body2' color='text.secondary'>
                   Cliente, evidencia, ítems y condiciones están completos.

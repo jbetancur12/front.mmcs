@@ -50,6 +50,7 @@ import { FileDownloadOutlined } from '@mui/icons-material'
 import LaboratoryMqttGuide from '../LaboratoryMqttGuide'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 // --- INTERFACES (MANTENEMOS LAS EXISTENTES Y AÑADIMOS NUEVAS) ---
 
 // Interfaz para los datos del sensor (sin cambios)
@@ -422,9 +423,9 @@ const LaboratoryMonitor: React.FC = () => {
               startIcon={<AddIcon />}
               onClick={handleOpenAddModal}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Agregar sensor
@@ -488,7 +489,7 @@ const LaboratoryMonitor: React.FC = () => {
                   lastTemperature: device.lastTemperature, // Pasar null si es null
                   lastHumidity: device.lastHumidity, // Pasar null si es null
                   lastSeen: device.lastSeen,
-                  color: device.color || '#8884d8' // Un color por defecto
+                  color: device.color || intent.info // Un color por defecto
                 }}
                 onEditClick={handleOpenEditModal}
                 onDeleteClick={handleOpenDeleteDialog}
@@ -668,7 +669,7 @@ const LaboratoryMonitor: React.FC = () => {
               <Typography
                 variant='h5'
                 component='h2'
-                className='font-bold text-gray-800'
+                className='font-bold text-neutral-text'
               >
                 Datos Históricos
               </Typography>
@@ -806,7 +807,10 @@ const LaboratoryMonitor: React.FC = () => {
                                 key={stats.id}
                                 sx={{
                                   '&:hover': {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                    backgroundColor: withAlpha(
+                                      neutral.black,
+                                      0.04
+                                    )
                                   }, // Hover más sutil
                                   '& td, & th': { py: 1.5, px: 2 }, // Padding consistente
                                   // Quitar borde inferior de la última fila para limpieza

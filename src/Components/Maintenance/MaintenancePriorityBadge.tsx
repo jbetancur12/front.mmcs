@@ -7,6 +7,7 @@ import {
   Warning
 } from '@mui/icons-material'
 import { MaintenancePriority } from '../../types/maintenance'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenancePriorityBadgeProps {
   priority: MaintenancePriority
@@ -26,39 +27,39 @@ const MaintenancePriorityBadge: React.FC<MaintenancePriorityBadgeProps> = ({
   const PRIORITY_STYLES = {
     [MaintenancePriority.LOW]: {
       label: 'Baja',
-      backgroundColor: '#ecfdf5',
-      textColor: '#166534',
-      borderColor: '#bbf7d0',
+      backgroundColor: intent.successSoft,
+      textColor: intent.successInk,
+      borderColor: intent.successSoft,
       icon: <KeyboardArrowDown />
     },
     [MaintenancePriority.MEDIUM]: {
       label: 'Media',
-      backgroundColor: '#fff7ed',
-      textColor: '#c2410c',
-      borderColor: '#fed7aa',
+      backgroundColor: intent.warningSoft,
+      textColor: intent.dangerInk,
+      borderColor: intent.warningSoft,
       icon: <KeyboardArrowUp />
     },
     [MaintenancePriority.HIGH]: {
       label: 'Alta',
-      backgroundColor: '#fef2f2',
-      textColor: '#b91c1c',
-      borderColor: '#fecaca',
+      backgroundColor: intent.dangerSoft,
+      textColor: intent.dangerInk,
+      borderColor: intent.dangerSoft,
       icon: <PriorityHigh />
     },
     [MaintenancePriority.URGENT]: {
       label: 'Urgente',
-      backgroundColor: '#ffe4e6',
-      textColor: '#be123c',
-      borderColor: '#fb7185',
+      backgroundColor: intent.dangerSoft,
+      textColor: intent.dangerInk,
+      borderColor: intent.danger,
       icon: <Warning />
     }
   }
 
   const config = PRIORITY_STYLES[priority] || {
     label: 'Desconocida',
-    backgroundColor: '#f8fafc',
-    textColor: '#475569',
-    borderColor: '#cbd5e1',
+    backgroundColor: neutral.surfaceAlt,
+    textColor: neutral.textBody,
+    borderColor: neutral.borderStrong,
     icon: <KeyboardArrowUp />
   }
   const isUrgent = priority === MaintenancePriority.URGENT
@@ -76,10 +77,12 @@ const MaintenancePriorityBadge: React.FC<MaintenancePriorityBadgeProps> = ({
         fontSize: size === 'small' ? '0.72rem' : '0.8rem',
         transition: 'border-color 0.2s ease, background-color 0.2s ease',
         backgroundColor:
-          variant === 'filled' ? config.backgroundColor : '#ffffff',
+          variant === 'filled' ? config.backgroundColor : neutral.surface,
         color: config.textColor,
         border: `1px solid ${config.borderColor}`,
-        boxShadow: isUrgent ? '0 0 0 1px rgba(225, 29, 72, 0.08)' : 'none',
+        boxShadow: isUrgent
+          ? `0 0 0 1px ${withAlpha(intent.danger, 0.08)}`
+          : 'none',
         '& .MuiChip-icon': {
           fontSize: size === 'small' ? '0.95rem' : '1.05rem',
           color: config.textColor
@@ -87,7 +90,9 @@ const MaintenancePriorityBadge: React.FC<MaintenancePriorityBadgeProps> = ({
         '&:hover': {
           backgroundColor: config.backgroundColor,
           borderColor: config.textColor,
-          boxShadow: isUrgent ? '0 4px 10px rgba(190, 18, 60, 0.12)' : 'none'
+          boxShadow: isUrgent
+            ? `0 4px 10px ${withAlpha(intent.dangerInk, 0.12)}`
+            : 'none'
         },
         ...(isUrgent && {
           fontWeight: 700

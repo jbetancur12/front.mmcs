@@ -7,6 +7,7 @@ import MaintenanceFileUpload from '../../../Components/Maintenance/MaintenanceFi
 import MaintenanceTimeline from '../../../Components/Maintenance/MaintenanceTimeline'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral } from 'src/theme/designTokens'
 
 interface MaintenanceTicketActivitySectionsProps {
   ticket: MaintenanceTicket
@@ -59,12 +60,15 @@ const MaintenanceTicketActivitySections = ({
           alignItems='center'
           mb={2}
         >
-          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+          <Typography
+            variant='h6'
+            sx={{ color: neutral.text, fontWeight: 600 }}
+          >
             Historial del Ticket
           </Typography>
           <IconButton
             onClick={() => setShowTimeline(!showTimeline)}
-            sx={{ color: '#475569' }}
+            sx={{ color: neutral.textBody }}
             aria-label={
               showTimeline ? 'Ocultar historial' : 'Mostrar historial'
             }
@@ -108,12 +112,15 @@ const MaintenanceTicketActivitySections = ({
           alignItems='center'
           mb={2}
         >
-          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+          <Typography
+            variant='h6'
+            sx={{ color: neutral.text, fontWeight: 600 }}
+          >
             Comentarios
           </Typography>
           <IconButton
             onClick={() => setShowComments(!showComments)}
-            sx={{ color: '#475569' }}
+            sx={{ color: neutral.textBody }}
             aria-label={
               showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'
             }
@@ -153,12 +160,15 @@ const MaintenanceTicketActivitySections = ({
           alignItems='center'
           mb={2}
         >
-          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+          <Typography
+            variant='h6'
+            sx={{ color: neutral.text, fontWeight: 600 }}
+          >
             Archivos Adjuntos
           </Typography>
           <IconButton
             onClick={() => setShowFiles(!showFiles)}
-            sx={{ color: '#475569' }}
+            sx={{ color: neutral.textBody }}
             aria-label={showFiles ? 'Ocultar archivos' : 'Mostrar archivos'}
             aria-expanded={showFiles}
             aria-controls='files-section'

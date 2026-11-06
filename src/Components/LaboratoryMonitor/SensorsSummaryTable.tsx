@@ -18,6 +18,7 @@ import OpacityIcon from '@mui/icons-material/Opacity'
 import TableChartOutlined from '@mui/icons-material/TableChartOutlined'
 import SectionHeader from 'src/Components/Common/SectionHeader'
 import EmptyState from 'src/Components/Common/EmptyState'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 import { SensorSummaryViewData } from './types' // Asegúrate que la ruta sea correcta
 
 interface SensorsSummaryTableProps {
@@ -63,7 +64,7 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
     return (
       <Paper
         variant='outlined'
-        sx={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
+        sx={{ borderRadius: '12px', borderColor: neutral.border }}
       >
         <EmptyState
           compact
@@ -85,11 +86,13 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
       <TableContainer
         component={Paper}
         variant='outlined'
-        sx={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
+        sx={{ borderRadius: '12px', borderColor: neutral.border }}
       >
         <Table aria-label='resumen de sensores'>
           <TableHead>
-            <TableRow sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}>
+            <TableRow
+              sx={{ '& th': { bgcolor: neutral.surfaceHead, fontWeight: 600 } }}
+            >
               <TableCell>Patrón</TableCell>
               <TableCell>Sensor</TableCell>
               <TableCell>Mide</TableCell>
@@ -103,7 +106,7 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
               <TableRow
                 key={row.sensorId}
                 hover
-                sx={{ '&:hover': { bgcolor: 'rgba(0,191,165,0.04)' } }}
+                sx={{ '&:hover': { bgcolor: withAlpha(brand.main, 0.04) } }}
               >
                 <TableCell component='th' scope='row'>
                   {row.patternName}
@@ -121,13 +124,13 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
                       {row.sensorType.includes('temperature') && (
                         <ThermostatIcon
                           fontSize='small'
-                          sx={{ color: '#c2410c' }}
+                          sx={{ color: intent.dangerInk }}
                         />
                       )}
                       {row.sensorType.includes('humidity') && (
                         <OpacityIcon
                           fontSize='small'
-                          sx={{ color: '#0369a1' }}
+                          sx={{ color: intent.infoInk }}
                         />
                       )}
                     </Box>
@@ -156,7 +159,7 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
                           color:
                             now - new Date(row.lastSeen).getTime() >
                             SILENCE_WARNING_MS
-                              ? '#b45309'
+                              ? intent.warningInk
                               : 'text.primary'
                         }}
                       >

@@ -18,6 +18,7 @@ import {
   formatCount,
   formatPctOrDash
 } from './indicatorFormat'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface Props {
   rows: IndicatorTypeRow[]
@@ -60,7 +61,11 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onReview }) => {
   return (
     <Card
       elevation={0}
-      sx={{ height: '100%', borderRadius: '16px', border: '1px solid #e5e7eb' }}
+      sx={{
+        height: '100%',
+        borderRadius: '16px',
+        border: `1px solid ${neutral.border}`
+      }}
     >
       <CardContent sx={{ p: 3 }}>
         <Box
@@ -155,7 +160,7 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onReview }) => {
                             sx={{
                               ml: 0.75,
                               fontSize: 16,
-                              color: '#b45309',
+                              color: intent.warningInk,
                               verticalAlign: 'text-bottom'
                             }}
                           />
@@ -169,11 +174,11 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onReview }) => {
                       sx={{
                         height: 8,
                         borderRadius: 4,
-                        bgcolor: '#e5e7eb',
+                        bgcolor: neutral.border,
                         gridColumn: { xs: '1 / 2', sm: 2 },
                         gridRow: { xs: 2, sm: 1 },
                         '& .MuiLinearProgress-bar': {
-                          bgcolor: unmatched ? '#d1d5db' : TEAL,
+                          bgcolor: unmatched ? neutral.borderStrong : TEAL,
                           borderRadius: 4
                         }
                       }}
@@ -194,7 +199,7 @@ const IndicatorByTypeCard: React.FC<Props> = ({ rows, onReview }) => {
                       variant='body2'
                       fontWeight={600}
                       sx={{
-                        color: unmatched ? '#b45309' : TEAL_TEXT,
+                        color: unmatched ? intent.warningInk : TEAL_TEXT,
                         fontVariantNumeric: 'tabular-nums',
                         textAlign: 'right',
                         gridColumn: { xs: 2, sm: 4 },

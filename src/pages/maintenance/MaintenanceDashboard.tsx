@@ -89,6 +89,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -121,10 +122,10 @@ const MaintenanceDashboard: React.FC = () => {
 
   const limit = 12
   const surfaceSx = {
-    backgroundColor: '#ffffff',
+    backgroundColor: neutral.surface,
     borderRadius: '14px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+    border: `1px solid ${neutral.border}`,
+    boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
   }
 
   const showToast = (
@@ -627,9 +628,9 @@ const MaintenanceDashboard: React.FC = () => {
               aria-expanded={showFilters}
               aria-controls='maintenance-filters-section'
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               {isMobile ? <FilterList /> : 'Filtros'}
@@ -639,9 +640,9 @@ const MaintenanceDashboard: React.FC = () => {
               startIcon={!isMobile && <Assessment />}
               href='/maintenance/analytics'
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               {isMobile ? <Assessment /> : 'Analíticas'}
@@ -652,9 +653,9 @@ const MaintenanceDashboard: React.FC = () => {
                 startIcon={!isMobile && <Add />}
                 href='/maintenance/report'
                 sx={{
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   whiteSpace: 'nowrap',
-                  '&:hover': { bgcolor: '#00ACC1' }
+                  '&:hover': { bgcolor: brand.hover }
                 }}
               >
                 {isMobile ? <Add /> : 'Nueva Solicitud'}
@@ -737,13 +738,13 @@ const MaintenanceDashboard: React.FC = () => {
                 sx={{
                   fontSize: { xs: '1.125rem', sm: '1.25rem' },
                   fontWeight: 600,
-                  color: '#0f172a',
+                  color: neutral.text,
                   mb: 0.5
                 }}
               >
                 Tickets por Prioridad
               </Typography>
-              <Typography variant='body2' sx={{ color: '#64748b' }}>
+              <Typography variant='body2' sx={{ color: neutral.textMuted }}>
                 Vista rápida para detectar carga operativa y urgencias sin
                 saturar el tablero.
               </Typography>
@@ -757,8 +758,8 @@ const MaintenanceDashboard: React.FC = () => {
                       sx={{
                         p: { xs: 1.75, sm: 2 },
                         borderRadius: '12px',
-                        backgroundColor: '#fbfdfb',
-                        border: '1px solid #e5e7eb'
+                        backgroundColor: neutral.surfaceAlt,
+                        border: `1px solid ${neutral.border}`
                       }}
                     >
                       <Typography
@@ -766,7 +767,7 @@ const MaintenanceDashboard: React.FC = () => {
                         sx={{
                           fontSize: { xs: '1.25rem', sm: '1.5rem' },
                           fontWeight: 700,
-                          color: '#0f172a',
+                          color: neutral.text,
                           mb: 1
                         }}
                       >
@@ -798,13 +799,13 @@ const MaintenanceDashboard: React.FC = () => {
                 sx={{
                   fontSize: { xs: '1.125rem', sm: '1.25rem' },
                   fontWeight: 600,
-                  color: '#0f172a',
+                  color: neutral.text,
                   mb: 0.5
                 }}
               >
                 Panorama Rápido
               </Typography>
-              <Typography variant='body2' sx={{ color: '#64748b' }}>
+              <Typography variant='body2' sx={{ color: neutral.textMuted }}>
                 Resumen operativo para leer el tablero de un vistazo.
               </Typography>
             </Box>
@@ -815,31 +816,31 @@ const MaintenanceDashboard: React.FC = () => {
                   label: 'Cierre efectivo',
                   value: `${completionRate}%`,
                   helper: 'Tickets completados sobre el total',
-                  color: '#00A651',
-                  background: '#e8f7ef'
+                  color: intent.successInk,
+                  background: intent.successSoft
                 },
                 {
                   label: 'Carga activa',
                   value: `${activeTickets}`,
                   helper: 'Tickets que siguen en operación',
-                  color: '#b45309',
-                  background: '#fff7ed'
+                  color: intent.warningInk,
+                  background: intent.warningSoft
                 },
                 {
                   label: 'Urgencias abiertas',
                   value: `${urgentTickets}`,
                   helper: 'Casos que necesitan más atención',
-                  color: '#dc2626',
-                  background: '#fef2f2'
+                  color: intent.danger,
+                  background: intent.dangerSoft
                 }
               ].map((item) => (
                 <Box
                   key={item.label}
                   sx={{
                     borderRadius: '12px',
-                    border: '1px solid #e5e7eb',
+                    border: `1px solid ${neutral.border}`,
                     p: 1.75,
-                    backgroundColor: '#ffffff'
+                    backgroundColor: neutral.surface
                   }}
                 >
                   <Box
@@ -851,11 +852,14 @@ const MaintenanceDashboard: React.FC = () => {
                     <Box>
                       <Typography
                         variant='body2'
-                        sx={{ fontWeight: 600, color: '#0f172a', mb: 0.25 }}
+                        sx={{ fontWeight: 600, color: neutral.text, mb: 0.25 }}
                       >
                         {item.label}
                       </Typography>
-                      <Typography variant='caption' sx={{ color: '#64748b' }}>
+                      <Typography
+                        variant='caption'
+                        sx={{ color: neutral.textMuted }}
+                      >
                         {item.helper}
                       </Typography>
                     </Box>
@@ -947,7 +951,7 @@ const MaintenanceDashboard: React.FC = () => {
               sx={{
                 fontSize: { xs: '1.125rem', sm: '1.25rem' },
                 fontWeight: 600,
-                color: '#0f172a',
+                color: neutral.text,
                 display: 'flex',
                 alignItems: 'center',
                 flexWrap: 'wrap',
@@ -960,14 +964,17 @@ const MaintenanceDashboard: React.FC = () => {
                   label={`${ticketsData.pagination.totalItems} total`}
                   size='small'
                   sx={{
-                    backgroundColor: '#e8f7ef',
-                    color: '#00A651',
+                    backgroundColor: intent.successSoft,
+                    color: intent.successInk,
                     fontWeight: 600
                   }}
                 />
               )}
             </Typography>
-            <Typography variant='body2' sx={{ mt: 0.5, color: '#64748b' }}>
+            <Typography
+              variant='body2'
+              sx={{ mt: 0.5, color: neutral.textMuted }}
+            >
               Tarjetas más ligeras para priorizar lectura rápida y acciones
               frecuentes.
             </Typography>
@@ -1128,7 +1135,7 @@ const MaintenanceDashboard: React.FC = () => {
                     mb: 0.75,
                     px: 0.5,
                     fontWeight: 600,
-                    color: '#64748b',
+                    color: neutral.textMuted,
                     letterSpacing: '0.02em'
                   }}
                 >
@@ -1166,7 +1173,7 @@ const MaintenanceDashboard: React.FC = () => {
                       mb: 0.75,
                       px: 0.5,
                       fontWeight: 600,
-                      color: '#64748b',
+                      color: neutral.textMuted,
                       letterSpacing: '0.02em'
                     }}
                   >

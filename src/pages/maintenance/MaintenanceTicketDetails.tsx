@@ -18,6 +18,7 @@ import MaintenanceTicketSignaturesCard from './ticket-details/MaintenanceTicketS
 import MaintenanceTicketSatisfactionCard from './ticket-details/MaintenanceTicketSatisfactionCard'
 import MaintenanceTicketQuickActions from './ticket-details/MaintenanceTicketQuickActions'
 import MaintenanceTicketDialogs from './ticket-details/MaintenanceTicketDialogs'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export { formatCurrency } from './ticket-details/maintenanceTicketDetailUtils'
 
@@ -42,7 +43,7 @@ const MaintenanceTicketDetails: React.FC = () => {
         sx={{
           py: { xs: 2, sm: 3 },
           px: { xs: 1, sm: 2, md: 3 },
-          backgroundColor: '#f8fafc',
+          backgroundColor: neutral.surfaceAlt,
           minHeight: '100vh'
         }}
       >
@@ -50,9 +51,9 @@ const MaintenanceTicketDetails: React.FC = () => {
           severity='error'
           sx={{
             mb: 3,
-            backgroundColor: '#ffffff',
+            backgroundColor: neutral.surface,
             borderRadius: '14px',
-            border: '1px solid rgba(244, 67, 54, 0.2)'
+            border: `1px solid ${withAlpha(intent.danger, 0.2)}`
           }}
         >
           {getApiErrorReason(ticketError) ||
@@ -64,12 +65,12 @@ const MaintenanceTicketDetails: React.FC = () => {
           onClick={handleBack}
           sx={{
             minHeight: 48,
-            borderColor: '#d1d5db',
-            color: '#334155',
+            borderColor: neutral.borderStrong,
+            color: neutral.textBody,
             borderRadius: '12px',
             '&:hover': {
-              borderColor: '#94a3b8',
-              backgroundColor: '#f8fafc'
+              borderColor: neutral.textFaint,
+              backgroundColor: neutral.surfaceAlt
             }
           }}
         >
@@ -86,7 +87,7 @@ const MaintenanceTicketDetails: React.FC = () => {
         sx={{
           py: { xs: 2, sm: 3 },
           px: { xs: 1, sm: 2, md: 3 },
-          backgroundColor: '#f8fafc',
+          backgroundColor: neutral.surfaceAlt,
           minHeight: '100vh'
         }}
       >

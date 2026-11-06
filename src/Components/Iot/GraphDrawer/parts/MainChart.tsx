@@ -13,6 +13,7 @@ import type { TooltipProps } from 'recharts'
 import type { Payload as LegendPayload } from 'recharts/types/component/DefaultLegendContent'
 import { Box, Typography, Stack } from '@mui/material'
 import { useMemo } from 'react'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MainChartProps {
   graphData: Array<{
@@ -60,7 +61,7 @@ const MainChart = ({
         <Box
           sx={{
             backgroundColor: 'white',
-            border: '1px solid #ccc',
+            border: `1px solid ${neutral.borderStrong}`,
             padding: 1,
             borderRadius: 1,
             boxShadow: 1
@@ -134,17 +135,17 @@ const MainChart = ({
     <Box sx={{ width: '100%', height: 400, mb: 4 }}>
       <ResponsiveContainer>
         <LineChart data={graphData}>
-          <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+          <CartesianGrid strokeDasharray='3 3' stroke={neutral.surfaceHead} />
           {visibleSeries.temperature && temperatureAlarms?.above && (
             <ReferenceLine
               y={temperatureAlarms.above}
               yAxisId='left'
-              stroke='#F44336'
+              stroke={intent.danger}
               strokeDasharray='5 5'
               label={{
                 value: `Alta: ${temperatureAlarms.above}°C`,
                 position: 'right',
-                fill: '#F44336'
+                fill: intent.danger
               }}
             />
           )}
@@ -152,12 +153,12 @@ const MainChart = ({
             <ReferenceLine
               y={temperatureAlarms.below}
               yAxisId='left'
-              stroke='#F44336'
+              stroke={intent.danger}
               strokeDasharray='5 5'
               label={{
                 value: `Baja: ${temperatureAlarms.below}°C`,
                 position: 'right',
-                fill: '#F44336'
+                fill: intent.danger
               }}
             />
           )}
@@ -167,12 +168,12 @@ const MainChart = ({
             <ReferenceLine
               y={humidityAlarms.above}
               yAxisId='right'
-              stroke='#2196F3'
+              stroke={intent.info}
               strokeDasharray='5 5'
               label={{
                 value: `Alta: ${humidityAlarms.above}%`,
                 position: 'left',
-                fill: '#2196F3'
+                fill: intent.info
               }}
             />
           )}
@@ -180,12 +181,12 @@ const MainChart = ({
             <ReferenceLine
               y={humidityAlarms.below}
               yAxisId='right'
-              stroke='#2196F3'
+              stroke={intent.info}
               strokeDasharray='5 5'
               label={{
                 value: `Baja: ${humidityAlarms.below}%`,
                 position: 'left',
-                fill: '#2196F3'
+                fill: intent.info
               }}
             />
           )}
@@ -223,7 +224,7 @@ const MainChart = ({
             yAxisId='left'
             type='monotone'
             dataKey='temperature'
-            stroke='#F44336'
+            stroke={intent.danger}
             hide={!visibleSeries.temperature}
             strokeWidth={2}
             dot={false}
@@ -234,7 +235,7 @@ const MainChart = ({
             yAxisId='right'
             type='monotone'
             dataKey='humidity'
-            stroke='#2196F3'
+            stroke={intent.info}
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 6 }}

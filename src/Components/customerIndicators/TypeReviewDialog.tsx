@@ -35,6 +35,7 @@ import {
   formatDate
 } from './indicatorFormat'
 import { suggestType } from './typeSuggestions'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface Props {
   open: boolean
@@ -100,7 +101,7 @@ const ReviewRow: React.FC<RowProps> = ({
       gap: 1.5,
       alignItems: 'start',
       py: 1.5,
-      borderBottom: '1px solid #e5e7eb'
+      borderBottom: `1px solid ${neutral.border}`
     }}
   >
     <Box sx={{ minWidth: 0 }}>
@@ -155,7 +156,7 @@ const ReviewRow: React.FC<RowProps> = ({
           title={REASON_HINT[suggestedBy]}
           sx={{
             mt: 0.75,
-            bgcolor: '#E0F7F4',
+            bgcolor: brand.soft,
             color: TEAL_TEXT,
             fontWeight: 600
           }}
@@ -164,7 +165,7 @@ const ReviewRow: React.FC<RowProps> = ({
       {target && target.counted === 0 && (
         <Typography
           variant='caption'
-          sx={{ display: 'block', mt: 0.5, color: '#b45309' }}
+          sx={{ display: 'block', mt: 0.5, color: intent.warningInk }}
         >
           Solo tiene certificados que no cuentan para el avance (
           {target.certificateTypes?.map((type) => type.name).join(', ')}).
@@ -463,7 +464,7 @@ const TypeReviewDialog: React.FC<Props> = ({
                     alignItems: 'center',
                     gap: 1,
                     py: 0.75,
-                    borderBottom: '1px solid #f3f4f6'
+                    borderBottom: `1px solid ${neutral.surfaceHead}`
                   }}
                 >
                   <Box sx={{ flex: 1, minWidth: 0 }}>

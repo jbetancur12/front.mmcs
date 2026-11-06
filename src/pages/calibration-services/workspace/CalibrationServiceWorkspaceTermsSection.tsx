@@ -18,6 +18,7 @@ import {
 } from '../calibrationQuoteTerms'
 import { sectionCardSx } from './calibrationServiceWorkspaceConstants'
 import { CalibrationServiceWorkspaceForm } from './useCalibrationServiceWorkspaceForm'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceWorkspaceTermsSectionProps {
   form: CalibrationServiceWorkspaceForm
@@ -42,8 +43,12 @@ const CalibrationServiceWorkspaceTermsSection = ({
           spacing={1.5}
           sx={{ mb: 2.5 }}
         >
-          <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-          <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+          <UploadFileOutlinedIcon sx={{ color: brand.hover, fontSize: 22 }} />
+          <Typography
+            variant='h6'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Términos
           </Typography>
         </Stack>

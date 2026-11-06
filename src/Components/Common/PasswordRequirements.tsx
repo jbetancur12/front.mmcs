@@ -5,6 +5,7 @@ import {
 import { Box, Typography } from '@mui/material'
 
 import { getPasswordRules } from 'src/utils/passwordPolicy'
+import { brand, neutral } from 'src/theme/designTokens'
 
 /**
  * Checklist en vivo de lo que pide la contraseña (largo, mayúscula, minúscula,
@@ -24,16 +25,16 @@ const PasswordRequirements = ({ password }: { password: string }) => (
         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
       >
         {rule.met ? (
-          <CheckCircleRounded sx={{ fontSize: 16, color: '#00BFA5' }} />
+          <CheckCircleRounded sx={{ fontSize: 16, color: brand.main }} />
         ) : (
           <RadioButtonUncheckedRounded
-            sx={{ fontSize: 16, color: '#9ca3af' }}
+            sx={{ fontSize: 16, color: neutral.textFaint }}
           />
         )}
         <Typography
           variant='caption'
           sx={{
-            color: rule.met ? '#00695C' : '#6b7280',
+            color: rule.met ? brand.ink : neutral.textMuted,
             fontWeight: rule.met ? 600 : 400
           }}
         >

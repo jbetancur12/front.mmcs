@@ -18,6 +18,7 @@ import { format, parseISO, isValid } from 'date-fns' // Import date-fns function
 // Asegúrate que la ruta de importación sea correcta
 import { ApiDeviceData } from './LaboratoryMonitor'
 import { logger } from 'src/utils/logger'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 // Ya no se necesita la interfaz SensorStatistics aquí
 
 interface SensorCardProps {
@@ -58,7 +59,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_DEVICE_MANAGE)
   // Usar un color por defecto si sensor.color es null o undefined
-  const cardBorderColor = sensor.color || '#cccccc' // Gris por defecto si no hay color
+  const cardBorderColor = sensor.color || neutral.borderStrong // Gris por defecto si no hay color
 
   return (
     // Card principal con borde completo controlado por el color del sensor
@@ -72,7 +73,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
         display: 'flex',
         flexDirection: 'column',
         position: 'relative', // Para posicionar los botones
-        backgroundColor: '#f8f9fa' // Fondo ligeramente grisáceo
+        backgroundColor: neutral.surfaceAlt // Fondo ligeramente grisáceo
       }}
     >
       {/* --- Botones de Editar y Eliminar --- */}
@@ -94,8 +95,10 @@ const SensorCard: React.FC<SensorCardProps> = ({
               onClick={() => onEditClick(sensor)}
               aria-label='editar sensor'
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
+                backgroundColor: withAlpha(neutral.surface, 0.7),
+                '&:hover': {
+                  backgroundColor: withAlpha(neutral.borderStrong, 0.8)
+                }
               }}
             >
               <EditIcon fontSize='small' sx={{ color: 'text.secondary' }} />
@@ -107,8 +110,10 @@ const SensorCard: React.FC<SensorCardProps> = ({
               onClick={() => onDeleteClick(sensor.id)}
               aria-label='eliminar sensor'
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
+                backgroundColor: withAlpha(neutral.surface, 0.7),
+                '&:hover': {
+                  backgroundColor: withAlpha(neutral.borderStrong, 0.8)
+                }
               }}
             >
               <DeleteIcon fontSize='small' sx={{ color: 'error.main' }} />
@@ -145,7 +150,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
           <Box
             sx={{
               flex: 1, // Ocupar espacio equitativo
-              backgroundColor: '#e3f2fd', // Azul claro
+              backgroundColor: intent.infoSoft, // Azul claro
               borderRadius: '8px',
               p: 1.5, // Padding interno
               display: 'flex',
@@ -159,7 +164,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                color: '#0d47a1',
+                color: intent.infoInk,
                 mb: 0.5,
                 fontWeight: 'medium'
               }}
@@ -172,7 +177,11 @@ const SensorCard: React.FC<SensorCardProps> = ({
             <Typography
               variant='h4'
               component='div'
-              sx={{ fontWeight: 'bold', color: '#0d47a1', lineHeight: 1.2 }}
+              sx={{
+                fontWeight: 'bold',
+                color: intent.infoInk,
+                lineHeight: 1.2
+              }}
             >
               {' '}
               {/* Quitado mb: 0.5 */}
@@ -187,7 +196,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
           <Box
             sx={{
               flex: 1,
-              backgroundColor: '#fff8e1', // Amarillo/beige claro
+              backgroundColor: intent.warningSoft, // Amarillo/beige claro
               borderRadius: '8px',
               p: 1.5,
               display: 'flex',
@@ -201,7 +210,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                color: '#e65100',
+                color: intent.danger,
                 mb: 0.5,
                 fontWeight: 'medium'
               }}
@@ -214,7 +223,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
             <Typography
               variant='h4'
               component='div'
-              sx={{ fontWeight: 'bold', color: '#e65100', lineHeight: 1.2 }}
+              sx={{ fontWeight: 'bold', color: intent.danger, lineHeight: 1.2 }}
             >
               {' '}
               {/* Quitado mb: 0.5 */}

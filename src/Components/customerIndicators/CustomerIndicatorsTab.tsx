@@ -40,6 +40,7 @@ import {
   formatPct,
   emeraldButtonSx
 } from './indicatorFormat'
+import { brand, intent } from 'src/theme/designTokens'
 
 interface Props {
   customerId: number | string
@@ -226,9 +227,9 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             label='Equipos contratados'
             value={formatCount(goal.value)}
             icon={<FactCheck />}
-            color='#1565c0'
-            background='#e3f2fd'
-            valueColor='#1565c0'
+            color={intent.infoInk}
+            background={intent.infoSoft}
+            valueColor={intent.infoInk}
             help='Meta de equipos a calibrar en el año'
             footer={
               <Chip
@@ -252,9 +253,9 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             label='Equipos con servicio metrológico'
             value={formatCount(indicators.calibrated)}
             icon={<AssignmentTurnedIn />}
-            color='#2e7d32'
-            background='#e8f5e9'
-            valueColor='#2e7d32'
+            color={intent.successInk}
+            background={intent.successSoft}
+            valueColor={intent.successInk}
             help='Equipos con certificado de calibración en el año; cada equipo cuenta una vez'
           />
         </Grid>
@@ -263,8 +264,8 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             label='Avance de la meta'
             value={formatPct(indicators.progressPct)}
             icon={<Percent />}
-            color='#00BFA5'
-            background='#E0F7F4'
+            color={brand.main}
+            background={brand.soft}
             valueColor={TEAL_TEXT}
             help='Con servicio metrológico frente a la meta'
           />
@@ -274,9 +275,9 @@ const CustomerIndicatorsTab: React.FC<Props> = ({ customerId }) => {
             label='Pendientes'
             value={formatCount(indicators.pending)}
             icon={<HourglassTop />}
-            color='#b45309'
-            background='#fff3e0'
-            valueColor='#b45309'
+            color={intent.warningInk}
+            background={intent.warningSoft}
+            valueColor={intent.warningInk}
             help='Equipos de la meta que aún no tienen certificado'
           />
         </Grid>

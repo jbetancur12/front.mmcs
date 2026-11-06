@@ -14,6 +14,7 @@ import React from 'react'
 
 import { ModernSwitch } from './ModernSwitch'
 import { CustomerProfileData } from './types'
+import { brand, neutral, detail, withAlpha } from 'src/theme/designTokens'
 
 interface CustomerProfileBannerProps {
   image: string
@@ -43,7 +44,7 @@ const ContactItem = ({
         width: 36,
         height: 36,
         borderRadius: '50%',
-        bgcolor: 'rgba(255,255,255,0.18)',
+        bgcolor: withAlpha(neutral.surface, 0.18),
         display: 'grid',
         placeItems: 'center',
         flexShrink: 0
@@ -81,7 +82,7 @@ const CustomerProfileBanner = ({
     elevation={0}
     sx={{
       mb: 4,
-      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      background: `linear-gradient(135deg, ${detail.from} 0%, ${detail.to} 100%)`,
       color: 'white',
       borderRadius: '20px',
       overflow: 'hidden',
@@ -97,7 +98,7 @@ const CustomerProfileBanner = ({
         width: 200,
         height: 200,
         borderRadius: '50%',
-        background: 'rgba(255,255,255,0.1)',
+        background: withAlpha(neutral.surface, 0.1),
         zIndex: 0
       }}
     />
@@ -109,7 +110,7 @@ const CustomerProfileBanner = ({
         width: 150,
         height: 150,
         borderRadius: '50%',
-        background: 'rgba(255,255,255,0.05)',
+        background: withAlpha(neutral.surface, 0.05),
         zIndex: 0
       }}
     />
@@ -126,8 +127,8 @@ const CustomerProfileBanner = ({
             left: 12,
             zIndex: 2,
             color: 'white',
-            bgcolor: 'rgba(255,255,255,0.18)',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
+            bgcolor: withAlpha(neutral.surface, 0.18),
+            '&:hover': { bgcolor: withAlpha(neutral.surface, 0.3) }
           }}
         >
           <ArrowBack fontSize='small' />
@@ -151,12 +152,12 @@ const CustomerProfileBanner = ({
                   sx={{
                     width: 120,
                     height: 120,
-                    bgcolor: 'rgba(255,255,255,0.25)',
+                    bgcolor: withAlpha(neutral.surface, 0.25),
                     color: 'white',
                     fontSize: 48,
                     fontWeight: 700,
-                    border: '4px solid rgba(255,255,255,0.3)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                    border: `4px solid ${withAlpha(neutral.surface, 0.3)}`,
+                    boxShadow: `0 8px 32px ${withAlpha(neutral.black, 0.3)}`,
                     '&:hover': {
                       transform: 'scale(1.05)',
                       transition: 'transform 0.2s ease-in-out'
@@ -184,8 +185,8 @@ const CustomerProfileBanner = ({
                       bottom: 0,
                       right: 0,
                       backgroundColor: 'white',
-                      color: '#00695C',
-                      '&:hover': { backgroundColor: '#E0F7F4' }
+                      color: brand.ink,
+                      '&:hover': { backgroundColor: brand.soft }
                     }}
                     size='small'
                   >
@@ -211,11 +212,11 @@ const CustomerProfileBanner = ({
                   right: 20,
                   mt: { xs: 2, md: 0 },
                   zIndex: 2,
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: withAlpha(neutral.surface, 0.1),
                   backdropFilter: 'blur(10px)',
                   borderRadius: '12px',
                   padding: '8px 16px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  border: `1px solid ${withAlpha(neutral.surface, 0.2)}`,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5
@@ -248,8 +249,8 @@ const CustomerProfileBanner = ({
             sx={{
               p: 3,
               borderRadius: '16px',
-              bgcolor: 'rgba(0,0,0,0.28)',
-              border: '1px solid rgba(255,255,255,0.18)',
+              bgcolor: withAlpha(neutral.black, 0.28),
+              border: `1px solid ${withAlpha(neutral.surface, 0.18)}`,
               display: 'grid',
               gap: 2.5,
               gridTemplateColumns: {
@@ -276,7 +277,7 @@ const CustomerProfileBanner = ({
                       label={sede}
                       size='small'
                       sx={{
-                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        backgroundColor: withAlpha(neutral.surface, 0.2),
                         color: 'white',
                         fontWeight: 600
                       }}
@@ -287,7 +288,7 @@ const CustomerProfileBanner = ({
                       label={`+${(customerData?.sede?.length || 0) - 3} más`}
                       size='small'
                       sx={{
-                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        backgroundColor: withAlpha(neutral.surface, 0.2),
                         color: 'white',
                         fontWeight: 600
                       }}

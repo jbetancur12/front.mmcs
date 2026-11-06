@@ -14,7 +14,7 @@ import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined'
 import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface UserMenuProps {
   name: string
@@ -151,8 +151,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             minWidth: 260,
             borderRadius: '12px',
             border: `1px solid ${neutral.border}`,
-            boxShadow:
-              '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)'
+            boxShadow: `0 10px 15px -3px ${withAlpha(neutral.black, 0.1)}, 0 4px 6px -2px ${withAlpha(neutral.black, 0.05)}`
           }
         }}
       >

@@ -7,6 +7,7 @@ import {
 } from '@mui/material'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
+import { brand } from 'src/theme/designTokens'
 
 /**
  * Campo de las pantallas de acceso: TextField de contorno con foco
@@ -47,9 +48,12 @@ const AuthField: React.FC<TextFieldProps> = ({
         {
           '& .MuiOutlinedInput-root': {
             borderRadius: '8px',
-            '&.Mui-focused fieldset': { borderColor: '#00897b', borderWidth: 2 }
+            '&.Mui-focused fieldset': {
+              borderColor: brand.hover,
+              borderWidth: 2
+            }
           },
-          '& .MuiInputLabel-root.Mui-focused': { color: '#00695c' }
+          '& .MuiInputLabel-root.Mui-focused': { color: brand.ink }
         },
         ...(Array.isArray(sx) ? sx : [sx])
       ]}

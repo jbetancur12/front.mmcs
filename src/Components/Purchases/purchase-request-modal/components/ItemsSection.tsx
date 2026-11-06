@@ -13,6 +13,7 @@ import { Add, DeleteOutline } from '@mui/icons-material'
 import { PurchaseRequestItem } from 'src/pages/Purchases/Types'
 import { ItemsSectionProps } from '../types/PurchaseRequestTypes'
 import { PURCHASE_TEAL, PURCHASE_TEAL_HOVER } from '../../purchaseTableStyle'
+import { neutral } from 'src/theme/designTokens'
 
 const ItemsSection: React.FC<ItemsSectionProps> = ({
   formData,
@@ -137,7 +138,9 @@ const ItemsSection: React.FC<ItemsSectionProps> = ({
                 gap: 2,
                 py: 1,
                 borderBottom:
-                  index < items.length - 1 ? '1px solid #eee' : 'none'
+                  index < items.length - 1
+                    ? `1px solid ${neutral.border}`
+                    : 'none'
               }}
             >
               <Typography

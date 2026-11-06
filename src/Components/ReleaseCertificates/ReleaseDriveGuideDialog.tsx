@@ -17,6 +17,7 @@ import {
   DRIVE_GUIDE_STEPS,
   DriveGuidePath
 } from './driveGuideSteps'
+import { brand } from 'src/theme/designTokens'
 
 interface ReleaseDriveGuideDialogProps {
   open: boolean
@@ -54,7 +55,7 @@ const ReleaseDriveGuideDialog: React.FC<ReleaseDriveGuideDialogProps> = ({
           onChange={(_event, value: DriveGuidePath) => setPath(value)}
           sx={{
             mb: 2,
-            '& .MuiTabs-indicator': { backgroundColor: '#00BFA5' },
+            '& .MuiTabs-indicator': { backgroundColor: brand.main },
             '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }
           }}
         >

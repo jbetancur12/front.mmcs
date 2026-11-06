@@ -13,6 +13,7 @@ import DataTable from '../Common/DataTable'
 import EmptyState from '../Common/EmptyState'
 import StatusPill from '../Common/StatusPill'
 import { CustomerSummary } from './dashboardCertificates'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface DashboardTableProps {
   customers: CustomerSummary[]
@@ -36,7 +37,7 @@ const DashboardTable: React.FC<DashboardTableProps> = ({ customers }) => {
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 fontSize: 14,
                 fontWeight: 700
               }}
@@ -61,11 +62,11 @@ const DashboardTable: React.FC<DashboardTableProps> = ({ customers }) => {
         Cell: ({ row }) => (
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <EmailOutlined sx={{ fontSize: 16, color: '#6b7280' }} />
+              <EmailOutlined sx={{ fontSize: 16, color: neutral.textMuted }} />
               <Typography variant='body2'>{row.original.email}</Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <PhoneOutlined sx={{ fontSize: 16, color: '#6b7280' }} />
+              <PhoneOutlined sx={{ fontSize: 16, color: neutral.textMuted }} />
               <Typography variant='caption' color='text.secondary'>
                 {row.original.telefono}
               </Typography>
@@ -152,7 +153,7 @@ const DashboardTable: React.FC<DashboardTableProps> = ({ customers }) => {
           <IconButton
             size='small'
             aria-label={`Ver certificados de ${row.original.nombre}`}
-            sx={{ color: '#00695C' }}
+            sx={{ color: brand.ink }}
             onClick={(event) => {
               event.stopPropagation()
               openCustomer(row.original.id)

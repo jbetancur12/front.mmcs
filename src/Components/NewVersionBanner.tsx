@@ -1,5 +1,12 @@
 import { Box, Button, Typography } from '@mui/material'
 import { useNewVersion } from '../hooks/useNewVersion'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 const NewVersionBanner = () => {
   const hasNewVersion = useNewVersion()
@@ -14,8 +21,7 @@ const NewVersionBanner = () => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        background:
-          'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
+        background: `linear-gradient(135deg, ${brand.ink} 0%, ${detail.to} 50%, ${intent.successInk} 100%)`,
         px: { xs: 2, md: 4 },
         py: 1.5,
         display: 'flex',
@@ -23,7 +29,7 @@ const NewVersionBanner = () => {
         justifyContent: 'center',
         gap: 2,
         flexWrap: 'wrap',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+        boxShadow: `0 -4px 20px ${withAlpha(neutral.black, 0.15)}`,
         animation: 'slideUp 0.3s ease-out',
         '@keyframes slideUp': {
           from: { transform: 'translateY(100%)' },
@@ -38,12 +44,12 @@ const NewVersionBanner = () => {
         variant='contained'
         onClick={() => window.location.reload()}
         sx={{
-          background: '#fff',
-          color: '#059669',
+          background: neutral.surface,
+          color: brand.ink,
           fontWeight: 700,
           borderRadius: '10px',
           textTransform: 'none',
-          '&:hover': { background: '#f0fdf4' }
+          '&:hover': { background: intent.successSoft }
         }}
       >
         Actualizar

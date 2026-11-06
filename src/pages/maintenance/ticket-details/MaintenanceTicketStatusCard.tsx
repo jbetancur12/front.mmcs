@@ -20,6 +20,7 @@ import MaintenanceStatusBadge from '../../../Components/Maintenance/MaintenanceS
 import MaintenancePriorityBadge from '../../../Components/Maintenance/MaintenancePriorityBadge'
 import { formatDate, surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketStatusCardProps {
   ticket: MaintenanceTicket
@@ -54,7 +55,7 @@ const MaintenanceTicketStatusCard = ({
           sx={{
             fontSize: { xs: '1.125rem', sm: '1.25rem' },
             fontWeight: 600,
-            color: '#0f172a'
+            color: neutral.text
           }}
         >
           Estado del Ticket
@@ -91,7 +92,7 @@ const MaintenanceTicketStatusCard = ({
                 startAdornment={
                   ticket.status === MaintenanceStatus.COMPLETED ? (
                     <InputAdornment position='start'>
-                      <Lock sx={{ color: '#10b981' }} />
+                      <Lock sx={{ color: brand.main }} />
                     </InputAdornment>
                   ) : undefined
                 }
@@ -99,9 +100,9 @@ const MaintenanceTicketStatusCard = ({
                 sx={
                   ticket.status === MaintenanceStatus.COMPLETED
                     ? {
-                        background: 'rgba(16, 185, 129, 0.05)',
+                        background: withAlpha(brand.main, 0.05),
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#10b981'
+                          borderColor: brand.main
                         }
                       }
                     : {}
@@ -144,16 +145,16 @@ const MaintenanceTicketStatusCard = ({
                 startAdornment={
                   isTechnician ? (
                     <InputAdornment position='start'>
-                      <Lock sx={{ color: '#10b981' }} />
+                      <Lock sx={{ color: brand.main }} />
                     </InputAdornment>
                   ) : undefined
                 }
                 sx={
                   isTechnician
                     ? {
-                        background: 'rgba(16, 185, 129, 0.05)',
+                        background: withAlpha(brand.main, 0.05),
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#10b981'
+                          borderColor: brand.main
                         }
                       }
                     : {}

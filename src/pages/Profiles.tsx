@@ -34,6 +34,7 @@ import EmptyState from 'src/Components/Common/EmptyState'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 export interface Profile {
   id: number
   name: string
@@ -54,9 +55,9 @@ const getDefaultAvatar = (name?: string) =>
 const TEAL_BUTTON_SX = {
   textTransform: 'none',
   fontWeight: 600,
-  bgcolor: '#00BFA5',
+  bgcolor: brand.main,
   whiteSpace: 'nowrap',
-  '&:hover': { bgcolor: '#00897B' }
+  '&:hover': { bgcolor: brand.hover }
 } as const
 
 const Profiles: React.FC = () => {
@@ -113,7 +114,7 @@ const Profiles: React.FC = () => {
                   event.currentTarget.src = getDefaultAvatar(row.original.name)
                 }
               }}
-              sx={{ width: 36, height: 36, bgcolor: '#00BFA5' }}
+              sx={{ width: 36, height: 36, bgcolor: brand.main }}
             />
             <Typography fontWeight={600}>{row.original.name}</Typography>
           </Box>
@@ -125,7 +126,7 @@ const Profiles: React.FC = () => {
         size: 170,
         Cell: ({ cell }: { cell: MRT_Cell<Profile> }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-            <Phone sx={{ fontSize: 16, color: '#6b7280' }} />
+            <Phone sx={{ fontSize: 16, color: neutral.textMuted }} />
             {cell.getValue<string>() || '—'}
           </Box>
         )
@@ -136,7 +137,7 @@ const Profiles: React.FC = () => {
         size: 260,
         Cell: ({ cell }: { cell: MRT_Cell<Profile> }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-            <Email sx={{ fontSize: 16, color: '#6b7280' }} />
+            <Email sx={{ fontSize: 16, color: neutral.textMuted }} />
             {cell.getValue<string>() || '—'}
           </Box>
         )
@@ -216,7 +217,7 @@ const Profiles: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Ver perfil de ${row.original.name}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => navigate(`/profiles/${row.original.id}`)}
               >
                 <Visibility fontSize='small' />

@@ -446,7 +446,26 @@ export interface CalibrationServiceAvailableAction {
   pendingWith: string
 }
 
+/** Certificados de «Certificados a liberar» ligados a un servicio. */
+export interface CalibrationServiceReleaseCertificates {
+  total: number
+  released: number
+  /** Certificados a los que el laboratorio les pidió ajustes. */
+  withAdjustments?: number
+  items: {
+    id: number
+    documentNumber: string | null
+    instrument: string | null
+    serie: string | null
+    status: string
+    cutId: number | null
+    /** Con ajustes pedidos: lo que el laboratorio observó. */
+    observation?: string | null
+  }[]
+}
+
 export interface CalibrationService {
+  releaseCertificates?: CalibrationServiceReleaseCertificates | null
   availableActions?: CalibrationServiceAvailableAction[]
   /** Siguiente tarea del flujo para el usuario y capacidad que la resuelve. */
   nextAction?: string | null
@@ -546,6 +565,8 @@ export interface CalibrationServiceFilters {
   cutTask?: CalibrationServiceCutTask
   billingStatus?: 'enviado' | 'no_enviado'
   paymentStatus?: 'pagado' | 'pendiente'
+  /** Servicios con algún certificado al que el laboratorio le pidió ajustes. */
+  certificateAlerts?: 'true'
   limit?: number
   offset?: number
 }

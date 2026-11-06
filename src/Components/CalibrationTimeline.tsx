@@ -25,6 +25,7 @@ import { useCustomerCalibrationSchedule } from '@hooks/calibration/useCustomerCa
 import DataTable from './Common/DataTable'
 import EmptyState from './Common/EmptyState'
 import StatusPill from './Common/StatusPill'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface Device {
   deviceId: number
@@ -89,28 +90,28 @@ const CELL_STYLES: Record<
 > = {
   done: {
     label: 'Calibración realizada',
-    color: '#166534',
-    bg: '#dcfce7',
+    color: intent.successInk,
+    bg: intent.successSoft,
     Icon: CheckCircleOutline
   },
   next: {
     label: 'Próxima calibración',
-    color: '#92400e',
-    bg: '#fef3c7',
+    color: intent.warningInk,
+    bg: intent.warningSoft,
     Icon: Schedule
   },
   overdue: {
     label: 'Calibración vencida',
-    color: '#b91c1c',
-    bg: '#fee2e2',
+    color: intent.dangerInk,
+    bg: intent.dangerSoft,
     Icon: ErrorOutline
   }
 }
 
 // Columna del mes actual: tinte turquesa marcado, con borde fino y barra en el encabezado
-const CURRENT_MONTH_BG = '#CFF3EE'
-const CURRENT_MONTH_CELL_BG = '#E3F6F3'
-const CURRENT_MONTH_LINE = '#8FDDD1'
+const CURRENT_MONTH_BG = brand.soft
+const CURRENT_MONTH_CELL_BG = brand.soft
+const CURRENT_MONTH_LINE = brand.main
 
 /** Meses que cubre el cronograma, a partir del mes y año de inicio. */
 const createTimeline = ({ month, totalMonths, startYear }: DataResponse) => {
@@ -259,7 +260,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                 <Typography
                   variant='caption'
                   display='block'
-                  sx={{ color: '#00695C', fontWeight: 700 }}
+                  sx={{ color: brand.ink, fontWeight: 700 }}
                 >
                   Actual
                 </Typography>
@@ -271,7 +272,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
             sx: isCurrent
               ? {
                   backgroundColor: CURRENT_MONTH_BG,
-                  borderBottom: '3px solid #00BFA5',
+                  borderBottom: `3px solid ${brand.main}`,
                   borderLeft: `1px solid ${CURRENT_MONTH_LINE}`,
                   borderRight: `1px solid ${CURRENT_MONTH_LINE}`
                 }
@@ -348,7 +349,11 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
         }}
       >
         <Box>
-          <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+          <Typography
+            variant='h5'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Programación
           </Typography>
           <Typography variant='body2' color='text.secondary'>
@@ -365,13 +370,13 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
             borderRadius: '10px',
             textTransform: 'none',
             fontWeight: 600,
-            borderColor: '#e5e7eb',
-            color: '#374151',
-            bgcolor: '#fff',
+            borderColor: neutral.border,
+            color: neutral.textBody,
+            bgcolor: neutral.surface,
             '&:hover': {
-              borderColor: '#00897B',
-              color: '#00695C',
-              bgcolor: '#E0F7F4'
+              borderColor: brand.hover,
+              color: brand.ink,
+              bgcolor: brand.soft
             }
           }}
         >
@@ -391,7 +396,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                 navigate(`schedule/pdf?headquarter=${headquarter}`)
               }}
             >
-              <LocationOn sx={{ mr: 1, fontSize: 18, color: '#00695C' }} />
+              <LocationOn sx={{ mr: 1, fontSize: 18, color: brand.ink }} />
               {headquarter}
             </MenuItem>
           ))}
@@ -442,7 +447,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
               height: 14,
               borderRadius: '4px',
               bgcolor: CURRENT_MONTH_BG,
-              border: '1px solid #00BFA5'
+              border: `1px solid ${brand.main}`
             }}
           />
           <Typography variant='body2' color='text.secondary'>
@@ -467,8 +472,8 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
         // Línea resaltada al pasar el mouse; el mes actual conserva su tinte, un poco más fuerte
         muiTableBodyRowProps={{
           sx: {
-            '&&&&:hover > td': { backgroundColor: '#E6F7F5' },
-            '&&&&:hover > td.current-month': { backgroundColor: '#C9EEE8' }
+            '&&&&:hover > td': { backgroundColor: brand.soft },
+            '&&&&:hover > td.current-month': { backgroundColor: brand.soft }
           }
         }}
         renderEmptyRowsFallback={() => (

@@ -66,20 +66,21 @@ import {
 } from '../../types/calibrationService'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 const FILTER_ALL = 'all'
 
 const ui = {
-  green: '#10b981',
-  greenDark: '#059669',
-  greenLight: '#f0fdf4',
-  warning: '#d97706',
-  error: '#dc2626',
-  info: '#2563eb',
-  text: '#1f2937',
-  muted: '#6b7280',
-  border: '#e5e7eb',
-  surface: '#f9fafb',
+  green: brand.main,
+  greenDark: brand.hover,
+  greenLight: intent.successSoft,
+  warning: intent.warning,
+  error: intent.danger,
+  info: intent.action,
+  text: neutral.text,
+  muted: neutral.textMuted,
+  border: neutral.border,
+  surface: neutral.surfaceAlt,
   white: '#ffffff'
 }
 
@@ -361,11 +362,11 @@ const CalibrationServiceAnalyticsPage = () => {
       )
     : 0
   const SLA_COLORS: Record<string, string> = {
-    green: '#00BFA5',
-    yellow: '#f59e0b',
-    red: '#ef4444',
-    gray: '#9ca3af',
-    blue: '#3b82f6'
+    green: brand.main,
+    yellow: intent.warning,
+    red: intent.danger,
+    gray: neutral.textFaint,
+    blue: intent.info
   }
   const slaSegments = slaOptions
     .filter((option) => option.value !== FILTER_ALL)
@@ -737,9 +738,9 @@ const CalibrationServiceAnalyticsPage = () => {
               }}
               disabled={!data || isExporting}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               {isExporting ? 'Generando...' : 'Descargar Excel'}
@@ -1089,10 +1090,10 @@ const CalibrationServiceAnalyticsPage = () => {
                   sx={{
                     height: 10,
                     borderRadius: 999,
-                    backgroundColor: '#E0F7F4',
+                    backgroundColor: brand.soft,
                     '& .MuiLinearProgress-bar': {
                       borderRadius: 999,
-                      backgroundColor: '#00BFA5'
+                      backgroundColor: brand.main
                     }
                   }}
                 />
@@ -1318,9 +1319,9 @@ const CalibrationServiceAnalyticsPage = () => {
                             sx={{
                               height: 10,
                               borderRadius: 999,
-                              backgroundColor: '#E0F7F4',
+                              backgroundColor: brand.soft,
                               '& .MuiLinearProgress-bar': {
-                                backgroundColor: '#00BFA5'
+                                backgroundColor: brand.main
                               }
                             }}
                           />
@@ -1359,7 +1360,9 @@ const CalibrationServiceAnalyticsPage = () => {
                         const unassigned = isUnassigned(
                           metrologist.metrologistName
                         )
-                        const barColor = unassigned ? '#f59e0b' : '#00BFA5'
+                        const barColor = unassigned
+                          ? intent.warning
+                          : brand.main
                         return (
                           <Box key={metrologist.key}>
                             <Stack
@@ -1371,7 +1374,9 @@ const CalibrationServiceAnalyticsPage = () => {
                                 variant='body2'
                                 sx={{
                                   fontWeight: 600,
-                                  color: unassigned ? '#b45309' : ui.text
+                                  color: unassigned
+                                    ? intent.warningInk
+                                    : ui.text
                                 }}
                               >
                                 {metrologist.metrologistName}
@@ -1392,8 +1397,8 @@ const CalibrationServiceAnalyticsPage = () => {
                                 height: 8,
                                 borderRadius: 999,
                                 backgroundColor: unassigned
-                                  ? '#fff7ed'
-                                  : '#E0F7F4',
+                                  ? intent.warningSoft
+                                  : brand.soft,
                                 '& .MuiLinearProgress-bar': {
                                   borderRadius: 999,
                                   backgroundColor: barColor

@@ -16,6 +16,7 @@ import {
 import React from 'react'
 
 import { CustomerLmsCoursesResponse } from './types'
+import { neutral } from 'src/theme/designTokens'
 
 interface LmsCoursesTabProps {
   customerLmsCourses?: CustomerLmsCoursesResponse
@@ -107,7 +108,7 @@ const LmsCoursesTab: React.FC<LmsCoursesTabProps> = ({
               elevation={0}
               sx={{
                 borderRadius: '16px',
-                border: '1px solid #e5e7eb',
+                border: `1px solid ${neutral.border}`,
                 height: '100%'
               }}
             >

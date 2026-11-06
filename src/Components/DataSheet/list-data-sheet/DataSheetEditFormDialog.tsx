@@ -16,6 +16,7 @@ import { DataSheetData } from './types'
 import { currencyFormatter, toDateInputValue } from './utils'
 
 import { toNumber, withNumericFields } from './editPayload'
+import { brand } from 'src/theme/designTokens'
 /** Campos de la hoja de vida que se envían al guardar. */
 const PAYLOAD_KEYS = [
   'pictureUrl',
@@ -216,7 +217,7 @@ const DataSheetEditFormDialog: React.FC<DataSheetEditFormDialogProps> = ({
               name='manual'
               checked={Boolean(formik.values.manual)}
               onChange={formik.handleChange}
-              sx={{ '&.Mui-checked': { color: '#00BFA5' } }}
+              sx={{ '&.Mui-checked': { color: brand.main } }}
             />
           }
         />

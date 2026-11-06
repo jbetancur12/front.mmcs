@@ -604,12 +604,12 @@ const sidebarSections = (
             <div
               role='separator'
               aria-label={title}
-              className='mx-auto mb-2 h-px w-8 bg-gray-200'
+              className='mx-auto mb-2 h-px w-8 bg-neutral-border'
             />
           ) : (
             <p
               id={headingId}
-              className='mb-1 px-3 text-xs font-semibold text-gray-500'
+              className='mb-1 px-3 text-xs font-semibold text-neutral-muted'
             >
               {title}
             </p>
@@ -949,7 +949,7 @@ const SideBar = ({
     <aside
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`fixed top-0 left-0 z-30 flex flex-col flex-shrink-0 h-full pt-[calc(4rem+var(--imp-h,0px))] bg-white border-r border-gray-200 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none ${
+      className={`fixed top-0 left-0 z-30 flex flex-col flex-shrink-0 h-full pt-[calc(4rem+var(--imp-h,0px))] bg-neutral-surface border-r border-neutral-border transition-[width,transform] duration-200 ease-out motion-reduce:transition-none ${
         mobileMenuOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'
       } lg:z-20 lg:translate-x-0 ${sidebarMinimized ? 'lg:w-20' : 'lg:w-64'} ${
         userMinimized && !sidebarMinimized ? 'lg:shadow-xl' : 'lg:shadow-none'
@@ -962,7 +962,7 @@ const SideBar = ({
           aria-label='Búsqueda rápida'
           aria-keyshortcuts='Control+K'
           title='Búsqueda rápida (Ctrl K)'
-          className={`flex w-full items-center rounded-xl border border-gray-200 bg-white text-sm text-gray-500 hover:border-[${brand.main}] hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[${brand.main}] ${
+          className={`flex w-full items-center rounded-xl border border-neutral-border bg-neutral-surface text-sm text-neutral-muted hover:border-[${brand.main}] hover:text-neutral-body focus-visible:outline focus-visible:outline-2 focus-visible:outline-[${brand.main}] ${
             minimized ? 'justify-center py-2.5' : 'gap-2 px-3 py-2'
           }`}
         >
@@ -970,7 +970,7 @@ const SideBar = ({
           {!minimized && (
             <>
               <span className='flex-1 text-left'>Búsqueda rápida</span>
-              <kbd className='hidden rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] text-gray-500 lg:block'>
+              <kbd className='hidden rounded-md border border-neutral-border bg-neutral-alt px-1.5 py-0.5 text-[11px] text-neutral-muted lg:block'>
                 Ctrl K
               </kbd>
             </>
@@ -986,7 +986,7 @@ const SideBar = ({
       </nav>
 
       {/* En móvil no hay nada que minimizar: el pie solo existe en escritorio. */}
-      <div className='hidden lg:block flex-shrink-0 border-t border-gray-200 px-3 py-2'>
+      <div className='hidden lg:block flex-shrink-0 border-t border-neutral-border px-3 py-2'>
         {isLmsRoute && !minimized && !isLmsHintDismissed && (
           <div
             className={`mb-3 flex items-start gap-2 rounded-lg bg-[${brand.soft}] p-3`}

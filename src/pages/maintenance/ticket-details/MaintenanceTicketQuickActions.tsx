@@ -7,6 +7,7 @@ import {
 import { maintenanceSignaturesEnabled } from '../../../features/maintenanceFlags'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral } from 'src/theme/designTokens'
 
 interface MaintenanceTicketQuickActionsProps {
   ticket: MaintenanceTicket
@@ -34,8 +35,11 @@ const MaintenanceTicketQuickActions = ({
       {/* Quick Actions */}
       <Paper sx={{ ...surfaceSx, p: 3 }}>
         <Box display='flex' alignItems='center' gap={1} mb={2}>
-          <TrendingUp sx={{ color: '#64748b' }} />
-          <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+          <TrendingUp sx={{ color: neutral.textMuted }} />
+          <Typography
+            variant='h6'
+            sx={{ color: neutral.text, fontWeight: 600 }}
+          >
             Acciones Rápidas
           </Typography>
         </Box>

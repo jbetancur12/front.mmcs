@@ -24,6 +24,13 @@ import { notify } from 'src/utils/notify'
 
 import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 import { logger } from 'src/utils/logger'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 export interface Certificate {
   id: number
   name: string
@@ -74,8 +81,8 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
     if (!certificate.nextCalibrationDate)
       return {
         status: 'unknown',
-        color: '#6b7280',
-        bgColor: '#f9fafb',
+        color: neutral.textMuted,
+        bgColor: neutral.surfaceAlt,
         label: 'Sin fecha'
       }
 
@@ -86,22 +93,22 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
     if (nextDate < now) {
       return {
         status: 'expired',
-        color: '#dc2626',
-        bgColor: '#fef2f2',
+        color: intent.danger,
+        bgColor: intent.dangerSoft,
         label: 'Vencido'
       }
     } else if (nextDate <= thirtyDaysFromNow) {
       return {
         status: 'warning',
-        color: '#d97706',
-        bgColor: '#fffbeb',
+        color: intent.warning,
+        bgColor: intent.warningSoft,
         label: 'Próximo a vencer'
       }
     } else {
       return {
         status: 'active',
-        color: '#059669',
-        bgColor: '#f0fdf4',
+        color: brand.ink,
+        bgColor: intent.successSoft,
         label: 'Activo'
       }
     }
@@ -176,14 +183,14 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
         elevation={0}
         onClick={handleCardClick}
         sx={{
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${neutral.border}`,
           borderRadius: '16px',
           cursor: 'pointer',
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 12px 24px rgba(0,0,0,0.1)',
-            borderColor: '#10b981'
+            boxShadow: `0 12px 24px ${withAlpha(neutral.black, 0.1)}`,
+            borderColor: brand.main
           }
         }}
       >
@@ -210,8 +217,8 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                 size='small'
                 onClick={handleMenuClick}
                 sx={{
-                  color: '#6b7280',
-                  '&:hover': { backgroundColor: '#f3f4f6' }
+                  color: neutral.textMuted,
+                  '&:hover': { backgroundColor: neutral.surfaceHead }
                 }}
               >
                 <Settings fontSize='small' />
@@ -233,7 +240,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                 >
                   <LocationOn
                     fontSize='small'
-                    sx={{ mr: 1, color: '#059669' }}
+                    sx={{ mr: 1, color: brand.ink }}
                   />
                   Cambiar Sede
                 </MenuItem>
@@ -242,7 +249,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                     e.stopPropagation()
                     handleDelete()
                   }}
-                  sx={{ color: '#dc2626' }}
+                  sx={{ color: intent.danger }}
                 >
                   <Delete fontSize='small' sx={{ mr: 1 }} />
                   Eliminar
@@ -262,7 +269,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
               <Typography
                 variant='h6'
                 fontWeight='bold'
-                sx={{ color: '#1f2937', flex: 1 }}
+                sx={{ color: neutral.text, flex: 1 }}
               >
                 {certificate.device?.name || 'Equipo sin nombre'}
               </Typography>
@@ -272,8 +279,8 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                     label='Sin cert.'
                     size='small'
                     sx={{
-                      backgroundColor: '#fef2f2',
-                      color: '#dc2626',
+                      backgroundColor: intent.dangerSoft,
+                      color: intent.danger,
                       fontSize: '0.7rem',
                       height: '20px'
                     }}
@@ -294,7 +301,11 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                 <Typography
                   variant='body2'
                   fontWeight='500'
-                  sx={{ color: certificate.serie ? '#374151' : '#9ca3af' }}
+                  sx={{
+                    color: certificate.serie
+                      ? neutral.textBody
+                      : neutral.textFaint
+                  }}
                 >
                   {certificate.serie || 'No especificada'}
                 </Typography>
@@ -311,7 +322,11 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                 <Typography
                   variant='body2'
                   fontWeight='500'
-                  sx={{ color: certificate.activoFijo ? '#374151' : '#9ca3af' }}
+                  sx={{
+                    color: certificate.activoFijo
+                      ? neutral.textBody
+                      : neutral.textFaint
+                  }}
                 >
                   {certificate.activoFijo || 'No asignado'}
                 </Typography>
@@ -330,9 +345,11 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                   size='small'
                   sx={{
                     backgroundColor: certificate.headquarter
-                      ? '#f0f9ff'
-                      : '#f9fafb',
-                    color: certificate.headquarter ? '#1e40af' : '#6b7280',
+                      ? intent.infoSoft
+                      : neutral.surfaceAlt,
+                    color: certificate.headquarter
+                      ? intent.infoInk
+                      : neutral.textMuted,
                     fontSize: '0.75rem',
                     height: '24px',
                     fontWeight: 500
@@ -358,7 +375,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                 <Box
                   sx={{
                     p: 2,
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: neutral.surfaceAlt,
                     borderRadius: '8px',
                     textAlign: 'center'
                   }}
@@ -373,7 +390,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                   <Typography
                     variant='body2'
                     fontWeight='600'
-                    sx={{ color: '#374151' }}
+                    sx={{ color: neutral.textBody }}
                   >
                     {certificate.calibrationDate
                       ? new Date(
@@ -428,7 +445,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
         PaperProps={{
           sx: {
             borderRadius: '16px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+            boxShadow: `0 20px 25px -5px ${withAlpha(neutral.black, 0.1)}`
           }
         }}
       >
@@ -437,7 +454,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
             textAlign: 'center',
             fontWeight: 'bold',
             pb: 1,
-            borderBottom: '1px solid #e5e7eb'
+            borderBottom: `1px solid ${neutral.border}`
           }}
         >
           <Box
@@ -446,7 +463,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
             justifyContent='center'
             gap={1}
           >
-            <LocationOn sx={{ color: '#10b981' }} />
+            <LocationOn sx={{ color: brand.main }} />
             Cambiar Sede del Equipo
           </Box>
         </DialogTitle>
@@ -471,8 +488,8 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
               label={certificate.headquarter || 'Sin sede'}
               size='small'
               sx={{
-                backgroundColor: '#f0f9ff',
-                color: '#1e40af',
+                backgroundColor: intent.infoSoft,
+                color: intent.infoInk,
                 fontWeight: 600
               }}
             />
@@ -503,20 +520,18 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
                     px: 2,
                     ...(certificate.headquarter === sede
                       ? {
-                          background:
-                            'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          background: `linear-gradient(135deg, ${detail.from} 0%, ${detail.to} 100%)`,
                           '&:hover': {
-                            background:
-                              'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                            background: `linear-gradient(135deg, ${detail.to} 0%, ${intent.successInk} 100%)`
                           }
                         }
                       : {
-                          borderColor: '#d1d5db',
-                          color: '#374151',
+                          borderColor: neutral.borderStrong,
+                          color: neutral.textBody,
                           '&:hover': {
-                            borderColor: '#10b981',
-                            backgroundColor: '#f0fdf4',
-                            color: '#059669'
+                            borderColor: brand.main,
+                            backgroundColor: intent.successSoft,
+                            color: brand.ink
                           }
                         })
                   }}

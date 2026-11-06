@@ -19,6 +19,7 @@ import {
   getApprovedPricingAdjustmentsForItem
 } from './calibrationServiceDetailUtils'
 import { CalibrationServiceDetailPermissions } from './calibrationServiceDetailTypes'
+import { neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceItemsTabProps {
   service: CalibrationService
@@ -49,7 +50,7 @@ const CalibrationServiceItemsTab = ({
           <Table size='small'>
             <TableHead
               sx={{
-                bgcolor: '#f5f5f5',
+                bgcolor: neutral.surfaceHead,
                 '& .MuiTableCell-root': { fontWeight: 600 }
               }}
             >
@@ -101,7 +102,7 @@ const CalibrationServiceItemsTab = ({
                         {item.otherFields?.hasCalibrationPoints !== false ? (
                           <Typography
                             variant='caption'
-                            sx={{ color: '#9ca3af', display: 'block' }}
+                            sx={{ color: neutral.textFaint, display: 'block' }}
                           >
                             {[
                               item.otherFields?.calibrationPointCount

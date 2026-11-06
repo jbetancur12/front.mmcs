@@ -19,6 +19,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { EquipmentProduct } from '../../types/equipmentSales'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 interface PickedProduct {
   product: EquipmentProduct
@@ -174,8 +181,8 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
               <thead>
                 <tr
                   style={{
-                    backgroundColor: '#f9fafb',
-                    borderBottom: '2px solid #e5e7eb'
+                    backgroundColor: neutral.surfaceAlt,
+                    borderBottom: `2px solid ${neutral.border}`
                   }}
                 >
                   <th style={{ width: 40, padding: '10px 8px' }}></th>
@@ -185,7 +192,7 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                       padding: '10px 8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280',
+                      color: neutral.textMuted,
                       textTransform: 'uppercase'
                     }}
                   >
@@ -197,7 +204,7 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                       padding: '10px 8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280',
+                      color: neutral.textMuted,
                       textTransform: 'uppercase'
                     }}
                   >
@@ -209,7 +216,7 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                       padding: '10px 8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280',
+                      color: neutral.textMuted,
                       textTransform: 'uppercase'
                     }}
                   >
@@ -221,7 +228,7 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                       padding: '10px 8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280',
+                      color: neutral.textMuted,
                       textTransform: 'uppercase'
                     }}
                   >
@@ -237,16 +244,18 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                     <React.Fragment key={product.id}>
                       <tr
                         style={{
-                          borderBottom: '1px solid #e5e7eb',
+                          borderBottom: `1px solid ${neutral.border}`,
                           cursor: 'pointer',
                           backgroundColor: isSelected
-                            ? 'rgba(16,185,129,0.04)'
+                            ? withAlpha(brand.main, 0.04)
                             : undefined
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected)
-                            e.currentTarget.style.backgroundColor =
-                              'rgba(0,0,0,0.02)'
+                            e.currentTarget.style.backgroundColor = withAlpha(
+                              neutral.black,
+                              0.02
+                            )
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected)
@@ -265,8 +274,8 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                               toggleSelection(product.id)
                             }}
                             sx={{
-                              color: '#d1d5db',
-                              '&.Mui-checked': { color: '#059669' }
+                              color: neutral.borderStrong,
+                              '&.Mui-checked': { color: brand.ink }
                             }}
                           />
                         </td>
@@ -289,7 +298,7 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                           <Typography
                             variant='body2'
                             fontWeight={600}
-                            color='#059669'
+                            color={brand.ink}
                           >
                             {product.defaultPrice != null
                               ? CURRENCY_FORMATTER.format(product.defaultPrice)
@@ -305,7 +314,11 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                         >
                           <IconButton
                             size='small'
-                            sx={{ color: isExpanded ? '#059669' : '#9ca3af' }}
+                            sx={{
+                              color: isExpanded
+                                ? brand.hover
+                                : neutral.textFaint
+                            }}
                           >
                             {isExpanded ? (
                               <ExpandLessIcon fontSize='small' />
@@ -316,7 +329,7 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr style={{ backgroundColor: '#f9fafb' }}>
+                        <tr style={{ backgroundColor: neutral.surfaceAlt }}>
                           <td
                             colSpan={6}
                             style={{ padding: '12px 16px 12px 56px' }}
@@ -385,12 +398,12 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
             disabled={totalSelected === 0}
             onClick={handleAddItems}
             sx={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: `linear-gradient(135deg, ${detail.from} 0%, ${detail.to} 100%)`,
               borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 700,
               '&:hover': {
-                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                background: `linear-gradient(135deg, ${detail.to} 0%, ${intent.successInk} 100%)`
               }
             }}
           >

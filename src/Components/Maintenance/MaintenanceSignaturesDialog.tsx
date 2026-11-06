@@ -14,6 +14,7 @@ import {
 import { Draw, Save } from '@mui/icons-material'
 import SignaturePad from './SignaturePad'
 import type { CompletionSignatureInput } from './CompletionCostsDialog'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MaintenanceSignaturesDialogProps {
   open: boolean
@@ -127,9 +128,9 @@ const MaintenanceSignaturesDialog: React.FC<
       maxWidth='md'
       fullWidth
     >
-      <DialogTitle sx={{ borderBottom: '1px solid #e5e7eb' }}>
+      <DialogTitle sx={{ borderBottom: `1px solid ${neutral.border}` }}>
         <Box display='flex' alignItems='center' gap={1}>
-          <Draw sx={{ color: '#00A651' }} />
+          <Draw sx={{ color: intent.successInk }} />
           <Typography variant='h6'>Registrar firmas de conformidad</Typography>
         </Box>
       </DialogTitle>
@@ -179,9 +180,9 @@ const MaintenanceSignaturesDialog: React.FC<
                 </Typography>
                 <Box
                   sx={{
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${neutral.borderStrong}`,
                     borderRadius: 2,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: neutral.surface,
                     minHeight: 180,
                     display: 'flex',
                     alignItems: 'center',
@@ -240,9 +241,9 @@ const MaintenanceSignaturesDialog: React.FC<
           disabled={loading}
           color='inherit'
           sx={{
-            borderColor: '#d1d5db',
-            color: '#334155',
-            '&:hover': { backgroundColor: '#f8fafc' }
+            borderColor: neutral.borderStrong,
+            color: neutral.textBody,
+            '&:hover': { backgroundColor: neutral.surfaceAlt }
           }}
         >
           Cancelar
@@ -253,8 +254,8 @@ const MaintenanceSignaturesDialog: React.FC<
           startIcon={<Save />}
           disabled={loading}
           sx={{
-            backgroundColor: '#00A651',
-            '&:hover': { backgroundColor: '#27672a' }
+            backgroundColor: intent.successInk,
+            '&:hover': { backgroundColor: intent.successInk }
           }}
         >
           {loading ? 'Guardando...' : 'Guardar firmas'}

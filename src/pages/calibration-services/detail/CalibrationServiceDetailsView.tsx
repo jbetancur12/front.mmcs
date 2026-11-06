@@ -28,6 +28,7 @@ import CalibrationServiceTimeline from '../CalibrationServiceTimeline'
 import CalibrationServiceGuidePanel from '../CalibrationServiceGuidePanel'
 import CalibrationServiceLogisticsPanel from '../CalibrationServiceLogisticsPanel'
 import CalibrationDeliveryReadyAction from './CalibrationDeliveryReadyAction'
+import { CalibrationServiceReleaseCertificatesAlert } from '../CalibrationServiceReleaseCertificates'
 import CalibrationServiceStageTracker from '../CalibrationServiceStageTracker'
 import { DetailTabPanel } from './CalibrationServiceDetailLayout'
 import { DetailTab, getEmailSendPreview } from './calibrationServiceDetailUtils'
@@ -50,6 +51,7 @@ import {
   CalibrationServiceDetailActions,
   CalibrationServiceDetailBusy
 } from './calibrationServiceDetailTypes'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceDetailsViewProps {
   service: CalibrationService
@@ -378,6 +380,9 @@ const CalibrationServiceDetailsView = ({
           operativos del servicio.
         </Alert>
       ) : null}
+      <CalibrationServiceReleaseCertificatesAlert
+        summary={service.releaseCertificates}
+      />
       <CalibrationServiceStageTracker
         status={service.status}
         sla={service.slaIndicator}
@@ -395,9 +400,9 @@ const CalibrationServiceDetailsView = ({
                 allowScrollButtonsMobile
                 sx={{
                   mb: 2,
-                  borderBottom: '1px solid #e5e7eb',
+                  borderBottom: `1px solid ${neutral.border}`,
                   '& .MuiTabs-indicator': {
-                    backgroundColor: '#00BFA5',
+                    backgroundColor: brand.main,
                     height: 3
                   },
                   '& .MuiTab-root': {
@@ -407,7 +412,7 @@ const CalibrationServiceDetailsView = ({
                     px: 1.1,
                     fontSize: '0.85rem'
                   },
-                  '& .Mui-selected': { color: '#00695C' }
+                  '& .Mui-selected': { color: brand.ink }
                 }}
               >
                 <Tab label='Resumen' value='summary' />

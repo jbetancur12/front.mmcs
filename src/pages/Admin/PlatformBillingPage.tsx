@@ -30,6 +30,7 @@ import {
 } from 'src/hooks/usePlatformBilling'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
+import { brand } from 'src/theme/designTokens'
 
 const BILLING_URL = 'https://cloud.digitalocean.com/account/billing'
 
@@ -163,8 +164,8 @@ const PlatformBillingPage = () => {
               rel='noopener noreferrer'
               sx={{
                 textTransform: 'none',
-                bgcolor: '#00BFA5',
-                '&:hover': { bgcolor: '#00ACC1' }
+                bgcolor: brand.main,
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Abrir DigitalOcean

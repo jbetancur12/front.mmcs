@@ -27,6 +27,7 @@ import { es } from 'date-fns/locale'
 import useWebSocket from '@utils/use-websockets'
 import { DeviceReadingPayload } from '../types'
 import { useEffect, useState } from 'react'
+import { intent, withAlpha } from 'src/theme/designTokens'
 
 interface DeviceListItemProps {
   device: DeviceIot
@@ -170,32 +171,32 @@ const DeviceListItem = ({
             '0%': {
               backgroundColor:
                 highestSeverity === AlarmSeverity.CRITICAL
-                  ? 'rgba(255, 0, 0, 0.05)'
+                  ? withAlpha(intent.danger, 0.05)
                   : highestSeverity === AlarmSeverity.WARNING
-                    ? 'rgba(255, 200, 0, 0.05)'
+                    ? withAlpha(intent.warning, 0.05)
                     : highestSeverity === AlarmSeverity.INFO
-                      ? 'rgba(0, 100, 255, 0.05)'
-                      : 'rgba(255, 0, 0, 0.05)'
+                      ? withAlpha(intent.info, 0.05)
+                      : withAlpha(intent.danger, 0.05)
             },
             '50%': {
               backgroundColor:
                 highestSeverity === AlarmSeverity.CRITICAL
-                  ? 'rgba(255, 0, 0, 0.15)'
+                  ? withAlpha(intent.danger, 0.15)
                   : highestSeverity === AlarmSeverity.WARNING
-                    ? 'rgba(255, 200, 0, 0.15)'
+                    ? withAlpha(intent.warning, 0.15)
                     : highestSeverity === AlarmSeverity.INFO
-                      ? 'rgba(0, 100, 255, 0.15)'
-                      : 'rgba(255, 0, 0, 0.15)'
+                      ? withAlpha(intent.info, 0.15)
+                      : withAlpha(intent.danger, 0.15)
             },
             '100%': {
               backgroundColor:
                 highestSeverity === AlarmSeverity.CRITICAL
-                  ? 'rgba(255, 0, 0, 0.05)'
+                  ? withAlpha(intent.danger, 0.05)
                   : highestSeverity === AlarmSeverity.WARNING
-                    ? 'rgba(255, 200, 0, 0.05)'
+                    ? withAlpha(intent.warning, 0.05)
                     : highestSeverity === AlarmSeverity.INFO
-                      ? 'rgba(0, 100, 255, 0.05)'
-                      : 'rgba(255, 0, 0, 0.05)'
+                      ? withAlpha(intent.info, 0.05)
+                      : withAlpha(intent.danger, 0.05)
             }
           }
         })
@@ -444,9 +445,9 @@ const DeviceListItem = ({
                       sx={{
                         ml: 1,
                         padding: '4px',
-                        backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                        backgroundColor: withAlpha(intent.info, 0.1),
                         '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 0.2)'
+                          backgroundColor: withAlpha(intent.info, 0.2)
                         }
                       }}
                     >

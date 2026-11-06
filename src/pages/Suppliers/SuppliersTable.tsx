@@ -31,6 +31,7 @@ import {
   PURCHASE_TEAL,
   PURCHASE_TEAL_HOVER
 } from 'src/Components/Purchases/purchaseTableStyle'
+import { brand } from 'src/theme/designTokens'
 
 // Interfaz para un proveedor, incluyendo los nuevos campos para el estado de evaluación
 interface Supplier {
@@ -349,7 +350,7 @@ const SuppliersTable: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Ver detalles de ${row.original.name}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() =>
                   navigate(`/purchases/suppliers/details/${row.original.id}`)
                 }

@@ -1,4 +1,5 @@
 import { CatalogPriceSource } from './calibrationServiceWorkspaceTypes'
+import { brand, neutral } from 'src/theme/designTokens'
 
 export const REQUEST_CHANNEL_OPTIONS = [
   'En persona',
@@ -36,8 +37,8 @@ export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export const sectionCardSx = {
   borderRadius: '16px',
   mb: 3,
-  border: '1px solid #e5e7eb',
-  bgcolor: '#fff',
+  border: `1px solid ${neutral.border}`,
+  bgcolor: neutral.surface,
   boxShadow: 'none'
 } as const
 
@@ -46,9 +47,9 @@ export const tealButtonSx = {
   textTransform: 'none',
   fontWeight: 600,
   py: 1.1,
-  bgcolor: '#00BFA5',
-  '&:hover': { bgcolor: '#00ACC1' },
-  '&.Mui-disabled': { bgcolor: '#e5e7eb', color: '#9ca3af' }
+  bgcolor: brand.main,
+  '&:hover': { bgcolor: brand.hover },
+  '&.Mui-disabled': { bgcolor: neutral.border, color: neutral.textFaint }
 } as const
 
 export const tealOutlineSx = {
@@ -56,9 +57,9 @@ export const tealOutlineSx = {
   textTransform: 'none',
   fontWeight: 600,
   py: 1.1,
-  color: '#00897B',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.hover,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 
 export const currencyFormatter = new Intl.NumberFormat('es-CO', {

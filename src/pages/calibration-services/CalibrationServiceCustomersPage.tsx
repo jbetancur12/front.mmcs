@@ -46,6 +46,7 @@ import { useCan } from '@utils/functions'
 import { getApiErrorMessage } from 'src/utils/apiError'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const customerQueryKey = ['calibration-service-customers']
 const DEFAULT_PAGE_SIZE = 10
@@ -290,9 +291,9 @@ const CalibrationServiceCustomersPage = () => {
                 setCustomerDialogMode('customer')
               }}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Crear cliente
@@ -334,7 +335,7 @@ const CalibrationServiceCustomersPage = () => {
         sx={{
           borderRadius: '12px',
           mb: 2.5,
-          border: '1px solid rgba(0,0,0,0.06)',
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
           overflow: 'hidden'
         }}
       >
@@ -357,7 +358,7 @@ const CalibrationServiceCustomersPage = () => {
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '10px',
-                backgroundColor: '#fff'
+                backgroundColor: neutral.surface
               }
             }}
           />
@@ -372,13 +373,13 @@ const CalibrationServiceCustomersPage = () => {
             elevation={0}
             sx={{
               borderRadius: '14px',
-              border: '1px solid rgba(0,0,0,0.06)',
-              background: '#fff',
+              border: `1px solid ${withAlpha(neutral.black, 0.06)}`,
+              background: neutral.surface,
               overflow: 'hidden',
               transition: 'box-shadow 0.2s, border-color 0.2s',
               '&:hover': {
-                borderColor: 'rgba(16,185,129,0.2)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+                borderColor: withAlpha(brand.main, 0.2),
+                boxShadow: `0 4px 12px ${withAlpha(neutral.black, 0.04)}`
               }
             }}
           >
@@ -404,8 +405,8 @@ const CalibrationServiceCustomersPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(16,185,129,0.08)',
-                      color: '#059669',
+                      backgroundColor: withAlpha(brand.main, 0.08),
+                      color: brand.ink,
                       flexShrink: 0
                     }}
                   >
@@ -571,12 +572,12 @@ const CalibrationServiceCustomersPage = () => {
                       cursor: 'pointer',
                       '&::before': {
                         borderColor: expandedCustomers.has(customer.id)
-                          ? 'rgba(16,185,129,0.3)'
+                          ? withAlpha(brand.main, 0.3)
                           : undefined
                       },
                       '&::after': {
                         borderColor: expandedCustomers.has(customer.id)
-                          ? 'rgba(16,185,129,0.3)'
+                          ? withAlpha(brand.main, 0.3)
                           : undefined
                       }
                     }}
@@ -621,13 +622,15 @@ const CalibrationServiceCustomersPage = () => {
                           <Grid item xs={12} md={6} key={site.id || site.name}>
                             <Box
                               sx={{
-                                backgroundColor: '#f8fafb',
+                                backgroundColor: neutral.surfaceAlt,
                                 borderRadius: '10px',
                                 p: 1.5,
                                 border: '1px solid',
-                                borderColor: 'rgba(0,0,0,0.05)',
+                                borderColor: withAlpha(neutral.black, 0.05),
                                 transition: 'background-color 0.15s',
-                                '&:hover': { backgroundColor: '#f1f5f9' }
+                                '&:hover': {
+                                  backgroundColor: neutral.surfaceHead
+                                }
                               }}
                             >
                               <Stack
@@ -711,12 +714,12 @@ const CalibrationServiceCustomersPage = () => {
             }}
           >
             <BusinessOutlinedIcon
-              sx={{ fontSize: 48, color: '#d1d5db', mb: 1.5 }}
+              sx={{ fontSize: 48, color: neutral.borderStrong, mb: 1.5 }}
             />
             <Typography
               variant='body1'
               fontWeight={600}
-              sx={{ color: '#6b7280', mb: 0.5 }}
+              sx={{ color: neutral.textMuted, mb: 0.5 }}
             >
               {search.trim() ? 'Sin resultados' : 'Aún no hay clientes'}
             </Typography>
@@ -735,7 +738,7 @@ const CalibrationServiceCustomersPage = () => {
         sx={{
           mt: 2.5,
           borderRadius: '12px',
-          border: '1px solid rgba(0,0,0,0.06)'
+          border: `1px solid ${withAlpha(neutral.black, 0.06)}`
         }}
       >
         <TablePagination

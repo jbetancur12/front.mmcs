@@ -26,6 +26,7 @@ import {
 import CalibrationServiceWhatsAppConfigDialog from './CalibrationServiceWhatsAppConfigDialog'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   ods_issued: 'ODS emitida',
@@ -94,7 +95,7 @@ const CalibrationNotificationCenter = () => {
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         minHeight: '100vh',
-        backgroundColor: '#f8fafb'
+        backgroundColor: neutral.surfaceAlt
       }}
     >
       <Stack
@@ -208,15 +209,15 @@ const CalibrationNotificationCenter = () => {
                 border: '1px solid',
                 borderColor: notification.readAt
                   ? 'divider'
-                  : 'rgba(16,185,129,0.2)',
+                  : withAlpha(brand.main, 0.2),
                 backgroundColor: notification.readAt
                   ? '#fff'
-                  : 'rgba(16,185,129,0.02)',
+                  : withAlpha(brand.main, 0.02),
                 cursor: notification.actionUrl ? 'pointer' : 'default',
                 transition: 'all 0.15s',
                 '&:hover': {
-                  borderColor: 'rgba(16,185,129,0.3)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                  borderColor: withAlpha(brand.main, 0.3),
+                  boxShadow: `0 2px 8px ${withAlpha(neutral.black, 0.04)}`
                 }
               }}
               onClick={() => handleNavigate(notification)}
@@ -306,7 +307,7 @@ const CalibrationNotificationCenter = () => {
                     >
                       <CheckCircleOutlineOutlinedIcon
                         fontSize='small'
-                        sx={{ color: '#059669' }}
+                        sx={{ color: brand.ink }}
                       />
                     </IconButton>
                   </Tooltip>
@@ -338,12 +339,12 @@ const CalibrationNotificationCenter = () => {
           }}
         >
           <NotificationsOutlinedIcon
-            sx={{ fontSize: 48, color: '#d1d5db', mb: 1.5 }}
+            sx={{ fontSize: 48, color: neutral.borderStrong, mb: 1.5 }}
           />
           <Typography
             variant='body1'
             fontWeight={600}
-            sx={{ color: '#6b7280' }}
+            sx={{ color: neutral.textMuted }}
           >
             {showRead
               ? 'No hay notificaciones'

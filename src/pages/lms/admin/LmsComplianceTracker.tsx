@@ -90,6 +90,7 @@ import type {
   MandatoryTrainingRecord,
   MandatoryTrainingStatus
 } from '../../../services/lmsService'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface ComplianceRecord {
   id: number
@@ -1000,7 +1001,10 @@ const LmsComplianceTracker: React.FC = () => {
               <IconButton
                 onClick={() => refetch()}
                 disabled={isFetching}
-                sx={{ bgcolor: '#f5f5f5', '&:hover': { bgcolor: '#e0e0e0' } }}
+                sx={{
+                  bgcolor: neutral.surfaceHead,
+                  '&:hover': { bgcolor: neutral.borderStrong }
+                }}
               >
                 <RefreshIcon
                   sx={{
@@ -1149,8 +1153,8 @@ const LmsComplianceTracker: React.FC = () => {
                     size='small'
                     onClick={() => handleViewDetails(row.original)}
                     sx={{
-                      color: '#00BFA5',
-                      '&:hover': { bgcolor: 'rgba(0, 191, 165, 0.1)' }
+                      color: brand.main,
+                      '&:hover': { bgcolor: withAlpha(brand.main, 0.1) }
                     }}
                   >
                     <VisibilityIcon />
@@ -1251,19 +1255,21 @@ const LmsComplianceTracker: React.FC = () => {
               sx: {
                 '& .MuiTableHead-root': {
                   '& .MuiTableCell-root': {
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: neutral.surfaceHead,
                     fontWeight: 600
                   }
                 },
                 '& .MuiTableBody-root': {
                   '& .MuiTableRow-root:hover': {
-                    backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                    backgroundColor: withAlpha(brand.main, 0.04)
                   }
                 }
               }
             }}
-            muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
-            muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+            muiTopToolbarProps={{ sx: { backgroundColor: neutral.surfaceAlt } }}
+            muiBottomToolbarProps={{
+              sx: { backgroundColor: neutral.surfaceAlt }
+            }}
             muiTablePaginationProps={{ rowsPerPageOptions: [10, 25, 50, 100] }}
             enablePinning
             initialState={{

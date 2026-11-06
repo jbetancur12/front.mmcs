@@ -34,6 +34,7 @@ import {
 } from '../../types/calibrationService'
 
 import { DetailField } from './CalibrationServiceDetailBlocks'
+import { brand, neutral } from 'src/theme/designTokens'
 type CalibrationServiceOperationalItem = NonNullable<
   CalibrationService['items']
 >[number]
@@ -432,7 +433,9 @@ const CalibrationServiceOperationsPanel = ({
           }}
         >
           <Table size='small'>
-            <TableHead sx={{ bgcolor: '#f5f5f5', '& th': { fontWeight: 600 } }}>
+            <TableHead
+              sx={{ bgcolor: neutral.surfaceHead, '& th': { fontWeight: 600 } }}
+            >
               <TableRow>
                 <TableCell>Ítem</TableCell>
                 <TableCell align='right'>Cant.</TableCell>
@@ -586,11 +589,11 @@ const CalibrationServiceOperationsPanel = ({
               onClick={() => void handleGeneratePdf()}
               disabled={isGeneratingProgressPdf || isBusy}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
+                color: brand.hover,
+                borderColor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Generar anexo de avance técnico
@@ -603,10 +606,10 @@ const CalibrationServiceOperationsPanel = ({
               disabled={isBusy}
               disableElevation
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Guardar avance técnico

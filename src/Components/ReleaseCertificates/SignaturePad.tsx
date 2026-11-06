@@ -1,5 +1,6 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Box, Typography } from '@mui/material'
+import { neutral, intent } from 'src/theme/designTokens'
 
 export interface SignaturePadHandle {
   clear: () => void
@@ -14,7 +15,7 @@ interface SignaturePadProps {
 
 const HEIGHT = 160
 const LINE_WIDTH = 2.4
-const INK = '#0b1f5c'
+const INK = intent.infoInk
 const CROP_MARGIN = 6
 
 /**
@@ -151,9 +152,9 @@ const SignaturePad = React.forwardRef<SignaturePadHandle, SignaturePadProps>(
       <Box>
         <Box
           sx={{
-            border: '1px solid #d1d5db',
+            border: `1px solid ${neutral.borderStrong}`,
             borderRadius: 2,
-            bgcolor: '#fff',
+            bgcolor: neutral.surface,
             position: 'relative',
             overflow: 'hidden'
           }}
@@ -196,7 +197,7 @@ const SignaturePad = React.forwardRef<SignaturePadHandle, SignaturePadProps>(
               left: 16,
               right: 16,
               bottom: 36,
-              borderBottom: '1px dashed #d1d5db',
+              borderBottom: `1px dashed ${neutral.borderStrong}`,
               pointerEvents: 'none'
             }}
           />
