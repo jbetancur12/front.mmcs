@@ -37,6 +37,7 @@ import PlatformBillingRoutes from './routes/PlatformBillingRoutes'
 import AssetLifeSheetRoutes from './routes/AssetLifeSheetRoutes'
 import CalibrationServiceRoutes from './routes/CalibrationServiceRoutes'
 import EquipmentSalesRoutes from './routes/EquipmentSalesRoutes'
+import ManagementReportRoutes from './routes/ManagementReportRoutes'
 
 function Router() {
   const $userStore = useStore(userStore)
@@ -82,6 +83,7 @@ function Router() {
           {AssetLifeSheetRoutes($userStore.rol)}
           {CalibrationServiceRoutes($userStore.rol)}
           {EquipmentSalesRoutes($userStore.rol)}
+          {ManagementReportRoutes($userStore.rol)}
           {OtherRoutes($userStore.rol)}
         </Route>
 

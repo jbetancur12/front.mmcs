@@ -961,6 +961,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'release:certificate:view': [
     { path: "/release-certificates", label: "Certificados a liberar", kind: 'screen' }
   ],
+  'reports:management:financial': [
+    { path: "/management-report", label: "Reporte gerencial", kind: 'action' }
+  ],
+  'reports:management:view': [
+    { path: "/management-report", label: "Reporte gerencial", kind: 'screen' }
+  ],
   'repositories:repository:manage': [
     { path: "/repository", label: "Repositorio", kind: 'action' }
   ],

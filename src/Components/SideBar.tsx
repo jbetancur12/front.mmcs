@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AccountTreeOutlined,
+  AssessmentOutlined,
   AssignmentTurnedInOutlined,
   LocalShippingOutlined,
   BuildOutlined,
@@ -118,6 +119,15 @@ const sidebarItems = ($userStore: UserData) => [
     to: '/',
     icon: <DashboardOutlined />,
     roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
+    moduleName: 'Basic'
+  },
+  {
+    type: 'link',
+    label: 'Reporte gerencial',
+    to: '/management-report',
+    icon: <AssessmentOutlined />,
+    roles: [] as string[],
+    permission: PERMISSIONS.REPORTS_MANAGEMENT_VIEW,
     moduleName: 'Basic'
   },
   {

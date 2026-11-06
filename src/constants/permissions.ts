@@ -484,7 +484,11 @@ export const PERMISSIONS = {
   /** Otorgar o quitar capacidades sensibles desde el panel de roles */
   RBAC_SENSITIVE_MANAGE: 'rbac:sensitive:manage',
   /** Crear roles y activar o desactivar capacidades */
-  RBAC_MANAGE: 'rbac:manage'
+  RBAC_MANAGE: 'rbac:manage',
+  /** Ver el reporte gerencial mensual (versión sin valores si no se tiene la capacidad financiera) */
+  REPORTS_MANAGEMENT_VIEW: 'reports:management:view',
+  /** Ver y enviar los valores en dinero del reporte gerencial mensual */
+  REPORTS_MANAGEMENT_FINANCIAL: 'reports:management:financial'
 } as const
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

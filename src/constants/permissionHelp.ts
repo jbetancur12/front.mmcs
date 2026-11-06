@@ -1222,6 +1222,17 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Subir, editar y eliminar archivos del repositorio.',
     'Repositorios.'
   ],
+  // --- Reporte gerencial
+  'reports:management:view': [
+    'Ver el reporte gerencial',
+    'Consultar el reporte mensual de gerencia. Sin la capacidad financiera se muestra la versión sin valores.',
+    'Reporte gerencial.'
+  ],
+  'reports:management:financial': [
+    'Ver los valores del reporte gerencial',
+    'Ver y enviar los montos en dinero del reporte gerencial mensual.',
+    'Reporte gerencial.'
+  ],
   // --- Administración de permisos
   'rbac:view': [
     'Ver roles y permisos',
