@@ -21,6 +21,7 @@ import {
   ConnectionStatus
 } from './types'
 import { useModernStyles } from './hooks/useModernStyles'
+import { intent } from 'src/theme/designTokens'
 
 /**
  * MaintenanceTVDisplayModern - Modern TV display component for maintenance tickets
@@ -47,7 +48,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
   //   slideInterval: 30, // seconds
   //   showAnimations: true,
   //   compactView: false,
-  //   primaryColor: '#7bff7f'
+  //   primaryColor: intent.success
   // })
 
   // Smart Pagination System
@@ -534,7 +535,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                     display: 'block',
                     mt: 0.15,
                     ml: '2.45rem',
-                    color: '#8a5a00',
+                    color: intent.warningInk,
                     fontWeight: 600,
                     fontSize: '0.72rem',
                     letterSpacing: '0.15px'

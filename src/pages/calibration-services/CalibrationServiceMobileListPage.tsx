@@ -31,20 +31,21 @@ import {
   getOperationsSummary
 } from './calibrationServiceOtherFields'
 import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
+import { brand, neutral, intent, detail } from 'src/theme/designTokens'
 
 // Misma paleta del detalle móvil
 const C = {
-  green: '#00BFA5',
-  greenDark: '#00897B',
-  greenLight: '#E0F7F4',
-  gray50: '#f0f2f5',
-  gray100: '#e8eaed',
-  gray300: '#b0b7c3',
-  gray400: '#9ca3af',
-  gray600: '#4b5563',
-  dark: '#1a1a2e'
+  green: brand.main,
+  greenDark: brand.hover,
+  greenLight: brand.soft,
+  gray50: neutral.surfaceHead,
+  gray100: neutral.border,
+  gray300: neutral.textFaint,
+  gray400: neutral.textFaint,
+  gray600: neutral.textBody,
+  dark: neutral.text
 }
-const BANNER_BG = 'linear-gradient(135deg, #10b981, #059669)'
+const BANNER_BG = `linear-gradient(135deg, ${detail.from}, ${detail.to})`
 
 const MOBILE_TECH_STATUSES: CalibrationServiceStatus[] = [
   'ods_issued',
@@ -230,7 +231,7 @@ const MobileListPage = () => {
       <Typography
         fontWeight={700}
         sx={{
-          color: warn && value > 0 ? '#fde68a' : '#fff',
+          color: warn && value > 0 ? intent.warning : '#fff',
           fontSize: '1.4rem',
           lineHeight: 1.1
         }}
@@ -307,7 +308,7 @@ const MobileListPage = () => {
               )
             }}
             sx={{
-              bgcolor: '#fff',
+              bgcolor: neutral.surface,
               borderRadius: '14px',
               '& .MuiOutlinedInput-root': { borderRadius: '14px', height: 48 },
               '& fieldset': { borderColor: C.gray100 }
@@ -381,7 +382,7 @@ const MobileListPage = () => {
                   sx={{
                     fontSize: '0.95rem',
                     fontWeight: 700,
-                    color: g.label === 'Atrasados' ? '#b45309' : C.dark,
+                    color: g.label === 'Atrasados' ? intent.warningInk : C.dark,
                     mb: 1
                   }}
                 >
@@ -490,7 +491,7 @@ const MobileListPage = () => {
                                     <Typography
                                       variant='caption'
                                       fontWeight={700}
-                                      sx={{ color: '#b45309' }}
+                                      sx={{ color: intent.warningInk }}
                                     >
                                       {Math.abs(dayDiff(date, today))} día
                                       {Math.abs(dayDiff(date, today)) === 1

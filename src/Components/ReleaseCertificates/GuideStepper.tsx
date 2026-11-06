@@ -11,6 +11,7 @@ import {
 } from '@mui/material'
 import { OpenInNewRounded } from '@mui/icons-material'
 import { DriveGuideStep } from './driveGuideSteps'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface GuideStepperProps {
   steps: DriveGuideStep[]
@@ -76,7 +77,7 @@ const GuideStepper: React.FC<GuideStepperProps> = ({ steps, resetKey }) => {
                 alt={step.image.alt}
                 sx={{
                   maxWidth: '100%',
-                  border: '1px solid #e5e7eb',
+                  border: `1px solid ${neutral.border}`,
                   borderRadius: 1,
                   mb: 1.5
                 }}
@@ -98,7 +99,10 @@ const GuideStepper: React.FC<GuideStepperProps> = ({ steps, resetKey }) => {
                   size='small'
                   variant='contained'
                   onClick={() => setActive(index + 1)}
-                  sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+                  sx={{
+                    bgcolor: brand.main,
+                    '&:hover': { bgcolor: brand.hover }
+                  }}
                 >
                   Ya lo hice, siguiente
                 </Button>

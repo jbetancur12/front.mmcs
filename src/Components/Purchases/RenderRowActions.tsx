@@ -34,6 +34,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 import { promptDialog } from 'src/utils/confirm'
+import { brand, intent } from 'src/theme/designTokens'
 type RenderRowActionsProps = {
   row: { original: PurchaseRequest }
   queryClient: QueryClient
@@ -191,7 +192,7 @@ const RenderRowActions = ({
           to={`${row.original.id}`}
           size='small'
           aria-label={`Ver solicitud ${row.original.purchaseCode}`}
-          sx={{ color: '#00695C' }}
+          sx={{ color: brand.ink }}
         >
           <Visibility />
         </IconButton>
@@ -207,7 +208,7 @@ const RenderRowActions = ({
           <IconButton
             size='small'
             aria-label={`Editar solicitud ${row.original.purchaseCode}`}
-            sx={{ color: '#2563eb' }}
+            sx={{ color: intent.action }}
             onClick={onEdit}
             disabled={
               row.original.status === 'aprobado' && row.original.hasOrder
@@ -224,9 +225,9 @@ const RenderRowActions = ({
           startIcon={primary.icon}
           onClick={primary.onClick}
           sx={{
-            bgcolor: '#00BFA5',
+            bgcolor: brand.main,
             whiteSpace: 'nowrap',
-            '&:hover': { bgcolor: '#00ACC1' }
+            '&:hover': { bgcolor: brand.hover }
           }}
         >
           {primary.label}

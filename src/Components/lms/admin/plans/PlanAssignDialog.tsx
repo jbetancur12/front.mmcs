@@ -52,6 +52,7 @@ import {
   primaryButtonSx,
   translateTargetText
 } from './planUi'
+import { brand, intent } from 'src/theme/designTokens'
 
 interface PlanAssignDialogProps {
   open: boolean
@@ -62,13 +63,16 @@ interface PlanAssignDialogProps {
 const ACTION_CHIP: Record<PlanCourseAction, { label: string; sx: object }> = {
   crear: {
     label: 'Se crea',
-    sx: { bgcolor: PLAN_TEAL_SOFT, color: '#00695C' }
+    sx: { bgcolor: PLAN_TEAL_SOFT, color: brand.ink }
   },
   reutilizar: {
     label: 'Ya asignado',
-    sx: { bgcolor: '#E3F2FD', color: '#1565C0' }
+    sx: { bgcolor: intent.infoSoft, color: intent.infoInk }
   },
-  omitir: { label: 'Se omite', sx: { bgcolor: '#FFF3E0', color: '#E65100' } }
+  omitir: {
+    label: 'Se omite',
+    sx: { bgcolor: intent.warningSoft, color: intent.danger }
+  }
 }
 
 const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({

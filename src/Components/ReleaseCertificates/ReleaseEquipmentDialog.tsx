@@ -30,6 +30,7 @@ import {
   ReleaseNewEquipment,
   ReleaseTarget
 } from './ReleaseCertificates.types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface ReleaseEquipmentDialogProps {
   certificateId: number | null
@@ -86,8 +87,8 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
       cursor: candidate.otherCertificateType ? 'not-allowed' : 'pointer',
       opacity: candidate.otherCertificateType ? 0.55 : 1,
       border: '1px solid',
-      borderColor: selected ? '#00695C' : '#e5e7eb',
-      bgcolor: selected ? '#f0fbf9' : '#fff'
+      borderColor: selected ? brand.ink : neutral.border,
+      bgcolor: selected ? brand.softer : '#fff'
     }}
   >
     <Radio
@@ -137,7 +138,7 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
       {candidate.otherCertificateType && (
         <Typography
           variant='caption'
-          sx={{ color: '#b45309', display: 'block' }}
+          sx={{ color: intent.warningInk, display: 'block' }}
         >
           Es el registro de «{candidate.certificateTypeName}» de este equipo: no
           se actualiza con este certificado.
@@ -146,7 +147,7 @@ const EquipmentOption: React.FC<EquipmentOptionProps> = ({
       {candidate.serieDiffers && (
         <Typography
           variant='caption'
-          sx={{ color: '#b45309', display: 'block' }}
+          sx={{ color: intent.warningInk, display: 'block' }}
         >
           Serie del PDF: {pdfSerie || '—'} · serie del equipo:{' '}
           {candidate.serie || '—'}
@@ -390,8 +391,8 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
                 borderRadius: 2,
                 cursor: 'pointer',
                 border: '1px solid',
-                borderColor: creating ? '#00695C' : '#e5e7eb',
-                bgcolor: creating ? '#f0fbf9' : '#fff'
+                borderColor: creating ? brand.ink : neutral.border,
+                bgcolor: creating ? brand.softer : '#fff'
               }}
             >
               <Radio
@@ -532,7 +533,7 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
           variant='contained'
           disabled={releasing || (!confirmOnly && (isLoading || missing))}
           onClick={confirm}
-          sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+          sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
         >
           {confirmOnly
             ? 'Confirmar y liberar'

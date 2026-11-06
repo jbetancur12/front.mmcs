@@ -34,6 +34,7 @@ import {
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
+import { intent } from 'src/theme/designTokens'
 // Define interfaces
 export interface CustomerData {
   id?: number
@@ -344,10 +345,10 @@ const Table: React.FC = () => {
             variant='contained'
             onClick={() => setCreateModalOpen(true)}
             sx={{
-              backgroundColor: '#9CF08B',
+              backgroundColor: intent.success,
               color: '#000',
               '&:hover': {
-                backgroundColor: '#6DC662' // Azul más oscuro en hover
+                backgroundColor: intent.success // Azul más oscuro en hover
               }
             }}
           >

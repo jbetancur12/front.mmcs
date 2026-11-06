@@ -34,6 +34,7 @@ import {
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 interface EquipmentFormValues {
   outReason: string
   /** Fechas como `yyyy-MM-dd`; se convierten a `Date` al enviar. */
@@ -196,9 +197,9 @@ const EquipmentForm: React.FC = () => {
   const buttonSx = {
     textTransform: 'none',
     fontWeight: 600,
-    color: '#00695C',
-    borderColor: '#00BFA5',
-    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+    color: brand.ink,
+    borderColor: brand.main,
+    '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
   } as const
 
   return (
@@ -260,8 +261,8 @@ const EquipmentForm: React.FC = () => {
                 onSubmit={formik.handleSubmit}
                 sx={{
                   '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
-                    { borderColor: '#00897B' },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#00695C' }
+                    { borderColor: brand.hover },
+                  '& .MuiInputLabel-root.Mui-focused': { color: brand.ink }
                 }}
               >
                 <FormSection
@@ -375,8 +376,8 @@ const EquipmentForm: React.FC = () => {
                         sx={{
                           textTransform: 'none',
                           fontWeight: 600,
-                          bgcolor: '#00BFA5',
-                          '&:hover': { bgcolor: '#00897B' }
+                          bgcolor: brand.main,
+                          '&:hover': { bgcolor: brand.hover }
                         }}
                       >
                         {!isEquipmentOut
@@ -397,12 +398,12 @@ const EquipmentForm: React.FC = () => {
             sx={{
               p: { xs: 2, md: 3 },
               borderRadius: '16px',
-              border: '1px solid #e5e7eb'
+              border: `1px solid ${neutral.border}`
             }}
           >
             <Typography
               component='h2'
-              sx={{ fontSize: 17, fontWeight: 700, color: '#111827', mb: 2 }}
+              sx={{ fontSize: 17, fontWeight: 700, color: neutral.text, mb: 2 }}
             >
               {isEquipmentOut ? 'Salida en curso' : 'Última entrada'}
             </Typography>

@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
-import { intent, brand } from 'src/theme/designTokens'
+import { intent, brand, neutral } from 'src/theme/designTokens'
 
 import DataSheetEditDialogs, { type EditStep } from './DataSheetEditDialogs'
 import { DataSheetData } from './types'
@@ -90,14 +90,14 @@ const DataSheetRowActions = ({
               mt: 0.5,
               minWidth: 230,
               borderRadius: '12px',
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${neutral.border}`,
               boxShadow: '0 8px 24px rgba(17, 24, 39, 0.10)',
               '& .MuiMenuItem-root': {
                 fontSize: 14,
                 fontWeight: 500,
                 py: 1,
                 gap: 0.5,
-                '&:hover': { bgcolor: '#f6fcfb' }
+                '&:hover': { bgcolor: brand.softer }
               }
             }
           }
@@ -110,7 +110,7 @@ const DataSheetRowActions = ({
             onClick={handleMenuClose}
           >
             <ListItemIcon>
-              <Visibility fontSize='small' sx={{ color: '#00695C' }} />
+              <Visibility fontSize='small' sx={{ color: brand.ink }} />
             </ListItemIcon>
             Ver hoja de vida
           </MuiMenuItem>
@@ -123,7 +123,7 @@ const DataSheetRowActions = ({
             onClick={handleMenuClose}
           >
             <ListItemIcon>
-              <Engineering fontSize='small' sx={{ color: '#00695C' }} />
+              <Engineering fontSize='small' sx={{ color: brand.ink }} />
             </ListItemIcon>
             Inspección y mantenimiento
           </MuiMenuItem>
@@ -136,7 +136,7 @@ const DataSheetRowActions = ({
             onClick={handleMenuClose}
           >
             <ListItemIcon>
-              <ExitToApp fontSize='small' sx={{ color: '#00695C' }} />
+              <ExitToApp fontSize='small' sx={{ color: brand.ink }} />
             </ListItemIcon>
             Entrada y salida
           </MuiMenuItem>
@@ -150,7 +150,7 @@ const DataSheetRowActions = ({
             }}
           >
             <ListItemIcon>
-              <Download fontSize='small' sx={{ color: '#00695C' }} />
+              <Download fontSize='small' sx={{ color: brand.ink }} />
             </ListItemIcon>
             Descargar factura
           </MuiMenuItem>
@@ -161,7 +161,7 @@ const DataSheetRowActions = ({
         {!isRetired && canUpdateDataSheet && (
           <MuiMenuItem onClick={handleEdit}>
             <ListItemIcon>
-              <Edit fontSize='small' sx={{ color: '#2563eb' }} />
+              <Edit fontSize='small' sx={{ color: intent.action }} />
             </ListItemIcon>
             Editar
           </MuiMenuItem>
@@ -205,10 +205,13 @@ const DataSheetRowActions = ({
               onDeletePermanent(row)
               handleMenuClose()
             }}
-            sx={{ color: '#dc2626', '&:hover': { bgcolor: '#fef2f2' } }}
+            sx={{
+              color: intent.danger,
+              '&:hover': { bgcolor: intent.dangerSoft }
+            }}
           >
             <ListItemIcon>
-              <DeleteForever fontSize='small' sx={{ color: '#dc2626' }} />
+              <DeleteForever fontSize='small' sx={{ color: intent.danger }} />
             </ListItemIcon>
             Eliminar definitivamente
           </MuiMenuItem>

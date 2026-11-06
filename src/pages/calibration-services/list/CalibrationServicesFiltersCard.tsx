@@ -37,6 +37,7 @@ import {
   CalibrationServicesViewMode
 } from './calibrationServicesListTypes'
 import { CalibrationServicesListFilters } from './useCalibrationServicesListFilters'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServicesFiltersCardProps {
   filters: CalibrationServicesListFilters
@@ -47,7 +48,7 @@ interface CalibrationServicesFiltersCardProps {
   metrologistOptions: CalibrationServicesMetrologistOption[]
 }
 
-const TEAL_INK = '#00695C'
+const TEAL_INK = brand.ink
 
 /** Atajo de filtro: se activa y desactiva con un clic. */
 const QuickFilter: React.FC<{
@@ -68,10 +69,10 @@ const QuickFilter: React.FC<{
       borderRadius: '10px',
       fontWeight: 600,
       fontSize: 14,
-      borderColor: active ? TEAL_INK : '#e5e7eb',
-      bgcolor: active ? '#E0F7F4' : '#fff',
-      color: active ? TEAL_INK : '#374151',
-      '&&:hover': { bgcolor: active ? '#E0F7F4' : '#f3f4f6' }
+      borderColor: active ? TEAL_INK : neutral.border,
+      bgcolor: active ? brand.soft : '#fff',
+      color: active ? TEAL_INK : neutral.textBody,
+      '&&:hover': { bgcolor: active ? brand.soft : neutral.surfaceHead }
     }}
   />
 )
@@ -168,12 +169,12 @@ const CalibrationServicesFiltersCard = ({
           sx={{
             minWidth: { lg: 340 },
             '& .MuiOutlinedInput-root': {
-              bgcolor: '#fff',
+              bgcolor: neutral.surface,
               borderRadius: '10px'
             },
             '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
               {
-                borderColor: '#00897B',
+                borderColor: brand.hover,
                 borderWidth: 2
               }
           }}
@@ -294,17 +295,17 @@ const CalibrationServicesFiltersCard = ({
           }}
           sx={{
             alignSelf: { xs: 'flex-start', lg: 'center' },
-            bgcolor: '#fff',
+            bgcolor: neutral.surface,
             '& .MuiToggleButton-root': {
               textTransform: 'none',
               fontWeight: 600,
-              color: '#374151',
+              color: neutral.textBody,
               gap: 0.75,
               px: 1.5,
-              borderColor: '#e5e7eb'
+              borderColor: neutral.border
             },
             '& .Mui-selected, & .Mui-selected:hover': {
-              bgcolor: '#E0F7F4 !important',
+              bgcolor: `${brand.soft} !important`,
               color: `${TEAL_INK} !important`
             }
           }}
@@ -330,12 +331,12 @@ const CalibrationServicesFiltersCard = ({
           sx={{
             mt: 1.5,
             p: 2,
-            border: '1px solid #e5e7eb',
+            border: `1px solid ${neutral.border}`,
             borderRadius: '12px',
-            bgcolor: '#fff',
+            bgcolor: neutral.surface,
             '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
               {
-                borderColor: '#00897B'
+                borderColor: brand.hover
               },
             '& .MuiInputLabel-root.Mui-focused': { color: TEAL_INK }
           }}

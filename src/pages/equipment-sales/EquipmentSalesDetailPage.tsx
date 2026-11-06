@@ -51,6 +51,7 @@ import {
 } from 'src/Components/Common/DetailBlocks'
 import { confirmDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent, detail } from 'src/theme/designTokens'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -415,14 +416,13 @@ const EquipmentSalesDetailPage = () => {
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         minHeight: '100vh',
-        backgroundColor: '#f8fafb'
+        backgroundColor: neutral.surfaceAlt
       }}
     >
       {/* ── Header banner ── */}
       <Box
         sx={{
-          background:
-            'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
+          background: `linear-gradient(135deg, ${brand.ink} 0%, ${detail.to} 50%, ${intent.successInk} 100%)`,
           borderRadius: '20px',
           p: { xs: 3, md: 4 },
           mb: 3,
@@ -770,7 +770,7 @@ const EquipmentSalesDetailPage = () => {
                             <Typography
                               variant='body2'
                               fontWeight={800}
-                              sx={{ color: '#059669' }}
+                              sx={{ color: brand.ink }}
                             >
                               {currencyFormatter.format(item.total)}
                             </Typography>
@@ -808,7 +808,7 @@ const EquipmentSalesDetailPage = () => {
                             border: '1px solid rgba(0,0,0,0.08)',
                             borderRadius: '8px',
                             p: 1.5,
-                            backgroundColor: '#fafafa'
+                            backgroundColor: neutral.surfaceAlt
                           }}
                           dangerouslySetInnerHTML={{ __html: String(value) }}
                         />
@@ -892,7 +892,7 @@ const EquipmentSalesDetailPage = () => {
                     <Typography
                       variant='body2'
                       fontWeight={700}
-                      sx={{ color: '#dc2626' }}
+                      sx={{ color: intent.danger }}
                     >
                       -{currencyFormatter.format(quotation.discountTotal)}
                     </Typography>
@@ -912,7 +912,7 @@ const EquipmentSalesDetailPage = () => {
                   <Typography
                     variant='h6'
                     fontWeight={800}
-                    sx={{ color: '#059669' }}
+                    sx={{ color: brand.ink }}
                   >
                     {currencyFormatter.format(quotation.grandTotal)}
                   </Typography>
@@ -968,8 +968,8 @@ const EquipmentSalesDetailPage = () => {
                       borderRadius: '10px',
                       textTransform: 'none',
                       fontWeight: 700,
-                      bgcolor: '#047857',
-                      '&:hover': { bgcolor: '#065f46' }
+                      bgcolor: intent.successInk,
+                      '&:hover': { bgcolor: intent.successInk }
                     }}
                   >
                     Registrar aprobación
@@ -1015,8 +1015,8 @@ const EquipmentSalesDetailPage = () => {
                     borderRadius: '10px',
                     textTransform: 'none',
                     fontWeight: 700,
-                    bgcolor: '#047857',
-                    '&:hover': { bgcolor: '#065f46' }
+                    bgcolor: intent.successInk,
+                    '&:hover': { bgcolor: intent.successInk }
                   }}
                 >
                   Marcar lista para facturar

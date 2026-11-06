@@ -12,6 +12,7 @@ import {
   CalibrationService,
   CalibrationServiceSendPreviewResult
 } from '../../types/calibrationService'
+import { brand } from 'src/theme/designTokens'
 
 interface Props {
   open: boolean
@@ -134,7 +135,7 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
             <Checkbox
               checked={sendWhatsApp}
               onChange={(event) => setSendWhatsApp(event.target.checked)}
-              sx={{ '&.Mui-checked': { color: '#00BFA5' } }}
+              sx={{ '&.Mui-checked': { color: brand.main } }}
             />
           }
           label='Enviar también por WhatsApp'

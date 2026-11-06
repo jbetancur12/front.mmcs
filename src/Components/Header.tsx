@@ -27,6 +27,7 @@ import { ROLE_GROUPS, getRoleLabelEs, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { openAnalyticsConsentPreferences } from 'src/utils/analyticsConsent'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 interface HeaderProps {
   toggleMobileMenu: () => void
 }
@@ -82,8 +83,8 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
         sx={{
           top: 'var(--imp-h, 0px)',
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#ffffff',
-          color: '#111827',
+          backgroundColor: neutral.surface,
+          color: neutral.text,
           // Escala de calibración tenue como borde inferior: marcas cada
           // 8px y una más larga cada 80px, la misma de las pantallas de acceso.
           '&::after': {
@@ -111,7 +112,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
               edge='start'
               aria-label='Abrir menú'
               onClick={toggleMobileMenu}
-              sx={{ mr: 0.5, color: '#374151' }}
+              sx={{ mr: 0.5, color: neutral.textBody }}
             >
               <MenuIcon />
             </IconButton>
@@ -127,7 +128,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
                 alignItems: 'center',
                 borderRadius: '8px',
                 '&:focus-visible': {
-                  outline: '3px solid #00695c',
+                  outline: `3px solid ${brand.ink}`,
                   outlineOffset: 4
                 }
               }}
@@ -155,8 +156,10 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
                     setImpersonationDialogOpen(true)
                   }}
                   sx={{
-                    color: isImpersonating ? '#b45309' : '#4b5563',
-                    '&:hover': { bgcolor: '#f3f4f6' }
+                    color: isImpersonating
+                      ? intent.warningInk
+                      : neutral.textBody,
+                    '&:hover': { bgcolor: neutral.surfaceHead }
                   }}
                 >
                   <AdminPanelSettingsOutlinedIcon />
@@ -168,7 +171,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
               sx={{
                 width: '1px',
                 height: 28,
-                bgcolor: '#e5e7eb',
+                bgcolor: neutral.border,
                 mx: 1,
                 display: { xs: 'none', md: 'block' }
               }}

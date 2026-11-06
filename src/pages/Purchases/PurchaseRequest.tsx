@@ -65,6 +65,7 @@ type QuickFilter = 'all' | 'pending' | 'toOrder' | 'late'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { notify } from 'src/utils/notify'
 import { promptDialog } from 'src/utils/confirm'
+import { neutral, intent } from 'src/theme/designTokens'
 
 const PurchaseRequest: React.FC = () => {
   const navigate = useNavigate()
@@ -333,8 +334,8 @@ const PurchaseRequest: React.FC = () => {
           case PurchaseRequestStatus.Pending:
             color = 'warning'
             estilo = {
-              backgroundColor: '#fff3e0',
-              color: '#ef6c00',
+              backgroundColor: intent.warningSoft,
+              color: intent.warning,
               fontWeight: 600,
               borderRadius: '12px',
               padding: '4px 12px'
@@ -343,8 +344,8 @@ const PurchaseRequest: React.FC = () => {
           case PurchaseRequestStatus.PreApproved:
             color = 'success'
             estilo = {
-              backgroundColor: '#e8f5e9',
-              color: '#2e7d32',
+              backgroundColor: intent.successSoft,
+              color: intent.successInk,
               fontWeight: 600,
               borderRadius: '12px',
               padding: '4px 12px'
@@ -353,8 +354,8 @@ const PurchaseRequest: React.FC = () => {
           case PurchaseRequestStatus.Accepted:
             color = 'success'
             estilo = {
-              backgroundColor: '#e8f5e9',
-              color: '#2e7d32',
+              backgroundColor: intent.successSoft,
+              color: intent.successInk,
               fontWeight: 600,
               borderRadius: '12px',
               padding: '4px 12px'
@@ -363,8 +364,8 @@ const PurchaseRequest: React.FC = () => {
           case PurchaseRequestStatus.Rejected:
             color = 'error'
             estilo = {
-              backgroundColor: '#ffebee',
-              color: '#c62828',
+              backgroundColor: intent.dangerSoft,
+              color: intent.danger,
               fontWeight: 600,
               borderRadius: '12px',
               padding: '4px 12px'
@@ -563,11 +564,14 @@ const PurchaseRequest: React.FC = () => {
               size: 270,
               muiTableHeadCellProps: {
                 align: 'left',
-                sx: { backgroundColor: '#f3f4f6', opacity: 1 }
+                sx: { backgroundColor: neutral.surfaceHead, opacity: 1 }
               },
               muiTableBodyCellProps: {
                 align: 'left',
-                sx: { backgroundColor: '#fff', boxShadow: '-1px 0 0 #e5e7eb' }
+                sx: {
+                  backgroundColor: neutral.surface,
+                  boxShadow: `-1px 0 0 ${neutral.border}`
+                }
               }
             }
           }}

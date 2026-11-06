@@ -16,6 +16,7 @@ import {
   Chamber,
   CHAMBER_STATUS
 } from './types'
+import { brand, neutral } from 'src/theme/designTokens'
 
 type Scenario = 'stable' | 'noisy_then_stable' | 'unstable' | 'silent_sensor'
 
@@ -202,7 +203,7 @@ export const StabilitySimulator: React.FC<Props> = ({ chamber }) => {
         p: 2,
         borderRadius: '12px',
         borderStyle: 'dashed',
-        borderColor: '#9ca3af'
+        borderColor: neutral.textFaint
       }}
     >
       <Box
@@ -213,7 +214,7 @@ export const StabilitySimulator: React.FC<Props> = ({ chamber }) => {
           gap: 2
         }}
       >
-        <Science sx={{ color: '#6b7280' }} />
+        <Science sx={{ color: neutral.textMuted }} />
         <Box sx={{ flex: '1 1 240px', minWidth: 0 }}>
           <Typography variant='subtitle2' fontWeight={700}>
             Modo de prueba (solo desarrollo)
@@ -255,7 +256,7 @@ export const StabilitySimulator: React.FC<Props> = ({ chamber }) => {
             startIcon={<PlayArrow />}
             onClick={start}
             disabled={!isCalibrating}
-            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+            sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
           >
             Simular
           </Button>

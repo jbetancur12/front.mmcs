@@ -13,6 +13,7 @@ import { Box, Card, Tab, Tabs } from '@mui/material'
 import React from 'react'
 
 import { TabValue } from './types'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CustomerProfileTabsProps {
   activeTab: TabValue
@@ -39,8 +40,8 @@ const CountLabel = ({ text, count }: { text: string; count: number }) => (
         px: 0.75,
         minWidth: 20,
         borderRadius: '999px',
-        bgcolor: '#E0F7F4',
-        color: '#00695C',
+        bgcolor: brand.soft,
+        color: brand.ink,
         fontSize: '0.75rem',
         fontWeight: 700,
         lineHeight: '20px',
@@ -66,7 +67,7 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
 }) => (
   <Card
     elevation={0}
-    sx={{ borderRadius: '16px', border: '1px solid #e5e7eb', mb: 3 }}
+    sx={{ borderRadius: '16px', border: `1px solid ${neutral.border}`, mb: 3 }}
   >
     <Tabs
       value={activeTab}
@@ -85,11 +86,11 @@ const CustomerProfileTabs: React.FC<CustomerProfileTabsProps> = ({
           px: 1,
           gap: 0.25,
           '&.Mui-selected': {
-            color: '#10b981'
+            color: brand.main
           }
         },
         '& .MuiTabs-indicator': {
-          backgroundColor: '#10b981',
+          backgroundColor: brand.main,
           height: 3,
           borderRadius: '3px 3px 0 0'
         }

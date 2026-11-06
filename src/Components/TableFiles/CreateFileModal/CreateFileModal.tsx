@@ -34,6 +34,7 @@ import { isFutureDay } from 'src/utils/dateOnly'
 
 import { logger } from 'src/utils/logger'
 import type { AxiosInstance } from 'axios'
+import { brand, neutral } from 'src/theme/designTokens'
 interface CreateFileModalProps {
   open: boolean
   onClose: () => void
@@ -46,7 +47,7 @@ interface CreateFileModalProps {
   }
 }
 
-const TEAL = '#00BFA5'
+const TEAL = brand.main
 const FULL_ROW = { gridColumn: { sm: '1 / -1' } }
 
 /**
@@ -386,8 +387,8 @@ export const CreateFileModal = ({
             sx={{
               fontSize: 14,
               fontWeight: 600,
-              color: '#374151',
-              '&.Mui-focused': { color: '#374151' }
+              color: neutral.textBody,
+              '&.Mui-focused': { color: neutral.textBody }
             }}
           >
             Periodo de calibración

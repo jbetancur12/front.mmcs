@@ -16,6 +16,7 @@ import {
 import { PatternItem } from './PatternItem'
 import { AddPatternModal } from './AddPatternModal'
 import { StabilityAlertState } from './ChamberDetails'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface PatternSectionProps {
   chamberId: string
@@ -94,7 +95,7 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
               startIcon={<AddIcon />}
               onClick={handleOpenAddPatternModal}
               disabled={isLoadingAddPattern}
-              sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+              sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
             >
               Agregar patrón
             </Button>
@@ -124,7 +125,7 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
       ) : (
         <Paper
           variant='outlined'
-          sx={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
+          sx={{ borderRadius: '12px', borderColor: neutral.border }}
         >
           <EmptyState
             icon={<Inventory2Outlined />}
@@ -136,7 +137,7 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
                   variant='outlined'
                   startIcon={<AddIcon />}
                   onClick={handleOpenAddPatternModal}
-                  sx={{ color: '#00897B', borderColor: '#00BFA5' }}
+                  sx={{ color: brand.hover, borderColor: brand.main }}
                 >
                   Agregar patrón
                 </Button>

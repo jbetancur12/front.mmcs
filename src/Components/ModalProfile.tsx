@@ -13,6 +13,7 @@ import FileDropZone from 'src/Components/Common/FileDropZone'
 import { useCreateProfile } from 'src/hooks/profiles/useProfiles'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 interface ModalProfileProps {
   open: boolean
   onClose: () => void
@@ -142,9 +143,9 @@ const ModalProfile: React.FC<ModalProfileProps> = ({ open, onClose }) => {
             sx={{
               width: 72,
               height: 72,
-              bgcolor: '#E0F7F4',
-              color: '#00695C',
-              border: '1px solid #e5e7eb',
+              bgcolor: brand.soft,
+              color: brand.ink,
+              border: `1px solid ${neutral.border}`,
               flexShrink: 0
             }}
           >
@@ -255,8 +256,8 @@ const ModalProfile: React.FC<ModalProfileProps> = ({ open, onClose }) => {
               sx={{
                 height: 6,
                 borderRadius: 3,
-                bgcolor: '#E0F7F4',
-                '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' }
+                bgcolor: brand.soft,
+                '& .MuiLinearProgress-bar': { bgcolor: brand.main }
               }}
             />
             <Typography variant='caption' color='text.secondary'>

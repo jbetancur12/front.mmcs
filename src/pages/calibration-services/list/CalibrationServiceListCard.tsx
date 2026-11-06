@@ -44,6 +44,7 @@ import {
 } from './calibrationServicesListUtils'
 import { CalibrationServicesListPermissions } from './useCalibrationServicesListPermissions'
 import { CalibrationServicesListActions } from './useCalibrationServicesListActions'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceListCardProps {
   service: CalibrationService
@@ -57,11 +58,11 @@ const iconButtonSx = {
   borderRadius: '10px',
   width: 40,
   height: 40,
-  color: '#374151',
+  color: neutral.textBody,
   '&:hover': {
-    borderColor: '#00897B',
-    color: '#00695C',
-    backgroundColor: '#E0F7F4'
+    borderColor: brand.hover,
+    color: brand.ink,
+    backgroundColor: brand.soft
   }
 }
 
@@ -228,7 +229,7 @@ const CalibrationServiceListCard = ({
         key='total'
         component='span'
         title='Total estimado'
-        sx={{ color: '#00695C', fontWeight: 700 }}
+        sx={{ color: brand.ink, fontWeight: 700 }}
       >
         {currencyFormatter.format(getItemsTotal(service))}
       </Box>
@@ -389,7 +390,11 @@ const CalibrationServiceListCard = ({
               {metaItems.map((item, index) => (
                 <Fragment key={index}>
                   {index > 0 ? (
-                    <Box aria-hidden component='span' sx={{ color: '#d1d5db' }}>
+                    <Box
+                      aria-hidden
+                      component='span'
+                      sx={{ color: neutral.borderStrong }}
+                    >
                       ·
                     </Box>
                   ) : null}

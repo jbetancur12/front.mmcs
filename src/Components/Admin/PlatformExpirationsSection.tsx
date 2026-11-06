@@ -35,7 +35,7 @@ import { getApiErrorReason } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
 import { notify } from 'src/utils/notify'
 import { nextRenewalDate } from 'src/utils/renewalDate'
-import { brand } from 'src/theme/designTokens'
+import { brand, intent } from 'src/theme/designTokens'
 
 interface FormValues {
   name: string
@@ -274,8 +274,8 @@ const PlatformExpirationsSection = () => {
               onClick={() => openDialog(null)}
               sx={{
                 textTransform: 'none',
-                bgcolor: '#00BFA5',
-                '&:hover': { bgcolor: '#00ACC1' }
+                bgcolor: brand.main,
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Agregar vencimiento
@@ -287,7 +287,7 @@ const PlatformExpirationsSection = () => {
             <IconButton
               size='small'
               aria-label={`Editar ${row.original.name}`}
-              sx={{ color: '#2563eb' }}
+              sx={{ color: intent.action }}
               onClick={() => openDialog(row.original)}
             >
               <EditOutlined fontSize='small' />

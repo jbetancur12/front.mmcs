@@ -16,6 +16,7 @@ import {
   InfoOutlined
 } from '@mui/icons-material'
 import CodeSnippet from 'src/Components/Common/CodeSnippet'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 type GuideVariant = 'conditions' | 'patterns'
 
@@ -119,7 +120,11 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
   return (
     <Paper
       variant='outlined'
-      sx={{ borderRadius: '12px', borderColor: '#e5e7eb', overflow: 'hidden' }}
+      sx={{
+        borderRadius: '12px',
+        borderColor: neutral.border,
+        overflow: 'hidden'
+      }}
     >
       {/* Toda la cabecera abre y cierra la guía */}
       <ButtonBase
@@ -134,9 +139,9 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
           gap: 2,
           p: 2,
           textAlign: 'left',
-          '&:hover': { bgcolor: '#fafafa' },
+          '&:hover': { bgcolor: neutral.surfaceAlt },
           '&.Mui-focusVisible': {
-            outline: '3px solid #00897B',
+            outline: `3px solid ${brand.hover}`,
             outlineOffset: -3
           }
         }}
@@ -149,8 +154,8 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
               width: 40,
               height: 40,
               borderRadius: '10px',
-              bgcolor: '#E0F7F4',
-              color: '#00897B',
+              bgcolor: brand.soft,
+              color: brand.hover,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -173,7 +178,7 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: 0.5,
-            color: '#4b5563',
+            color: neutral.textBody,
             flexShrink: 0
           }}
         >
@@ -189,7 +194,9 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
       </ButtonBase>
 
       <Collapse in={isOpen} id={panelId} unmountOnExit>
-        <Box sx={{ p: { xs: 2, md: 3 }, borderTop: '1px solid #e5e7eb' }}>
+        <Box
+          sx={{ p: { xs: 2, md: 3 }, borderTop: `1px solid ${neutral.border}` }}
+        >
           {/* De dónde sale el nombre: lo que se crea en pantalla es lo que envía el dispositivo */}
           <Box
             sx={{
@@ -200,8 +207,8 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
               p: 2,
               mb: 3,
               borderRadius: '10px',
-              bgcolor: '#F4FCFA',
-              border: '1px solid #b2ebe2'
+              bgcolor: brand.softer,
+              border: `1px solid ${brand.soft}`
             }}
           >
             <Typography variant='body2'>Si creas el sensor</Typography>
@@ -211,7 +218,7 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
               size='small'
             />
             <ArrowForward
-              sx={{ color: '#00897B', fontSize: 20 }}
+              sx={{ color: brand.hover, fontSize: 20 }}
               aria-label='entonces'
             />
             <Typography variant='body2'>el dispositivo envía</Typography>
@@ -238,7 +245,7 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
                         width: 24,
                         height: 24,
                         borderRadius: '50%',
-                        bgcolor: '#00BFA5',
+                        bgcolor: brand.main,
                         color: '#fff',
                         fontSize: '0.8125rem',
                         fontWeight: 700,
@@ -301,7 +308,7 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
                   >
                     <CheckCircleOutline
                       aria-hidden
-                      sx={{ fontSize: 18, color: '#00897B', mt: 0.25 }}
+                      sx={{ fontSize: 18, color: brand.hover, mt: 0.25 }}
                     />
                     <Typography variant='body2'>{rule}</Typography>
                   </Box>
@@ -318,16 +325,19 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
               mt: 3,
               p: 2,
               borderRadius: '10px',
-              bgcolor: '#fffbeb',
-              border: '1px solid #fde68a'
+              bgcolor: intent.warningSoft,
+              border: `1px solid ${intent.warning}`
             }}
           >
-            <InfoOutlined aria-hidden sx={{ color: '#b45309', mt: 0.25 }} />
+            <InfoOutlined
+              aria-hidden
+              sx={{ color: intent.warningInk, mt: 0.25 }}
+            />
             <Box>
               <Typography
                 variant='body2'
                 fontWeight={700}
-                sx={{ color: '#92400e' }}
+                sx={{ color: intent.warningInk }}
               >
                 {content.warning}
               </Typography>
@@ -335,7 +345,7 @@ const LaboratoryMqttGuide: React.FC<LaboratoryMqttGuideProps> = ({
                 <Typography
                   key={note}
                   variant='body2'
-                  sx={{ color: '#92400e', mt: 0.5 }}
+                  sx={{ color: intent.warningInk, mt: 0.5 }}
                 >
                   {note}
                 </Typography>

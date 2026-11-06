@@ -26,6 +26,7 @@ import {
   useCalibrationDeliveryMutations
 } from '../../hooks/useCalibrationDeliveries'
 import { getApiErrorMessage } from '../../utils/apiError'
+import { brand, neutral } from 'src/theme/designTokens'
 
 type TabKey = 'available' | 'inTransit' | 'delivered'
 
@@ -73,7 +74,7 @@ const DeliveryCard = ({
 }: CardProps) => (
   <Paper
     variant='outlined'
-    sx={{ p: 2, borderRadius: '16px', borderColor: '#e5e7eb' }}
+    sx={{ p: 2, borderRadius: '16px', borderColor: neutral.border }}
   >
     <Stack spacing={1.25}>
       <Stack
@@ -164,8 +165,8 @@ const DeliveryCard = ({
           disabled={busy}
           onClick={onTake}
           sx={{
-            bgcolor: '#00BFA5',
-            '&:hover': { bgcolor: '#00897B' },
+            bgcolor: brand.main,
+            '&:hover': { bgcolor: brand.hover },
             textTransform: 'none',
             fontWeight: 700,
             py: 1.1
@@ -182,8 +183,8 @@ const DeliveryCard = ({
             disabled={busy}
             onClick={onSign}
             sx={{
-              bgcolor: '#00BFA5',
-              '&:hover': { bgcolor: '#00897B' },
+              bgcolor: brand.main,
+              '&:hover': { bgcolor: brand.hover },
               textTransform: 'none',
               fontWeight: 700,
               py: 1.1,

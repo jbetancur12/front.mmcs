@@ -12,6 +12,7 @@ import {
   Box
 } from '@mui/material'
 import { SensorDataPoint, SensorType } from './types'
+import { neutral } from 'src/theme/designTokens'
 
 interface SensorDataTableProps {
   data: SensorDataPoint[]
@@ -44,7 +45,7 @@ export const SensorDataTable: React.FC<SensorDataTableProps> = ({
     <TableContainer
       component={Paper}
       variant='outlined'
-      sx={{ maxHeight: 300, borderColor: '#e5e7eb', borderRadius: '8px' }}
+      sx={{ maxHeight: 300, borderColor: neutral.border, borderRadius: '8px' }}
     >
       <Table
         stickyHeader
@@ -53,7 +54,9 @@ export const SensorDataTable: React.FC<SensorDataTableProps> = ({
         aria-label='tabla de datos del sensor'
       >
         <TableHead>
-          <TableRow sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}>
+          <TableRow
+            sx={{ '& th': { bgcolor: neutral.surfaceHead, fontWeight: 600 } }}
+          >
             <TableCell>Hora</TableCell>
             {sensorType.includes('temperature') && (
               <TableCell align='right'>Temp. (°C)</TableCell>

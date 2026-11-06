@@ -1,6 +1,7 @@
 // src/Components/LaboratoryMonitor/ChamberTabs.tsx
 import React from 'react'
 import { Tabs, Tab, Box, Paper, Typography } from '@mui/material'
+import { brand, neutral } from 'src/theme/designTokens'
 import { Chamber, CHAMBER_STATUS } from './types' // Ajusta la ruta si es necesario
 
 interface ChamberTabsProps {
@@ -19,7 +20,7 @@ const StatusDot: React.FC<{ live: boolean }> = ({ live }) => (
       width: 8,
       height: 8,
       borderRadius: '50%',
-      bgcolor: live ? '#00BFA5' : '#d1d5db',
+      bgcolor: live ? brand.main : neutral.borderStrong,
       flexShrink: 0
     }}
   />
@@ -41,7 +42,7 @@ export const ChamberTabs: React.FC<ChamberTabsProps> = ({
   return (
     <Paper
       variant='outlined'
-      sx={{ borderRadius: '12px', borderColor: '#e5e7eb', width: '100%' }}
+      sx={{ borderRadius: '12px', borderColor: neutral.border, width: '100%' }}
     >
       <Tabs
         value={selectedChamberId || false} // Tabs necesita un valor que no sea null
@@ -49,7 +50,7 @@ export const ChamberTabs: React.FC<ChamberTabsProps> = ({
         aria-label='Cámaras ambientales'
         variant='scrollable'
         scrollButtons='auto'
-        TabIndicatorProps={{ sx: { bgcolor: '#00BFA5', height: 3 } }}
+        TabIndicatorProps={{ sx: { bgcolor: brand.main, height: 3 } }}
         sx={{ minHeight: 56 }}
       >
         {chambers.map((chamber) => (
@@ -66,7 +67,7 @@ export const ChamberTabs: React.FC<ChamberTabsProps> = ({
               textTransform: 'none',
               fontWeight: 600,
               gap: 0.5,
-              '&.Mui-selected': { color: '#00897B' }
+              '&.Mui-selected': { color: brand.hover }
             }}
           />
         ))}

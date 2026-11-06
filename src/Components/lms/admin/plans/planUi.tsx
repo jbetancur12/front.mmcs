@@ -5,10 +5,11 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { getRoleLabelEs } from 'src/constants/roles'
 import type { DeadlineSource, PlanTarget } from 'src/services/lmsService'
+import { brand, detail } from 'src/theme/designTokens'
 
-export const PLAN_TEAL = '#00BFA5'
-export const PLAN_TEAL_HOVER = '#00897B'
-export const PLAN_TEAL_SOFT = '#E0F7F4'
+export const PLAN_TEAL = brand.main
+export const PLAN_TEAL_HOVER = brand.hover
+export const PLAN_TEAL_SOFT = brand.soft
 
 /** Roles que se pueden elegir como destino de un plan (internos). */
 export const PLAN_ROLE_OPTIONS = [
@@ -92,7 +93,7 @@ export const PlanDialogHeader: React.FC<PlanDialogHeaderProps> = ({
   <Box
     sx={{
       position: 'relative',
-      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      background: `linear-gradient(135deg, ${detail.from} 0%, ${detail.to} 100%)`,
       color: 'white',
       px: 3,
       py: 2.5,

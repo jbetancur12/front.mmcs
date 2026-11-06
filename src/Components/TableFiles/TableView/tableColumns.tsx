@@ -3,6 +3,7 @@ import { FileData } from '../types/fileTypes'
 import { CheckCircle, Warning, Cancel } from '@mui/icons-material'
 import { format, differenceInDays } from 'date-fns'
 import { Box, Chip, Typography } from '@mui/material'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 type EditTextFieldProps = (
   cell: MRT_Cell<FileData>
@@ -32,23 +33,23 @@ export const createTableColumns = (
         if (daysRemaining < 0) {
           chipIcon = <Cancel sx={{ fontSize: 18 }} />
           chipLabel = 'VENCIDO'
-          bgColor = '#fee2e2'
-          textColor = '#dc2626'
+          bgColor = intent.dangerSoft
+          textColor = intent.danger
         } else if (daysRemaining <= 15) {
           chipIcon = <Cancel sx={{ fontSize: 18 }} />
           chipLabel = `${daysRemaining} días`
-          bgColor = '#fef3c7'
-          textColor = '#f59e0b'
+          bgColor = intent.warningSoft
+          textColor = intent.warning
         } else if (daysRemaining <= 45) {
           chipIcon = <Warning sx={{ fontSize: 18 }} />
           chipLabel = `${daysRemaining} días`
-          bgColor = '#fef3c7'
-          textColor = '#f59e0b'
+          bgColor = intent.warningSoft
+          textColor = intent.warning
         } else {
           chipIcon = <CheckCircle sx={{ fontSize: 18 }} />
           chipLabel = `${daysRemaining} días`
-          bgColor = '#d1fae5'
-          textColor = '#059669'
+          bgColor = intent.successSoft
+          textColor = brand.hover
         }
 
         return (
@@ -57,7 +58,7 @@ export const createTableColumns = (
               variant='body2'
               sx={{
                 fontWeight: 600,
-                color: '#374151',
+                color: neutral.textBody,
                 fontSize: '0.875rem'
               }}
             >
@@ -174,7 +175,7 @@ export const createTableColumns = (
             variant='body2'
             sx={{
               fontWeight: 600,
-              color: '#374151',
+              color: neutral.textBody,
               fontSize: '0.875rem'
             }}
           >

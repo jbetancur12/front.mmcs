@@ -9,17 +9,18 @@ import {
   SignalCellularConnectedNoInternet0Bar
 } from '@mui/icons-material'
 import { DeviceIot } from '../../types'
+import { neutral, intent } from 'src/theme/designTokens'
 
 export const getStatusInfo = (status: string) => {
   switch (status) {
     case DeviceStatus.ONLINE:
-      return { color: '#4caf50', text: 'Online' }
+      return { color: intent.success, text: 'Online' }
     case DeviceStatus.OFFLINE:
-      return { color: '#f44336', text: 'Offline' }
+      return { color: intent.danger, text: 'Offline' }
     case DeviceStatus.LOW_BATTERY:
-      return { color: '#ff9800', text: 'Low Battery' }
+      return { color: intent.warning, text: 'Low Battery' }
     default:
-      return { color: '#757575', text: 'Unknown' }
+      return { color: neutral.textMuted, text: 'Unknown' }
   }
 }
 

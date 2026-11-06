@@ -16,6 +16,7 @@ import {
 import FormDialog from 'src/Components/Common/FormDialog'
 import FileDropZone from 'src/Components/Common/FileDropZone'
 import { notify } from 'src/utils/notify'
+import { brand, neutral } from 'src/theme/designTokens'
 
 export type EditStep = 'options' | 'image' | 'invoice' | null
 
@@ -59,11 +60,11 @@ const Option: React.FC<OptionProps> = ({
       textAlign: 'left',
       cursor: 'pointer',
       font: 'inherit',
-      bgcolor: '#fff',
-      border: '1px solid #e5e7eb',
+      bgcolor: neutral.surface,
+      border: `1px solid ${neutral.border}`,
       borderRadius: '12px',
-      '&:hover': { borderColor: '#00BFA5', bgcolor: '#f6fcfb' },
-      '&:focus-visible': { outline: '3px solid #00695C', outlineOffset: 2 }
+      '&:hover': { borderColor: brand.main, bgcolor: brand.softer },
+      '&:focus-visible': { outline: `3px solid ${brand.ink}`, outlineOffset: 2 }
     }}
   >
     <Box
@@ -75,8 +76,8 @@ const Option: React.FC<OptionProps> = ({
         display: 'grid',
         placeItems: 'center',
         flexShrink: 0,
-        bgcolor: '#E0F7F4',
-        color: '#00695C'
+        bgcolor: brand.soft,
+        color: brand.ink
       }}
     >
       {icon}
@@ -105,7 +106,7 @@ const ImagePreview: React.FC<{ file: File }> = ({ file }) => {
         maxHeight: 220,
         objectFit: 'contain',
         borderRadius: '12px',
-        border: '1px solid #e5e7eb'
+        border: `1px solid ${neutral.border}`
       }}
     />
   )

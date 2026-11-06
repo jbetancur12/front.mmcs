@@ -6,6 +6,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 interface PDFData {
   url: string
   fileName: string
@@ -18,9 +19,9 @@ interface PDFViewerProps {
 const TEAL_BUTTON_SX = {
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00695C',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.ink,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ path }) => {
@@ -135,8 +136,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ path }) => {
           sx={{
             textTransform: 'none',
             fontWeight: 600,
-            bgcolor: '#00BFA5',
-            '&:hover': { bgcolor: '#00897B' }
+            bgcolor: brand.main,
+            '&:hover': { bgcolor: brand.hover }
           }}
         >
           Descargar PDF
@@ -164,7 +165,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ path }) => {
             href={pdfData.url}
             download={pdfData.fileName}
             style={{
-              color: '#00695C',
+              color: brand.ink,
               textDecoration: 'underline',
               marginTop: 8
             }}

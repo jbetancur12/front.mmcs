@@ -45,6 +45,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 const Documents: React.FC = () => {
   const canUpload = useCan(PERMISSIONS.FLEET_VEHICLE_DOCUMENT_UPLOAD)
@@ -178,9 +179,9 @@ const Documents: React.FC = () => {
               startIcon={<CloudUpload />}
               onClick={() => handleOpen()}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Agregar documento
@@ -294,7 +295,7 @@ const Documents: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              backgroundColor: '#506F69', // Verde brillante
+              backgroundColor: brand.main, // Verde brillante
               padding: '16px',
               borderRadius: '8px',
               margin: 'auto',
@@ -308,7 +309,7 @@ const Documents: React.FC = () => {
                 fontFamily: 'Orbitron, monospace',
                 textAlign: 'center',
                 margin: 'auto',
-                color: '#000000' // Color del texto, asegúrate de que contraste con el fondo
+                color: neutral.text // Color del texto, asegúrate de que contraste con el fondo
               }}
             >
               {currentMileage.toLocaleString('es-CO', {
@@ -323,7 +324,7 @@ const Documents: React.FC = () => {
                 fontFamily: 'Orbitron, monospace',
                 textAlign: 'center',
                 margin: 'auto',
-                color: '#000000' // Color del texto
+                color: neutral.text // Color del texto
               }}
             >
               {new Date().toLocaleString('es-CO', {
@@ -335,7 +336,7 @@ const Documents: React.FC = () => {
             {reminders.length > 0 && (
               <IconButton
                 sx={{
-                  color: '#FFC107' // Color del ícono, elige uno que contraste
+                  color: intent.warning // Color del ícono, elige uno que contraste
                 }}
               >
                 <Warning />
@@ -428,7 +429,7 @@ const Documents: React.FC = () => {
               style={{
                 textTransform: 'none',
                 fontWeight: 'bold',
-                color: '#DCFCE7'
+                color: intent.successSoft
               }}
             >
               {pdfName ? pdfName : 'Cargar Archivo'}

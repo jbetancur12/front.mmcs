@@ -26,6 +26,7 @@ import { DataSheetData } from './types'
 import { useDataSheetMutations, useReusableCodes } from './useDataSheets'
 
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 interface CreateModalProps {
   columns: MRT_ColumnDef<DataSheetData>[]
   onClose: () => void
@@ -122,11 +123,11 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                   ? URL.createObjectURL(formik.values.picture)
                   : ''
               }
-              sx={{ width: 96, height: 96, mx: 'auto', bgcolor: '#E0F7F4' }}
+              sx={{ width: 96, height: 96, mx: 'auto', bgcolor: brand.soft }}
             />
             <Typography
               variant='body2'
-              sx={{ mt: 1, color: '#00695C', fontWeight: 600 }}
+              sx={{ mt: 1, color: brand.ink, fontWeight: 600 }}
             >
               {formik.values.picture
                 ? 'Cambiar foto'
@@ -163,8 +164,8 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
               name='manual'
               onBlur={formik.handleBlur}
               sx={{
-                '& .Mui-checked': { color: '#00BFA5' },
-                '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#00BFA5' }
+                '& .Mui-checked': { color: brand.main },
+                '& .Mui-checked + .MuiSwitch-track': { bgcolor: brand.main }
               }}
             />
           }

@@ -19,24 +19,25 @@ import {
   Assessment as AssessmentIcon
 } from '@mui/icons-material'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 // Modern color palette
 const colors = {
-  primary: '#10b981',
-  primaryLight: '#f0fdf4',
-  success: '#059669',
-  warning: '#d97706',
-  error: '#dc2626',
-  info: '#3b82f6',
+  primary: brand.main,
+  primaryLight: intent.successSoft,
+  success: brand.hover,
+  warning: intent.warning,
+  error: intent.danger,
+  info: intent.info,
   gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    700: '#374151',
-    800: '#1f2937'
+    50: neutral.surfaceAlt,
+    100: neutral.surfaceHead,
+    200: neutral.border,
+    300: neutral.borderStrong,
+    400: neutral.textFaint,
+    500: neutral.textMuted,
+    700: neutral.textBody,
+    800: neutral.text
   }
 }
 
@@ -145,7 +146,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Avatar
             sx={{
-              bgcolor: '#eff6ff',
+              bgcolor: intent.infoSoft,
               color: colors.info,
               mr: 2,
               width: 48,
@@ -169,7 +170,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
                 <Typography
                   variant='caption'
                   sx={{
-                    bgcolor: '#eff6ff',
+                    bgcolor: intent.infoSoft,
                     color: colors.info,
                     px: 1,
                     py: 0.25,
@@ -218,7 +219,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
               sx={{
                 textAlign: 'center',
                 p: 2,
-                bgcolor: '#eff6ff',
+                bgcolor: intent.infoSoft,
                 borderRadius: 2
               }}
             >
@@ -325,7 +326,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
               cursor: 'pointer',
               transition: 'all 0.2s ease-in-out',
               '&:hover': {
-                bgcolor: '#eff6ff',
+                bgcolor: intent.infoSoft,
                 transform: 'translateX(4px)'
               }
             }}

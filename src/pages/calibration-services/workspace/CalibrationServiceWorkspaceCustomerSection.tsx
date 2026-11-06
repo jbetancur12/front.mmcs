@@ -39,6 +39,7 @@ import {
 } from './calibrationServiceWorkspaceTypes'
 import { getSiteDisplayLabel } from './calibrationServiceWorkspaceUtils'
 import { CalibrationServiceWorkspaceForm } from './useCalibrationServiceWorkspaceForm'
+import { brand, neutral } from 'src/theme/designTokens'
 
 // La lista del selector de clientes es más ancha que el campo: los nombres largos se leen en una o dos líneas
 const WideListPopper = (props: PopperProps) => (
@@ -96,8 +97,12 @@ const CalibrationServiceWorkspaceCustomerSection = ({
           spacing={1.5}
           sx={{ mb: 2.5 }}
         >
-          <GroupOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-          <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+          <GroupOutlinedIcon sx={{ color: brand.hover, fontSize: 22 }} />
+          <Typography
+            variant='h6'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Cliente y alcance
           </Typography>
         </Stack>
@@ -270,11 +275,11 @@ const CalibrationServiceWorkspaceCustomerSection = ({
 
         <Divider sx={{ my: 2 }} />
         <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
-          <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 20 }} />
+          <UploadFileOutlinedIcon sx={{ color: brand.hover, fontSize: 20 }} />
           <Typography
             variant='subtitle2'
             fontWeight={700}
-            sx={{ color: '#374151' }}
+            sx={{ color: neutral.textBody }}
           >
             Evidencia de solicitud *
           </Typography>

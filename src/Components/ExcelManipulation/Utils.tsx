@@ -1,4 +1,5 @@
 import type { CSSObjectWithLabel, StylesConfig } from 'react-select'
+import { intent } from 'src/theme/designTokens'
 
 export {
   limitArraySize,
@@ -18,7 +19,7 @@ export const styles = (error: boolean): StylesConfig => ({
   control: (provided) =>
     ({
       ...provided,
-      border: error ? '1px solid #ccc' : '2px solid #d32f2f',
+      border: error ? '1px solid #ccc' : `2px solid ${intent.danger}`,
       borderRadius: 5,
       height: 55
     }) as CSSObjectWithLabel,
@@ -30,5 +31,8 @@ export const styles = (error: boolean): StylesConfig => ({
     }) as CSSObjectWithLabel,
   menu: (provided) => ({ ...provided }) as CSSObjectWithLabel,
   placeholder: (provided) =>
-    ({ ...provided, color: error ? 'gray' : '#d32f2f' }) as CSSObjectWithLabel
+    ({
+      ...provided,
+      color: error ? 'gray' : intent.danger
+    }) as CSSObjectWithLabel
 })

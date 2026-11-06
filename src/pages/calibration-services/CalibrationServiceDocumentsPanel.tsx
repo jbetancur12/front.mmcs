@@ -21,6 +21,7 @@ import {
   CALIBRATION_SERVICE_DOCUMENT_LABELS
 } from '../../constants/calibrationServices'
 import { CalibrationServiceDocument } from '../../types/calibrationService'
+import { brand, neutral } from 'src/theme/designTokens'
 
 type ManualCalibrationDocumentType =
   | 'request_evidence'
@@ -171,7 +172,7 @@ const CalibrationServiceDocumentsPanel = ({
               sx={{
                 p: 1.5,
                 borderRadius: '12px',
-                borderColor: '#e5e7eb',
+                borderColor: neutral.border,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.5,
@@ -179,7 +180,7 @@ const CalibrationServiceDocumentsPanel = ({
               }}
             >
               <PictureAsPdfOutlinedIcon
-                sx={{ color: '#00897B', flexShrink: 0 }}
+                sx={{ color: brand.hover, flexShrink: 0 }}
               />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
@@ -237,7 +238,7 @@ const CalibrationServiceDocumentsPanel = ({
                       aria-label={`Ver ${document.title || fileName}`}
                       onClick={() => void onViewDocument(document.id, fileName)}
                       disabled={isBusy}
-                      sx={{ color: '#00897B' }}
+                      sx={{ color: brand.hover }}
                     >
                       <VisibilityOutlinedIcon fontSize='small' />
                     </IconButton>
@@ -252,7 +253,7 @@ const CalibrationServiceDocumentsPanel = ({
                         void onDownloadDocument(document.id, fileName)
                       }
                       disabled={isBusy}
-                      sx={{ color: '#00897B' }}
+                      sx={{ color: brand.hover }}
                     >
                       <DownloadOutlinedIcon fontSize='small' />
                     </IconButton>
@@ -279,11 +280,11 @@ const CalibrationServiceDocumentsPanel = ({
                 isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf
               }
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
+                color: brand.hover,
+                borderColor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Generar cotización PDF
@@ -296,11 +297,11 @@ const CalibrationServiceDocumentsPanel = ({
               onClick={() => void onGenerateOdsPdf()}
               disabled={isBusy || !hasOds || !canGenerateOdsPdf}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
+                color: brand.hover,
+                borderColor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Generar ODS PDF
@@ -387,11 +388,11 @@ const CalibrationServiceDocumentsPanel = ({
                 startIcon={<UploadFileOutlinedIcon />}
                 disabled={isBusy}
                 sx={{
-                  color: '#00897B',
-                  borderColor: '#00BFA5',
+                  color: brand.hover,
+                  borderColor: brand.main,
                   textTransform: 'none',
                   fontWeight: 600,
-                  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
                 }}
               >
                 Seleccionar archivo
@@ -415,10 +416,10 @@ const CalibrationServiceDocumentsPanel = ({
               onClick={() => void handleUpload()}
               disabled={isBusy || !selectedFile}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 textTransform: 'none',
                 fontWeight: 600,
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Subir documento

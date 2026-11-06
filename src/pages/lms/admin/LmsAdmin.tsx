@@ -59,26 +59,27 @@ import {
   LMSMetricHelp
 } from '../../../Components/lms/Help/ContextualHelp'
 import { notify } from 'src/utils/notify'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 // Modern color palette following design system
 const colors = {
-  primary: '#10b981',
-  primaryDark: '#059669',
-  primaryLight: '#f0fdf4',
-  success: '#059669',
-  warning: '#d97706',
-  error: '#dc2626',
-  info: '#3b82f6',
+  primary: brand.main,
+  primaryDark: brand.hover,
+  primaryLight: intent.successSoft,
+  success: brand.hover,
+  warning: intent.warning,
+  error: intent.danger,
+  info: intent.info,
   gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827'
+    50: neutral.surfaceAlt,
+    100: neutral.surfaceHead,
+    200: neutral.border,
+    300: neutral.borderStrong,
+    400: neutral.textFaint,
+    500: neutral.textMuted,
+    700: neutral.textBody,
+    800: neutral.text,
+    900: neutral.text
   }
 }
 
@@ -171,7 +172,7 @@ const LmsAdmin: React.FC = () => {
       description: 'Crear, editar y organizar el catalogo',
       icon: <VideoIcon />,
       color: colors.info,
-      gradient: `linear-gradient(135deg, ${colors.info} 0%, #2563eb 100%)`,
+      gradient: `linear-gradient(135deg, ${colors.info} 0%, ${intent.action} 100%)`,
       route: '/lms/admin/courses'
     },
     {
@@ -180,7 +181,7 @@ const LmsAdmin: React.FC = () => {
       description: 'Cursos obligatorios y roles',
       icon: <AssignmentIcon />,
       color: colors.warning,
-      gradient: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`,
+      gradient: `linear-gradient(135deg, ${colors.warning} 0%, ${intent.danger} 100%)`,
       route: '/lms/admin/assignments'
     },
     {
@@ -188,8 +189,8 @@ const LmsAdmin: React.FC = () => {
       title: 'Planes de formación',
       description: 'Cursos agrupados por cargo',
       icon: <PlanIcon />,
-      color: '#00BFA5',
-      gradient: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
+      color: brand.main,
+      gradient: `linear-gradient(135deg, ${brand.main} 0%, ${brand.hover} 100%)`,
       route: '/lms/admin/plans',
       isNew: true
     },
@@ -199,7 +200,7 @@ const LmsAdmin: React.FC = () => {
       description: 'Reportes y métricas',
       icon: <AnalyticsIcon />,
       color: colors.success,
-      gradient: `linear-gradient(135deg, ${colors.success} 0%, #047857 100%)`,
+      gradient: `linear-gradient(135deg, ${colors.success} 0%, ${intent.successInk} 100%)`,
       route: '/lms/admin/analytics'
     },
     {
@@ -207,8 +208,8 @@ const LmsAdmin: React.FC = () => {
       title: 'Notificaciones',
       description: 'Avisos y seguimiento reciente',
       icon: <AssignmentIcon />,
-      color: '#0891b2',
-      gradient: 'linear-gradient(135deg, #0891b2 0%, #0f766e 100%)',
+      color: brand.main,
+      gradient: `linear-gradient(135deg, ${brand.main} 0%, ${brand.ink} 100%)`,
       route: '/lms/admin/notifications'
     },
     {
@@ -226,8 +227,8 @@ const LmsAdmin: React.FC = () => {
       title: 'Certificados',
       description: 'Plantillas y emisión',
       icon: <CertificateIcon />,
-      color: '#f59e0b',
-      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      color: intent.warning,
+      gradient: `linear-gradient(135deg, ${intent.warning} 0%, ${intent.warning} 100%)`,
       route: '/lms/admin/certificate-templates'
     },
     {
@@ -235,8 +236,8 @@ const LmsAdmin: React.FC = () => {
       title: 'Certificados emitidos',
       description: 'Buscar, validar y reimprimir',
       icon: <CertificateIcon />,
-      color: '#0ea5e9',
-      gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+      color: intent.info,
+      gradient: `linear-gradient(135deg, ${intent.info} 0%, ${intent.infoInk} 100%)`,
       route: '/lms/admin/certificates'
     }
   ]
@@ -613,7 +614,7 @@ const LmsAdmin: React.FC = () => {
                       >
                         <Avatar
                           sx={{
-                            bgcolor: '#eff6ff',
+                            bgcolor: intent.infoSoft,
                             color: colors.info,
                             mr: 2,
                             width: 48,
@@ -644,7 +645,7 @@ const LmsAdmin: React.FC = () => {
                           label={`${recentCourses.length} recientes`}
                           size='small'
                           sx={{
-                            bgcolor: '#eff6ff',
+                            bgcolor: intent.infoSoft,
                             color: colors.info,
                             fontWeight: 600,
                             fontSize: '0.75rem'
@@ -677,7 +678,7 @@ const LmsAdmin: React.FC = () => {
                       >
                         <Avatar
                           sx={{
-                            bgcolor: '#fef3c7',
+                            bgcolor: intent.warningSoft,
                             color: colors.warning,
                             mr: 2,
                             width: 48,
@@ -708,7 +709,7 @@ const LmsAdmin: React.FC = () => {
                           label='Requieren atención'
                           size='small'
                           sx={{
-                            bgcolor: '#fef3c7',
+                            bgcolor: intent.warningSoft,
                             color: colors.warning,
                             fontWeight: 600,
                             fontSize: '0.75rem'

@@ -2,6 +2,7 @@ import { Paper, Typography, Box } from '@mui/material'
 import { Description } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MaintenanceTicketIssueCardProps {
   ticket: MaintenanceTicket
@@ -26,7 +27,7 @@ const MaintenanceTicketIssueCard = ({
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              backgroundColor: '#e8f7ef',
+              backgroundColor: intent.successSoft,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -35,7 +36,7 @@ const MaintenanceTicketIssueCard = ({
             }}
           >
             <Description
-              sx={{ color: '#00A651', fontSize: 20 }}
+              sx={{ color: intent.successInk, fontSize: 20 }}
               aria-hidden='true'
             />
           </Box>
@@ -43,7 +44,7 @@ const MaintenanceTicketIssueCard = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#0f172a'
+              color: neutral.text
             }}
           >
             Descripción del Problema

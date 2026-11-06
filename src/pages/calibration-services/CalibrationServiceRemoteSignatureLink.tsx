@@ -10,6 +10,7 @@ import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 interface RemoteSignatureState {
   expiresAt?: string
   usedAt?: string | null
@@ -126,13 +127,13 @@ const CalibrationServiceRemoteSignatureLink = ({
         p: 2,
         borderRadius: 2,
         border: '1px dashed',
-        borderColor: '#00BFA5',
-        bgcolor: '#E0F7F4'
+        borderColor: brand.main,
+        bgcolor: brand.soft
       }}
     >
       <Stack spacing={1.5}>
         <Stack direction='row' spacing={1} alignItems='center'>
-          <LinkOutlinedIcon sx={{ color: '#00897B' }} />
+          <LinkOutlinedIcon sx={{ color: brand.hover }} />
           <Typography variant='body2' fontWeight={700}>
             Firma a distancia
           </Typography>
@@ -194,8 +195,8 @@ const CalibrationServiceRemoteSignatureLink = ({
             onClick={handleGenerate}
             disabled={isBusy}
             sx={{
-              bgcolor: '#00BFA5',
-              '&:hover': { bgcolor: '#00897B' },
+              bgcolor: brand.main,
+              '&:hover': { bgcolor: brand.hover },
               textTransform: 'none'
             }}
           >

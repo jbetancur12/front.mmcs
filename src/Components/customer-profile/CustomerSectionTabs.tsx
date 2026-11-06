@@ -6,6 +6,7 @@ import CalibrationTimeline from '../CalibrationTimeline'
 import Headquarters from '../Headquarters'
 import Modules from '../Modules'
 import TableUsersCustomer from '../TableUsersCustomer'
+import { neutral } from 'src/theme/designTokens'
 
 interface HeadquartersTabProps {
   customerId?: string
@@ -80,7 +81,7 @@ export const ModulesTab = ({
   id?: string
 }) => (
   <Box>
-    <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+    <Typography variant='h5' fontWeight={700} sx={{ color: neutral.text }}>
       Módulos
     </Typography>
     <Typography variant='body2' color='text.secondary'>

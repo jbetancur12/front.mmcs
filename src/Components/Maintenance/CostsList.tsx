@@ -27,6 +27,7 @@ import {
 // Asegúrate de que esta importación sea correcta en tu entorno:
 import { formatCurrency } from 'src/pages/maintenance/ticket-details/maintenanceTicketDetailUtils'
 import { logger } from 'src/utils/logger'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 // --- Interfaces ---
 
@@ -126,7 +127,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
       <DialogTitle>
         <Box display='flex' alignItems='center' justifyContent='space-between'>
           <Box display='flex' alignItems='center'>
-            <AttachMoney sx={{ mr: 1, color: '#00A651' }} />
+            <AttachMoney sx={{ mr: 1, color: intent.successInk }} />
             <Typography variant='h6'>Costo del Servicio</Typography>
             <Box ml={2}>{statusChip}</Box> {/* 👈 Colocamos el Chip aquí */}
           </Box>
@@ -155,11 +156,11 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                   p: 2,
                   mb: 2,
                   borderRadius: '12px',
-                  border: '1px solid #e5e7eb',
-                  background: '#fafafa',
+                  border: `1px solid ${neutral.border}`,
+                  background: neutral.surfaceAlt,
                   '&:hover': {
-                    background: '#f0fdf4',
-                    borderColor: '#10b981'
+                    background: intent.successSoft,
+                    borderColor: brand.main
                   },
                   '&:last-child': { mb: 0 }
                 }}
@@ -171,8 +172,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                       sx={{
                         width: 32,
                         height: 32,
-                        backgroundColor: '#e8f7ef',
-                        color: '#00A651',
+                        backgroundColor: intent.successSoft,
+                        color: intent.successInk,
                         fontSize: '0.875rem',
                         fontWeight: 700
                       }}
@@ -202,7 +203,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                     >
                       Monto
                     </Typography>
-                    <Typography variant='h6' fontWeight={700} color='#059669'>
+                    <Typography variant='h6' fontWeight={700} color={brand.ink}>
                       {formatCurrency(parseFloat(cost.amount.toString()))}
                     </Typography>
                   </Grid>
@@ -220,14 +221,14 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
               sx={{
                 p: 2,
                 borderRadius: '12px',
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e5e7eb'
+                backgroundColor: neutral.surfaceAlt,
+                border: `1px solid ${neutral.border}`
               }}
             >
               <Typography variant='h6' fontWeight={600}>
                 Total de Costos
               </Typography>
-              <Typography variant='h5' fontWeight={700} color='#059669'>
+              <Typography variant='h5' fontWeight={700} color={brand.ink}>
                 {formatCurrency(totalCost)}
               </Typography>
             </Box>
@@ -257,8 +258,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
             )
           }
           sx={{
-            backgroundColor: '#00A651',
-            '&:hover': { backgroundColor: '#27672a' }
+            backgroundColor: intent.successInk,
+            '&:hover': { backgroundColor: intent.successInk }
           }}
         >
           {isProcessingInvoice

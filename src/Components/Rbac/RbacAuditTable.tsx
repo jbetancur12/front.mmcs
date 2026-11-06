@@ -5,6 +5,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { useRbacAudit } from '../../hooks/useRbac'
 import { RbacAuditAction, RbacAuditItem } from '../../types/rbac'
 import { getRoleLabelEs } from 'src/constants/roles'
+import { neutral } from 'src/theme/designTokens'
 
 const ACTION_META: Record<
   RbacAuditAction,
@@ -171,11 +172,13 @@ const RbacAuditTable: React.FC = () => {
         enableDensityToggle={false}
         enableFullScreenToggle={false}
         enableHiding={false}
-        muiTableHeadCellProps={{ sx: { bgcolor: '#f5f5f5', fontWeight: 600 } }}
+        muiTableHeadCellProps={{
+          sx: { bgcolor: neutral.surfaceHead, fontWeight: 600 }
+        }}
         muiTableBodyRowProps={{
           sx: { '&:hover': { bgcolor: 'rgba(0,191,165,0.04)' } }
         }}
-        muiBottomToolbarProps={{ sx: { bgcolor: '#fafafa' } }}
+        muiBottomToolbarProps={{ sx: { bgcolor: neutral.surfaceAlt } }}
         renderEmptyRowsFallback={() => (
           <Typography color='text.secondary' align='center' sx={{ py: 4 }}>
             Aún no hay cambios registrados.

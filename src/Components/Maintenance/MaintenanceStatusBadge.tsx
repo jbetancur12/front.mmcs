@@ -10,6 +10,7 @@ import {
   Cancel
 } from '@mui/icons-material'
 import { MaintenanceStatus } from '../../types/maintenance'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MaintenanceStatusBadgeProps {
   status: MaintenanceStatus
@@ -29,31 +30,31 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
       case MaintenanceStatus.PENDING:
         return {
           label: 'Pendiente',
-          backgroundColor: '#fff7ed',
-          textColor: '#c2410c',
-          borderColor: '#fed7aa',
+          backgroundColor: intent.warningSoft,
+          textColor: intent.dangerInk,
+          borderColor: intent.warningSoft,
           icon: <HourglassEmpty />
         }
       case MaintenanceStatus.ASSIGNED:
         return {
           label: 'Asignado',
-          backgroundColor: '#eff6ff',
-          textColor: '#1d4ed8',
-          borderColor: '#bfdbfe',
+          backgroundColor: intent.infoSoft,
+          textColor: intent.info,
+          borderColor: intent.infoSoft,
           icon: <Assignment />
         }
       case MaintenanceStatus.IN_PROGRESS:
         return {
           label: 'En Progreso',
-          backgroundColor: '#ecfdf5',
-          textColor: '#047857',
-          borderColor: '#a7f3d0',
+          backgroundColor: intent.successSoft,
+          textColor: intent.successInk,
+          borderColor: intent.successSoft,
           icon: <Build />
         }
       case MaintenanceStatus.ON_HOLD:
         return {
           label: 'En Pausa',
-          backgroundColor: '#faf5ff',
+          backgroundColor: neutral.surfaceAlt,
           textColor: '#7e22ce',
           borderColor: '#e9d5ff',
           icon: <Pause />
@@ -61,33 +62,33 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
       case MaintenanceStatus.WAITING_PARTS:
         return {
           label: 'Esperando Partes',
-          backgroundColor: '#f8fafc',
-          textColor: '#475569',
-          borderColor: '#cbd5e1',
+          backgroundColor: neutral.surfaceAlt,
+          textColor: neutral.textBody,
+          borderColor: neutral.borderStrong,
           icon: <Inventory />
         }
       case MaintenanceStatus.COMPLETED:
         return {
           label: 'Completado',
-          backgroundColor: '#ecfdf5',
-          textColor: '#166534',
-          borderColor: '#bbf7d0',
+          backgroundColor: intent.successSoft,
+          textColor: intent.successInk,
+          borderColor: intent.successSoft,
           icon: <CheckCircle />
         }
       case MaintenanceStatus.CANCELLED:
         return {
           label: 'Cancelado',
-          backgroundColor: '#fef2f2',
-          textColor: '#b91c1c',
-          borderColor: '#fecaca',
+          backgroundColor: intent.dangerSoft,
+          textColor: intent.dangerInk,
+          borderColor: intent.dangerSoft,
           icon: <Cancel />
         }
       default:
         return {
           label: 'Desconocido',
-          backgroundColor: '#f8fafc',
-          textColor: '#475569',
-          borderColor: '#cbd5e1',
+          backgroundColor: neutral.surfaceAlt,
+          textColor: neutral.textBody,
+          borderColor: neutral.borderStrong,
           icon: <HourglassEmpty />
         }
     }
@@ -103,7 +104,7 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
       variant={variant}
       sx={{
         backgroundColor:
-          variant === 'filled' ? config.backgroundColor : '#ffffff',
+          variant === 'filled' ? config.backgroundColor : neutral.surface,
         color: config.textColor,
         border: `1px solid ${config.borderColor}`,
         fontWeight: 600,

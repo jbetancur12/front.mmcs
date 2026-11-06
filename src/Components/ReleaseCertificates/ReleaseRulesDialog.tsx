@@ -35,6 +35,7 @@ import {
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface TabConfig {
   type: ReleaseRuleType
@@ -231,7 +232,7 @@ const ReleaseRulesDialog: React.FC<ReleaseRulesDialogProps> = ({
           scrollButtons='auto'
           sx={{
             mb: 2,
-            '& .MuiTabs-indicator': { backgroundColor: '#00BFA5' },
+            '& .MuiTabs-indicator': { backgroundColor: brand.main },
             '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }
           }}
         >
@@ -320,7 +321,7 @@ const ReleaseRulesDialog: React.FC<ReleaseRulesDialogProps> = ({
               variant='contained'
               disabled={!canAdd || actions.create.isLoading}
               onClick={add}
-              sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+              sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
             >
               Agregar
             </Button>
@@ -345,7 +346,7 @@ const ReleaseRulesDialog: React.FC<ReleaseRulesDialogProps> = ({
                   alignItems: 'flex-start',
                   flexWrap: 'wrap',
                   py: 1.25,
-                  borderBottom: '1px solid #e5e7eb',
+                  borderBottom: `1px solid ${neutral.border}`,
                   opacity: rule.active ? 1 : 0.55
                 }}
               >
@@ -423,7 +424,7 @@ const ReleaseRulesDialog: React.FC<ReleaseRulesDialogProps> = ({
                       <Tooltip title='Guardar'>
                         <IconButton
                           aria-label={`Guardar ${keyLabel(rule)}`}
-                          sx={{ color: '#00695C' }}
+                          sx={{ color: brand.ink }}
                           disabled={actions.update.isLoading}
                           onClick={() => saveEdit(rule)}
                         >
@@ -456,7 +457,7 @@ const ReleaseRulesDialog: React.FC<ReleaseRulesDialogProps> = ({
                       <Tooltip title='Editar'>
                         <IconButton
                           aria-label={`Editar ${keyLabel(rule)}`}
-                          sx={{ color: '#2563eb' }}
+                          sx={{ color: intent.action }}
                           onClick={() => startEdit(rule)}
                         >
                           <EditOutlined fontSize='small' />
@@ -466,7 +467,7 @@ const ReleaseRulesDialog: React.FC<ReleaseRulesDialogProps> = ({
                         <Tooltip title='Eliminar'>
                           <IconButton
                             aria-label={`Eliminar ${keyLabel(rule)}`}
-                            sx={{ color: '#b91c1c' }}
+                            sx={{ color: intent.dangerInk }}
                             onClick={() => remove(rule)}
                           >
                             <DeleteOutline fontSize='small' />

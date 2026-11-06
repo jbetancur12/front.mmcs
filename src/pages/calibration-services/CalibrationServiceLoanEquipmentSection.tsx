@@ -39,6 +39,7 @@ import {
 import { getApiErrorMessage } from '../../utils/apiError'
 
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 interface Props {
   serviceId: string
 }
@@ -251,8 +252,8 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
               onClick={() => void handleAdd()}
               disabled={createLoan.isLoading}
               sx={{
-                bgcolor: '#00BFA5',
-                '&:hover': { bgcolor: '#00897B' },
+                bgcolor: brand.main,
+                '&:hover': { bgcolor: brand.hover },
                 textTransform: 'none'
               }}
             >
@@ -418,8 +419,8 @@ const CalibrationServiceLoanEquipmentSection = ({ serviceId }: Props) => {
             onClick={() => void handleReturn()}
             disabled={returnLoan.isLoading}
             sx={{
-              bgcolor: '#00BFA5',
-              '&:hover': { bgcolor: '#00897B' },
+              bgcolor: brand.main,
+              '&:hover': { bgcolor: brand.hover },
               textTransform: 'none'
             }}
           >

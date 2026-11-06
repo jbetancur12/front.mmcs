@@ -32,6 +32,7 @@ import {
   CalibrationServiceEventType,
   CalibrationServiceStatus
 } from '../../types/calibrationService'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface CalibrationServiceTimelineProps {
   events: CalibrationServiceEvent[]
@@ -71,17 +72,17 @@ const getDotPalette = (
 ) => {
   switch (color) {
     case 'primary':
-      return { bg: '#E0F7F4', fg: '#00897B' }
+      return { bg: brand.soft, fg: brand.hover }
     case 'success':
-      return { bg: '#ecfdf5', fg: '#059669' }
+      return { bg: intent.successSoft, fg: brand.hover }
     case 'error':
-      return { bg: '#fef2f2', fg: '#dc2626' }
+      return { bg: intent.dangerSoft, fg: intent.danger }
     case 'warning':
-      return { bg: '#fffbeb', fg: '#d97706' }
+      return { bg: intent.warningSoft, fg: intent.warning }
     case 'info':
-      return { bg: '#eff6ff', fg: '#2563eb' }
+      return { bg: intent.infoSoft, fg: intent.action }
     default:
-      return { bg: '#f5f3ff', fg: '#7c3aed' }
+      return { bg: intent.infoSoft, fg: '#7c3aed' }
   }
 }
 
@@ -158,7 +159,7 @@ const CalibrationServiceTimeline = ({
           }
         },
         '& .MuiTimelineConnector-root': {
-          backgroundColor: '#e5e7eb',
+          backgroundColor: neutral.border,
           width: '2px'
         }
       }}

@@ -44,6 +44,7 @@ import {
 } from './types'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 /** El servidor responde de a 9 equipos por página. */
 const PAGE_SIZE = 9
 
@@ -84,27 +85,27 @@ const formatDate = (value?: string) =>
   value ? new Date(value).toLocaleDateString('es-CO') : '—'
 
 const primaryButtonSx = {
-  bgcolor: '#00BFA5',
+  bgcolor: brand.main,
   borderRadius: '10px',
   textTransform: 'none',
   fontWeight: 700,
   boxShadow: 'none',
   whiteSpace: 'nowrap',
-  '&:hover': { bgcolor: '#00ACC1', boxShadow: 'none' }
+  '&:hover': { bgcolor: brand.hover, boxShadow: 'none' }
 } as const
 
 const secondaryButtonSx = {
   borderRadius: '10px',
   textTransform: 'none',
   fontWeight: 600,
-  borderColor: '#e5e7eb',
-  color: '#374151',
-  bgcolor: '#fff',
+  borderColor: neutral.border,
+  color: neutral.textBody,
+  bgcolor: neutral.surface,
   whiteSpace: 'nowrap',
   '&:hover': {
-    borderColor: '#00897B',
-    color: '#00695C',
-    bgcolor: '#E0F7F4'
+    borderColor: brand.hover,
+    color: brand.ink,
+    bgcolor: brand.soft
   }
 } as const
 
@@ -154,7 +155,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   fontSize: 14,
                   fontWeight: 700
                 }}
@@ -317,7 +318,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({
               <IconButton
                 size='small'
                 aria-label='Ver certificado'
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() =>
                   navigate(`/calibraciones/certificados/${row.original.id}`)
                 }
@@ -331,7 +332,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({
                   <IconButton
                     size='small'
                     aria-label='Cambiar sede del equipo'
-                    sx={{ color: '#2563eb' }}
+                    sx={{ color: intent.action }}
                     onClick={() => setSedeTarget(row.original)}
                   >
                     <LocationOnOutlined fontSize='small' />
@@ -364,7 +365,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({
               <Chip
                 label={`Mostrando: ${STATUS_LABELS[statusFilter]}`}
                 onDelete={() => onStatusFilter(statusFilter)}
-                sx={{ fontWeight: 600, bgcolor: '#E0F7F4', color: '#00695C' }}
+                sx={{ fontWeight: 600, bgcolor: brand.soft, color: brand.ink }}
               />
             ) : null}
             {searchTerm && matchedFields.length > 0 ? (

@@ -12,6 +12,7 @@ import {
   CalibrationServiceCollectionBucket,
   CalibrationServiceAnalyticsResponse
 } from '../../types/calibrationService'
+import { neutral, intent } from 'src/theme/designTokens'
 
 const currency = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -52,7 +53,11 @@ const CalibrationServiceCollectionsCard = ({ collections }: Props) => {
   return (
     <Card
       elevation={0}
-      sx={{ mb: 3, borderRadius: '16px', border: '1px solid #e5e7eb' }}
+      sx={{
+        mb: 3,
+        borderRadius: '16px',
+        border: `1px solid ${neutral.border}`
+      }}
     >
       <CardContent>
         <Typography variant='h6' sx={{ fontWeight: 700 }}>
@@ -88,7 +93,7 @@ const CalibrationServiceCollectionsCard = ({ collections }: Props) => {
                   align='right'
                   sx={{
                     fontWeight: 700,
-                    color: bucket.outstanding > 0 ? '#c2410c' : 'inherit'
+                    color: bucket.outstanding > 0 ? intent.dangerInk : 'inherit'
                   }}
                 >
                   {currency.format(bucket.outstanding)}

@@ -31,6 +31,7 @@ import {
   formatPlanDate,
   translateTargetText
 } from './planUi'
+import { brand, neutral } from 'src/theme/designTokens'
 
 const STATUS_META: Record<
   PlanComplianceStatus,
@@ -60,7 +61,7 @@ const ProgressBar: React.FC<{ value: number }> = ({ value }) => (
         flex: 1,
         height: 8,
         borderRadius: 4,
-        bgcolor: '#e0f2f1',
+        bgcolor: brand.soft,
         '& .MuiLinearProgress-bar': { bgcolor: PLAN_TEAL }
       }}
     />
@@ -351,7 +352,7 @@ const PlanComplianceTab: React.FC<PlanComplianceTabProps> = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Paper
         elevation={0}
-        sx={{ p: 2, borderRadius: 2, border: '1px solid #e5e7eb' }}
+        sx={{ p: 2, borderRadius: 2, border: `1px solid ${neutral.border}` }}
       >
         <Box
           sx={{
@@ -503,7 +504,7 @@ const PlanComplianceTab: React.FC<PlanComplianceTabProps> = ({
                       alignItems: 'center',
                       gap: 1.5,
                       py: 0.75,
-                      borderBottom: '1px solid #f0f0f0'
+                      borderBottom: `1px solid ${neutral.surfaceHead}`
                     }}
                   >
                     <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
@@ -560,7 +561,7 @@ const PlanComplianceTab: React.FC<PlanComplianceTabProps> = ({
             muiTableProps={{
               sx: {
                 '& .MuiTableHead-root .MuiTableCell-root': {
-                  backgroundColor: '#f5f5f5',
+                  backgroundColor: neutral.surfaceHead,
                   fontWeight: 600
                 },
                 '& .MuiTableBody-root .MuiTableRow-root:hover': {
@@ -568,8 +569,10 @@ const PlanComplianceTab: React.FC<PlanComplianceTabProps> = ({
                 }
               }
             }}
-            muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
-            muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+            muiTopToolbarProps={{ sx: { backgroundColor: neutral.surfaceAlt } }}
+            muiBottomToolbarProps={{
+              sx: { backgroundColor: neutral.surfaceAlt }
+            }}
             muiTablePaginationProps={{ rowsPerPageOptions: [10, 25, 50, 100] }}
             initialState={{
               density: 'comfortable',

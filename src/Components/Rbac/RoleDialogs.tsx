@@ -14,11 +14,12 @@ import { useCreateRole, useUpdateRole } from '../../hooks/useRbac'
 import { RbacRole } from '../../types/rbac'
 import { rbacErrorMessage } from '../../utils/rbacErrors'
 import { roleDisplayName } from './PermissionMatrix'
+import { brand } from 'src/theme/designTokens'
 
 const primaryButtonSx = {
   textTransform: 'none',
-  bgcolor: '#00BFA5',
-  '&:hover': { bgcolor: '#00897B' }
+  bgcolor: brand.main,
+  '&:hover': { bgcolor: brand.hover }
 } as const
 
 // Mismo patrón que valida el backend: minúscula inicial, minúsculas, números y guion bajo

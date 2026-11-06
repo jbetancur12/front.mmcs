@@ -57,11 +57,10 @@ export const theme = createTheme({
       default: neutral.surfaceAlt,
       paper: neutral.surface
     },
-    // text.secondary sigue en #4b5563: pasarlo a neutral.textBody oscurecería todo el texto de apoyo
-    // de la aplicación y está pendiente de decisión (plans/tema-de-colores, README).
+    // Decisión 2026-11-02: el texto de apoyo (text.secondary, ~900 usos) pasa al gris neutral.textBody.
     text: {
       primary: neutral.text,
-      secondary: colors.gray[600]
+      secondary: neutral.textBody
     }
   },
   typography: {

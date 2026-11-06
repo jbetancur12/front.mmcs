@@ -16,6 +16,7 @@ import {
   DetailField,
   DetailSection
 } from 'src/Components/Common/DetailBlocks'
+import { brand } from 'src/theme/designTokens'
 
 interface EquipmentInOutRecord {
   id: number
@@ -39,9 +40,9 @@ type Cell = { cell: MRT_Cell<EquipmentInOutRecord> }
 const buttonSx = {
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00695C',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.ink,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 
 const dateText = formatDateOnly

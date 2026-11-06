@@ -25,6 +25,7 @@ import { useCan } from '@utils/functions'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand } from 'src/theme/designTokens'
 
 const validationSchema = yup.object().shape({
   name: yup.string().required('Nombre es obligatorio'),
@@ -190,9 +191,9 @@ const InterventionTypes = () => {
               startIcon={<Add />}
               onClick={handleAddNew}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Agregar nuevo

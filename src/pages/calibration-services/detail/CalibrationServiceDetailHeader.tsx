@@ -51,6 +51,7 @@ import {
   CalibrationServiceDetailActions,
   CalibrationServiceDetailBusy
 } from './calibrationServiceDetailTypes'
+import { neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceDetailHeaderProps {
   service: CalibrationService
@@ -368,7 +369,7 @@ const CalibrationServiceDetailHeader = ({
               sx={{
                 ...secondaryActionSx,
                 color: 'text.primary',
-                borderColor: '#d1d5db'
+                borderColor: neutral.borderStrong
               }}
             >
               Más acciones

@@ -1,12 +1,13 @@
 import React from 'react'
 import { Box, Typography } from '@mui/material'
+import { neutral, intent } from 'src/theme/designTokens'
 
 export type ReadingTone = 'temperature' | 'humidity' | 'neutral'
 
 const TONES: Record<ReadingTone, string> = {
-  temperature: '#c2410c',
-  humidity: '#0369a1',
-  neutral: '#374151'
+  temperature: intent.dangerInk,
+  humidity: intent.infoInk,
+  neutral: neutral.textBody
 }
 
 interface ReadingValueProps {
@@ -57,7 +58,7 @@ const ReadingValue: React.FC<ReadingValueProps> = ({
           fontSize: size === 'large' ? '1.75rem' : '1.125rem',
           lineHeight: 1.2,
           fontVariantNumeric: 'tabular-nums',
-          color: hasValue ? TONES[tone] : '#9ca3af'
+          color: hasValue ? TONES[tone] : neutral.textFaint
         }}
       >
         {hasValue ? (value as number).toFixed(digits) : '--'}

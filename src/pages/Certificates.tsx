@@ -35,6 +35,7 @@ import { CERTIFICATE_HISTORY_QUERY_KEYS } from '@hooks/certificates/useCertifica
 import { formatDateOnly } from '@utils/dateOnly'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface DeviceDetailsProps {
   id: number
@@ -63,15 +64,15 @@ type StatusTone = 'success' | 'warning' | 'error' | 'default'
 const OUTLINE_BUTTON_SX = {
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00695C',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.ink,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 
 const CARD_SX = {
   p: { xs: 2, md: 3 },
   borderRadius: '16px',
-  border: '1px solid #e5e7eb'
+  border: `1px solid ${neutral.border}`
 } as const
 
 const STATUS_STYLE: Record<
@@ -79,24 +80,29 @@ const STATUS_STYLE: Record<
   { ink: string; soft: string; border: string; Icon: typeof CheckCircle }
 > = {
   success: {
-    ink: '#2e7d32',
-    soft: '#e8f5e9',
-    border: '#a5d6a7',
+    ink: intent.successInk,
+    soft: intent.successSoft,
+    border: intent.success,
     Icon: CheckCircle
   },
   warning: {
-    ink: '#b45309',
-    soft: '#fff3e0',
-    border: '#fdba74',
+    ink: intent.warningInk,
+    soft: intent.warningSoft,
+    border: intent.warning,
     Icon: Warning
   },
   error: {
-    ink: '#b91c1c',
-    soft: '#fee2e2',
-    border: '#fca5a5',
+    ink: intent.dangerInk,
+    soft: intent.dangerSoft,
+    border: intent.dangerSoft,
     Icon: ErrorIcon
   },
-  default: { ink: '#4b5563', soft: '#f3f4f6', border: '#d1d5db', Icon: Info }
+  default: {
+    ink: neutral.textBody,
+    soft: neutral.surfaceHead,
+    border: neutral.borderStrong,
+    Icon: Info
+  }
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -242,8 +248,8 @@ const Certificates: React.FC = () => {
                   sx={{
                     textTransform: 'none',
                     fontWeight: 600,
-                    bgcolor: '#00BFA5',
-                    '&:hover': { bgcolor: '#00897B' }
+                    bgcolor: brand.main,
+                    '&:hover': { bgcolor: brand.hover }
                   }}
                 >
                   Actualizar

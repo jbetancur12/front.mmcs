@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Card, CardContent, Tooltip, Typography } from '@mui/material'
 import { HelpOutline } from '@mui/icons-material'
+import { neutral } from 'src/theme/designTokens'
 
 interface ProfileStatCardProps {
   label: string
@@ -54,7 +55,7 @@ const ProfileStatCard: React.FC<ProfileStatCardProps> = ({
     sx={{
       height: '100%',
       borderRadius: '16px',
-      border: selected ? `2px solid ${color}` : '1px solid #e5e7eb',
+      border: selected ? `2px solid ${color}` : `1px solid ${neutral.border}`,
       boxShadow: selected ? `0 0 0 3px ${color}22` : 'none',
       ...(onClick && {
         cursor: 'pointer',
@@ -89,7 +90,7 @@ const ProfileStatCard: React.FC<ProfileStatCardProps> = ({
         fontWeight='bold'
         sx={{
           // En 0 no hay nada que atender: el número queda gris
-          color: value === 0 ? '#6b7280' : valueColor ?? color,
+          color: value === 0 ? neutral.textMuted : valueColor ?? color,
           fontVariantNumeric: 'tabular-nums'
         }}
       >
@@ -122,7 +123,7 @@ const ProfileStatCard: React.FC<ProfileStatCardProps> = ({
           sx={{
             display: 'block',
             mt: 0.5,
-            color: selected ? color : '#6b7280',
+            color: selected ? color : neutral.textMuted,
             fontWeight: selected ? 700 : 400
           }}
         >

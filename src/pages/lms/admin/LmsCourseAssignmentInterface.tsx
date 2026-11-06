@@ -55,6 +55,7 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand } from 'src/theme/designTokens'
 interface Course {
   id: number
   title: string
@@ -1060,9 +1061,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                                 clickable
                                 onClick={() => navigate('/lms/admin/plans')}
                                 sx={{
-                                  bgcolor: '#E0F7F4',
-                                  color: '#00695C',
-                                  '& .MuiChip-icon': { color: '#00695C' }
+                                  bgcolor: brand.soft,
+                                  color: brand.ink,
+                                  '& .MuiChip-icon': { color: brand.ink }
                                 }}
                               />
                             ))}
@@ -1230,8 +1231,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                                 startIcon={<PlanIcon />}
                                 onClick={() => navigate('/lms/admin/plans')}
                                 sx={{
-                                  borderColor: '#00BFA5',
-                                  color: '#00897B'
+                                  borderColor: brand.main,
+                                  color: brand.hover
                                 }}
                               >
                                 Gestionar en Planes

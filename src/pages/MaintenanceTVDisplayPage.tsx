@@ -3,6 +3,7 @@ import type { AxiosError } from 'axios'
 import { Box } from '@mui/material'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import MaintenanceTVDisplayPublic from '../Components/Maintenance/TVDisplayModern'
+import { neutral } from 'src/theme/designTokens'
 
 // Create a separate query client for the TV display to avoid conflicts
 const tvDisplayQueryClient = new QueryClient({
@@ -41,7 +42,7 @@ const MaintenanceTVDisplayPage: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          backgroundColor: '#121212',
+          backgroundColor: neutral.text,
           overflow: 'hidden'
         }}
       >

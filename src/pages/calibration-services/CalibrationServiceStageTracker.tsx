@@ -6,6 +6,7 @@ import {
   CalibrationServiceSlaIndicator,
   CalibrationServiceStatus
 } from '../../types/calibrationService'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 // Ciclo completo de un servicio, en el orden en que ocurre.
 const STAGES: StageTrackerStage[] = [
@@ -20,11 +21,11 @@ const STAGES: StageTrackerStage[] = [
 ]
 
 const SLA_COLORS: Record<string, string> = {
-  green: '#00BFA5',
-  yellow: '#f59e0b',
-  red: '#ef4444',
-  gray: '#9ca3af',
-  blue: '#3b82f6'
+  green: brand.main,
+  yellow: intent.warning,
+  red: intent.danger,
+  gray: neutral.textFaint,
+  blue: intent.info
 }
 
 interface CalibrationServiceStageTrackerProps {
@@ -119,7 +120,7 @@ const CalibrationServiceStageTracker = ({
                   sx={{
                     height: 10,
                     borderRadius: '999px',
-                    bgcolor: '#f3f4f6',
+                    bgcolor: neutral.surfaceHead,
                     '& .MuiLinearProgress-bar': {
                       borderRadius: '999px',
                       bgcolor: slaColor
@@ -133,7 +134,7 @@ const CalibrationServiceStageTracker = ({
                     bottom: -2,
                     left: `${warningAt}%`,
                     width: 2,
-                    bgcolor: '#f59e0b',
+                    bgcolor: intent.warning,
                     borderRadius: 1
                   }}
                   aria-hidden

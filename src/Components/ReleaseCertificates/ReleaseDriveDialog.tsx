@@ -30,6 +30,7 @@ import {
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
+import { brand } from 'src/theme/designTokens'
 
 interface ReleaseDriveDialogProps {
   open: boolean
@@ -260,7 +261,7 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
               onChange={(_event, value: Mode) => setMode(value)}
               sx={{
                 mb: 2,
-                '& .MuiTabs-indicator': { backgroundColor: '#00BFA5' },
+                '& .MuiTabs-indicator': { backgroundColor: brand.main },
                 '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }
               }}
             >
@@ -402,7 +403,7 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
               !status?.encryptionReady
             }
             onClick={connectWithGoogle}
-            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+            sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
           >
             {sameModeConnected
               ? 'Reconectar con Google'
@@ -417,7 +418,7 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
             sx={
               mode === 'oauth'
                 ? undefined
-                : { bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }
+                : { bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }
             }
           >
             Guardar

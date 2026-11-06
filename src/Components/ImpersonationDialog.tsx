@@ -17,6 +17,7 @@ import {
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 interface ImpersonationUser {
   id: number
@@ -130,7 +131,7 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
               variant='caption'
               fontWeight={700}
               sx={{
-                color: '#6b7280',
+                color: neutral.textMuted,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
                 ml: 1,
@@ -156,7 +157,7 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
                         width: 32,
                         height: 32,
                         fontSize: '0.8rem',
-                        bgcolor: '#6366f1'
+                        bgcolor: intent.info
                       }}
                     >
                       {u.name.charAt(0).toUpperCase()}
@@ -207,7 +208,7 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
               variant='caption'
               fontWeight={700}
               sx={{
-                color: '#6b7280',
+                color: neutral.textMuted,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
                 ml: 1,
@@ -233,7 +234,7 @@ const ImpersonationDialog: React.FC<ImpersonationDialogProps> = ({
                         width: 32,
                         height: 32,
                         fontSize: '0.8rem',
-                        bgcolor: '#059669'
+                        bgcolor: brand.hover
                       }}
                     >
                       {u.name.charAt(0).toUpperCase()}

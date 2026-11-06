@@ -37,6 +37,7 @@ import { confirmDialog } from 'src/utils/confirm'
 import { busyDialog } from 'src/utils/confirm'
 import { getApiErrorMessage } from 'src/utils/apiError'
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 export interface CustomerData {
   id?: number
   nombre: string
@@ -135,7 +136,7 @@ const CustomersTable: React.FC = () => {
         <div style="text-align: left; margin: 20px 0;">
           <p><strong>Cliente:</strong> ${customer.nombre}</p>
           <p><strong>Identificación:</strong> ${customer.identificacion}</p>
-          <p style="color: #d32f2f; margin-top: 15px;">
+          <p style="color: ${intent.danger}; margin-top: 15px;">
             <strong>⚠️ Esta acción no se puede deshacer</strong>
           </p>
         </div>
@@ -187,7 +188,7 @@ const CustomersTable: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 width: 32,
                 height: 32
               }}
@@ -284,9 +285,9 @@ const CustomersTable: React.FC = () => {
               startIcon={<Add />}
               onClick={() => setCreateModalOpen(true)}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 '&:hover': {
-                  bgcolor: '#00ACC1'
+                  bgcolor: brand.hover
                 }
               }}
               aria-label='Crear nuevo cliente'
@@ -321,7 +322,7 @@ const CustomersTable: React.FC = () => {
                 aria-label={`Ver ${row.original.nombre}`}
                 onClick={() => handleViewCustomer(row.original.id!)}
                 sx={{
-                  color: '#00695C',
+                  color: brand.ink,
                   '&:hover': {
                     bgcolor: 'rgba(0, 191, 165, 0.1)'
                   }
@@ -336,7 +337,7 @@ const CustomersTable: React.FC = () => {
                   size='small'
                   aria-label={`Editar ${row.original.nombre}`}
                   onClick={() => handleEditCustomer(row.original)}
-                  sx={{ color: '#2563eb' }}
+                  sx={{ color: intent.action }}
                 >
                   <Edit />
                 </IconButton>

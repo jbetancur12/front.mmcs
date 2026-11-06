@@ -16,6 +16,7 @@ import { useSaveIndicatorObservations } from 'src/hooks/useCustomerIndicators'
 import { IndicatorObservations } from 'src/types/customerIndicators'
 import { notify } from 'src/utils/notify'
 import { emeraldButtonSx, formatDate } from './indicatorFormat'
+import { neutral } from 'src/theme/designTokens'
 
 export const OBSERVATIONS_MAX_LENGTH = 2000
 
@@ -58,7 +59,7 @@ const IndicatorObservationsCard: React.FC<Props> = ({
   return (
     <Card
       elevation={0}
-      sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+      sx={{ borderRadius: '16px', border: `1px solid ${neutral.border}` }}
     >
       <CardContent sx={{ p: 3 }}>
         <Typography variant='h6' fontWeight='bold' gutterBottom>

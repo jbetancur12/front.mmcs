@@ -22,6 +22,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { neutral, brand } from 'src/theme/designTokens'
 
 const PRIORITY_COLORS: Record<
   string,
@@ -82,7 +83,7 @@ const NotificationBell = () => {
         onClick={handleClick}
         size='small'
         sx={{
-          color: open ? '#059669' : 'text.secondary',
+          color: open ? brand.hover : 'text.secondary',
           position: 'relative'
         }}
       >
@@ -229,7 +230,7 @@ const NotificationBell = () => {
             ) : (
               <Box sx={{ p: 3, textAlign: 'center' }}>
                 <NotificationsOutlinedIcon
-                  sx={{ fontSize: 32, color: '#d1d5db', mb: 1 }}
+                  sx={{ fontSize: 32, color: neutral.borderStrong, mb: 1 }}
                 />
                 <Typography variant='body2' color='text.secondary'>
                   Sin notificaciones

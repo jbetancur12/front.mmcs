@@ -11,6 +11,7 @@ import {
   KanbanColumnDefinition,
   StoredFilters
 } from './calibrationServicesListTypes'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 export const getStoredViewMode = (): CalibrationServicesViewMode => {
   if (typeof window === 'undefined') {
@@ -58,7 +59,7 @@ export const getSlaVisualTone = (
   switch (color) {
     case 'red':
       return {
-        accent: '#ef4444',
+        accent: intent.danger,
         background:
           'linear-gradient(180deg, rgba(239,68,68,0.14) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(239,68,68,0.24)',
@@ -66,7 +67,7 @@ export const getSlaVisualTone = (
       }
     case 'yellow':
       return {
-        accent: '#f59e0b',
+        accent: intent.warning,
         background:
           'linear-gradient(180deg, rgba(245,158,11,0.14) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(245,158,11,0.24)',
@@ -74,7 +75,7 @@ export const getSlaVisualTone = (
       }
     case 'green':
       return {
-        accent: '#10b981',
+        accent: brand.main,
         background:
           'linear-gradient(180deg, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(16,185,129,0.18)',
@@ -82,7 +83,7 @@ export const getSlaVisualTone = (
       }
     case 'blue':
       return {
-        accent: '#3b82f6',
+        accent: intent.info,
         background:
           'linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(59,130,246,0.18)',
@@ -90,7 +91,7 @@ export const getSlaVisualTone = (
       }
     default:
       return {
-        accent: '#94a3b8',
+        accent: neutral.textFaint,
         background:
           'linear-gradient(180deg, rgba(148,163,184,0.08) 0%, rgba(255,255,255,0.96) 28%)',
         border: 'rgba(148,163,184,0.16)',
@@ -304,35 +305,35 @@ export const getKanbanColumns = (
         key: 'pre_operational',
         title: 'Preoperativo',
         description: 'Aún no liberados al frente técnico',
-        accent: '#64748b',
+        accent: neutral.textMuted,
         priority: 5
       },
       {
         key: 'to_schedule',
         title: 'Por programar',
         description: 'ODS emitidas o pendientes de agenda',
-        accent: '#f59e0b',
+        accent: intent.warning,
         priority: 2
       },
       {
         key: 'in_service',
         title: 'En ejecución',
         description: 'Programados o en trabajo activo',
-        accent: '#10b981',
+        accent: brand.main,
         priority: 1
       },
       {
         key: 'pending_close',
         title: 'Pendiente cierre',
         description: 'Finalizados técnicamente y pendientes de salida',
-        accent: '#0ea5e9',
+        accent: intent.info,
         priority: 3
       },
       {
         key: 'closed',
         title: 'Cerrados',
         description: 'Servicios completamente terminados',
-        accent: '#059669',
+        accent: brand.hover,
         priority: 6
       }
     ]
@@ -343,35 +344,35 @@ export const getKanbanColumns = (
       key: 'adjustments',
       title: 'Por ajustar',
       description: 'Borradores, rechazadas o con cambios pendientes',
-      accent: '#64748b',
+      accent: neutral.textMuted,
       priority: 6
     },
     {
       key: 'waiting_customer',
       title: 'Esperando respuesta cliente',
       description: 'Cotizaciones enviadas pendientes de respuesta',
-      accent: '#f59e0b',
+      accent: intent.warning,
       priority: 4
     },
     {
       key: 'ready_for_ods',
       title: 'Listo para ODS',
       description: 'Aprobadas y listas para liberar',
-      accent: '#10b981',
+      accent: brand.main,
       priority: 5
     },
     {
       key: 'to_schedule',
       title: 'Pendiente programación',
       description: 'ODS emitidas o pendientes de agenda operativa',
-      accent: '#3b82f6',
+      accent: intent.info,
       priority: 3
     },
     {
       key: 'in_service',
       title: 'En servicio',
       description: 'Programados y en ejecución',
-      accent: '#14b8a6',
+      accent: brand.main,
       priority: 2
     },
     {
@@ -379,14 +380,14 @@ export const getKanbanColumns = (
       title: 'Facturación y cierre',
       description:
         'Finalizados técnicamente: por facturar, facturados o listos para cierre',
-      accent: '#3b82f6',
+      accent: intent.info,
       priority: 1
     },
     {
       key: 'closed',
       title: 'Cerradas',
       description: 'Servicios completados',
-      accent: '#059669',
+      accent: brand.hover,
       priority: 7
     }
   ]

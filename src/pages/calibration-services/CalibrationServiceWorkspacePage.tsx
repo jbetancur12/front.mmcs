@@ -48,6 +48,7 @@ import useCalibrationServiceWorkspaceNavigation from './workspace/useCalibration
 import useCalibrationServiceWorkspaceActions from './workspace/useCalibrationServiceWorkspaceActions'
 import useCalibrationServiceWorkspaceCustomerActions from './workspace/useCalibrationServiceWorkspaceCustomerActions'
 import useWorkspaceActionBarBox from './workspace/useWorkspaceActionBarBox'
+import { neutral } from 'src/theme/designTokens'
 
 /** Formulario por pasos para crear o editar la cotización base de un servicio de calibración. */
 const CalibrationServiceWorkspacePage = () => {
@@ -317,7 +318,11 @@ const CalibrationServiceWorkspacePage = () => {
               startIcon={<ArrowBackOutlinedIcon />}
               onClick={() => goToSection(activeSection - 1)}
               disabled={activeSection === 0}
-              sx={{ textTransform: 'none', fontWeight: 600, color: '#4b5563' }}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                color: neutral.textBody
+              }}
             >
               Anterior
             </Button>

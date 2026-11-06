@@ -15,6 +15,7 @@ import {
   CalibrationServiceCustomerSite
 } from '../../types/calibrationService'
 import { normalizeIdentification } from '@utils/identification'
+import { brand } from 'src/theme/designTokens'
 
 export interface CalibrationServiceCustomerDialogValues {
   customer: {
@@ -317,9 +318,9 @@ const CalibrationServiceCustomerDialog = ({
                     }))
                   }
                   sx={{
-                    '& .Mui-checked': { color: '#00BFA5' },
+                    '& .Mui-checked': { color: brand.main },
                     '& .Mui-checked + .MuiSwitch-track': {
-                      bgcolor: '#00BFA5'
+                      bgcolor: brand.main
                     }
                   }}
                 />

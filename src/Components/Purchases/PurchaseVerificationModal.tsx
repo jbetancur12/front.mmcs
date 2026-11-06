@@ -16,6 +16,7 @@ import {
 } from 'src/pages/Purchases/Types'
 
 import { logger } from 'src/utils/logger'
+import { intent } from 'src/theme/designTokens'
 export interface PurchaseVerificationData {
   receivedDate: string
   invoiceNumber: string
@@ -184,9 +185,9 @@ const CreatePurchaseVerificationModal: React.FC<
           variant='contained'
           onClick={handleSubmit}
           sx={{
-            backgroundColor: '#9CF08B',
-            color: '#2D4A27',
-            '&:hover': { backgroundColor: '#6DC662' }
+            backgroundColor: intent.success,
+            color: intent.successInk,
+            '&:hover': { backgroundColor: intent.success }
           }}
         >
           Crear Verificación

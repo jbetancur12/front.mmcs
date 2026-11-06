@@ -26,6 +26,7 @@ import PDFViewer from './PDFViewer'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { logger } from 'src/utils/logger'
+import { neutral, intent } from 'src/theme/designTokens'
 
 type Certificate = CertificateHistoryItem
 
@@ -63,7 +64,7 @@ function CertificatesList() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <PictureAsPdfOutlined
               fontSize='small'
-              sx={{ color: '#dc2626', flexShrink: 0 }}
+              sx={{ color: intent.danger, flexShrink: 0 }}
             />
             <Typography
               variant='body2'
@@ -164,8 +165,8 @@ function CertificatesList() {
             <Box
               sx={{
                 width: '100%',
-                backgroundColor: '#f9fafb',
-                border: '1px solid #e5e7eb',
+                backgroundColor: neutral.surfaceAlt,
+                border: `1px solid ${neutral.border}`,
                 borderRadius: '12px',
                 p: 2
               }}
@@ -184,7 +185,7 @@ function CertificatesList() {
                 <IconButton
                   size='small'
                   aria-label='Descargar certificado'
-                  sx={{ color: '#2563eb' }}
+                  sx={{ color: intent.action }}
                   onClick={() => handleDownload(row.original.filePath)}
                 >
                   <FileDownloadOutlined fontSize='small' />

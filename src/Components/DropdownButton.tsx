@@ -4,6 +4,7 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import { hasPermission, PermissionKey } from 'src/constants/permissions'
 import NavItem from './Common/NavItem'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface DropdownButtonProps {
   buttonText: string
@@ -120,7 +121,7 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
               minWidth: 220,
               ml: 1,
               borderRadius: '12px',
-              border: '1px solid #e5e7eb'
+              border: `1px solid ${neutral.border}`
             }
           }}
           MenuListProps={{ 'aria-label': buttonText }}
@@ -135,8 +136,8 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
               sx={{
                 fontSize: 14,
                 '&.Mui-selected, &.Mui-selected:hover': {
-                  bgcolor: '#e0f7f4',
-                  color: '#00695c',
+                  bgcolor: brand.soft,
+                  color: brand.ink,
                   fontWeight: 600
                 }
               }}

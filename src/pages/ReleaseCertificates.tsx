@@ -62,6 +62,7 @@ import {
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { userStore } from 'src/store/userStore'
 import { notify } from 'src/utils/notify'
+import { brand, intent } from 'src/theme/designTokens'
 
 const PAGE_SIZE = 25
 const SEARCH_DEBOUNCE_MS = 350
@@ -222,7 +223,7 @@ const ReleaseCertificates: React.FC = () => {
               >
                 <WarningAmberRounded
                   fontSize='small'
-                  sx={{ color: '#d97706' }}
+                  sx={{ color: intent.warning }}
                   aria-label={`${row.original.anomalies.length} por revisar`}
                 />
               </Tooltip>
@@ -236,7 +237,7 @@ const ReleaseCertificates: React.FC = () => {
                   {row.original.customer?.nombre ?? (
                     <Box
                       component='span'
-                      sx={{ color: '#b45309', fontWeight: 600 }}
+                      sx={{ color: intent.warningInk, fontWeight: 600 }}
                     >
                       Cliente sin identificar ·{' '}
                       {row.original.customerName ?? 'sin nombre'}
@@ -327,7 +328,7 @@ const ReleaseCertificates: React.FC = () => {
       variant='contained'
       startIcon={<CloudUploadOutlined />}
       onClick={() => setUploadOpen(true)}
-      sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00ACC1' } }}
+      sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
     >
       Cargar certificado
     </Button>
@@ -493,9 +494,9 @@ const ReleaseCertificates: React.FC = () => {
               checked={withAnomalies}
               onChange={(event) => setWithAnomalies(event.target.checked)}
               sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': { color: '#00897B' },
+                '& .MuiSwitch-switchBase.Mui-checked': { color: brand.hover },
                 '& .MuiSwitch-track': {
-                  bgcolor: withAnomalies ? '#00BFA5' : undefined
+                  bgcolor: withAnomalies ? brand.main : undefined
                 }
               }}
             />
@@ -519,9 +520,11 @@ const ReleaseCertificates: React.FC = () => {
               checked={withoutCustomer}
               onChange={(event) => setWithoutCustomer(event.target.checked)}
               sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': { color: '#b45309' },
+                '& .MuiSwitch-switchBase.Mui-checked': {
+                  color: intent.warningInk
+                },
                 '& .MuiSwitch-track': {
-                  bgcolor: withoutCustomer ? '#f59e0b' : undefined
+                  bgcolor: withoutCustomer ? intent.warning : undefined
                 }
               }}
             />
@@ -611,7 +614,7 @@ const ReleaseCertificates: React.FC = () => {
                 <Tooltip title='Revisar'>
                   <IconButton
                     aria-label={`Revisar ${label}`}
-                    sx={{ color: '#00695C' }}
+                    sx={{ color: brand.ink }}
                     onClick={() => setViewingId(certificate.id)}
                   >
                     <VisibilityOutlined fontSize='small' />

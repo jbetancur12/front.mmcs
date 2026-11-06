@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, MenuItem, TextField } from '@mui/material'
+import { neutral } from 'src/theme/designTokens'
 
 interface ScoreSelectProps {
   label: string
@@ -56,15 +57,15 @@ export const ScoreSummary: React.FC<ScoreSummaryProps> = ({ items }) => (
       px: 2,
       py: 1.5,
       borderRadius: '12px',
-      bgcolor: '#f9fafb',
-      border: '1px solid #e5e7eb',
+      bgcolor: neutral.surfaceAlt,
+      border: `1px solid ${neutral.border}`,
       fontSize: 14,
-      color: '#4b5563'
+      color: neutral.textBody
     }}
   >
     {items.map((item) => (
       <span key={item.label}>
-        {item.label}: <b style={{ color: '#111827' }}>{item.value}</b>
+        {item.label}: <b style={{ color: neutral.text }}>{item.value}</b>
       </span>
     ))}
   </Box>

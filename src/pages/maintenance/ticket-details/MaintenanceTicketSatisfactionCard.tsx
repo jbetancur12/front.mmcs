@@ -2,6 +2,7 @@ import { Paper, Typography, Box, Chip } from '@mui/material'
 import { Star } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MaintenanceTicketSatisfactionCardProps {
   ticket: MaintenanceTicket
@@ -20,13 +21,13 @@ const MaintenanceTicketSatisfactionCard = ({
             ...surfaceSx,
             p: 3,
             mb: 3,
-            borderColor: '#fde68a'
+            borderColor: intent.warning
           }}
         >
           <Box display='flex' alignItems='center' gap={1} mb={2}>
             <Box
               sx={{
-                backgroundColor: '#fef3c7',
+                backgroundColor: intent.warningSoft,
                 borderRadius: '8px',
                 p: 1,
                 display: 'flex',
@@ -34,13 +35,13 @@ const MaintenanceTicketSatisfactionCard = ({
                 justifyContent: 'center'
               }}
             >
-              <Star sx={{ color: '#b45309', fontSize: 20 }} />
+              <Star sx={{ color: intent.warningInk, fontSize: 20 }} />
             </Box>
             <Typography
               variant='h6'
               sx={{
                 fontWeight: 600,
-                color: '#0f172a'
+                color: neutral.text
               }}
             >
               Satisfacción del Cliente

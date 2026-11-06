@@ -19,6 +19,7 @@ import { handleDownload } from '../utils/fileHandlers'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 
 // Key for sessionStorage
 const TABLE_STATE_KEY = 'calibration-table-state'
@@ -208,7 +209,7 @@ export const TableView = ({
             <IconButton
               size='small'
               aria-label='Ver certificado'
-              sx={{ color: '#00695C' }}
+              sx={{ color: brand.ink }}
               onClick={() => navigate(`${row.original.id}`)}
             >
               <VisibilityOutlined fontSize='small' />
@@ -218,7 +219,7 @@ export const TableView = ({
             <IconButton
               size='small'
               aria-label='Descargar certificado'
-              sx={{ color: '#2563eb' }}
+              sx={{ color: intent.action }}
               onClick={() =>
                 handleDownload(row.original.filePath, axiosPrivate)
               }
@@ -260,7 +261,11 @@ export const TableView = ({
               label={`${(globalFilter ? 1 : 0) + (sorting.length > 0 ? 1 : 0)} filtro(s) activo(s)`}
               onDelete={handleClearFilters}
               deleteIcon={<FilterAltOff />}
-              sx={{ fontWeight: 600, color: '#00695C', borderColor: '#b2ebe3' }}
+              sx={{
+                fontWeight: 600,
+                color: brand.ink,
+                borderColor: brand.soft
+              }}
             />
           )}
           {canCreateFile && (
@@ -269,9 +274,9 @@ export const TableView = ({
               variant='contained'
               startIcon={<Add />}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Subir nuevo certificado

@@ -16,6 +16,7 @@ import {
   ReleaseCertificateDetail,
   ReleaseKind
 } from './ReleaseCertificates.types'
+import { brand } from 'src/theme/designTokens'
 
 interface ReleaseEditFormProps {
   certificate: ReleaseCertificateDetail
@@ -161,7 +162,7 @@ const ReleaseEditForm: React.FC<ReleaseEditFormProps> = ({
             variant='contained'
             onClick={submit}
             disabled={saving}
-            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+            sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
           >
             Guardar cambios
           </Button>

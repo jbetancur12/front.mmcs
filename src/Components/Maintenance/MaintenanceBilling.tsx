@@ -31,6 +31,7 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 interface MaintenanceTicketCost {
   id: string
   name: string
@@ -230,7 +231,7 @@ const MaintenanceBilling: React.FC = () => {
           const ticket = row.original
           if (ticket.totalCost > 0) {
             return (
-              <Typography variant='body2' fontWeight={700} color='#00897B'>
+              <Typography variant='body2' fontWeight={700} color={brand.hover}>
                 {formatCurrency(ticket.totalCost)}
               </Typography>
             )
@@ -247,7 +248,11 @@ const MaintenanceBilling: React.FC = () => {
             )
           }
           return (
-            <Typography variant='body2' fontWeight={700} color='#9ca3af'>
+            <Typography
+              variant='body2'
+              fontWeight={700}
+              color={neutral.textFaint}
+            >
               $0
             </Typography>
           )
@@ -345,10 +350,10 @@ const MaintenanceBilling: React.FC = () => {
             variant={filter === 'not_invoiced' ? 'contained' : 'outlined'}
             sx={{
               backgroundColor:
-                filter === 'not_invoiced' ? '#dc2626' : undefined,
+                filter === 'not_invoiced' ? intent.danger : undefined,
               '&:hover': {
                 backgroundColor:
-                  filter === 'not_invoiced' ? '#b91c1c' : undefined
+                  filter === 'not_invoiced' ? intent.dangerInk : undefined
               }
             }}
           >
@@ -361,9 +366,9 @@ const MaintenanceBilling: React.FC = () => {
             }}
             variant={filter === 'invoiced' ? 'contained' : 'outlined'}
             sx={{
-              backgroundColor: filter === 'invoiced' ? '#10b981' : undefined,
+              backgroundColor: filter === 'invoiced' ? brand.main : undefined,
               '&:hover': {
-                backgroundColor: filter === 'invoiced' ? '#059669' : undefined
+                backgroundColor: filter === 'invoiced' ? brand.hover : undefined
               }
             }}
           >
@@ -376,9 +381,9 @@ const MaintenanceBilling: React.FC = () => {
             }}
             variant={filter === 'all' ? 'contained' : 'outlined'}
             sx={{
-              backgroundColor: filter === 'all' ? '#3b82f6' : undefined,
+              backgroundColor: filter === 'all' ? intent.info : undefined,
               '&:hover': {
-                backgroundColor: filter === 'all' ? '#2563eb' : undefined
+                backgroundColor: filter === 'all' ? intent.action : undefined
               }
             }}
           >
@@ -444,7 +449,9 @@ const MaintenanceBilling: React.FC = () => {
                     disabled={
                       toggleInvoiceMutation.isLoading || !canPerformActions
                     }
-                    sx={{ color: ticket.isInvoiced ? 'error.main' : '#00BFA5' }}
+                    sx={{
+                      color: ticket.isInvoiced ? 'error.main' : brand.main
+                    }}
                   >
                     {ticket.isInvoiced ? <Cancel /> : <CheckCircle />}
                   </IconButton>
@@ -479,7 +486,7 @@ const MaintenanceBilling: React.FC = () => {
                           elevation={1}
                           sx={{
                             p: 2,
-                            border: '1px solid #e5e7eb',
+                            border: `1px solid ${neutral.border}`,
                             borderRadius: '8px'
                           }}
                         >
@@ -503,7 +510,7 @@ const MaintenanceBilling: React.FC = () => {
                           <Typography
                             variant='h6'
                             fontWeight={700}
-                            color='#10b981'
+                            color={brand.main}
                           >
                             {formatCurrency(cost.amount)}
                           </Typography>
@@ -515,7 +522,7 @@ const MaintenanceBilling: React.FC = () => {
                     sx={{
                       mt: 3,
                       p: 2,
-                      backgroundColor: '#10b981',
+                      backgroundColor: brand.main,
                       borderRadius: '8px',
                       display: 'flex',
                       justifyContent: 'space-between',

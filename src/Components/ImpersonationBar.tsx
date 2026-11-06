@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from '@mui/material'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
 import React, { useLayoutEffect, useRef } from 'react'
+import { intent } from 'src/theme/designTokens'
 
 interface ImpersonationBarProps {
   impersonatorName: string
@@ -43,8 +44,8 @@ const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
         px: { xs: 2, md: 3 },
         py: 0.75,
         minHeight: 40,
-        backgroundColor: '#fef3c7',
-        borderBottom: '2px solid #f59e0b',
+        backgroundColor: intent.warningSoft,
+        borderBottom: `2px solid ${intent.warning}`,
         flexWrap: 'wrap',
         position: 'fixed',
         top: 0,
@@ -53,13 +54,13 @@ const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
         zIndex: 9999
       }}
     >
-      <WarningAmberRoundedIcon sx={{ color: '#d97706', fontSize: 20 }} />
+      <WarningAmberRoundedIcon sx={{ color: intent.warning, fontSize: 20 }} />
       <Typography
         variant='body2'
-        sx={{ color: '#92400e', flex: 1, minWidth: 0 }}
+        sx={{ color: intent.warningInk, flex: 1, minWidth: 0 }}
       >
         Estás operando como <strong>{targetName}</strong>
-        <Box component='span' sx={{ color: '#78350f', ml: 1 }}>
+        <Box component='span' sx={{ color: intent.dangerInk, ml: 1 }}>
           · suplantado por {impersonatorName}
         </Box>
       </Typography>
@@ -74,9 +75,9 @@ const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
           fontWeight: 600,
           fontSize: '0.8rem',
           py: 0.25,
-          bgcolor: '#b45309',
+          bgcolor: intent.warningInk,
           color: '#fff',
-          '&:hover': { bgcolor: '#92400e' }
+          '&:hover': { bgcolor: intent.warningInk }
         }}
       >
         Volver a mi sesión

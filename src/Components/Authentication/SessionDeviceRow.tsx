@@ -3,6 +3,7 @@ import { Box, Checkbox, Chip, Typography } from '@mui/material'
 import ComputerOutlinedIcon from '@mui/icons-material/ComputerOutlined'
 import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined'
 import { formatSessionActivity } from 'src/hooks/useSessions'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface SessionDeviceRowProps {
   deviceLabel: string
@@ -36,9 +37,9 @@ const SessionDeviceRow: React.FC<SessionDeviceRowProps> = ({
         alignItems: 'center',
         gap: 1.5,
         p: 1.5,
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${neutral.border}`,
         borderRadius: '12px',
-        borderColor: select?.checked ? '#00BFA5' : '#e5e7eb'
+        borderColor: select?.checked ? brand.main : neutral.border
       }}
     >
       {select && (
@@ -46,7 +47,7 @@ const SessionDeviceRow: React.FC<SessionDeviceRowProps> = ({
           checked={select.checked}
           onChange={(event) => select.onChange(event.target.checked)}
           inputProps={{ 'aria-label': `Cerrar la sesión de ${deviceLabel}` }}
-          sx={{ p: 0.5, '&.Mui-checked': { color: '#00BFA5' } }}
+          sx={{ p: 0.5, '&.Mui-checked': { color: brand.main } }}
         />
       )}
       <Box
@@ -58,8 +59,8 @@ const SessionDeviceRow: React.FC<SessionDeviceRowProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: '50%',
-          bgcolor: '#E0F7F4',
-          color: '#00695c'
+          bgcolor: brand.soft,
+          color: brand.ink
         }}
       >
         <Icon fontSize='small' />
@@ -73,7 +74,9 @@ const SessionDeviceRow: React.FC<SessionDeviceRowProps> = ({
             flexWrap: 'wrap'
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>
+          <Typography
+            sx={{ fontWeight: 600, fontSize: 14, color: neutral.text }}
+          >
             {deviceLabel}
           </Typography>
           {current && (

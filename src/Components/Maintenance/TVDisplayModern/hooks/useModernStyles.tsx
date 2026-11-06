@@ -1,24 +1,25 @@
 import { useMemo } from 'react'
 import { ModernColors } from '../types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 export const useModernStyles = () => {
   const modernColors: ModernColors = useMemo(
     () => ({
-      primary: '#5ed65a', // Verde más oscuro como solicitaste
-      primaryLight: '#7bff7f',
-      primaryDark: '#4caf50',
-      background: '#ffffff',
+      primary: intent.success, // Verde más oscuro como solicitaste
+      primaryLight: intent.success,
+      primaryDark: intent.success,
+      background: neutral.surface,
       cardBackground: '#ffffff',
-      secondaryBackground: '#f8f9fa',
-      textPrimary: '#000000', // Negro puro para mejor contraste
-      textSecondary: '#333333', // Más oscuro para mejor legibilidad
-      textMuted: '#666666',
-      success: '#28a745',
-      warning: '#ffc107',
-      danger: '#dc3545',
-      info: '#17a2b8',
-      border: '#e9ecef',
-      borderLight: '#f1f3f4'
+      secondaryBackground: neutral.surfaceAlt,
+      textPrimary: neutral.text, // Negro puro para mejor contraste
+      textSecondary: neutral.textBody, // Más oscuro para mejor legibilidad
+      textMuted: neutral.textMuted,
+      success: intent.successInk,
+      warning: intent.warning,
+      danger: intent.danger,
+      info: brand.main,
+      border: neutral.border,
+      borderLight: neutral.surfaceHead
     }),
     []
   )
@@ -44,7 +45,7 @@ export const useModernStyles = () => {
         justifyContent: 'center'
       },
       urgent: {
-        backgroundColor: '#ffebee', // Fondo más visible para TV
+        backgroundColor: intent.dangerSoft, // Fondo más visible para TV
         border: `4px solid ${modernColors.danger}`, // Borde más grueso
         borderLeft: `8px solid ${modernColors.danger}`, // Borde izquierdo más prominente
         boxShadow: '0 6px 20px rgba(220, 53, 69, 0.2)',

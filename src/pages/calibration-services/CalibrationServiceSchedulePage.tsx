@@ -37,14 +37,15 @@ import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import ListItemCard from 'src/Components/Common/ListItemCard'
 import { CalibrationService } from '../../types/calibrationService'
 import { getOperationsSummary } from './calibrationServiceOtherFields'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 // Más servicios en el día, más color: la carga se ve sin abrir cada celda.
 const LOAD_STEPS = [
-  { min: 6, bg: '#80CBC4', label: '6 o más' },
-  { min: 3, bg: '#B2DFDB', label: '3 a 5' },
-  { min: 1, bg: '#E0F7F4', label: '1 o 2' }
+  { min: 6, bg: brand.main, label: '6 o más' },
+  { min: 3, bg: brand.soft, label: '3 a 5' },
+  { min: 1, bg: brand.soft, label: '1 o 2' }
 ]
 const loadColor = (count: number) =>
   LOAD_STEPS.find((step) => count >= step.min)?.bg ?? '#ffffff'
@@ -211,9 +212,9 @@ const CalibrationServiceSchedulePage = () => {
                   variant='outlined'
                   onClick={goToday}
                   sx={{
-                    color: '#00897B',
-                    borderColor: '#00BFA5',
-                    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                    color: brand.hover,
+                    borderColor: brand.main,
+                    '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
                   }}
                 >
                   Hoy
@@ -264,7 +265,7 @@ const CalibrationServiceSchedulePage = () => {
                     width: 14,
                     height: 4,
                     borderRadius: 2,
-                    bgcolor: '#3b82f6'
+                    bgcolor: intent.info
                   }}
                 />
                 <Typography variant='caption' color='text.secondary'>
@@ -293,7 +294,10 @@ const CalibrationServiceSchedulePage = () => {
                     sx={{
                       textAlign: 'center',
                       py: 0.5,
-                      color: index === 0 || index === 6 ? '#9ca3af' : '#4b5563'
+                      color:
+                        index === 0 || index === 6
+                          ? neutral.textFaint
+                          : neutral.textBody
                     }}
                   >
                     {day}
@@ -324,14 +328,14 @@ const CalibrationServiceSchedulePage = () => {
                         borderRadius: 1.5,
                         border: '2px solid',
                         borderColor: isSelected
-                          ? '#00897B'
+                          ? brand.hover
                           : isToday
-                            ? '#00BFA5'
+                            ? brand.main
                             : 'transparent',
                         bgcolor: loadColor(dayServices.length),
                         boxShadow:
                           dayServices.length === 0
-                            ? 'inset 0 0 0 1px #e5e7eb'
+                            ? `inset 0 0 0 1px ${neutral.border}`
                             : 'none',
                         p: { xs: 0.5, md: 1 },
                         cursor: 'pointer',
@@ -343,9 +347,9 @@ const CalibrationServiceSchedulePage = () => {
                         position: 'relative',
                         overflow: 'hidden',
                         transition: 'border-color 0.15s',
-                        '&:hover': { borderColor: '#00897B' },
+                        '&:hover': { borderColor: brand.hover },
                         '&:focus-visible': {
-                          outline: '3px solid #00897B',
+                          outline: `3px solid ${brand.hover}`,
                           outlineOffset: 2
                         }
                       }}
@@ -355,7 +359,7 @@ const CalibrationServiceSchedulePage = () => {
                         variant='body2'
                         sx={{
                           fontWeight: isToday ? 800 : 600,
-                          color: isToday ? '#00695C' : '#1f2937',
+                          color: isToday ? brand.ink : neutral.text,
                           lineHeight: 1
                         }}
                       >
@@ -375,7 +379,7 @@ const CalibrationServiceSchedulePage = () => {
                               fontSize: { xs: '1rem', md: '1.5rem' },
                               fontWeight: 700,
                               lineHeight: 1,
-                              color: '#00695C'
+                              color: brand.ink
                             }}
                           >
                             {dayServices.length}
@@ -384,7 +388,7 @@ const CalibrationServiceSchedulePage = () => {
                             component='span'
                             variant='caption'
                             sx={{
-                              color: '#00695C',
+                              color: brand.ink,
                               display: { xs: 'none', md: 'inline' }
                             }}
                           >
@@ -402,7 +406,7 @@ const CalibrationServiceSchedulePage = () => {
                             right: 0,
                             bottom: 0,
                             height: 4,
-                            bgcolor: '#3b82f6'
+                            bgcolor: intent.info
                           }}
                         />
                       )}

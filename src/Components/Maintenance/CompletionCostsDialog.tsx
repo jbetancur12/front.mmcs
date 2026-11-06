@@ -32,6 +32,7 @@ import {
 import MaintenanceFileUpload from './MaintenanceFileUpload'
 import SignaturePad from './SignaturePad'
 import type { MaintenanceFile } from '../../types/maintenance'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 export interface CompletionCost {
   name: string
@@ -84,9 +85,9 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const surfaceSx = {
-    backgroundColor: '#ffffff',
+    backgroundColor: neutral.surface,
     borderRadius: '14px',
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${neutral.border}`,
     boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
   }
 
@@ -357,19 +358,19 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       {/* Header */}
       <DialogTitle
         sx={{
-          backgroundColor: '#ffffff',
-          color: '#0f172a',
+          backgroundColor: neutral.surface,
+          color: neutral.text,
           display: 'flex',
           alignItems: 'center',
           gap: 2,
           py: 3,
-          borderBottom: '1px solid #e5e7eb'
+          borderBottom: `1px solid ${neutral.border}`
         }}
       >
         <Avatar
           sx={{
-            backgroundColor: '#e8f7ef',
-            color: '#00A651',
+            backgroundColor: intent.successSoft,
+            color: intent.successInk,
             width: 48,
             height: 48
           }}
@@ -380,12 +381,12 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           <Typography variant='h5' fontWeight={700}>
             Completar Ticket
           </Typography>
-          <Typography variant='body2' sx={{ color: '#64748b' }}>
+          <Typography variant='body2' sx={{ color: neutral.textMuted }}>
             Describa el trabajo realizado y registre los costos
           </Typography>
         </Box>
         {isMobile && !loading && (
-          <IconButton onClick={onClose} sx={{ color: '#475569' }}>
+          <IconButton onClick={onClose} sx={{ color: neutral.textBody }}>
             <Close />
           </IconButton>
         )}
@@ -411,15 +412,15 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             p: 3,
             mb: 3,
             borderRadius: '12px',
-            border: '1px solid #bfdbfe',
-            backgroundColor: '#f8fbff'
+            border: `1px solid ${intent.infoSoft}`,
+            backgroundColor: neutral.surfaceAlt
           }}
         >
           <Typography
             variant='subtitle1'
             fontWeight={600}
             gutterBottom
-            sx={{ color: '#0f172a' }}
+            sx={{ color: neutral.text }}
           >
             Trabajo Realizado *
           </Typography>
@@ -455,15 +456,15 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             p: 3,
             mb: 3,
             borderRadius: '12px',
-            border: '1px solid #dbeafe',
-            backgroundColor: '#f8fbff'
+            border: `1px solid ${intent.infoSoft}`,
+            backgroundColor: neutral.surfaceAlt
           }}
         >
           <Typography
             variant='subtitle1'
             fontWeight={600}
             gutterBottom
-            sx={{ color: '#0f172a' }}
+            sx={{ color: neutral.text }}
           >
             Tiempo invertido por el técnico *
           </Typography>
@@ -503,7 +504,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             variant='h6'
             fontWeight={600}
             gutterBottom
-            sx={{ mb: 2, color: '#3b82f6' }}
+            sx={{ mb: 2, color: intent.info }}
           >
             Evidencia fotográfica (opcional)
           </Typography>
@@ -517,15 +518,15 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               minHeight: 44,
               ...(showPhotoUpload
                 ? {
-                    backgroundColor: '#00A651',
-                    '&:hover': { backgroundColor: '#27672a' }
+                    backgroundColor: intent.successInk,
+                    '&:hover': { backgroundColor: intent.successInk }
                   }
                 : {
-                    borderColor: '#d1d5db',
-                    color: '#334155',
+                    borderColor: neutral.borderStrong,
+                    color: neutral.textBody,
                     '&:hover': {
-                      borderColor: '#94a3b8',
-                      backgroundColor: '#f8fafc'
+                      borderColor: neutral.textFaint,
+                      backgroundColor: neutral.surfaceAlt
                     }
                   })
             }}
@@ -542,8 +543,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 mt: 2,
                 p: 2,
                 borderRadius: '12px',
-                border: '1px dashed #cbd5e1',
-                backgroundColor: '#f8fafc'
+                border: `1px dashed ${neutral.borderStrong}`,
+                backgroundColor: neutral.surfaceAlt
               }}
             >
               <Typography variant='subtitle1' fontWeight={600} gutterBottom>
@@ -616,16 +617,16 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               p: 3,
               mb: 3,
               borderRadius: '12px',
-              border: '1px solid #dbeafe',
-              backgroundColor: '#f8fbff'
+              border: `1px solid ${intent.infoSoft}`,
+              backgroundColor: neutral.surfaceAlt
             }}
           >
             <Box display='flex' alignItems='center' gap={1} mb={1.5}>
-              <Draw sx={{ color: '#2563eb' }} />
+              <Draw sx={{ color: intent.action }} />
               <Typography
                 variant='h6'
                 fontWeight={600}
-                sx={{ color: '#0f172a' }}
+                sx={{ color: neutral.text }}
               >
                 Firma del técnico
               </Typography>
@@ -639,9 +640,9 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               <Box>
                 <Box
                   sx={{
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${neutral.borderStrong}`,
                     borderRadius: 2,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: neutral.surface,
                     minHeight: 180,
                     display: 'flex',
                     alignItems: 'center',
@@ -697,7 +698,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           variant='h6'
           fontWeight={600}
           gutterBottom
-          sx={{ mb: 2, color: '#10b981' }}
+          sx={{ mb: 2, color: brand.main }}
         >
           Costos del Servicio (Opcional)
         </Typography>
@@ -711,8 +712,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               p: 3,
               mb: 2,
               borderRadius: '12px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: '#fafafa',
+              border: `1px solid ${neutral.border}`,
+              backgroundColor: neutral.surfaceAlt,
               position: 'relative'
             }}
           >
@@ -724,7 +725,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 position: 'absolute',
                 top: 8,
                 right: 8,
-                color: '#dc2626',
+                color: intent.danger,
                 '&:disabled': { opacity: 0.3 }
               }}
             >
@@ -781,7 +782,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                   helperText={errors[index]?.amount}
                   InputProps={{
                     startAdornment: (
-                      <AttachMoney sx={{ color: '#10b981', mr: 0.5 }} />
+                      <AttachMoney sx={{ color: brand.main, mr: 0.5 }} />
                     )
                   }}
                   inputProps={{ min: 0, step: 0.01 }}
@@ -800,14 +801,14 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           disabled={loading}
           sx={{
             borderRadius: '12px',
-            borderColor: '#10b981',
-            color: '#10b981',
+            borderColor: brand.main,
+            color: brand.main,
             borderStyle: 'dashed',
             borderWidth: 2,
             py: 1.5,
             '&:hover': {
-              borderColor: '#00A651',
-              backgroundColor: '#f8fafc',
+              borderColor: intent.successInk,
+              backgroundColor: neutral.surfaceAlt,
               borderStyle: 'solid'
             }
           }}
@@ -821,7 +822,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             ...surfaceSx,
             p: 2,
             mt: 3,
-            borderColor: '#bbf7d0'
+            borderColor: intent.successSoft
           }}
         >
           <Box
@@ -832,7 +833,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             <Typography variant='h6' fontWeight={600}>
               Total de Costos
             </Typography>
-            <Typography variant='h4' fontWeight={700} color='#166534'>
+            <Typography variant='h4' fontWeight={700} color={intent.successInk}>
               {formatCurrency(calculateTotal())}
             </Typography>
           </Box>
@@ -841,7 +842,13 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
       {/* Actions */}
       <DialogActions
-        sx={{ px: 3, py: 2, background: '#fafafa', gap: 1, flexWrap: 'wrap' }}
+        sx={{
+          px: 3,
+          py: 2,
+          background: neutral.surfaceAlt,
+          gap: 1,
+          flexWrap: 'wrap'
+        }}
       >
         <Button
           onClick={onClose}
@@ -860,17 +867,17 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           variant='outlined'
           sx={{
             borderRadius: '12px',
-            borderColor: '#d1d5db',
-            color: '#334155',
+            borderColor: neutral.borderStrong,
+            color: neutral.textBody,
             minHeight: 48,
             fontWeight: 600,
             '&:hover': {
-              borderColor: '#94a3b8',
-              backgroundColor: '#f8fafc'
+              borderColor: neutral.textFaint,
+              backgroundColor: neutral.surfaceAlt
             },
             '&:disabled': {
-              borderColor: '#e5e7eb',
-              color: '#9ca3af'
+              borderColor: neutral.border,
+              color: neutral.textFaint
             }
           }}
         >
@@ -884,15 +891,15 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
           sx={{
             borderRadius: '12px',
-            backgroundColor: '#00A651',
+            backgroundColor: intent.successInk,
             minHeight: 48,
             fontWeight: 600,
             '&:hover': {
-              backgroundColor: '#27672a'
+              backgroundColor: intent.successInk
             },
             '&:disabled': {
-              background: '#e5e7eb',
-              color: '#9ca3af'
+              background: neutral.border,
+              color: neutral.textFaint
             }
           }}
         >

@@ -57,6 +57,7 @@ import {
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 interface Certificate extends ApiCertificate {
   certificateNumber: string
   courseTitle: string
@@ -314,39 +315,39 @@ const LmsCertificateView: React.FC = () => {
 
   const generateCertificateHtml = (cert: Certificate) => {
     return `
-      <div style="width: 800px; min-height: 600px; box-sizing: border-box; border: 8px solid #0f766e; padding: 48px; font-family: Georgia, 'Times New Roman', serif; text-align: center; background: linear-gradient(135deg, #fdfcf7 0%, #f1f5f9 100%); margin: 0 auto; position: relative; overflow: hidden;">
+      <div style="width: 800px; min-height: 600px; box-sizing: border-box; border: 8px solid ${brand.ink}; padding: 48px; font-family: Georgia, 'Times New Roman', serif; text-align: center; background: linear-gradient(135deg, ${neutral.surfaceAlt} 0%, ${neutral.surfaceHead} 100%); margin: 0 auto; position: relative; overflow: hidden;">
         <div style="position: absolute; inset: 16px; border: 1px solid rgba(15,118,110,0.18);"></div>
         <div style="position: relative; z-index: 1;">
-          <p style="letter-spacing: 0.4em; text-transform: uppercase; color: #0f766e; font-size: 12px; margin: 0 0 16px;">${getOrganizationName(cert)}</p>
-          <h1 style="color: #0f172a; margin: 0 0 10px; font-size: 38px; font-weight: 700;">Certificado de Finalización</h1>
-          <p style="font-size: 17px; color: #475569; margin-bottom: 40px;">Reconocimiento oficial por completar satisfactoriamente esta experiencia de aprendizaje.</p>
-          <p style="font-size: 18px; margin-bottom: 8px; color: #334155;">Se certifica que</p>
-          <h2 style="color: #111827; font-size: 30px; margin: 18px auto; padding-bottom: 14px; border-bottom: 2px solid rgba(15,118,110,0.35); width: fit-content; max-width: 100%;">${cert.certificateData?.userName || 'Usuario'}</h2>
-          <p style="font-size: 18px; margin: 0; color: #334155;">ha completado el curso</p>
-          <h3 style="color: #0f766e; font-size: 26px; margin: 20px 0 12px;">${cert.certificateData?.courseTitle || cert.courseTitle}</h3>
-          <p style="font-size: 15px; color: #64748b; margin-bottom: 28px;">${cert.courseDescription || 'Curso certificado dentro del entorno de aprendizaje MMCS.'}</p>
-          <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin: 36px 0; color: #334155;">
+          <p style="letter-spacing: 0.4em; text-transform: uppercase; color: ${brand.ink}; font-size: 12px; margin: 0 0 16px;">${getOrganizationName(cert)}</p>
+          <h1 style="color: ${neutral.text}; margin: 0 0 10px; font-size: 38px; font-weight: 700;">Certificado de Finalización</h1>
+          <p style="font-size: 17px; color: ${neutral.textBody}; margin-bottom: 40px;">Reconocimiento oficial por completar satisfactoriamente esta experiencia de aprendizaje.</p>
+          <p style="font-size: 18px; margin-bottom: 8px; color: ${neutral.textBody};">Se certifica que</p>
+          <h2 style="color: ${neutral.text}; font-size: 30px; margin: 18px auto; padding-bottom: 14px; border-bottom: 2px solid rgba(15,118,110,0.35); width: fit-content; max-width: 100%;">${cert.certificateData?.userName || 'Usuario'}</h2>
+          <p style="font-size: 18px; margin: 0; color: ${neutral.textBody};">ha completado el curso</p>
+          <h3 style="color: ${brand.ink}; font-size: 26px; margin: 20px 0 12px;">${cert.certificateData?.courseTitle || cert.courseTitle}</h3>
+          <p style="font-size: 15px; color: ${neutral.textMuted}; margin-bottom: 28px;">${cert.courseDescription || 'Curso certificado dentro del entorno de aprendizaje MMCS.'}</p>
+          <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin: 36px 0; color: ${neutral.textBody};">
             <div>
-              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: #64748b;">Finalización</p>
+              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: ${neutral.textMuted};">Finalización</p>
               <p style="font-size: 16px; margin: 0;">${cert.certificateData?.completionDate || new Date(cert.issuedAt).toLocaleDateString()}</p>
             </div>
             <div>
-              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: #64748b;">Duración</p>
+              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: ${neutral.textMuted};">Duración</p>
               <p style="font-size: 16px; margin: 0;">${getCourseDurationLabel(cert)}</p>
             </div>
             <div>
-              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: #64748b;">Certificado</p>
+              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: ${neutral.textMuted};">Certificado</p>
               <p style="font-size: 16px; margin: 0;">${cert.certificateData?.certificateNumber || cert.certificateNumber}</p>
             </div>
           </div>
           <div style="display: flex; justify-content: space-between; gap: 32px; margin-top: 56px; align-items: flex-end;">
             <div style="flex: 1; text-align: left;">
-              <p style="margin: 0 0 8px; color: #0f766e; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;">Verificación pública</p>
-              <p style="margin: 0; color: #475569; font-size: 13px; word-break: break-word;">${cert.verification_url || 'Disponible desde el panel LMS'}</p>
+              <p style="margin: 0 0 8px; color: ${brand.ink}; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;">Verificación pública</p>
+              <p style="margin: 0; color: ${neutral.textBody}; font-size: 13px; word-break: break-word;">${cert.verification_url || 'Disponible desde el panel LMS'}</p>
             </div>
-            <div style="width: 220px; border-top: 1px solid #334155; padding-top: 10px;">
-              <p style="font-size: 14px; margin: 0; color: #0f172a;">Firma autorizada</p>
-              <p style="font-size: 12px; margin: 4px 0 0; color: #64748b;">${getOrganizationName(cert)}</p>
+            <div style="width: 220px; border-top: 1px solid ${neutral.textBody}; padding-top: 10px;">
+              <p style="font-size: 14px; margin: 0; color: ${neutral.text};">Firma autorizada</p>
+              <p style="font-size: 12px; margin: 4px 0 0; color: ${neutral.textMuted};">${getOrganizationName(cert)}</p>
             </div>
           </div>
         </div>

@@ -56,6 +56,7 @@ import type {
 import { sanitizeHtml } from '../../../utils/htmlSanitizer'
 import certificateTemplateBackground from 'src/assets/template.png'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -192,8 +193,8 @@ const DEFAULT_TEMPLATE_HTML = `
   <svg class="corner corner-bl" viewBox="0 0 88 88" fill="none"><path d="M8 8 L42 8" stroke="#c9a84c" stroke-width="1.5"/><path d="M8 8 L8 42" stroke="#c9a84c" stroke-width="1.5"/><circle cx="8" cy="8" r="2.5" fill="#c9a84c"/><path d="M15 8 L15 15 L8 15" stroke="#c9a84c" stroke-width=".7" opacity=".45"/><path d="M38 8 Q38 22 22 38 Q14 42 8 42" stroke="#c9a84c" stroke-width=".7" fill="none" opacity=".3"/></svg>
   <svg class="corner corner-br" viewBox="0 0 88 88" fill="none"><path d="M8 8 L42 8" stroke="#c9a84c" stroke-width="1.5"/><path d="M8 8 L8 42" stroke="#c9a84c" stroke-width="1.5"/><circle cx="8" cy="8" r="2.5" fill="#c9a84c"/><path d="M15 8 L15 15 L8 15" stroke="#c9a84c" stroke-width=".7" opacity=".45"/><path d="M38 8 Q38 22 22 38 Q14 42 8 42" stroke="#c9a84c" stroke-width=".7" fill="none" opacity=".3"/></svg>
 
-  <div class="wave-l"><svg viewBox="0 0 55 400" fill="none"><path d="M28 0 Q52 50 28 100 Q4 150 28 200 Q52 250 28 300 Q4 350 28 400" stroke="#2d9e45" stroke-width="1.5" fill="none"/><path d="M38 0 Q62 50 38 100 Q14 150 38 200 Q62 250 38 300 Q14 350 38 400" stroke="#2d9e45" stroke-width="1" fill="none" opacity=".5"/></svg></div>
-  <div class="wave-r"><svg viewBox="0 0 55 400" fill="none"><path d="M28 0 Q52 50 28 100 Q4 150 28 200 Q52 250 28 300 Q4 350 28 400" stroke="#2d9e45" stroke-width="1.5" fill="none"/><path d="M38 0 Q62 50 38 100 Q14 150 38 200 Q62 250 38 300 Q14 350 38 400" stroke="#2d9e45" stroke-width="1" fill="none" opacity=".5"/></svg></div>
+  <div class="wave-l"><svg viewBox="0 0 55 400" fill="none"><path d="M28 0 Q52 50 28 100 Q4 150 28 200 Q52 250 28 300 Q4 350 28 400" stroke="${intent.successInk}" stroke-width="1.5" fill="none"/><path d="M38 0 Q62 50 38 100 Q14 150 38 200 Q62 250 38 300 Q14 350 38 400" stroke="${intent.successInk}" stroke-width="1" fill="none" opacity=".5"/></svg></div>
+  <div class="wave-r"><svg viewBox="0 0 55 400" fill="none"><path d="M28 0 Q52 50 28 100 Q4 150 28 200 Q52 250 28 300 Q4 350 28 400" stroke="${intent.successInk}" stroke-width="1.5" fill="none"/><path d="M38 0 Q62 50 38 100 Q14 150 38 200 Q62 250 38 300 Q14 350 38 400" stroke="${intent.successInk}" stroke-width="1" fill="none" opacity=".5"/></svg></div>
 
   <div class="web-strip">
     <div class="dot"></div>
@@ -271,7 +272,7 @@ const DEFAULT_TEMPLATE_HTML = `
         <svg class="seal-ring" viewBox="0 0 74 74" fill="none">
           <defs>
             <linearGradient id="sg" x1="0" y1="0" x2="74" y2="74" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#3ab554"/><stop offset="100%" stop-color="#0d4a1c"/>
+              <stop offset="0%" stop-color="${intent.success}"/><stop offset="100%" stop-color="${intent.successInk}"/>
             </linearGradient>
           </defs>
           <circle cx="37" cy="37" r="35" fill="none" stroke="#c9a84c" stroke-width="1" stroke-dasharray="4 2.8" opacity=".65"/>
@@ -304,10 +305,10 @@ const DEFAULT_TEMPLATE_CSS = `
 :root {
   --gold-light: #e8c96a;
   --gold-mid: #c9a84c;
-  --green-deep: #0d4a1c;
-  --green-rich: #1a6b2a;
-  --green-mid: #2d9e45;
-  --cream: #fdfaf4;
+  --green-deep: ${intent.successInk};
+  --green-rich: ${intent.successInk};
+  --green-mid: ${intent.successInk};
+  --cream: ${neutral.surfaceHead};
 }
 
 @page {
@@ -813,7 +814,7 @@ const buildSamplePreviewHtml = (
     html, body {
       margin: 0;
       padding: 0;
-      background: #eef6f1;
+      background: ${neutral.surfaceHead};
       font-family: Arial, sans-serif;
     }
 
@@ -824,8 +825,8 @@ const buildSamplePreviewHtml = (
       background:
         radial-gradient(circle at top right, rgba(49, 177, 99, 0.14), transparent 30%),
         radial-gradient(circle at bottom left, rgba(24, 49, 83, 0.10), transparent 32%),
-        linear-gradient(180deg, #fbfffc 0%, #eef7f2 100%);
-      border: 4px solid #1f3958;
+        linear-gradient(180deg, ${neutral.surfaceAlt} 0%, ${neutral.surfaceHead} 100%);
+      border: 4px solid ${neutral.textBody};
       border-radius: 18px;
       box-sizing: border-box;
       overflow: hidden;
@@ -848,7 +849,7 @@ const buildSamplePreviewHtml = (
       background:
         radial-gradient(circle at center, rgba(255,255,255,0.98) 0%, rgba(253,250,244,0.98) 55%, rgba(244,250,246,0.98) 100%);
       font-family: 'Lato', Arial, sans-serif;
-      color: #1a1a18;
+      color: ${neutral.text};
     }
 
     .certificate-official-side {
@@ -857,7 +858,7 @@ const buildSamplePreviewHtml = (
       bottom: 0;
       width: 7px;
       z-index: 2;
-      background: linear-gradient(180deg, #0d4a1c 0%, #2d9e45 35%, #c9a84c 50%, #2d9e45 65%, #0d4a1c 100%);
+      background: linear-gradient(180deg, ${intent.successInk} 0%, ${intent.successInk} 35%, #c9a84c 50%, ${intent.successInk} 65%, ${intent.successInk} 100%);
     }
 
     .certificate-official-side--left { left: 0; }
@@ -870,7 +871,7 @@ const buildSamplePreviewHtml = (
       right: 0;
       height: 118px;
       z-index: 0;
-      background: linear-gradient(180deg, #0d4a1c 0%, #1a6b2a 75%, transparent 100%);
+      background: linear-gradient(180deg, ${intent.successInk} 0%, ${intent.successInk} 75%, transparent 100%);
       clip-path: polygon(0 0, 100% 0, 100% 78%, 53% 100%, 47% 100%, 0 78%);
     }
 
@@ -1007,7 +1008,7 @@ const buildSamplePreviewHtml = (
       letter-spacing: 0.06em;
       line-height: 0.95;
       text-transform: uppercase;
-      color: #0d5a3d;
+      color: ${intent.successInk};
       text-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
     }
 
@@ -1022,7 +1023,7 @@ const buildSamplePreviewHtml = (
     .certificate-official-subtitle-line {
       flex: 1;
       height: 2px;
-      background: linear-gradient(90deg, transparent, #17664a, transparent);
+      background: linear-gradient(90deg, transparent, ${intent.successInk}, transparent);
     }
 
     .certificate-official-subtitle-text {
@@ -1031,7 +1032,7 @@ const buildSamplePreviewHtml = (
       font-weight: 700;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: #1f2b24;
+      color: ${intent.successInk};
       white-space: nowrap;
     }
 
@@ -1053,7 +1054,7 @@ const buildSamplePreviewHtml = (
     .certificate-official-field {
       width: 72%;
       text-align: center;
-      border: 3px solid #0d5a3d;
+      border: 3px solid ${intent.successInk};
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.95);
       box-shadow: 0 4px 12px rgba(7, 59, 40, 0.18);
@@ -1091,7 +1092,7 @@ const buildSamplePreviewHtml = (
       font-weight: 700;
       line-height: 1.02;
       font-style: italic;
-      color: #0d4a3b;
+      color: ${brand.ink};
     }
 
     .certificate-official-inline--recipient.is-compact { font-size: 36px; }
@@ -1104,7 +1105,7 @@ const buildSamplePreviewHtml = (
       line-height: 1.1;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #0d4a3b;
+      color: ${brand.ink};
     }
 
     .certificate-official-inline--course.is-compact { font-size: 21px; }
@@ -1116,7 +1117,7 @@ const buildSamplePreviewHtml = (
       max-width: 74%;
       text-align: center;
       font-size: 16px;
-      color: #272727;
+      color: ${neutral.text};
       line-height: 1.55;
     }
 
@@ -1131,12 +1132,12 @@ const buildSamplePreviewHtml = (
     .certificate-official-divider-line {
       flex: 1;
       height: 2px;
-      background: linear-gradient(90deg, transparent, #0d4a3b, transparent);
+      background: linear-gradient(90deg, transparent, ${brand.ink}, transparent);
     }
 
     .certificate-official-divider-orn {
       font-size: 26px;
-      color: #0d4a3b;
+      color: ${brand.ink};
       line-height: 1;
     }
 
@@ -1157,7 +1158,7 @@ const buildSamplePreviewHtml = (
       text-align: center;
       font-size: 14px;
       font-weight: 700;
-      color: #1a1a18;
+      color: ${neutral.text};
       line-height: 1.2;
       padding: 0 10px;
       position: relative;
@@ -1183,7 +1184,7 @@ const buildSamplePreviewHtml = (
       font-size: 13px;
       line-height: 1.2;
       font-weight: 700;
-      color: #1a1a18;
+      color: ${neutral.text};
     }
 
     .certificate-official-footer {
@@ -1238,13 +1239,13 @@ const buildSamplePreviewHtml = (
 
     .certificate-official-signature-name {
       font-size: 18px;
-      color: #202020;
+      color: ${neutral.text};
     }
 
     .certificate-official-signature-role {
       font-size: 14px;
       font-weight: 800;
-      color: #0d5a3d;
+      color: ${intent.successInk};
     }
 
     .certificate-official-company-pill {
@@ -1263,7 +1264,7 @@ const buildSamplePreviewHtml = (
     .certificate-official-company-pill strong {
       font-family: 'Cinzel', Georgia, serif;
       font-size: 18px;
-      color: #102b22;
+      color: ${intent.successInk};
       letter-spacing: 0.04em;
     }
 
@@ -1273,7 +1274,7 @@ const buildSamplePreviewHtml = (
       color: #fff;
       padding: 4px 18px;
       border-radius: 999px;
-      background: linear-gradient(180deg, #15915d, #0d6b49);
+      background: linear-gradient(180deg, ${intent.successInk}, ${intent.successInk});
     }
 
     .certificate-official-verification {
@@ -1293,7 +1294,7 @@ const buildSamplePreviewHtml = (
       font-weight: 800;
       letter-spacing: 0.26em;
       text-transform: uppercase;
-      color: #b8a87a;
+      color: ${intent.warning};
     }
 
     .certificate-official-verification-value {
@@ -1301,7 +1302,7 @@ const buildSamplePreviewHtml = (
       font-size: 14px;
       font-weight: 700;
       letter-spacing: 0.14em;
-      color: #0d5a3d;
+      color: ${intent.successInk};
       background: linear-gradient(135deg, rgba(253,250,244,0.97) 0%, rgba(245,239,220,0.97) 100%);
       border: 1px solid rgba(201, 168, 76, 0.55);
       border-radius: 6px;
@@ -1316,7 +1317,7 @@ const buildSamplePreviewHtml = (
       bottom: 0;
       height: 22px;
       z-index: 4;
-      background: linear-gradient(90deg, #0d4a1c, #1a6b2a, #0d4a1c);
+      background: linear-gradient(90deg, ${intent.successInk}, ${intent.successInk}, ${intent.successInk});
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1340,7 +1341,7 @@ const buildSamplePreviewHtml = (
     .certificate-template-official.certificate {
       width: 100%;
       min-height: 720px;
-      background: var(--cream, #fdfaf4);
+      background: var(--cream, ${neutral.surfaceHead});
       position: relative;
       overflow: hidden;
       box-shadow: 0 0 0 1px rgba(201,168,76,.4), 0 12px 48px rgba(0,0,0,.25);
@@ -1354,12 +1355,12 @@ const buildSamplePreviewHtml = (
       bottom: 0;
       width: 7px;
       z-index: 3;
-      background: linear-gradient(180deg, #0d4a1c 0%, #2d9e45 35%, #c9a84c 50%, #2d9e45 65%, #0d4a1c 100%);
+      background: linear-gradient(180deg, ${intent.successInk} 0%, ${intent.successInk} 35%, #c9a84c 50%, ${intent.successInk} 65%, ${intent.successInk} 100%);
     }
 
     .certificate-template-official .side-left { left: 0; }
     .certificate-template-official .side-right { right: 0; }
-    .certificate-template-official .top-band { position: absolute; top: 0; left: 0; right: 0; height: 118px; z-index: 1; background: linear-gradient(180deg, #0d4a1c 0%, #1a6b2a 75%, transparent 100%); clip-path: polygon(0 0, 100% 0, 100% 78%, 53% 100%, 47% 100%, 0 78%); }
+    .certificate-template-official .top-band { position: absolute; top: 0; left: 0; right: 0; height: 118px; z-index: 1; background: linear-gradient(180deg, ${intent.successInk} 0%, ${intent.successInk} 75%, transparent 100%); clip-path: polygon(0 0, 100% 0, 100% 78%, 53% 100%, 47% 100%, 0 78%); }
     .certificate-template-official .top-band::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #e8c96a 30%, #c9a84c 50%, #e8c96a 70%, transparent); }
     .certificate-template-official .inner-border { position: absolute; inset: 18px; border: 1px solid rgba(201,168,76,.45); z-index: 2; pointer-events: none; }
     .certificate-template-official .inner-border-2 { position: absolute; inset: 23px; border: .5px solid rgba(201,168,76,.2); z-index: 2; pointer-events: none; }
@@ -1371,7 +1372,7 @@ const buildSamplePreviewHtml = (
     .certificate-template-official .wave-l, .certificate-template-official .wave-r { position: absolute; top: 115px; bottom: 80px; width: 55px; z-index: 2; opacity: .14; pointer-events: none; }
     .certificate-template-official .wave-l { left: 26px; }
     .certificate-template-official .wave-r { right: 26px; transform: scaleX(-1); }
-    .certificate-template-official .web-strip { position: absolute; bottom: 0; left: 7px; right: 7px; height: 20px; z-index: 10; background: linear-gradient(90deg, #0d4a1c, #1a6b2a, #0d4a1c); display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .certificate-template-official .web-strip { position: absolute; bottom: 0; left: 7px; right: 7px; height: 20px; z-index: 10; background: linear-gradient(90deg, ${intent.successInk}, ${intent.successInk}, ${intent.successInk}); display: flex; align-items: center; justify-content: center; gap: 8px; }
     .certificate-template-official .ws-text { font-family: 'Lato', sans-serif; font-size: 8.5px; font-weight: 700; letter-spacing: 2.5px; color: rgba(255,255,255,.65); text-transform: uppercase; }
     .certificate-template-official .dot { width: 3px; height: 3px; border-radius: 50%; background: #c9a84c; opacity: .7; }
     .certificate-template-official .verification { position: absolute; bottom: 13px; right: 44px; z-index: 10; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
@@ -1389,21 +1390,21 @@ const buildSamplePreviewHtml = (
     .certificate-template-official .logo-image { width: 280px; max-width: 100%; object-fit: contain; display: block; }
     .certificate-template-official .logo-tagline { font-family: 'Lato', sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 5px; color: rgba(255,255,255,.6); text-transform: uppercase; }
     .certificate-template-official .orn-divider { margin-top: 8px; width: 260px; height: 12px; opacity: .65; }
-    .certificate-template-official .heading-certificado { font-family: 'Cinzel', serif; font-size: 58px; font-weight: 900; letter-spacing: 9px; text-transform: uppercase; line-height: 1; margin-top: 26px; background: linear-gradient(90deg, #1a6b2a 0%, #e8c96a 35%, #c9a84c 50%, #e8c96a 65%, #1a6b2a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .certificate-template-official .heading-certificado { font-family: 'Cinzel', serif; font-size: 58px; font-weight: 900; letter-spacing: 9px; text-transform: uppercase; line-height: 1; margin-top: 26px; background: linear-gradient(90deg, ${intent.successInk} 0%, #e8c96a 35%, #c9a84c 50%, #e8c96a 65%, ${intent.successInk} 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .certificate-template-official .subheading-row { display: flex; align-items: center; gap: 12px; margin-top: 3px; width: 580px; }
     .certificate-template-official .orn-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #c9a84c); }
     .certificate-template-official .orn-line.r { background: linear-gradient(90deg, #c9a84c, transparent); }
-    .certificate-template-official .subheading-text { font-family: 'Cinzel', serif; font-size: 10.5px; font-weight: 600; letter-spacing: 5.5px; color: #1a6b2a; text-transform: uppercase; white-space: nowrap; }
+    .certificate-template-official .subheading-text { font-family: 'Cinzel', serif; font-size: 10.5px; font-weight: 600; letter-spacing: 5.5px; color: ${intent.successInk}; text-transform: uppercase; white-space: nowrap; }
     .certificate-template-official .certifica-label { font-family: 'Cormorant Garamond', serif; font-size: 13.5px; font-style: italic; color: #777; letter-spacing: .5px; margin-top: 10px; }
-    .certificate-template-official .field-name, .certificate-template-official .field-course { width: 620px; border: 1.5px solid #2d9e45; border-radius: 4px; background: rgba(45,158,69,.05); text-align: center; box-sizing: border-box; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(7,59,40,.14); }
+    .certificate-template-official .field-name, .certificate-template-official .field-course { width: 620px; border: 1.5px solid ${intent.successInk}; border-radius: 4px; background: rgba(45,158,69,.05); text-align: center; box-sizing: border-box; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(7,59,40,.14); }
     .certificate-template-official .field-name { margin-top: 6px; min-height: 58px; padding: 5px 28px; position: relative; }
     .certificate-template-official .field-course { margin-top: 7px; min-height: 58px; padding: 5px 22px; }
     .certificate-template-official .field-name::before, .certificate-template-official .field-name::after { content: '◆'; position: absolute; top: 50%; transform: translateY(-50%); font-size: 7px; color: #c9a84c; opacity: .6; }
     .certificate-template-official .field-name::before { left: 10px; }
     .certificate-template-official .field-name::after { right: 10px; }
     .certificate-template-official .official-fit { display: block; width: 100%; text-align: center; word-break: break-word; hyphens: auto; }
-    .certificate-template-official .name-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; font-style: italic; color: #0d4a1c; letter-spacing: .5px; line-height: 1.02; }
-    .certificate-template-official .course-value { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: #0d4a1c; letter-spacing: 3px; text-transform: uppercase; line-height: 1.12; }
+    .certificate-template-official .name-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; font-style: italic; color: ${intent.successInk}; letter-spacing: .5px; line-height: 1.02; }
+    .certificate-template-official .course-value { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: ${intent.successInk}; letter-spacing: 3px; text-transform: uppercase; line-height: 1.12; }
     .certificate-template-official .official-fit--recipient.is-compact { font-size: 19px; }
     .certificate-template-official .official-fit--recipient.is-xcompact { font-size: 17px; }
     .certificate-template-official .official-fit--course.is-compact { font-size: 12px; }
@@ -1419,17 +1420,17 @@ const buildSamplePreviewHtml = (
     .certificate-template-official .mag-item { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0 18px; position: relative; }
     .certificate-template-official .mag-item:not(:last-child)::after { content: ''; position: absolute; right: 0; top: 8px; height: 36px; width: 1px; background: linear-gradient(180deg, transparent, rgba(201,168,76,.35), transparent); }
     .certificate-template-official .mag-hex { width: 50px; height: 50px; }
-    .certificate-template-official .mag-label { font-family: 'Lato', sans-serif; font-size: 9.5px; font-weight: 700; color: #1a6b2a; text-align: center; line-height: 1.35; text-transform: uppercase; letter-spacing: .2px; }
+    .certificate-template-official .mag-label { font-family: 'Lato', sans-serif; font-size: 9.5px; font-weight: 700; color: ${intent.successInk}; text-align: center; line-height: 1.35; text-transform: uppercase; letter-spacing: .2px; }
     .certificate-template-official .footer { margin-top: 56px; padding-top: 0; padding-bottom: 6px; display: flex; align-items: flex-end; justify-content: space-between; width: 100%; }
     .certificate-template-official .footer-block { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 180px; }
     .certificate-template-official .signature-stage { min-height: 52px; display: flex; align-items: flex-end; justify-content: center; width: 100%; }
     .certificate-template-official .signature-image { max-width: 150px; max-height: 46px; object-fit: contain; object-position: center bottom; background: transparent; }
     .certificate-template-official .footer-person { font-family: 'Lato', sans-serif; font-size: 11px; color: #555; }
     .certificate-template-official .footer-sig-line { width: 130px; height: 1px; background: linear-gradient(90deg, transparent, #c9a84c, transparent); }
-    .certificate-template-official .footer-role-title { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #1a6b2a; letter-spacing: 1.5px; }
+    .certificate-template-official .footer-role-title { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: ${intent.successInk}; letter-spacing: 1.5px; }
     .certificate-template-official .seal { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .certificate-template-official .seal-ring { width: 74px; height: 74px; }
-    .certificate-template-official .seal-name { font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 700; color: #1a6b2a; letter-spacing: 1.5px; }
+    .certificate-template-official .seal-name { font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 700; color: ${intent.successInk}; letter-spacing: 1.5px; }
     .certificate-template-official .seal-nit { font-family: 'Lato', sans-serif; font-size: 8.5px; color: #888; letter-spacing: 1px; }
 ${renderedCss}
   </style>

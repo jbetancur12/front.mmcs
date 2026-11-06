@@ -11,6 +11,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { TemplatesData, TemplateData } from './types'
 import EditTemplateModal from './EditTemplateModal'
+import { brand, intent } from 'src/theme/designTokens'
 
 interface TemplatesTableProps {
   templates: TemplatesData[]
@@ -119,7 +120,7 @@ const TemplatesTable: React.FC<TemplatesTableProps> = ({
               <IconButton
                 size='small'
                 aria-label={`Duplicar plantilla ${row.original.name}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => onDuplicate(row.original)}
               >
                 <ContentCopyOutlined fontSize='small' />
@@ -129,7 +130,7 @@ const TemplatesTable: React.FC<TemplatesTableProps> = ({
               <IconButton
                 size='small'
                 aria-label={`Editar plantilla ${row.original.name}`}
-                sx={{ color: '#2563eb' }}
+                sx={{ color: intent.action }}
                 onClick={() => setTemplateToEdit(row.original)}
               >
                 <EditOutlined fontSize='small' />

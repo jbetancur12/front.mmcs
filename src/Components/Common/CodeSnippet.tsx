@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Box, IconButton, Tooltip } from '@mui/material'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import CheckIcon from '@mui/icons-material/Check'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CodeSnippetProps {
   /** Texto exacto que se muestra y se copia. */
@@ -43,8 +44,8 @@ const CodeSnippet: React.FC<CodeSnippetProps> = ({
         pr: 0.5,
         py: size === 'small' ? 0 : 0.25,
         borderRadius: '8px',
-        bgcolor: '#f3f4f6',
-        border: '1px solid #e5e7eb'
+        bgcolor: neutral.surfaceHead,
+        border: `1px solid ${neutral.border}`
       }}
     >
       <Box
@@ -53,7 +54,7 @@ const CodeSnippet: React.FC<CodeSnippetProps> = ({
           fontFamily:
             'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
           fontSize: size === 'small' ? '0.8125rem' : '0.875rem',
-          color: '#1f2937',
+          color: neutral.text,
           overflowWrap: 'anywhere'
         }}
       >
@@ -64,7 +65,7 @@ const CodeSnippet: React.FC<CodeSnippetProps> = ({
           size='small'
           onClick={handleCopy}
           aria-label={`Copiar ${label}`}
-          sx={{ color: copied ? '#00897B' : '#6b7280' }}
+          sx={{ color: copied ? brand.hover : neutral.textMuted }}
         >
           {copied ? (
             <CheckIcon sx={{ fontSize: 16 }} />

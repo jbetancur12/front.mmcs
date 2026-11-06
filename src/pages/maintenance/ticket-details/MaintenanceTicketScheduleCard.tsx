@@ -6,6 +6,7 @@ import {
 } from '../../../types/maintenance'
 import { formatDate } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { intent } from 'src/theme/designTokens'
 
 interface MaintenanceTicketScheduleCardProps {
   ticket: MaintenanceTicket
@@ -42,7 +43,7 @@ const MaintenanceTicketScheduleCard = ({
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+              background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -56,7 +57,7 @@ const MaintenanceTicketScheduleCard = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#00bf75'
+              color: intent.successInk
             }}
           >
             Programación

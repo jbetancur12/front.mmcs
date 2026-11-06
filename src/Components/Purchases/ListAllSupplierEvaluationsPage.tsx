@@ -41,6 +41,7 @@ import { isAxiosError } from 'axios'
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 // Interfaz para el objeto de evaluación como se espera de la API (con proveedor anidado)
 interface EvaluationWithSupplier extends SupplierEvaluationData {
   supplier?: Pick<Supplier, 'id' | 'name' | 'taxId'>
@@ -307,9 +308,9 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
               onClick={() => refetch()}
               disabled={isLoading || isFetching}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Refrescar
@@ -319,9 +320,9 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
               startIcon={<Add />}
               onClick={handleOpenCreateModal}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Nueva evaluación
@@ -387,7 +388,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
               <IconButton
                 onClick={() => handleViewReport(row.original.id)}
                 aria-label={`Ver reporte PDF de la evaluación ${row.original.id}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 size='small'
               >
                 <PictureAsPdf />
@@ -397,7 +398,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
               <IconButton
                 onClick={() => handleOpenEditModal(row.original)}
                 aria-label={`Editar la evaluación ${row.original.id}`}
-                sx={{ color: '#2563eb' }}
+                sx={{ color: intent.action }}
                 size='small'
               >
                 <Edit />

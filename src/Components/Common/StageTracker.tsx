@@ -2,9 +2,10 @@ import React from 'react'
 import { Box, LinearProgress, Paper, Stack, Typography } from '@mui/material'
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
-const TEAL = '#00BFA5'
-const TEAL_INK = '#00695C'
+const TEAL = brand.main
+const TEAL_INK = brand.ink
 
 export interface StageTrackerStage {
   key: string
@@ -42,7 +43,7 @@ const StageTracker: React.FC<StageTrackerProps> = ({
     <Paper elevation={2} sx={{ borderRadius: 2, p: { xs: 2, md: 3 }, mb: 2 }}>
       {stopped ? (
         <Stack direction='row' spacing={1.5} alignItems='center'>
-          <BlockOutlinedIcon sx={{ color: '#ef4444' }} />
+          <BlockOutlinedIcon sx={{ color: intent.danger }} />
           <Box>
             <Typography fontWeight={700}>{stopped.title}</Typography>
             <Typography variant='body2' color='text.secondary'>
@@ -86,7 +87,7 @@ const StageTracker: React.FC<StageTrackerProps> = ({
                         left: '-50%',
                         width: '100%',
                         height: 2,
-                        bgcolor: currentIndex >= index ? TEAL : '#e5e7eb'
+                        bgcolor: currentIndex >= index ? TEAL : neutral.border
                       }}
                     />
                   )}
@@ -102,8 +103,9 @@ const StageTracker: React.FC<StageTrackerProps> = ({
                       placeItems: 'center',
                       bgcolor: done ? TEAL : '#fff',
                       border: '2px solid',
-                      borderColor: done || isCurrent ? TEAL : '#d1d5db',
-                      color: done ? '#fff' : '#00897B',
+                      borderColor:
+                        done || isCurrent ? TEAL : neutral.borderStrong,
+                      color: done ? '#fff' : brand.hover,
                       boxShadow: isCurrent
                         ? '0 0 0 4px rgba(0,191,165,0.18)'
                         : 'none'
@@ -130,7 +132,11 @@ const StageTracker: React.FC<StageTrackerProps> = ({
                       px: 0.5,
                       lineHeight: 1.25,
                       fontWeight: isCurrent ? 700 : 500,
-                      color: isCurrent ? TEAL_INK : done ? '#374151' : '#6b7280'
+                      color: isCurrent
+                        ? TEAL_INK
+                        : done
+                          ? neutral.textBody
+                          : neutral.textMuted
                     }}
                   >
                     {stage.label}
@@ -166,7 +172,7 @@ const StageTracker: React.FC<StageTrackerProps> = ({
               sx={{
                 height: 8,
                 borderRadius: '999px',
-                bgcolor: '#E0F7F4',
+                bgcolor: brand.soft,
                 '& .MuiLinearProgress-bar': {
                   borderRadius: '999px',
                   bgcolor: TEAL
@@ -178,7 +184,7 @@ const StageTracker: React.FC<StageTrackerProps> = ({
       )}
 
       {children && (
-        <Box sx={{ mt: 2.5, pt: 2, borderTop: '1px solid #e5e7eb' }}>
+        <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${neutral.border}` }}>
           {children}
         </Box>
       )}

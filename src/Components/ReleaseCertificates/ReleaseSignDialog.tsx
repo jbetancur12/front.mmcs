@@ -429,7 +429,7 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
                     height: stageHeight,
                     mx: 'auto',
                     bgcolor: neutral.surface,
-                    boxShadow: '0 0 0 1px #d1d5db',
+                    boxShadow: `0 0 0 1px ${neutral.borderStrong}`,
                     touchAction: 'none'
                   }}
                 >
@@ -577,7 +577,7 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
                     px: 0.5,
                     borderRadius: 1,
                     cursor: 'pointer',
-                    bgcolor: p.key === selected ? '#f0fbf9' : undefined
+                    bgcolor: p.key === selected ? brand.softer : undefined
                   }}
                 >
                   <Typography variant='body2' sx={{ flex: 1, minWidth: 0 }}>

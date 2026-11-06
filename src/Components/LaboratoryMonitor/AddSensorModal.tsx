@@ -12,6 +12,7 @@ import {
   Stack
 } from '@mui/material'
 import FormDialog from 'src/Components/Common/FormDialog'
+import { brand } from 'src/theme/designTokens'
 import { SensorType } from './types' // Asegúrate que la ruta sea correcta
 
 interface AddSensorModalProps {
@@ -121,7 +122,7 @@ export const AddSensorModal: React.FC<AddSensorModalProps> = ({
                 checked={showGraph}
                 onChange={(e) => setShowGraph(e.target.checked)}
                 name='showGraph'
-                sx={{ '&.Mui-checked': { color: '#00897B' } }}
+                sx={{ '&.Mui-checked': { color: brand.hover } }}
               />
             }
             label='Mostrar gráfica'

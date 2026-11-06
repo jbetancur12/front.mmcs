@@ -11,13 +11,14 @@ import React from 'react'
 
 import { Role, UserData } from './types'
 import { getRoleChipLabel } from './userValidation'
+import { brand, neutral } from 'src/theme/designTokens'
 
 const MAX_VISIBLE_ROLES = 2
 
 // Chip outlined turquesa; los roles que sobran se agrupan en "+N" con su detalle al pasar el mouse
 const roleChipSx = {
-  color: '#00695C',
-  borderColor: '#00BFA5',
+  color: brand.ink,
+  borderColor: brand.main,
   fontWeight: 500,
   cursor: 'help'
 }
@@ -48,7 +49,11 @@ export const RolesCell: React.FC<{ cell: MRT_Cell<UserData> }> = ({ cell }) => {
             label={`+${hidden.length}`}
             size='small'
             variant='outlined'
-            sx={{ ...roleChipSx, color: '#4b5563', borderColor: '#d1d5db' }}
+            sx={{
+              ...roleChipSx,
+              color: neutral.textBody,
+              borderColor: neutral.borderStrong
+            }}
           />
         </Tooltip>
       )}

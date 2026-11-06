@@ -11,15 +11,16 @@ import { Link } from 'react-router-dom'
 
 import { menuOptions } from './constants'
 import { DataSheetData, MenuOption } from './types'
+import { brand } from 'src/theme/designTokens'
 
 // Botón secundario outlined del sistema de diseño (verde azulado)
 const toolbarButtonSx = {
   whiteSpace: 'nowrap',
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00695C',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.ink,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 }
 
 interface ScheduleMenuProps {

@@ -29,6 +29,7 @@ import {
 } from '../../types/calibrationService'
 
 import { DetailField } from './CalibrationServiceDetailBlocks'
+import { neutral } from 'src/theme/designTokens'
 interface CalibrationServiceAdjustmentsPanelProps {
   service: CalibrationService
   canReport: boolean
@@ -243,7 +244,7 @@ const CalibrationServiceAdjustmentsPanel = ({
               <Paper
                 key={adjustment.id}
                 variant='outlined'
-                sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}
+                sx={{ p: 2, borderRadius: '12px', borderColor: neutral.border }}
               >
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}

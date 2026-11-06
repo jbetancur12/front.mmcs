@@ -31,6 +31,7 @@ import {
 } from 'src/Components/Common/DetailBlocks'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 // Definir los tipos para los valores del formulario
 export interface InspectionMaintenanceData {
   equipmentId: string | number
@@ -368,7 +369,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
             sx={{
               p: { xs: 2, md: 3 },
               borderRadius: '16px',
-              border: '1px solid #e5e7eb'
+              border: `1px solid ${neutral.border}`
             }}
           >
             <DetailSection title='Datos del equipo'>

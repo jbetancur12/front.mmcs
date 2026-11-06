@@ -25,6 +25,7 @@ import {
   getServiceOperationalFocus,
   getServiceSiteLabel
 } from './calibrationServicesListUtils'
+import { brand, neutral } from 'src/theme/designTokens'
 
 /** Parámetros que usan las celdas personalizadas de la tabla. */
 interface ServiceCellProps {
@@ -191,7 +192,7 @@ const CalibrationServicesTable = ({
               <Typography
                 variant='body2'
                 fontWeight={700}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
               >
                 {currencyFormatter.format(cell.getValue() as number)}
               </Typography>
@@ -231,11 +232,14 @@ const CalibrationServicesTable = ({
           size: 64,
           muiTableHeadCellProps: {
             align: 'left',
-            sx: { backgroundColor: '#f3f4f6' }
+            sx: { backgroundColor: neutral.surfaceHead }
           },
           muiTableBodyCellProps: {
             align: 'left',
-            sx: { backgroundColor: '#fff', boxShadow: '-1px 0 0 #e5e7eb' }
+            sx: {
+              backgroundColor: neutral.surface,
+              boxShadow: `-1px 0 0 ${neutral.border}`
+            }
           }
         }
       }}
@@ -250,7 +254,7 @@ const CalibrationServicesTable = ({
               event.stopPropagation()
               openServiceDetail(row.original.id)
             }}
-            sx={{ color: '#00695C' }}
+            sx={{ color: brand.ink }}
           >
             <VisibilityOutlinedIcon fontSize='small' />
           </IconButton>

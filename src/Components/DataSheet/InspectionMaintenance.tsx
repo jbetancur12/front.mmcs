@@ -37,6 +37,7 @@ import {
   DetailField,
   DetailSection
 } from 'src/Components/Common/DetailBlocks'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 export interface InspectionHistoryData {
   id: number
@@ -60,9 +61,9 @@ const CALIBRATION = 'Calibración'
 const outlinedButtonSx = {
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00695C',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.ink,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 
 const InspectionMaintenance: React.FC = () => {
@@ -195,8 +196,8 @@ const InspectionMaintenance: React.FC = () => {
                 textTransform: 'none',
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
-                bgcolor: '#00BFA5',
-                '&:hover': { bgcolor: '#00897B' }
+                bgcolor: brand.main,
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Agregar mantenimiento
@@ -258,7 +259,7 @@ const InspectionMaintenance: React.FC = () => {
             p: { xs: 2, md: 3 },
             mb: 3,
             borderRadius: '16px',
-            border: '1px solid #e5e7eb'
+            border: `1px solid ${neutral.border}`
           }}
         >
           <DetailSection title='Datos del equipo'>
@@ -324,7 +325,7 @@ const InspectionMaintenance: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Ver ${row.original.activity}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => handleView(row.original)}
               >
                 <Visibility fontSize='small' />
@@ -334,7 +335,7 @@ const InspectionMaintenance: React.FC = () => {
               <IconButton
                 size='small'
                 aria-label={`Editar ${row.original.activity}`}
-                sx={{ color: '#2563eb' }}
+                sx={{ color: intent.action }}
                 onClick={() => handleEdit(row.original)}
               >
                 <Edit fontSize='small' />

@@ -26,6 +26,7 @@ import {
 import CalibrationServiceWhatsAppConfigDialog from './CalibrationServiceWhatsAppConfigDialog'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { neutral, brand } from 'src/theme/designTokens'
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   ods_issued: 'ODS emitida',
@@ -94,7 +95,7 @@ const CalibrationNotificationCenter = () => {
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         minHeight: '100vh',
-        backgroundColor: '#f8fafb'
+        backgroundColor: neutral.surfaceAlt
       }}
     >
       <Stack
@@ -306,7 +307,7 @@ const CalibrationNotificationCenter = () => {
                     >
                       <CheckCircleOutlineOutlinedIcon
                         fontSize='small'
-                        sx={{ color: '#059669' }}
+                        sx={{ color: brand.ink }}
                       />
                     </IconButton>
                   </Tooltip>
@@ -338,12 +339,12 @@ const CalibrationNotificationCenter = () => {
           }}
         >
           <NotificationsOutlinedIcon
-            sx={{ fontSize: 48, color: '#d1d5db', mb: 1.5 }}
+            sx={{ fontSize: 48, color: neutral.borderStrong, mb: 1.5 }}
           />
           <Typography
             variant='body1'
             fontWeight={600}
-            sx={{ color: '#6b7280' }}
+            sx={{ color: neutral.textMuted }}
           >
             {showRead
               ? 'No hay notificaciones'

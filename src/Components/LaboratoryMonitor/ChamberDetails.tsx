@@ -29,6 +29,7 @@ import type { useVoiceAnnouncer } from '@hooks/useVoiceAnnouncer'
 import type { useDesktopNotifications } from '@hooks/useDesktopNotifications'
 import { NotificationsActive, NotificationsOff } from '@mui/icons-material'
 import { isPatternStable, StabilityAlertState } from './stability'
+import { brand, neutral } from 'src/theme/designTokens'
 
 // Se reexporta para no cambiar los imports de PatternItem y PatternSection
 export { isPatternStable }
@@ -144,8 +145,8 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
           p: { xs: 2, md: 2.5 },
           mb: 3,
           borderRadius: '12px',
-          borderColor: isCalibrating ? '#00BFA5' : '#e5e7eb',
-          bgcolor: isCalibrating ? '#F4FCFA' : 'background.paper'
+          borderColor: isCalibrating ? brand.main : neutral.border,
+          bgcolor: isCalibrating ? brand.softer : 'background.paper'
         }}
       >
         <Box
@@ -199,7 +200,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                     onClick={
                       needsClick || !enabled ? test : () => setEnabled(false)
                     }
-                    sx={{ color: needsClick ? undefined : '#4b5563' }}
+                    sx={{ color: needsClick ? undefined : neutral.textBody }}
                   >
                     {needsClick
                       ? 'Activar avisos de voz'
@@ -238,7 +239,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                         color:
                           desktop.permission === 'default'
                             ? undefined
-                            : '#4b5563'
+                            : neutral.textBody
                       }}
                     >
                       {desktop.permission === 'granted'
@@ -273,7 +274,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                 <IconButton
                   aria-label='Editar nombre de la cámara'
                   onClick={onEditChamber}
-                  sx={{ color: '#4b5563' }}
+                  sx={{ color: neutral.textBody }}
                 >
                   <EditIcon />
                 </IconButton>
@@ -285,7 +286,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                     onClick={() => onDeleteChamber(chamber.id)}
                     disabled={isDeletingChamber}
                     sx={{
-                      color: '#4b5563',
+                      color: neutral.textBody,
                       '&:hover': { color: 'error.main' }
                     }}
                   >
@@ -309,7 +310,10 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                   }
                   onClick={() => onStartCalibration(chamber.id)}
                   disabled={isStartingCalibration}
-                  sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+                  sx={{
+                    bgcolor: brand.main,
+                    '&:hover': { bgcolor: brand.hover }
+                  }}
                 >
                   Iniciar calibración
                 </Button>

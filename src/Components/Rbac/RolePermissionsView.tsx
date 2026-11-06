@@ -34,12 +34,13 @@ import {
   moduleLabel,
   roleDisplayName
 } from './PermissionMatrix'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
-const TEAL = '#00BFA5'
-const TEAL_DARK = '#00897B'
-const TEAL_SOFT = '#E0F7F4'
-const AMBER_SOFT = '#fff8e1'
-const AMBER = '#ffb74d'
+const TEAL = brand.main
+const TEAL_DARK = brand.hover
+const TEAL_SOFT = brand.soft
+const AMBER_SOFT = intent.warningSoft
+const AMBER = intent.warning
 
 type StatusFilter = 'all' | 'granted' | 'missing'
 
@@ -279,7 +280,7 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
               label={pending}
               sx={{
                 bgcolor: AMBER,
-                color: '#5d4037',
+                color: intent.dangerInk,
                 fontWeight: 700,
                 height: 20
               }}
@@ -519,7 +520,7 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                     px: 1.5,
                     py: 0.75,
                     borderRadius: 1.5,
-                    bgcolor: '#f5f5f5'
+                    bgcolor: neutral.surfaceHead
                   }}
                 >
                   <Typography fontWeight={700}>
@@ -661,11 +662,11 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                                 }}
                               >
                                 <WarningAmberIcon
-                                  sx={{ fontSize: 16, color: '#d97706' }}
+                                  sx={{ fontSize: 16, color: intent.warning }}
                                 />
                                 <Typography
                                   variant='caption'
-                                  sx={{ color: '#92400e' }}
+                                  sx={{ color: intent.warningInk }}
                                 >
                                   Necesita también:{' '}
                                   {missing.map(requirementName).join(', ')}

@@ -9,6 +9,7 @@ import AuthLayout from 'src/Components/Common/AuthLayout'
 import AuthField from 'src/Components/Common/AuthField'
 import PasswordRequirements from 'src/Components/Common/PasswordRequirements'
 import { isPasswordValid } from 'src/utils/passwordPolicy'
+import { brand } from 'src/theme/designTokens'
 
 const PasswordGeneratorForm: React.FC = () => {
   const queryString = window.location.search
@@ -88,7 +89,7 @@ const PasswordGeneratorForm: React.FC = () => {
           component={Link}
           to='/login'
           underline='hover'
-          sx={{ fontWeight: 600, color: '#00695c' }}
+          sx={{ fontWeight: 600, color: brand.ink }}
         >
           Volver a iniciar sesión
         </MuiLink>
@@ -129,7 +130,7 @@ const PasswordGeneratorForm: React.FC = () => {
                   underline='hover'
                   sx={{
                     fontWeight: 600,
-                    color: '#00695c',
+                    color: brand.ink,
                     whiteSpace: 'nowrap'
                   }}
                 >
@@ -147,14 +148,14 @@ const PasswordGeneratorForm: React.FC = () => {
             sx={{
               height: 48,
               borderRadius: '12px',
-              bgcolor: '#00bfa5',
+              bgcolor: brand.main,
               color: '#ffffff',
               fontSize: 15,
               fontWeight: 700,
               textTransform: 'none',
-              '&:hover': { bgcolor: '#00acc1' },
+              '&:hover': { bgcolor: brand.hover },
               '&.Mui-disabled': {
-                bgcolor: '#00bfa5',
+                bgcolor: brand.main,
                 color: '#ffffff',
                 opacity: 0.6
               }

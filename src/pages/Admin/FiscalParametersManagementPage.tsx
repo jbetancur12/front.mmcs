@@ -49,6 +49,7 @@ import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 // Interfaz para los parámetros fiscales
 interface FiscalParameter {
   id: number
@@ -433,9 +434,9 @@ const FiscalParametersManagementPage: React.FC = () => {
               }
               disabled={isFetching}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Refrescar
@@ -445,9 +446,9 @@ const FiscalParametersManagementPage: React.FC = () => {
               startIcon={<Add />}
               onClick={() => handleOpenDialog()}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Nuevo parámetro
@@ -498,7 +499,7 @@ const FiscalParametersManagementPage: React.FC = () => {
               <IconButton
                 onClick={() => handleOpenDialog(row.original)}
                 aria-label={`Editar ${row.original.keyName}`}
-                sx={{ color: '#2563eb' }}
+                sx={{ color: intent.action }}
                 size='small'
               >
                 <Edit fontSize='small' />

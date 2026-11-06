@@ -28,8 +28,12 @@ export const neutral = {
   textBody: '#374151',
   /** Pistas y leyendas (4,83:1 sobre blanco). NO sobre `surfaceHead` (4,39:1). */
   textMuted: '#6b7280',
+  /** Íconos y texto desactivado o decorativo (2,5:1: no usar para texto que haya que leer). */
+  textFaint: '#9ca3af',
   /** Bordes de tarjetas y tablas. */
   border: '#e5e7eb',
+  /** Bordes y divisores más marcados (controles, zonas de arrastre). */
+  borderStrong: '#d1d5db',
   /** Tarjetas y diálogos. */
   surface: '#ffffff',
   /** Fondo de página y barras de herramientas. */
@@ -42,6 +46,10 @@ export const neutral = {
 export const intent = {
   /** Acción "editar". */
   action: '#2563eb',
+  /** Tonos medios por significado: íconos, bordes de acento y rellenos. Para texto usa los `*Ink`. */
+  success: '#22c55e',
+  warning: '#f59e0b',
+  info: '#3b82f6',
   danger: '#dc2626',
   dangerInk: '#b91c1c',
   dangerSoft: '#fee2e2',

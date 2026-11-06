@@ -72,6 +72,7 @@ import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDi
 import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -236,7 +237,7 @@ const EquipmentSalesPage = () => {
               <IconButton
                 size='small'
                 aria-label={`Enviar ${quotation.quoteCode} al cliente`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={(e) => {
                   e.stopPropagation()
                   void handleSend(quotation)
@@ -334,9 +335,9 @@ const EquipmentSalesPage = () => {
               startIcon={<GroupOutlinedIcon />}
               onClick={() => navigate('/calibration-services/customers')}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Clientes
@@ -347,9 +348,9 @@ const EquipmentSalesPage = () => {
                 startIcon={<Inventory2OutlinedIcon />}
                 onClick={() => navigate('/equipment-sales/products')}
                 sx={{
-                  color: '#00897B',
-                  borderColor: '#00BFA5',
-                  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                  color: brand.hover,
+                  borderColor: brand.main,
+                  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
                 }}
               >
                 Productos
@@ -364,9 +365,9 @@ const EquipmentSalesPage = () => {
                   aria-haspopup='menu'
                   aria-expanded={Boolean(configAnchor)}
                   sx={{
-                    color: '#00897B',
-                    borderColor: '#00BFA5',
-                    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                    color: brand.hover,
+                    borderColor: brand.main,
+                    '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
                   }}
                 >
                   Configuración
@@ -403,9 +404,9 @@ const EquipmentSalesPage = () => {
                 startIcon={<AddOutlinedIcon />}
                 onClick={() => navigate('/equipment-sales/new')}
                 sx={{
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   whiteSpace: 'nowrap',
-                  '&:hover': { bgcolor: '#00ACC1' }
+                  '&:hover': { bgcolor: brand.hover }
                 }}
               >
                 Nueva cotización
@@ -475,10 +476,10 @@ const EquipmentSalesPage = () => {
                 onClick={() => setViewMode(mode)}
                 sx={{
                   border: '1px solid',
-                  borderColor: viewMode === mode ? '#00695C' : 'divider',
+                  borderColor: viewMode === mode ? brand.ink : 'divider',
                   borderRadius: '8px',
-                  color: viewMode === mode ? '#00695C' : 'text.secondary',
-                  bgcolor: viewMode === mode ? '#E0F7F4' : 'transparent'
+                  color: viewMode === mode ? brand.ink : 'text.secondary',
+                  bgcolor: viewMode === mode ? brand.soft : 'transparent'
                 }}
               >
                 {icon}
@@ -509,7 +510,7 @@ const EquipmentSalesPage = () => {
           }}
         >
           <Inventory2OutlinedIcon
-            sx={{ fontSize: 48, color: '#d1d5db', mb: 1 }}
+            sx={{ fontSize: 48, color: neutral.borderStrong, mb: 1 }}
           />
           <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
             {statusFilter
@@ -601,7 +602,7 @@ const EquipmentSalesPage = () => {
               <IconButton
                 size='small'
                 aria-label={`Ver cotización ${row.original.quoteCode}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={(e) => {
                   e.stopPropagation()
                   navigate(`/equipment-sales/${row.original.id}`)
@@ -671,7 +672,7 @@ const EquipmentSalesPage = () => {
                       <Typography
                         variant='body2'
                         fontWeight={700}
-                        sx={{ mt: 1, color: '#059669' }}
+                        sx={{ mt: 1, color: brand.ink }}
                       >
                         {currencyFormatter.format(quotation.grandTotal)}
                       </Typography>

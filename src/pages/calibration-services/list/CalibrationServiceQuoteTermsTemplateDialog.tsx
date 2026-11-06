@@ -16,6 +16,7 @@ import {
   CALIBRATION_QUOTE_TERM_KEYS,
   CALIBRATION_QUOTE_TERM_LABELS
 } from '../calibrationQuoteTerms'
+import { brand, intent } from 'src/theme/designTokens'
 
 interface CalibrationServiceQuoteTermsTemplateDialogProps {
   open: boolean
@@ -83,9 +84,9 @@ const CalibrationServiceQuoteTermsTemplateDialog = ({
               sx={{
                 fontFamily: 'monospace',
                 alignSelf: 'flex-start',
-                borderColor: '#00BFA5',
-                color: '#00695C',
-                '&:hover': { bgcolor: '#E0F7F4' }
+                borderColor: brand.main,
+                color: brand.ink,
+                '&:hover': { bgcolor: brand.soft }
               }}
             />
           </Tooltip>
@@ -124,7 +125,7 @@ const CalibrationServiceQuoteTermsTemplateDialog = ({
                 <Typography
                   variant='caption'
                   sx={{
-                    color: isEmpty ? '#b45309' : '#00695C',
+                    color: isEmpty ? intent.warningInk : brand.ink,
                     fontWeight: 600
                   }}
                 >

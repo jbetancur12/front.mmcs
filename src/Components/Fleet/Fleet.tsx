@@ -51,6 +51,7 @@ import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 const validationSchema = yup.object().shape({
   pictureUrl: yup.mixed().required('Imagen es obligatoria'),
   vin: yup.string().required('Número de Identificación es obligatorio'),
@@ -376,9 +377,9 @@ const Fleet = () => {
               startIcon={<Plumbing />}
               onClick={() => navigate('/fleet/interventions')}
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Tipos de intervención
@@ -389,9 +390,9 @@ const Fleet = () => {
                 startIcon={<Add />}
                 onClick={() => setCreateModalOpen(true)}
                 sx={{
-                  bgcolor: '#00BFA5',
+                  bgcolor: brand.main,
                   whiteSpace: 'nowrap',
-                  '&:hover': { bgcolor: '#00ACC1' }
+                  '&:hover': { bgcolor: brand.hover }
                 }}
               >
                 Crear vehículo
@@ -453,8 +454,8 @@ const Fleet = () => {
                       sx={{
                         color:
                           row.original.upcomingReminders.length > 0
-                            ? '#ef4444'
-                            : '#00BFA5'
+                            ? intent.danger
+                            : brand.main
                       }}
                     />
                   </IconButton>

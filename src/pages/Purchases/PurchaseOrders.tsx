@@ -27,6 +27,7 @@ import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
 import { notify } from 'src/utils/notify'
+import { brand } from 'src/theme/designTokens'
 
 type QuickFilter = 'all' | 'unsent' | 'overdue' | 'unverified'
 
@@ -335,7 +336,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
           to={`${row.original.id}`}
           size='small'
           aria-label={`Ver ${row.original.code}`}
-          sx={{ color: '#00695C' }}
+          sx={{ color: brand.ink }}
         >
           <Visibility />
         </IconButton>
@@ -347,9 +348,9 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
           startIcon={<FactCheck />}
           onClick={() => openVerificationModal(row.original)}
           sx={{
-            bgcolor: '#00BFA5',
+            bgcolor: brand.main,
             whiteSpace: 'nowrap',
-            '&:hover': { bgcolor: '#00ACC1' }
+            '&:hover': { bgcolor: brand.hover }
           }}
         >
           Verificar

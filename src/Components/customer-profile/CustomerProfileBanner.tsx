@@ -14,6 +14,7 @@ import React from 'react'
 
 import { ModernSwitch } from './ModernSwitch'
 import { CustomerProfileData } from './types'
+import { brand, detail } from 'src/theme/designTokens'
 
 interface CustomerProfileBannerProps {
   image: string
@@ -81,7 +82,7 @@ const CustomerProfileBanner = ({
     elevation={0}
     sx={{
       mb: 4,
-      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      background: `linear-gradient(135deg, ${detail.from} 0%, ${detail.to} 100%)`,
       color: 'white',
       borderRadius: '20px',
       overflow: 'hidden',
@@ -184,8 +185,8 @@ const CustomerProfileBanner = ({
                       bottom: 0,
                       right: 0,
                       backgroundColor: 'white',
-                      color: '#00695C',
-                      '&:hover': { backgroundColor: '#E0F7F4' }
+                      color: brand.ink,
+                      '&:hover': { backgroundColor: brand.soft }
                     }}
                     size='small'
                   >

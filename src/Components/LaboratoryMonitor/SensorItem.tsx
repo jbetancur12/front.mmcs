@@ -28,6 +28,7 @@ import { getStaleSensorIds } from './stability'
 import StatusPill from 'src/Components/Common/StatusPill'
 import { SensorDataTable } from './SensorDataTable'
 import { SensorRealtimeChart } from './SensorRealtimeChart'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface SensorItemProps {
   sensor: Sensor
@@ -78,16 +79,19 @@ export const SensorItem: React.FC<SensorItemProps> = ({
       elevation={0}
       TransitionProps={{ unmountOnExit: true }}
       sx={{
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${neutral.border}`,
         borderRadius: '8px !important',
         '&:before': { display: 'none' },
-        '&.Mui-expanded': { borderColor: '#00BFA5' }
+        '&.Mui-expanded': { borderColor: brand.main }
       }}
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         sx={{
-          '&:focus-visible': { outline: '3px solid #00897B', outlineOffset: -3 }
+          '&:focus-visible': {
+            outline: `3px solid ${brand.hover}`,
+            outlineOffset: -3
+          }
         }}
       >
         {/* La lectura vive en la fila cerrada: se ve sin abrir cada sensor */}
@@ -122,7 +126,9 @@ export const SensorItem: React.FC<SensorItemProps> = ({
             )}
             {showGraph && (
               <MuiTooltip title='Gráfica activada'>
-                <ShowChartIcon sx={{ fontSize: 18, color: '#9ca3af' }} />
+                <ShowChartIcon
+                  sx={{ fontSize: 18, color: neutral.textFaint }}
+                />
               </MuiTooltip>
             )}
           </Box>
@@ -153,7 +159,10 @@ export const SensorItem: React.FC<SensorItemProps> = ({
                     onDeleteSensor(sensorId)
                   }}
                   disabled={isLoadingDelete}
-                  sx={{ color: '#4b5563', '&:hover': { color: 'error.main' } }}
+                  sx={{
+                    color: neutral.textBody,
+                    '&:hover': { color: 'error.main' }
+                  }}
                 >
                   {isLoadingDelete ? (
                     <CircularProgress size={20} color='inherit' />
@@ -167,7 +176,11 @@ export const SensorItem: React.FC<SensorItemProps> = ({
         </Box>
       </AccordionSummary>
       <AccordionDetails
-        sx={{ bgcolor: '#fafafa', p: 2, borderTop: '1px solid #e5e7eb' }}
+        sx={{
+          bgcolor: neutral.surfaceAlt,
+          p: 2,
+          borderTop: `1px solid ${neutral.border}`
+        }}
       >
         {/* Mostrar sección de gráfica y tabla si showGraph es true */}
         {!showGraph ? (

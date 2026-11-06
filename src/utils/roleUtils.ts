@@ -3,6 +3,7 @@ import { userStore } from '../store/userStore'
 import { hasTrainingManagerRole, normalizeLmsRoles } from './lmsIdentity'
 
 import { ROLES } from 'src/constants/roles'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 // Define LMS role types
 export type LMSRole = 'admin' | 'training_manager' | 'user'
 export const LMS_MANAGEMENT_ROLES = [
@@ -260,17 +261,17 @@ export const getRoleDisplayInfo = (role: LMSRole) => {
     admin: {
       label: 'Administrador del Sistema',
       description: 'Acceso completo a todas las funcionalidades',
-      color: '#dc2626'
+      color: intent.danger
     },
     training_manager: {
       label: 'Gestor de Capacitación',
       description: 'Gestión de cursos y capacitación',
-      color: '#059669'
+      color: brand.ink
     },
     user: {
       label: 'Usuario',
       description: 'Acceso básico a cursos asignados',
-      color: '#6b7280'
+      color: neutral.textMuted
     }
   }
 

@@ -16,6 +16,7 @@ import React from 'react'
 import { roleModulesText, unassignableText } from './roleSummary'
 import { AssignableRole, Role } from './types'
 import { getRoleChipLabel } from './userValidation'
+import { brand, intent } from 'src/theme/designTokens'
 
 /** TextField de los diálogos de usuario (reenvía la ref para usarlo dentro de Fade). */
 export const UserTextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
@@ -82,7 +83,7 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
             variant='text'
             startIcon={<HelpOutline fontSize='small' />}
             onClick={onShowHelp}
-            sx={{ color: '#00695C', textTransform: 'none', fontWeight: 600 }}
+            sx={{ color: brand.ink, textTransform: 'none', fontWeight: 600 }}
           >
             Qué permite cada rol
           </Button>
@@ -115,7 +116,7 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
                     <Typography
                       variant='caption'
                       component='div'
-                      sx={{ color: '#b45309' }}
+                      sx={{ color: intent.warningInk }}
                     >
                       {blocked}
                     </Typography>
@@ -133,11 +134,11 @@ export const RolesField = React.forwardRef<HTMLDivElement, RolesFieldProps>(
                 label={getRoleChipLabel(option)}
                 size='small'
                 sx={{
-                  backgroundColor: '#E0F7F4',
-                  color: '#00695C',
+                  backgroundColor: brand.soft,
+                  color: brand.ink,
                   fontWeight: 500,
                   '& .MuiChip-deleteIcon': {
-                    color: '#00695C'
+                    color: brand.ink
                   }
                 }}
               />

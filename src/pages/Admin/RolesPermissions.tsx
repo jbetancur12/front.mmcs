@@ -45,8 +45,9 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { RbacRole } from '../../types/rbac'
 import { rbacErrorMessage } from '../../utils/rbacErrors'
 import { notify } from 'src/utils/notify'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
-const TEAL = '#00BFA5'
+const TEAL = brand.main
 
 const RolesPermissions: React.FC = () => {
   const [tab, setTab] = useState<'matrix' | 'role' | 'audit'>('role')
@@ -253,7 +254,7 @@ const RolesPermissions: React.FC = () => {
               component={RouterLink}
               to='/settings/roles/ayuda'
               startIcon={<MenuBookIcon />}
-              sx={{ textTransform: 'none', color: '#00897B' }}
+              sx={{ textTransform: 'none', color: brand.hover }}
             >
               Guía de capacidades
             </Button>
@@ -265,7 +266,7 @@ const RolesPermissions: React.FC = () => {
                 sx={{
                   textTransform: 'none',
                   bgcolor: TEAL,
-                  '&:hover': { bgcolor: '#00ACC1' }
+                  '&:hover': { bgcolor: brand.hover }
                 }}
               >
                 Nuevo rol
@@ -326,7 +327,7 @@ const RolesPermissions: React.FC = () => {
 
       <Paper
         elevation={0}
-        sx={{ mb: 2, borderRadius: 2, border: '1px solid #e5e7eb' }}
+        sx={{ mb: 2, borderRadius: 2, border: `1px solid ${neutral.border}` }}
       >
         <Tabs
           value={tab}
@@ -399,8 +400,8 @@ const RolesPermissions: React.FC = () => {
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: 1,
-            border: '1px solid #ffb74d',
-            bgcolor: '#fff8e1',
+            border: `1px solid ${intent.warning}`,
+            bgcolor: intent.warningSoft,
             zIndex: 5
           }}
           role='region'
@@ -428,7 +429,7 @@ const RolesPermissions: React.FC = () => {
               sx={{
                 textTransform: 'none',
                 bgcolor: TEAL,
-                '&:hover': { bgcolor: '#00897B' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Revisar y guardar

@@ -17,6 +17,7 @@ import StatusPill, { StatusPillTone } from '../Common/StatusPill'
 
 import { useCustomerOverview } from './useCustomerProfileData'
 import { TabValue } from './types'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface OverviewTabProps {
   customerId?: string
@@ -28,13 +29,13 @@ interface OverviewTabProps {
 const cardSx = {
   height: '100%',
   borderRadius: '16px',
-  border: '1px solid #e5e7eb',
+  border: `1px solid ${neutral.border}`,
   boxShadow: 'none'
 }
 
 const sectionTitle = (title: string, hint?: string) => (
   <Box sx={{ mb: 2 }}>
-    <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+    <Typography variant='h6' fontWeight={700} sx={{ color: neutral.text }}>
       {title}
     </Typography>
     {hint ? (
@@ -80,7 +81,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           mb: 3
         }}
       >
-        <Typography variant='h5' fontWeight={700} sx={{ color: '#111827' }}>
+        <Typography variant='h5' fontWeight={700} sx={{ color: neutral.text }}>
           Resumen del cliente
         </Typography>
         <Button
@@ -95,12 +96,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           onClick={handleDownloadOverviewReport}
           disabled={isDownloading}
           sx={{
-            bgcolor: '#00BFA5',
+            bgcolor: brand.main,
             borderRadius: '10px',
             textTransform: 'none',
             fontWeight: 700,
             boxShadow: 'none',
-            '&:hover': { bgcolor: '#00ACC1', boxShadow: 'none' }
+            '&:hover': { bgcolor: brand.hover, boxShadow: 'none' }
           }}
         >
           {isDownloading ? 'Generando reporte…' : 'Descargar reporte'}
@@ -151,12 +152,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                           mx: -1.5,
                           borderRadius: '10px',
                           cursor: 'pointer',
-                          '&:hover': { bgcolor: '#f6fcfb' },
+                          '&:hover': { bgcolor: brand.softer },
                           '&:focus-visible': {
-                            outline: '2px solid #00BFA5',
+                            outline: `2px solid ${brand.main}`,
                             outlineOffset: -2
                           },
-                          '& + &': { borderTop: '1px solid #f3f4f6' }
+                          '& + &': {
+                            borderTop: `1px solid ${neutral.surfaceHead}`
+                          }
                         }}
                       >
                         <Box sx={{ minWidth: 0 }}>
@@ -206,7 +209,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                         mt: 1,
                         textTransform: 'none',
                         fontWeight: 600,
-                        color: '#00695C'
+                        color: brand.ink
                       }}
                     >
                       Ver los {data?.totalFiles} en Equipos
@@ -254,7 +257,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                       sx={{
                         height: 8,
                         borderRadius: '999px',
-                        bgcolor: '#f3f4f6',
+                        bgcolor: neutral.surfaceHead,
                         overflow: 'hidden'
                       }}
                     >
@@ -262,7 +265,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                         sx={{
                           height: '100%',
                           width: `${(hq.count / maxCount) * 100}%`,
-                          bgcolor: '#00BFA5',
+                          bgcolor: brand.main,
                           borderRadius: '999px'
                         }}
                       />

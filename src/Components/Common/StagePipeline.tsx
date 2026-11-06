@@ -1,9 +1,10 @@
 import React from 'react'
 import { Box, ButtonBase, Paper, Typography } from '@mui/material'
+import { brand, neutral } from 'src/theme/designTokens'
 
-const TEAL = '#00BFA5'
-const TEAL_INK = '#00695C'
-const TEAL_SOFT = '#E0F7F4'
+const TEAL = brand.main
+const TEAL_INK = brand.ink
+const TEAL_SOFT = brand.soft
 
 export interface StagePipelineStage {
   key: string
@@ -47,7 +48,7 @@ const StageButton: React.FC<{
       width: compact ? 'auto' : '100%',
       borderRadius: '12px',
       bgcolor: active ? TEAL_SOFT : 'transparent',
-      '&:hover': { bgcolor: active ? TEAL_SOFT : '#f3f4f6' },
+      '&:hover': { bgcolor: active ? TEAL_SOFT : neutral.surfaceHead },
       '&.Mui-focusVisible': {
         outline: `3px solid ${TEAL_INK}`,
         outlineOffset: 2
@@ -63,9 +64,13 @@ const StageButton: React.FC<{
         display: 'grid',
         placeItems: 'center',
         border: '2px solid',
-        borderColor: active ? TEAL_INK : count > 0 ? TEAL : '#d1d5db',
+        borderColor: active
+          ? TEAL_INK
+          : count > 0
+            ? TEAL
+            : neutral.borderStrong,
         bgcolor: active ? TEAL_INK : '#fff',
-        color: active ? '#fff' : count > 0 ? TEAL_INK : '#6b7280',
+        color: active ? '#fff' : count > 0 ? TEAL_INK : neutral.textMuted,
         fontWeight: 700,
         fontSize: compact ? 13 : 15,
         fontVariantNumeric: 'tabular-nums'
@@ -80,7 +85,7 @@ const StageButton: React.FC<{
         lineHeight: 1.25,
         textAlign: 'center',
         fontWeight: active ? 700 : 500,
-        color: active ? TEAL_INK : '#374151'
+        color: active ? TEAL_INK : neutral.textBody
       }}
     >
       {label}
@@ -112,7 +117,7 @@ const StagePipeline: React.FC<StagePipelineProps> = ({
       p: 1.5,
       mb: 3,
       borderRadius: '16px',
-      borderColor: '#e5e7eb',
+      borderColor: neutral.border,
       overflowX: 'auto'
     }}
   >
@@ -127,7 +132,7 @@ const StagePipeline: React.FC<StagePipelineProps> = ({
     </Box>
 
     <Box
-      sx={{ width: '1px', bgcolor: '#e5e7eb', my: 1, flexShrink: 0 }}
+      sx={{ width: '1px', bgcolor: neutral.border, my: 1, flexShrink: 0 }}
       aria-hidden
     />
 
@@ -158,7 +163,7 @@ const StagePipeline: React.FC<StagePipelineProps> = ({
                 left: '-50%',
                 width: '100%',
                 height: 2,
-                bgcolor: '#d1d5db'
+                bgcolor: neutral.borderStrong
               }}
             />
           )}
@@ -175,7 +180,7 @@ const StagePipeline: React.FC<StagePipelineProps> = ({
     {outside.length > 0 && (
       <>
         <Box
-          sx={{ width: '1px', bgcolor: '#e5e7eb', my: 1, flexShrink: 0 }}
+          sx={{ width: '1px', bgcolor: neutral.border, my: 1, flexShrink: 0 }}
           aria-hidden
         />
         <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>

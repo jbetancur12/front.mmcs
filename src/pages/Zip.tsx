@@ -4,6 +4,7 @@ import { Container, IconButton, Tooltip } from '@mui/material'
 import { LockOutlined } from '@mui/icons-material'
 
 import ModalPasswordForm from '../Components/ModalPasswordForm'
+import { brand } from 'src/theme/designTokens'
 
 const AnalyzeExcelComponent = lazy(() => import('./AnalyzeExcelComponent'))
 
@@ -29,7 +30,7 @@ const Zip = () => {
               <IconButton
                 aria-label='Contraseñas de los libros'
                 onClick={() => setOpenModalSettings(true)}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
               >
                 <LockOutlined />
               </IconButton>

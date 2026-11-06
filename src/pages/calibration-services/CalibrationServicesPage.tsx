@@ -20,6 +20,7 @@ import useCalibrationServicesListFilters from './list/useCalibrationServicesList
 import useCalibrationServicesListActions from './list/useCalibrationServicesListActions'
 import useCalibrationServicesListData from './list/useCalibrationServicesListData'
 import { secondaryButtonSx } from './list/calibrationServicesListConstants'
+import { neutral } from 'src/theme/designTokens'
 
 /** Bandeja de servicios de calibración: lista agrupada, tabla o kanban con filtros operativos. */
 const CalibrationServicesPage = () => {
@@ -209,7 +210,7 @@ const CalibrationServicesPage = () => {
         >
           <Typography
             variant='body2'
-            sx={{ color: '#4b5563' }}
+            sx={{ color: neutral.textBody }}
             aria-live='polite'
           >
             {`Se cargaron ${loadedCount} de ${totalItems} servicios`}

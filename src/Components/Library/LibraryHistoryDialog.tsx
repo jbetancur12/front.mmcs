@@ -21,6 +21,7 @@ import { useLibraryHistory } from 'src/hooks/library/useLibraryDocuments'
 import { downloadLibraryPdf, downloadLibrarySource } from './libraryDownloads'
 import { formatLibraryDate } from './libraryFormat'
 import { LibraryDocument } from './Library.types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface LibraryHistoryDialogProps {
   document: LibraryDocument | null
@@ -63,7 +64,7 @@ const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
                   alignItems: 'center',
                   gap: 1.5,
                   p: 1.5,
-                  border: '1px solid #e5e7eb',
+                  border: `1px solid ${neutral.border}`,
                   borderRadius: 2
                 }}
               >
@@ -112,7 +113,7 @@ const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
                 <Tooltip title='Ver'>
                   <IconButton
                     aria-label={`Ver versión ${version.version}`}
-                    sx={{ color: '#00695C' }}
+                    sx={{ color: brand.ink }}
                     onClick={() => onView(version)}
                   >
                     <VisibilityOutlined fontSize='small' />
@@ -132,7 +133,7 @@ const LibraryHistoryDialog: React.FC<LibraryHistoryDialogProps> = ({
                   <Tooltip title='Descargar archivo original'>
                     <IconButton
                       aria-label={`Descargar archivo original de la versión ${version.version}`}
-                      sx={{ color: '#2563eb' }}
+                      sx={{ color: intent.action }}
                       onClick={() => downloadLibrarySource(version)}
                     >
                       <DescriptionOutlined fontSize='small' />

@@ -1,6 +1,7 @@
 import toast, { type ToastOptions } from 'react-hot-toast'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
+import { intent } from 'src/theme/designTokens'
 
 /**
  * Avisos breves de la app. Es la única forma de mostrar un aviso que no pide
@@ -29,7 +30,7 @@ export const notify = {
 
   info: (message: string, detail?: string, options?: ToastOptions): void => {
     toast(compose(message, detail), {
-      icon: <InfoOutlinedIcon fontSize='small' sx={{ color: '#2563eb' }} />,
+      icon: <InfoOutlinedIcon fontSize='small' sx={{ color: intent.action }} />,
       ...options
     })
   },
@@ -37,7 +38,10 @@ export const notify = {
   warning: (message: string, detail?: string, options?: ToastOptions): void => {
     toast(compose(message, detail), {
       icon: (
-        <WarningAmberRoundedIcon fontSize='small' sx={{ color: '#d97706' }} />
+        <WarningAmberRoundedIcon
+          fontSize='small'
+          sx={{ color: intent.warning }}
+        />
       ),
       ...options
     })

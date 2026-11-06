@@ -19,6 +19,7 @@ import { getItemsTotal } from './calibrationServicesListUtils'
 import CalibrationServiceListCard from './CalibrationServiceListCard'
 import { CalibrationServicesListPermissions } from './useCalibrationServicesListPermissions'
 import { CalibrationServicesListActions } from './useCalibrationServicesListActions'
+import { brand, neutral } from 'src/theme/designTokens'
 
 const GROUPED_STORAGE_KEY = 'calibrationServicesListGrouped'
 
@@ -80,7 +81,7 @@ const CalibrationServicesGroupedList = ({
           m: 0,
           '& .MuiFormControlLabel-label': {
             fontSize: '0.875rem',
-            color: '#374151',
+            color: neutral.textBody,
             fontWeight: 600
           }
         }}
@@ -91,8 +92,8 @@ const CalibrationServicesGroupedList = ({
             onChange={(_event, checked) => handleGroupedChange(checked)}
             inputProps={{ 'aria-label': 'Agrupar servicios por etapa' }}
             sx={{
-              '& .Mui-checked': { color: '#00BFA5' },
-              '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#00BFA5' }
+              '& .Mui-checked': { color: brand.main },
+              '& .Mui-checked + .MuiSwitch-track': { bgcolor: brand.main }
             }}
           />
         }
@@ -148,7 +149,7 @@ const CalibrationServicesGroupedList = ({
             <AccordionSummary
               expandIcon={<ExpandMoreOutlinedIcon />}
               sx={{
-                backgroundColor: '#f9fafb',
+                backgroundColor: neutral.surfaceAlt,
                 borderBottom: `1px solid ${ui.border}`,
                 minHeight: 48,
                 '&.Mui-expanded': { minHeight: 48 },
@@ -184,8 +185,8 @@ const CalibrationServicesGroupedList = ({
                   size='small'
                   label={group.services.length}
                   sx={{
-                    bgcolor: '#f3f4f6',
-                    color: '#374151',
+                    bgcolor: neutral.surfaceHead,
+                    color: neutral.textBody,
                     fontWeight: 700,
                     fontVariantNumeric: 'tabular-nums'
                   }}
@@ -202,7 +203,7 @@ const CalibrationServicesGroupedList = ({
                     variant='body2'
                     sx={{
                       ml: 'auto !important',
-                      color: '#00695C',
+                      color: brand.ink,
                       fontWeight: 700
                     }}
                   >

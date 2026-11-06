@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, Typography } from '@mui/material'
+import { neutral } from 'src/theme/designTokens'
 
 interface EmptyStateProps {
   icon: React.ReactElement
@@ -36,7 +37,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     }}
   >
     {React.cloneElement(icon, {
-      sx: { fontSize: compact ? 28 : 40, color: '#9ca3af', mb: 0.5 }
+      sx: { fontSize: compact ? 28 : 40, color: neutral.textFaint, mb: 0.5 }
     })}
     <Typography variant='body2' fontWeight={600} color='text.primary'>
       {title}

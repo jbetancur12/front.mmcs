@@ -1,6 +1,7 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React from 'react'
 import { Box, Card, CardContent, Skeleton, Grid, Stack } from '@mui/material'
+import { neutral, intent } from 'src/theme/designTokens'
 
 // Skeleton for metric cards
 export const MetricCardSkeleton: React.FC = () => <SignalLoader size='small' />
@@ -12,7 +13,7 @@ export const WidgetCardSkeleton: React.FC<{ height?: number }> = ({
   <Card
     sx={{
       borderRadius: '16px',
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${neutral.border}`,
       height: height
     }}
   >
@@ -115,8 +116,8 @@ export const ActivityFeedSkeleton: React.FC = () => (
           alignItems: 'center',
           p: 2,
           borderRadius: '12px',
-          bgcolor: '#f9fafb',
-          border: '1px solid #f3f4f6'
+          bgcolor: neutral.surfaceAlt,
+          border: `1px solid ${neutral.surfaceHead}`
         }}
       >
         <Skeleton variant='circular' width={40} height={40} sx={{ mr: 2 }} />
@@ -135,7 +136,7 @@ export const QuickActionSkeleton: React.FC = () => (
   <Card
     sx={{
       borderRadius: '16px',
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${neutral.border}`,
       cursor: 'pointer',
       height: '100%'
     }}
@@ -166,7 +167,7 @@ export const NotificationSkeleton: React.FC = () => (
       alignItems: 'center',
       p: 2,
       borderRadius: '8px',
-      border: '1px solid #f3f4f6'
+      border: `1px solid ${neutral.surfaceHead}`
     }}
   >
     <Skeleton variant='circular' width={32} height={32} sx={{ mr: 2 }} />
@@ -195,7 +196,7 @@ export const SystemStatusSkeleton: React.FC = () => (
           alignItems: 'center',
           p: 2,
           borderRadius: '12px',
-          bgcolor: '#f0fdf4'
+          bgcolor: intent.successSoft
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>

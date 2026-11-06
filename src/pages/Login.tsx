@@ -28,6 +28,7 @@ import {
   clearSessionEnded,
   peekSessionEndedMessage
 } from 'src/utils/sessionEnd'
+import { brand } from 'src/theme/designTokens'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: unknown): obj is AxiosError {
@@ -381,7 +382,7 @@ const Login: React.FC = () => {
                 component={Link}
                 to='/password-recovery'
                 underline='hover'
-                sx={{ fontSize: 14, fontWeight: 600, color: '#00695c' }}
+                sx={{ fontSize: 14, fontWeight: 600, color: brand.ink }}
               >
                 ¿Olvidaste tu contraseña?
               </MuiLink>
@@ -407,15 +408,15 @@ const Login: React.FC = () => {
             sx={{
               height: 48,
               borderRadius: '12px',
-              bgcolor: '#00bfa5',
+              bgcolor: brand.main,
               color: '#ffffff',
               fontSize: 15,
               fontWeight: 700,
               textTransform: 'none',
               boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
-              '&:hover': { bgcolor: '#00acc1' },
+              '&:hover': { bgcolor: brand.hover },
               '&.Mui-disabled': {
-                bgcolor: '#00bfa5',
+                bgcolor: brand.main,
                 color: '#ffffff',
                 opacity: 0.6
               }

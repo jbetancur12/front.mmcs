@@ -17,6 +17,7 @@ import {
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { useEffect, useState } from 'react'
 import { notify } from 'src/utils/notify'
+import { intent } from 'src/theme/designTokens'
 
 const APPROVAL_CHANNEL_OPTIONS = [
   'En persona',
@@ -191,7 +192,7 @@ const EquipmentQuotationApprovalDialog = ({
             <Typography
               variant='caption'
               fontWeight={700}
-              sx={{ color: '#dc2626', mb: 1, display: 'block' }}
+              sx={{ color: intent.danger, mb: 1, display: 'block' }}
             >
               * Evidencia obligatoria
             </Typography>

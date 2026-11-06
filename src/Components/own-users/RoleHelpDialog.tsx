@@ -17,6 +17,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { moduleCounts, unassignableText } from './roleSummary'
 import { AssignableRole } from './types'
 import { getRoleChipLabel } from './userValidation'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface RoleHelpDialogProps {
   open: boolean
@@ -57,7 +58,7 @@ const RoleHelpDialog: React.FC<RoleHelpDialogProps> = ({
                   gap: 1,
                   alignItems: 'start',
                   py: 1,
-                  borderBottom: '1px solid #e5e7eb',
+                  borderBottom: `1px solid ${neutral.border}`,
                   '&:last-of-type': { borderBottom: 'none' }
                 }}
               >
@@ -66,8 +67,8 @@ const RoleHelpDialog: React.FC<RoleHelpDialogProps> = ({
                   size='small'
                   sx={{
                     width: 'fit-content',
-                    backgroundColor: '#d1fae5',
-                    color: '#047857',
+                    backgroundColor: intent.successSoft,
+                    color: intent.successInk,
                     fontWeight: 600
                   }}
                 />
@@ -117,7 +118,7 @@ const RoleHelpDialog: React.FC<RoleHelpDialogProps> = ({
                     <Typography
                       variant='caption'
                       component='div'
-                      sx={{ mt: 0.5, color: '#b45309' }}
+                      sx={{ mt: 0.5, color: intent.warningInk }}
                     >
                       {blocked}
                     </Typography>

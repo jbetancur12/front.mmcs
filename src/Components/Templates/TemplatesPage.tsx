@@ -22,6 +22,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 
 const TemplatesPage: React.FC = () => {
   const canManageTemplates = useCan(PERMISSIONS.CALIBRATION_TEMPLATE_MANAGE)
@@ -143,9 +144,9 @@ const TemplatesPage: React.FC = () => {
       startIcon={<AddIcon />}
       onClick={() => setCreateModalOpen(true)}
       sx={{
-        bgcolor: '#00BFA5',
+        bgcolor: brand.main,
         whiteSpace: 'nowrap',
-        '&:hover': { bgcolor: '#00ACC1' }
+        '&:hover': { bgcolor: brand.hover }
       }}
     >
       Crear plantilla

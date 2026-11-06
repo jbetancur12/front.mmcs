@@ -14,6 +14,7 @@ import {
   Typography
 } from '@mui/material'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+import { brand } from 'src/theme/designTokens'
 
 /**
  * Confirmaciones y esperas que se piden desde código (un handler, un hook)
@@ -288,8 +289,8 @@ export const DialogHost: React.FC = () => {
             sx={{
               textTransform: 'none',
               fontWeight: 600,
-              bgcolor: '#00BFA5',
-              '&:hover': { bgcolor: '#00ACC1' }
+              bgcolor: brand.main,
+              '&:hover': { bgcolor: brand.hover }
             }}
           >
             {prompt?.confirmLabel ?? 'Aceptar'}
@@ -327,7 +328,7 @@ export const DialogHost: React.FC = () => {
                 value={option.value}
                 label={option.label}
                 control={
-                  <Radio sx={{ '&.Mui-checked': { color: '#00BFA5' } }} />
+                  <Radio sx={{ '&.Mui-checked': { color: brand.main } }} />
                 }
               />
             ))}
@@ -347,8 +348,8 @@ export const DialogHost: React.FC = () => {
             sx={{
               textTransform: 'none',
               fontWeight: 600,
-              bgcolor: '#00BFA5',
-              '&:hover': { bgcolor: '#00ACC1' }
+              bgcolor: brand.main,
+              '&:hover': { bgcolor: brand.hover }
             }}
           >
             {choice?.confirmLabel ?? 'Aceptar'}

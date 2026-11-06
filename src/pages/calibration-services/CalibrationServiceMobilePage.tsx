@@ -79,34 +79,35 @@ import {
   useCalibrationService
 } from '../../hooks/useCalibrationServices'
 import { useCalibrationDeviceSearch } from '../../hooks/calibration/useCalibrationDeviceSearch'
+import { brand, neutral, intent, detail } from 'src/theme/designTokens'
 
 // Figma design palette
 const G = {
-  green: '#00BFA5',
-  greenLight: '#E0F7F4',
-  greenDark: '#00897B',
-  yellow: '#F5A623',
-  yellowLight: '#fff8ec',
-  red: '#e53e3e',
-  gray50: '#f0f2f5',
-  gray100: '#e8eaed',
-  gray200: '#d1d5db',
-  gray300: '#b0b7c3',
-  gray400: '#9ca3af',
-  gray600: '#4b5563',
-  gray800: '#1f2937',
-  dark: '#1a1a2e',
+  green: brand.main,
+  greenLight: brand.soft,
+  greenDark: brand.hover,
+  yellow: intent.warning,
+  yellowLight: intent.warningSoft,
+  red: intent.danger,
+  gray50: neutral.surfaceHead,
+  gray100: neutral.border,
+  gray200: neutral.borderStrong,
+  gray300: neutral.textFaint,
+  gray400: neutral.textFaint,
+  gray600: neutral.textBody,
+  gray800: neutral.text,
+  dark: neutral.text,
   white: '#ffffff'
 }
 
-const BANNER_BG = 'linear-gradient(135deg, #10b981, #059669)'
+const BANNER_BG = `linear-gradient(135deg, ${detail.from}, ${detail.to})`
 const primarySx = {
   borderRadius: '12px',
   py: 1.5,
   textTransform: 'none',
   fontWeight: 600,
   bgcolor: G.green,
-  '&:hover': { bgcolor: '#00ACC1' },
+  '&:hover': { bgcolor: brand.hover },
   '&.Mui-disabled': { bgcolor: G.gray100, color: G.gray400 },
   '&:active': { transform: 'scale(0.97)' }
 } as const
@@ -137,7 +138,7 @@ const STATUS_FLOW: CalibrationServiceOperationalItemStatus[] = [
   'completed'
 ]
 const CUT_STATUSES: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Borrador', color: '#b45309' },
+  draft: { label: 'Borrador', color: intent.warningInk },
   ready_for_invoicing: { label: 'Listo para facturar', color: G.greenDark },
   invoiced: { label: 'Facturado', color: G.gray600 }
 }
@@ -663,7 +664,7 @@ const MobilePage = () => {
     fontSize: '0.75rem',
     color: G.greenDark,
     bgcolor: G.greenLight,
-    '&:hover': { bgcolor: '#c9efe9' },
+    '&:hover': { bgcolor: brand.soft },
     '&.Mui-disabled': { color: G.gray300, bgcolor: G.gray50 }
   } as const
 
@@ -743,8 +744,8 @@ const MobilePage = () => {
                     elevation={0}
                     sx={{
                       ...cardSx,
-                      borderColor: '#f59e0b',
-                      bgcolor: '#fffbeb'
+                      borderColor: intent.warning,
+                      bgcolor: intent.warningSoft
                     }}
                   >
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
@@ -1523,7 +1524,7 @@ const MobilePage = () => {
                     {cuts.map((cut: CalibrationServiceCut) => {
                       const cs = CUT_STATUSES[cut.status] || {
                         label: cut.status,
-                        color: '#6b7280'
+                        color: neutral.textMuted
                       }
                       return (
                         <Card key={cut.id} elevation={0} sx={cardSx}>
@@ -3056,7 +3057,9 @@ const DeviceSearch = ({ onSelect }: { onSelect: (name: string) => void }) => {
           InputProps={{
             ...p.InputProps,
             startAdornment: (
-              <SearchIcon sx={{ mr: 0.5, color: '#9ca3af', fontSize: 20 }} />
+              <SearchIcon
+                sx={{ mr: 0.5, color: neutral.textFaint, fontSize: 20 }}
+              />
             )
           }}
         />

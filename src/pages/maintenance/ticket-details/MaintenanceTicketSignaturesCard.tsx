@@ -7,6 +7,7 @@ import {
 import { maintenanceSignaturesEnabled } from '../../../features/maintenanceFlags'
 import { formatDate, surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { intent, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTicketSignaturesCardProps {
   ticket: MaintenanceTicket
@@ -37,7 +38,9 @@ const MaintenanceTicketSignaturesCard = ({
               ...surfaceSx,
               p: 3,
               mb: 3,
-              borderColor: signaturesMissing ? '#fcd34d' : '#bbf7d0'
+              borderColor: signaturesMissing
+                ? intent.warning
+                : intent.successSoft
             }}
           >
             <Box
@@ -52,7 +55,7 @@ const MaintenanceTicketSignaturesCard = ({
                   variant='h6'
                   sx={{
                     fontWeight: 600,
-                    color: signaturesMissing ? '#d97706' : '#059669'
+                    color: signaturesMissing ? intent.warning : brand.hover
                   }}
                 >
                   Firmas de conformidad

@@ -27,6 +27,7 @@ import {
 } from '../../types/maintenance'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTimelineProps {
   timeline: MaintenanceTimelineEntry[]
@@ -144,15 +145,15 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
   ) => {
     switch (color) {
       case 'primary':
-        return { bg: '#e8f7ef', fg: '#00A651' }
+        return { bg: intent.successSoft, fg: intent.successInk }
       case 'success':
-        return { bg: '#ecfdf5', fg: '#059669' }
+        return { bg: intent.successSoft, fg: brand.hover }
       case 'error':
-        return { bg: '#fef2f2', fg: '#dc2626' }
+        return { bg: intent.dangerSoft, fg: intent.danger }
       case 'secondary':
         return { bg: '#f3e8ff', fg: '#7c3aed' }
       default:
-        return { bg: '#f1f5f9', fg: '#475569' }
+        return { bg: neutral.surfaceHead, fg: neutral.textBody }
     }
   }
 
@@ -160,10 +161,10 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
     return (
       <Card
         sx={{
-          backgroundColor: '#ffffff',
+          backgroundColor: neutral.surface,
           borderRadius: '12px',
           boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${neutral.border}`
         }}
       >
         <CardContent>
@@ -191,7 +192,7 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
           }
         },
         '& .MuiTimelineConnector-root': {
-          backgroundColor: '#cbd5e1',
+          backgroundColor: neutral.borderStrong,
           width: '3px'
         }
       }}
@@ -257,8 +258,8 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                           width: 20,
                           height: 20,
                           fontSize: '0.65rem',
-                          backgroundColor: '#e8f7ef',
-                          color: '#00A651'
+                          backgroundColor: intent.successSoft,
+                          color: intent.successInk
                         }}
                       >
                         {getInitials(entry.performedBy)}

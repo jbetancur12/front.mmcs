@@ -42,6 +42,7 @@ import { NonConformWorkReportAlert } from './NonConformWorkReport.types'
 import { notify } from 'src/utils/notify'
 import { notify as appNotify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
+import { brand, intent } from 'src/theme/designTokens'
 
 // Traducciones y mapeos
 const impactMap: Record<string, string> = {
@@ -370,9 +371,9 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
               startIcon={<Add />}
               onClick={onCreate}
               sx={{
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#00ACC1' }
+                '&:hover': { bgcolor: brand.hover }
               }}
             >
               Nuevo reporte
@@ -447,7 +448,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
               <IconButton
                 size='small'
                 aria-label={`Ver reporte ${row.original.tncCode}`}
-                sx={{ color: '#00695C' }}
+                sx={{ color: brand.ink }}
                 onClick={() => onView && onView(row.original)}
               >
                 <VisibilityIcon fontSize='small' />
@@ -459,7 +460,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
                   <IconButton
                     size='small'
                     aria-label={`Editar reporte ${row.original.tncCode}`}
-                    sx={{ color: '#2563eb' }}
+                    sx={{ color: intent.action }}
                     onClick={() => onEdit && onEdit(row.original)}
                   >
                     <EditIcon fontSize='small' />

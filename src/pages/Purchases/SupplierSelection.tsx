@@ -31,6 +31,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import SupplierSelectionModal from 'src/Components/Purchases/SupplierSelectionModal'
 
 import { logger } from 'src/utils/logger'
+import { brand, intent } from 'src/theme/designTokens'
 // Definir el tipo para los proveedores
 
 const DECISIONS: Record<
@@ -121,9 +122,9 @@ const SuppliersSelection: React.FC = () => {
             startIcon={<Add />}
             onClick={() => setModalOpen(true)}
             sx={{
-              bgcolor: '#00BFA5',
+              bgcolor: brand.main,
               whiteSpace: 'nowrap',
-              '&:hover': { bgcolor: '#00ACC1' }
+              '&:hover': { bgcolor: brand.hover }
             }}
           >
             Nuevo proveedor
@@ -184,7 +185,7 @@ const SuppliersSelection: React.FC = () => {
                   to={`${row.original.id}`}
                   size='small'
                   aria-label={`Ver ${row.original.supplier?.name}`}
-                  sx={{ color: '#00695C' }}
+                  sx={{ color: brand.ink }}
                 >
                   <Visibility />
                 </IconButton>
@@ -194,7 +195,7 @@ const SuppliersSelection: React.FC = () => {
                   onClick={() => handleOpenEditModal(row.original)}
                   size='small'
                   aria-label={`Editar evaluación de ${row.original.supplier?.name}`}
-                  sx={{ color: '#2563eb' }}
+                  sx={{ color: intent.action }}
                 >
                   <Edit />
                 </IconButton>

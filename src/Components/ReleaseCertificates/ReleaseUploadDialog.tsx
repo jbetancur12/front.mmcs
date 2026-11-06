@@ -27,10 +27,11 @@ import {
   ReleaseServiceOption,
   ReleaseUploadResult
 } from './ReleaseCertificates.types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 const MAX_FILES = 50
 const MAX_SIZE_MB = 20
-const BUTTON_SX = { bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }
+const BUTTON_SX = { bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }
 
 interface ReleaseUploadDialogProps {
   open: boolean
@@ -173,12 +174,12 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
                   {result.ok ? (
                     <CheckCircleOutline
                       fontSize='small'
-                      sx={{ color: '#2e7d32', mt: 0.25 }}
+                      sx={{ color: intent.successInk, mt: 0.25 }}
                     />
                   ) : (
                     <ErrorOutline
                       fontSize='small'
-                      sx={{ color: '#b91c1c', mt: 0.25 }}
+                      sx={{ color: intent.dangerInk, mt: 0.25 }}
                     />
                   )}
                   <Box sx={{ minWidth: 0 }}>
@@ -231,16 +232,16 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
               }}
               sx={{
                 border: '2px dashed',
-                borderColor: dragOver ? '#00BFA5' : '#d1d5db',
-                bgcolor: dragOver ? '#f0fbf9' : '#fafafa',
+                borderColor: dragOver ? brand.main : neutral.borderStrong,
+                bgcolor: dragOver ? brand.softer : neutral.surfaceAlt,
                 borderRadius: 2,
                 p: 4,
                 textAlign: 'center',
                 cursor: 'pointer',
-                '&:focus-visible': { outline: '2px solid #00BFA5' }
+                '&:focus-visible': { outline: `2px solid ${brand.main}` }
               }}
             >
-              <CloudUploadOutlined sx={{ fontSize: 40, color: '#00897B' }} />
+              <CloudUploadOutlined sx={{ fontSize: 40, color: brand.hover }} />
               <Typography fontWeight={600}>
                 Suelta aquí los PDF o haz clic para elegirlos
               </Typography>
@@ -297,7 +298,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
                   >
                     <PictureAsPdfOutlined
                       fontSize='small'
-                      sx={{ color: '#b91c1c' }}
+                      sx={{ color: intent.dangerInk }}
                     />
                     <Typography
                       variant='body2'
@@ -322,7 +323,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
             {upload.isLoading && (
               <Box sx={{ mt: 2 }}>
                 <LinearProgress
-                  sx={{ '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5' } }}
+                  sx={{ '& .MuiLinearProgress-bar': { bgcolor: brand.main } }}
                 />
                 <Typography variant='caption' color='text.secondary'>
                   Cargando y leyendo los certificados…

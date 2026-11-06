@@ -7,6 +7,7 @@ import ModulesView from 'src/Components/Modules/components/ModulesView'
 import CustomerModulesMatrix from 'src/Components/Modules/components/CustomerModulesMatrix'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
+import { brand, neutral } from 'src/theme/designTokens'
 
 type ModulesTab = 'catalogo' | 'clientes'
 
@@ -34,7 +35,7 @@ const Modules = () => {
       {canViewCustomers && (
         <Paper
           elevation={0}
-          sx={{ mb: 3, borderRadius: 2, border: '1px solid #e5e7eb' }}
+          sx={{ mb: 3, borderRadius: 2, border: `1px solid ${neutral.border}` }}
         >
           <Tabs
             value={tab}
@@ -43,7 +44,7 @@ const Modules = () => {
                 replace: true
               })
             }
-            TabIndicatorProps={{ sx: { bgcolor: '#00BFA5' } }}
+            TabIndicatorProps={{ sx: { bgcolor: brand.main } }}
             sx={{
               '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }
             }}

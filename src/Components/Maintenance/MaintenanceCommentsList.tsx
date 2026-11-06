@@ -32,6 +32,7 @@ import { es } from 'date-fns/locale'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 interface MaintenanceCommentsListProps {
   comments: MaintenanceComment[]
   onAddComment: (comment: string, isInternal: boolean) => Promise<void>
@@ -71,9 +72,9 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState('')
   const surfaceSx = {
-    backgroundColor: '#ffffff',
+    backgroundColor: neutral.surface,
     borderRadius: '12px',
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${neutral.border}`,
     boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
   }
 
@@ -217,7 +218,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
         gutterBottom
         sx={{
           fontWeight: 600,
-          color: '#0f172a',
+          color: neutral.text,
           mb: 3
         }}
       >
@@ -234,11 +235,11 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
             width: '6px'
           },
           '&::-webkit-scrollbar-track': {
-            background: '#e2e8f0',
+            background: neutral.border,
             borderRadius: '3px'
           },
           '&::-webkit-scrollbar-thumb': {
-            background: '#94a3b8',
+            background: neutral.textFaint,
             borderRadius: '3px'
           }
         }}
@@ -248,7 +249,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
             severity='info'
             sx={{
               mb: 2,
-              backgroundColor: '#ffffff',
+              backgroundColor: neutral.surface,
               borderRadius: '12px',
               border: '1px solid rgba(33, 150, 243, 0.2)'
             }}
@@ -264,13 +265,17 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 ...surfaceSx,
                 p: 2,
                 mb: 2,
-                backgroundColor: comment.isInternal ? '#fffbeb' : '#ffffff',
+                backgroundColor: comment.isInternal
+                  ? intent.warningSoft
+                  : '#ffffff',
                 border: comment.isInternal
-                  ? '1px solid #fde68a'
-                  : '1px solid #e5e7eb',
+                  ? `1px solid ${intent.warning}`
+                  : `1px solid ${neutral.border}`,
                 transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                 '&:hover': {
-                  borderColor: comment.isInternal ? '#fcd34d' : '#cbd5e1',
+                  borderColor: comment.isInternal
+                    ? intent.warning
+                    : neutral.borderStrong,
                   boxShadow: comment.isInternal
                     ? '0 4px 12px rgba(245, 158, 11, 0.12)'
                     : '0 4px 12px rgba(15, 23, 42, 0.08)'
@@ -293,37 +298,37 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       backgroundColor:
                         getRoleColor(comment.authorType || comment.userRole) ===
                         'primary'
-                          ? '#e8f7ef'
+                          ? intent.successSoft
                           : getRoleColor(
                                 comment.authorType || comment.userRole
                               ) === 'error'
-                            ? '#fef2f2'
+                            ? intent.dangerSoft
                             : getRoleColor(
                                   comment.authorType || comment.userRole
                                 ) === 'success'
-                              ? '#ecfdf5'
+                              ? intent.successSoft
                               : getRoleColor(
                                     comment.authorType || comment.userRole
                                   ) === 'info'
-                                ? '#eff6ff'
-                                : '#f1f5f9',
+                                ? intent.infoSoft
+                                : neutral.surfaceHead,
                       color:
                         getRoleColor(comment.authorType || comment.userRole) ===
                         'primary'
-                          ? '#00A651'
+                          ? intent.successInk
                           : getRoleColor(
                                 comment.authorType || comment.userRole
                               ) === 'error'
-                            ? '#dc2626'
+                            ? intent.danger
                             : getRoleColor(
                                   comment.authorType || comment.userRole
                                 ) === 'success'
-                              ? '#059669'
+                              ? brand.hover
                               : getRoleColor(
                                     comment.authorType || comment.userRole
                                   ) === 'info'
-                                ? '#2563eb'
-                                : '#475569'
+                                ? intent.action
+                                : neutral.textBody
                     }}
                   >
                     {getInitials(comment.authorName || comment.userName)}
@@ -346,13 +351,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             getRoleColor(
                               comment.authorType || comment.userRole
                             ) === 'primary'
-                              ? '#e8f7ef'
+                              ? intent.successSoft
                               : undefined,
                           color:
                             getRoleColor(
                               comment.authorType || comment.userRole
                             ) === 'primary'
-                              ? '#00A651'
+                              ? intent.successInk
                               : undefined,
                           border:
                             getRoleColor(
@@ -381,11 +386,11 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             sx={{
                               borderRadius: '6px',
                               fontWeight: 500,
-                              backgroundColor: '#fef3c7',
-                              color: '#b45309',
+                              backgroundColor: intent.warningSoft,
+                              color: intent.warningInk,
                               border: 'none',
                               '& .MuiChip-icon': {
-                                color: '#b45309'
+                                color: intent.warningInk
                               }
                             }}
                           />
@@ -499,7 +504,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
             gutterBottom
             sx={{
               fontWeight: 600,
-              color: '#0f172a'
+              color: neutral.text
             }}
           >
             Agregar comentario
@@ -519,14 +524,14 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#86c88a'
+                    borderColor: intent.success
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#00A651'
+                    borderColor: intent.successInk
                   }
                 },
                 '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#00A651'
+                  color: intent.successInk
                 }
               }}
             />
@@ -586,10 +591,10 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 disabled={!newComment.trim() || submitting || loading}
                 size='small'
                 sx={{
-                  backgroundColor: '#00A651',
+                  backgroundColor: intent.successInk,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: '#27672a'
+                    backgroundColor: intent.successInk
                   },
                   '&:disabled': {
                     background: 'rgba(0, 0, 0, 0.12)',

@@ -11,6 +11,7 @@ import {
   Paper
 } from '@mui/material'
 import { Keyboard, Close } from '@mui/icons-material'
+import { intent } from 'src/theme/designTokens'
 
 interface KeyboardShortcutsHelpProps {
   open: boolean
@@ -141,7 +142,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           <Typography
             variant='subtitle2'
             gutterBottom
-            sx={{ color: '#ff9800' }}
+            sx={{ color: intent.warning }}
           >
             Atajos Contextuales
           </Typography>

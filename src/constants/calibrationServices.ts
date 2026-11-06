@@ -12,6 +12,7 @@ import {
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../types/calibrationService'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 // Quién puede hacer qué (y qué parte de los servicios ve cada persona) se decide por capacidades: ver
 // constants/permissions.ts y hooks/useCalibrationVisibility.ts. Ya no hay listas de roles aquí.
@@ -120,13 +121,13 @@ export const CALIBRATION_SERVICE_STATUS_VARIANTS: Record<
 }
 
 const CHIP_ACCENT_HEX: Record<string, string> = {
-  default: '#9ca3af',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  success: '#10b981',
-  info: '#3b82f6',
+  default: neutral.textFaint,
+  warning: intent.warning,
+  error: intent.danger,
+  success: brand.main,
+  info: intent.info,
   secondary: '#8b5cf6',
-  primary: '#00BFA5'
+  primary: brand.main
 }
 
 // Color de la barra lateral de las tarjetas: sale del mismo mapa que el chip.

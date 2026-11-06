@@ -72,6 +72,7 @@ import PDFViewer from 'src/Components/PDFViewer'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 const fadeIn = { animation: 'fadeSlideIn 0.35s ease-out' }
 const styles = `
 @keyframes fadeSlideIn {
@@ -959,8 +960,8 @@ const LmsCourseView: React.FC = () => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: '#0b3532',
-        color: '#e2e8f0'
+        bgcolor: brand.ink,
+        color: neutral.border
       }}
     >
       <Box
@@ -981,7 +982,7 @@ const LmsCourseView: React.FC = () => {
             py: 0.5,
             borderRadius: 0.5,
             bgcolor: 'rgba(0,191,165,0.3)',
-            color: '#5EEAD4',
+            color: brand.main,
             mb: 2.5
           }}
         >
@@ -999,7 +1000,7 @@ const LmsCourseView: React.FC = () => {
           variant='subtitle1'
           sx={{
             fontWeight: 600,
-            color: '#f0f4f8',
+            color: neutral.surfaceHead,
             lineHeight: 1.35,
             mb: 3,
             fontSize: '1.05rem'
@@ -1026,7 +1027,7 @@ const LmsCourseView: React.FC = () => {
             </Typography>
             <Typography
               variant='caption'
-              sx={{ color: '#5EEAD4', fontWeight: 700, fontSize: '1rem' }}
+              sx={{ color: brand.main, fontWeight: 700, fontSize: '1rem' }}
             >
               {Math.round(courseProgress.percentage)}%
             </Typography>
@@ -1040,7 +1041,7 @@ const LmsCourseView: React.FC = () => {
               bgcolor: 'rgba(255,255,255,0.08)',
               '& .MuiLinearProgress-bar': {
                 borderRadius: 999,
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 transition: 'width 0.5s ease'
               }
             }}
@@ -1091,7 +1092,7 @@ const LmsCourseView: React.FC = () => {
                   <Typography
                     variant='caption'
                     sx={{
-                      color: '#dbe7f2',
+                      color: neutral.border,
                       fontWeight: 600,
                       fontSize: '0.86rem',
                       lineHeight: 1.3,
@@ -1117,7 +1118,9 @@ const LmsCourseView: React.FC = () => {
                   }}
                 >
                   {modTotal > 0 && modCompleted === modTotal && (
-                    <CheckCircleIcon sx={{ fontSize: 16, color: '#4ade80' }} />
+                    <CheckCircleIcon
+                      sx={{ fontSize: 16, color: intent.success }}
+                    />
                   )}
                   {isExpanded ? (
                     <ExpandMoreIcon sx={{ fontSize: 14 }} />
@@ -1161,7 +1164,7 @@ const LmsCourseView: React.FC = () => {
                             : 'transparent',
                           borderLeft: '2px solid',
                           borderLeftColor: isCurrent
-                            ? '#00BFA5'
+                            ? brand.main
                             : 'transparent',
                           '&:hover': isUnlocked
                             ? {
@@ -1178,9 +1181,9 @@ const LmsCourseView: React.FC = () => {
                             mt: 0.25,
                             flexShrink: 0,
                             color: isCompleted
-                              ? '#4dc8e0'
+                              ? brand.main
                               : isCurrent
-                                ? '#9de4f0'
+                                ? brand.main
                                 : 'rgba(200,216,232,0.3)'
                           }}
                         >
@@ -1199,7 +1202,7 @@ const LmsCourseView: React.FC = () => {
                               fontSize: '0.86rem',
                               lineHeight: 1.35,
                               color: isCurrent
-                                ? '#f0f4f8'
+                                ? neutral.surfaceHead
                                 : isCompleted
                                   ? 'rgba(240,244,248,0.55)'
                                   : 'rgba(240,244,248,0.82)',
@@ -1258,8 +1261,7 @@ const LmsCourseView: React.FC = () => {
           height: '100%',
           minHeight: '100vh',
           overflow: 'hidden',
-          background:
-            'radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, #f3fbfa 0%, #ecf6f5 100%)'
+          background: `radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, ${brand.softer} 0%, ${neutral.surfaceHead} 100%)`
         }}
       >
         {/* Mobile FAB for sidebar */}
@@ -1291,7 +1293,7 @@ const LmsCourseView: React.FC = () => {
               position: 'relative',
               height: '100%',
               borderRight: 'none',
-              background: '#0b3532'
+              background: brand.ink
             }
           }}
         >
@@ -1320,8 +1322,8 @@ const LmsCourseView: React.FC = () => {
             sx={{
               px: { xs: 2, md: 3 },
               height: 52,
-              borderBottom: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              borderBottom: `1px solid ${neutral.border}`,
+              bgcolor: neutral.surface,
               display: 'flex',
               alignItems: 'center',
               gap: 1,
@@ -1342,7 +1344,7 @@ const LmsCourseView: React.FC = () => {
               noWrap
               sx={{
                 fontWeight: 500,
-                color: '#0f1117',
+                color: neutral.text,
                 fontSize: '0.82rem',
                 minWidth: 0,
                 display: { xs: 'none', md: 'block' }
@@ -1352,7 +1354,10 @@ const LmsCourseView: React.FC = () => {
             </Typography>
             <Typography
               variant='caption'
-              sx={{ color: '#94a3b8', display: { xs: 'none', md: 'block' } }}
+              sx={{
+                color: neutral.textFaint,
+                display: { xs: 'none', md: 'block' }
+              }}
             >
               /
             </Typography>
@@ -1360,7 +1365,7 @@ const LmsCourseView: React.FC = () => {
               variant='caption'
               noWrap
               sx={{
-                color: '#00BFA5',
+                color: brand.main,
                 fontWeight: 600,
                 fontSize: '0.82rem',
                 minWidth: 0,
@@ -1372,7 +1377,7 @@ const LmsCourseView: React.FC = () => {
             <Box sx={{ flex: 1 }} />
             <Typography
               variant='caption'
-              sx={{ color: '#00BFA5', fontWeight: 700, fontSize: '0.85rem' }}
+              sx={{ color: brand.main, fontWeight: 700, fontSize: '0.85rem' }}
             >
               {Math.round(courseProgress.percentage)}%
             </Typography>
@@ -1383,16 +1388,16 @@ const LmsCourseView: React.FC = () => {
             sx={{
               height: 4,
               flexShrink: 0,
-              bgcolor: '#e2e8f0',
+              bgcolor: neutral.border,
               '& .MuiLinearProgress-bar': {
-                bgcolor: '#00BFA5',
+                bgcolor: brand.main,
                 transition: 'width 0.5s ease'
               }
             }}
           />
 
           {/* Lesson content */}
-          <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#f8fafc' }}>
+          <Box sx={{ flex: 1, overflow: 'auto', bgcolor: neutral.surfaceAlt }}>
             <Box sx={{ maxWidth: 1320, mx: 'auto', p: { xs: 2, md: 3 } }}>
               {currentLesson ? (
                 <Box
@@ -1404,7 +1409,7 @@ const LmsCourseView: React.FC = () => {
                     variant='h5'
                     sx={{
                       fontWeight: 700,
-                      color: '#0f1117',
+                      color: neutral.text,
                       mb: 2,
                       fontSize: { xs: '1.35rem', md: '1.7rem' }
                     }}
@@ -1427,9 +1432,9 @@ const LmsCourseView: React.FC = () => {
                       icon={<AccessTimeIcon />}
                       label={`${currentLesson.duration} · ${getContentTypeLabel(currentLesson.type)}`}
                       sx={{
-                        bgcolor: '#E0F7F4',
-                        color: '#00695C',
-                        '& .MuiChip-icon': { color: '#00897B' }
+                        bgcolor: brand.soft,
+                        color: brand.ink,
+                        '& .MuiChip-icon': { color: brand.hover }
                       }}
                     />
                     <Chip
@@ -1461,8 +1466,7 @@ const LmsCourseView: React.FC = () => {
                           borderRadius: 3,
                           color: 'white',
                           boxShadow: 3,
-                          background:
-                            'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)'
+                          background: `linear-gradient(135deg, ${intent.success} 0%, ${brand.main} 100%)`
                         }}
                       >
                         <CheckCircleIcon
@@ -1492,8 +1496,8 @@ const LmsCourseView: React.FC = () => {
                               textTransform: 'none',
                               fontWeight: 600,
                               bgcolor: 'white',
-                              color: '#00695C',
-                              '&:hover': { bgcolor: '#E0F7F4' }
+                              color: brand.ink,
+                              '&:hover': { bgcolor: brand.soft }
                             }}
                           >
                             Abrir certificado
@@ -1519,7 +1523,7 @@ const LmsCourseView: React.FC = () => {
                             justifyContent: 'space-between',
                             mb: 3,
                             p: 2,
-                            bgcolor: '#E0F7F4',
+                            bgcolor: brand.soft,
                             borderRadius: 2
                           }}
                         >
@@ -1527,7 +1531,7 @@ const LmsCourseView: React.FC = () => {
                             <Typography
                               variant='body2'
                               fontWeight={600}
-                              sx={{ color: '#00897B' }}
+                              sx={{ color: brand.hover }}
                             >
                               Certificado disponible
                             </Typography>
@@ -1546,8 +1550,8 @@ const LmsCourseView: React.FC = () => {
                               borderRadius: 2,
                               textTransform: 'none',
                               fontSize: '0.75rem',
-                              bgcolor: '#00BFA5',
-                              '&:hover': { bgcolor: '#00897B' }
+                              bgcolor: brand.main,
+                              '&:hover': { bgcolor: brand.hover }
                             }}
                           >
                             Abrir
@@ -1601,7 +1605,7 @@ const LmsCourseView: React.FC = () => {
                       <Typography
                         variant='body2'
                         sx={{
-                          color: '#0f1117',
+                          color: neutral.text,
                           lineHeight: 1.8,
                           mb: 4,
                           fontSize: '0.8rem'
@@ -1627,8 +1631,8 @@ const LmsCourseView: React.FC = () => {
                             px: 2,
                             py: 1.5,
                             borderRadius: 2,
-                            bgcolor: '#E0F7F4',
-                            color: '#00897B'
+                            bgcolor: brand.soft,
+                            color: brand.hover
                           }}
                         >
                           <CheckCircleIcon sx={{ fontSize: 24 }} />
@@ -1663,40 +1667,40 @@ const LmsCourseView: React.FC = () => {
                           sx={{
                             p: 3,
                             borderRadius: 2,
-                            border: '1px solid #e2e8f0',
+                            border: `1px solid ${neutral.border}`,
                             mb: 3,
-                            bgcolor: '#ffffff'
+                            bgcolor: neutral.surface
                           }}
                         >
                           <Typography
                             component='div'
                             sx={{
                               '& h1, & h2, & h3': {
-                                color: '#0f172a',
+                                color: neutral.text,
                                 mb: 2,
                                 mt: 3
                               },
                               '& p': {
                                 mb: 2,
                                 lineHeight: 1.8,
-                                color: '#334155',
+                                color: neutral.textBody,
                                 fontSize: '0.9rem'
                               },
                               '& code': {
-                                bgcolor: '#f1f5f9',
+                                bgcolor: neutral.surfaceHead,
                                 px: 1,
                                 borderRadius: 1,
                                 fontFamily: 'monospace'
                               },
                               '& pre': {
-                                bgcolor: '#0f172a',
-                                color: '#e2e8f0',
+                                bgcolor: neutral.text,
+                                color: neutral.border,
                                 p: 2,
                                 borderRadius: 1,
                                 overflow: 'auto'
                               },
                               '& ul, & ol': { mb: 2, pl: 3 },
-                              '& li': { mb: 1, color: '#334155' }
+                              '& li': { mb: 1, color: neutral.textBody }
                             }}
                             dangerouslySetInnerHTML={{
                               __html: currentLesson.content.text
@@ -1727,7 +1731,7 @@ const LmsCourseView: React.FC = () => {
                           variant='body2'
                           sx={{
                             fontWeight: 600,
-                            color: '#0f1117',
+                            color: neutral.text,
                             mb: 2,
                             fontSize: '0.85rem'
                           }}
@@ -1746,16 +1750,16 @@ const LmsCourseView: React.FC = () => {
                                 px: 2,
                                 py: 1.5,
                                 borderRadius: 2,
-                                border: '1px solid #e2e8f0',
-                                bgcolor: '#ffffff',
+                                border: `1px solid ${neutral.border}`,
+                                bgcolor: neutral.surface,
                                 cursor: 'pointer',
                                 transition: 'all 0.15s ease',
                                 '&:hover': {
-                                  borderColor: '#00BFA5',
-                                  bgcolor: '#f8fbfc'
+                                  borderColor: brand.main,
+                                  bgcolor: neutral.surfaceAlt
                                 },
                                 '&:hover .resource-download': {
-                                  color: '#00BFA5'
+                                  color: brand.main
                                 }
                               }}
                             >
@@ -1764,7 +1768,7 @@ const LmsCourseView: React.FC = () => {
                                   width: 32,
                                   height: 32,
                                   borderRadius: 1,
-                                  bgcolor: '#f0eeea',
+                                  bgcolor: intent.warningSoft,
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -1773,11 +1777,11 @@ const LmsCourseView: React.FC = () => {
                               >
                                 {resource.resourceType === 'link' ? (
                                   <ExternalLinkIcon
-                                    sx={{ fontSize: 14, color: '#00BFA5' }}
+                                    sx={{ fontSize: 14, color: brand.main }}
                                   />
                                 ) : (
                                   <DescriptionIcon
-                                    sx={{ fontSize: 14, color: '#00BFA5' }}
+                                    sx={{ fontSize: 14, color: brand.main }}
                                   />
                                 )}
                               </Box>
@@ -1786,7 +1790,7 @@ const LmsCourseView: React.FC = () => {
                                   variant='body2'
                                   sx={{
                                     fontWeight: 500,
-                                    color: '#0f1117',
+                                    color: neutral.text,
                                     fontSize: '0.75rem'
                                   }}
                                 >
@@ -1794,7 +1798,10 @@ const LmsCourseView: React.FC = () => {
                                 </Typography>
                                 <Typography
                                   variant='caption'
-                                  sx={{ color: '#6b6b72', fontSize: '0.65rem' }}
+                                  sx={{
+                                    color: neutral.textMuted,
+                                    fontSize: '0.65rem'
+                                  }}
                                 >
                                   {resource.resourceType === 'pdf'
                                     ? 'PDF'
@@ -1809,7 +1816,7 @@ const LmsCourseView: React.FC = () => {
                               <DownloadIcon
                                 sx={{
                                   fontSize: 13,
-                                  color: '#6b6b72',
+                                  color: neutral.textMuted,
                                   flexShrink: 0,
                                   transition: 'color 0.15s ease'
                                 }}
@@ -1828,7 +1835,7 @@ const LmsCourseView: React.FC = () => {
                       mt: 4,
                       pt: 3,
                       pb: 1,
-                      borderTop: '1px solid #e2e8f0',
+                      borderTop: `1px solid ${neutral.border}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1869,10 +1876,10 @@ const LmsCourseView: React.FC = () => {
                           justifyContent: 'center',
                           transition: 'all 0.15s ease',
                           borderColor: currentLessonCompleted
-                            ? '#00BFA5'
-                            : '#d1d5db',
+                            ? brand.main
+                            : neutral.borderStrong,
                           bgcolor: currentLessonCompleted
-                            ? '#00BFA5'
+                            ? brand.main
                             : 'transparent'
                         }}
                       >
@@ -1883,7 +1890,9 @@ const LmsCourseView: React.FC = () => {
                       <Typography
                         variant='caption'
                         sx={{
-                          color: currentLessonCompleted ? '#00BFA5' : '#6b6b72',
+                          color: currentLessonCompleted
+                            ? brand.main
+                            : neutral.textMuted,
                           fontWeight: 500,
                           fontSize: '0.75rem'
                         }}
@@ -1901,7 +1910,7 @@ const LmsCourseView: React.FC = () => {
                       <Typography
                         variant='caption'
                         sx={{
-                          color: '#6b6b72',
+                          color: neutral.textMuted,
                           fontSize: '0.82rem',
                           display: { xs: 'none', sm: 'block' }
                         }}
@@ -1928,8 +1937,8 @@ const LmsCourseView: React.FC = () => {
                               py: 1,
                               fontSize: '0.8rem',
                               fontWeight: 600,
-                              bgcolor: '#00BFA5',
-                              '&:hover': { bgcolor: '#00695C', opacity: 0.9 },
+                              bgcolor: brand.main,
+                              '&:hover': { bgcolor: brand.ink, opacity: 0.9 },
                               '&:active': { transform: 'scale(0.98)' },
                               transition: 'all 0.15s ease'
                             }}
@@ -1951,8 +1960,8 @@ const LmsCourseView: React.FC = () => {
                               borderRadius: 1,
                               px: { xs: 1.25, sm: 2 },
                               fontSize: '0.85rem',
-                              borderColor: '#d1d5db',
-                              color: '#374151'
+                              borderColor: neutral.borderStrong,
+                              color: neutral.textBody
                             }}
                           >
                             {isMobile ? 'Anterior' : 'Lección Anterior'}
@@ -1973,8 +1982,8 @@ const LmsCourseView: React.FC = () => {
                               borderRadius: 1,
                               px: { xs: 1.25, sm: 2 },
                               fontSize: '0.85rem',
-                              bgcolor: '#00BFA5',
-                              '&:hover': { bgcolor: '#00695C' }
+                              bgcolor: brand.main,
+                              '&:hover': { bgcolor: brand.ink }
                             }}
                           >
                             {isMobile ? 'Siguiente' : 'Siguiente Lección'}
@@ -2008,7 +2017,7 @@ const LmsCourseView: React.FC = () => {
                 width: 80,
                 height: 80,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)',
+                background: `linear-gradient(135deg, ${intent.success} 0%, ${brand.main} 100%)`,
                 boxShadow: 3,
                 display: 'flex',
                 alignItems: 'center',
@@ -2020,7 +2029,10 @@ const LmsCourseView: React.FC = () => {
             >
               <CertificateIcon sx={{ fontSize: 44, color: 'white' }} />
             </Box>
-            <Typography variant='h4' sx={{ fontWeight: 800, color: '#183153' }}>
+            <Typography
+              variant='h4'
+              sx={{ fontWeight: 800, color: intent.infoInk }}
+            >
               ¡Felicitaciones!
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
@@ -2028,7 +2040,7 @@ const LmsCourseView: React.FC = () => {
             </Typography>
             <Typography
               variant='h6'
-              sx={{ fontWeight: 700, color: '#00A58E', mt: 0.5 }}
+              sx={{ fontWeight: 700, color: brand.ink, mt: 0.5 }}
             >
               "{course.title}"
             </Typography>
@@ -2142,7 +2154,7 @@ const LmsCourseView: React.FC = () => {
               </IconButton>
             </Stack>
           </DialogTitle>
-          <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+          <DialogContent dividers sx={{ p: 0, bgcolor: neutral.surfaceHead }}>
             {pdfViewerResource && (
               <PDFViewer
                 downloadUrl={`/lms/content/resources/${pdfViewerResource.id}/download`}

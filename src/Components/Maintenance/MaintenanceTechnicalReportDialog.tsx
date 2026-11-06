@@ -39,6 +39,7 @@ import {
   useMaintenanceProtocolTemplates,
   useMaintenanceToolEquipmentSearch
 } from '../../hooks/useMaintenance'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 interface Props {
   open: boolean
@@ -132,9 +133,9 @@ const toEditableReport = (
 const sectionCardSx = {
   p: 2,
   borderRadius: '12px',
-  border: '1px solid #e5e7eb',
+  border: `1px solid ${neutral.border}`,
   boxShadow: 'none',
-  backgroundColor: '#ffffff'
+  backgroundColor: neutral.surface
 }
 
 const getCompletionTone = (pct: number) => {
@@ -475,13 +476,13 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
         </Box>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ backgroundColor: '#f8fafc' }}>
+      <DialogContent dividers sx={{ backgroundColor: neutral.surfaceAlt }}>
         {loading && (
           <SignalLoader message='Cargando estructura del reporte técnico...' />
         )}
 
         <Stack spacing={2}>
-          <Paper sx={{ ...sectionCardSx, backgroundColor: '#f8fbff' }}>
+          <Paper sx={{ ...sectionCardSx, backgroundColor: neutral.surfaceAlt }}>
             <Stack
               direction={{ xs: 'column', md: 'row' }}
               spacing={2}
@@ -667,7 +668,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               mb={2}
             >
               <Box display='flex' alignItems='center' gap={1}>
-                <Engineering fontSize='small' sx={{ color: '#2563eb' }} />
+                <Engineering fontSize='small' sx={{ color: intent.action }} />
                 <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
                   Intervención Realizada
                 </Typography>
@@ -783,7 +784,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               mb={2}
             >
               <Box display='flex' alignItems='center' gap={1}>
-                <Science fontSize='small' sx={{ color: '#059669' }} />
+                <Science fontSize='small' sx={{ color: brand.ink }} />
                 <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
                   Validación Técnica y Metrología
                 </Typography>

@@ -6,6 +6,7 @@ import { useCalibrationDeliveryMutations } from '../../../hooks/useCalibrationDe
 import { getApiErrorMessage } from '../../../utils/apiError'
 import { CalibrationService } from '../../../types/calibrationService'
 import CalibrationServicePauseDialog from '../CalibrationServicePauseDialog'
+import { brand } from 'src/theme/designTokens'
 
 interface Props {
   service: CalibrationService
@@ -106,12 +107,12 @@ const CalibrationDeliveryReadyAction = ({ service, canManage }: Props) => {
             onClick={() => setIsOpen(true)}
             disabled={setReady.isLoading}
             sx={{
-              color: '#00897B',
-              borderColor: '#00BFA5',
+              color: brand.hover,
+              borderColor: brand.main,
               textTransform: 'none',
               fontWeight: 600,
               whiteSpace: 'nowrap',
-              '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
             }}
           >
             {delivery.status === 'delivered'

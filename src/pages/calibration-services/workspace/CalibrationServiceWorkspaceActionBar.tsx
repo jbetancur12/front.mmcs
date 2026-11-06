@@ -9,6 +9,7 @@ import {
 } from './calibrationServiceWorkspaceConstants'
 import { CalibrationServiceWorkspaceSummary } from './calibrationServiceWorkspaceSummary'
 import { SaveTargetStatus } from './calibrationServiceWorkspaceTypes'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface CalibrationServiceWorkspaceActionBarProps {
   summary: CalibrationServiceWorkspaceSummary
@@ -42,7 +43,7 @@ const CalibrationServiceWorkspaceActionBar = ({
           px: { xs: 1.5, sm: 2.5 },
           py: 1.5,
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${neutral.border}`,
           boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
@@ -54,12 +55,16 @@ const CalibrationServiceWorkspaceActionBar = ({
         {pendingRequirements.length ? (
           <Stack direction='row' alignItems='center' spacing={1.25}>
             <ErrorOutlineOutlinedIcon
-              sx={{ color: pendingForDraft.length ? '#d97706' : '#9ca3af' }}
+              sx={{
+                color: pendingForDraft.length
+                  ? intent.warning
+                  : neutral.textFaint
+              }}
             />
             <Typography
               variant='body2'
               sx={{
-                color: '#374151',
+                color: neutral.textBody,
                 flex: 1,
                 fontSize: { xs: '0.8rem', sm: '0.875rem' }
               }}
@@ -71,15 +76,19 @@ const CalibrationServiceWorkspaceActionBar = ({
             <Button
               size='small'
               onClick={() => goToSection(pendingRequirements[0].section)}
-              sx={{ textTransform: 'none', fontWeight: 600, color: '#00897B' }}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                color: brand.hover
+              }}
             >
               Ver qué falta
             </Button>
           </Stack>
         ) : (
           <Stack direction='row' alignItems='center' spacing={1.25}>
-            <CheckCircleOutlineOutlinedIcon sx={{ color: '#00897B' }} />
-            <Typography variant='body2' sx={{ color: '#374151' }}>
+            <CheckCircleOutlineOutlinedIcon sx={{ color: brand.hover }} />
+            <Typography variant='body2' sx={{ color: neutral.textBody }}>
               Todo listo para enviar la cotización
             </Typography>
           </Stack>

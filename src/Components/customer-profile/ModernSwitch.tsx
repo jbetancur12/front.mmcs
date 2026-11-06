@@ -1,5 +1,6 @@
 import { Switch, SwitchProps, styled } from '@mui/material'
 import React from 'react'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 // Modern Switch Component
 export const ModernSwitch = styled(
@@ -18,7 +19,7 @@ export const ModernSwitch = styled(
       transform: 'translateX(16px)',
       color: '#fff',
       '& + .MuiSwitch-track': {
-        backgroundColor: '#10b981',
+        backgroundColor: brand.main,
         opacity: 1,
         border: 0
       },
@@ -27,7 +28,7 @@ export const ModernSwitch = styled(
       }
     },
     '&.Mui-focusVisible .MuiSwitch-thumb': {
-      color: '#33cf4d',
+      color: intent.success,
       border: '6px solid #fff'
     },
     '&.Mui-disabled .MuiSwitch-thumb': {
@@ -47,7 +48,8 @@ export const ModernSwitch = styled(
   },
   '& .MuiSwitch-track': {
     borderRadius: 26 / 2,
-    backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
+    backgroundColor:
+      theme.palette.mode === 'light' ? neutral.border : neutral.textBody,
     opacity: 1,
     transition: theme.transitions.create(['background-color'], {
       duration: 500

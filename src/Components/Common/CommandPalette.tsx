@@ -6,6 +6,7 @@ import {
   History,
   SearchOutlined
 } from '@mui/icons-material'
+import { brand, neutral } from 'src/theme/designTokens'
 
 export interface CommandEntry {
   /** Identificador estable (la ruta). */
@@ -103,7 +104,7 @@ const Highlighted: React.FC<{ text: string; tokens: string[] }> = ({
           <Box
             key={index}
             component='mark'
-            sx={{ bgcolor: '#E0F7F4', color: '#00695C', borderRadius: '3px' }}
+            sx={{ bgcolor: brand.soft, color: brand.ink, borderRadius: '3px' }}
           >
             {part.value}
           </Box>
@@ -123,9 +124,9 @@ const KeyHint: React.FC<{ children: React.ReactNode }> = ({ children }) => (
       py: 0.25,
       fontSize: 11,
       fontFamily: 'inherit',
-      color: '#6b7280',
-      bgcolor: '#f9fafb',
-      border: '1px solid #e5e7eb',
+      color: neutral.textMuted,
+      bgcolor: neutral.surfaceAlt,
+      border: `1px solid ${neutral.border}`,
       borderRadius: '6px'
     }}
   >
@@ -224,7 +225,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
           m: { xs: 1, sm: 2 },
           width: { xs: 'calc(100% - 16px)', sm: '100%' },
           borderRadius: '12px',
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${neutral.border}`,
           boxShadow: '0 20px 40px rgba(0,0,0,0.12)'
         }
       }}
@@ -236,10 +237,10 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
           gap: 1.5,
           px: 2,
           py: 1.5,
-          borderBottom: '1px solid #e5e7eb'
+          borderBottom: `1px solid ${neutral.border}`
         }}
       >
-        <SearchOutlined sx={{ color: '#9ca3af' }} />
+        <SearchOutlined sx={{ color: neutral.textFaint }} />
         <InputBase
           autoFocus
           fullWidth
@@ -296,7 +297,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                           pt: index === 0 ? 0.5 : 1.5,
                           pb: 0.75,
                           fontWeight: 600,
-                          color: '#6b7280'
+                          color: neutral.textMuted
                         }}
                       >
                         {GROUP_TITLES[source]}
@@ -317,13 +318,13 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                         borderRadius: '8px',
                         cursor: 'pointer',
                         fontSize: 14,
-                        bgcolor: selected ? '#f3f4f6' : 'transparent'
+                        bgcolor: selected ? neutral.surfaceHead : 'transparent'
                       }}
                     >
                       <Box
                         sx={{
                           display: 'flex',
-                          color: '#6b7280',
+                          color: neutral.textMuted,
                           '& svg': { fontSize: 18 }
                         }}
                       >
@@ -341,11 +342,14 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                       >
                         {entry.parents?.map((parent) => (
                           <React.Fragment key={parent}>
-                            <Box component='span' sx={{ color: '#6b7280' }}>
+                            <Box
+                              component='span'
+                              sx={{ color: neutral.textMuted }}
+                            >
                               <Highlighted text={parent} tokens={tokens} />
                             </Box>
                             <ChevronRight
-                              sx={{ fontSize: 16, color: '#9ca3af' }}
+                              sx={{ fontSize: 16, color: neutral.textFaint }}
                             />
                           </React.Fragment>
                         ))}
@@ -357,7 +361,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                         <Typography
                           variant='caption'
                           sx={{
-                            color: '#9ca3af',
+                            color: neutral.textFaint,
                             display: { xs: 'none', sm: 'block' }
                           }}
                         >
@@ -365,7 +369,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                         </Typography>
                       )}
                       {selected && (
-                        <ArrowForward sx={{ fontSize: 18, color: '#9ca3af' }} />
+                        <ArrowForward
+                          sx={{ fontSize: 18, color: neutral.textFaint }}
+                        />
                       )}
                     </Box>
                   </React.Fragment>
@@ -383,10 +389,10 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
           gap: 2,
           px: 2,
           py: 1,
-          bgcolor: '#f9fafb',
-          borderTop: '1px solid #e5e7eb',
+          bgcolor: neutral.surfaceAlt,
+          borderTop: `1px solid ${neutral.border}`,
           fontSize: 12,
-          color: '#6b7280'
+          color: neutral.textMuted
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>

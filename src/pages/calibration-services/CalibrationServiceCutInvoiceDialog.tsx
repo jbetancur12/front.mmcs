@@ -3,6 +3,7 @@ import { MenuItem, Stack, TextField, Typography } from '@mui/material'
 import FormDialog from '../../Components/Common/FormDialog'
 import FileDropZone from '../../Components/Common/FileDropZone'
 import { CalibrationServiceCut } from '../../types/calibrationService'
+import { neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceCutInvoiceDialogProps {
   open: boolean
@@ -129,7 +130,7 @@ const CalibrationServiceCutInvoiceDialog = ({
           <Typography
             variant='body2'
             fontWeight={600}
-            sx={{ color: '#374151', mb: 0.5 }}
+            sx={{ color: neutral.textBody, mb: 0.5 }}
           >
             Soporte de factura (opcional)
           </Typography>

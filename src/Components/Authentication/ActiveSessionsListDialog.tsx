@@ -21,6 +21,7 @@ import {
   useSessions
 } from 'src/hooks/useSessions'
 import SessionDeviceRow from './SessionDeviceRow'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface ActiveSessionsListDialogProps {
   open: boolean
@@ -137,14 +138,14 @@ const ActiveSessionsListDialog: React.FC<ActiveSessionsListDialogProps> = ({
           )}
         </DialogContent>
         <DialogActions sx={{ p: '16px 24px' }}>
-          <Button onClick={onClose} sx={{ color: '#4b5563' }}>
+          <Button onClick={onClose} sx={{ color: neutral.textBody }}>
             Listo
           </Button>
           <Button
             variant='contained'
             disabled={others.length === 0}
             onClick={() => setConfirmOthers(true)}
-            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+            sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
           >
             Cerrar las demás
           </Button>

@@ -16,6 +16,7 @@ import {
   getServiceOperationalFocus,
   getServiceSiteLabel
 } from './calibrationServicesListUtils'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceKanbanCardProps {
   service: CalibrationService
@@ -53,17 +54,20 @@ const CalibrationServiceKanbanCard = ({
       sx={{
         // Tarjeta blanca del sistema; el semáforo va en la pastilla
         borderRadius: '12px',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#fff',
+        border: `1px solid ${neutral.border}`,
+        backgroundColor: neutral.surface,
         boxShadow: 'none',
         cursor: 'pointer',
         flexShrink: 0,
         transition: 'border-color .15s, box-shadow .15s',
         '&:hover': {
-          borderColor: '#9ca3af',
+          borderColor: neutral.textFaint,
           boxShadow: '0 4px 12px rgba(17, 24, 39, 0.08)'
         },
-        '&:focus-visible': { outline: '3px solid #00695C', outlineOffset: 2 },
+        '&:focus-visible': {
+          outline: `3px solid ${brand.ink}`,
+          outlineOffset: 2
+        },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
       }}
     >
@@ -215,7 +219,7 @@ const CalibrationServiceKanbanCard = ({
             <Typography
               variant='caption'
               fontWeight={700}
-              sx={{ color: '#00695C' }}
+              sx={{ color: brand.ink }}
             >
               {isTechnicalOnlyView
                 ? service.odsCode || 'ODS pendiente'

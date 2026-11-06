@@ -20,6 +20,7 @@ import {
   MaintenanceStatus
 } from '../../../types/maintenance'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MaintenanceTicketTechnicianCardProps {
   ticket: MaintenanceTicket
@@ -56,7 +57,7 @@ const MaintenanceTicketTechnicianCard = ({
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
+              background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -70,7 +71,7 @@ const MaintenanceTicketTechnicianCard = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#00bf75'
+              color: intent.successInk
             }}
           >
             Técnico Asignado
@@ -82,11 +83,11 @@ const MaintenanceTicketTechnicianCard = ({
             {isTechnician ? (
               <Box
                 sx={{
-                  border: '1px solid #dbe3ef',
+                  border: `1px solid ${neutral.border}`,
                   borderRadius: 2,
                   px: 2,
                   py: 1.5,
-                  backgroundColor: '#f8fafc'
+                  backgroundColor: neutral.surfaceAlt
                 }}
               >
                 <Typography

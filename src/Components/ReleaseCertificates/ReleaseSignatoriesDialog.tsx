@@ -190,7 +190,7 @@ const ReleaseSignatoriesDialog: React.FC<ReleaseSignatoriesDialogProps> = ({
                     alignItems: 'center',
                     gap: 1.5,
                     py: 1,
-                    borderBottom: '1px solid #f1f5f9',
+                    borderBottom: `1px solid ${neutral.surfaceHead}`,
                     opacity: signatory.active ? 1 : 0.55
                   }}
                 >

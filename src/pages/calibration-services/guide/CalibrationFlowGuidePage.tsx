@@ -24,8 +24,9 @@ import {
   GUIDE_TROUBLESHOOTING,
   GuideSection
 } from './calibrationFlowGuideContent'
+import { brand, neutral } from 'src/theme/designTokens'
 
-const TEAL = '#00BFA5'
+const TEAL = brand.main
 
 /**
  * Aviso de qué permiso habilita una etapa. Quien administra los roles ve el nombre exacto de
@@ -99,7 +100,7 @@ const GuideImages = ({ section }: { section: GuideSection }) =>
               height: 'auto',
               display: 'block',
               borderRadius: '12px',
-              border: '1px solid #e5e7eb'
+              border: `1px solid ${neutral.border}`
             }}
           />
           <Typography
@@ -126,7 +127,7 @@ const SectionCard = ({
     elevation={0}
     sx={{
       p: { xs: 2, md: 3 },
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${neutral.border}`,
       borderRadius: '16px',
       scrollMarginTop: 80
     }}
@@ -196,9 +197,9 @@ const SectionCard = ({
               key={variant.title}
               sx={{
                 p: 1.5,
-                bgcolor: '#f9fafb',
+                bgcolor: neutral.surfaceAlt,
                 borderRadius: 2,
-                border: '1px solid #f3f4f6'
+                border: `1px solid ${neutral.surfaceHead}`
               }}
             >
               <Typography variant='subtitle2' fontWeight={700}>
@@ -287,9 +288,9 @@ const CalibrationFlowGuidePage = () => {
             sx={{
               textTransform: 'none',
               fontWeight: 600,
-              color: '#00897B',
+              color: brand.hover,
               borderColor: TEAL,
-              '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+              '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
             }}
           >
             Volver a la bandeja
@@ -317,9 +318,9 @@ const CalibrationFlowGuidePage = () => {
             position: 'sticky',
             top: 80,
             p: 1.5,
-            border: '1px solid #e5e7eb',
+            border: `1px solid ${neutral.border}`,
             borderRadius: '16px',
-            bgcolor: '#fff'
+            bgcolor: neutral.surface
           }}
         >
           {GUIDE_SECTIONS.map((section, index) => (
@@ -333,10 +334,10 @@ const CalibrationFlowGuidePage = () => {
                 py: 0.75,
                 borderRadius: 2,
                 fontSize: 14,
-                color: active === section.id ? '#00695C' : 'text.secondary',
+                color: active === section.id ? brand.ink : 'text.secondary',
                 fontWeight: active === section.id ? 700 : 500,
-                bgcolor: active === section.id ? '#E0F7F4' : 'transparent',
-                '&:hover': { bgcolor: '#f3f4f6' }
+                bgcolor: active === section.id ? brand.soft : 'transparent',
+                '&:hover': { bgcolor: neutral.surfaceHead }
               }}
             >
               {index + 1}. {section.title}
@@ -353,7 +354,7 @@ const CalibrationFlowGuidePage = () => {
             elevation={0}
             sx={{
               p: { xs: 2, md: 3 },
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${neutral.border}`,
               borderRadius: '16px'
             }}
           >

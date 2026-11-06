@@ -21,6 +21,7 @@ import {
   VALIDITY_DAY_OPTIONS
 } from './calibrationServiceWorkspaceConstants'
 import { CalibrationServiceWorkspaceForm } from './useCalibrationServiceWorkspaceForm'
+import { brand, neutral } from 'src/theme/designTokens'
 
 interface CalibrationServiceWorkspaceCommercialSectionProps {
   form: CalibrationServiceWorkspaceForm
@@ -45,8 +46,12 @@ const CalibrationServiceWorkspaceCommercialSection = ({
           spacing={1.5}
           sx={{ mb: 2.5 }}
         >
-          <ReceiptLongOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
-          <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
+          <ReceiptLongOutlinedIcon sx={{ color: brand.hover, fontSize: 22 }} />
+          <Typography
+            variant='h6'
+            fontWeight={700}
+            sx={{ color: neutral.text }}
+          >
             Condiciones comerciales
           </Typography>
         </Stack>

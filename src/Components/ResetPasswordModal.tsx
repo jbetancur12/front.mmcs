@@ -17,6 +17,7 @@ import {
   generateStrongPassword,
   isPasswordValid
 } from 'src/utils/passwordPolicy'
+import { brand, neutral } from 'src/theme/designTokens'
 
 /** Restablece la contraseña de un usuario: la escribes o generas una segura. */
 const ResetPasswordModal = ({
@@ -98,12 +99,12 @@ const ResetPasswordModal = ({
             borderRadius: '10px',
             textTransform: 'none',
             fontWeight: 600,
-            borderColor: '#e5e7eb',
-            color: '#374151',
+            borderColor: neutral.border,
+            color: neutral.textBody,
             '&:hover': {
-              borderColor: '#00897B',
-              color: '#00695C',
-              backgroundColor: '#E0F7F4'
+              borderColor: brand.hover,
+              color: brand.ink,
+              backgroundColor: brand.soft
             }
           }}
         >

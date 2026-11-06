@@ -41,6 +41,7 @@ import {
   EquipmentQuotationItemPayload
 } from '../../types/equipmentSales'
 import { useEquipmentProducts } from '../../hooks/useEquipmentSales'
+import { brand, neutral, intent, detail } from 'src/theme/designTokens'
 
 export type FormItem = EquipmentQuotationItemPayload & { localId: string }
 
@@ -215,7 +216,7 @@ const EquipmentQuotationItemsEditor = ({
           borderRadius: '12px !important',
           '&:before': { display: 'none' },
           border: '2px solid',
-          borderColor: item.itemName ? 'divider' : '#10b981',
+          borderColor: item.itemName ? 'divider' : brand.main,
           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
             borderColor: 'rgba(16, 185, 129, 0.3)',
@@ -246,8 +247,8 @@ const EquipmentQuotationItemsEditor = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: item.itemName ? '#059669' : '#e5e7eb',
-              color: item.itemName ? '#fff' : '#9ca3af',
+              backgroundColor: item.itemName ? brand.hover : neutral.border,
+              color: item.itemName ? '#fff' : neutral.textFaint,
               fontWeight: 800,
               fontSize: '0.75rem',
               flexShrink: 0
@@ -267,7 +268,7 @@ const EquipmentQuotationItemsEditor = ({
             {totals.total > 0 ? (
               <Box
                 component='span'
-                sx={{ color: '#059669', fontWeight: 700, ml: 1 }}
+                sx={{ color: brand.ink, fontWeight: 700, ml: 1 }}
               >
                 {currencyFormatter.format(totals.total)}
               </Box>
@@ -308,12 +309,14 @@ const EquipmentQuotationItemsEditor = ({
                 spacing={1}
                 sx={{ mb: 0.5 }}
               >
-                <SellOutlinedIcon sx={{ color: '#6b7280', fontSize: 18 }} />
+                <SellOutlinedIcon
+                  sx={{ color: neutral.textMuted, fontSize: 18 }}
+                />
                 <Typography
                   variant='caption'
                   fontWeight={700}
                   sx={{
-                    color: '#6b7280',
+                    color: neutral.textMuted,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em'
                   }}
@@ -355,13 +358,13 @@ const EquipmentQuotationItemsEditor = ({
                 sx={{ mb: 0.5 }}
               >
                 <Inventory2OutlinedIcon
-                  sx={{ color: '#6b7280', fontSize: 18 }}
+                  sx={{ color: neutral.textMuted, fontSize: 18 }}
                 />
                 <Typography
                   variant='caption'
                   fontWeight={700}
                   sx={{
-                    color: '#6b7280',
+                    color: neutral.textMuted,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em'
                   }}
@@ -647,7 +650,7 @@ const EquipmentQuotationItemsEditor = ({
         <TableCell
           sx={{
             fontWeight: 600,
-            color: '#6b7280',
+            color: neutral.textMuted,
             fontSize: '0.8rem',
             width: 40
           }}
@@ -667,7 +670,7 @@ const EquipmentQuotationItemsEditor = ({
             <Typography
               variant='caption'
               sx={{
-                color: '#9ca3af',
+                color: neutral.textFaint,
                 display: 'block',
                 lineHeight: 1.2,
                 mt: 0.25
@@ -694,7 +697,7 @@ const EquipmentQuotationItemsEditor = ({
           />
         </TableCell>
         <TableCell sx={{ width: 120 }}>
-          <Typography variant='body2' fontWeight={700} color='#059669'>
+          <Typography variant='body2' fontWeight={700} color={brand.ink}>
             {currencyFormatter.format(totals.total)}
           </Typography>
         </TableCell>
@@ -737,7 +740,7 @@ const EquipmentQuotationItemsEditor = ({
         spacing={2}
       >
         <Stack direction='row' alignItems='center' spacing={1.5}>
-          <Inventory2OutlinedIcon sx={{ color: '#059669', fontSize: 24 }} />
+          <Inventory2OutlinedIcon sx={{ color: brand.ink, fontSize: 24 }} />
           <Box>
             <Typography
               variant='h6'
@@ -787,10 +790,10 @@ const EquipmentQuotationItemsEditor = ({
               fontWeight: 700,
               px: 2.5,
               whiteSpace: 'nowrap',
-              borderColor: '#10b981',
-              color: '#059669',
+              borderColor: brand.main,
+              color: brand.ink,
               '&:hover': {
-                borderColor: '#059669',
+                borderColor: brand.hover,
                 backgroundColor: 'rgba(16,185,129,0.06)'
               }
             }}
@@ -803,7 +806,7 @@ const EquipmentQuotationItemsEditor = ({
             onClick={onAddItem}
             disabled={!canEdit || isBusy}
             sx={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: `linear-gradient(135deg, ${detail.from} 0%, ${detail.to} 100%)`,
               borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 700,
@@ -811,7 +814,7 @@ const EquipmentQuotationItemsEditor = ({
               whiteSpace: 'nowrap',
               boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.15)',
               '&:hover': {
-                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                background: `linear-gradient(135deg, ${detail.to} 0%, ${intent.successInk} 100%)`,
                 boxShadow: '0 6px 12px -2px rgba(16, 185, 129, 0.25)'
               }
             }}
@@ -935,7 +938,7 @@ const EquipmentQuotationItemsEditor = ({
               }}
             >
               <Inventory2OutlinedIcon
-                sx={{ fontSize: 40, color: '#d1d5db', mb: 1 }}
+                sx={{ fontSize: 40, color: neutral.borderStrong, mb: 1 }}
               />
               <Typography variant='body2' color='text.secondary'>
                 {searchQuery.trim()
@@ -977,7 +980,7 @@ const EquipmentQuotationItemsEditor = ({
                     sx={{
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280'
+                      color: neutral.textMuted
                     }}
                   >
                     #
@@ -986,7 +989,7 @@ const EquipmentQuotationItemsEditor = ({
                     sx={{
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280'
+                      color: neutral.textMuted
                     }}
                   >
                     Nombre
@@ -995,7 +998,7 @@ const EquipmentQuotationItemsEditor = ({
                     sx={{
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280'
+                      color: neutral.textMuted
                     }}
                   >
                     Cant.
@@ -1004,7 +1007,7 @@ const EquipmentQuotationItemsEditor = ({
                     sx={{
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      color: '#6b7280'
+                      color: neutral.textMuted
                     }}
                   >
                     Total

@@ -35,6 +35,7 @@ import LmsPageHeader from '../lms/admin/LmsPageHeader'
 import LmsStatCard from '../lms/admin/LmsStatCard'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 /**
  * Inicio del personal interno: clientes con certificados vencidos o por
  * vencer. Los indicadores de vencidos y próximos filtran la lista, que se
@@ -118,7 +119,10 @@ const Dashboard: React.FC = () => {
                   aria-label='Actualizar datos'
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  sx={{ border: '1px solid #e5e7eb', borderRadius: '10px' }}
+                  sx={{
+                    border: `1px solid ${neutral.border}`,
+                    borderRadius: '10px'
+                  }}
                 >
                   <RefreshIcon
                     sx={{
@@ -144,14 +148,14 @@ const Dashboard: React.FC = () => {
               aria-label='Vista de los clientes'
               size='small'
               sx={{
-                bgcolor: '#fff',
+                bgcolor: neutral.surface,
                 '& .MuiToggleButton-root': {
-                  borderColor: '#e5e7eb',
-                  color: '#374151'
+                  borderColor: neutral.border,
+                  color: neutral.textBody
                 },
                 '& .Mui-selected, & .Mui-selected:hover': {
-                  bgcolor: '#E0F7F4 !important',
-                  color: '#00695C !important'
+                  bgcolor: `${brand.soft} !important`,
+                  color: `${brand.ink} !important`
                 }
               }}
             >

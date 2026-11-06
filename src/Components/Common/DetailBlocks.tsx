@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Box, Button, Grid, Typography } from '@mui/material'
+import { brand, neutral } from 'src/theme/designTokens'
 
 const isMissingValue = (children: React.ReactNode) =>
   typeof children === 'string' &&
@@ -50,7 +51,9 @@ export const DetailSection = ({
   description,
   children
 }: DetailSectionProps) => (
-  <Box sx={{ '& + &': { mt: 3, pt: 3, borderTop: '1px solid #e5e7eb' } }}>
+  <Box
+    sx={{ '& + &': { mt: 3, pt: 3, borderTop: `1px solid ${neutral.border}` } }}
+  >
     <Typography variant='subtitle1' fontWeight={700}>
       {title}
     </Typography>
@@ -118,7 +121,7 @@ export const ClampedText = ({
             px: 0,
             textTransform: 'none',
             fontWeight: 600,
-            color: '#00897B',
+            color: brand.hover,
             minWidth: 0
           }}
         >

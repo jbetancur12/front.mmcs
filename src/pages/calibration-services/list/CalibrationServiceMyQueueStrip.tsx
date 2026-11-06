@@ -5,6 +5,7 @@ import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material'
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 import { useCalibrationServiceMyQueue } from '../../../hooks/useCalibrationServices'
+import { brand, neutral } from 'src/theme/designTokens'
 
 // El color dice qué tan urgente es: rojo = bloquea dinero, naranja = espera una acción, azul = seguimiento.
 const SECTION_TONES: Record<string, LmsStatTone> = {
@@ -77,7 +78,7 @@ const CalibrationServiceMyQueueStrip = ({
       <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1.5 }}>
         <Typography
           component='h2'
-          sx={{ fontSize: 16, fontWeight: 700, color: '#111827' }}
+          sx={{ fontSize: 16, fontWeight: 700, color: neutral.text }}
         >
           Mis pendientes
         </Typography>
@@ -86,7 +87,7 @@ const CalibrationServiceMyQueueStrip = ({
           variant='outlined'
           label={total}
           aria-label={`${total} pendientes`}
-          sx={{ fontWeight: 600, color: '#00695C', borderColor: '#b2ebe3' }}
+          sx={{ fontWeight: 600, color: brand.ink, borderColor: brand.soft }}
         />
       </Stack>
       {/* Se mide el ancho del bloque (no el de la pantalla): con el menú lateral abierto o cerrado cambia el espacio. */}
@@ -136,7 +137,12 @@ const CalibrationServiceMyQueueStrip = ({
       {selected ? (
         <Paper
           variant='outlined'
-          sx={{ mt: 2, p: 2, borderRadius: '16px', borderColor: '#e5e7eb' }}
+          sx={{
+            mt: 2,
+            p: 2,
+            borderRadius: '16px',
+            borderColor: neutral.border
+          }}
         >
           <Stack spacing={1}>
             {selected.items.map((item) => (
@@ -162,8 +168,8 @@ const CalibrationServiceMyQueueStrip = ({
                   sx={{
                     textTransform: 'none',
                     fontWeight: 600,
-                    color: '#00897B',
-                    borderColor: '#00BFA5'
+                    color: brand.hover,
+                    borderColor: brand.main
                   }}
                 >
                   Abrir

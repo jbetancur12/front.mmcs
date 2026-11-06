@@ -40,6 +40,7 @@ import {
 } from 'src/hooks/profiles/useProfiles'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral } from 'src/theme/designTokens'
 interface Profile {
   id: number
   name: string
@@ -59,15 +60,15 @@ type EditableProfile = Pick<
 const OUTLINE_BUTTON_SX = {
   textTransform: 'none',
   fontWeight: 600,
-  color: '#00695C',
-  borderColor: '#00BFA5',
-  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  color: brand.ink,
+  borderColor: brand.main,
+  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
 } as const
 
 const CARD_SX = {
   p: { xs: 2, md: 3 },
   borderRadius: '16px',
-  border: '1px solid #e5e7eb'
+  border: `1px solid ${neutral.border}`
 } as const
 
 const Profile: React.FC = () => {
@@ -312,10 +313,10 @@ const Profile: React.FC = () => {
               />
               <Box
                 sx={{
-                  border: '1px solid #e5e7eb',
+                  border: `1px solid ${neutral.border}`,
                   borderRadius: '12px',
                   overflow: 'hidden',
-                  bgcolor: '#fff'
+                  bgcolor: neutral.surface
                 }}
               >
                 <PDFViewer

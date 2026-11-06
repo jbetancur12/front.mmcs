@@ -39,6 +39,7 @@ import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { brand } from 'src/theme/designTokens'
 const CustomersManagement: React.FC = () => {
   const queryClient = useQueryClient()
   const axiosPrivate = useAxiosPrivate()
@@ -157,9 +158,9 @@ const CustomersManagement: React.FC = () => {
             <Button
               variant='outlined'
               sx={{
-                color: '#00897B',
-                borderColor: '#00BFA5',
-                '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
               }}
             >
               Volver al mapa

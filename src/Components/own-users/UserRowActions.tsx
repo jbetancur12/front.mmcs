@@ -19,6 +19,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import { UserData } from './types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 // Menú de acciones por fila: un solo botón de tres puntos, sin importar cuántas acciones haya
 const UserRowActions: React.FC<{
@@ -65,13 +66,13 @@ const UserRowActions: React.FC<{
               mt: 0.5,
               minWidth: 230,
               borderRadius: '12px',
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${neutral.border}`,
               boxShadow: '0 8px 24px rgba(17, 24, 39, 0.10)',
               '& .MuiMenuItem-root': {
                 fontSize: 14,
                 fontWeight: 500,
                 py: 1,
-                '&:hover': { bgcolor: '#f6fcfb' }
+                '&:hover': { bgcolor: brand.softer }
               }
             }
           }
@@ -80,7 +81,7 @@ const UserRowActions: React.FC<{
         {canUpdate && (
           <MenuItem onClick={run(onEdit)}>
             <ListItemIcon>
-              <Edit fontSize='small' sx={{ color: '#2563eb' }} />
+              <Edit fontSize='small' sx={{ color: intent.action }} />
             </ListItemIcon>
             Editar usuario
           </MenuItem>
@@ -88,7 +89,7 @@ const UserRowActions: React.FC<{
         {canActivate && user.active !== true && (
           <MenuItem onClick={run(() => onActivationLink(false))}>
             <ListItemIcon>
-              <LinkIcon fontSize='small' sx={{ color: '#00695C' }} />
+              <LinkIcon fontSize='small' sx={{ color: brand.ink }} />
             </ListItemIcon>
             Enlace de activación
           </MenuItem>
@@ -96,7 +97,7 @@ const UserRowActions: React.FC<{
         {canActivate && user.active !== true && (
           <MenuItem onClick={run(() => onActivationLink(true))}>
             <ListItemIcon>
-              <ForwardToInbox fontSize='small' sx={{ color: '#00695C' }} />
+              <ForwardToInbox fontSize='small' sx={{ color: brand.ink }} />
             </ListItemIcon>
             Reenviar correo de activación
           </MenuItem>
@@ -107,8 +108,8 @@ const UserRowActions: React.FC<{
             <MenuItem
               onClick={run(onDelete)}
               sx={{
-                color: '#dc2626',
-                '&:hover': { bgcolor: '#fef2f2 !important' }
+                color: intent.danger,
+                '&:hover': { bgcolor: `${intent.dangerSoft} !important` }
               }}
             >
               <ListItemIcon>

@@ -47,6 +47,7 @@ import {
   LicensableModule
 } from 'src/types/customerModules'
 import { notify } from 'src/utils/notify'
+import { brand, neutral } from 'src/theme/designTokens'
 
 type RowProps = { row: MRT_Row<CustomerModulesRow> }
 
@@ -192,7 +193,7 @@ const CustomerModulesMatrix: React.FC = () => {
         Cell: ({ row }: RowProps) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
-              sx={{ width: 32, height: 32, bgcolor: '#00BFA5', fontSize: 14 }}
+              sx={{ width: 32, height: 32, bgcolor: brand.main, fontSize: 14 }}
             >
               {row.original.nombre?.charAt(0) ?? '?'}
             </Avatar>
@@ -274,9 +275,11 @@ const CustomerModulesMatrix: React.FC = () => {
                     'aria-label': `${module.label} para ${row.original.nombre}`
                   }}
                   sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': { color: '#00BFA5' },
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: brand.main
+                    },
                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#00BFA5'
+                      backgroundColor: brand.main
                     }
                   }}
                 />
@@ -525,8 +528,8 @@ const CustomerModulesMatrix: React.FC = () => {
                   onClick={() => requestBulk(true)}
                   sx={{
                     textTransform: 'none',
-                    bgcolor: '#00BFA5',
-                    '&:hover': { bgcolor: '#00ACC1' }
+                    bgcolor: brand.main,
+                    '&:hover': { bgcolor: brand.hover }
                   }}
                 >
                   Activar{modules.length === 1 ? ` ${modules[0].label}` : ''}
@@ -558,7 +561,7 @@ const CustomerModulesMatrix: React.FC = () => {
           muiTableProps={{
             sx: {
               '& .MuiTableHead-root .MuiTableCell-root': {
-                backgroundColor: '#f5f5f5',
+                backgroundColor: neutral.surfaceHead,
                 fontWeight: 600
               },
               '& .MuiTableBody-root .MuiTableRow-root:hover': {
@@ -566,8 +569,10 @@ const CustomerModulesMatrix: React.FC = () => {
               }
             }
           }}
-          muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
-          muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+          muiTopToolbarProps={{ sx: { backgroundColor: neutral.surfaceAlt } }}
+          muiBottomToolbarProps={{
+            sx: { backgroundColor: neutral.surfaceAlt }
+          }}
         />
       </Paper>
 

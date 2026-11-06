@@ -42,6 +42,7 @@ import {
 import LmsStatCard, {
   type LmsStatTone
 } from 'src/Components/lms/admin/LmsStatCard'
+import { intent } from 'src/theme/designTokens'
 
 interface QuizQuestion {
   id: number
@@ -564,8 +565,8 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
                       p: 3,
                       mb: 2,
                       backgroundColor: bestAttempt.passed
-                        ? '#e8f5e9'
-                        : '#fff3e0',
+                        ? intent.successSoft
+                        : intent.warningSoft,
                       border: 2,
                       borderColor: bestAttempt.passed
                         ? 'success.main'

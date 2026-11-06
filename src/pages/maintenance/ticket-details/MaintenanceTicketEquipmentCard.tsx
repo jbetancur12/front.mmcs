@@ -3,6 +3,7 @@ import { Build } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface MaintenanceTicketEquipmentCardProps {
   ticket: MaintenanceTicket
@@ -31,7 +32,7 @@ const MaintenanceTicketEquipmentCard = ({
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              backgroundColor: '#e8f7ef',
+              backgroundColor: intent.successSoft,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -39,13 +40,16 @@ const MaintenanceTicketEquipmentCard = ({
               justifyContent: 'center'
             }}
           >
-            <Build sx={{ color: '#00A651', fontSize: 20 }} aria-hidden='true' />
+            <Build
+              sx={{ color: intent.successInk, fontSize: 20 }}
+              aria-hidden='true'
+            />
           </Box>
           <Typography
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: '#0f172a'
+              color: neutral.text
             }}
           >
             Información del Equipo
@@ -76,10 +80,10 @@ const MaintenanceTicketEquipmentCard = ({
                   label={ticket.equipmentType}
                   sx={{
                     fontWeight: 'medium',
-                    backgroundColor: '#e8f7ef',
-                    color: '#00A651',
+                    backgroundColor: intent.successSoft,
+                    color: intent.successInk,
                     borderRadius: '8px',
-                    border: '1px solid #dbeedb'
+                    border: `1px solid ${intent.successSoft}`
                   }}
                 />
               )}

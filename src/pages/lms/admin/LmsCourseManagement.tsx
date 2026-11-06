@@ -50,6 +50,7 @@ import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { notify } from 'src/utils/notify'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface Course {
   id: number
@@ -1042,7 +1043,7 @@ const LmsCourseManagement: React.FC = () => {
                   >
                     <IconButton
                       size='small'
-                      sx={{ color: '#2e7d32' }}
+                      sx={{ color: intent.successInk }}
                       onClick={() => handlePublishCourse(course.id)}
                     >
                       <PublishIcon />
@@ -1055,7 +1056,7 @@ const LmsCourseManagement: React.FC = () => {
                   <Tooltip title='Archivar curso'>
                     <IconButton
                       size='small'
-                      sx={{ color: '#ed6c02' }}
+                      sx={{ color: intent.warning }}
                       onClick={() => handleArchiveCourse(course.id)}
                     >
                       <ArchiveIcon />
@@ -1097,7 +1098,7 @@ const LmsCourseManagement: React.FC = () => {
           muiTableProps={{
             sx: {
               '& .MuiTableHead-root .MuiTableCell-root': {
-                backgroundColor: '#f5f5f5',
+                backgroundColor: neutral.surfaceHead,
                 fontWeight: 600
               },
               '& .MuiTableBody-root .MuiTableRow-root:hover': {
@@ -1105,8 +1106,10 @@ const LmsCourseManagement: React.FC = () => {
               }
             }
           }}
-          muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
-          muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+          muiTopToolbarProps={{ sx: { backgroundColor: neutral.surfaceAlt } }}
+          muiBottomToolbarProps={{
+            sx: { backgroundColor: neutral.surfaceAlt }
+          }}
           muiTablePaginationProps={{ rowsPerPageOptions: [5, 10, 25, 50] }}
           enablePinning
           initialState={{

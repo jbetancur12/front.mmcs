@@ -7,6 +7,7 @@ import { FilterPanel } from './FilterPanel'
 import { DeviceList } from './DeviceList'
 import { DeviceIot } from '../../types'
 import Logo from '/images/sense.png'
+import { intent } from 'src/theme/designTokens'
 
 export const DeviceSidebar = ({
   isOpen,
@@ -46,7 +47,7 @@ export const DeviceSidebar = ({
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: theme.spacing(1, 2),
-              background: 'linear-gradient(135deg, #1E40AF 30%, #3B82F6 100%)', // Gradiente para mayor impacto visual
+              background: `linear-gradient(135deg, ${intent.infoInk} 30%, ${intent.info} 100%)`, // Gradiente para mayor impacto visual
               boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
               borderRadius: '12px',
               color: 'white'

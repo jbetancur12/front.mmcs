@@ -17,6 +17,7 @@ import { useOwnUsersActions } from './own-users/useOwnUsersActions'
 import { useOwnUsersColumns } from './own-users/useOwnUsersColumns'
 import UserRowActions from './own-users/UserRowActions'
 import { filterUsers } from './own-users/userFilters'
+import { brand } from 'src/theme/designTokens'
 
 export type { Role, UserData } from './own-users/types'
 
@@ -97,8 +98,8 @@ const TableOwnUsers: React.FC = () => {
         textTransform: 'none',
         fontWeight: 600,
         whiteSpace: 'nowrap',
-        bgcolor: '#00BFA5',
-        '&:hover': { bgcolor: '#00897B' }
+        bgcolor: brand.main,
+        '&:hover': { bgcolor: brand.hover }
       }}
     >
       {createUser.isLoading ? 'Creando…' : 'Crear nuevo usuario'}

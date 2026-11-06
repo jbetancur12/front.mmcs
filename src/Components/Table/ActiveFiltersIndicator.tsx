@@ -23,6 +23,7 @@ import {
   getFilterSummary
 } from '../../utils/tableStateUtils'
 import type { TableStateLike } from '../../utils/tableStateUtils'
+import { intent } from 'src/theme/designTokens'
 
 interface ActiveFiltersIndicatorProps {
   tableState: TableStateLike
@@ -81,8 +82,8 @@ export const ActiveFiltersIndicator: React.FC<ActiveFiltersIndicatorProps> = ({
       sx={{
         p: 2,
         mb: 2,
-        backgroundColor: '#fff3e0',
-        borderLeft: '4px solid #ff9800',
+        backgroundColor: intent.warningSoft,
+        borderLeft: `4px solid ${intent.warning}`,
         borderRadius: 1
       }}
     >
