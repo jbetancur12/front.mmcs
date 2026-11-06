@@ -125,10 +125,16 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
     // Enriquecer cursos con datos calculados
     const enrichedCourses = courses.map((course: Course) => {
-      const progress = getCourseProgressPercentage(course)
-      const totalLessons = getCourseTotalLessons(course)
-      const completedLessons = getCourseCompletedLessons(course)
       const earnedCertificate = certificatesByCourseId.get(course.id)
+      const totalLessons = getCourseTotalLessons(course)
+      // Con certificado el curso está finalizado, aunque se hayan agregado
+      // lecciones después.
+      const progress = earnedCertificate
+        ? 100
+        : getCourseProgressPercentage(course)
+      const completedLessons = earnedCertificate
+        ? totalLessons
+        : getCourseCompletedLessons(course)
 
       return {
         ...course,
