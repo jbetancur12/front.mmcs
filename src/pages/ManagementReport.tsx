@@ -211,6 +211,7 @@ const ManagementReportPage = () => {
   const [sending, setSending] = useState(false)
   const [recipientsFull, setRecipientsFull] = useState('')
   const [recipientsNoAmounts, setRecipientsNoAmounts] = useState('')
+  const [whatsappPhone, setWhatsappPhone] = useState('')
   const [includeLms, setIncludeLms] = useState(false)
   const [savingConfig, setSavingConfig] = useState(false)
 
@@ -233,6 +234,7 @@ const ManagementReportPage = () => {
     if (!config) return
     setRecipientsFull(config.recipients.full.join(', '))
     setRecipientsNoAmounts(config.recipients.no_amounts.join(', '))
+    setWhatsappPhone(config.whatsappPhone || '')
     setIncludeLms(Boolean(config.includeLms))
   }, [config])
 
@@ -291,10 +293,12 @@ const ManagementReportPage = () => {
           full: parseEmails(recipientsFull),
           no_amounts: parseEmails(recipientsNoAmounts)
         },
+        whatsappPhone: whatsappPhone.trim(),
         includeLms
       })
       setRecipientsFull(saved.recipients.full.join(', '))
       setRecipientsNoAmounts(saved.recipients.no_amounts.join(', '))
+      setWhatsappPhone(saved.whatsappPhone || '')
       setIncludeLms(Boolean(saved.includeLms))
       notify.success('Destinatarios guardados')
     } catch (configError) {
@@ -630,7 +634,8 @@ const ManagementReportPage = () => {
                   sx={{ mb: 2 }}
                 >
                   El reporte se genera el día 3 de cada mes a las 07:00. Si no
-                  hay destinatarios configurados, se guarda sin enviar.
+                  hay destinatarios ni WhatsApp configurados, se guarda sin
+                  enviar.
                 </Typography>
                 <Stack spacing={2}>
                   <TextField
@@ -648,6 +653,15 @@ const ManagementReportPage = () => {
                       setRecipientsNoAmounts(event.target.value)
                     }
                     helperText='Separe varios correos con coma'
+                    size='small'
+                    fullWidth
+                  />
+                  <TextField
+                    label='WhatsApp de gerencia (un solo número)'
+                    value={whatsappPhone}
+                    onChange={(event) => setWhatsappPhone(event.target.value)}
+                    helperText='Recibe el PDF con valores. Un solo número, por ejemplo 318 185 9446. Déjelo vacío para no enviar por WhatsApp.'
+                    inputProps={{ inputMode: 'tel' }}
                     size='small'
                     fullWidth
                   />

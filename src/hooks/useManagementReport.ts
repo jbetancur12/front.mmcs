@@ -83,6 +83,8 @@ export interface ManagementReportConfig {
     full: string[]
     no_amounts: string[]
   }
+  /** Un solo número: recibe por WhatsApp la versión de gerencia. */
+  whatsappPhone?: string
   includeLms: boolean
 }
 
