@@ -3,6 +3,13 @@ import { createContext, useContext, ReactNode } from 'react'
 import { DeviceReadingPayload } from 'src/Components/Iot/DeviceIotMap/types'
 
 import { logger } from 'src/utils/logger'
+import { isTokenExpired } from 'src/utils/sessionEnd'
+import {
+  GIVE_UP_FAILURES,
+  nextRetryMs,
+  shouldGiveUp
+} from 'src/utils/sessionGuardRetry'
+import { syncUserAccess } from 'src/utils/syncUserAccess'
 type MessageType =
   | 'REAL_TIME_DATA'
   | 'ALARM_UPDATE'
@@ -86,7 +93,10 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
   const listenersRef = useRef(new Set<WebSocketListener>())
   const unmountedRef = useRef(false)
-  const reconnectDelayRef = useRef(2000)
+  // Intentos seguidos que se cerraron sin llegar a abrir (el servidor rechazó el handshake o no hay red)
+  const failuresRef = useRef(0)
+  // Token con el que se dejó de insistir; se retoma si cambia o si la pestaña vuelve a verse
+  const gaveUpWithRef = useRef<string | null>(null)
 
   const subscribe = useCallback((listener: WebSocketListener) => {
     listenersRef.current.add(listener)
@@ -114,13 +124,22 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         return
       }
 
+      // Una pestaña oculta no reintenta: lo hace al volver a verse
+      if (document.hidden) {
+        gaveUpWithRef.current = localStorage.getItem('accessToken')
+        return
+      }
+
+      const token = localStorage.getItem('accessToken')
       const socket = new WebSocket(wsUrl)
       wsRef.current = socket
+      let opened = false
 
       socket.onopen = () => {
+        opened = true
+        failuresRef.current = 0
         logger.log('WebSocket connected')
         setStatus('connected')
-        reconnectDelayRef.current = 2000
         // Clear any reconnect timeout
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current)
@@ -130,15 +149,26 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       socket.onclose = () => {
         logger.log('WebSocket closed')
         setStatus('closed')
-        // Reintenta también tras un error de red, con espera creciente (2 s → 30 s)
-        if (!unmountedRef.current) {
-          const delay = reconnectDelayRef.current
-          reconnectDelayRef.current = Math.min(delay * 2, 30000)
-          reconnectTimeoutRef.current = setTimeout(() => {
-            logger.log('Attempting to reconnect WebSocket...')
-            connectWebSocket()
-          }, delay)
+        if (unmountedRef.current) return
+
+        if (!opened) {
+          failuresRef.current += 1
+          // El servidor responde 403 si el token venció. En una pestaña inactiva nadie lo renueva, y reintentar con
+          // el mismo token fallaría para siempre: una petición autenticada lo renueva por el interceptor.
+          if (token && isTokenExpired(token)) void syncUserAccess()
         }
+
+        // Tras varios cierres seguidos sin abrir (token vencido, o una cuenta sin empresa que el servidor rechaza con
+        // 404) reintentar solo llena el log del servidor: se espera a que cambie el token o la pestaña se vea
+        if (shouldGiveUp(failuresRef.current)) {
+          gaveUpWithRef.current = token
+          return
+        }
+        // Reintenta también tras un error de red, con espera creciente (5 s → 5 min)
+        reconnectTimeoutRef.current = setTimeout(() => {
+          logger.log('Attempting to reconnect WebSocket...')
+          connectWebSocket()
+        }, nextRetryMs(failuresRef.current))
       }
 
       socket.onerror = (error) => {
@@ -203,9 +233,30 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     unmountedRef.current = false
     connectWebSocket()
 
+    // Retoma tras rendirse u ocultarse: con token nuevo desde cero, con el mismo token un solo intento más
+    const resume = () => {
+      if (unmountedRef.current || gaveUpWithRef.current === null) return
+      if (document.hidden) return
+      const token = localStorage.getItem('accessToken')
+      if (token !== gaveUpWithRef.current) failuresRef.current = 0
+      else if (failuresRef.current >= GIVE_UP_FAILURES) {
+        failuresRef.current = GIVE_UP_FAILURES - 1
+      }
+      gaveUpWithRef.current = null
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+      connectWebSocket()
+    }
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'accessToken') resume()
+    }
+    document.addEventListener('visibilitychange', resume)
+    window.addEventListener('storage', onStorage)
+
     // Cleanup
     return () => {
       unmountedRef.current = true
+      document.removeEventListener('visibilitychange', resume)
+      window.removeEventListener('storage', onStorage)
       if (wsRef.current) {
         wsRef.current.close()
       }
