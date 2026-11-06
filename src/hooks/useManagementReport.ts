@@ -78,6 +78,40 @@ export const downloadStoredManagementReport = ({
     { profile }
   )
 
+export interface ManagementReportConfig {
+  recipients: {
+    full: string[]
+    no_amounts: string[]
+  }
+  includeLms: boolean
+}
+
+export const useManagementReportConfig = (enabled = true) =>
+  useQuery<ManagementReportConfig>(
+    [REPORT_KEY, 'config'],
+    async () =>
+      (
+        await axiosPrivate.get<ManagementReportConfig>(
+          '/management-reports/config'
+        )
+      ).data,
+    {
+      enabled,
+      staleTime: 5 * 60 * 1000,
+      retry: false
+    }
+  )
+
+export const saveManagementReportConfig = async (
+  values: ManagementReportConfig
+) => {
+  const { data } = await axiosPrivate.put<ManagementReportConfig>(
+    '/management-reports/config',
+    values
+  )
+  return data
+}
+
 export const sendManagementReport = async ({
   month,
   profile

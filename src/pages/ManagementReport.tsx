@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   Container,
   Divider,
+  FormControlLabel,
   Grid,
   Paper,
   Stack,
@@ -24,6 +29,7 @@ import {
 import {
   AssessmentOutlined,
   AttachMoneyOutlined,
+  ExpandMoreOutlined,
   GridOnOutlined,
   HistoryOutlined,
   PercentOutlined,
@@ -33,6 +39,7 @@ import {
   ScheduleOutlined,
   SendOutlined,
   SentimentSatisfiedOutlined,
+  SettingsOutlined,
   WarningAmberOutlined
 } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -46,8 +53,10 @@ import { brand, intent, neutral } from 'src/theme/designTokens'
 import {
   downloadManagementReport,
   downloadStoredManagementReport,
+  saveManagementReportConfig,
   sendManagementReport,
   useManagementReport,
+  useManagementReportConfig,
   useManagementReportHistory
 } from 'src/hooks/useManagementReport'
 import type { ManagementReportStatus } from 'src/types/managementReport'
@@ -118,6 +127,10 @@ const ManagementReportPage = () => {
   )
   const [downloading, setDownloading] = useState<'pdf' | 'xlsx' | null>(null)
   const [sending, setSending] = useState(false)
+  const [recipientsFull, setRecipientsFull] = useState('')
+  const [recipientsNoAmounts, setRecipientsNoAmounts] = useState('')
+  const [includeLms, setIncludeLms] = useState(false)
+  const [savingConfig, setSavingConfig] = useState(false)
 
   useEffect(() => {
     if (!canSeeAmounts) setProfile('no_amounts')
@@ -132,6 +145,14 @@ const ManagementReportPage = () => {
     isFetching
   } = useManagementReport({ month, profile, enabled: Boolean(month) })
   const { data: history = [] } = useManagementReportHistory(true)
+  const { data: config } = useManagementReportConfig(canSeeAmounts)
+
+  useEffect(() => {
+    if (!config) return
+    setRecipientsFull(config.recipients.full.join(', '))
+    setRecipientsNoAmounts(config.recipients.no_amounts.join(', '))
+    setIncludeLms(Boolean(config.includeLms))
+  }, [config])
 
   const visibleHistory = useMemo(
     () =>
@@ -171,6 +192,38 @@ const ManagementReportPage = () => {
       )
     } finally {
       setSending(false)
+    }
+  }
+
+  const parseEmails = (value: string) =>
+    value
+      .split(/[,;]/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+
+  const handleSaveConfig = async () => {
+    try {
+      setSavingConfig(true)
+      const saved = await saveManagementReportConfig({
+        recipients: {
+          full: parseEmails(recipientsFull),
+          no_amounts: parseEmails(recipientsNoAmounts)
+        },
+        includeLms
+      })
+      setRecipientsFull(saved.recipients.full.join(', '))
+      setRecipientsNoAmounts(saved.recipients.no_amounts.join(', '))
+      setIncludeLms(Boolean(saved.includeLms))
+      notify.success('Destinatarios guardados')
+    } catch (configError) {
+      notify.error(
+        getApiErrorMessage(
+          configError,
+          'No se pudo guardar la configuración de envío'
+        )
+      )
+    } finally {
+      setSavingConfig(false)
     }
   }
 
@@ -432,6 +485,82 @@ const ManagementReportPage = () => {
               )}
             </Paper>
           ))}
+
+          {canSeeAmounts && (
+            <Accordion
+              elevation={0}
+              sx={{
+                mb: 3,
+                border: `1px solid ${neutral.border}`,
+                borderRadius: 3,
+                '&:before': { display: 'none' }
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                <Stack direction='row' spacing={1} alignItems='center'>
+                  <SettingsOutlined sx={{ color: brand.ink }} />
+                  <Typography variant='h6'>
+                    Destinatarios y envío automático
+                  </Typography>
+                </Stack>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 2 }}
+                >
+                  El reporte se genera el día 3 de cada mes a las 07:00. Si no
+                  hay destinatarios configurados, se guarda sin enviar.
+                </Typography>
+                <Stack spacing={2}>
+                  <TextField
+                    label='Gerencia (con valores)'
+                    value={recipientsFull}
+                    onChange={(event) => setRecipientsFull(event.target.value)}
+                    helperText='Separe varios correos con coma'
+                    size='small'
+                    fullWidth
+                  />
+                  <TextField
+                    label='Coordinación (sin valores)'
+                    value={recipientsNoAmounts}
+                    onChange={(event) =>
+                      setRecipientsNoAmounts(event.target.value)
+                    }
+                    helperText='Separe varios correos con coma'
+                    size='small'
+                    fullWidth
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={includeLms}
+                        onChange={(event) =>
+                          setIncludeLms(event.target.checked)
+                        }
+                      />
+                    }
+                    label='Incluir bloque de capacitación (LMS)'
+                  />
+                  <Box>
+                    <Button
+                      variant='contained'
+                      onClick={handleSaveConfig}
+                      disabled={savingConfig}
+                      sx={{
+                        bgcolor: brand.main,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: brand.hover }
+                      }}
+                    >
+                      {savingConfig ? 'Guardando…' : 'Guardar destinatarios'}
+                    </Button>
+                  </Box>
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
+          )}
 
           <Paper
             elevation={0}
