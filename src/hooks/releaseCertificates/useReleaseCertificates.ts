@@ -333,6 +333,19 @@ export const useSignPlan = (id: number | null) => {
   )
 }
 
+/** Imagen del sello «Firmado digitalmente» del laboratorio, como URL local. */
+export const useSealImage = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<string>(
+    ['releaseCertificates', 'seal-image'],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/seal-image', { responseType: 'blob' })
+        .then((response) => window.URL.createObjectURL(response.data)),
+    { staleTime: Infinity, cacheTime: Infinity }
+  )
+}
+
 /** Imagen de una firma del registro como URL local; se descarga con la sesión. */
 export const useSignatoryImage = (id: number) => {
   const axiosPrivate = useAxiosPrivate()

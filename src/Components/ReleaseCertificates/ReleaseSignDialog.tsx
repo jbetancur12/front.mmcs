@@ -33,7 +33,7 @@ import {
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 import ReleaseSignatoriesDialog from './ReleaseSignatoriesDialog'
-import SignatoryImage from './SignatoryImage'
+import SignatoryImage, { SealImage } from './SignatoryImage'
 import { ReleasePlacement, ReleaseSignatory } from './ReleaseCertificates.types'
 import { brand, neutral } from 'src/theme/designTokens'
 
@@ -41,7 +41,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 /** Ancho al que se muestra la página; la posición se guarda como fracción, así que no depende de este valor. */
 const VIEW_WIDTH = 540
-const SEAL_ASPECT = 2.4
 const MIN_WIDTH = 0.05
 const MAX_WIDTH = 0.5
 
@@ -487,26 +486,7 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
                             draggable={false}
                           />
                         ) : (
-                          <Box
-                            sx={{
-                              aspectRatio: `${SEAL_ASPECT}`,
-                              border: '2px solid #008c73',
-                              bgcolor: neutral.surface,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              color: '#008c73',
-                              fontWeight: 700,
-                              fontSize: 9,
-                              lineHeight: 1.15
-                            }}
-                          >
-                            <span>FIRMADO DIGITALMENTE</span>
-                            <span style={{ fontSize: 16, color: '#263232' }}>
-                              MMCS
-                            </span>
-                          </Box>
+                          <SealImage sx={{ width: '100%', display: 'block' }} />
                         )}
                       </Box>
                     ))}
