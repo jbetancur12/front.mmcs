@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -22,7 +22,11 @@ import {
 } from '@mui/icons-material'
 import { useUploadReleaseCertificates } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { getApiErrorReason } from 'src/utils/apiError'
-import { ReleaseUploadResult } from './ReleaseCertificates.types'
+import ReleaseServicePicker from './ReleaseServicePicker'
+import {
+  ReleaseServiceOption,
+  ReleaseUploadResult
+} from './ReleaseCertificates.types'
 
 const MAX_FILES = 50
 const MAX_SIZE_MB = 20
@@ -31,6 +35,12 @@ const BUTTON_SX = { bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }
 interface ReleaseUploadDialogProps {
   open: boolean
   onClose: () => void
+  /** Servicio preelegido (cuando se abre desde un servicio). */
+  initialService?: ReleaseServiceOption | null
+  /** Corte preelegido (cuando se abre desde el control documental de un corte). */
+  initialCutId?: number | null
+  /** Se llama cuando al menos un PDF quedó registrado. */
+  onUploaded?: () => void
 }
 
 const isPdf = (file: File) =>
@@ -50,7 +60,10 @@ const resultDetail = (result: ReleaseUploadResult) => {
 /** Carga masiva: se sueltan los PDF y el sistema los lee; no se diligencia nada más. */
 const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   open,
-  onClose
+  onClose,
+  initialService = null,
+  initialCutId = null,
+  onUploaded
 }) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
@@ -60,13 +73,19 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   const [results, setResults] = useState<ReleaseUploadResult[] | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
+  const [service, setService] = useState<ReleaseServiceOption | null>(null)
   const upload = useUploadReleaseCertificates()
+
+  useEffect(() => {
+    if (open) setService(initialService)
+  }, [open, initialService])
 
   const reset = () => {
     setFiles([])
     setRejected([])
     setResults(null)
     setFailure(null)
+    setService(null)
   }
 
   const close = () => {
@@ -99,11 +118,24 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
 
   const send = () => {
     setFailure(null)
-    upload.mutate(files, {
-      onSuccess: (data) => setResults(data),
-      onError: (error) =>
-        setFailure(getApiErrorReason(error) ?? 'No se pudo completar la carga')
-    })
+    upload.mutate(
+      {
+        files,
+        serviceId: service?.id ?? null,
+        // El corte solo vale mientras siga el servicio con el que se abrió.
+        cutId: service?.id === initialService?.id ? initialCutId : null
+      },
+      {
+        onSuccess: (data) => {
+          setResults(data)
+          if (data.some((result) => result.ok)) onUploaded?.()
+        },
+        onError: (error) =>
+          setFailure(
+            getApiErrorReason(error) ?? 'No se pudo completar la carga'
+          )
+      }
+    )
   }
 
   const okCount = results?.filter((r) => r.ok).length ?? 0
@@ -169,6 +201,13 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
           </Box>
         ) : (
           <>
+            <Box sx={{ mb: 2 }}>
+              <ReleaseServicePicker
+                value={service}
+                onChange={setService}
+                helperText='Opcional. Si eliges uno, el cliente se toma del servicio.'
+              />
+            </Box>
             <Box
               role='button'
               tabIndex={0}

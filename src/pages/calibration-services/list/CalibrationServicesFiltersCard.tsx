@@ -118,6 +118,8 @@ const CalibrationServicesFiltersCard = ({
     setBillingStatusFilter,
     paymentStatusFilter,
     setPaymentStatusFilter,
+    certificateAlertsFilter,
+    setCertificateAlertsFilter,
     activeFiltersCount,
     clearFilters
   } = filters
@@ -132,6 +134,7 @@ const CalibrationServicesFiltersCard = ({
     hasAdjustmentsFilter !== FILTER_ALL,
     Boolean(billingStatusFilter),
     Boolean(paymentStatusFilter),
+    certificateAlertsFilter,
     siteFilter.trim()
   ].filter(Boolean).length
 
@@ -486,6 +489,23 @@ const CalibrationServicesFiltersCard = ({
                 </TextField>
               </Grid>
             ) : null}
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                size='small'
+                label='Certificados'
+                value={certificateAlertsFilter ? 'observed' : FILTER_ALL}
+                onChange={(event) =>
+                  setCertificateAlertsFilter(event.target.value === 'observed')
+                }
+              >
+                <MenuItem value={FILTER_ALL}>Todos</MenuItem>
+                <MenuItem value='observed'>
+                  Con observaciones del laboratorio
+                </MenuItem>
+              </TextField>
+            </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth

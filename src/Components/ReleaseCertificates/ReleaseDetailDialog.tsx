@@ -10,6 +10,7 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  MenuItem,
   TextField,
   Typography,
   useMediaQuery,
@@ -21,16 +22,16 @@ import { downloadPrivateFile } from '@utils/downloadBlob'
 import { useStore } from '@nanostores/react'
 import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import { userStore } from 'src/store/userStore'
-import { getApiErrorReason } from 'src/utils/apiError'
+import { getApiErrorCode, getApiErrorReason } from 'src/utils/apiError'
 import ReleaseEditForm from './ReleaseEditForm'
 import ReleaseEquipmentDialog from './ReleaseEquipmentDialog'
-import ReleaseSignatureDialog from './ReleaseSignatureDialog'
+import ReleaseReasonChips from './ReleaseReasonChips'
+import ReleaseServicePicker from './ReleaseServicePicker'
+import ReleaseSignDialog from './ReleaseSignDialog'
 import {
   releaseFileUrl,
   ReleaseCorrections,
   useCustomerSuggestions,
-  useMySignature,
-  useSignReleaseCertificates,
   ReleaseReviewAction,
   useReleaseCertificate,
   useReleaseReview
@@ -40,8 +41,10 @@ import ReleaseStatusPill from './ReleaseStatusPill'
 import {
   RELEASE_KIND_LABELS,
   RELEASE_READ_LABELS,
-  RELEASE_STATUS_LABELS
+  RELEASE_STATUS_LABELS,
+  ReleaseServiceOption
 } from './ReleaseCertificates.types'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 
 interface ReleaseDetailDialogProps {
   certificateId: number | null
@@ -72,7 +75,7 @@ const Field: React.FC<FieldProps> = ({ label, value, warn = false }) => (
       variant='body2'
       sx={{
         fontWeight: 600,
-        color: warn ? '#b45309' : undefined,
+        color: warn ? intent.warningInk : undefined,
         wordBreak: 'break-word'
       }}
     >
@@ -112,9 +115,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_RELEASE
   )
-  const sign = useSignReleaseCertificates()
-  const { data: mySignature } = useMySignature(canSign)
-  const [signatureOpen, setSignatureOpen] = useState(false)
+  const [signing, setSigning] = useState(false)
   const [releasing, setReleasing] = useState(false)
   const review = useReleaseReview()
   const versionInput = useRef<HTMLInputElement>(null)
@@ -129,6 +130,51 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     'discard' | 'reopen' | 'revert' | null
   >(null)
   const [observation, setObservation] = useState('')
+  const [reasons, setReasons] = useState<string[]>([])
+
+  // Servicio de otro cliente (p. ej. cotizado a X pero para un tercero): el API pide confirmarlo.
+  const [otherCustomer, setOtherCustomer] = useState<{
+    option: ReleaseServiceOption
+    message: string
+  } | null>(null)
+
+  const linkService = (
+    option: ReleaseServiceOption | null,
+    confirmOtherCustomer = false
+  ) => {
+    if (!certificate) return
+    review.mutate(
+      {
+        type: 'service',
+        id: certificate.id,
+        serviceId: option?.id ?? null,
+        confirmOtherCustomer
+      },
+      {
+        onSuccess: () => {
+          setOtherCustomer(null)
+          notify.success(
+            option
+              ? `Ligado al servicio ${option.serviceCode}`
+              : 'Servicio desligado'
+          )
+        },
+        onError: (error) => {
+          if (option && getApiErrorCode(error) === 'SERVICE_OTHER_CUSTOMER') {
+            setOtherCustomer({
+              option,
+              message: getApiErrorReason(error) ?? ''
+            })
+            return
+          }
+          notify.error(
+            'No se pudo ligar el servicio',
+            getApiErrorReason(error) ?? undefined
+          )
+        }
+      }
+    )
+  }
 
   const run = (action: ReleaseReviewAction, done: string, after?: () => void) =>
     review.mutate(action, {
@@ -143,26 +189,6 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         )
     })
 
-  const signNow = () => {
-    if (!certificate) return
-    if (!mySignature?.configured) {
-      notify.info(
-        'Primero carga tu firma',
-        'Se estampa en los certificados que firmas.'
-      )
-      setSignatureOpen(true)
-      return
-    }
-    sign.mutate([certificate.id], {
-      onSuccess: ([result]) =>
-        result.ok
-          ? notify.success('Certificado firmado')
-          : notify.error('No se pudo firmar', result.error),
-      onError: (error) =>
-        notify.error('No se pudo firmar', getApiErrorReason(error) ?? undefined)
-    })
-  }
-
   const save = (data: ReleaseCorrections) =>
     certificate &&
     run({ type: 'correct', id: certificate.id, data }, 'Datos guardados', () =>
@@ -173,8 +199,10 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
     setEditing(false)
     setAsking(false)
     setObservation('')
+    setReasons([])
     setUndoing(null)
     setReleasing(false)
+    setSigning(false)
   }, [certificateId])
 
   useEffect(() => {
@@ -369,6 +397,76 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                       warn={!certificate.customer}
                     />
                   </Grid>
+                  <Grid item xs={12}>
+                    {canReview && certificate.status !== 'descartado' ? (
+                      <ReleaseServicePicker
+                        value={
+                          certificate.service
+                            ? {
+                                id: certificate.service.id,
+                                serviceCode: certificate.service.serviceCode,
+                                status: certificate.service.status,
+                                customerId: certificate.customerId,
+                                customerName:
+                                  certificate.customer?.nombre ?? null,
+                                certificates: { total: 0, released: 0 }
+                              }
+                            : null
+                        }
+                        customerId={certificate.customerId}
+                        disabled={review.isLoading}
+                        helperText={
+                          certificate.customerId
+                            ? 'Opcional. Se ofrecen los de este cliente; escribe el código para buscar en todos (servicio para un tercero).'
+                            : 'Opcional. Al elegir un servicio se toma su cliente.'
+                        }
+                        onChange={(option) => linkService(option)}
+                      />
+                    ) : (
+                      <Field
+                        label='Servicio de calibración (ODS)'
+                        value={
+                          certificate.service?.serviceCode ?? 'Sin servicio'
+                        }
+                      />
+                    )}
+                  </Grid>
+                  {canReview &&
+                    certificate.status !== 'descartado' &&
+                    (certificate.service?.cuts?.length ?? 0) > 1 && (
+                      <Grid item xs={12}>
+                        <TextField
+                          select
+                          fullWidth
+                          size='small'
+                          label='Corte del servicio'
+                          value={certificate.cutId ?? ''}
+                          disabled={review.isLoading}
+                          helperText='Opcional. Así el control documental de ese corte lo cuenta.'
+                          onChange={(event) =>
+                            run(
+                              {
+                                type: 'service',
+                                id: certificate.id,
+                                serviceId: certificate.serviceId ?? null,
+                                cutId:
+                                  event.target.value === ''
+                                    ? null
+                                    : Number(event.target.value)
+                              },
+                              'Corte actualizado'
+                            )
+                          }
+                        >
+                          <MenuItem value=''>Sin corte</MenuItem>
+                          {certificate.service?.cuts?.map((cut) => (
+                            <MenuItem key={cut.id} value={cut.id}>
+                              {cut.cutCode}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                    )}
                   <Grid item xs={6}>
                     <Field
                       label='Instrumento'
@@ -524,7 +622,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               item
               xs={12}
               md={7}
-              sx={{ bgcolor: '#f3f4f6', minHeight: 420 }}
+              sx={{ bgcolor: neutral.surfaceHead, minHeight: 420 }}
             >
               {pdfUrl ? (
                 <Box
@@ -558,6 +656,14 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
       )}
       {(asking || undoing) && certificate && (
         <Box sx={{ px: 3, pt: 2 }}>
+          <ReleaseReasonChips
+            mode={undoing ?? 'adjustments'}
+            certificate={certificate}
+            reasons={reasons}
+            onReasons={setReasons}
+            observation={observation}
+            onObservation={setObservation}
+          />
           <TextField
             fullWidth
             multiline
@@ -637,11 +743,17 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               disabled={!observation.trim() || review.isLoading}
               onClick={() =>
                 run(
-                  { type: 'adjustments', id: certificate.id, observation },
+                  {
+                    type: 'adjustments',
+                    id: certificate.id,
+                    observation,
+                    reasons
+                  },
                   'Se pidieron ajustes y se avisó al responsable',
                   () => {
                     setAsking(false)
                     setObservation('')
+                    setReasons([])
                   }
                 )
               }
@@ -675,7 +787,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                   'Certificado verificado'
                 )
               }
-              sx={{ bgcolor: '#00897B', '&:hover': { bgcolor: '#00695C' } }}
+              sx={{ bgcolor: brand.hover, '&:hover': { bgcolor: brand.ink } }}
             >
               Verificar
             </Button>
@@ -688,9 +800,9 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
           certificate.status === 'verificado' && (
             <Button
               variant='contained'
-              disabled={sign.isLoading || editing}
-              onClick={signNow}
-              sx={{ bgcolor: '#00897B', '&:hover': { bgcolor: '#00695C' } }}
+              disabled={editing}
+              onClick={() => setSigning(true)}
+              sx={{ bgcolor: brand.hover, '&:hover': { bgcolor: brand.ink } }}
             >
               Firmar
             </Button>
@@ -707,7 +819,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
             <Button
               variant='contained'
               onClick={() => setReleasing(true)}
-              sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+              sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
             >
               Liberar
             </Button>
@@ -767,6 +879,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               onClick={() => {
                 setUndoing(null)
                 setObservation('')
+                setReasons([])
               }}
               disabled={review.isLoading}
             >
@@ -778,7 +891,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               disabled={!observation.trim() || review.isLoading}
               onClick={() =>
                 run(
-                  { type: undoing, id: certificate.id, observation },
+                  { type: undoing, id: certificate.id, observation, reasons },
                   undoing === 'discard'
                     ? 'Certificado descartado'
                     : undoing === 'reopen'
@@ -787,6 +900,7 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                   () => {
                     setUndoing(null)
                     setObservation('')
+                    setReasons([])
                   }
                 )
               }
@@ -810,15 +924,45 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               `${certificate.documentNumber ?? 'certificado'}.pdf`
             ).catch(() => notify.error('No se pudo descargar el PDF'))
           }
-          sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+          sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
         >
           Descargar
         </Button>
       </DialogActions>
-      <ReleaseSignatureDialog
-        open={signatureOpen}
-        onClose={() => setSignatureOpen(false)}
+      <ReleaseSignDialog
+        open={signing && certificate !== undefined}
+        ids={certificate ? [certificate.id] : []}
+        onClose={() => setSigning(false)}
       />
+      <Dialog
+        open={otherCustomer !== null}
+        onClose={() => setOtherCustomer(null)}
+        maxWidth='xs'
+        fullWidth
+      >
+        <DialogTitle>Servicio de otro cliente</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2'>{otherCustomer?.message}</Typography>
+          <Typography variant='body2' sx={{ mt: 1.5 }}>
+            ¿Es un servicio para un tercero y quieres ligarlo de todos modos? El
+            certificado pasará al cliente del servicio (el que cotizó) y queda
+            registrado en el historial.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOtherCustomer(null)}>Cancelar</Button>
+          <Button
+            variant='contained'
+            disabled={review.isLoading}
+            onClick={() =>
+              otherCustomer && linkService(otherCustomer.option, true)
+            }
+            sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
+          >
+            Sí, ligar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <ReleaseEquipmentDialog
         certificateId={releasing && certificate ? certificate.id : null}
         confirmOnly={false}

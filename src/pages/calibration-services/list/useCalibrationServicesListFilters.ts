@@ -84,6 +84,7 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<
     string | undefined
   >(undefined)
+  const [certificateAlertsFilter, setCertificateAlertsFilter] = useState(false)
 
   // La bandeja carga de a PAGE_SIZE servicios; "Cargar más" amplía el límite
   const [limit, setLimit] = useState(PAGE_SIZE)
@@ -127,6 +128,10 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     queryFilters.paymentStatus = paymentStatusFilter as 'pagado' | 'pendiente'
   }
 
+  if (certificateAlertsFilter) {
+    queryFilters.certificateAlerts = 'true'
+  }
+
   // Al cambiar lo que se consulta al servidor, se vuelve a la primera página
   useEffect(() => {
     setLimit(PAGE_SIZE)
@@ -137,6 +142,7 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     hasAdjustmentsFilter,
     billingStatusFilter,
     paymentStatusFilter,
+    certificateAlertsFilter,
     cutTaskFilter
   ])
 
@@ -198,6 +204,7 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     setHasAdjustmentsFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
     setCutTaskFilter('')
+    setCertificateAlertsFilter(false)
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
     }
@@ -234,6 +241,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     setBillingStatusFilter,
     paymentStatusFilter,
     setPaymentStatusFilter,
+    certificateAlertsFilter,
+    setCertificateAlertsFilter,
     queryFilters,
     limit,
     loadMore: () => setLimit((current) => current + PAGE_SIZE),

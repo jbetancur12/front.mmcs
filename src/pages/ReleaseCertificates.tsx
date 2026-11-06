@@ -43,7 +43,8 @@ import CalibrationNotificationBell from 'src/pages/calibration-services/Calibrat
 import ReleaseRulesDialog from 'src/Components/ReleaseCertificates/ReleaseRulesDialog'
 import ReleaseAnalystGuideDialog from 'src/Components/ReleaseCertificates/ReleaseAnalystGuideDialog'
 import ReleaseDriveDialog from 'src/Components/ReleaseCertificates/ReleaseDriveDialog'
-import ReleaseSignatureDialog from 'src/Components/ReleaseCertificates/ReleaseSignatureDialog'
+import ReleaseSignatoriesDialog from 'src/Components/ReleaseCertificates/ReleaseSignatoriesDialog'
+import ReleaseSignDialog from 'src/Components/ReleaseCertificates/ReleaseSignDialog'
 import ReleaseUploadDialog from 'src/Components/ReleaseCertificates/ReleaseUploadDialog'
 import {
   RELEASE_KIND_LABELS,
@@ -55,14 +56,11 @@ import {
 import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import {
   releaseFileUrl,
-  useMySignature,
   useReleaseCertificates,
   useReleaseCustomerSearch,
-  useReleaseUploaders,
-  useSignReleaseCertificates
+  useReleaseUploaders
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { userStore } from 'src/store/userStore'
-import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 
 const PAGE_SIZE = 25
@@ -116,9 +114,8 @@ const ReleaseCertificates: React.FC = () => {
   const [driveOpen, setDriveOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const driveResult = new URLSearchParams(window.location.search).get('drive')
-  const sign = useSignReleaseCertificates()
-  const { data: mySignature } = useMySignature(canSign)
   const [signatureOpen, setSignatureOpen] = useState(false)
+  const [signIds, setSignIds] = useState<number[] | null>(null)
   const [selection, setSelection] = useState<MRT_RowSelectionState>({})
   const [status, setStatus] = useState<ReleaseStatus | undefined>()
   const [kind, setKind] = useState<ReleaseKind | ''>('')
@@ -294,6 +291,12 @@ const ReleaseCertificates: React.FC = () => {
             </Box>
           )
       },
+      {
+        id: 'service',
+        header: 'ODS',
+        size: 130,
+        accessorFn: (row) => row.service?.serviceCode ?? '—'
+      },
       { accessorKey: 'instrument', header: 'Instrumento', size: 210 },
       { accessorKey: 'serie', header: 'Serie', size: 150 },
       {
@@ -333,37 +336,6 @@ const ReleaseCertificates: React.FC = () => {
   const selectedIds = Object.keys(selection)
     .filter((key) => selection[key])
     .map(Number)
-
-  const signSelected = () => {
-    if (!mySignature?.configured) {
-      notify.info(
-        'Primero carga tu firma',
-        'Se estampa en los certificados que firmas.'
-      )
-      setSignatureOpen(true)
-      return
-    }
-    sign.mutate(selectedIds, {
-      onSuccess: (results) => {
-        const failed = results.filter((result) => !result.ok)
-        if (failed.length === 0) {
-          notify.success(
-            results.length === 1
-              ? 'Certificado firmado'
-              : `${results.length} certificados firmados`
-          )
-        } else {
-          notify.warning(
-            `${results.length - failed.length} firmados, ${failed.length} no se pudieron firmar`,
-            failed[0].error
-          )
-        }
-        setSelection({})
-      },
-      onError: (error) =>
-        notify.error('No se pudo firmar', getApiErrorReason(error) ?? undefined)
-    })
-  }
 
   const hasFilters = Boolean(
     status ||
@@ -406,15 +378,14 @@ const ReleaseCertificates: React.FC = () => {
             )}
             {canSign && (
               <Button variant='text' onClick={() => setSignatureOpen(true)}>
-                Mi firma
+                Firmas
               </Button>
             )}
             {canSign && selectedIds.length > 0 && (
               <Button
                 variant='outlined'
                 startIcon={<VerifiedOutlined />}
-                disabled={sign.isLoading}
-                onClick={signSelected}
+                onClick={() => setSignIds(selectedIds)}
               >
                 Firmar{' '}
                 {selectedIds.length === 1
@@ -677,9 +648,15 @@ const ReleaseCertificates: React.FC = () => {
         open={driveOpen}
         onClose={() => setDriveOpen(false)}
       />
-      <ReleaseSignatureDialog
+      <ReleaseSignatoriesDialog
         open={signatureOpen}
         onClose={() => setSignatureOpen(false)}
+      />
+      <ReleaseSignDialog
+        open={signIds !== null}
+        ids={signIds ?? []}
+        onClose={() => setSignIds(null)}
+        onDone={() => setSelection({})}
       />
       <ReleaseUploadDialog
         open={uploadOpen}

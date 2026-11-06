@@ -64,6 +64,8 @@ export interface ReleaseCertificate {
   anomalies: ReleaseAnomaly[]
   readStatus: ReleaseReadStatus
   customerId: number | null
+  serviceId?: number | null
+  cutId?: number | null
   currentVersionId: number | null
   signedAt?: string | null
   releasedAt?: string | null
@@ -75,6 +77,35 @@ export interface ReleaseCertificate {
   createdAt: string
   uploader?: ReleaseUserRef | null
   customer?: { id: number; nombre: string } | null
+  /** Servicio de calibración (ODS) al que pertenece, si se ligó. */
+  service?: {
+    id: number
+    serviceCode: string
+    status: string
+    cuts?: ReleaseServiceCut[]
+  } | null
+  /** Corte del servicio al que pertenece, si se ligó. */
+  cut?: { id: number; cutCode: string } | null
+}
+
+export interface ReleaseServiceCut {
+  id: number
+  cutCode: string
+  cutType?: string
+  status?: string
+}
+
+/** Servicio que se puede elegir al ligar un certificado. */
+export interface ReleaseServiceOption {
+  id: number
+  serviceCode: string
+  status: string
+  customerId: number | null
+  customerName: string | null
+  certificates: { total: number; released: number }
+  cuts?: ReleaseServiceCut[]
+  /** Con un cliente de referencia: si el servicio es de ese mismo cliente. */
+  sameCustomer?: boolean | null
 }
 
 export interface ReleaseVersion {
@@ -91,6 +122,7 @@ export interface ReleaseHistoryEntry {
   fromStatus: ReleaseStatus | null
   toStatus: ReleaseStatus
   observation: string | null
+  reasons?: string[] | null
   createdAt: string
   user?: ReleaseUserRef | null
 }
@@ -208,4 +240,35 @@ export const RELEASE_MATCH_LABELS: Record<
   ubicacion: 'Misma ubicación',
   mismo_tipo: 'Mismo tipo de equipo',
   manual: 'Elegido a mano'
+}
+
+/** Firma de una persona del laboratorio en el registro. */
+export interface ReleaseSignatory {
+  id: number
+  name: string
+  role: string | null
+  active: boolean
+  mimeType: string
+}
+
+/** Una firma o el sello en el documento. `x`, `y` (esquina superior izquierda) y `w` son fracciones de la página. */
+export interface ReleasePlacement {
+  type: 'signature' | 'seal'
+  signatoryId?: number
+  /** Desde 1; -1 es la última. */
+  page: number
+  x: number
+  y: number
+  w: number
+}
+
+export interface ReleaseSignPlan {
+  certificateId: number
+  documentNumber: string | null
+  pages: { width: number; height: number }[]
+  category: { key: string; label: string }
+  /** De dónde sale la posición propuesta. */
+  source: 'layout' | 'names' | 'none'
+  placements: ReleasePlacement[]
+  signatories: ReleaseSignatory[]
 }
