@@ -63,6 +63,8 @@ export const initialDataSheetFormValues = {
   serialNumber: '',
   supplier: '',
   manual: false,
+  /** Archivo del manual; opcional, solo se envía si "Tiene manual" está activo. */
+  manualFile: null as File | null,
   magnitude: '',
   units: '',
   receivedDate: '',
@@ -87,6 +89,10 @@ export const initialDataSheetFormValues = {
   calibrationCycle: '',
   status: 'available'
 }
+
+/** Tipos y peso que acepta el manual (el API valida lo mismo). */
+export const MANUAL_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp'
+export const MANUAL_MAX_MB = 20
 
 export type DataSheetFormValues = typeof initialDataSheetFormValues
 

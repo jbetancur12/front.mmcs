@@ -38,6 +38,52 @@ export const InvoiceCell = ({ cell }: Pick<CellProps, 'cell'>) => (
   />
 )
 
+/** Estado del manual: con archivo, pendiente de subir (tiene manual) o sin manual. */
+export const ManualCell = ({ row }: Pick<CellProps, 'row'>) => {
+  if (row.original.manualUrl) {
+    return (
+      <Chip
+        size='small'
+        variant='outlined'
+        color='success'
+        label='Con archivo'
+      />
+    )
+  }
+  if (row.original.manual) {
+    return (
+      <Tooltip title='Tiene manual, pero aún no se ha subido el archivo'>
+        <Chip
+          size='small'
+          variant='outlined'
+          color='warning'
+          label='Archivo pendiente'
+        />
+      </Tooltip>
+    )
+  }
+  return <Chip size='small' variant='outlined' label='Sin manual' />
+}
+
+/** Filtro de la columna Manual: pendiente, con archivo o sin manual. */
+export const MANUAL_FILTER_OPTIONS = [
+  { value: 'pending', text: 'Archivo pendiente' },
+  { value: 'file', text: 'Con archivo' },
+  { value: 'none', text: 'Sin manual' }
+]
+
+export const manualFilterFn = (
+  row: { original: DataSheetData },
+  _columnId: string,
+  filterValue: string
+) => {
+  if (!filterValue) return true
+  const { manual, manualUrl } = row.original
+  if (filterValue === 'file') return Boolean(manualUrl)
+  if (filterValue === 'pending') return Boolean(manual) && !manualUrl
+  return !manual
+}
+
 export const StatusCell = ({ cell, row }: CellProps) => {
   if (row.original.isRetired) {
     return (

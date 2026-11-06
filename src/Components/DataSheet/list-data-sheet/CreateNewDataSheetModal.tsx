@@ -16,10 +16,13 @@ import React, { useEffect } from 'react'
 import FormDialog, { FormDialogSection } from '../../Common/FormDialog'
 import { notify } from 'src/utils/notify'
 
+import FileDropZone from '../../Common/FileDropZone'
 import {
   createServiceTypeOptions,
   DataSheetFormValues,
   initialDataSheetFormValues,
+  MANUAL_ACCEPT,
+  MANUAL_MAX_MB,
   validationSchema
 } from './constants'
 import { DataSheetData } from './types'
@@ -40,7 +43,13 @@ type FieldKey = keyof DataSheetFormValues
 const FULL_ROW = { gridColumn: { sm: '1 / -1' } }
 
 // Campos que el formulario de creación no muestra
-const HIDDEN_FIELDS = ['id', 'invoiceUrl', 'internalCode', 'status']
+const HIDDEN_FIELDS = [
+  'id',
+  'invoiceUrl',
+  'manualUrl',
+  'internalCode',
+  'status'
+]
 
 /** Crea una hoja de datos de equipo: foto y datos en dos columnas. */
 export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
@@ -59,6 +68,11 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       Object.keys(values).forEach((key) => {
         const value = values[key as FieldKey]
         if (key === 'internalCode' && !String(value ?? '').trim()) return
+        if (key === 'manualFile') {
+          // Solo viaja si "Tiene manual" sigue activo.
+          if (values.manual && value) formData.append(key, value as Blob)
+          return
+        }
         formData.append(key, value as string | Blob)
       })
 
@@ -155,22 +169,46 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
 
     if (key === 'manual') {
       return (
-        <FormControlLabel
-          key={column.accessorKey}
-          control={
-            <Switch
-              checked={formik.values.manual}
-              onChange={formik.handleChange}
-              name='manual'
-              onBlur={formik.handleBlur}
-              sx={{
-                '& .Mui-checked': { color: brand.main },
-                '& .Mui-checked + .MuiSwitch-track': { bgcolor: brand.main }
-              }}
-            />
-          }
-          label='Tiene manual'
-        />
+        <Box key={column.accessorKey} sx={FULL_ROW}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formik.values.manual}
+                onChange={(event) => {
+                  formik.handleChange(event)
+                  if (!event.target.checked) {
+                    formik.setFieldValue('manualFile', null)
+                  }
+                }}
+                name='manual'
+                onBlur={formik.handleBlur}
+                sx={{
+                  '& .Mui-checked': { color: brand.main },
+                  '& .Mui-checked + .MuiSwitch-track': { bgcolor: brand.main }
+                }}
+              />
+            }
+            label='Tiene manual'
+          />
+          {formik.values.manual && (
+            <Box sx={{ mt: 1 }}>
+              <FileDropZone
+                file={formik.values.manualFile}
+                onFileSelected={(file) =>
+                  formik.setFieldValue('manualFile', file)
+                }
+                onReject={(message) =>
+                  notify.error('Archivo no válido', message)
+                }
+                accept={MANUAL_ACCEPT}
+                acceptLabel='PDF o imagen'
+                title='Arrastra el manual aquí o haz clic para elegirlo'
+                hint={`PDF, JPG, PNG o WEBP, hasta ${MANUAL_MAX_MB} MB. Es opcional: también puedes subirlo después desde Editar.`}
+                maxSizeMb={MANUAL_MAX_MB}
+              />
+            </Box>
+          )}
+        </Box>
       )
     }
 

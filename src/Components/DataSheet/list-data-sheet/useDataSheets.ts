@@ -217,6 +217,18 @@ export const useDataSheetMutations = () => {
     })
   }, options)
 
+  const uploadManual = useMutation<
+    AxiosResponse,
+    unknown,
+    { id: number; manualFile: File }
+  >(({ id, manualFile }) => {
+    const formData = new FormData()
+    formData.append('manualFile', manualFile)
+    return axiosPrivate.put(`/dataSheet/${id}/update-manual`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }, options)
+
   const createDataSheet = useMutation<AxiosResponse, unknown, FormData>(
     (formData) =>
       axiosPrivate.post(`/dataSheet`, formData, {
@@ -234,8 +246,18 @@ export const useDataSheetMutations = () => {
     restoreDataSheet,
     uploadImage,
     uploadInvoice,
+    uploadManual,
     createDataSheet
   }
+}
+
+/** Descarga del manual (blob): efecto imperativo, no es una query. */
+export const useDownloadManual = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return (id: number) =>
+    axiosPrivate.get(`/dataSheet/download-manual/${id}`, {
+      responseType: 'blob'
+    })
 }
 
 /** Descarga de la factura (blob): efecto imperativo, no es una query. */
