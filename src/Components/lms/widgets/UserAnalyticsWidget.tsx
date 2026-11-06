@@ -19,7 +19,7 @@ import {
   Assessment as AssessmentIcon
 } from '@mui/icons-material'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
-import { neutral, intent, brand } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 // Modern color palette
 const colors = {
@@ -136,7 +136,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           borderColor: colors.info,
-          boxShadow: `0 8px 25px rgba(59, 130, 246, 0.15)`,
+          boxShadow: `0 8px 25px ${withAlpha(intent.info, 0.15)}`,
           transform: 'translateY(-2px)'
         }
       }}

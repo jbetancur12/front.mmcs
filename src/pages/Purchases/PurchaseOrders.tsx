@@ -27,7 +27,7 @@ import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import DataTable from 'src/Components/Common/DataTable'
 import { notify } from 'src/utils/notify'
-import { brand } from 'src/theme/designTokens'
+import { brand, intent, withAlpha } from 'src/theme/designTokens'
 
 type QuickFilter = 'all' | 'unsent' | 'overdue' | 'unverified'
 
@@ -279,8 +279,8 @@ const PurchaseOrders: React.FC = () => {
             if (sendOverdue) {
               return {
                 sx: {
-                  backgroundColor: 'rgba(244, 67, 54, 0.10)',
-                  '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.18)' }
+                  backgroundColor: withAlpha(intent.danger, 0.1),
+                  '&:hover': { backgroundColor: withAlpha(intent.danger, 0.18) }
                 }
               }
             }
@@ -291,8 +291,10 @@ const PurchaseOrders: React.FC = () => {
             if (daysPast > 20) {
               return {
                 sx: {
-                  backgroundColor: 'rgba(255, 165, 0, 0.15)',
-                  '&:hover': { backgroundColor: 'rgba(255, 165, 0, 0.25)' }
+                  backgroundColor: withAlpha(intent.warning, 0.15),
+                  '&:hover': {
+                    backgroundColor: withAlpha(intent.warning, 0.25)
+                  }
                 }
               }
             }

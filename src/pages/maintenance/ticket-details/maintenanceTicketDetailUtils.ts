@@ -5,7 +5,7 @@ import {
   MaintenanceTicket,
   MaintenanceUpdateRequest
 } from '../../../types/maintenance'
-import { neutral } from 'src/theme/designTokens'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 export const formatCurrency = (amount: number | undefined) => {
   if (!amount) return 'No especificado'
@@ -38,7 +38,7 @@ export const surfaceSx = {
   backgroundColor: neutral.surface,
   borderRadius: '14px',
   border: `1px solid ${neutral.border}`,
-  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+  boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
 }
 
 export const getFileDisplayName = (file: MaintenanceFile) =>

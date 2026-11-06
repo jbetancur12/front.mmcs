@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Box, Button, Stack, Typography } from '@mui/material'
 import { BorderColor, Clear, UploadFile } from '@mui/icons-material'
-import { neutral } from 'src/theme/designTokens'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 interface SignaturePadProps {
   value?: string | null
@@ -312,8 +312,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
           border: `1px solid ${neutral.borderStrong}`,
           borderRadius: 2,
           overflow: 'hidden',
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.88) 100%)',
+          background: `linear-gradient(180deg, rgba(255,255,255,0.92) 0%, ${withAlpha(neutral.surfaceAlt, 0.88)} 100%)`,
           position: 'relative'
         }}
       >

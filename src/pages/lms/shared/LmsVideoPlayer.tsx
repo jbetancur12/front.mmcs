@@ -1,3 +1,4 @@
+import { neutral } from 'src/theme/designTokens'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useRef, useEffect } from 'react'
 import {
@@ -321,7 +322,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
       ref={containerRef}
       sx={{
         position: 'relative',
-        backgroundColor: 'black',
+        backgroundColor: neutral.text,
         borderRadius: 1,
         overflow: 'hidden'
       }}

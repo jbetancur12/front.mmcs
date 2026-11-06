@@ -57,7 +57,7 @@ import {
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 interface Certificate extends ApiCertificate {
   certificateNumber: string
   courseTitle: string
@@ -316,13 +316,13 @@ const LmsCertificateView: React.FC = () => {
   const generateCertificateHtml = (cert: Certificate) => {
     return `
       <div style="width: 800px; min-height: 600px; box-sizing: border-box; border: 8px solid ${brand.ink}; padding: 48px; font-family: Georgia, 'Times New Roman', serif; text-align: center; background: linear-gradient(135deg, ${neutral.surfaceAlt} 0%, ${neutral.surfaceHead} 100%); margin: 0 auto; position: relative; overflow: hidden;">
-        <div style="position: absolute; inset: 16px; border: 1px solid rgba(15,118,110,0.18);"></div>
+        <div style="position: absolute; inset: 16px; border: 1px solid ${withAlpha(brand.ink, 0.18)};"></div>
         <div style="position: relative; z-index: 1;">
           <p style="letter-spacing: 0.4em; text-transform: uppercase; color: ${brand.ink}; font-size: 12px; margin: 0 0 16px;">${getOrganizationName(cert)}</p>
           <h1 style="color: ${neutral.text}; margin: 0 0 10px; font-size: 38px; font-weight: 700;">Certificado de Finalización</h1>
           <p style="font-size: 17px; color: ${neutral.textBody}; margin-bottom: 40px;">Reconocimiento oficial por completar satisfactoriamente esta experiencia de aprendizaje.</p>
           <p style="font-size: 18px; margin-bottom: 8px; color: ${neutral.textBody};">Se certifica que</p>
-          <h2 style="color: ${neutral.text}; font-size: 30px; margin: 18px auto; padding-bottom: 14px; border-bottom: 2px solid rgba(15,118,110,0.35); width: fit-content; max-width: 100%;">${cert.certificateData?.userName || 'Usuario'}</h2>
+          <h2 style="color: ${neutral.text}; font-size: 30px; margin: 18px auto; padding-bottom: 14px; border-bottom: 2px solid ${withAlpha(brand.ink, 0.35)}; width: fit-content; max-width: 100%;">${cert.certificateData?.userName || 'Usuario'}</h2>
           <p style="font-size: 18px; margin: 0; color: ${neutral.textBody};">ha completado el curso</p>
           <h3 style="color: ${brand.ink}; font-size: 26px; margin: 20px 0 12px;">${cert.certificateData?.courseTitle || cert.courseTitle}</h3>
           <p style="font-size: 15px; color: ${neutral.textMuted}; margin-bottom: 28px;">${cert.courseDescription || 'Curso certificado dentro del entorno de aprendizaje MMCS.'}</p>

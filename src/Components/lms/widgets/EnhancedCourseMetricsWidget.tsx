@@ -41,7 +41,7 @@ import {
   Visibility as VisibilityIcon
 } from '@mui/icons-material'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
-import { neutral, intent, brand } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 // Modern color palette
 const colors = {
@@ -249,7 +249,7 @@ const EnhancedCourseMetricsWidget: React.FC<
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           borderColor: colors.primary,
-          boxShadow: `0 8px 25px rgba(16, 185, 129, 0.15)`,
+          boxShadow: `0 8px 25px ${withAlpha(brand.main, 0.15)}`,
           transform: 'translateY(-2px)'
         }
       }}

@@ -32,7 +32,7 @@ import { es } from 'date-fns/locale'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
-import { neutral, intent, brand } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 interface MaintenanceCommentsListProps {
   comments: MaintenanceComment[]
   onAddComment: (comment: string, isInternal: boolean) => Promise<void>
@@ -75,7 +75,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
     backgroundColor: neutral.surface,
     borderRadius: '12px',
     border: `1px solid ${neutral.border}`,
-    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+    boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
   }
 
   const canAddInternalComments = useCan(
@@ -251,7 +251,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
               mb: 2,
               backgroundColor: neutral.surface,
               borderRadius: '12px',
-              border: '1px solid rgba(33, 150, 243, 0.2)'
+              border: `1px solid ${withAlpha(intent.info, 0.2)}`
             }}
           >
             No hay comentarios aún. ¡Sé el primero en comentar!
@@ -277,8 +277,8 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                     ? intent.warning
                     : neutral.borderStrong,
                   boxShadow: comment.isInternal
-                    ? '0 4px 12px rgba(245, 158, 11, 0.12)'
-                    : '0 4px 12px rgba(15, 23, 42, 0.08)'
+                    ? `0 4px 12px ${withAlpha(intent.warning, 0.12)}`
+                    : `0 4px 12px ${withAlpha(neutral.text, 0.08)}`
                 }
               }}
             >

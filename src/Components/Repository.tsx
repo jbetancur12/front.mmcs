@@ -29,6 +29,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 export interface FileData {
   name: string
   title: string
@@ -204,7 +205,7 @@ const Repository = () => {
         renderTopToolbarCustomActions={() =>
           canManage ? (
             <button
-              className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+              className='bg-intent-info hover:bg-intent-info-ink text-white font-bold py-2 px-4 rounded '
               onClick={() => setCreateModalOpen(true)}
             >
               Subir Nuevo Archivo
@@ -368,7 +369,7 @@ export const CreateNewRepositoryModal = ({
         <Button
           variant='contained'
           onClick={onClose}
-          sx={{ backgroundColor: '#ccc', marginRight: '10px' }}
+          sx={{ backgroundColor: neutral.borderStrong, marginRight: '10px' }}
         >
           Cancelar
         </Button>

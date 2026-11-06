@@ -22,7 +22,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { neutral, brand } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const PRIORITY_COLORS: Record<
   string,
@@ -161,7 +161,9 @@ const NotificationBell = () => {
                       py: 1.5,
                       borderBottom: '1px solid',
                       borderColor: 'divider',
-                      '&:hover': { backgroundColor: 'rgba(16,185,129,0.04)' }
+                      '&:hover': {
+                        backgroundColor: withAlpha(brand.main, 0.04)
+                      }
                     }}
                   >
                     <ListItemText

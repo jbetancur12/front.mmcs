@@ -28,7 +28,7 @@ import MaintenancePriorityBadge from './MaintenancePriorityBadge'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import useRelativeTime from '../../hooks/useRelativeTime'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCardProps {
   ticket: MaintenanceTicket
@@ -113,7 +113,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         minHeight: { xs: 'auto', md: 320 },
         backgroundColor: neutral.surface,
         borderRadius: '14px',
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+        boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
         border: `1px solid ${neutral.border}`,
         position: 'relative',
         overflow: 'hidden',
@@ -129,7 +129,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           opacity: 0.8
         },
         '&:hover': {
-          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+          boxShadow: `0 4px 12px ${withAlpha(neutral.text, 0.08)}`,
           border: `1px solid ${neutral.borderStrong}`,
           '&::before': {
             opacity: 1

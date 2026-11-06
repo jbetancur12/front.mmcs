@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { ModernColors } from '../types'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export const useModernStyles = () => {
   const modernColors: ModernColors = useMemo(
@@ -48,7 +48,7 @@ export const useModernStyles = () => {
         backgroundColor: intent.dangerSoft, // Fondo más visible para TV
         border: `4px solid ${modernColors.danger}`, // Borde más grueso
         borderLeft: `8px solid ${modernColors.danger}`, // Borde izquierdo más prominente
-        boxShadow: '0 6px 20px rgba(220, 53, 69, 0.2)',
+        boxShadow: `0 6px 20px ${withAlpha(intent.danger, 0.2)}`,
         position: 'relative',
         '&::before': {
           content: '""',
@@ -63,7 +63,7 @@ export const useModernStyles = () => {
           animation: 'subtlePulse 3s infinite'
         },
         '&:hover': {
-          boxShadow: '0 10px 30px rgba(220, 53, 69, 0.3)',
+          boxShadow: `0 10px 30px ${withAlpha(intent.danger, 0.3)}`,
           transform: 'translateY(-3px)'
         }
       },
@@ -146,9 +146,9 @@ export const useModernStyles = () => {
     () => ({
       subtlePulse: {
         '@keyframes subtlePulse': {
-          '0%': { boxShadow: '0 0 0 0 rgba(244, 67, 54, 0.4)' },
-          '70%': { boxShadow: '0 0 0 15px rgba(244, 67, 54, 0)' },
-          '100%': { boxShadow: '0 0 0 0 rgba(244, 67, 54, 0)' }
+          '0%': { boxShadow: `0 0 0 0 ${withAlpha(intent.danger, 0.4)}` },
+          '70%': { boxShadow: `0 0 0 15px ${withAlpha(intent.danger, 0)}` },
+          '100%': { boxShadow: `0 0 0 0 ${withAlpha(intent.danger, 0)}` }
         }
       },
       fadeInUp: {

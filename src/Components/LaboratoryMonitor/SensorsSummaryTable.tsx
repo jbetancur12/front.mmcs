@@ -18,7 +18,7 @@ import OpacityIcon from '@mui/icons-material/Opacity'
 import TableChartOutlined from '@mui/icons-material/TableChartOutlined'
 import SectionHeader from 'src/Components/Common/SectionHeader'
 import EmptyState from 'src/Components/Common/EmptyState'
-import { neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 import { SensorSummaryViewData } from './types' // Asegúrate que la ruta sea correcta
 
 interface SensorsSummaryTableProps {
@@ -106,7 +106,7 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
               <TableRow
                 key={row.sensorId}
                 hover
-                sx={{ '&:hover': { bgcolor: 'rgba(0,191,165,0.04)' } }}
+                sx={{ '&:hover': { bgcolor: withAlpha(brand.main, 0.04) } }}
               >
                 <TableCell component='th' scope='row'>
                   {row.patternName}

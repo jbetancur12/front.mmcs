@@ -19,7 +19,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { EquipmentProduct } from '../../types/equipmentSales'
-import { neutral, intent, brand, detail } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 interface PickedProduct {
   product: EquipmentProduct
@@ -241,7 +247,7 @@ const EquipmentSalesCatalogProductPickerDialog: React.FC<
                           borderBottom: `1px solid ${neutral.border}`,
                           cursor: 'pointer',
                           backgroundColor: isSelected
-                            ? 'rgba(16,185,129,0.04)'
+                            ? withAlpha(brand.main, 0.04)
                             : undefined
                         }}
                         onMouseEnter={(e) => {

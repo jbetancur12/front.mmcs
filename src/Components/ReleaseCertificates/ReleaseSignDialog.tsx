@@ -35,7 +35,7 @@ import { notify } from 'src/utils/notify'
 import ReleaseSignatoriesDialog from './ReleaseSignatoriesDialog'
 import SignatoryImage, { SealImage } from './SignatoryImage'
 import { ReleasePlacement, ReleaseSignatory } from './ReleaseCertificates.types'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
@@ -454,8 +454,8 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
                           outline:
                             p.key === selected
                               ? `2px solid ${brand.main}`
-                              : '1px dashed rgba(0,105,92,.7)',
-                          bgcolor: 'rgba(224,247,244,.25)'
+                              : `1px dashed ${withAlpha(brand.ink, 0.7)}`,
+                          bgcolor: withAlpha(brand.soft, 0.25)
                         }}
                       >
                         {p.key === selected && (

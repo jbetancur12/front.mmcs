@@ -27,7 +27,13 @@ import {
 } from '../../types/maintenance'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { neutral, intent, brand, accent } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  withAlpha
+} from 'src/theme/designTokens'
 
 interface MaintenanceTimelineProps {
   timeline: MaintenanceTimelineEntry[]
@@ -163,7 +169,7 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
         sx={{
           backgroundColor: neutral.surface,
           borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+          boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
           border: `1px solid ${neutral.border}`
         }}
       >

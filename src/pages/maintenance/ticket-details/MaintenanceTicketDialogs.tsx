@@ -21,6 +21,7 @@ import {
   getFilePreviewType
 } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
+import { neutral } from 'src/theme/designTokens'
 
 interface MaintenanceTicketDialogsProps {
   ticket: MaintenanceTicket
@@ -152,7 +153,7 @@ const MaintenanceTicketDialogs = ({
                   width: '100%',
                   maxHeight: '70vh',
                   borderRadius: 2,
-                  backgroundColor: '#000'
+                  backgroundColor: neutral.text
                 }}
               />
             )}

@@ -11,7 +11,7 @@ import {
   KanbanColumnDefinition,
   StoredFilters
 } from './calibrationServicesListTypes'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export const getStoredViewMode = (): CalibrationServicesViewMode => {
   if (typeof window === 'undefined') {
@@ -60,42 +60,37 @@ export const getSlaVisualTone = (
     case 'red':
       return {
         accent: intent.danger,
-        background:
-          'linear-gradient(180deg, rgba(239,68,68,0.14) 0%, rgba(255,255,255,0.96) 28%)',
-        border: 'rgba(239,68,68,0.24)',
-        glow: '0 6px 18px rgba(239,68,68,0.12)'
+        background: `linear-gradient(180deg, ${withAlpha(intent.danger, 0.14)} 0%, rgba(255,255,255,0.96) 28%)`,
+        border: withAlpha(intent.danger, 0.24),
+        glow: `0 6px 18px ${withAlpha(intent.danger, 0.12)}`
       }
     case 'yellow':
       return {
         accent: intent.warning,
-        background:
-          'linear-gradient(180deg, rgba(245,158,11,0.14) 0%, rgba(255,255,255,0.96) 28%)',
-        border: 'rgba(245,158,11,0.24)',
-        glow: '0 6px 18px rgba(245,158,11,0.12)'
+        background: `linear-gradient(180deg, ${withAlpha(intent.warning, 0.14)} 0%, rgba(255,255,255,0.96) 28%)`,
+        border: withAlpha(intent.warning, 0.24),
+        glow: `0 6px 18px ${withAlpha(intent.warning, 0.12)}`
       }
     case 'green':
       return {
         accent: brand.main,
-        background:
-          'linear-gradient(180deg, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0.96) 28%)',
-        border: 'rgba(16,185,129,0.18)',
-        glow: '0 6px 18px rgba(16,185,129,0.08)'
+        background: `linear-gradient(180deg, ${withAlpha(brand.main, 0.1)} 0%, rgba(255,255,255,0.96) 28%)`,
+        border: withAlpha(brand.main, 0.18),
+        glow: `0 6px 18px ${withAlpha(brand.main, 0.08)}`
       }
     case 'blue':
       return {
         accent: intent.info,
-        background:
-          'linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.96) 28%)',
-        border: 'rgba(59,130,246,0.18)',
-        glow: '0 6px 18px rgba(59,130,246,0.08)'
+        background: `linear-gradient(180deg, ${withAlpha(intent.info, 0.1)} 0%, rgba(255,255,255,0.96) 28%)`,
+        border: withAlpha(intent.info, 0.18),
+        glow: `0 6px 18px ${withAlpha(intent.info, 0.08)}`
       }
     default:
       return {
         accent: neutral.textFaint,
-        background:
-          'linear-gradient(180deg, rgba(148,163,184,0.08) 0%, rgba(255,255,255,0.96) 28%)',
-        border: 'rgba(148,163,184,0.16)',
-        glow: '0 4px 12px rgba(148,163,184,0.08)'
+        background: `linear-gradient(180deg, ${withAlpha(neutral.textFaint, 0.08)} 0%, rgba(255,255,255,0.96) 28%)`,
+        border: withAlpha(neutral.textFaint, 0.16),
+        glow: `0 4px 12px ${withAlpha(neutral.textFaint, 0.08)}`
       }
   }
 }

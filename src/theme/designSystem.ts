@@ -1,6 +1,13 @@
 // Design System Constants for Templates Enhancement
 // Los colores de la marca y los neutros viven en ./designTokens (fuente única).
-export { brand, neutral, intent, accent, detail } from './designTokens'
+export {
+  brand,
+  neutral,
+  intent,
+  accent,
+  detail,
+  withAlpha
+} from './designTokens'
 // Following the emerald green color palette and modern UI principles
 
 export const colors = {

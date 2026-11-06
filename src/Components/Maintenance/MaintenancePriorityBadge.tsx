@@ -7,7 +7,7 @@ import {
   Warning
 } from '@mui/icons-material'
 import { MaintenancePriority } from '../../types/maintenance'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenancePriorityBadgeProps {
   priority: MaintenancePriority
@@ -80,7 +80,9 @@ const MaintenancePriorityBadge: React.FC<MaintenancePriorityBadgeProps> = ({
           variant === 'filled' ? config.backgroundColor : neutral.surface,
         color: config.textColor,
         border: `1px solid ${config.borderColor}`,
-        boxShadow: isUrgent ? '0 0 0 1px rgba(225, 29, 72, 0.08)' : 'none',
+        boxShadow: isUrgent
+          ? `0 0 0 1px ${withAlpha(intent.danger, 0.08)}`
+          : 'none',
         '& .MuiChip-icon': {
           fontSize: size === 'small' ? '0.95rem' : '1.05rem',
           color: config.textColor
@@ -88,7 +90,9 @@ const MaintenancePriorityBadge: React.FC<MaintenancePriorityBadgeProps> = ({
         '&:hover': {
           backgroundColor: config.backgroundColor,
           borderColor: config.textColor,
-          boxShadow: isUrgent ? '0 4px 10px rgba(190, 18, 60, 0.12)' : 'none'
+          boxShadow: isUrgent
+            ? `0 4px 10px ${withAlpha(intent.dangerInk, 0.12)}`
+            : 'none'
         },
         ...(isUrgent && {
           fontWeight: 700

@@ -12,7 +12,7 @@ import { ModuleAudience } from 'src/types/customerModules'
 import { useQueryClient } from 'react-query'
 import { modulesKeys, useModules } from 'src/hooks/modules/useModules'
 import { notify } from 'src/utils/notify'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const AUDIENCE_LABELS: Record<
   ModuleAudience,
@@ -121,7 +121,7 @@ const ModulesView = () => {
                 fontWeight: 600
               },
               '& .MuiDataGrid-row:hover': {
-                backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                backgroundColor: withAlpha(brand.main, 0.04)
               }
             }}
           />

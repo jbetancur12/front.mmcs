@@ -1,3 +1,4 @@
+import { intent, neutral } from 'src/theme/designTokens'
 import React from 'react'
 import { Box, Typography } from '@mui/material'
 import { CheckCircle, Warning, Error } from '@mui/icons-material'
@@ -8,12 +9,12 @@ import { format } from 'date-fns'
 const getConditionIcon = (condition: string) => {
   switch (condition) {
     case 'good':
-      return <CheckCircle sx={{ color: 'green' }} />
+      return <CheckCircle sx={{ color: intent.success }} />
     case 'fair':
-      return <Warning sx={{ color: 'orange' }} />
+      return <Warning sx={{ color: intent.warning }} />
     case 'poor':
     case 'low':
-      return <Error sx={{ color: 'red' }} />
+      return <Error sx={{ color: intent.danger }} />
     default:
       return null
   }
@@ -60,7 +61,7 @@ const InspectionSummary: React.FC<InspectionSummaryProps> = ({
     <Box
       sx={{
         padding: 2,
-        border: '1px solid #ddd',
+        border: `1px solid ${neutral.border}`,
         borderRadius: 2,
         maxWidth: 600,
         mx: 'auto'

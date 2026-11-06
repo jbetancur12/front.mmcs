@@ -37,7 +37,7 @@ import { confirmDialog } from 'src/utils/confirm'
 import { busyDialog } from 'src/utils/confirm'
 import { getApiErrorMessage } from 'src/utils/apiError'
 import { logger } from 'src/utils/logger'
-import { brand, intent } from 'src/theme/designTokens'
+import { brand, intent, withAlpha } from 'src/theme/designTokens'
 export interface CustomerData {
   id?: number
   nombre: string
@@ -324,7 +324,7 @@ const CustomersTable: React.FC = () => {
                 sx={{
                   color: brand.ink,
                   '&:hover': {
-                    bgcolor: 'rgba(0, 191, 165, 0.1)'
+                    bgcolor: withAlpha(brand.main, 0.1)
                   }
                 }}
               >

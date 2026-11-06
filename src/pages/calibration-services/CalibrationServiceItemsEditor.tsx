@@ -47,7 +47,14 @@ import {
   CalibrationServiceProductSummary
 } from '../../types/calibrationService'
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
-import { neutral, intent, brand, detail, accent } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 type CatalogPriceSourceOption = {
   value: 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice'
@@ -237,15 +244,15 @@ const CalibrationServiceItemsEditor = ({
               : brand.main,
           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
-            borderColor: hasError ? intent.danger : 'rgba(16, 185, 129, 0.3)',
+            borderColor: hasError ? intent.danger : withAlpha(brand.main, 0.3),
             boxShadow: hasError
-              ? '0 2px 8px rgba(239,68,68,0.15)'
+              ? `0 2px 8px ${withAlpha(intent.danger, 0.15)}`
               : '0 2px 8px rgba(0,0,0,0.04)'
           },
           '&.Mui-expanded': {
-            borderColor: hasError ? intent.danger : 'rgba(16, 185, 129, 0.4)',
+            borderColor: hasError ? intent.danger : withAlpha(brand.main, 0.4),
             boxShadow: hasError
-              ? '0 4px 16px rgba(239,68,68,0.2)'
+              ? `0 4px 16px ${withAlpha(intent.danger, 0.2)}`
               : '0 4px 16px rgba(0,0,0,0.06)'
           }
         }}
@@ -693,9 +700,8 @@ const CalibrationServiceItemsEditor = ({
               borderRadius: '10px',
               overflow: 'hidden',
               border: '1px solid',
-              borderColor: 'rgba(16, 185, 129, 0.15)',
-              background:
-                'linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(5, 150, 105, 0.02) 100%)'
+              borderColor: withAlpha(brand.main, 0.15),
+              background: `linear-gradient(135deg, ${withAlpha(brand.main, 0.04)} 0%, ${withAlpha(brand.hover, 0.02)} 100%)`
             }}
           >
             <Stack
@@ -775,7 +781,7 @@ const CalibrationServiceItemsEditor = ({
       <TableRow
         key={item.localId}
         hover
-        sx={{ '&:hover': { backgroundColor: 'rgba(16,185,129,0.03)' } }}
+        sx={{ '&:hover': { backgroundColor: withAlpha(brand.main, 0.03) } }}
       >
         <TableCell
           sx={{
@@ -938,10 +944,10 @@ const CalibrationServiceItemsEditor = ({
               fontWeight: 700,
               px: 3,
               whiteSpace: 'nowrap',
-              boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.15)',
+              boxShadow: `0 4px 6px -1px ${withAlpha(brand.main, 0.15)}`,
               '&:hover': {
                 background: `linear-gradient(135deg, ${detail.to} 0%, ${intent.successInk} 100%)`,
-                boxShadow: '0 6px 12px -2px rgba(16, 185, 129, 0.25)'
+                boxShadow: `0 6px 12px -2px ${withAlpha(brand.main, 0.25)}`
               }
             }}
           >
@@ -957,7 +963,7 @@ const CalibrationServiceItemsEditor = ({
           p: 1.5,
           borderRadius: '10px',
           border: '1px solid rgba(0,0,0,0.06)',
-          background: 'rgba(16,185,129,0.03)',
+          background: withAlpha(brand.main, 0.03),
           display: 'flex',
           flexWrap: 'wrap',
           gap: 3,

@@ -46,7 +46,7 @@ import { useCan } from '@utils/functions'
 import { getApiErrorMessage } from 'src/utils/apiError'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const customerQueryKey = ['calibration-service-customers']
 const DEFAULT_PAGE_SIZE = 10
@@ -378,7 +378,7 @@ const CalibrationServiceCustomersPage = () => {
               overflow: 'hidden',
               transition: 'box-shadow 0.2s, border-color 0.2s',
               '&:hover': {
-                borderColor: 'rgba(16,185,129,0.2)',
+                borderColor: withAlpha(brand.main, 0.2),
                 boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
               }
             }}
@@ -405,7 +405,7 @@ const CalibrationServiceCustomersPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(16,185,129,0.08)',
+                      backgroundColor: withAlpha(brand.main, 0.08),
                       color: brand.ink,
                       flexShrink: 0
                     }}
@@ -572,12 +572,12 @@ const CalibrationServiceCustomersPage = () => {
                       cursor: 'pointer',
                       '&::before': {
                         borderColor: expandedCustomers.has(customer.id)
-                          ? 'rgba(16,185,129,0.3)'
+                          ? withAlpha(brand.main, 0.3)
                           : undefined
                       },
                       '&::after': {
                         borderColor: expandedCustomers.has(customer.id)
-                          ? 'rgba(16,185,129,0.3)'
+                          ? withAlpha(brand.main, 0.3)
                           : undefined
                       }
                     }}

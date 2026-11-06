@@ -16,6 +16,7 @@ import { es } from 'date-fns/locale'
 import { useEffect, useState } from 'react'
 import { DeviceReadingPayload } from '../types'
 import useWebSocket from '@utils/use-websockets'
+import { intent, withAlpha } from 'src/theme/designTokens'
 
 interface DevicePopupProps {
   device: DeviceIot
@@ -136,26 +137,26 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
                     '0%': {
                       boxShadow:
                         highestSeverity === AlarmSeverity.INFO
-                          ? '0 0 0 0 rgba(0, 100, 255, 0.4)'
+                          ? `0 0 0 0 ${withAlpha(intent.info, 0.4)}`
                           : highestSeverity === AlarmSeverity.WARNING
-                            ? '0 0 0 0 rgba(255, 200, 0, 0.4)'
-                            : '0 0 0 0 rgba(255, 0, 0, 0.4)'
+                            ? `0 0 0 0 ${withAlpha(intent.warning, 0.4)}`
+                            : `0 0 0 0 ${withAlpha(intent.danger, 0.4)}`
                     },
                     '70%': {
                       boxShadow:
                         highestSeverity === AlarmSeverity.INFO
-                          ? '0 0 0 7px rgba(0, 100, 255, 0)'
+                          ? `0 0 0 7px ${withAlpha(intent.info, 0)}`
                           : highestSeverity === AlarmSeverity.WARNING
-                            ? '0 0 0 7px rgba(255, 200, 0, 0)'
-                            : '0 0 0 7px rgba(255, 0, 0, 0)'
+                            ? `0 0 0 7px ${withAlpha(intent.warning, 0)}`
+                            : `0 0 0 7px ${withAlpha(intent.danger, 0)}`
                     },
                     '100%': {
                       boxShadow:
                         highestSeverity === AlarmSeverity.INFO
-                          ? '0 0 0 0 rgba(0, 100, 255, 0)'
+                          ? `0 0 0 0 ${withAlpha(intent.info, 0)}`
                           : highestSeverity === AlarmSeverity.WARNING
-                            ? '0 0 0 0 rgba(255, 200, 0, 0)'
-                            : '0 0 0 0 rgba(255, 0, 0, 0)'
+                            ? `0 0 0 0 ${withAlpha(intent.warning, 0)}`
+                            : `0 0 0 0 ${withAlpha(intent.danger, 0)}`
                     }
                   }
                 }
@@ -164,7 +165,7 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
         />
       </Box>
 
-      <Typography variant='body2' className='text-gray-600 mb-3'>
+      <Typography variant='body2' className='text-neutral-body mb-3'>
         {device?.location?.trim() || ''
           ? device.location
           : `${device?.lastLocation?.lat ?? 'N/A'}, ${device?.lastLocation?.lng ?? 'N/A'}`}
@@ -303,7 +304,7 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Battery5Bar fontSize='small' className='mr-1 text-green-500' />
+          <Battery5Bar fontSize='small' className='mr-1 text-intent-success' />
           <Typography variant='body2' sx={{ ml: 1 }} color='inherit'>
             Battery: 100%
           </Typography>

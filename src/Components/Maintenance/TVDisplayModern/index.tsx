@@ -21,7 +21,7 @@ import {
   ConnectionStatus
 } from './types'
 import { useModernStyles } from './hooks/useModernStyles'
-import { intent } from 'src/theme/designTokens'
+import { intent, withAlpha } from 'src/theme/designTokens'
 
 /**
  * MaintenanceTVDisplayModern - Modern TV display component for maintenance tickets
@@ -362,7 +362,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
             textAlign: 'center',
             border: `2px solid ${modernColors.danger}`,
             borderRadius: '16px',
-            boxShadow: `0 8px 32px rgba(220, 53, 69, 0.15)`
+            boxShadow: `0 8px 32px ${withAlpha(intent.danger, 0.15)}`
           }}
         >
           <ErrorIcon
@@ -448,9 +448,9 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       <style>
         {`
           @keyframes subtlePulse {
-            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(244, 67, 54, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+            0% { box-shadow: 0 0 0 0 ${withAlpha(intent.danger, 0.4)}; }
+            70% { box-shadow: 0 0 0 15px ${withAlpha(intent.danger, 0)}; }
+            100% { box-shadow: 0 0 0 0 ${withAlpha(intent.danger, 0)}; }
           }
 
           @keyframes shimmer {

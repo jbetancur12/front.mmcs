@@ -565,7 +565,7 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
                         gap: 1.5,
                         px: 1.5,
                         py: 1,
-                        borderBottom: '1px solid #eee',
+                        borderBottom: `1px solid ${neutral.border}`,
                         bgcolor: changed ? AMBER_SOFT : 'transparent',
                         boxShadow: changed ? `inset 3px 0 0 ${AMBER}` : 'none'
                       }}

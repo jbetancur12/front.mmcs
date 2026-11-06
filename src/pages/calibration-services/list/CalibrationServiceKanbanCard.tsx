@@ -16,7 +16,7 @@ import {
   getServiceOperationalFocus,
   getServiceSiteLabel
 } from './calibrationServicesListUtils'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface CalibrationServiceKanbanCardProps {
   service: CalibrationService
@@ -62,7 +62,7 @@ const CalibrationServiceKanbanCard = ({
         transition: 'border-color .15s, box-shadow .15s',
         '&:hover': {
           borderColor: neutral.textFaint,
-          boxShadow: '0 4px 12px rgba(17, 24, 39, 0.08)'
+          boxShadow: `0 4px 12px ${withAlpha(neutral.text, 0.08)}`
         },
         '&:focus-visible': {
           outline: `3px solid ${brand.ink}`,

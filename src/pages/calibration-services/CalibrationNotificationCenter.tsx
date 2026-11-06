@@ -26,7 +26,7 @@ import {
 import CalibrationServiceWhatsAppConfigDialog from './CalibrationServiceWhatsAppConfigDialog'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { neutral, brand } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   ods_issued: 'ODS emitida',
@@ -209,14 +209,14 @@ const CalibrationNotificationCenter = () => {
                 border: '1px solid',
                 borderColor: notification.readAt
                   ? 'divider'
-                  : 'rgba(16,185,129,0.2)',
+                  : withAlpha(brand.main, 0.2),
                 backgroundColor: notification.readAt
                   ? '#fff'
-                  : 'rgba(16,185,129,0.02)',
+                  : withAlpha(brand.main, 0.02),
                 cursor: notification.actionUrl ? 'pointer' : 'default',
                 transition: 'all 0.15s',
                 '&:hover': {
-                  borderColor: 'rgba(16,185,129,0.3)',
+                  borderColor: withAlpha(brand.main, 0.3),
                   boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                 }
               }}

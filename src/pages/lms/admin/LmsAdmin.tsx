@@ -59,7 +59,13 @@ import {
   LMSMetricHelp
 } from '../../../Components/lms/Help/ContextualHelp'
 import { notify } from 'src/utils/notify'
-import { brand, neutral, intent, accent } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  withAlpha
+} from 'src/theme/designTokens'
 
 // Modern color palette following design system
 const colors = {
@@ -511,7 +517,7 @@ const LmsAdmin: React.FC = () => {
                       transition: 'all 0.3s ease-in-out',
                       '&:hover': {
                         borderColor: colors.primary,
-                        boxShadow: `0 8px 25px rgba(16, 185, 129, 0.15)`,
+                        boxShadow: `0 8px 25px ${withAlpha(brand.main, 0.15)}`,
                         transform: 'translateY(-4px)'
                       }
                     }}
@@ -603,7 +609,7 @@ const LmsAdmin: React.FC = () => {
                       transition: 'all 0.3s ease-in-out',
                       '&:hover': {
                         borderColor: colors.info,
-                        boxShadow: `0 8px 25px rgba(59, 130, 246, 0.15)`,
+                        boxShadow: `0 8px 25px ${withAlpha(intent.info, 0.15)}`,
                         transform: 'translateY(-4px)'
                       }
                     }}
@@ -667,7 +673,7 @@ const LmsAdmin: React.FC = () => {
                       transition: 'all 0.3s ease-in-out',
                       '&:hover': {
                         borderColor: colors.warning,
-                        boxShadow: `0 8px 25px rgba(217, 119, 6, 0.15)`,
+                        boxShadow: `0 8px 25px ${withAlpha(intent.warning, 0.15)}`,
                         transform: 'translateY(-4px)'
                       }
                     }}
@@ -732,7 +738,7 @@ const LmsAdmin: React.FC = () => {
                       transition: 'all 0.3s ease-in-out',
                       '&:hover': {
                         borderColor: colors.success,
-                        boxShadow: `0 8px 25px rgba(5, 150, 105, 0.15)`,
+                        boxShadow: `0 8px 25px ${withAlpha(brand.hover, 0.15)}`,
                         transform: 'translateY(-4px)'
                       }
                     }}

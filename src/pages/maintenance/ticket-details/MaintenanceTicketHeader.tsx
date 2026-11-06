@@ -34,7 +34,7 @@ import {
 } from '../../../types/maintenance'
 import { formatDate } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketHeaderProps {
   ticket: MaintenanceTicket
@@ -79,7 +79,7 @@ const MaintenanceTicketHeader = ({
         backgroundColor: neutral.surface,
         borderRadius: '14px',
         p: { xs: 2, sm: 3 },
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+        boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
         border: `1px solid ${neutral.border}`
       }}
     >
@@ -296,7 +296,7 @@ const MaintenanceTicketHeader = ({
               '& .MuiPaper-root': {
                 backgroundColor: neutral.surface,
                 borderRadius: '12px',
-                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)',
+                boxShadow: `0 8px 24px ${withAlpha(neutral.text, 0.12)}`,
                 border: `1px solid ${neutral.border}`,
                 mt: 1
               }
@@ -366,7 +366,7 @@ const MaintenanceTicketHeader = ({
                   mb: 0.5,
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    background: 'rgba(109, 198, 98, 0.1)',
+                    background: withAlpha(intent.success, 0.1),
                     transform: 'translateX(4px)'
                   }
                 }}
@@ -393,7 +393,7 @@ const MaintenanceTicketHeader = ({
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     background: ticket.status === MaintenanceStatus.COMPLETED
-                      ? 'rgba(109, 198, 98, 0.1)'
+                      ? withAlpha(intent.success, 0.1)
                       : 'rgba(0, 0, 0, 0.04)',
                     transform: ticket.status === MaintenanceStatus.COMPLETED
                       ? 'translateX(4px)'
@@ -438,7 +438,7 @@ const MaintenanceTicketHeader = ({
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     background: (ticket.actualCost || ticket.estimatedCost)
-                      ? 'rgba(109, 198, 98, 0.1)'
+                      ? withAlpha(intent.success, 0.1)
                       : 'rgba(0, 0, 0, 0.04)',
                     transform: (ticket.actualCost || ticket.estimatedCost)
                       ? 'translateX(4px)'
@@ -489,7 +489,7 @@ const MaintenanceTicketHeader = ({
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     borderColor: intent.danger,
-                    background: 'rgba(255, 87, 34, 0.1)',
+                    background: withAlpha(intent.danger, 0.1),
                     transform: 'translateY(-1px)'
                   }
                 }}
@@ -514,12 +514,12 @@ const MaintenanceTicketHeader = ({
                   fontSize: { xs: '0.813rem', sm: '0.875rem' },
                   background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
                   borderRadius: '12px',
-                  boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                  boxShadow: `0 4px 12px ${withAlpha(intent.success, 0.3)}`,
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.success} 100%)`,
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                    boxShadow: `0 6px 20px ${withAlpha(intent.success, 0.4)}`
                   },
                   '&:disabled': {
                     background: 'rgba(0, 0, 0, 0.12)',
@@ -548,12 +548,12 @@ const MaintenanceTicketHeader = ({
                 fontSize: { xs: '0.813rem', sm: '0.875rem' },
                 background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
                 borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                boxShadow: `0 4px 12px ${withAlpha(intent.success, 0.3)}`,
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.success} 100%)`,
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                  boxShadow: `0 6px 20px ${withAlpha(intent.success, 0.4)}`
                 }
               }}
             >

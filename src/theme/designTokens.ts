@@ -69,6 +69,19 @@ export const accent = {
   soft: '#f3e8ff'
 } as const
 
+/**
+ * Un color de token con transparencia: `withAlpha(brand.main, 0.12)` -> "rgba(0, 191, 165, 0.12)".
+ * Para sombras, anillos de foco y fondos translúcidos de color de marca; así siguen al token si la marca cambia.
+ * (No se llama `alpha` para no chocar con la de MUI.)
+ */
+export const withAlpha = (hex: string, opacity: number): string => {
+  const value = hex.replace('#', '')
+  const r = parseInt(value.slice(0, 2), 16)
+  const g = parseInt(value.slice(2, 4), 16)
+  const b = parseInt(value.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 /** RESERVADO: degradado del banner de las fichas de detalle (esmeralda). No usar en otras pantallas. */
 export const detail = {
   from: '#10b981',

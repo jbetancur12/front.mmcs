@@ -50,7 +50,7 @@ import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { notify } from 'src/utils/notify'
-import { neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface Course {
   id: number
@@ -1102,7 +1102,7 @@ const LmsCourseManagement: React.FC = () => {
                 fontWeight: 600
               },
               '& .MuiTableBody-root .MuiTableRow-root:hover': {
-                backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                backgroundColor: withAlpha(brand.main, 0.04)
               }
             }
           }}

@@ -56,7 +56,13 @@ import {
 } from 'recharts'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
 import type { QuizPerformanceAnalytics as QuizAnalytics } from '../../../services/lmsService'
-import { brand, neutral, intent, accent } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  withAlpha
+} from 'src/theme/designTokens'
 
 // Modern color palette
 const colors = {
@@ -552,7 +558,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             borderColor: accent.main,
-            boxShadow: `0 8px 25px rgba(139, 92, 246, 0.15)`,
+            boxShadow: `0 8px 25px ${withAlpha(accent.main, 0.15)}`,
             transform: 'translateY(-2px)'
           }
         }}

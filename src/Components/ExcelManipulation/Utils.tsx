@@ -1,5 +1,5 @@
 import type { CSSObjectWithLabel, StylesConfig } from 'react-select'
-import { intent } from 'src/theme/designTokens'
+import { intent, neutral } from 'src/theme/designTokens'
 
 export {
   limitArraySize,
@@ -19,7 +19,9 @@ export const styles = (error: boolean): StylesConfig => ({
   control: (provided) =>
     ({
       ...provided,
-      border: error ? '1px solid #ccc' : `2px solid ${intent.danger}`,
+      border: error
+        ? `1px solid ${neutral.borderStrong}`
+        : `2px solid ${intent.danger}`,
       borderRadius: 5,
       height: 55
     }) as CSSObjectWithLabel,

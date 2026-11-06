@@ -20,7 +20,7 @@ import {
   MaintenanceStatus
 } from '../../../types/maintenance'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketTechnicianCardProps {
   ticket: MaintenanceTicket
@@ -46,11 +46,11 @@ const MaintenanceTicketTechnicianCard = ({
           backdropFilter: 'blur(10px)',
           borderRadius: '16px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)',
+          border: `1px solid ${withAlpha(intent.success, 0.1)}`,
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+            boxShadow: `0 8px 30px ${withAlpha(intent.success, 0.12)}`
           }
         }}
       >

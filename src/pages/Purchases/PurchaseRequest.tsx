@@ -65,7 +65,7 @@ type QuickFilter = 'all' | 'pending' | 'toOrder' | 'late'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { notify } from 'src/utils/notify'
 import { promptDialog } from 'src/utils/confirm'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 const PurchaseRequest: React.FC = () => {
   const navigate = useNavigate()
@@ -588,8 +588,10 @@ const PurchaseRequest: React.FC = () => {
             isLate(row.original)
               ? {
                   sx: {
-                    backgroundColor: 'rgba(255, 193, 7, 0.15)',
-                    '&:hover': { backgroundColor: 'rgba(255, 193, 7, 0.25)' }
+                    backgroundColor: withAlpha(intent.warning, 0.15),
+                    '&:hover': {
+                      backgroundColor: withAlpha(intent.warning, 0.25)
+                    }
                   }
                 }
               : {}

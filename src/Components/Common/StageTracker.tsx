@@ -2,7 +2,7 @@ import React from 'react'
 import { Box, LinearProgress, Paper, Stack, Typography } from '@mui/material'
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 const TEAL = brand.main
 const TEAL_INK = brand.ink
@@ -107,7 +107,7 @@ const StageTracker: React.FC<StageTrackerProps> = ({
                         done || isCurrent ? TEAL : neutral.borderStrong,
                       color: done ? '#fff' : brand.hover,
                       boxShadow: isCurrent
-                        ? '0 0 0 4px rgba(0,191,165,0.18)'
+                        ? `0 0 0 4px ${withAlpha(brand.main, 0.18)}`
                         : 'none'
                     }}
                   >

@@ -25,7 +25,7 @@ import {
   surfaceSx
 } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCostsSectionProps {
   ticket: MaintenanceTicket
@@ -61,11 +61,11 @@ const MaintenanceTicketCostsSection = ({
           backdropFilter: 'blur(10px)',
           borderRadius: '16px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)',
+          border: `1px solid ${withAlpha(intent.success, 0.1)}`,
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+            boxShadow: `0 8px 30px ${withAlpha(intent.success, 0.12)}`
           }
         }}
       >
@@ -230,7 +230,7 @@ const MaintenanceTicketCostsSection = ({
             mb: 3,
             '&:hover': {
               borderColor: neutral.borderStrong,
-              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+              boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
             },
             cursor: 'pointer'
           }}
@@ -317,7 +317,7 @@ const MaintenanceTicketCostsSection = ({
               mb: 3,
               '&:hover': {
                 borderColor: neutral.borderStrong,
-                boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+                boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
               },
               cursor: 'pointer'
             }}

@@ -20,7 +20,7 @@ import MaintenanceStatusBadge from '../../../Components/Maintenance/MaintenanceS
 import MaintenancePriorityBadge from '../../../Components/Maintenance/MaintenancePriorityBadge'
 import { formatDate, surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, brand } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketStatusCardProps {
   ticket: MaintenanceTicket
@@ -100,7 +100,7 @@ const MaintenanceTicketStatusCard = ({
                 sx={
                   ticket.status === MaintenanceStatus.COMPLETED
                     ? {
-                        background: 'rgba(16, 185, 129, 0.05)',
+                        background: withAlpha(brand.main, 0.05),
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: brand.main
                         }
@@ -152,7 +152,7 @@ const MaintenanceTicketStatusCard = ({
                 sx={
                   isTechnician
                     ? {
-                        background: 'rgba(16, 185, 129, 0.05)',
+                        background: withAlpha(brand.main, 0.05),
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: brand.main
                         }

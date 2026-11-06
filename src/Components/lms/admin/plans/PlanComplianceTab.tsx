@@ -31,7 +31,7 @@ import {
   formatPlanDate,
   translateTargetText
 } from './planUi'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const STATUS_META: Record<
   PlanComplianceStatus,
@@ -565,7 +565,7 @@ const PlanComplianceTab: React.FC<PlanComplianceTabProps> = ({
                   fontWeight: 600
                 },
                 '& .MuiTableBody-root .MuiTableRow-root:hover': {
-                  backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                  backgroundColor: withAlpha(brand.main, 0.04)
                 }
               }
             }}

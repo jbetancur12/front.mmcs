@@ -26,7 +26,14 @@ import {
   CalibrationServiceProductSummary,
   ProductVariantSummary
 } from '../../types/calibrationService'
-import { neutral, intent, brand, detail, accent } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  detail,
+  withAlpha
+} from 'src/theme/designTokens'
 
 type CatalogPriceSource = 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice'
 
@@ -498,7 +505,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                       style={{
                                         borderBottom: `1px solid ${neutral.surfaceHead}`,
                                         backgroundColor: isSelected
-                                          ? 'rgba(16,185,129,0.04)'
+                                          ? withAlpha(brand.main, 0.04)
                                           : undefined,
                                         cursor: 'pointer'
                                       }}

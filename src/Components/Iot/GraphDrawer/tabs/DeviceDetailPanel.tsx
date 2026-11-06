@@ -20,6 +20,7 @@ import { DeviceAlarm, DeviceReadingPayload } from '../../DeviceIotMap/types'
 import { es } from 'date-fns/locale'
 import useWebSocket from '@utils/use-websockets'
 import { useEffect, useState } from 'react'
+import { intent, withAlpha } from 'src/theme/designTokens'
 
 interface SummaryTabProps {
   device: DeviceIot | null
@@ -320,10 +321,10 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
                           : 'error.main',
                     boxShadow:
                       tempAlarm?.severity === AlarmSeverity.INFO
-                        ? '0 0 15px rgba(0, 100, 255, 0.3)'
+                        ? `0 0 15px ${withAlpha(intent.info, 0.3)}`
                         : tempAlarm?.severity === AlarmSeverity.WARNING
-                          ? '0 0 15px rgba(255, 200, 0, 0.3)'
-                          : '0 0 15px rgba(255, 0, 0, 0.3)'
+                          ? `0 0 15px ${withAlpha(intent.warning, 0.3)}`
+                          : `0 0 15px ${withAlpha(intent.danger, 0.3)}`
                   }
                 })())
             }}
@@ -362,26 +363,26 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
                               '0%': {
                                 boxShadow:
                                   alarm.severity === AlarmSeverity.INFO
-                                    ? '0 0 0 0 rgba(0, 100, 255, 0.4)'
+                                    ? `0 0 0 0 ${withAlpha(intent.info, 0.4)}`
                                     : alarm.severity === AlarmSeverity.WARNING
-                                      ? '0 0 0 0 rgba(255, 200, 0, 0.4)'
-                                      : '0 0 0 0 rgba(255, 0, 0, 0.4)'
+                                      ? `0 0 0 0 ${withAlpha(intent.warning, 0.4)}`
+                                      : `0 0 0 0 ${withAlpha(intent.danger, 0.4)}`
                               },
                               '70%': {
                                 boxShadow:
                                   alarm.severity === AlarmSeverity.INFO
-                                    ? '0 0 0 10px rgba(0, 100, 255, 0)'
+                                    ? `0 0 0 10px ${withAlpha(intent.info, 0)}`
                                     : alarm.severity === AlarmSeverity.WARNING
-                                      ? '0 0 0 10px rgba(255, 200, 0, 0)'
-                                      : '0 0 0 10px rgba(255, 0, 0, 0)'
+                                      ? `0 0 0 10px ${withAlpha(intent.warning, 0)}`
+                                      : `0 0 0 10px ${withAlpha(intent.danger, 0)}`
                               },
                               '100%': {
                                 boxShadow:
                                   alarm.severity === AlarmSeverity.INFO
-                                    ? '0 0 0 0 rgba(0, 100, 255, 0)'
+                                    ? `0 0 0 0 ${withAlpha(intent.info, 0)}`
                                     : alarm.severity === AlarmSeverity.WARNING
-                                      ? '0 0 0 0 rgba(255, 200, 0, 0)'
-                                      : '0 0 0 0 rgba(255, 0, 0, 0)'
+                                      ? `0 0 0 0 ${withAlpha(intent.warning, 0)}`
+                                      : `0 0 0 0 ${withAlpha(intent.danger, 0)}`
                               }
                             }
                           }}
@@ -477,10 +478,10 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
                           : 'error.main',
                     boxShadow:
                       humidityAlarm?.severity === AlarmSeverity.INFO
-                        ? '0 0 15px rgba(0, 100, 255, 0.3)'
+                        ? `0 0 15px ${withAlpha(intent.info, 0.3)}`
                         : humidityAlarm?.severity === AlarmSeverity.WARNING
-                          ? '0 0 15px rgba(255, 200, 0, 0.3)'
-                          : '0 0 15px rgba(255, 0, 0, 0.3)'
+                          ? `0 0 15px ${withAlpha(intent.warning, 0.3)}`
+                          : `0 0 15px ${withAlpha(intent.danger, 0.3)}`
                   }
                 })())
             }}
@@ -519,26 +520,26 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
                               '0%': {
                                 boxShadow:
                                   alarm.severity === AlarmSeverity.INFO
-                                    ? '0 0 0 0 rgba(0, 100, 255, 0.4)'
+                                    ? `0 0 0 0 ${withAlpha(intent.info, 0.4)}`
                                     : alarm.severity === AlarmSeverity.WARNING
-                                      ? '0 0 0 0 rgba(255, 200, 0, 0.4)'
-                                      : '0 0 0 0 rgba(255, 0, 0, 0.4)'
+                                      ? `0 0 0 0 ${withAlpha(intent.warning, 0.4)}`
+                                      : `0 0 0 0 ${withAlpha(intent.danger, 0.4)}`
                               },
                               '70%': {
                                 boxShadow:
                                   alarm.severity === AlarmSeverity.INFO
-                                    ? '0 0 0 10px rgba(0, 100, 255, 0)'
+                                    ? `0 0 0 10px ${withAlpha(intent.info, 0)}`
                                     : alarm.severity === AlarmSeverity.WARNING
-                                      ? '0 0 0 10px rgba(255, 200, 0, 0)'
-                                      : '0 0 0 10px rgba(255, 0, 0, 0)'
+                                      ? `0 0 0 10px ${withAlpha(intent.warning, 0)}`
+                                      : `0 0 0 10px ${withAlpha(intent.danger, 0)}`
                               },
                               '100%': {
                                 boxShadow:
                                   alarm.severity === AlarmSeverity.INFO
-                                    ? '0 0 0 0 rgba(0, 100, 255, 0)'
+                                    ? `0 0 0 0 ${withAlpha(intent.info, 0)}`
                                     : alarm.severity === AlarmSeverity.WARNING
-                                      ? '0 0 0 0 rgba(255, 200, 0, 0)'
-                                      : '0 0 0 0 rgba(255, 0, 0, 0)'
+                                      ? `0 0 0 0 ${withAlpha(intent.warning, 0)}`
+                                      : `0 0 0 0 ${withAlpha(intent.danger, 0)}`
                               }
                             }
                           }}

@@ -72,7 +72,7 @@ import PDFViewer from 'src/Components/PDFViewer'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 const fadeIn = { animation: 'fadeSlideIn 0.35s ease-out' }
 const styles = `
 @keyframes fadeSlideIn {
@@ -981,7 +981,7 @@ const LmsCourseView: React.FC = () => {
             px: 1.5,
             py: 0.5,
             borderRadius: 0.5,
-            bgcolor: 'rgba(0,191,165,0.3)',
+            bgcolor: withAlpha(brand.main, 0.3),
             color: brand.main,
             mb: 2.5
           }}
@@ -1021,7 +1021,10 @@ const LmsCourseView: React.FC = () => {
           >
             <Typography
               variant='caption'
-              sx={{ color: 'rgba(240,244,248,0.65)', fontSize: '0.78rem' }}
+              sx={{
+                color: withAlpha(neutral.surfaceHead, 0.65),
+                fontSize: '0.78rem'
+              }}
             >
               Tu progreso
             </Typography>
@@ -1049,7 +1052,7 @@ const LmsCourseView: React.FC = () => {
           <Typography
             variant='caption'
             sx={{
-              color: 'rgba(240,244,248,0.6)',
+              color: withAlpha(neutral.surfaceHead, 0.6),
               fontSize: '0.75rem',
               mt: 0.75,
               display: 'block'
@@ -1103,14 +1106,17 @@ const LmsCourseView: React.FC = () => {
                   </Typography>
                   <Typography
                     variant='caption'
-                    sx={{ color: 'rgba(200,216,232,0.6)', fontSize: '0.73rem' }}
+                    sx={{
+                      color: withAlpha(intent.infoSoft, 0.6),
+                      fontSize: '0.73rem'
+                    }}
                   >
                     {modCompleted}/{modTotal} lecciones
                   </Typography>
                 </Box>
                 <Box
                   sx={{
-                    color: 'rgba(200,216,232,0.5)',
+                    color: withAlpha(intent.infoSoft, 0.5),
                     display: 'flex',
                     alignItems: 'center',
                     gap: 0.75,
@@ -1160,7 +1166,7 @@ const LmsCourseView: React.FC = () => {
                           transition: 'all 0.15s ease',
                           opacity: isUnlocked ? 1 : 0.45,
                           bgcolor: isCurrent
-                            ? 'rgba(0,191,165,0.18)'
+                            ? withAlpha(brand.main, 0.18)
                             : 'transparent',
                           borderLeft: '2px solid',
                           borderLeftColor: isCurrent
@@ -1169,7 +1175,7 @@ const LmsCourseView: React.FC = () => {
                           '&:hover': isUnlocked
                             ? {
                                 bgcolor: isCurrent
-                                  ? 'rgba(0,191,165,0.25)'
+                                  ? withAlpha(brand.main, 0.25)
                                   : 'rgba(255,255,255,0.04)'
                               }
                             : {}
@@ -1184,7 +1190,7 @@ const LmsCourseView: React.FC = () => {
                               ? brand.main
                               : isCurrent
                                 ? brand.main
-                                : 'rgba(200,216,232,0.3)'
+                                : withAlpha(intent.infoSoft, 0.3)
                           }}
                         >
                           {isCompleted ? (
@@ -1204,8 +1210,8 @@ const LmsCourseView: React.FC = () => {
                               color: isCurrent
                                 ? neutral.surfaceHead
                                 : isCompleted
-                                  ? 'rgba(240,244,248,0.55)'
-                                  : 'rgba(240,244,248,0.82)',
+                                  ? withAlpha(neutral.surfaceHead, 0.55)
+                                  : withAlpha(neutral.surfaceHead, 0.82),
                               fontWeight: isCurrent ? 500 : 400
                             }}
                           >
@@ -1221,7 +1227,7 @@ const LmsCourseView: React.FC = () => {
                           >
                             <Box
                               sx={{
-                                color: 'rgba(200,216,232,0.6)',
+                                color: withAlpha(intent.infoSoft, 0.6),
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 0.5
@@ -1232,7 +1238,7 @@ const LmsCourseView: React.FC = () => {
                                 variant='caption'
                                 sx={{
                                   fontSize: '0.73rem',
-                                  color: 'rgba(200,216,232,0.6)'
+                                  color: withAlpha(intent.infoSoft, 0.6)
                                 }}
                               >
                                 {lesson.duration}
@@ -1261,7 +1267,7 @@ const LmsCourseView: React.FC = () => {
           height: '100%',
           minHeight: '100vh',
           overflow: 'hidden',
-          background: `radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, ${brand.softer} 0%, ${neutral.surfaceHead} 100%)`
+          background: `radial-gradient(circle at top left, ${withAlpha(intent.success, 0.12)}, transparent 30%), linear-gradient(180deg, ${brand.softer} 0%, ${neutral.surfaceHead} 100%)`
         }}
       >
         {/* Mobile FAB for sidebar */}

@@ -89,7 +89,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -125,7 +125,7 @@ const MaintenanceDashboard: React.FC = () => {
     backgroundColor: neutral.surface,
     borderRadius: '14px',
     border: `1px solid ${neutral.border}`,
-    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+    boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
   }
 
   const showToast = (

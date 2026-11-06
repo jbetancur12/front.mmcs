@@ -43,7 +43,7 @@ import { MaintenanceAnalyticsFilters } from '../../types/maintenance'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 const getDefaultDateRange = () => {
   const today = new Date()
   const start = new Date()
@@ -89,7 +89,7 @@ const surfaceSx = {
   backgroundColor: neutral.surface,
   borderRadius: '16px',
   border: `1px solid ${neutral.border}`,
-  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+  boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
 }
 
 const MaintenanceAnalytics: React.FC = () => {

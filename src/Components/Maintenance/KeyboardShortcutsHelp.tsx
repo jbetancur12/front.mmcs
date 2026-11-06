@@ -11,7 +11,7 @@ import {
   Paper
 } from '@mui/material'
 import { Keyboard, Close } from '@mui/icons-material'
-import { intent } from 'src/theme/designTokens'
+import { intent, withAlpha } from 'src/theme/designTokens'
 
 interface KeyboardShortcutsHelpProps {
   open: boolean
@@ -107,8 +107,8 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           sx={{
             p: 2,
             mb: 2,
-            background: 'rgba(109, 198, 98, 0.05)',
-            border: '1px solid rgba(109, 198, 98, 0.1)',
+            background: withAlpha(intent.success, 0.05),
+            border: `1px solid ${withAlpha(intent.success, 0.1)}`,
             borderRadius: '8px'
           }}
         >
@@ -134,8 +134,8 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           elevation={0}
           sx={{
             p: 2,
-            background: 'rgba(255, 152, 0, 0.05)',
-            border: '1px solid rgba(255, 152, 0, 0.1)',
+            background: withAlpha(intent.warning, 0.05),
+            border: `1px solid ${withAlpha(intent.warning, 0.1)}`,
             borderRadius: '8px'
           }}
         >
@@ -163,7 +163,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
         <Box
           mt={2}
           p={2}
-          sx={{ background: 'rgba(33, 150, 243, 0.05)', borderRadius: '8px' }}
+          sx={{ background: withAlpha(intent.info, 0.05), borderRadius: '8px' }}
         >
           <Typography variant='caption' color='text.secondary'>
             💡 <strong>Tip:</strong> Los atajos contextuales (E, C) no funcionan

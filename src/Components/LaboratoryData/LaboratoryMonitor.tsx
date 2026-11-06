@@ -669,7 +669,7 @@ const LaboratoryMonitor: React.FC = () => {
               <Typography
                 variant='h5'
                 component='h2'
-                className='font-bold text-gray-800'
+                className='font-bold text-neutral-text'
               >
                 Datos Históricos
               </Typography>

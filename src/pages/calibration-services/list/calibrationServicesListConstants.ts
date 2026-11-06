@@ -4,7 +4,7 @@ import {
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../../../types/calibrationService'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export const FILTER_ALL = 'all'
 export const FILTER_UNASSIGNED = 'unassigned'
@@ -117,7 +117,7 @@ export const softCardSx = {
   transition: 'border-color .15s, box-shadow .15s',
   '&:hover': {
     borderColor: neutral.borderStrong,
-    boxShadow: '0 4px 12px rgba(17, 24, 39, 0.06)'
+    boxShadow: `0 4px 12px ${withAlpha(neutral.text, 0.06)}`
   },
   '@media (prefers-reduced-motion: reduce)': { transition: 'none' }
 }

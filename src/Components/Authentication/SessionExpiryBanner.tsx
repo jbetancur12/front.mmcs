@@ -17,6 +17,7 @@ import { axiosPublic } from '@utils/api'
 import useRefreshToken from '@utils/use-refresh-token'
 
 import { logger } from 'src/utils/logger'
+import { intent, withAlpha } from 'src/theme/designTokens'
 interface SessionExpiryBannerProps {
   finalWarningMsBefore?: number
   warningMsBefore?: number
@@ -181,7 +182,7 @@ const SessionExpiryBanner = ({
             sx={{
               alignItems: 'center',
               borderRadius: 3,
-              boxShadow: '0 8px 24px rgba(180, 83, 9, 0.18)'
+              boxShadow: `0 8px 24px ${withAlpha(intent.warningInk, 0.18)}`
             }}
           >
             {message}

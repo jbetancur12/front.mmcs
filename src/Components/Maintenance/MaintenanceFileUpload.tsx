@@ -26,7 +26,7 @@ import type { FileRejection } from 'react-dropzone'
 import { MaintenanceFile } from '../../types/maintenance'
 
 import { logger } from 'src/utils/logger'
-import { neutral, intent, accent } from 'src/theme/designTokens'
+import { neutral, intent, accent, withAlpha } from 'src/theme/designTokens'
 interface MaintenanceFileUploadProps {
   files: MaintenanceFile[]
   onFilesChange: (files: File[]) => void
@@ -86,7 +86,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
     backgroundColor: neutral.surface,
     borderRadius: '14px',
     border: `1px solid ${neutral.border}`,
-    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+    boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
   }
 
   const onDrop = useCallback(
@@ -224,8 +224,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             justifyContent: 'center',
             gap: 1,
             borderRadius: '12px 12px 0 0',
-            background:
-              'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(103, 58, 183, 0.18) 100%)'
+            background: `linear-gradient(135deg, ${withAlpha(accent.main, 0.12)} 0%, ${withAlpha(accent.ink, 0.18)} 100%)`
           }}
         >
           <VideoFile sx={{ fontSize: 42, color: accent.ink }} />
@@ -252,8 +251,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           gap: 1,
           borderRadius: '12px 12px 0 0',
           background: isPdfFile(file)
-            ? 'linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(229, 57, 53, 0.16) 100%)'
-            : 'linear-gradient(135deg, rgba(109, 198, 98, 0.08) 0%, rgba(96, 125, 139, 0.16) 100%)'
+            ? `linear-gradient(135deg, ${withAlpha(intent.danger, 0.1)} 0%, ${withAlpha(intent.danger, 0.16)} 100%)`
+            : `linear-gradient(135deg, ${withAlpha(intent.success, 0.08)} 0%, ${withAlpha(neutral.textMuted, 0.16)} 100%)`
         }}
       >
         {isPdfFile(file) ? (
@@ -310,7 +309,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           backgroundColor:
             dragActive || isDragActive ? intent.successSoft : '#ffffff',
           borderRadius: '16px',
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+          boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
           cursor: disabled || uploading ? 'not-allowed' : 'pointer',
           transition: 'border-color 0.2s ease, background-color 0.2s ease',
           '&:hover': {
@@ -428,7 +427,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             mt: 2,
             backgroundColor: neutral.surface,
             borderRadius: '12px',
-            border: '1px solid rgba(244, 67, 54, 0.2)'
+            border: `1px solid ${withAlpha(intent.danger, 0.2)}`
           }}
           onClose={() => setError(null)}
         >
@@ -459,9 +458,9 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                       ? neutral.surfaceAlt
                       : '#ffffff',
                     borderRadius: '12px',
-                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+                    boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
                     border: failedFiles.has(file.id)
-                      ? '1px solid rgba(244, 67, 54, 0.2)'
+                      ? `1px solid ${withAlpha(intent.danger, 0.2)}`
                       : `1px solid ${neutral.border}`,
                     transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                     '&:hover': {
@@ -469,8 +468,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                         ? intent.dangerSoft
                         : neutral.borderStrong,
                       boxShadow: failedFiles.has(file.id)
-                        ? '0 4px 12px rgba(244, 67, 54, 0.12)'
-                        : '0 4px 12px rgba(15, 23, 42, 0.08)'
+                        ? `0 4px 12px ${withAlpha(intent.danger, 0.12)}`
+                        : `0 4px 12px ${withAlpha(neutral.text, 0.08)}`
                     }
                   }}
                 >

@@ -7,7 +7,7 @@ import { FilterPanel } from './FilterPanel'
 import { DeviceList } from './DeviceList'
 import { DeviceIot } from '../../types'
 import Logo from '/images/sense.png'
-import { intent } from 'src/theme/designTokens'
+import { intent, neutral } from 'src/theme/designTokens'
 
 export const DeviceSidebar = ({
   isOpen,
@@ -39,8 +39,8 @@ export const DeviceSidebar = ({
         }
       }}
     >
-      <Box className='h-full flex flex-col bg-white'>
-        <Box className='p-4 border-b border-gray-200'>
+      <Box className='h-full flex flex-col bg-neutral-surface'>
+        <Box className='p-4 border-b border-neutral-border'>
           <Box
             sx={{
               display: 'flex',
@@ -92,7 +92,7 @@ export const DeviceSidebar = ({
           >
             <Typography
               variant='subtitle2'
-              sx={{ color: 'gray', fontWeight: 'bold' }}
+              sx={{ color: neutral.textMuted, fontWeight: 'bold' }}
             >
               Total: {filteredDevices.length}
             </Typography>

@@ -26,7 +26,7 @@ import {
 } from '../../types/maintenance'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
 import MaintenancePriorityBadge from './MaintenancePriorityBadge'
-import { neutral, intent, brand } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceFiltersProps {
   filters: IMaintenanceFilters
@@ -110,7 +110,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
         backgroundColor: neutral.surface,
         borderRadius: '14px',
         border: `1px solid ${neutral.border}`,
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+        boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`
       }}
     >
       {/* Header */}

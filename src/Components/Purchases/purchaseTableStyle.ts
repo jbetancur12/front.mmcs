@@ -1,5 +1,5 @@
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 /**
  * Props de Material React Table compartidas por las tablas de Compras
@@ -16,7 +16,7 @@ export const purchaseTableStyle = {
         fontWeight: 600
       },
       '& .MuiTableBody-root .MuiTableRow-root:hover': {
-        backgroundColor: 'rgba(0, 191, 165, 0.04)'
+        backgroundColor: withAlpha(brand.main, 0.04)
       }
     }
   },

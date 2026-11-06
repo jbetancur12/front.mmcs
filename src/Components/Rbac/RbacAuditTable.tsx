@@ -5,7 +5,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { useRbacAudit } from '../../hooks/useRbac'
 import { RbacAuditAction, RbacAuditItem } from '../../types/rbac'
 import { getRoleLabelEs } from 'src/constants/roles'
-import { neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const ACTION_META: Record<
   RbacAuditAction,
@@ -176,7 +176,7 @@ const RbacAuditTable: React.FC = () => {
           sx: { bgcolor: neutral.surfaceHead, fontWeight: 600 }
         }}
         muiTableBodyRowProps={{
-          sx: { '&:hover': { bgcolor: 'rgba(0,191,165,0.04)' } }
+          sx: { '&:hover': { bgcolor: withAlpha(brand.main, 0.04) } }
         }}
         muiBottomToolbarProps={{ sx: { bgcolor: neutral.surfaceAlt } }}
         renderEmptyRowsFallback={() => (

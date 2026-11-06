@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Card, CardContent, Typography } from '@mui/material'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export type LmsStatTone = 'blue' | 'green' | 'orange' | 'red' | 'teal'
 
@@ -8,23 +8,23 @@ export type LmsStatTone = 'blue' | 'green' | 'orange' | 'red' | 'teal'
 const GRADIENTS: Record<LmsStatTone, { background: string; ring: string }> = {
   blue: {
     background: `linear-gradient(135deg, ${intent.info} 0%, ${intent.info} 100%)`,
-    ring: 'rgba(33,150,243,0.35)'
+    ring: withAlpha(intent.info, 0.35)
   },
   green: {
     background: `linear-gradient(135deg, ${intent.success} 0%, ${intent.success} 100%)`,
-    ring: 'rgba(76,175,80,0.35)'
+    ring: withAlpha(intent.success, 0.35)
   },
   orange: {
     background: `linear-gradient(135deg, ${intent.warning} 0%, ${intent.warning} 100%)`,
-    ring: 'rgba(255,152,0,0.35)'
+    ring: withAlpha(intent.warning, 0.35)
   },
   red: {
     background: `linear-gradient(135deg, ${intent.danger} 0%, ${intent.danger} 100%)`,
-    ring: 'rgba(244,67,54,0.35)'
+    ring: withAlpha(intent.danger, 0.35)
   },
   teal: {
     background: `linear-gradient(135deg, ${brand.hover} 0%, ${brand.main} 100%)`,
-    ring: 'rgba(0,172,193,0.35)'
+    ring: withAlpha(brand.main, 0.35)
   }
 }
 
@@ -109,7 +109,7 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
               borderColor: active ? brand.ink : neutral.textFaint,
               boxShadow: active
                 ? `inset 0 0 0 1px ${brand.ink}`
-                : '0 4px 12px rgba(17,24,39,0.08)'
+                : `0 4px 12px ${withAlpha(neutral.text, 0.08)}`
             }
           : undefined,
         '&:focus-visible': {

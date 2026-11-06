@@ -43,7 +43,7 @@ import {
   getStructuredApiErrorMessage
 } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
-import { brand, neutral } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 type PlanFilter = 'all' | 'assigned' | 'unassigned'
 
@@ -395,7 +395,7 @@ const LmsTrainingPlans: React.FC = () => {
                   fontWeight: 600
                 },
                 '& .MuiTableBody-root .MuiTableRow-root:hover': {
-                  backgroundColor: 'rgba(0, 191, 165, 0.04)'
+                  backgroundColor: withAlpha(brand.main, 0.04)
                 }
               }
             }}

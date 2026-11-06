@@ -83,7 +83,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className='fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white z-50'>
+      <div className='fixed top-0 left-0 w-full h-full flex items-center justify-center bg-neutral-surface z-50'>
         <SignalLoader size='large' message='Validando sesión...' />
       </div>
     )

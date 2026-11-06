@@ -42,7 +42,13 @@ import {
 } from 'src/hooks/purchases/useProducts'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
-import { brand, neutral, intent, accent } from 'src/theme/designTokens'
+import {
+  brand,
+  neutral,
+  intent,
+  accent,
+  withAlpha
+} from 'src/theme/designTokens'
 
 export interface ProductVariant {
   id: number
@@ -83,10 +89,10 @@ const SERVICE_TYPE_COLORS: Record<string, string> = {
 }
 
 const SERVICE_TYPE_BG: Record<string, string> = {
-  Acreditado: 'rgba(16,185,129,0.08)',
-  Trazable: 'rgba(59,130,246,0.08)',
-  'Subcontratado ONAC': 'rgba(139,92,246,0.08)',
-  Especial: 'rgba(245,158,11,0.08)'
+  Acreditado: withAlpha(brand.main, 0.08),
+  Trazable: withAlpha(intent.info, 0.08),
+  'Subcontratado ONAC': withAlpha(accent.main, 0.08),
+  Especial: withAlpha(intent.warning, 0.08)
 }
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat('es-CO', {
@@ -112,7 +118,8 @@ const ServiceTypeBadge: React.FC<{ type: string }> = ({ type }) => (
       py: 0.25,
       borderRadius: '6px',
       display: 'inline-block',
-      backgroundColor: SERVICE_TYPE_BG[type] || 'rgba(107,114,128,0.08)',
+      backgroundColor:
+        SERVICE_TYPE_BG[type] || withAlpha(neutral.textMuted, 0.08),
       color: SERVICE_TYPE_COLORS[type] || neutral.textMuted,
       fontWeight: 600,
       fontSize: '0.78rem'
@@ -477,7 +484,7 @@ const TableProducts: React.FC = () => {
                     style={{ borderBottom: `1px solid ${neutral.border}` }}
                     onMouseEnter={(e) => {
                       ;(e.currentTarget as HTMLElement).style.backgroundColor =
-                        'rgba(0, 191, 165, 0.04)'
+                        withAlpha(brand.main, 0.04)
                     }}
                     onMouseLeave={(e) => {
                       ;(e.currentTarget as HTMLElement).style.backgroundColor =

@@ -3,7 +3,7 @@ import { Box, Paper, Typography, Button, Alert } from '@mui/material'
 import { Error as ErrorIcon, Refresh } from '@mui/icons-material'
 
 import { logger } from 'src/utils/logger'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 interface Props {
   children: ReactNode
 }
@@ -60,7 +60,7 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
               width: '100%',
               backgroundColor: neutral.surface,
               borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+              boxShadow: `0 4px 12px ${withAlpha(neutral.text, 0.08)}`,
               border: `1px solid ${neutral.border}`
             }}
           >
@@ -104,9 +104,9 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 sx={{
                   mb: 2,
                   textAlign: 'left',
-                  background: 'rgba(244, 67, 54, 0.05)',
+                  background: withAlpha(intent.danger, 0.05),
                   borderRadius: '12px',
-                  border: '1px solid rgba(244, 67, 54, 0.2)'
+                  border: `1px solid ${withAlpha(intent.danger, 0.2)}`
                 }}
               >
                 <Typography

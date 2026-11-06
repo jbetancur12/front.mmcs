@@ -27,7 +27,7 @@ import { ROLE_GROUPS, getRoleLabelEs, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { openAnalyticsConsentPreferences } from 'src/utils/analyticsConsent'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 interface HeaderProps {
   toggleMobileMenu: () => void
 }
@@ -96,9 +96,9 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
             height: 7,
             pointerEvents: 'none',
             backgroundImage: [
-              'linear-gradient(rgba(0,105,92,0.22), rgba(0,105,92,0.22))',
-              'repeating-linear-gradient(to right, rgba(0,105,92,0.45) 0 1px, transparent 1px 80px)',
-              'repeating-linear-gradient(to right, rgba(0,105,92,0.25) 0 1px, transparent 1px 8px)'
+              `linear-gradient(${withAlpha(brand.ink, 0.22)}, ${withAlpha(brand.ink, 0.22)})`,
+              `repeating-linear-gradient(to right, ${withAlpha(brand.ink, 0.45)} 0 1px, transparent 1px 80px)`,
+              `repeating-linear-gradient(to right, ${withAlpha(brand.ink, 0.25)} 0 1px, transparent 1px 8px)`
             ].join(','),
             backgroundSize: '100% 1px, 100% 7px, 100% 4px',
             backgroundPosition: 'bottom, bottom, bottom',

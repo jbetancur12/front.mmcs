@@ -20,7 +20,7 @@ import {
   Warning as WarningIcon,
   Close as CloseIcon
 } from '@mui/icons-material'
-import { neutral, intent, brand } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface HelpTooltipProps {
   title: string
@@ -117,7 +117,7 @@ export const MetricHelp: React.FC<MetricHelpProps> = ({
           color: neutral.textMuted,
           '&:hover': {
             color: intent.info,
-            bgcolor: 'rgba(59, 130, 246, 0.1)'
+            bgcolor: withAlpha(intent.info, 0.1)
           }
         }}
       >

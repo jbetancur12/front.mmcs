@@ -18,7 +18,7 @@ import MaintenanceTicketSignaturesCard from './ticket-details/MaintenanceTicketS
 import MaintenanceTicketSatisfactionCard from './ticket-details/MaintenanceTicketSatisfactionCard'
 import MaintenanceTicketQuickActions from './ticket-details/MaintenanceTicketQuickActions'
 import MaintenanceTicketDialogs from './ticket-details/MaintenanceTicketDialogs'
-import { neutral } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export { formatCurrency } from './ticket-details/maintenanceTicketDetailUtils'
 
@@ -53,7 +53,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             mb: 3,
             backgroundColor: neutral.surface,
             borderRadius: '14px',
-            border: '1px solid rgba(244, 67, 54, 0.2)'
+            border: `1px solid ${withAlpha(intent.danger, 0.2)}`
           }}
         >
           {getApiErrorReason(ticketError) ||

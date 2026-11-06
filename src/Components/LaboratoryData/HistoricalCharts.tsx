@@ -147,7 +147,9 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               onClick={() => toggleSensor(sensor.id)}
               style={{
                 // Usar el color del sensor
-                color: isDisabled ? '#aaa' : sensor.color || '#666',
+                color: isDisabled
+                  ? neutral.textFaint
+                  : sensor.color || neutral.textMuted,
                 cursor: 'pointer',
                 textDecoration: isDisabled ? 'line-through' : 'none',
                 opacity: isDisabled ? 0.5 : 1, // Atenuar si está deshabilitado
@@ -161,7 +163,9 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                   display: 'inline-block',
                   width: '10px',
                   height: '10px',
-                  backgroundColor: isDisabled ? '#aaa' : sensor.color || '#666',
+                  backgroundColor: isDisabled
+                    ? neutral.textFaint
+                    : sensor.color || neutral.textMuted,
                   marginRight: '5px',
                   borderRadius: '50%', // Círculo
                   verticalAlign: 'middle'
@@ -196,7 +200,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
   // Mostrar mensaje si no hay datos DESPUÉS de que la carga terminó y no hubo error
   if (!isLoading && !isError && (!sortedData || sortedData.length === 0)) {
     return (
-      <Typography className='text-center text-gray-500 mt-10'>
+      <Typography className='text-center text-neutral-muted mt-10'>
         No hay datos históricos disponibles para la selección actual.
       </Typography>
     )
@@ -232,7 +236,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
             <XAxis
               dataKey='timestamp'
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
             />
             <YAxis
@@ -240,11 +244,11 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                 value: '°C',
                 angle: -90,
                 position: 'insideLeft',
-                fill: '#666',
+                fill: neutral.textMuted,
                 fontSize: 12,
                 dy: -10
               }}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
               // Ajustar dominio dinámicamente con algo de padding
               domain={['dataMin - 2', 'dataMax + 2']} // Menor padding que antes
@@ -257,7 +261,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               contentStyle={{
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '4px',
-                borderColor: '#ccc'
+                borderColor: neutral.borderStrong
               }} // Estilo tooltip
               itemStyle={{ fontSize: 12 }}
               labelStyle={{ fontSize: 12, fontWeight: 'bold' }}
@@ -317,7 +321,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
             <XAxis
               dataKey='timestamp'
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
             />
             <YAxis
@@ -325,11 +329,11 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                 value: '%',
                 angle: -90,
                 position: 'insideLeft',
-                fill: '#666',
+                fill: neutral.textMuted,
                 fontSize: 12,
                 dy: -10
               }}
-              stroke='#666'
+              stroke={neutral.textMuted}
               tick={{ fontSize: 12 }}
               // Dominio con padding para humedad
               domain={['dataMin - 5', 'dataMax + 5']} // Padding diferente para humedad
@@ -341,7 +345,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
               contentStyle={{
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '4px',
-                borderColor: '#ccc'
+                borderColor: neutral.borderStrong
               }}
               itemStyle={{ fontSize: 12 }}
               labelStyle={{ fontSize: 12, fontWeight: 'bold' }}

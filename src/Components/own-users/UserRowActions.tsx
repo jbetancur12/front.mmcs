@@ -19,7 +19,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
 import { UserData } from './types'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 // Menú de acciones por fila: un solo botón de tres puntos, sin importar cuántas acciones haya
 const UserRowActions: React.FC<{
@@ -67,7 +67,7 @@ const UserRowActions: React.FC<{
               minWidth: 230,
               borderRadius: '12px',
               border: `1px solid ${neutral.border}`,
-              boxShadow: '0 8px 24px rgba(17, 24, 39, 0.10)',
+              boxShadow: `0 8px 24px ${withAlpha(neutral.text, 0.1)}`,
               '& .MuiMenuItem-root': {
                 fontSize: 14,
                 fontWeight: 500,

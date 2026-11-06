@@ -18,7 +18,7 @@ import { format, parseISO, isValid } from 'date-fns' // Import date-fns function
 // Asegúrate que la ruta de importación sea correcta
 import { ApiDeviceData } from './LaboratoryMonitor'
 import { logger } from 'src/utils/logger'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 // Ya no se necesita la interfaz SensorStatistics aquí
 
 interface SensorCardProps {
@@ -96,7 +96,9 @@ const SensorCard: React.FC<SensorCardProps> = ({
               aria-label='editar sensor'
               sx={{
                 backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
+                '&:hover': {
+                  backgroundColor: withAlpha(neutral.borderStrong, 0.8)
+                }
               }}
             >
               <EditIcon fontSize='small' sx={{ color: 'text.secondary' }} />
@@ -109,7 +111,9 @@ const SensorCard: React.FC<SensorCardProps> = ({
               aria-label='eliminar sensor'
               sx={{
                 backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
+                '&:hover': {
+                  backgroundColor: withAlpha(neutral.borderStrong, 0.8)
+                }
               }}
             >
               <DeleteIcon fontSize='small' sx={{ color: 'error.main' }} />

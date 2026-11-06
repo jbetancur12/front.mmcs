@@ -61,7 +61,7 @@ const MainChart = ({
         <Box
           sx={{
             backgroundColor: 'white',
-            border: '1px solid #ccc',
+            border: `1px solid ${neutral.borderStrong}`,
             padding: 1,
             borderRadius: 1,
             boxShadow: 1

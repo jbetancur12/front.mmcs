@@ -49,6 +49,7 @@ import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
 
 import { logger } from 'src/utils/logger'
+import { neutral } from 'src/theme/designTokens'
 // Definir localmente si no está en Types.ts, pero idealmente debería estar allí
 interface Quotation {
   id: string | number
@@ -787,7 +788,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                   <Box
                     sx={{
                       mt: 2,
-                      border: '1px solid #ccc',
+                      border: `1px solid ${neutral.borderStrong}`,
                       borderRadius: 1,
                       overflow: 'hidden'
                     }}

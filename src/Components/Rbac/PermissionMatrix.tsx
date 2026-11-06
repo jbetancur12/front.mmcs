@@ -40,7 +40,7 @@ import {
   permissionPlainText
 } from './PermissionHelp'
 import { missingRequirements, requirementName } from './requirements'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 /** Nombre legible de cada módulo del catálogo; si falta, se muestra la clave. */
 export const RBAC_MODULE_LABELS: Record<string, string> = {
@@ -302,7 +302,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
           gap: 2,
           alignItems: 'center',
           bgcolor: neutral.surfaceAlt,
-          borderBottom: '1px solid #eee'
+          borderBottom: `1px solid ${neutral.border}`
         }}
       >
         <Autocomplete
@@ -462,7 +462,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                   <TableRow
                     key={permission.key}
                     hover
-                    sx={{ '&:hover': { bgcolor: 'rgba(0,191,165,0.04)' } }}
+                    sx={{ '&:hover': { bgcolor: withAlpha(brand.main, 0.04) } }}
                   >
                     <TableCell
                       sx={{
@@ -538,7 +538,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                           sx={{
                             opacity: role.isActive ? 1 : 0.55,
                             bgcolor: changed
-                              ? 'rgba(255,152,0,0.16)'
+                              ? withAlpha(intent.warning, 0.16)
                               : undefined
                           }}
                         >
@@ -581,7 +581,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                                   color: neutral.textFaint,
                                   '&.Mui-checked': { color: TEAL },
                                   '&.Mui-checked.Mui-disabled': {
-                                    color: 'rgba(0,191,165,0.55)'
+                                    color: withAlpha(brand.main, 0.55)
                                   }
                                 }}
                               />

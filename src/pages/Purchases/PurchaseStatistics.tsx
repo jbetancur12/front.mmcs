@@ -47,7 +47,7 @@ import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 interface PurchaseStatistics {
   overview: {
     totalRequests: number
@@ -494,7 +494,7 @@ const PurchaseStatistics = () => {
                     tickFormatter={compactCurrency}
                   />
                   <Tooltip
-                    cursor={{ fill: 'rgba(0, 191, 165, 0.06)' }}
+                    cursor={{ fill: withAlpha(brand.main, 0.06) }}
                     contentStyle={{
                       borderRadius: 12,
                       border: `1px solid ${neutral.border}`,
