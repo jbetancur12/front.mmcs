@@ -7,6 +7,7 @@ import {
   TextField,
   Typography
 } from '@mui/material'
+import { DevicesOtherOutlined } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers'
 import { format, parseISO } from 'date-fns'
 import { useFormik } from 'formik'
@@ -137,8 +138,16 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                   ? URL.createObjectURL(formik.values.picture)
                   : ''
               }
-              sx={{ width: 96, height: 96, mx: 'auto', bgcolor: brand.soft }}
-            />
+              sx={{
+                width: 96,
+                height: 96,
+                mx: 'auto',
+                bgcolor: brand.soft,
+                color: brand.ink
+              }}
+            >
+              <DevicesOtherOutlined sx={{ fontSize: 44 }} />
+            </Avatar>
             <Typography
               variant='body2'
               sx={{ mt: 1, color: brand.ink, fontWeight: 600 }}
@@ -295,6 +304,14 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       maxWidth='md'
     >
       <FormDialogSection title='Datos del equipo'>
+        {/* La foto abre el formulario; el tipo de servicio define el prefijo del
+            código, por eso va antes que el código interno. */}
+        {columns
+          .filter((column) => column.accessorKey === 'pictureUrl')
+          .map(renderField)}
+        {columns
+          .filter((column) => column.accessorKey === 'serviceType')
+          .map(renderField)}
         <TextField
           select
           fullWidth
@@ -329,6 +346,8 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
           .filter(
             (column) =>
               column.accessorKey &&
+              column.accessorKey !== 'serviceType' &&
+              column.accessorKey !== 'pictureUrl' &&
               !HIDDEN_FIELDS.includes(column.accessorKey as string)
           )
           .map(renderField)}
