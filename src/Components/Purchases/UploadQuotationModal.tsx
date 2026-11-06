@@ -792,7 +792,6 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                       overflow: 'hidden'
                     }}
                   >
-                    {/* <Typography variant="subtitle2" sx={{p:1, backgroundColor:'#f5f5f5'}}>Visualizando cotización de: {supplier.name}</Typography> */}
                     <iframe
                       src={currentActionState.pdfUrl}
                       width='100%'

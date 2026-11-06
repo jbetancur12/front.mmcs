@@ -47,7 +47,7 @@ import {
   CalibrationServiceProductSummary
 } from '../../types/calibrationService'
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
-import { neutral, intent, brand, detail } from 'src/theme/designTokens'
+import { neutral, intent, brand, detail, accent } from 'src/theme/designTokens'
 
 type CatalogPriceSourceOption = {
   value: 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice'
@@ -850,7 +850,7 @@ const CalibrationServiceItemsEditor = ({
                   : item.serviceType === 'Trazable'
                     ? intent.action
                     : item.serviceType === 'Subcontratado ONAC'
-                      ? '#7c3aed'
+                      ? accent.main
                       : intent.warning
             }}
           >

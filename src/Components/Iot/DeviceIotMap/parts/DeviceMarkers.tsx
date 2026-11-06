@@ -11,6 +11,7 @@ import { DeviceStatus } from '../constants'
 import { Sensors } from '@mui/icons-material'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { divIcon } from 'leaflet'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface DeviceMarkersProps {
   devices: DeviceIot[]
@@ -33,18 +34,18 @@ const DeviceMarker = memo(
   }) => {
     const getMarkerColor = (status: string, isInAlarm: boolean) => {
       if (isInAlarm) {
-        return '#f44336' // rojo
+        return intent.danger // rojo
       }
 
       switch (status) {
         case DeviceStatus.ONLINE:
-          return '#1976d2' // primary
+          return intent.info // primary
         case DeviceStatus.OFFLINE:
-          return '#808080' // error
+          return neutral.textMuted // error
         case DeviceStatus.LOW_BATTERY:
-          return '#ff9800' // warning
+          return intent.warning // warning
         default:
-          return '#808080'
+          return neutral.textMuted
       }
     }
 

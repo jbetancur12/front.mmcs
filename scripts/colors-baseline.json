@@ -1,15 +1,4 @@
 {
   "src/Components/DataSheet/DataSheetPDF.tsx": 2,
-  "src/Components/Fleet/VehicleDataSheetPreview.tsx": 4,
-  "src/Components/Iot/DeviceIotMap/index.tsx": 2,
-  "src/Components/Iot/DeviceIotMap/parts/DeviceMarkers.tsx": 5,
-  "src/Components/Iot/GraphDrawer/parts/MainChart.tsx": 11,
-  "src/Components/LaboratoryData/HistoricalCharts.tsx": 7,
-  "src/Components/LaboratoryMonitor/SensorRealtimeChart.tsx": 7,
-  "src/Components/lms/widgets/QuizPerformanceDashboard.tsx": 17,
-  "src/Components/Maintenance/TVDisplayModern/index.tsx": 1,
-  "src/Components/Purchases/UploadQuotationModal.tsx": 1,
-  "src/pages/calibration-services/CalibrationServiceAnalyticsPage.tsx": 26,
-  "src/pages/lms/admin/LmsAnalytics.tsx": 4,
-  "src/pages/Purchases/PurchaseStatistics.tsx": 33
+  "src/Components/Fleet/VehicleDataSheetPreview.tsx": 4
 }

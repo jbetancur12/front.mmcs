@@ -29,7 +29,7 @@ import { intent } from 'src/theme/designTokens'
  * Optimized for large screens (1920x1080+) with real-time WebSocket updates
  *
  * Key Features:
- * - Clean white background with company primary color (#7bff7f)
+ * - Clean white background with company primary color
  * - Modular component architecture for better maintainability
  * - Modern card design with subtle shadows
  * - High contrast typography for better readability

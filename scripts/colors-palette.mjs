@@ -247,41 +247,34 @@ const UNIFIED = {
   '#546e7a': 'neutral.textMuted' // 1
 }
 
+/** Violetas: familia propia `accent` (decisión 2026-11-06). Van después de UNIFIED para tener prioridad. */
+const ACCENT = {
+  '#7c3aed': 'accent.main',
+  '#8b5cf6': 'accent.main',
+  '#6d28d9': 'accent.ink',
+  '#7e22ce': 'accent.ink',
+  '#7b1fa2': 'accent.ink',
+  '#6a1b9a': 'accent.ink',
+  '#f3e8ff': 'accent.soft',
+  '#e9d5ff': 'accent.soft',
+  '#faf5ff': 'accent.soft'
+}
+
 /** Hex (en minúscula) que se migran solos a un token. */
-export const PALETTE = { ...CORE, ...UNIFIED }
+export const PALETTE = { ...CORE, ...UNIFIED, ...ACCENT }
 
 /**
- * Archivos que NO se migran solos: gráficos, mapas y PDF. Sus series de colores deben seguir distinguiéndose entre sí
- * y unificarlas puede volverlas iguales; se revisan a mano. El trinquete sí los cuenta.
+ * Documentos impresos que NO se migran solos: tienen identidad propia (el verde claro de los formatos FOGMMCS en los
+ * PDF) y hay una propuesta de diseño de PDF pendiente que los tratará juntos (plans/diseno-pdf). El trinquete sí los
+ * cuenta. Las gráficas y los mapas SÍ se migran: sus series quedan en tokens distintos entre sí.
  */
 export const EXCLUDED_FROM_AUTO = [
   'src/Components/DataSheet/DataSheetPDF.tsx',
-  'src/Components/Fleet/VehicleDataSheetPreview.tsx',
-  'src/Components/Iot/DeviceIotMap/hooks/useMapSetup.ts',
-  'src/Components/Iot/DeviceIotMap/index.tsx',
-  'src/Components/Iot/DeviceIotMap/parts/DeviceMarkers.tsx',
-  'src/Components/Iot/GraphDrawer/parts/MainChart.tsx',
-  'src/Components/LaboratoryData/HistoricalCharts.tsx',
-  'src/Components/LaboratoryMonitor/SensorRealtimeChart.tsx',
-  'src/Components/lms/widgets/QuizPerformanceDashboard.tsx',
-  'src/pages/Purchases/PurchaseStatistics.tsx',
-  'src/pages/calibration-services/CalibrationServiceAnalyticsPage.tsx',
-  'src/pages/lms/admin/LmsAnalytics.tsx'
+  'src/Components/Fleet/VehicleDataSheetPreview.tsx'
 ]
 
-/** Colores sin familia en el sistema (dorado del sello, violetas): se quedan como hex hasta decidir. */
-export const NO_FAMILY = [
-  '#c9a84c',
-  '#e8c96a',
-  '#7c3aed',
-  '#8b5cf6',
-  '#6d28d9',
-  '#7b1fa2',
-  '#6a1b9a',
-  '#7e22ce',
-  '#f3e8ff',
-  '#e9d5ff'
-]
+/** Colores de documentos: el dorado del certificado de la Academia es contenido del documento, no de la interfaz. */
+export const NO_FAMILY = ['#c9a84c', '#e8c96a']
 
 /** Hex reservados: el trinquete los cuenta, pero se migran a mano (dependen del contexto). */
 export const RESERVED = {

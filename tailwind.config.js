@@ -1,4 +1,4 @@
-import { brand, detail } from './src/theme/designTokens.ts'
+import { brand, accent, detail } from './src/theme/designTokens.ts'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -15,6 +15,7 @@ export default {
           soft: brand.soft,
           softer: brand.softer
         },
+        accent: { DEFAULT: accent.main, ink: accent.ink, soft: accent.soft },
         detail: { from: detail.from, to: detail.to }
       },
       fontFamily: {

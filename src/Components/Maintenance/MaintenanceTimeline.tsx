@@ -27,7 +27,7 @@ import {
 } from '../../types/maintenance'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { neutral, intent, brand } from 'src/theme/designTokens'
+import { neutral, intent, brand, accent } from 'src/theme/designTokens'
 
 interface MaintenanceTimelineProps {
   timeline: MaintenanceTimelineEntry[]
@@ -151,7 +151,7 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
       case 'error':
         return { bg: intent.dangerSoft, fg: intent.danger }
       case 'secondary':
-        return { bg: '#f3e8ff', fg: '#7c3aed' }
+        return { bg: accent.soft, fg: accent.main }
       default:
         return { bg: neutral.surfaceHead, fg: neutral.textBody }
     }

@@ -26,7 +26,7 @@ import {
   CalibrationServiceProductSummary,
   ProductVariantSummary
 } from '../../types/calibrationService'
-import { neutral, intent, brand, detail } from 'src/theme/designTokens'
+import { neutral, intent, brand, detail, accent } from 'src/theme/designTokens'
 
 type CatalogPriceSource = 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice'
 
@@ -62,13 +62,13 @@ const PRICE_SOURCE_OPTIONS: { value: CatalogPriceSource; label: string }[] = [
 const PRICE_COLORS: Record<CatalogPriceSource, string> = {
   medicalPrice: brand.hover,
   industrialPrice: intent.action,
-  thirdPartyPrice: '#7c3aed'
+  thirdPartyPrice: accent.main
 }
 
 const SERVICE_TYPE_COLORS: Record<string, string> = {
   Acreditado: brand.hover,
   Trazable: intent.action,
-  'Subcontratado ONAC': '#7c3aed',
+  'Subcontratado ONAC': accent.main,
   Especial: intent.warning
 }
 

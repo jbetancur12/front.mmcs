@@ -56,25 +56,26 @@ import {
 } from 'recharts'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
 import type { QuizPerformanceAnalytics as QuizAnalytics } from '../../../services/lmsService'
+import { brand, neutral, intent, accent } from 'src/theme/designTokens'
 
 // Modern color palette
 const colors = {
-  primary: '#10b981',
-  primaryLight: '#f0fdf4',
-  success: '#059669',
-  warning: '#d97706',
-  error: '#dc2626',
-  info: '#3b82f6',
+  primary: brand.main,
+  primaryLight: intent.successSoft,
+  success: brand.hover,
+  warning: intent.warning,
+  error: intent.danger,
+  info: intent.info,
   gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937'
+    50: neutral.surfaceAlt,
+    100: neutral.surfaceHead,
+    200: neutral.border,
+    300: neutral.borderStrong,
+    400: neutral.textFaint,
+    500: neutral.textMuted,
+    600: neutral.textBody,
+    700: neutral.textBody,
+    800: neutral.text
   }
 }
 
@@ -330,7 +331,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
             </Paper>
           </Grid>
           <Grid item xs={6}>
-            <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f0f9ff' }}>
+            <Paper sx={{ p: 2, textAlign: 'center', bgcolor: intent.infoSoft }}>
               <Typography
                 variant='h4'
                 sx={{ fontWeight: 700, color: colors.info }}
@@ -550,7 +551,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
           border: `1px solid ${colors.gray[200]}`,
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
-            borderColor: '#8b5cf6',
+            borderColor: accent.main,
             boxShadow: `0 8px 25px rgba(139, 92, 246, 0.15)`,
             transform: 'translateY(-2px)'
           }
@@ -561,7 +562,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
             <Avatar
               sx={{
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                background: `linear-gradient(135deg, ${accent.main} 0%, ${accent.main} 100%)`,
                 color: 'white',
                 mr: 2,
                 width: 48,
@@ -620,17 +621,17 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
                 sx={{
                   textAlign: 'center',
                   p: 2,
-                  bgcolor: '#f3e8ff',
+                  bgcolor: accent.soft,
                   borderRadius: 2
                 }}
               >
                 <Typography
                   variant='h4'
-                  sx={{ fontWeight: 700, color: '#8b5cf6' }}
+                  sx={{ fontWeight: 700, color: accent.main }}
                 >
                   {data.averageScore || 0}
                 </Typography>
-                <Typography variant='body2' color='#8b5cf6'>
+                <Typography variant='body2' color={accent.main}>
                   Puntaje prom.
                 </Typography>
               </Box>
@@ -660,7 +661,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
                 sx={{
                   textAlign: 'center',
                   p: 2,
-                  bgcolor: '#eff6ff',
+                  bgcolor: intent.infoSoft,
                   borderRadius: 2
                 }}
               >
@@ -836,8 +837,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Avatar
                 sx={{
-                  background:
-                    'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  background: `linear-gradient(135deg, ${accent.main} 0%, ${accent.main} 100%)`,
                   color: 'white',
                   mr: 2,
                   width: 40,
@@ -899,9 +899,9 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
             variant='contained'
             onClick={onViewDetails}
             sx={{
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              background: `linear-gradient(135deg, ${accent.main} 0%, ${accent.main} 100%)`,
               '&:hover': {
-                background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)'
+                background: `linear-gradient(135deg, ${accent.main} 0%, ${accent.ink} 100%)`
               }
             }}
           >

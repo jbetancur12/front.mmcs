@@ -32,7 +32,7 @@ import {
   CalibrationServiceEventType,
   CalibrationServiceStatus
 } from '../../types/calibrationService'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, accent } from 'src/theme/designTokens'
 
 interface CalibrationServiceTimelineProps {
   events: CalibrationServiceEvent[]
@@ -82,7 +82,7 @@ const getDotPalette = (
     case 'info':
       return { bg: intent.infoSoft, fg: intent.action }
     default:
-      return { bg: intent.infoSoft, fg: '#7c3aed' }
+      return { bg: intent.infoSoft, fg: accent.main }
   }
 }
 

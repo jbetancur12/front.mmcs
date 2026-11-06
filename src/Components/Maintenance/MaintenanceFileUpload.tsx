@@ -26,7 +26,7 @@ import type { FileRejection } from 'react-dropzone'
 import { MaintenanceFile } from '../../types/maintenance'
 
 import { logger } from 'src/utils/logger'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, accent } from 'src/theme/designTokens'
 interface MaintenanceFileUploadProps {
   files: MaintenanceFile[]
   onFilesChange: (files: File[]) => void
@@ -228,11 +228,14 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(103, 58, 183, 0.18) 100%)'
           }}
         >
-          <VideoFile sx={{ fontSize: 42, color: '#7b1fa2' }} />
+          <VideoFile sx={{ fontSize: 42, color: accent.ink }} />
           <Chip
             size='small'
             label='Vista previa en modal'
-            sx={{ backgroundColor: 'rgba(255,255,255,0.85)', color: '#6a1b9a' }}
+            sx={{
+              backgroundColor: 'rgba(255,255,255,0.85)',
+              color: accent.ink
+            }}
           />
         </Box>
       )

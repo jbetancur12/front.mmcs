@@ -121,7 +121,7 @@ function transform(text) {
 }
 
 function addImport(text, used) {
-  const names = ['brand', 'neutral', 'intent', 'detail'].filter((n) =>
+  const names = ['brand', 'neutral', 'intent', 'accent', 'detail'].filter((n) =>
     used.has(n)
   )
   if (!names.length) return text
@@ -159,10 +159,12 @@ function hasNameConflict(text) {
     ''
   )
   return (
-    /(?:const|let|var|function|class|type|interface|enum)\s+(?:brand|neutral|intent)/.test(
+    /(?:const|let|var|function|class|type|interface|enum)\s+(?:brand|neutral|intent|accent)/.test(
       noTokenImport
     ) ||
-    /import\s*\{[^}]*(?:brand|neutral|intent)[^}]*\}\s*from/.test(noTokenImport)
+    /import\s*\{[^}]*(?:brand|neutral|intent|accent)[^}]*\}\s*from/.test(
+      noTokenImport
+    )
   )
 }
 

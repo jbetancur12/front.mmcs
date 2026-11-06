@@ -47,6 +47,7 @@ import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 import { logger } from 'src/utils/logger'
+import { brand, neutral, intent } from 'src/theme/designTokens'
 interface PurchaseStatistics {
   overview: {
     totalRequests: number
@@ -78,8 +79,6 @@ interface PurchaseStatistics {
     }>
   }
 }
-
-// const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
 const PurchaseStatistics = () => {
   const [timeRange, setTimeRange] = useState<'daily' | 'monthly' | 'yearly'>(
@@ -147,13 +146,13 @@ const PurchaseStatistics = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors: { [key: string]: string } = {
-      pendiente: '#f59e0b',
-      'pre-aprobado': '#3b82f6',
-      aprobado: '#00BFA5',
-      aceptada: '#00BFA5',
-      rechazado: '#ef4444'
+      pendiente: intent.warning,
+      'pre-aprobado': intent.info,
+      aprobado: brand.main,
+      aceptada: brand.main,
+      rechazado: intent.danger
     }
-    return statusColors[String(status).toLowerCase()] || '#9ca3af'
+    return statusColors[String(status).toLowerCase()] || neutral.textFaint
   }
 
   const formatCurrency = (value: number) => {
@@ -267,19 +266,19 @@ const PurchaseStatistics = () => {
       label: 'Solicitudes',
       value: totalRequests,
       rate: null as number | null,
-      color: '#3b82f6'
+      color: intent.info
     },
     {
       label: 'Órdenes de compra',
       value: totalOrders,
       rate: percentOf(totalOrders, totalRequests),
-      color: '#00BFA5'
+      color: brand.main
     },
     {
       label: 'Verificaciones',
       value: totalVerifications,
       rate: percentOf(totalVerifications, totalOrders),
-      color: '#00695C'
+      color: brand.ink
     }
   ]
   const funnelMax = Math.max(...funnel.map((step) => step.value), 0)
@@ -296,7 +295,7 @@ const PurchaseStatistics = () => {
       fontWeight: 600,
       px: 2
     },
-    '& .Mui-selected': { bgcolor: '#E0F7F4 !important', color: '#00695C' }
+    '& .Mui-selected': { bgcolor: `${brand.soft} !important`, color: brand.ink }
   }
 
   return (
@@ -313,14 +312,14 @@ const PurchaseStatistics = () => {
             sx={
               customDateRange
                 ? {
-                    color: '#00897B',
-                    borderColor: '#00BFA5',
-                    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+                    color: brand.hover,
+                    borderColor: brand.main,
+                    '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
                   }
                 : {
-                    bgcolor: '#00BFA5',
+                    bgcolor: brand.main,
                     whiteSpace: 'nowrap',
-                    '&:hover': { bgcolor: '#00ACC1' }
+                    '&:hover': { bgcolor: brand.hover }
                   }
             }
           >
@@ -470,19 +469,19 @@ const PurchaseStatistics = () => {
                   data={timeSeriesData}
                   margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid vertical={false} stroke='#e5e7eb' />
+                  <CartesianGrid vertical={false} stroke={neutral.border} />
                   <XAxis
                     dataKey='date'
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: neutral.textMuted, fontSize: 12 }}
                   />
                   <YAxis
                     yAxisId='left'
                     allowDecimals={false}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: neutral.textMuted, fontSize: 12 }}
                     width={32}
                   />
                   <YAxis
@@ -490,7 +489,7 @@ const PurchaseStatistics = () => {
                     orientation='right'
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: neutral.textMuted, fontSize: 12 }}
                     width={56}
                     tickFormatter={compactCurrency}
                   />
@@ -498,7 +497,7 @@ const PurchaseStatistics = () => {
                     cursor={{ fill: 'rgba(0, 191, 165, 0.06)' }}
                     contentStyle={{
                       borderRadius: 12,
-                      border: '1px solid #e5e7eb',
+                      border: `1px solid ${neutral.border}`,
                       boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                     }}
                     formatter={(value: number, name: string) => [
@@ -513,7 +512,7 @@ const PurchaseStatistics = () => {
                     yAxisId='left'
                     dataKey='orderCount'
                     name='Órdenes'
-                    fill='#00BFA5'
+                    fill={brand.main}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={36}
                   />
@@ -521,9 +520,9 @@ const PurchaseStatistics = () => {
                     yAxisId='right'
                     dataKey='totalAmount'
                     name='Monto'
-                    stroke='#00695C'
+                    stroke={brand.ink}
                     strokeWidth={2.5}
-                    dot={{ r: 3, fill: '#00695C' }}
+                    dot={{ r: 3, fill: brand.ink }}
                     activeDot={{ r: 5 }}
                   />
                 </ComposedChart>
@@ -566,7 +565,7 @@ const PurchaseStatistics = () => {
                   sx={{
                     height: 12,
                     borderRadius: 6,
-                    bgcolor: '#E0F7F4',
+                    bgcolor: brand.soft,
                     '& .MuiLinearProgress-bar': {
                       borderRadius: 6,
                       bgcolor: step.color
@@ -585,7 +584,7 @@ const PurchaseStatistics = () => {
                 mt: 3,
                 p: 2,
                 borderRadius: 2,
-                bgcolor: stuckTotal > 0 ? '#fff7ed' : '#E0F7F4'
+                bgcolor: stuckTotal > 0 ? intent.warningSoft : brand.soft
               }}
             >
               <Typography variant='body2' fontWeight={600}>

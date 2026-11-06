@@ -78,7 +78,7 @@ import {
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, accent } from 'src/theme/designTokens'
 
 type FormState = Omit<
   EquipmentQuotationPayload,
@@ -1107,7 +1107,7 @@ const EquipmentSalesWorkspacePage = () => {
                   sx={{ mb: 2 }}
                 >
                   <UploadFileOutlinedIcon
-                    sx={{ color: '#7c3aed', fontSize: 20 }}
+                    sx={{ color: accent.main, fontSize: 20 }}
                   />
                   <Typography
                     variant='subtitle2'

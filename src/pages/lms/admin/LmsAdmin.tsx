@@ -59,7 +59,7 @@ import {
   LMSMetricHelp
 } from '../../../Components/lms/Help/ContextualHelp'
 import { notify } from 'src/utils/notify'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, accent } from 'src/theme/designTokens'
 
 // Modern color palette following design system
 const colors = {
@@ -217,8 +217,8 @@ const LmsAdmin: React.FC = () => {
       title: 'Reportes',
       description: 'Generación y análisis de reportes',
       icon: <AssessmentIcon />,
-      color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+      color: accent.main,
+      gradient: `linear-gradient(135deg, ${accent.main} 0%, ${accent.main} 100%)`,
       route: '/lms/admin/reporting',
       isNew: true
     },

@@ -42,7 +42,7 @@ import {
 } from 'src/hooks/purchases/useProducts'
 import { notify } from 'src/utils/notify'
 import { confirmDialog } from 'src/utils/confirm'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, accent } from 'src/theme/designTokens'
 
 export interface ProductVariant {
   id: number
@@ -78,7 +78,7 @@ const SERVICE_TYPE_OPTIONS = [
 const SERVICE_TYPE_COLORS: Record<string, string> = {
   Acreditado: brand.hover,
   Trazable: intent.action,
-  'Subcontratado ONAC': '#7c3aed',
+  'Subcontratado ONAC': accent.main,
   Especial: intent.warning
 }
 

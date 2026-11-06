@@ -19,6 +19,7 @@ import { format, parseISO, isValid } from 'date-fns'
 import { Alert } from '@mui/material'
 
 import { logger } from 'src/utils/logger'
+import { neutral, intent } from 'src/theme/designTokens'
 // --- Interfaces (sin cambios) ---
 interface ChartDataPoint {
   timestamp: string
@@ -223,7 +224,10 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
           <LineChart data={sortedData} syncId='historicalSync'>
             {' '}
             {/* syncId para sincronizar tooltips/brush */}
-            <CartesianGrid strokeDasharray='3 3' stroke='#e0e0e0' />
+            <CartesianGrid
+              strokeDasharray='3 3'
+              stroke={neutral.borderStrong}
+            />
             {/* Formato de hora/minuto para el eje X principal */}
             <XAxis
               dataKey='timestamp'
@@ -267,7 +271,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                   <Line
                     key={`temp_${sensor.id}`}
                     dataKey={`temp_${sensor.id}`}
-                    stroke={sensor.color || '#8884d8'}
+                    stroke={sensor.color || intent.info}
                     name={`${sensor.name} (${sensor.location || 'N/A'})`}
                     dot={false} // Sin puntos para datos densos
                     strokeWidth={1} // Grosor de línea
@@ -280,7 +284,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
             <Brush
               dataKey='timestamp'
               height={30}
-              stroke='#8884d8' // Color del brush
+              stroke={intent.info} // Color del brush
               // Formato más simple para los ticks del brush
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
               // --- Pasar el estado para controlar el rango ---
@@ -306,7 +310,10 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
         <ResponsiveContainer width='100%' height={400}>
           {/* Usar sortedData y el mismo syncId */}
           <LineChart data={sortedData} syncId='historicalSync'>
-            <CartesianGrid strokeDasharray='3 3' stroke='#e0e0e0' />
+            <CartesianGrid
+              strokeDasharray='3 3'
+              stroke={neutral.borderStrong}
+            />
             <XAxis
               dataKey='timestamp'
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
@@ -348,7 +355,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
                   <Line
                     key={`hum_${sensor.id}`}
                     dataKey={`hum_${sensor.id}`}
-                    stroke={sensor.color || '#82ca9d'} // Color diferente para humedad
+                    stroke={sensor.color || intent.success} // Color diferente para humedad
                     name={`${sensor.name} (${sensor.location || 'N/A'})`}
                     dot={false}
                     strokeWidth={1}
@@ -362,8 +369,7 @@ const HistoricalCharts: React.FC<HistoricalChartsProps> = ({
             <Brush
               dataKey='timestamp'
               height={30}
-              stroke='#82ca9d' // Color diferente para el brush de humedad? O usar el mismo? Usemos el mismo para consistencia visual del control.
-              // stroke="#8884d8" // O usar el mismo color que el de temperatura
+              stroke={intent.success} // Color diferente para el brush de humedad? O usar el mismo? Usemos el mismo para consistencia visual del control.
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
               // --- Pasar el MISMO estado para controlar el rango ---
               startIndex={brushRange.startIndex}

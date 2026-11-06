@@ -10,7 +10,7 @@ import {
   Cancel
 } from '@mui/icons-material'
 import { MaintenanceStatus } from '../../types/maintenance'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, accent } from 'src/theme/designTokens'
 
 interface MaintenanceStatusBadgeProps {
   status: MaintenanceStatus
@@ -55,8 +55,8 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
         return {
           label: 'En Pausa',
           backgroundColor: neutral.surfaceAlt,
-          textColor: '#7e22ce',
-          borderColor: '#e9d5ff',
+          textColor: accent.ink,
+          borderColor: accent.soft,
           icon: <Pause />
         }
       case MaintenanceStatus.WAITING_PARTS:

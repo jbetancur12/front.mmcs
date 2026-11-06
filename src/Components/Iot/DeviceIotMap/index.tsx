@@ -29,6 +29,7 @@ import L from 'leaflet'
 
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import AlarmNotification from './parts/AlarmNotification.tsx'
+import { intent } from 'src/theme/designTokens'
 
 /** Marcador de Leaflet con los datos del dispositivo adjuntos al agregarse al mapa. */
 export type DeviceMarker = L.Marker & { deviceData?: DeviceIot }
@@ -185,7 +186,7 @@ const DeviceIotMap = () => {
                 const deviceData = marker.deviceData // Acceder a los datos del dispositivo
                 return deviceData?.isInAlarm // Verificar si tiene alarma activa
               })
-              const baseColor = hasAlarm ? '#ff0000' : '#1976d2'
+              const baseColor = hasAlarm ? intent.danger : intent.info
 
               const count = cluster.getChildCount()
               const size = Math.min(60, 40 + Math.log10(count) * 20)

@@ -61,6 +61,14 @@ export const intent = {
   infoSoft: '#e3f2fd'
 } as const
 
+/** Violeta: categorías y estados que deben distinguirse de los azules (p. ej. "asignado", "subcontratado"). */
+export const accent = {
+  main: '#7c3aed',
+  /** Texto e íconos violeta sobre blanco. */
+  ink: '#6d28d9',
+  soft: '#f3e8ff'
+} as const
+
 /** RESERVADO: degradado del banner de las fichas de detalle (esmeralda). No usar en otras pantallas. */
 export const detail = {
   from: '#10b981',

@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { Box, Typography } from '@mui/material'
 import { SensorDataPoint, SensorType } from './types'
+import { neutral, intent } from 'src/theme/designTokens'
 
 interface SensorRealtimeChartProps {
   data: SensorDataPoint[]
@@ -19,9 +20,9 @@ interface SensorRealtimeChartProps {
 }
 
 // Mismos colores que las lecturas de las filas (ReadingValue)
-const TEMP_COLOR = '#c2410c'
-const HUM_COLOR = '#0369a1'
-const AXIS_TICK = { fontSize: 12, fill: '#6b7280' }
+const TEMP_COLOR = intent.dangerInk
+const HUM_COLOR = intent.infoInk
+const AXIS_TICK = { fontSize: 12, fill: neutral.textMuted }
 
 const formatTime = (timestamp: number) =>
   new Date(timestamp).toLocaleTimeString([], {
@@ -48,8 +49,8 @@ const ChartTooltip: React.FC<{
   return (
     <Box
       sx={{
-        bgcolor: '#fff',
-        border: '1px solid #e5e7eb',
+        bgcolor: neutral.surface,
+        border: `1px solid ${neutral.border}`,
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
         px: 1.5,
@@ -139,13 +140,13 @@ export const SensorRealtimeChart: React.FC<SensorRealtimeChartProps> = ({
             data={sortedData}
             margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
           >
-            <CartesianGrid vertical={false} stroke='#e5e7eb' />
+            <CartesianGrid vertical={false} stroke={neutral.border} />
             <XAxis
               dataKey='timestamp'
               tickFormatter={formatTime}
               tick={AXIS_TICK}
               tickLine={false}
-              axisLine={{ stroke: '#d1d5db' }}
+              axisLine={{ stroke: neutral.borderStrong }}
               minTickGap={48}
             />
             {hasTemp && (
@@ -173,7 +174,7 @@ export const SensorRealtimeChart: React.FC<SensorRealtimeChartProps> = ({
             )}
             <Tooltip
               content={<ChartTooltip />}
-              cursor={{ stroke: '#9ca3af', strokeDasharray: '4 4' }}
+              cursor={{ stroke: neutral.textFaint, strokeDasharray: '4 4' }}
             />
             {hasTemp && (
               <Line

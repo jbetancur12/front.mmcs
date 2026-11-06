@@ -12,7 +12,7 @@ import {
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../types/calibrationService'
-import { brand, neutral, intent } from 'src/theme/designTokens'
+import { brand, neutral, intent, accent } from 'src/theme/designTokens'
 
 // Quién puede hacer qué (y qué parte de los servicios ve cada persona) se decide por capacidades: ver
 // constants/permissions.ts y hooks/useCalibrationVisibility.ts. Ya no hay listas de roles aquí.
@@ -126,7 +126,7 @@ const CHIP_ACCENT_HEX: Record<string, string> = {
   error: intent.danger,
   success: brand.main,
   info: intent.info,
-  secondary: '#8b5cf6',
+  secondary: accent.main,
   primary: brand.main
 }
 
