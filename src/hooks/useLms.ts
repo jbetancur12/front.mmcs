@@ -577,10 +577,14 @@ export const useSubmitQuiz = (
     ({ quizId, data }: { quizId: number; data: SubmitQuizRequest }) =>
       lmsService.submitQuiz(quizId, data),
     {
-      // Un 429 significa "espera": reintentarlo solo gasta otro cupo del limitador
-      retry: (failureCount, error) =>
-        (error as { response?: { status?: number } })?.response?.status !==
-          429 && failureCount < 1,
+      // Un rechazo del servidor (4xx, como el 429 o "demasiado rápido") no mejora
+      // al repetirlo y gasta otro cupo del limitador: solo se reintenta un corte
+      // de red o un error 5xx
+      retry: (failureCount, error) => {
+        const status = (error as { response?: { status?: number } })?.response
+          ?.status
+        return (!status || status >= 500) && failureCount < 1
+      },
       ...options,
       onSuccess: (data, variables, context) => {
         // Invalidate quiz attempts
