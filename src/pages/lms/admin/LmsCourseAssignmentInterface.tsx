@@ -345,13 +345,13 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     total: number
   }>(
     // Todos los cursos: alimentan el selector y el filtro, no la tabla (que
-    // pagina las asignaciones). Con la página de la tabla solo llegaban 10.
+    // pagina las asignaciones). Con la página de la tabla solo llegaban 10; el API admite hasta 100.
     ['lms-courses', 'all-for-assignment'],
     async () => {
       const response = await axiosPrivate.get('/lms/courses', {
         params: {
           page: 1,
-          limit: 1000,
+          limit: 100,
           include: 'modules,assignments,_count'
         }
       })
