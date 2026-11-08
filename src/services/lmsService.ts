@@ -1163,6 +1163,9 @@ export interface MandatoryTrainingRecord {
   completedDate: string | null
   status: MandatoryTrainingStatus
   progress: number
+  /** Terminó el curso (certificado vigente) aunque el porcentaje bajó por lecciones nuevas */
+  completedByCertificate?: boolean
+  newLessonsPending?: number
   isOverdue: boolean
   daysUntilDeadline: number | null
   reminderSummary: AssignmentReminderSummary
