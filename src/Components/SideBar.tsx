@@ -22,8 +22,7 @@ import {
   SpeedOutlined,
   StorefrontOutlined,
   VerifiedOutlined,
-  LocalLibraryOutlined,
-  FactCheckOutlined
+  LocalLibraryOutlined
 } from '@mui/icons-material'
 
 import DropdownButton from './DropdownButton'
@@ -135,15 +134,6 @@ const sidebarItems = ($userStore: UserData) => [
     permission: PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE,
     icon: <BusinessOutlined />,
     roles: ROLE_GROUPS.METROLOGY_STAFF,
-    moduleName: 'Basic'
-  },
-  {
-    type: 'link',
-    label: 'Certificados a liberar',
-    to: '/release-certificates',
-    icon: <FactCheckOutlined />,
-    roles: [] as string[],
-    permission: PERMISSIONS.RELEASE_CERTIFICATE_VIEW,
     moduleName: 'Basic'
   },
 
@@ -378,7 +368,10 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.CALIBRATION_DEVICE_VIEW,
       PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE,
       PERMISSIONS.CALIBRATION_FILE_CREATE,
-      PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
+      PERMISSIONS.CALIBRATION_TEMPLATE_VIEW,
+      ...(releaseCertificatesEnabled
+        ? [PERMISSIONS.RELEASE_CERTIFICATE_VIEW]
+        : [])
     ] as readonly PermissionKey[],
     moduleName: 'Basic',
     icon: <SpeedOutlined />,
@@ -407,7 +400,17 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Plantillas',
         url: 'calibraciones/templates',
         permission: PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
-      }
+      },
+      // Oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts)
+      ...(releaseCertificatesEnabled
+        ? [
+            {
+              label: 'Certificados a liberar',
+              url: 'release-certificates',
+              permission: PERMISSIONS.RELEASE_CERTIFICATE_VIEW
+            }
+          ]
+        : [])
     ]
   },
   {
@@ -772,15 +775,6 @@ const SideBar = ({
     if (!libraryEnabled && 'to' in item && item.to === '/library') {
       return false
     }
-    // Certificados a liberar oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts)
-    if (
-      !releaseCertificatesEnabled &&
-      'to' in item &&
-      item.to === '/release-certificates'
-    ) {
-      return false
-    }
-
     if (
       isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
       !isLmsSidebarItem(item)

@@ -959,7 +959,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/users", label: "Usuarios", kind: 'action' }
   ],
   'release:certificate:view': [
-    { path: "/release-certificates", label: "Certificados a liberar", kind: 'screen' }
+    { path: "/release-certificates", label: "Calibraciones › Certificados a liberar", kind: 'screen' }
   ],
   'repositories:repository:manage': [
     { path: "/repository", label: "Repositorio", kind: 'action' }
