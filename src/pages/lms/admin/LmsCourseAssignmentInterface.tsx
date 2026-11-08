@@ -957,23 +957,31 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   flexWrap: 'wrap'
                 }}
               >
-                <FormControl size='small' sx={{ minWidth: 280 }}>
-                  <InputLabel>Filtrar por curso</InputLabel>
-                  <Select
-                    value={selectedCourse}
-                    label='Filtrar por curso'
-                    onChange={(e) =>
-                      handleCourseSelection((e.target.value as number) || '')
-                    }
-                  >
-                    <MenuItem value=''>Todos los cursos</MenuItem>
-                    {assignableCourses.map((course) => (
-                      <MenuItem key={course.id} value={course.id}>
-                        {course.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  size='small'
+                  sx={{ minWidth: 280 }}
+                  options={assignableCourses}
+                  value={
+                    assignableCourses.find(
+                      (course) => course.id === selectedCourse
+                    ) || null
+                  }
+                  getOptionLabel={(course) => course.title}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
+                  onChange={(_, course) =>
+                    handleCourseSelection(course ? course.id : '')
+                  }
+                  noOptionsText='Ningún curso coincide'
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label='Filtrar por curso'
+                      placeholder='Todos los cursos'
+                    />
+                  )}
+                />
                 <FormControl size='small' sx={{ minWidth: 180 }}>
                   <InputLabel>Estado</InputLabel>
                   <Select
@@ -1302,24 +1310,29 @@ const LmsCourseAssignmentInterface: React.FC = () => {
               <CardContent>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>Seleccionar Curso</InputLabel>
-                      <Select
-                        value={selectedCourse}
-                        label='Seleccionar Curso'
-                        onChange={(e) =>
-                          handleCourseSelection(e.target.value as number)
-                        }
-                      >
-                        {assignableCourses.map((course) => (
-                          <MenuItem key={course.id} value={course.id}>
-                            {course.duration
-                              ? `${course.title} (${course.duration})`
-                              : course.title}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <Autocomplete
+                      options={assignableCourses}
+                      value={
+                        assignableCourses.find(
+                          (course) => course.id === selectedCourse
+                        ) || null
+                      }
+                      getOptionLabel={(course) =>
+                        course.duration
+                          ? `${course.title} (${course.duration})`
+                          : course.title
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option.id === value.id
+                      }
+                      onChange={(_, course) =>
+                        handleCourseSelection(course ? course.id : '')
+                      }
+                      noOptionsText='Ningún curso coincide'
+                      renderInput={(params) => (
+                        <TextField {...params} label='Seleccionar Curso' />
+                      )}
+                    />
                   </Grid>
 
                   {selectedCourseData &&
