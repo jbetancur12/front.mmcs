@@ -344,12 +344,14 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     courses: Course[]
     total: number
   }>(
-    ['lms-courses', page, rowsPerPage],
+    // Todos los cursos: alimentan el selector y el filtro, no la tabla (que
+    // pagina las asignaciones). Con la página de la tabla solo llegaban 10.
+    ['lms-courses', 'all-for-assignment'],
     async () => {
       const response = await axiosPrivate.get('/lms/courses', {
         params: {
-          page: page + 1,
-          limit: rowsPerPage,
+          page: 1,
+          limit: 1000,
           include: 'modules,assignments,_count'
         }
       })
@@ -556,7 +558,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
   )
 
-  const courses = coursesResponse?.courses || []
+  const courses = useMemo(
+    () => coursesResponse?.courses || [],
+    [coursesResponse]
+  )
   const assignableCourses = courses.filter(
     (course) => course.audience !== 'client'
   )
