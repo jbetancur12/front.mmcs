@@ -17,8 +17,11 @@ import NewVersionBanner from './Components/NewVersionBanner'
 import AnalyticsConsentBanner from './Components/Common/AnalyticsConsentBanner'
 import AppToaster from './Components/Common/AppToaster'
 import { DialogHost } from './utils/confirm'
+import { initPwa } from './utils/pwa'
 // Reporta al backend los errores no capturados del navegador (ver services/errorReportingService.ts)
 import './services/errorReportingService'
+
+initPwa()
 
 const options = {
   api_host: import.meta.env.VITE_POSTHOG_HOST,

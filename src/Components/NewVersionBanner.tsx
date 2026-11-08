@@ -1,5 +1,7 @@
 import { Box, Button, Typography } from '@mui/material'
+import { useEffect } from 'react'
 import { useNewVersion } from '../hooks/useNewVersion'
+import { applyUpdate, checkForPwaUpdate, usePwaNeedRefresh } from '../utils/pwa'
 import {
   brand,
   neutral,
@@ -10,8 +12,14 @@ import {
 
 const NewVersionBanner = () => {
   const hasNewVersion = useNewVersion()
+  const pwaNeedsRefresh = usePwaNeedRefresh()
 
-  if (!hasNewVersion) return null
+  // version.json cambió: que el navegador busque el service worker nuevo sin esperar su revisión periódica
+  useEffect(() => {
+    if (hasNewVersion) void checkForPwaUpdate()
+  }, [hasNewVersion])
+
+  if (!hasNewVersion && !pwaNeedsRefresh) return null
 
   return (
     <Box
@@ -42,7 +50,7 @@ const NewVersionBanner = () => {
       </Typography>
       <Button
         variant='contained'
-        onClick={() => window.location.reload()}
+        onClick={() => void applyUpdate()}
         sx={{
           background: neutral.surface,
           color: brand.ink,

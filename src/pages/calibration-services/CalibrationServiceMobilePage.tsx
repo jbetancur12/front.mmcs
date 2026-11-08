@@ -34,6 +34,13 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from 'react-query'
 import { toast } from 'react-hot-toast'
+import { notify } from 'src/utils/notify'
+import OfflineBanner from 'src/Components/Common/OfflineBanner'
+import {
+  clearMobileDraft,
+  loadMobileDraft,
+  saveMobileDraft
+} from './mobileDraftStorage'
 import { axiosPrivate } from '@utils/api'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -473,21 +480,33 @@ const MobilePage = () => {
     ) + (s?.adjustments?.length ?? 0)
   useEffect(() => {
     if (!s) return
-    setDraftItems({})
-    setDraftNotes({})
-    setDraftExecuted({})
+    // Avance sin guardar de una sesión anterior (la pestaña se cerró): se recupera si lo guardado no cambió
+    const stored = loadMobileDraft(s.id, savedItemsKey)
+    const nextItems: Record<number, CalibrationServiceOperationalItemStatus> =
+      {}
+    const nextNotes: Record<number, string> = {}
+    const nextExecuted: Record<number, number> = {}
+    let restored = false
     for (const item of s.items || []) {
-      const st = itemFieldsOf(item).operationalStatus || 'pending'
-      setDraftItems((p) => ({ ...p, [item.id]: st }))
-      setDraftNotes((p) => ({
-        ...p,
-        [item.id]: itemFieldsOf(item).technicalNotes || ''
-      }))
-      setDraftExecuted((p) => ({
-        ...p,
-        [item.id]: getSavedExecuted(item, s.adjustments)
-      }))
+      nextItems[item.id] = itemFieldsOf(item).operationalStatus || 'pending'
+      nextNotes[item.id] = itemFieldsOf(item).technicalNotes || ''
+      nextExecuted[item.id] = getSavedExecuted(item, s.adjustments)
+      if (stored) {
+        const st = stored.items[item.id]
+        if (st !== undefined && st !== nextItems[item.id]) restored = true
+        if (st !== undefined) nextItems[item.id] = st
+        const nt = stored.notes[item.id]
+        if (nt !== undefined && nt !== nextNotes[item.id]) restored = true
+        if (nt !== undefined) nextNotes[item.id] = nt
+        const ex = stored.executed[item.id]
+        if (ex !== undefined && ex !== nextExecuted[item.id]) restored = true
+        if (ex !== undefined) nextExecuted[item.id] = ex
+      }
     }
+    setDraftItems(nextItems)
+    setDraftNotes(nextNotes)
+    setDraftExecuted(nextExecuted)
+    if (restored) notify.info('Recuperamos tu avance sin guardar')
   }, [s?.id, savedItemsKey])
 
   const allCompleted = useMemo(
@@ -628,6 +647,31 @@ const MobilePage = () => {
       (draftExecuted[i.id] ?? 0) !== getSavedExecuted(i, s?.adjustments)
     )
   })
+  // Guarda el borrador en el teléfono mientras haya cambios sin enviar; al guardar en el servidor se borra
+  const draftServiceId = s?.id
+  const hasItems = items.length > 0
+  useEffect(() => {
+    if (draftServiceId === undefined) return
+    // Aún no se armaron los borradores desde lo guardado
+    if (hasItems && Object.keys(draftItems).length === 0) return
+    if (dirty) {
+      saveMobileDraft(draftServiceId, savedItemsKey, {
+        items: draftItems,
+        notes: draftNotes,
+        executed: draftExecuted
+      })
+    } else {
+      clearMobileDraft(draftServiceId)
+    }
+  }, [
+    dirty,
+    hasItems,
+    draftItems,
+    draftNotes,
+    draftExecuted,
+    draftServiceId,
+    savedItemsKey
+  ])
   const controlSheet = otherFieldsOf(s).logistics?.controlSheet || {}
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([s?.address, s?.city].filter(Boolean).join(', '))}`
   const canEditItems = !paused && ['scheduled', 'in_execution'].includes(status)
@@ -676,6 +720,7 @@ const MobilePage = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, pb: 22 }}>
+      <OfflineBanner />
       {isLoading ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <SignalLoader />

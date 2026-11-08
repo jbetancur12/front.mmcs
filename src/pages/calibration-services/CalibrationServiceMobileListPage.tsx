@@ -1,5 +1,6 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
+import OfflineBanner from 'src/Components/Common/OfflineBanner'
 import {
   Box,
   Card,
@@ -255,6 +256,7 @@ const MobileListPage = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: C.gray50, pb: 6 }}>
+      <OfflineBanner message='Sin conexión. La lista no se actualizará hasta que vuelva la señal.' />
       <Box sx={{ maxWidth: 430, mx: 'auto' }}>
         <Box
           sx={{
