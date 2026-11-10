@@ -14,11 +14,6 @@ import {
   MenuItem,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Typography
 } from '@mui/material'
@@ -40,7 +35,13 @@ import {
   useMaintenanceAnalytics,
   useMaintenanceTechnicians
 } from '../../hooks/useMaintenance'
-import { MaintenanceAnalyticsFilters } from '../../types/maintenance'
+import {
+  MaintenanceAnalyticsFilters,
+  MaintenanceTechnicianPerformance
+} from '../../types/maintenance'
+import { MRT_ColumnDef } from 'material-react-table'
+import DataTable from 'src/Components/Common/DataTable'
+import EmptyState from 'src/Components/Common/EmptyState'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { formatDateOnly } from 'src/utils/dateOnly'
@@ -131,6 +132,70 @@ const MaintenanceAnalytics: React.FC = () => {
       .sort((a, b) => b.completedTickets - a.completedTickets)
       .slice(0, 5)
   }, [analytics?.technicianPerformance])
+
+  const showSatisfaction = (analytics?.technicianPerformance || []).some(
+    (tech) => tech.avgCustomerSatisfaction > 0
+  )
+
+  const performanceColumns = useMemo<
+    MRT_ColumnDef<MaintenanceTechnicianPerformance>[]
+  >(() => {
+    const number = (
+      header: string,
+      accessorKey: keyof MaintenanceTechnicianPerformance,
+      format?: (value: number) => string
+    ): MRT_ColumnDef<MaintenanceTechnicianPerformance> => ({
+      header,
+      accessorKey,
+      size: 110,
+      muiTableHeadCellProps: { align: 'right' },
+      muiTableBodyCellProps: { align: 'right' },
+      Cell: ({ cell }) => {
+        const value = Number(cell.getValue())
+        return format ? format(value) : value
+      }
+    })
+
+    return [
+      {
+        header: 'Técnico',
+        accessorKey: 'name',
+        size: 260,
+        Cell: ({ row }) => (
+          <Stack spacing={0.25}>
+            <Typography variant='body2' sx={{ fontWeight: 700 }}>
+              {row.original.name}
+            </Typography>
+            <Stack direction='row' spacing={0.75} alignItems='center'>
+              <Chip
+                size='small'
+                label={`Carga actual ${row.original.workload}/${row.original.maxWorkload}`}
+                color={row.original.isAvailable ? 'success' : 'default'}
+                variant='outlined'
+              />
+              <Typography variant='caption' color='text.secondary'>
+                {getTechnicianStatusLabel(row.original.status)}
+              </Typography>
+            </Stack>
+          </Stack>
+        )
+      },
+      number('Pendientes', 'pendingTickets'),
+      number('Asignados', 'assignedTickets'),
+      number('Abiertos', 'openTickets'),
+      number('Cerrados', 'completedTickets'),
+      number('Gestionados', 'totalAssignedTickets'),
+      number('Cierre', 'completionRate', (value) => `${value}%`),
+      number('Tiempo medio', 'avgResolutionTimeHours', formatHours),
+      ...(showSatisfaction
+        ? [
+            number('Satisfacción', 'avgCustomerSatisfaction', (value) =>
+              value.toFixed(2)
+            )
+          ]
+        : [])
+    ]
+  }, [showSatisfaction])
 
   const exportToExcel = async () => {
     if (!analytics) return
@@ -364,20 +429,24 @@ const MaintenanceAnalytics: React.FC = () => {
               {
                 title: 'Satisfacción Promedio',
                 value: analytics.overview.avgCustomerSatisfaction.toFixed(2),
-                hint: 'Escala 1 a 5'
+                hint: 'Escala 1 a 5',
+                // Mientras ninguna encuesta se haya respondido no se muestra un 0.00 sin sentido
+                hidden: analytics.overview.avgCustomerSatisfaction <= 0
               }
-            ].map((item, i) => (
-              <Grid item xs={12} sm={6} md={4} key={item.title}>
-                <LmsStatCard
-                  label={item.title}
-                  value={item.value}
-                  caption={item.hint}
-                  icon={KPI_ICONS[i]}
-                  tone={KPI_TONES[i]}
-                  compact
-                />
-              </Grid>
-            ))}
+            ]
+              .filter((item) => !('hidden' in item && item.hidden))
+              .map((item, i) => (
+                <Grid item xs={12} sm={6} md={4} key={item.title}>
+                  <LmsStatCard
+                    label={item.title}
+                    value={item.value}
+                    caption={item.hint}
+                    icon={KPI_ICONS[i]}
+                    tone={KPI_TONES[i]}
+                    compact
+                  />
+                </Grid>
+              ))}
           </Grid>
 
           <Grid container spacing={3}>
@@ -397,85 +466,30 @@ const MaintenanceAnalytics: React.FC = () => {
                   </Typography>
                 </Box>
                 <Divider />
-                <Box sx={{ overflowX: 'auto' }}>
-                  <Table size='small'>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Técnico</TableCell>
-                        <TableCell align='right'>Pendientes</TableCell>
-                        <TableCell align='right'>Asignados</TableCell>
-                        <TableCell align='right'>Abiertos</TableCell>
-                        <TableCell align='right'>Cerrados</TableCell>
-                        <TableCell align='right'>Gestionados</TableCell>
-                        <TableCell align='right'>Cierre</TableCell>
-                        <TableCell align='right'>Tiempo medio</TableCell>
-                        <TableCell align='right'>Satisfacción</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {analytics.technicianPerformance.map((technician) => (
-                        <TableRow key={technician.technicianId} hover>
-                          <TableCell>
-                            <Stack spacing={0.25}>
-                              <Typography
-                                variant='body2'
-                                sx={{ fontWeight: 700 }}
-                              >
-                                {technician.name}
-                              </Typography>
-                              <Stack
-                                direction='row'
-                                spacing={0.75}
-                                alignItems='center'
-                              >
-                                <Chip
-                                  size='small'
-                                  label={`Carga actual ${technician.workload}/${technician.maxWorkload}`}
-                                  color={
-                                    technician.isAvailable
-                                      ? 'success'
-                                      : 'default'
-                                  }
-                                  variant='outlined'
-                                />
-                                <Typography
-                                  variant='caption'
-                                  color='text.secondary'
-                                >
-                                  {getTechnicianStatusLabel(technician.status)}
-                                </Typography>
-                              </Stack>
-                            </Stack>
-                          </TableCell>
-                          <TableCell align='right'>
-                            {technician.pendingTickets}
-                          </TableCell>
-                          <TableCell align='right'>
-                            {technician.assignedTickets}
-                          </TableCell>
-                          <TableCell align='right'>
-                            {technician.openTickets}
-                          </TableCell>
-                          <TableCell align='right'>
-                            {technician.completedTickets}
-                          </TableCell>
-                          <TableCell align='right'>
-                            {technician.totalAssignedTickets}
-                          </TableCell>
-                          <TableCell align='right'>
-                            {technician.completionRate}%
-                          </TableCell>
-                          <TableCell align='right'>
-                            {formatHours(technician.avgResolutionTimeHours)}
-                          </TableCell>
-                          <TableCell align='right'>
-                            {technician.avgCustomerSatisfaction.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Box>
+                <DataTable<MaintenanceTechnicianPerformance>
+                  columns={performanceColumns}
+                  data={analytics.technicianPerformance}
+                  itemLabel={['técnico', 'técnicos']}
+                  enableGlobalFilter={false}
+                  enableColumnFilters={false}
+                  enableSorting
+                  enablePagination={false}
+                  enableBottomToolbar={false}
+                  getRowId={(row) => String(row.technicianId)}
+                  initialState={{ density: 'compact', showGlobalFilter: false }}
+                  muiTablePaperProps={{
+                    elevation: 0,
+                    sx: { borderRadius: 0, boxShadow: 'none' }
+                  }}
+                  renderEmptyRowsFallback={() => (
+                    <EmptyState
+                      compact
+                      icon={<Engineering />}
+                      title='Sin actividad de técnicos en este rango'
+                      hint='Cambia las fechas o el técnico para ver resultados.'
+                    />
+                  )}
+                />
               </Paper>
             </Grid>
 

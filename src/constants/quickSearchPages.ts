@@ -161,13 +161,6 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     keywords: ['crear', 'cotizar', 'nueva']
   },
   {
-    label: 'Analíticas',
-    path: '/maintenance/analytics',
-    parents: ['Mantenimiento'],
-    permission: PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW,
-    keywords: ['analiticas', 'indicadores', 'graficas', 'estadisticas']
-  },
-  {
     label: 'Personal de compras',
     path: '/purchases/personnel-management',
     parents: ['Compras'],

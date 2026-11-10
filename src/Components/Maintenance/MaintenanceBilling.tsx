@@ -24,8 +24,9 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '../../utils/use-axios-private'
 
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import { MRT_ColumnDef } from 'material-react-table'
+import DataTable from 'src/Components/Common/DataTable'
+import EmptyState from 'src/Components/Common/EmptyState'
 import { PERMISSIONS } from 'src/constants/permissions'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -412,187 +413,181 @@ const MaintenanceBilling: React.FC = () => {
         </ButtonGroup>
       </Paper>
 
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable
-          {...purchaseTableStyle}
-          columns={columns}
-          data={data?.tickets ?? []}
-          manualPagination
-          rowCount={data?.pagination.totalItems ?? 0}
-          state={{
-            isLoading,
-            pagination: { pageIndex: page, pageSize: rowsPerPage }
-          }}
-          onPaginationChange={(updater) => {
-            const next =
-              typeof updater === 'function'
-                ? updater({ pageIndex: page, pageSize: rowsPerPage })
-                : updater
-            if (next.pageSize !== rowsPerPage) {
-              setRowsPerPage(next.pageSize)
-              setPage(0)
-            } else {
-              setPage(next.pageIndex)
-            }
-          }}
-          muiTablePaginationProps={{ rowsPerPageOptions: [10, 20, 50, 100] }}
-          enableGlobalFilter={false}
-          enableColumnFilters={false}
-          enableDensityToggle={false}
-          enableHiding={false}
-          enableSorting={false}
-          enableColumnActions={false}
-          enablePinning
-          getRowId={(row, index) => String(row.id ?? `skeleton-${index}`)}
-          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
-          enableRowActions
-          displayColumnDefOptions={{
-            'mrt-row-actions': { header: 'Acciones', size: 90 },
-            'mrt-row-expand': { header: '', size: 50 }
-          }}
-          renderRowActions={({ row }) => {
-            const ticket = row.original
-            return (
-              <Tooltip
-                title={
-                  ticket.isInvoiced
-                    ? 'Marcar como no facturado'
-                    : 'Marcar como facturado'
-                }
-              >
-                <span>
-                  <IconButton
-                    size='small'
-                    aria-label={
+      <DataTable<BillingTicket>
+        itemLabel={['ticket', 'tickets']}
+        columns={columns}
+        data={data?.tickets ?? []}
+        manualPagination
+        rowCount={data?.pagination.totalItems ?? 0}
+        state={{
+          isLoading,
+          pagination: { pageIndex: page, pageSize: rowsPerPage }
+        }}
+        onPaginationChange={(updater) => {
+          const next =
+            typeof updater === 'function'
+              ? updater({ pageIndex: page, pageSize: rowsPerPage })
+              : updater
+          if (next.pageSize !== rowsPerPage) {
+            setRowsPerPage(next.pageSize)
+            setPage(0)
+          } else {
+            setPage(next.pageIndex)
+          }
+        }}
+        muiTablePaginationProps={{ rowsPerPageOptions: [10, 20, 50, 100] }}
+        enableGlobalFilter={false}
+        enableColumnFilters={false}
+        enableHiding={false}
+        enableSorting={false}
+        getRowId={(row, index) => String(row.id ?? `skeleton-${index}`)}
+        initialState={{ showGlobalFilter: false }}
+        enableRowActions
+        displayColumnDefOptions={{
+          'mrt-row-expand': { header: '', size: 50 }
+        }}
+        renderRowActions={({ row }) => {
+          const ticket = row.original
+          return (
+            <Tooltip
+              title={
+                ticket.isInvoiced
+                  ? 'Marcar como no facturado'
+                  : 'Marcar como facturado'
+              }
+            >
+              <span>
+                <IconButton
+                  size='small'
+                  aria-label={
+                    ticket.isInvoiced
+                      ? `Marcar ${ticket.ticketCode} como no facturado`
+                      : `Marcar ${ticket.ticketCode} como facturado`
+                  }
+                  onClick={() =>
+                    handleToggleInvoice(
+                      ticket.id,
+                      ticket.ticketCode,
                       ticket.isInvoiced
-                        ? `Marcar ${ticket.ticketCode} como no facturado`
-                        : `Marcar ${ticket.ticketCode} como facturado`
-                    }
-                    onClick={() =>
-                      handleToggleInvoice(
-                        ticket.id,
-                        ticket.ticketCode,
-                        ticket.isInvoiced
-                      )
-                    }
-                    disabled={
-                      toggleInvoiceMutation.isLoading || !canPerformActions
-                    }
-                    sx={{
-                      color: ticket.isInvoiced ? 'error.main' : brand.main
-                    }}
-                  >
-                    {ticket.isInvoiced ? <Cancel /> : <CheckCircle />}
-                  </IconButton>
-                </span>
-              </Tooltip>
-            )
-          }}
-          renderDetailPanel={({ row }) => (
-            <Box sx={{ py: 3, px: 2 }}>
-              <Typography variant='h6' gutterBottom fontWeight={600}>
-                Desglose de Costos
-              </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
-                Tiempo técnico registrado:{' '}
-                <strong>
-                  {formatWorkMinutes(row.original.technicianWorkMinutes)}
-                </strong>
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              {row.original.costs.length === 0 ? (
-                <Alert severity='info' sx={{ mb: 2 }}>
-                  Sin costos de materiales — Este servicio no registró costos de
-                  materiales. El tiempo técnico registrado queda como referencia
-                  para la facturación externa.
-                </Alert>
-              ) : (
-                <>
-                  <Grid container spacing={2}>
-                    {row.original.costs.map((cost) => (
-                      <Grid item xs={12} sm={6} md={4} key={cost.id}>
-                        <Paper
-                          elevation={1}
-                          sx={{
-                            p: 2,
-                            border: `1px solid ${neutral.border}`,
-                            borderRadius: '8px'
-                          }}
+                    )
+                  }
+                  disabled={
+                    toggleInvoiceMutation.isLoading || !canPerformActions
+                  }
+                  sx={{
+                    color: ticket.isInvoiced ? 'error.main' : brand.main
+                  }}
+                >
+                  {ticket.isInvoiced ? <Cancel /> : <CheckCircle />}
+                </IconButton>
+              </span>
+            </Tooltip>
+          )
+        }}
+        renderDetailPanel={({ row }) => (
+          <Box sx={{ py: 3, px: 2 }}>
+            <Typography variant='h6' gutterBottom fontWeight={600}>
+              Desglose de Costos
+            </Typography>
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
+              Tiempo técnico registrado:{' '}
+              <strong>
+                {formatWorkMinutes(row.original.technicianWorkMinutes)}
+              </strong>
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            {row.original.costs.length === 0 ? (
+              <Alert severity='info' sx={{ mb: 2 }}>
+                Sin costos de materiales — Este servicio no registró costos de
+                materiales. El tiempo técnico registrado queda como referencia
+                para la facturación externa.
+              </Alert>
+            ) : (
+              <>
+                <Grid container spacing={2}>
+                  {row.original.costs.map((cost) => (
+                    <Grid item xs={12} sm={6} md={4} key={cost.id}>
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          p: 2,
+                          border: `1px solid ${neutral.border}`,
+                          borderRadius: '8px'
+                        }}
+                      >
+                        <Typography
+                          variant='subtitle2'
+                          fontWeight={700}
+                          gutterBottom
                         >
+                          {cost.name}
+                        </Typography>
+                        {cost.description && (
                           <Typography
-                            variant='subtitle2'
-                            fontWeight={700}
-                            gutterBottom
+                            variant='caption'
+                            color='text.secondary'
+                            display='block'
+                            sx={{ mb: 1 }}
                           >
-                            {cost.name}
+                            {cost.description}
                           </Typography>
-                          {cost.description && (
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                              display='block'
-                              sx={{ mb: 1 }}
-                            >
-                              {cost.description}
-                            </Typography>
-                          )}
-                          <Typography
-                            variant='h6'
-                            fontWeight={700}
-                            color={brand.main}
-                          >
-                            {formatCurrency(cost.amount)}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                  <Box
-                    sx={{
-                      mt: 3,
-                      p: 2,
-                      backgroundColor: brand.main,
-                      borderRadius: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
+                        )}
+                        <Typography
+                          variant='h6'
+                          fontWeight={700}
+                          color={brand.main}
+                        >
+                          {formatCurrency(cost.amount)}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Box
+                  sx={{
+                    mt: 3,
+                    p: 2,
+                    backgroundColor: brand.main,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography
+                    variant='h6'
+                    fontWeight={700}
+                    color={brand.onMain}
                   >
-                    <Typography
-                      variant='h6'
-                      fontWeight={700}
-                      color={brand.onMain}
-                    >
-                      Total
-                    </Typography>
-                    <Typography
-                      variant='h5'
-                      fontWeight={700}
-                      color={brand.onMain}
-                    >
-                      {formatCurrency(row.original.totalCost)}
-                    </Typography>
-                  </Box>
-                </>
-              )}
-            </Box>
-          )}
-          renderEmptyRowsFallback={() => (
-            <Box sx={{ py: 8, textAlign: 'center' }}>
-              <Typography variant='h6' color='text.secondary'>
-                No hay tickets completados para mostrar
-              </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-                {filter === 'not_invoiced'
-                  ? 'No hay tickets pendientes de facturar'
-                  : filter === 'invoiced'
-                    ? 'No hay tickets facturados'
-                    : 'No hay tickets completados'}
-              </Typography>
-            </Box>
-          )}
-        />
-      </Paper>
+                    Total
+                  </Typography>
+                  <Typography
+                    variant='h5'
+                    fontWeight={700}
+                    color={brand.onMain}
+                  >
+                    {formatCurrency(row.original.totalCost)}
+                  </Typography>
+                </Box>
+              </>
+            )}
+          </Box>
+        )}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            compact
+            icon={<Receipt />}
+            title='No hay tickets completados para mostrar'
+            hint={
+              filter === 'not_invoiced'
+                ? 'No hay tickets pendientes de facturar'
+                : filter === 'invoiced'
+                  ? 'No hay tickets facturados'
+                  : 'No hay tickets completados'
+            }
+          />
+        )}
+      />
     </Container>
   )
 }

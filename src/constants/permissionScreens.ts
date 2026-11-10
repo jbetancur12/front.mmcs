@@ -449,6 +449,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/customers/:id", label: "Empresas", kind: 'action' }
   ],
   'customers:customer:catalog': [
+    { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'action' },
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
@@ -714,7 +715,8 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
   ],
   'maintenance:invoicing:manage': [
-    { path: "/maintenance/billing", label: "Mantenimiento › Facturación", kind: 'action' }
+    { path: "/maintenance/billing", label: "Mantenimiento › Facturación", kind: 'action' },
+    { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'action' }
   ],
   'maintenance:invoicing:view': [
     { path: "/maintenance/billing", label: "Mantenimiento › Facturación", kind: 'screen' }
@@ -741,31 +743,31 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
   ],
   'maintenance:technician:create': [
+    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'action' },
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
-    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
   ],
   'maintenance:technician:delete': [
+    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'action' },
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
-    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
   ],
   'maintenance:technician:list': [
     { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'screen' },
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'action' },
+    { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'action' },
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'action' },
-    { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' }
   ],
   'maintenance:technician:update': [
+    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'action' },
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
-    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
   ],
   'maintenance:technician:view': [
@@ -779,7 +781,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'action' }
   ],
   'maintenance:ticket:delete': [
-    { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
+    { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'action' },
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
     { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },

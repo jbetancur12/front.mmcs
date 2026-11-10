@@ -458,7 +458,8 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.MAINTENANCE_TICKET_VIEW,
       PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST,
       PERMISSIONS.MAINTENANCE_PROTOCOL_MANAGE,
-      PERMISSIONS.MAINTENANCE_INVOICING_VIEW
+      PERMISSIONS.MAINTENANCE_INVOICING_VIEW,
+      PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW
     ] as readonly PermissionKey[],
     moduleName: 'Basic',
     icon: <BuildOutlined />,
@@ -482,6 +483,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Facturación',
         url: 'maintenance/billing',
         permission: PERMISSIONS.MAINTENANCE_INVOICING_VIEW
+      },
+      {
+        label: 'Analíticas',
+        url: 'maintenance/analytics',
+        permission: PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW
       }
     ]
   },

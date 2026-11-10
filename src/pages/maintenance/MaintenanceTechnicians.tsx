@@ -2,7 +2,6 @@ import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useMemo, useState } from 'react'
 import {
   Container,
-  Paper,
   Typography,
   Box,
   Button,
@@ -49,8 +48,9 @@ import {
   TechnicianFormData
 } from '../../types/maintenance'
 
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import { MRT_ColumnDef } from 'material-react-table'
+import DataTable from 'src/Components/Common/DataTable'
+import EmptyState from 'src/Components/Common/EmptyState'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { notify } from 'src/utils/notify'
@@ -100,6 +100,25 @@ const statusOptions = [
   { value: 'inactive', label: 'Inactivo' },
   { value: 'on_leave', label: 'En Licencia' }
 ]
+
+const ratingColumn: MRT_ColumnDef<MaintenanceTechnician> = {
+  accessorKey: 'rating',
+  header: 'Calificación',
+  size: 190,
+  Cell: ({ row }) => (
+    <Box display='flex' alignItems='center' gap={0.5}>
+      <Rating
+        value={row.original.rating || 0}
+        readOnly
+        size='small'
+        precision={0.1}
+      />
+      <Typography variant='caption'>
+        ({row.original.rating?.toFixed(1) || 0})
+      </Typography>
+    </Box>
+  )
+}
 
 /**
  * MaintenanceTechnicians component manages the technician database
@@ -270,6 +289,9 @@ const MaintenanceTechnicians: React.FC = () => {
     }
   }
 
+  // La calificación solo se muestra cuando algún técnico ya tiene una
+  const hasRatings = (technicians ?? []).some((tech) => (tech.rating ?? 0) > 0)
+
   const columns = useMemo<MRT_ColumnDef<MaintenanceTechnician>[]>(
     () => [
       {
@@ -376,24 +398,7 @@ const MaintenanceTechnicians: React.FC = () => {
           />
         )
       },
-      {
-        accessorKey: 'rating',
-        header: 'Calificación',
-        size: 190,
-        Cell: ({ row }) => (
-          <Box display='flex' alignItems='center' gap={0.5}>
-            <Rating
-              value={row.original.rating || 0}
-              readOnly
-              size='small'
-              precision={0.1}
-            />
-            <Typography variant='caption'>
-              ({row.original.rating?.toFixed(1) || 0})
-            </Typography>
-          </Box>
-        )
-      },
+      ...(hasRatings ? [ratingColumn] : []),
       {
         id: 'workload',
         header: 'Carga de trabajo',
@@ -417,8 +422,7 @@ const MaintenanceTechnicians: React.FC = () => {
         )
       }
     ],
-
-    []
+    [hasRatings]
   )
 
   return (
@@ -477,111 +481,106 @@ const MaintenanceTechnicians: React.FC = () => {
             tone='orange'
           />
         </Grid>
-        <Grid item xs={6} md={3}>
-          <LmsStatCard
-            label='Calificación Promedio'
-            value={
-              technicians && technicians.length > 0
-                ? (
-                    technicians.reduce((acc, t) => acc + (t.rating || 0), 0) /
-                    technicians.length
-                  ).toFixed(1)
-                : '0.0'
-            }
-            icon={<Star />}
-            tone='blue'
-          />
-        </Grid>
+        {hasRatings && (
+          <Grid item xs={6} md={3}>
+            <LmsStatCard
+              label='Calificación Promedio'
+              value={
+                technicians && technicians.length > 0
+                  ? (
+                      technicians.reduce((acc, t) => acc + (t.rating || 0), 0) /
+                      technicians.length
+                    ).toFixed(1)
+                  : '0.0'
+              }
+              icon={<Star />}
+              tone='blue'
+            />
+          </Grid>
+        )}
       </Grid>
 
       {/* Technicians Table */}
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <MaterialReactTable
-          {...purchaseTableStyle}
-          columns={columns}
-          data={technicians ?? []}
-          state={{ isLoading }}
-          getRowId={(row, index) => String(row.id ?? `skeleton-${index}`)}
-          enablePinning
-          initialState={{
-            columnPinning: { right: ['mrt-row-actions'] },
-            density: 'comfortable'
-          }}
-          enableRowActions={canUpdateTechnician || canDeleteTechnician}
-          displayColumnDefOptions={{
-            'mrt-row-actions': { header: 'Acciones', size: 150 }
-          }}
-          renderRowActions={({ row }) => {
-            const technician = row.original
-            return (
-              <Box display='flex' gap={0.5}>
-                {canUpdateTechnician && (
-                  <Tooltip title='Editar'>
-                    <IconButton
-                      size='small'
-                      color='primary'
-                      aria-label={`Editar a ${technician.name}`}
-                      onClick={() => handleEdit(technician)}
-                    >
-                      <Edit />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                {canUpdateTechnician && (
-                  <Tooltip
-                    title={
-                      technician.status === 'active'
-                        ? 'Desactivar'
-                        : 'Reactivar'
-                    }
+      <DataTable<MaintenanceTechnician>
+        itemLabel={['técnico', 'técnicos']}
+        searchPlaceholder='Buscar técnicos'
+        columns={columns}
+        data={technicians ?? []}
+        state={{ isLoading }}
+        getRowId={(row, index) => String(row.id ?? `skeleton-${index}`)}
+        initialState={{ density: 'comfortable' }}
+        enableRowActions={canUpdateTechnician || canDeleteTechnician}
+        renderRowActions={({ row }) => {
+          const technician = row.original
+          return (
+            <Box display='flex' gap={0.5}>
+              {canUpdateTechnician && (
+                <Tooltip title='Editar'>
+                  <IconButton
+                    size='small'
+                    color='primary'
+                    aria-label={`Editar a ${technician.name}`}
+                    onClick={() => handleEdit(technician)}
                   >
-                    <IconButton
-                      size='small'
-                      aria-label={`${technician.status === 'active' ? 'Desactivar' : 'Reactivar'} a ${technician.name}`}
-                      onClick={() => {
-                        setTechnicianToToggle(technician)
-                        setStatusConfirmDialogOpen(true)
-                      }}
-                      sx={{
-                        color:
-                          technician.status === 'active'
-                            ? 'warning.main'
-                            : brand.main
-                      }}
-                    >
-                      {technician.status === 'active' ? (
-                        <PowerSettingsNew />
-                      ) : (
-                        <RestoreFromTrash />
-                      )}
-                    </IconButton>
-                  </Tooltip>
-                )}
-                {canDeleteTechnician && (
-                  <Tooltip title='Eliminar'>
-                    <IconButton
-                      size='small'
-                      color='error'
-                      aria-label={`Eliminar a ${technician.name}`}
-                      onClick={() => {
-                        setTechnicianToDelete(technician)
-                        setDeleteDialogOpen(true)
-                      }}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </Box>
-            )
-          }}
-          renderEmptyRowsFallback={() => (
-            <Alert severity='info' sx={{ m: 2 }}>
-              No hay técnicos registrados. Agregue el primer técnico.
-            </Alert>
-          )}
-        />
-      </Paper>
+                    <Edit />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {canUpdateTechnician && (
+                <Tooltip
+                  title={
+                    technician.status === 'active' ? 'Desactivar' : 'Reactivar'
+                  }
+                >
+                  <IconButton
+                    size='small'
+                    aria-label={`${technician.status === 'active' ? 'Desactivar' : 'Reactivar'} a ${technician.name}`}
+                    onClick={() => {
+                      setTechnicianToToggle(technician)
+                      setStatusConfirmDialogOpen(true)
+                    }}
+                    sx={{
+                      color:
+                        technician.status === 'active'
+                          ? 'warning.main'
+                          : brand.main
+                    }}
+                  >
+                    {technician.status === 'active' ? (
+                      <PowerSettingsNew />
+                    ) : (
+                      <RestoreFromTrash />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              )}
+              {canDeleteTechnician && (
+                <Tooltip title='Eliminar'>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    aria-label={`Eliminar a ${technician.name}`}
+                    onClick={() => {
+                      setTechnicianToDelete(technician)
+                      setDeleteDialogOpen(true)
+                    }}
+                  >
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          )
+        }}
+        renderEmptyRowsFallback={() => (
+          <EmptyState
+            compact
+            icon={<People />}
+            title='No hay técnicos registrados'
+            hint='Agrega el primer técnico para poder asignarle tickets.'
+          />
+        )}
+      />
 
       {/* Add/Edit Technician Dialog */}
       <Dialog
