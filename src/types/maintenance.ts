@@ -413,6 +413,8 @@ export interface MaintenanceFilters {
   equipmentType?: string[]
   search?: string
   customerEmail?: string
+  /** Solo tickets con algo pendiente (sin técnico, sin reporte, sin firma o sin facturar). */
+  hasPending?: boolean
 }
 
 export interface FilterPreset {

@@ -160,10 +160,10 @@ const MaintenanceDashboard: React.FC = () => {
     return $userStore.email
   }, [isTechnician, $userStore.email])
 
-  // Con texto en el buscador se busca en todos los estados (si no, un ticket
+  // Con texto en el buscador, o con «Solo con pendientes», se recorren todos los estados (si no, un ticket
   // completado no aparece por su número); solo se respeta el estado si la persona lo cambió a mano
   const searchOverridesStatus =
-    Boolean(filters.search?.trim()) &&
+    (Boolean(filters.search?.trim()) || Boolean(filters.hasPending)) &&
     isDefaultStatusFilter(filters.status, DEFAULT_STATUS_FILTER)
 
   const queryFilters = useMemo(

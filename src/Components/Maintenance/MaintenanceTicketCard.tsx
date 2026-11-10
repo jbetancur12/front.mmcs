@@ -25,6 +25,7 @@ import {
 import { MaintenanceTicket } from '../../types/maintenance'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
 import MaintenancePriorityBadge from './MaintenancePriorityBadge'
+import { getTicketPendings } from './ticketPendings'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import useRelativeTime from '../../hooks/useRelativeTime'
@@ -57,6 +58,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
   compact = false
 }) => {
   const [expanded, setExpanded] = useState(false)
+  const pendings = getTicketPendings(ticket)
 
   // Relative time hooks
   const createdTime = useRelativeTime(ticket.createdAt)
@@ -206,6 +208,31 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             <MaintenanceStatusBadge status={ticket.status} />
           </Box>
         </Box>
+
+        {pendings.length > 0 && (
+          <Box
+            display='flex'
+            gap={0.75}
+            flexWrap='wrap'
+            mb={2}
+            role='list'
+            aria-label='Pendientes del ticket'
+          >
+            {pendings.map((pending) => (
+              <Chip
+                key={pending}
+                role='listitem'
+                size='small'
+                label={pending}
+                sx={{
+                  backgroundColor: intent.warningSoft,
+                  color: intent.warningInk,
+                  fontWeight: 600
+                }}
+              />
+            ))}
+          </Box>
+        )}
 
         {/* ESSENTIAL FIELDS - Always visible */}
 

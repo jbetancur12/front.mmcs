@@ -12,6 +12,8 @@ import {
   Button,
   Grid,
   Autocomplete,
+  FormControlLabel,
+  Switch,
   Accordion,
   AccordionSummary,
   AccordionDetails
@@ -90,6 +92,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
     if (localFilters.assignedTechnician?.length) count++
     if (localFilters.equipmentType?.length) count++
     if (localFilters.search) count++
+    if (localFilters.hasPending) count++
     if (localFilters.customerEmail) count++
     if (localFilters.dateRange) count++
     return count
@@ -177,7 +180,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             placeholder='Número de ticket, cliente, equipo o problema'
             helperText={
               searchOverridesStatus
-                ? 'Con texto en la búsqueda se incluyen todos los estados, también los completados.'
+                ? 'Con texto en la búsqueda o con pendientes se incluyen todos los estados, también los completados.'
                 : undefined
             }
             value={localFilters.search || ''}
@@ -261,6 +264,20 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={Boolean(localFilters.hasPending)}
+                onChange={(e) =>
+                  handleFilterChange('hasPending', e.target.checked)
+                }
+              />
+            }
+            label='Solo con pendientes (sin técnico, sin reporte, sin firma o sin facturar)'
+          />
+        </Grid>
       </Grid>
 
       {activeFiltersCount > 0 && (
@@ -304,6 +321,15 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               <Chip
                 label={`Búsqueda: ${localFilters.search}`}
                 onDelete={() => handleFilterChange('search', '')}
+                size='small'
+                variant='outlined'
+                sx={{ backgroundColor: neutral.surface }}
+              />
+            )}
+            {localFilters.hasPending && (
+              <Chip
+                label='Solo con pendientes'
+                onDelete={() => handleFilterChange('hasPending', false)}
                 size='small'
                 variant='outlined'
                 sx={{ backgroundColor: neutral.surface }}
