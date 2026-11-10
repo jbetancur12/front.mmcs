@@ -17,6 +17,7 @@ import MaintenanceTicketCostsSection from './ticket-details/MaintenanceTicketCos
 import MaintenanceTicketSignaturesCard from './ticket-details/MaintenanceTicketSignaturesCard'
 import MaintenanceTicketSatisfactionCard from './ticket-details/MaintenanceTicketSatisfactionCard'
 import MaintenanceTicketQuickActions from './ticket-details/MaintenanceTicketQuickActions'
+import MaintenanceTicketNextStep from './ticket-details/MaintenanceTicketNextStep'
 import MaintenanceTicketDialogs from './ticket-details/MaintenanceTicketDialogs'
 import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
@@ -41,7 +42,8 @@ const MaintenanceTicketDetails: React.FC = () => {
       <Container
         maxWidth={false}
         sx={{
-          py: { xs: 2, sm: 3 },
+          pt: { xs: 2, sm: 3 },
+          pb: { xs: 14, sm: 3 },
           px: { xs: 1, sm: 2, md: 3 },
           backgroundColor: neutral.surfaceAlt,
           minHeight: '100vh'
@@ -93,6 +95,9 @@ const MaintenanceTicketDetails: React.FC = () => {
       >
         {/* Header with breadcrumbs */}
         <MaintenanceTicketHeader ticket={ticket} details={details} />
+
+        {/* Etapas del ticket y botón de siguiente paso */}
+        <MaintenanceTicketNextStep ticket={ticket} details={details} />
 
         <Grid container spacing={{ xs: 2, sm: 3 }}>
           {/* Main Content */}
