@@ -31,6 +31,7 @@ import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
+import { confirmDialog } from 'src/utils/confirm'
 import { brand, neutral, intent } from 'src/theme/designTokens'
 interface MaintenanceTicketCost {
   id: string
@@ -129,7 +130,26 @@ const MaintenanceBilling: React.FC = () => {
     }
   })
 
-  const handleToggleInvoice = (ticketId: string, currentStatus: boolean) => {
+  const handleToggleInvoice = async (
+    ticketId: string,
+    ticketCode: string,
+    currentStatus: boolean
+  ) => {
+    const { isConfirmed } = await confirmDialog(
+      currentStatus
+        ? {
+            title: '¿Marcar como no facturado?',
+            text: `El ticket ${ticketCode} volverá a la lista de pendientes por facturar.`,
+            confirmLabel: 'Marcar como no facturado',
+            tone: 'danger'
+          }
+        : {
+            title: '¿Marcar como facturado?',
+            text: `El ticket ${ticketCode} quedará registrado como facturado.`,
+            confirmLabel: 'Marcar como facturado'
+          }
+    )
+    if (!isConfirmed) return
     toggleInvoiceMutation.mutate({
       ticketId,
       isInvoiced: !currentStatus
@@ -443,8 +463,17 @@ const MaintenanceBilling: React.FC = () => {
                 <span>
                   <IconButton
                     size='small'
+                    aria-label={
+                      ticket.isInvoiced
+                        ? `Marcar ${ticket.ticketCode} como no facturado`
+                        : `Marcar ${ticket.ticketCode} como facturado`
+                    }
                     onClick={() =>
-                      handleToggleInvoice(ticket.id, ticket.isInvoiced)
+                      handleToggleInvoice(
+                        ticket.id,
+                        ticket.ticketCode,
+                        ticket.isInvoiced
+                      )
                     }
                     disabled={
                       toggleInvoiceMutation.isLoading || !canPerformActions

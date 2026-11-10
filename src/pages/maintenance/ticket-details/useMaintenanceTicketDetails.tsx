@@ -38,6 +38,7 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import { ROLES } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
+import { getTechnicalReportCompletion } from '../../../Components/Maintenance/technicalReportCompletion'
 import { useCan } from '@utils/functions'
 import useMaintenanceTicketFeedback from './useMaintenanceTicketFeedback'
 import useMaintenanceFilePreview from './useMaintenanceFilePreview'
@@ -187,24 +188,10 @@ const useMaintenanceTicketDetails = () => {
     )
   }, [ticket?.isInvoiced])
 
-  const technicalReportCompletion = useMemo(() => {
-    if (!technicalReport) return 0
-
-    const checkpoints = [
-      technicalReport.finalDiagnosis,
-      technicalReport.rootCause,
-      technicalReport.activities?.length,
-      technicalReport.parts?.length,
-      technicalReport.verificationProtocolType,
-      technicalReport.verificationTests?.length,
-      technicalReport.recommendations,
-      technicalReport.scopeClause,
-      technicalReport.responsibilityClause
-    ]
-
-    const completed = checkpoints.filter(Boolean).length
-    return Math.round((completed / checkpoints.length) * 100)
-  }, [technicalReport])
+  const technicalReportCompletion = useMemo(
+    () => getTechnicalReportCompletion(technicalReport),
+    [technicalReport]
+  )
   const handleSaveEdit = async () => {
     if (!ticket) return
 
@@ -352,7 +339,6 @@ const useMaintenanceTicketDetails = () => {
   }
 
   const handleInvoice = async () => {
-    logger.log(ticket)
     if (!ticket) return
 
     try {
@@ -365,11 +351,11 @@ const useMaintenanceTicketDetails = () => {
       setBriefCostsDialogOpen(false)
       await refetchTicket()
       await refetchTimeline()
-      showToast('Ticket completado exitosamente', 'success')
+      showToast('Ticket marcado como facturado', 'success')
     } catch (error: unknown) {
-      logger.error('Error completing ticket:', error)
+      logger.error('Error al marcar el ticket como facturado:', error)
       const errorMessage =
-        getApiErrorReason(error) || 'Error al completar el ticket'
+        getApiErrorReason(error) || 'Error al marcar el ticket como facturado'
       showToast(errorMessage, 'error')
       throw error
     }

@@ -17,6 +17,7 @@ import {
   Paper,
   Stack,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import {
@@ -40,6 +41,8 @@ import {
   useMaintenanceToolEquipmentSearch
 } from '../../hooks/useMaintenance'
 import { neutral, intent, brand } from 'src/theme/designTokens'
+import { confirmDialog } from 'src/utils/confirm'
+import { getTechnicalReportCompletion } from './technicalReportCompletion'
 
 interface Props {
   open: boolean
@@ -123,7 +126,7 @@ const toEditableReport = (
       : [{ parameter: '', result: 'PASA', value: '', notes: '' }],
     recommendations: report.recommendations || '',
     nextMaintenanceDate: report.nextMaintenanceDate || null,
-    warrantyDays: report.warrantyDays || 90,
+    warrantyDays: report.warrantyDays ?? 90,
     warrantyTerms: report.warrantyTerms || '',
     scopeClause: report.scopeClause || '',
     responsibilityClause: report.responsibilityClause || ''
@@ -194,7 +197,27 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
     )
   }, [activeProtocols, equipmentType])
 
-  const applyPreset = (protocol: MaintenanceProtocolTemplate) => {
+  const baseline = React.useMemo(() => toEditableReport(report), [report])
+  const hasUnsavedChanges =
+    JSON.stringify(formData) !== JSON.stringify(baseline)
+
+  // Cerrar con cambios sin guardar pide confirmación para no perder lo digitado
+  const handleRequestClose = async () => {
+    if (!hasUnsavedChanges) {
+      onClose()
+      return
+    }
+    const { isConfirmed } = await confirmDialog({
+      title: '¿Cerrar sin guardar?',
+      text: 'Hay cambios en el reporte técnico que aún no se han guardado. Si cierras ahora, se perderán.',
+      confirmLabel: 'Cerrar sin guardar',
+      cancelLabel: 'Seguir editando',
+      tone: 'danger'
+    })
+    if (isConfirmed) onClose()
+  }
+
+  const applyProtocol = (protocol: MaintenanceProtocolTemplate) => {
     if (!protocol) return
 
     setFormData((prev) => ({
@@ -209,6 +232,29 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
         : prev.verificationTests,
       recommendations: prev.recommendations || protocol.recommendations || ''
     }))
+  }
+
+  // Aplicar un protocolo reemplaza herramientas y pruebas: si ya hay digitadas, se pregunta antes
+  const requestApplyProtocol = async (
+    protocol: MaintenanceProtocolTemplate
+  ) => {
+    const replacesTools =
+      protocol.tools.length > 0 &&
+      formData.verificationTools.some((tool) => tool.name?.trim())
+    const replacesTests =
+      protocol.tests.length > 0 &&
+      formData.verificationTests.some((test) => test.parameter.trim())
+
+    if (replacesTools || replacesTests) {
+      const { isConfirmed } = await confirmDialog({
+        title: `¿Aplicar el protocolo "${protocol.name}"?`,
+        text: 'Las herramientas y pruebas que ya digitaste se reemplazarán por las del protocolo.',
+        confirmLabel: 'Aplicar protocolo',
+        cancelLabel: 'Cancelar'
+      })
+      if (!isConfirmed) return
+    }
+    applyProtocol(protocol)
   }
 
   const handleFieldChange = (
@@ -415,22 +461,11 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
     await onSave(payload)
   }
 
-  const completedBlocks = [
-    formData.finalDiagnosis?.trim(),
-    formData.rootCause?.trim(),
-    formData.activities.some((item) => item.trim()),
-    formData.parts.some((item) => item.description.trim()),
-    formData.verificationProtocolType?.trim(),
-    formData.verificationTools.some((item) => item.name?.trim()),
-    formData.verificationTests.some((item) => item.parameter.trim()),
-    formData.recommendations?.trim()
-  ].filter(Boolean).length
-
-  const completionPct = Math.round((completedBlocks / 8) * 100)
+  const completionPct = getTechnicalReportCompletion(formData)
   const completionTone = getCompletionTone(completionPct)
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='lg' fullWidth>
+    <Dialog open={open} onClose={handleRequestClose} maxWidth='lg' fullWidth>
       <DialogTitle>
         <Box
           display='flex'
@@ -539,7 +574,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                       ? 'contained'
                       : 'outlined'
                   }
-                  onClick={() => applyPreset(protocol)}
+                  onClick={() => requestApplyProtocol(protocol)}
                   sx={{ mb: 1 }}
                 >
                   {protocol.name}
@@ -618,11 +653,11 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                   fullWidth
                   type='number'
                   label='Garantía (días)'
-                  value={formData.warrantyDays || 90}
+                  value={formData.warrantyDays ?? 90}
                   onChange={(e) =>
                     handleFieldChange(
                       'warrantyDays',
-                      Number(e.target.value) || 90
+                      Math.max(0, Number(e.target.value) || 0)
                     )
                   }
                 />
@@ -688,12 +723,15 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                       handleActivityChange(index, e.target.value)
                     }
                   />
-                  <IconButton
-                    onClick={() => removeActivity(index)}
-                    sx={{ alignSelf: 'center' }}
-                  >
-                    <DeleteOutline />
-                  </IconButton>
+                  <Tooltip title='Quitar actividad'>
+                    <IconButton
+                      onClick={() => removeActivity(index)}
+                      aria-label={`Quitar actividad ${index + 1}`}
+                      sx={{ alignSelf: 'center' }}
+                    >
+                      <DeleteOutline />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
               ))}
             </Stack>
@@ -767,9 +805,14 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                     />
                   </Grid>
                   <Grid item xs={12} md={1}>
-                    <IconButton onClick={() => removePart(index)}>
-                      <DeleteOutline />
-                    </IconButton>
+                    <Tooltip title='Quitar repuesto'>
+                      <IconButton
+                        onClick={() => removePart(index)}
+                        aria-label={`Quitar repuesto ${index + 1}`}
+                      >
+                        <DeleteOutline />
+                      </IconButton>
+                    </Tooltip>
                   </Grid>
                 </Grid>
               ))}
@@ -809,7 +852,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                     )
 
                     if (selectedProtocol) {
-                      applyPreset(selectedProtocol)
+                      requestApplyProtocol(selectedProtocol)
                       return
                     }
 
@@ -998,9 +1041,14 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                     </Grid>
                   )}
                   <Grid item xs={12} md={1}>
-                    <IconButton onClick={() => removeTool(index)}>
-                      <DeleteOutline />
-                    </IconButton>
+                    <Tooltip title='Quitar herramienta'>
+                      <IconButton
+                        onClick={() => removeTool(index)}
+                        aria-label={`Quitar herramienta ${index + 1}`}
+                      >
+                        <DeleteOutline />
+                      </IconButton>
+                    </Tooltip>
                   </Grid>
                 </Grid>
               ))}
@@ -1073,9 +1121,14 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                     />
                   </Grid>
                   <Grid item xs={12} md={1}>
-                    <IconButton onClick={() => removeTest(index)}>
-                      <DeleteOutline />
-                    </IconButton>
+                    <Tooltip title='Quitar prueba'>
+                      <IconButton
+                        onClick={() => removeTest(index)}
+                        aria-label={`Quitar prueba ${index + 1}`}
+                      >
+                        <DeleteOutline />
+                      </IconButton>
+                    </Tooltip>
                   </Grid>
                 </Grid>
               ))}
@@ -1134,17 +1187,11 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               />
             </Stack>
           </Paper>
-
-          <Alert severity='info'>
-            Esta primera versión deja el reporte técnico bien estructurado y
-            listo para PDF. Después podemos enriquecerlo por tipo de equipo o
-            protocolo sin tocar el ticket base.
-          </Alert>
         </Stack>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} color='inherit'>
+        <Button onClick={handleRequestClose} color='inherit'>
           Cerrar
         </Button>
         <Button

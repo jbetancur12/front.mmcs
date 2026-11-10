@@ -32,6 +32,7 @@ import { es } from 'date-fns/locale'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
+import { confirmDialog } from 'src/utils/confirm'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 interface MaintenanceCommentsListProps {
   comments: MaintenanceComment[]
@@ -204,6 +205,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
   }
 
   const handleDelete = async (commentId: string) => {
+    const { isConfirmed } = await confirmDialog({
+      title: '¿Eliminar el comentario?',
+      text: 'El comentario se borrará del ticket y no se puede recuperar.',
+      confirmLabel: 'Eliminar comentario',
+      tone: 'danger'
+    })
+    if (!isConfirmed) return
     try {
       await onDeleteComment(commentId)
     } catch (error) {
@@ -417,6 +425,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       <Tooltip title='Editar comentario'>
                         <IconButton
                           size='small'
+                          aria-label='Editar comentario'
                           onClick={() => handleStartEdit(comment)}
                           disabled={loading}
                         >
@@ -426,6 +435,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       <Tooltip title='Eliminar comentario'>
                         <IconButton
                           size='small'
+                          aria-label='Eliminar comentario'
                           onClick={() => handleDelete(comment.id)}
                           disabled={loading}
                         >

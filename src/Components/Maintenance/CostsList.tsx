@@ -16,17 +16,14 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  Chip, // 👈 Nuevo: para el badge
-  CircularProgress // 👈 Nuevo: para el estado de carga
+  Chip,
+  CircularProgress,
+  Tooltip
 } from '@mui/material'
-import {
-  AttachMoney,
-  Close,
-  Receipt // 👈 Nuevo ícono para facturar
-} from '@mui/icons-material'
-// Asegúrate de que esta importación sea correcta en tu entorno:
+import { AttachMoney, Close, Receipt } from '@mui/icons-material'
 import { formatCurrency } from 'src/pages/maintenance/ticket-details/maintenanceTicketDetailUtils'
 import { logger } from 'src/utils/logger'
+import { confirmDialog } from 'src/utils/confirm'
 import { neutral, intent, brand } from 'src/theme/designTokens'
 
 // --- Interfaces ---
@@ -80,6 +77,12 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
 
   // Manejador del botón de facturación
   const handleInvoice = async () => {
+    const { isConfirmed } = await confirmDialog({
+      title: '¿Marcar el ticket como facturado?',
+      text: 'Quedará registrado como facturado. Podrás revertirlo desde Facturación.',
+      confirmLabel: 'Marcar como facturado'
+    })
+    if (!isConfirmed) return
     try {
       await onInvoice()
       // 3. Una vez que la acción del padre es exitosa, actualizamos el estado interno
@@ -131,9 +134,17 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
             <Typography variant='h6'>Costo del Servicio</Typography>
             <Box ml={2}>{statusChip}</Box> {/* 👈 Colocamos el Chip aquí */}
           </Box>
-          <IconButton onClick={onClose} disabled={isProcessingInvoice}>
-            <Close />
-          </IconButton>
+          <Tooltip title='Cerrar'>
+            <span>
+              <IconButton
+                onClick={onClose}
+                disabled={isProcessingInvoice}
+                aria-label='Cerrar'
+              >
+                <Close />
+              </IconButton>
+            </span>
+          </Tooltip>
         </Box>
       </DialogTitle>
 
