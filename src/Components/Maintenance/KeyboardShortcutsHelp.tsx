@@ -23,10 +23,6 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   onClose
 }) => {
   const globalShortcuts = [
-    { key: 'Ctrl + K', description: 'Enfocar búsqueda' },
-    { key: 'Ctrl + N', description: 'Nuevo ticket' },
-    { key: 'Ctrl + F', description: 'Alternar filtros' },
-    { key: 'Ctrl + R', description: 'Actualizar datos' },
     { key: 'Shift + ?', description: 'Mostrar esta ayuda' },
     { key: 'Esc', description: 'Cerrar modal/diálogo' }
   ]

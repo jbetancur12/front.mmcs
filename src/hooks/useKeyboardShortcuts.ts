@@ -2,10 +2,6 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import { useCallback } from 'react'
 
 interface KeyboardShortcutsOptions {
-  onNewTicket?: () => void
-  onToggleFilters?: () => void
-  onRefreshData?: () => void
-  onFocusSearch?: () => void
   onShowHelp?: () => void
   onEditTicket?: () => void
   onAddComment?: () => void
@@ -14,10 +10,6 @@ interface KeyboardShortcutsOptions {
 }
 
 export const useKeyboardShortcuts = ({
-  onNewTicket,
-  onToggleFilters,
-  onRefreshData,
-  onFocusSearch,
   onShowHelp,
   onEditTicket,
   onAddComment,
@@ -26,55 +18,7 @@ export const useKeyboardShortcuts = ({
 }: KeyboardShortcutsOptions) => {
   const options = { enabled }
 
-  // Global shortcuts
-  useHotkeys(
-    'ctrl+k',
-    useCallback(
-      (e) => {
-        e.preventDefault()
-        onFocusSearch?.()
-      },
-      [onFocusSearch]
-    ),
-    options
-  )
-
-  useHotkeys(
-    'ctrl+n',
-    useCallback(
-      (e) => {
-        e.preventDefault()
-        onNewTicket?.()
-      },
-      [onNewTicket]
-    ),
-    options
-  )
-
-  useHotkeys(
-    'ctrl+f',
-    useCallback(
-      (e) => {
-        e.preventDefault()
-        onToggleFilters?.()
-      },
-      [onToggleFilters]
-    ),
-    options
-  )
-
-  useHotkeys(
-    'ctrl+r',
-    useCallback(
-      (e) => {
-        e.preventDefault()
-        onRefreshData?.()
-      },
-      [onRefreshData]
-    ),
-    options
-  )
-
+  // Atajos globales (Ctrl+K/N/F/R se quitaron: chocan con la búsqueda rápida global y con el navegador)
   useHotkeys(
     'shift+/',
     useCallback(
@@ -138,10 +82,6 @@ export const useKeyboardShortcuts = ({
 }
 
 export const KEYBOARD_SHORTCUTS = {
-  'Ctrl + K': 'Enfocar búsqueda',
-  'Ctrl + N': 'Nuevo ticket',
-  'Ctrl + F': 'Alternar filtros',
-  'Ctrl + R': 'Actualizar datos',
   E: 'Editar ticket (en vista de ticket)',
   C: 'Agregar comentario (en vista de ticket)',
   Esc: 'Cerrar modal/diálogo',

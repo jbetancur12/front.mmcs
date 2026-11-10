@@ -90,6 +90,20 @@ import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { logger } from 'src/utils/logger'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { getTechnicalReportCompletion } from '../../Components/Maintenance/technicalReportCompletion'
+
+const isDefaultStatusFilter = (
+  status: MaintenanceStatus[] | undefined,
+  defaults: MaintenanceStatus[]
+) =>
+  Boolean(status) &&
+  status!.length === defaults.length &&
+  defaults.every((item) => status!.includes(item))
+
+const DEFAULT_STATUS_FILTER = Object.values(MaintenanceStatus).filter(
+  (status) => status !== MaintenanceStatus.COMPLETED
+)
+
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -102,9 +116,7 @@ const MaintenanceDashboard: React.FC = () => {
   const $userStore = useStore(userStore)
   // Por defecto, no mostrar los tickets completados
   const [filters, setFilters] = useState<MaintenanceFilters>({
-    status: Object.values(MaintenanceStatus).filter(
-      (s) => s !== MaintenanceStatus.COMPLETED
-    )
+    status: DEFAULT_STATUS_FILTER
   })
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
@@ -140,24 +152,34 @@ const MaintenanceDashboard: React.FC = () => {
   const isTechnician = !useCan(PERMISSIONS.MAINTENANCE_TICKET_MANAGE_ALL)
   const canListTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
   const canCreateTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_CREATE)
+  const canDeleteTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_DELETE)
 
-  // Get technician ID if user is a technician
+  // Correo del técnico en sesión (solo aplica si el usuario es técnico)
   const currentTechnicianEmail = useMemo(() => {
     if (!isTechnician) return null
-    logger.log('User email:', $userStore)
-    // Hardcode technician ID 4 for kat34433@laoia.com for testing
     return $userStore.email
   }, [isTechnician, $userStore.email])
 
-  // For technicians, filter to only show their assigned tickets
+  // Con texto en el buscador se busca en todos los estados (si no, un ticket
+  // completado no aparece por su número); solo se respeta el estado si la persona lo cambió a mano
+  const searchOverridesStatus =
+    Boolean(filters.search?.trim()) &&
+    isDefaultStatusFilter(filters.status, DEFAULT_STATUS_FILTER)
+
+  const queryFilters = useMemo(
+    () => (searchOverridesStatus ? { ...filters, status: undefined } : filters),
+    [filters, searchOverridesStatus]
+  )
+
+  // Un técnico solo ve los tickets asignados a él
   const technicianFilters = useMemo(() => {
-    if (!isTechnician || !currentTechnicianEmail) return filters
+    if (!isTechnician || !currentTechnicianEmail) return queryFilters
 
     return {
-      ...filters,
-      assignedTechnicianEmail: currentTechnicianEmail // Using numeric technician ID
+      ...queryFilters,
+      assignedTechnicianEmail: currentTechnicianEmail
     }
-  }, [filters, isTechnician, currentTechnicianEmail])
+  }, [queryFilters, isTechnician, currentTechnicianEmail])
 
   // Filter allowed statuses for technicians (they can't change to 'new' or 'assigned')
   const allowedStatuses = useMemo(() => {
@@ -232,71 +254,24 @@ const MaintenanceDashboard: React.FC = () => {
     return value >= 10 ? `${Math.round(value)}h` : `${value.toFixed(1)}h`
   }, [stats?.metrics?.avgResolutionTimeHours])
 
-  const technicalReportCompletion = useMemo(() => {
-    if (!technicalReport) return 0
-
-    const checkpoints = [
-      technicalReport.finalDiagnosis,
-      technicalReport.rootCause,
-      technicalReport.activities?.length,
-      technicalReport.parts?.length,
-      technicalReport.verificationProtocolType,
-      technicalReport.verificationTests?.length,
-      technicalReport.recommendations,
-      technicalReport.scopeClause,
-      technicalReport.responsibilityClause
-    ]
-
-    const completed = checkpoints.filter(Boolean).length
-    return Math.round((completed / checkpoints.length) * 100)
-  }, [technicalReport])
+  const technicalReportCompletion = useMemo(
+    () => getTechnicalReportCompletion(technicalReport),
+    [technicalReport]
+  )
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
-    onTicketUpdate: (ticket) => {
-      logger.log('Ticket updated via WebSocket:', ticket)
+    onTicketUpdate: () => {
       refetchTickets()
       refetchStats()
     },
-    onNotification: (notification) => {
-      logger.log('New notification:', notification)
-      // You could integrate with a notification system here
+    onNotification: () => {
+      // Sin acciones: el panel solo se refresca con onTicketUpdate
     }
   })
 
-  // Keyboard shortcuts
+  // Atajos de teclado
   useKeyboardShortcuts({
-    onNewTicket: () => {
-      if (canCreateTickets) {
-        navigate('/maintenance/new')
-      }
-    },
-    onToggleFilters: () => {
-      setShowFilters((prev) => !prev)
-    },
-    onRefreshData: () => {
-      refetchTickets()
-      refetchStats()
-      showToast('Datos actualizados', 'success')
-    },
-    onFocusSearch: () => {
-      // Focus search field in filters
-      const searchField = document.getElementById('quick-search-field')
-      if (searchField) {
-        searchField.focus()
-      } else {
-        // If filters are collapsed, expand them first
-        if (!showFilters) {
-          setShowFilters(true)
-          // Focus after a brief delay to allow expansion
-          setTimeout(() => {
-            const searchFieldDelayed =
-              document.getElementById('quick-search-field')
-            searchFieldDelayed?.focus()
-          }, 100)
-        }
-      }
-    },
     onShowHelp: () => {
       setShortcutsHelpOpen(true)
     },
@@ -361,7 +336,6 @@ const MaintenanceDashboard: React.FC = () => {
     }
 
     setSelectedTicket(ticket)
-    logger.log('🚀 ~ handleEditTicket ~ ticket:', ticket)
     setEditData({
       status: ticket.status,
       assignedTechnician: ticket.assignedTechnicianId || '',
@@ -599,7 +573,7 @@ const MaintenanceDashboard: React.FC = () => {
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
-        title='Dashboard de Mantenimiento'
+        title='Panel de Mantenimiento'
         subtitle='Gestión integral de tickets y técnicos'
         icon={<Dashboard />}
         actions={
@@ -607,7 +581,7 @@ const MaintenanceDashboard: React.FC = () => {
             <Tooltip title='Actualizar datos'>
               <IconButton
                 onClick={handleRefresh}
-                aria-label='Actualizar datos del dashboard'
+                aria-label='Actualizar datos del panel'
               >
                 <Refresh />
               </IconButton>
@@ -647,7 +621,7 @@ const MaintenanceDashboard: React.FC = () => {
             >
               {isMobile ? <Assessment /> : 'Analíticas'}
             </Button>
-            {!isTechnician && (
+            {canCreateTickets && (
               <Button
                 variant='contained'
                 startIcon={!isMobile && <Add />}
@@ -671,7 +645,7 @@ const MaintenanceDashboard: React.FC = () => {
         spacing={3}
         mb={3}
         role='region'
-        aria-label='Estadísticas del dashboard'
+        aria-label='Estadísticas del panel'
       >
         {statsLoading ? (
           <>
@@ -883,32 +857,6 @@ const MaintenanceDashboard: React.FC = () => {
             </Box>
           </Paper>
         </Grid>
-
-        {/* <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Información Financiera
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Ingresos Totales
-                </Typography>
-                <Typography variant="h5" color="success.main">
-                  ${stats?.totalRevenue?.toLocaleString() || 0}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Costo Promedio
-                </Typography>
-                <Typography variant="h5" color="primary">
-                  ${stats?.averageCost?.toLocaleString() || 0}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid> */}
       </Grid>
 
       {/* Filters */}
@@ -921,6 +869,7 @@ const MaintenanceDashboard: React.FC = () => {
         >
           <MaintenanceFiltersComponent
             filters={filters}
+            searchOverridesStatus={searchOverridesStatus}
             onFiltersChange={(newFilters) => setFilters({ ...newFilters })}
             technicians={technicians || []}
             equipmentTypes={equipmentTypes}
@@ -959,9 +908,9 @@ const MaintenanceDashboard: React.FC = () => {
               }}
             >
               Tickets de Mantenimiento
-              {ticketsData?.pagination.totalItems && (
+              {(ticketsData?.pagination.totalItems ?? 0) > 0 && (
                 <Chip
-                  label={`${ticketsData.pagination.totalItems} total`}
+                  label={`${ticketsData?.pagination.totalItems} total`}
                   size='small'
                   sx={{
                     backgroundColor: intent.successSoft,
@@ -1008,7 +957,7 @@ const MaintenanceDashboard: React.FC = () => {
                     onView={handleViewTicket}
                     onEdit={handleEditTicket}
                     onDelete={
-                      !isTechnician &&
+                      canDeleteTickets &&
                       [
                         MaintenanceStatus.PENDING,
                         MaintenanceStatus.ASSIGNED,

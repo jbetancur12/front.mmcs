@@ -26,6 +26,10 @@ import {
 } from '../../types/maintenance'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
 import MaintenancePriorityBadge from './MaintenancePriorityBadge'
+import {
+  MAINTENANCE_PRIORITY_LABELS,
+  MAINTENANCE_STATUS_LABELS
+} from './maintenanceLabels'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceFiltersProps {
@@ -35,6 +39,8 @@ interface MaintenanceFiltersProps {
   equipmentTypes: string[]
   loading?: boolean
   resultsCount?: number
+  /** Hay texto en la búsqueda y el estado es el de por defecto: la búsqueda recorre todos los estados. */
+  searchOverridesStatus?: boolean
 }
 
 /**
@@ -46,13 +52,15 @@ interface MaintenanceFiltersProps {
  * @param equipmentTypes - Array of available equipment types
  * @param loading - Whether data is loading
  * @param resultsCount - Number of results matching current filters
+ * @param searchOverridesStatus - Si la búsqueda por texto ignora el filtro de estado por defecto
  */
 const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
   filters,
   onFiltersChange,
   technicians,
   equipmentTypes,
-  resultsCount
+  resultsCount,
+  searchOverridesStatus = false
 }) => {
   const [localFilters, setLocalFilters] = useState<IMaintenanceFilters>(filters)
 
@@ -77,7 +85,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
 
   const getActiveFiltersCount = () => {
     let count = 0
-    if (localFilters.status?.length) count++
+    if (localFilters.status?.length && !searchOverridesStatus) count++
     if (localFilters.priority?.length) count++
     if (localFilters.assignedTechnician?.length) count++
     if (localFilters.equipmentType?.length) count++
@@ -92,14 +100,14 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
   const statusSummary =
     localFilters.status && localFilters.status.length > 0
       ? localFilters.status.length === 1
-        ? localFilters.status[0]
+        ? MAINTENANCE_STATUS_LABELS[localFilters.status[0]]
         : `${localFilters.status.length} estados`
       : null
 
   const prioritySummary =
     localFilters.priority && localFilters.priority.length > 0
       ? localFilters.priority.length === 1
-        ? localFilters.priority[0]
+        ? MAINTENANCE_PRIORITY_LABELS[localFilters.priority[0]]
         : `${localFilters.priority.length} prioridades`
       : null
 
@@ -138,7 +146,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 height: 24,
                 fontWeight: 700,
                 backgroundColor: brand.main,
-                color: '#ffffff'
+                color: neutral.surface
               }}
             />
           )}
@@ -166,7 +174,12 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             size='small'
             id='quick-search-field'
             label='Búsqueda rápida'
-            placeholder='Buscar tickets...'
+            placeholder='Número de ticket, cliente, equipo o problema'
+            helperText={
+              searchOverridesStatus
+                ? 'Con texto en la búsqueda se incluyen todos los estados, también los completados.'
+                : undefined
+            }
             value={localFilters.search || ''}
             onChange={(e) => handleFilterChange('search', e.target.value)}
             InputProps={{
@@ -305,7 +318,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 sx={{ backgroundColor: neutral.surface }}
               />
             )}
-            {statusSummary && (
+            {statusSummary && !searchOverridesStatus && (
               <Chip
                 label={`Estado: ${statusSummary}`}
                 onDelete={() => handleFilterChange('status', [])}
