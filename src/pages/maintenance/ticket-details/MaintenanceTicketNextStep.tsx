@@ -269,6 +269,19 @@ const MaintenanceTicketNextStep = ({
           backgroundColor: neutral.surface
         }}
       >
+        <Typography
+          variant='caption'
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            mb: 1,
+            fontWeight: 700,
+            color: neutral.textBody
+          }}
+        >
+          {next.currentIndex >= next.stages.length
+            ? 'Todos los pasos listos'
+            : `Paso ${next.currentIndex + 1} de ${next.stages.length}: ${next.stages[next.currentIndex].label}`}
+        </Typography>
         <Box
           component='ol'
           aria-label='Etapas del ticket'
@@ -279,7 +292,7 @@ const MaintenanceTicketNextStep = ({
             mb: 2,
             display: 'flex',
             gap: 0.75,
-            overflowX: 'auto'
+            overflowX: { xs: 'visible', sm: 'auto' }
           }}
         >
           {next.stages.map((stage, index) => {
@@ -290,8 +303,8 @@ const MaintenanceTicketNextStep = ({
                 key={stage.label}
                 aria-current={current ? 'step' : undefined}
                 sx={{
-                  flex: '1 0 auto',
-                  minWidth: { xs: 70, sm: 92 },
+                  flex: { xs: '1 1 0', sm: '1 0 auto' },
+                  minWidth: { xs: 0, sm: 92 },
                   display: 'grid',
                   gap: 0.75,
                   fontSize: 12,
@@ -309,7 +322,12 @@ const MaintenanceTicketNextStep = ({
                     boxShadow: current ? `0 0 0 3px ${brand.soft}` : 'none'
                   }}
                 />
-                {stage.label}
+                <Box
+                  component='span'
+                  sx={{ display: { xs: 'none', sm: 'inline' } }}
+                >
+                  {stage.label}
+                </Box>
                 <Box component='span' sx={visuallyHidden}>
                   {stage.done ? ' (hecho)' : current ? ' (en curso)' : ''}
                 </Box>
