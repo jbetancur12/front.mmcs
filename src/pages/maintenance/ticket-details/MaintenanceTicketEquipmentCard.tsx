@@ -53,9 +53,9 @@ const MaintenanceTicketEquipmentCard = ({
           </Typography>
         </Box>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+        <Grid container spacing={{ xs: 1, md: 3 }}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Tipo de Equipo
               </Typography>
@@ -87,8 +87,8 @@ const MaintenanceTicketEquipmentCard = ({
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Marca
               </Typography>
@@ -113,8 +113,8 @@ const MaintenanceTicketEquipmentCard = ({
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Modelo
               </Typography>
@@ -137,8 +137,8 @@ const MaintenanceTicketEquipmentCard = ({
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Número de Serie
               </Typography>
