@@ -212,7 +212,8 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
           <TimelineItem key={entry.id}>
             <TimelineOppositeContent
               sx={{
-                m: 'auto 0',
+                m: 0,
+                py: 0,
                 flex: compact ? 0.3 : 0.4,
                 px: 1
               }}
@@ -221,6 +222,7 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                 variant={compact ? 'caption' : 'body2'}
                 color='text.secondary'
                 fontWeight='medium'
+                sx={{ lineHeight: '40px' }}
               >
                 {formatDate(entry.performedAt)}
               </Typography>
@@ -242,9 +244,14 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
               {!isLast && <TimelineConnector />}
             </TimelineSeparator>
 
-            <TimelineContent sx={{ py: compact ? 1 : 2, px: 2 }}>
+            <TimelineContent sx={{ py: 0, px: 2, pb: compact ? 1.5 : 2.5 }}>
               <Box>
-                <Box display='flex' alignItems='center' gap={1} mb={0.5}>
+                <Box
+                  display='flex'
+                  alignItems='center'
+                  gap={1}
+                  sx={{ minHeight: 40 }}
+                >
                   <Chip
                     size='small'
                     label={config.label}
