@@ -508,8 +508,8 @@ const MaintenanceReport: React.FC = () => {
           <Box textAlign='center'>
             {submissionResult.success ? (
               <>
-                <CheckCircle color='success' sx={{ fontSize: 64, mb: 2 }} />
-                <Typography variant='h4' gutterBottom color='success.main'>
+                <CheckCircle color='primary' sx={{ fontSize: 64, mb: 2 }} />
+                <Typography variant='h4' gutterBottom color='primary.main'>
                   ¡Solicitud Enviada!
                 </Typography>
                 <Typography variant='h6' gutterBottom>

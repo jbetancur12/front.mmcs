@@ -287,7 +287,7 @@ const MaintenanceBilling: React.FC = () => {
           row.original.isInvoiced ? (
             <Chip
               label='Facturado'
-              color='success'
+              color='primary'
               size='small'
               variant='outlined'
               icon={<CheckCircle />}

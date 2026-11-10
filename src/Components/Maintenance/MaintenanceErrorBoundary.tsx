@@ -3,7 +3,7 @@ import { Box, Paper, Typography, Button, Alert } from '@mui/material'
 import { Error as ErrorIcon, Refresh } from '@mui/icons-material'
 
 import { logger } from 'src/utils/logger'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha, brand } from 'src/theme/designTokens'
 interface Props {
   children: ReactNode
 }
@@ -129,10 +129,10 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRetry}
                 startIcon={<Refresh />}
                 sx={{
-                  backgroundColor: intent.successInk,
+                  backgroundColor: brand.main,
                   borderRadius: '12px',
                   '&:hover': {
-                    backgroundColor: intent.successInk
+                    backgroundColor: brand.main
                   }
                 }}
               >

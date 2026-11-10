@@ -2,7 +2,7 @@ import { Paper, Typography, Box } from '@mui/material'
 import { Description } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTicketIssueCardProps {
   ticket: MaintenanceTicket
@@ -27,7 +27,7 @@ const MaintenanceTicketIssueCard = ({
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              backgroundColor: intent.successSoft,
+              backgroundColor: brand.soft,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -36,7 +36,7 @@ const MaintenanceTicketIssueCard = ({
             }}
           >
             <Description
-              sx={{ color: intent.successInk, fontSize: 20 }}
+              sx={{ color: brand.ink, fontSize: 20 }}
               aria-hidden='true'
             />
           </Box>

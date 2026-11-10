@@ -49,7 +49,7 @@ import { getApiErrorMessage } from 'src/utils/apiError'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
-import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 const getDefaultDateRange = () => {
   const today = new Date()
@@ -170,7 +170,7 @@ const MaintenanceAnalytics: React.FC = () => {
               <Chip
                 size='small'
                 label={`Carga actual ${row.original.workload}/${row.original.maxWorkload}`}
-                color={row.original.isAvailable ? 'success' : 'default'}
+                color={row.original.isAvailable ? 'primary' : 'default'}
                 variant='outlined'
               />
               <Typography variant='caption' color='text.secondary'>
@@ -533,7 +533,7 @@ const MaintenanceAnalytics: React.FC = () => {
                               borderRadius: 999,
                               backgroundColor: neutral.border,
                               '& .MuiLinearProgress-bar': {
-                                backgroundColor: intent.successInk,
+                                backgroundColor: brand.main,
                                 borderRadius: 999
                               }
                             }}
@@ -619,7 +619,7 @@ const MaintenanceAnalytics: React.FC = () => {
                         <Chip
                           size='small'
                           label={`Cerrados ${point.completed}`}
-                          color='success'
+                          color='primary'
                         />
                       </Stack>
                     </Box>

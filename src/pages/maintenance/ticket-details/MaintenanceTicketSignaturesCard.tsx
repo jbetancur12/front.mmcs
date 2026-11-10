@@ -38,9 +38,7 @@ const MaintenanceTicketSignaturesCard = ({
               ...surfaceSx,
               p: 3,
               mb: 3,
-              borderColor: signaturesMissing
-                ? intent.warning
-                : intent.successSoft
+              borderColor: signaturesMissing ? intent.warning : brand.soft
             }}
           >
             <Box
@@ -77,7 +75,7 @@ const MaintenanceTicketSignaturesCard = ({
                 >
                   <Chip
                     size='small'
-                    color={hasTechnicianSignature ? 'success' : 'warning'}
+                    color={hasTechnicianSignature ? 'primary' : 'warning'}
                     label={
                       hasTechnicianSignature
                         ? 'Firma técnico OK'
@@ -86,7 +84,7 @@ const MaintenanceTicketSignaturesCard = ({
                   />
                   <Chip
                     size='small'
-                    color={hasCustomerSignature ? 'success' : 'warning'}
+                    color={hasCustomerSignature ? 'primary' : 'warning'}
                     label={
                       hasCustomerSignature
                         ? 'Firma cliente OK'

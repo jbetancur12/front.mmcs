@@ -88,7 +88,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 import { getTechnicalReportCompletion } from '../../Components/Maintenance/technicalReportCompletion'
 
 const isDefaultStatusFilter = (
@@ -762,8 +762,8 @@ const MaintenanceDashboard: React.FC = () => {
                   label={`${ticketsData?.pagination.totalItems} total`}
                   size='small'
                   sx={{
-                    backgroundColor: intent.successSoft,
-                    color: intent.successInk,
+                    backgroundColor: brand.soft,
+                    color: brand.ink,
                     fontWeight: 600
                   }}
                 />
@@ -1122,7 +1122,7 @@ const MaintenanceDashboard: React.FC = () => {
                                       ? 'error.main'
                                       : isNearFull
                                         ? 'warning.main'
-                                        : 'success.main'
+                                        : 'primary.main'
                                   }}
                                 >
                                   {technician.name
@@ -1160,7 +1160,7 @@ const MaintenanceDashboard: React.FC = () => {
                                         ? 'error'
                                         : isNearFull
                                           ? 'warning'
-                                          : 'success'
+                                          : 'primary'
                                     }
                                     variant='outlined'
                                   />
@@ -1183,7 +1183,7 @@ const MaintenanceDashboard: React.FC = () => {
                                       ? 'error'
                                       : isNearFull
                                         ? 'warning'
-                                        : 'success'
+                                        : 'primary'
                                   }
                                   sx={{ height: 4, borderRadius: 2 }}
                                 />

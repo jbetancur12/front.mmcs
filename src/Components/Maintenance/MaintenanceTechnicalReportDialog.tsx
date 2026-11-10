@@ -536,7 +536,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
           <Stack direction='row' spacing={1} flexWrap='wrap'>
             <Chip
               size='small'
-              color={completionPct >= 75 ? 'success' : 'primary'}
+              color={completionPct >= 75 ? 'primary' : 'primary'}
               label={`${completionPct}% diligenciado`}
             />
             <Chip
@@ -547,7 +547,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             />
             <Chip
               size='small'
-              color='success'
+              color='primary'
               label={report?.serviceFinalStatus || 'OPERATIVO'}
             />
             {report?.verificationProtocolType && (

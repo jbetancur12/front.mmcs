@@ -20,7 +20,7 @@ import {
   MaintenanceStatus
 } from '../../../types/maintenance'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketTechnicianCardProps {
   ticket: MaintenanceTicket
@@ -46,18 +46,18 @@ const MaintenanceTicketTechnicianCard = ({
           backdropFilter: 'blur(10px)',
           borderRadius: '16px',
           boxShadow: `0 4px 20px ${withAlpha(neutral.black, 0.08)}`,
-          border: `1px solid ${withAlpha(intent.success, 0.1)}`,
+          border: `1px solid ${withAlpha(brand.main, 0.1)}`,
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
             transform: 'translateY(-2px)',
-            boxShadow: `0 8px 30px ${withAlpha(intent.success, 0.12)}`
+            boxShadow: `0 8px 30px ${withAlpha(brand.main, 0.12)}`
           }
         }}
       >
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
+              background: `linear-gradient(135deg, ${brand.ink} 0%, ${brand.ink} 100%)`,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -71,7 +71,7 @@ const MaintenanceTicketTechnicianCard = ({
             variant='h6'
             sx={{
               fontWeight: 600,
-              color: intent.successInk
+              color: brand.ink
             }}
           >
             Técnico Asignado
@@ -165,7 +165,7 @@ const MaintenanceTicketTechnicianCard = ({
                                     ? 'error.main'
                                     : isNearFull
                                       ? 'warning.main'
-                                      : 'success.main'
+                                      : 'primary.main'
                                 }}
                               >
                                 {technician.name
@@ -196,7 +196,7 @@ const MaintenanceTicketTechnicianCard = ({
                                       ? 'error'
                                       : isNearFull
                                         ? 'warning'
-                                        : 'success'
+                                        : 'primary'
                                   }
                                   variant='outlined'
                                 />
@@ -219,7 +219,7 @@ const MaintenanceTicketTechnicianCard = ({
                                     ? 'error'
                                     : isNearFull
                                       ? 'warning'
-                                      : 'success'
+                                      : 'primary'
                                 }
                                 sx={{ height: 4, borderRadius: 2 }}
                               />

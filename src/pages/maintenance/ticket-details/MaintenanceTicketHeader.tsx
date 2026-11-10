@@ -213,7 +213,7 @@ const MaintenanceTicketHeader = ({
                     <Print
                       fontSize='small'
                       aria-hidden='true'
-                      sx={{ color: intent.successInk }}
+                      sx={{ color: brand.ink }}
                     />
                   </ListItemIcon>
                   <ListItemText

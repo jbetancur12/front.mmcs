@@ -373,7 +373,7 @@ const MaintenanceTechnicians: React.FC = () => {
             label={getStatusLabel(row.original.status)}
             color={
               row.original.status === 'active'
-                ? 'success'
+                ? 'primary'
                 : row.original.status === 'inactive'
                   ? 'error'
                   : 'warning'
@@ -391,7 +391,7 @@ const MaintenanceTechnicians: React.FC = () => {
             size='small'
             variant='outlined'
             label={row.original.isAvailable ? 'Disponible' : 'No Disponible'}
-            color={row.original.isAvailable ? 'success' : 'warning'}
+            color={row.original.isAvailable ? 'primary' : 'warning'}
           />
         )
       },

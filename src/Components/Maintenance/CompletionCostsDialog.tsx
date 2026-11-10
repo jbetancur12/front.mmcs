@@ -379,8 +379,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       >
         <Avatar
           sx={{
-            backgroundColor: intent.successSoft,
-            color: intent.successInk,
+            backgroundColor: brand.soft,
+            color: brand.ink,
             width: 48,
             height: 48
           }}
@@ -528,8 +528,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               minHeight: 44,
               ...(showPhotoUpload
                 ? {
-                    backgroundColor: intent.successInk,
-                    '&:hover': { backgroundColor: intent.successInk }
+                    backgroundColor: brand.main,
+                    '&:hover': { backgroundColor: brand.hover }
                   }
                 : {
                     borderColor: neutral.borderStrong,
@@ -835,7 +835,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 borderWidth: 2,
                 py: 1.5,
                 '&:hover': {
-                  borderColor: intent.successInk,
+                  borderColor: brand.ink,
                   backgroundColor: neutral.surfaceAlt,
                   borderStyle: 'solid'
                 }
@@ -850,7 +850,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 ...surfaceSx,
                 p: 2,
                 mt: 3,
-                borderColor: intent.successSoft
+                borderColor: brand.soft
               }}
             >
               <Box
@@ -861,11 +861,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 <Typography variant='h6' fontWeight={600}>
                   Total de Costos
                 </Typography>
-                <Typography
-                  variant='h4'
-                  fontWeight={700}
-                  color={intent.successInk}
-                >
+                <Typography variant='h4' fontWeight={700} color={brand.ink}>
                   {formatCurrency(calculateTotal())}
                 </Typography>
               </Box>
@@ -910,11 +906,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
           sx={{
             borderRadius: '12px',
-            backgroundColor: intent.successInk,
+            backgroundColor: brand.main,
             minHeight: 48,
             fontWeight: 600,
             '&:hover': {
-              backgroundColor: intent.successInk
+              backgroundColor: brand.main
             },
             '&:disabled': {
               background: neutral.border,

@@ -25,7 +25,7 @@ import {
   surfaceSx
 } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCostsSectionProps {
   ticket: MaintenanceTicket
@@ -76,8 +76,8 @@ const MaintenanceTicketCostsSection = ({
             {/* 1. Avatar (Ícono) */}
             <Avatar
               sx={{
-                backgroundColor: intent.successSoft,
-                color: intent.successInk,
+                backgroundColor: brand.soft,
+                color: brand.ink,
                 width: 48,
                 height: 48,
                 flexShrink: 0
@@ -122,8 +122,8 @@ const MaintenanceTicketCostsSection = ({
                 )
               )}
               sx={{
-                backgroundColor: intent.successSoft,
-                color: intent.successInk,
+                backgroundColor: brand.soft,
+                color: brand.ink,
                 fontWeight: 700,
                 fontSize: '0.9rem',
                 height: 40,
@@ -248,7 +248,7 @@ const MaintenanceTicketCostsSection = ({
                 {technicalReport?.serviceFinalStatus && (
                   <Chip
                     size='small'
-                    color='success'
+                    color='primary'
                     label={technicalReport.serviceFinalStatus.replace(
                       /_/g,
                       ' '

@@ -17,7 +17,7 @@ import {
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, intent, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCustomerCardProps {
   ticket: MaintenanceTicket
@@ -65,11 +65,11 @@ const MaintenanceTicketCustomerCard = ({
                 }
                 aria-label={`Enviar email a ${ticket.customerEmail}`}
                 sx={{
-                  backgroundColor: intent.successSoft,
-                  color: intent.successInk,
+                  backgroundColor: brand.soft,
+                  color: brand.ink,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: intent.successSoft
+                    backgroundColor: brand.soft
                   }
                 }}
               >
@@ -84,11 +84,11 @@ const MaintenanceTicketCustomerCard = ({
                 }
                 aria-label={`Llamar al cliente ${ticket.customerPhone}`}
                 sx={{
-                  backgroundColor: intent.successSoft,
-                  color: intent.successInk,
+                  backgroundColor: brand.soft,
+                  color: brand.ink,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: intent.successSoft
+                    backgroundColor: brand.soft
                   }
                 }}
               >

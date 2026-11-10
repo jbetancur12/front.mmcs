@@ -375,7 +375,7 @@ const MaintenanceProtocols = () => {
                   </Box>
                   <Chip
                     size='small'
-                    color={protocol.isActive ? 'success' : 'default'}
+                    color={protocol.isActive ? 'primary' : 'default'}
                     label={protocol.isActive ? 'Activo' : 'Inactivo'}
                   />
                 </Stack>

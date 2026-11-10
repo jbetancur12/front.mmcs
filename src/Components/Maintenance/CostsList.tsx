@@ -24,7 +24,7 @@ import { AttachMoney, Close, Receipt } from '@mui/icons-material'
 import { formatCurrency } from 'src/pages/maintenance/ticket-details/maintenanceTicketDetailUtils'
 import { logger } from 'src/utils/logger'
 import { confirmDialog } from 'src/utils/confirm'
-import { neutral, intent, brand } from 'src/theme/designTokens'
+import { neutral, brand } from 'src/theme/designTokens'
 
 // --- Interfaces ---
 
@@ -104,7 +104,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
       return (
         <Chip
           label='Facturado'
-          color='success'
+          color='primary'
           icon={<Receipt />}
           size='small'
         />
@@ -131,7 +131,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
       <DialogTitle>
         <Box display='flex' alignItems='center' justifyContent='space-between'>
           <Box display='flex' alignItems='center'>
-            <AttachMoney sx={{ mr: 1, color: intent.successInk }} />
+            <AttachMoney sx={{ mr: 1, color: brand.ink }} />
             <Typography variant='h6'>Costo del Servicio</Typography>
             <Box ml={2}>{statusChip}</Box> {/* 👈 Colocamos el Chip aquí */}
           </Box>
@@ -171,7 +171,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                   border: `1px solid ${neutral.border}`,
                   background: neutral.surfaceAlt,
                   '&:hover': {
-                    background: intent.successSoft,
+                    background: brand.soft,
                     borderColor: brand.main
                   },
                   '&:last-child': { mb: 0 }
@@ -184,8 +184,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                       sx={{
                         width: 32,
                         height: 32,
-                        backgroundColor: intent.successSoft,
-                        color: intent.successInk,
+                        backgroundColor: brand.soft,
+                        color: brand.ink,
                         fontSize: '0.875rem',
                         fontWeight: 700
                       }}
@@ -270,8 +270,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
               )
             }
             sx={{
-              backgroundColor: intent.successInk,
-              '&:hover': { backgroundColor: intent.successInk }
+              backgroundColor: brand.main,
+              '&:hover': { backgroundColor: brand.hover }
             }}
           >
             {isProcessingInvoice

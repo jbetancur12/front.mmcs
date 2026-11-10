@@ -26,7 +26,13 @@ import type { FileRejection } from 'react-dropzone'
 import { MaintenanceFile } from '../../types/maintenance'
 
 import { logger } from 'src/utils/logger'
-import { neutral, intent, accent, withAlpha } from 'src/theme/designTokens'
+import {
+  neutral,
+  intent,
+  accent,
+  withAlpha,
+  brand
+} from 'src/theme/designTokens'
 interface MaintenanceFileUploadProps {
   files: MaintenanceFile[]
   onFilesChange: (files: File[]) => void
@@ -260,7 +266,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           borderRadius: '12px 12px 0 0',
           background: isPdfFile(file)
             ? `linear-gradient(135deg, ${withAlpha(intent.danger, 0.1)} 0%, ${withAlpha(intent.danger, 0.16)} 100%)`
-            : `linear-gradient(135deg, ${withAlpha(intent.success, 0.08)} 0%, ${withAlpha(neutral.textMuted, 0.16)} 100%)`
+            : `linear-gradient(135deg, ${withAlpha(brand.main, 0.08)} 0%, ${withAlpha(neutral.textMuted, 0.16)} 100%)`
         }}
       >
         {isPdfFile(file) ? (
@@ -313,21 +319,21 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
         sx={{
           border: '2px dashed',
           borderColor:
-            dragActive || isDragActive ? intent.success : neutral.borderStrong,
+            dragActive || isDragActive ? brand.main : neutral.borderStrong,
           backgroundColor:
-            dragActive || isDragActive ? intent.successSoft : neutral.surface,
+            dragActive || isDragActive ? brand.soft : neutral.surface,
           borderRadius: '16px',
           boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
           cursor: disabled || uploading ? 'not-allowed' : 'pointer',
           transition: 'border-color 0.2s ease, background-color 0.2s ease',
           '&:hover': {
             borderColor:
-              disabled || uploading ? neutral.borderStrong : intent.success,
+              disabled || uploading ? neutral.borderStrong : brand.main,
             backgroundColor:
               disabled || uploading ? neutral.surface : neutral.surfaceAlt
           },
           '&:focus': {
-            outline: `2px solid ${intent.successInk}`,
+            outline: `2px solid ${brand.ink}`,
             outlineOffset: '2px'
           }
         }}
@@ -337,9 +343,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           <Box
             sx={{
               backgroundColor:
-                disabled || uploading
-                  ? neutral.surfaceHead
-                  : intent.successSoft,
+                disabled || uploading ? neutral.surfaceHead : brand.soft,
               borderRadius: '50%',
               width: 80,
               height: 80,
@@ -347,14 +351,13 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px',
-              border: `1px solid ${intent.successSoft}`
+              border: `1px solid ${brand.soft}`
             }}
           >
             <CloudUpload
               sx={{
                 fontSize: 40,
-                color:
-                  disabled || uploading ? neutral.textMuted : intent.successInk
+                color: disabled || uploading ? neutral.textMuted : brand.ink
               }}
             />
           </Box>
@@ -422,7 +425,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               borderRadius: 4,
               backgroundColor: neutral.border,
               '& .MuiLinearProgress-bar': {
-                backgroundColor: intent.successInk,
+                backgroundColor: brand.main,
                 borderRadius: 4
               }
             }}
@@ -534,8 +537,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                         size='small'
                         label={getLocalizedFileType(file)}
                         sx={{
-                          backgroundColor: intent.successSoft,
-                          color: intent.successInk,
+                          backgroundColor: brand.soft,
+                          color: brand.ink,
                           borderRadius: '6px',
                           fontWeight: 500,
                           border: 'none'
@@ -575,11 +578,11 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                               aria-label={`Ver ${file.originalName}`}
                               onClick={() => onFileView(file)}
                               sx={{
-                                backgroundColor: intent.successSoft,
-                                color: intent.successInk,
+                                backgroundColor: brand.soft,
+                                color: brand.ink,
                                 borderRadius: '6px',
                                 '&:hover': {
-                                  backgroundColor: intent.successSoft
+                                  backgroundColor: brand.soft
                                 }
                               }}
                             >

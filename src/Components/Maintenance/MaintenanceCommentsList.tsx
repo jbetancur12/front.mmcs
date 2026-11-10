@@ -306,7 +306,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       backgroundColor:
                         getRoleColor(comment.authorType || comment.userRole) ===
                         'primary'
-                          ? intent.successSoft
+                          ? brand.soft
                           : getRoleColor(
                                 comment.authorType || comment.userRole
                               ) === 'error'
@@ -314,7 +314,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             : getRoleColor(
                                   comment.authorType || comment.userRole
                                 ) === 'success'
-                              ? intent.successSoft
+                              ? brand.soft
                               : getRoleColor(
                                     comment.authorType || comment.userRole
                                   ) === 'info'
@@ -323,7 +323,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       color:
                         getRoleColor(comment.authorType || comment.userRole) ===
                         'primary'
-                          ? intent.successInk
+                          ? brand.ink
                           : getRoleColor(
                                 comment.authorType || comment.userRole
                               ) === 'error'
@@ -359,13 +359,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             getRoleColor(
                               comment.authorType || comment.userRole
                             ) === 'primary'
-                              ? intent.successSoft
+                              ? brand.soft
                               : undefined,
                           color:
                             getRoleColor(
                               comment.authorType || comment.userRole
                             ) === 'primary'
-                              ? intent.successInk
+                              ? brand.ink
                               : undefined,
                           border:
                             getRoleColor(
@@ -534,14 +534,14 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: intent.success
+                    borderColor: brand.main
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: intent.successInk
+                    borderColor: brand.ink
                   }
                 },
                 '& .MuiInputLabel-root.Mui-focused': {
-                  color: intent.successInk
+                  color: brand.ink
                 }
               }}
             />
@@ -601,10 +601,10 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 disabled={!newComment.trim() || submitting || loading}
                 size='small'
                 sx={{
-                  backgroundColor: intent.successInk,
+                  backgroundColor: brand.main,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: intent.successInk
+                    backgroundColor: brand.main
                   },
                   '&:disabled': {
                     background: withAlpha(neutral.black, 0.12),

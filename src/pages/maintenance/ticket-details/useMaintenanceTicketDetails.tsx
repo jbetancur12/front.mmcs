@@ -174,7 +174,7 @@ const useMaintenanceTicketDetails = () => {
       return (
         <Chip
           label='Facturado'
-          color='success'
+          color='primary'
           icon={<Receipt />}
           size='small'
         />

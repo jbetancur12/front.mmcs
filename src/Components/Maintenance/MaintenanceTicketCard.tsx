@@ -29,7 +29,7 @@ import { getTicketPendings } from './ticketPendings'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import useRelativeTime from '../../hooks/useRelativeTime'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCardProps {
   ticket: MaintenanceTicket
@@ -127,7 +127,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           left: 0,
           right: 0,
           height: '3px',
-          background: intent.successInk,
+          background: brand.main,
           opacity: 0.8
         },
         '&:hover': {
@@ -154,7 +154,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           <Box display='flex' alignItems='center' gap={1.5}>
             <Box
               sx={{
-                backgroundColor: intent.successSoft,
+                backgroundColor: brand.soft,
                 borderRadius: '8px',
                 p: 1,
                 display: 'flex',
@@ -164,7 +164,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 minHeight: 36
               }}
             >
-              <Build sx={{ color: intent.successInk, fontSize: 18 }} />
+              <Build sx={{ color: brand.ink, fontSize: 18 }} />
             </Box>
             <Box>
               <Typography
@@ -507,7 +507,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             sx={{
               textTransform: 'none',
               fontSize: { xs: '0.75rem', sm: '0.8rem' },
-              color: intent.successInk,
+              color: brand.ink,
               borderRadius: '6px',
               fontWeight: 500,
               minHeight: { xs: 28, sm: 32 },
@@ -552,7 +552,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 startIcon={<Visibility />}
                 aria-label={`Ver detalles del ticket ${safeText(ticket.ticketCode, 'sin código')}`}
                 sx={{
-                  color: intent.successInk,
+                  color: brand.ink,
                   borderRadius: '6px',
                   fontWeight: 500,
                   fontSize: { xs: '0.75rem', sm: '0.8rem' },

@@ -32,7 +32,7 @@ import {
   MAINTENANCE_PRIORITY_LABELS,
   MAINTENANCE_STATUS_LABELS
 } from './maintenanceLabels'
-import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceFiltersProps {
   filters: IMaintenanceFilters
@@ -134,7 +134,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
         flexWrap='wrap'
       >
         <Box display='flex' alignItems='center' gap={1}>
-          <FilterList sx={{ color: intent.successInk }} />
+          <FilterList sx={{ color: brand.ink }} />
           <Typography
             variant='h6'
             sx={{ fontSize: '1.125rem', fontWeight: 600, color: neutral.text }}

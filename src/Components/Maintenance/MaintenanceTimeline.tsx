@@ -151,9 +151,9 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
   ) => {
     switch (color) {
       case 'primary':
-        return { bg: intent.successSoft, fg: intent.successInk }
+        return { bg: brand.soft, fg: brand.ink }
       case 'success':
-        return { bg: intent.successSoft, fg: brand.hover }
+        return { bg: brand.soft, fg: brand.hover }
       case 'error':
         return { bg: intent.dangerSoft, fg: intent.danger }
       case 'secondary':
@@ -264,8 +264,8 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                           width: 20,
                           height: 20,
                           fontSize: '0.65rem',
-                          backgroundColor: intent.successSoft,
-                          color: intent.successInk
+                          backgroundColor: brand.soft,
+                          color: brand.ink
                         }}
                       >
                         {getInitials(entry.performedBy)}
