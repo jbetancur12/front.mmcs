@@ -1,5 +1,5 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
-import React from 'react'
+import React, { useState } from 'react'
 import { Container, Grid, Alert, Button } from '@mui/material'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { ArrowBack } from '@mui/icons-material'
@@ -18,6 +18,9 @@ import MaintenanceTicketSignaturesCard from './ticket-details/MaintenanceTicketS
 import MaintenanceTicketSatisfactionCard from './ticket-details/MaintenanceTicketSatisfactionCard'
 import MaintenanceTicketNextStep from './ticket-details/MaintenanceTicketNextStep'
 import MaintenanceTicketEditBar from './ticket-details/MaintenanceTicketEditBar'
+import MaintenanceTicketMobileTabs, {
+  TicketMobileTab
+} from './ticket-details/MaintenanceTicketMobileTabs'
 import MaintenanceTicketDialogs from './ticket-details/MaintenanceTicketDialogs'
 import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
@@ -29,7 +32,9 @@ export { formatCurrency } from './ticket-details/maintenanceTicketDetailUtils'
  */
 const MaintenanceTicketDetails: React.FC = () => {
   const details = useMaintenanceTicketDetails()
-  const { ticket, ticketLoading, ticketError, handleBack } = details
+  const { ticket, ticketLoading, ticketError, handleBack, isMobile, editMode } =
+    details
+  const [mobileTab, setMobileTab] = useState<TicketMobileTab>('work')
 
   // Loading state
   if (ticketLoading) {
@@ -75,45 +80,116 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   return (
     <MaintenanceErrorBoundary>
-      <Container maxWidth='xl' sx={{ pt: 3, pb: { xs: 14, sm: 12 } }}>
+      <Container maxWidth='xl' sx={{ pt: 3, pb: { xs: 22, sm: 12 } }}>
         {/* Header with breadcrumbs */}
         <MaintenanceTicketHeader ticket={ticket} details={details} />
 
         {/* Etapas del ticket y botón de siguiente paso */}
         <MaintenanceTicketNextStep ticket={ticket} details={details} />
 
-        <Grid container spacing={{ xs: 2, sm: 3 }}>
-          {/* Main Content */}
-          <Grid item xs={12} lg={8}>
-            {/* Ticket Status and Priority */}
-            <MaintenanceTicketStatusCard ticket={ticket} details={details} />
-            <MaintenanceTicketCustomerCard ticket={ticket} details={details} />
-            <MaintenanceTicketEquipmentCard ticket={ticket} details={details} />
-            <MaintenanceTicketIssueCard ticket={ticket} />
-            <MaintenanceTicketActivitySections
-              ticket={ticket}
-              details={details}
-            />
-          </Grid>
+        {isMobile ? (
+          <>
+            {mobileTab === 'work' && (
+              <>
+                <MaintenanceTicketStatusCard
+                  ticket={ticket}
+                  details={details}
+                />
+                <MaintenanceTicketTechnicianCard
+                  ticket={ticket}
+                  details={details}
+                />
+                <MaintenanceTicketScheduleCard
+                  ticket={ticket}
+                  details={details}
+                />
+                <MaintenanceTicketIssueCard ticket={ticket} />
+              </>
+            )}
+            {mobileTab === 'intake' && (
+              <>
+                <MaintenanceTicketCustomerCard
+                  ticket={ticket}
+                  details={details}
+                />
+                <MaintenanceTicketEquipmentCard
+                  ticket={ticket}
+                  details={details}
+                />
+              </>
+            )}
+            {mobileTab === 'news' && (
+              <MaintenanceTicketActivitySections
+                ticket={ticket}
+                details={details}
+              />
+            )}
+            {mobileTab === 'close' && (
+              <>
+                <MaintenanceTicketCostsSection
+                  ticket={ticket}
+                  details={details}
+                />
+                <MaintenanceTicketSignaturesCard
+                  ticket={ticket}
+                  details={details}
+                />
+                <MaintenanceTicketSatisfactionCard ticket={ticket} />
+              </>
+            )}
+          </>
+        ) : (
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
+            {/* Main Content */}
+            <Grid item xs={12} lg={8}>
+              {/* Ticket Status and Priority */}
+              <MaintenanceTicketStatusCard ticket={ticket} details={details} />
+              <MaintenanceTicketCustomerCard
+                ticket={ticket}
+                details={details}
+              />
+              <MaintenanceTicketEquipmentCard
+                ticket={ticket}
+                details={details}
+              />
+              <MaintenanceTicketIssueCard ticket={ticket} />
+              <MaintenanceTicketActivitySections
+                ticket={ticket}
+                details={details}
+              />
+            </Grid>
 
-          {/* Sidebar */}
-          <Grid item xs={12} lg={4}>
-            <MaintenanceTicketTechnicianCard
-              ticket={ticket}
-              details={details}
-            />
-            <MaintenanceTicketScheduleCard ticket={ticket} details={details} />
-            <MaintenanceTicketCostsSection ticket={ticket} details={details} />
-            <MaintenanceTicketSignaturesCard
-              ticket={ticket}
-              details={details}
-            />
-            <MaintenanceTicketSatisfactionCard ticket={ticket} />
+            {/* Sidebar */}
+            <Grid item xs={12} lg={4}>
+              <MaintenanceTicketTechnicianCard
+                ticket={ticket}
+                details={details}
+              />
+              <MaintenanceTicketScheduleCard
+                ticket={ticket}
+                details={details}
+              />
+              <MaintenanceTicketCostsSection
+                ticket={ticket}
+                details={details}
+              />
+              <MaintenanceTicketSignaturesCard
+                ticket={ticket}
+                details={details}
+              />
+              <MaintenanceTicketSatisfactionCard ticket={ticket} />
+            </Grid>
           </Grid>
-        </Grid>
+        )}
 
         <MaintenanceTicketDialogs ticket={ticket} details={details} />
         <MaintenanceTicketEditBar details={details} />
+        {isMobile && !editMode && (
+          <MaintenanceTicketMobileTabs
+            value={mobileTab}
+            onChange={setMobileTab}
+          />
+        )}
       </Container>
     </MaintenanceErrorBoundary>
   )

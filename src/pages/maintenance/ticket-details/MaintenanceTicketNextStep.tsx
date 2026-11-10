@@ -23,6 +23,7 @@ import { maintenanceSignaturesEnabled } from '../../../features/maintenanceFlags
 import { MAINTENANCE_STATUS_LABELS } from '../../../Components/Maintenance/maintenanceLabels'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
 import { getNextStep, NextStepAction } from './ticketNextStep'
+import { MOBILE_TABS_HEIGHT } from './MaintenanceTicketMobileTabs'
 
 interface MaintenanceTicketNextStepProps {
   ticket: MaintenanceTicket
@@ -393,12 +394,11 @@ const MaintenanceTicketNextStep = ({
             position: 'fixed',
             left: 0,
             right: 0,
-            bottom: 0,
+            bottom: `calc(${MOBILE_TABS_HEIGHT}px + env(safe-area-inset-bottom, 0px))`,
             zIndex: (theme) => theme.zIndex.appBar,
             display: 'flex',
             gap: 1,
             p: 1.5,
-            pb: 'max(12px, env(safe-area-inset-bottom, 0px))',
             bgcolor: neutral.surface,
             borderTop: `1px solid ${neutral.border}`
           }}
