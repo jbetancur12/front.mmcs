@@ -76,6 +76,7 @@ import useAxiosPrivate from '../../utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import NewMaintenanceRequestDialog from '../../Components/Maintenance/NewMaintenanceRequestDialog'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
@@ -128,6 +129,7 @@ const MaintenanceDashboard: React.FC = () => {
   const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
     useState(false)
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
+  const [newRequestOpen, setNewRequestOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [ticketToDelete, setTicketToDelete] =
     useState<MaintenanceTicket | null>(null)
@@ -625,7 +627,8 @@ const MaintenanceDashboard: React.FC = () => {
               <Button
                 variant='contained'
                 startIcon={!isMobile && <Add />}
-                href='/maintenance/report'
+                onClick={() => setNewRequestOpen(true)}
+                aria-label='Nueva solicitud'
                 sx={{
                   bgcolor: brand.main,
                   whiteSpace: 'nowrap',
@@ -1566,6 +1569,12 @@ const MaintenanceDashboard: React.FC = () => {
           uploadFilesMutation.isLoading ||
           updateTechnicianMutation.isLoading
         }
+      />
+
+      <NewMaintenanceRequestDialog
+        open={newRequestOpen}
+        onClose={() => setNewRequestOpen(false)}
+        onCreated={(ticketId) => navigate(`/maintenance/tickets/${ticketId}`)}
       />
 
       {/* Keyboard Shortcuts Help Modal */}
