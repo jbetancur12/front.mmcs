@@ -16,7 +16,6 @@ import MaintenanceTicketScheduleCard from './ticket-details/MaintenanceTicketSch
 import MaintenanceTicketCostsSection from './ticket-details/MaintenanceTicketCostsSection'
 import MaintenanceTicketSignaturesCard from './ticket-details/MaintenanceTicketSignaturesCard'
 import MaintenanceTicketSatisfactionCard from './ticket-details/MaintenanceTicketSatisfactionCard'
-import MaintenanceTicketQuickActions from './ticket-details/MaintenanceTicketQuickActions'
 import MaintenanceTicketNextStep from './ticket-details/MaintenanceTicketNextStep'
 import MaintenanceTicketEditBar from './ticket-details/MaintenanceTicketEditBar'
 import MaintenanceTicketDialogs from './ticket-details/MaintenanceTicketDialogs'
@@ -40,16 +39,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Error state
   if (ticketError || !ticket) {
     return (
-      <Container
-        maxWidth={false}
-        sx={{
-          pt: { xs: 2, sm: 3 },
-          pb: { xs: 14, sm: 12 },
-          px: { xs: 1, sm: 2, md: 3 },
-          backgroundColor: neutral.surfaceAlt,
-          minHeight: '100vh'
-        }}
-      >
+      <Container maxWidth='xl' sx={{ pt: 3, pb: { xs: 14, sm: 12 } }}>
         <Alert
           severity='error'
           sx={{
@@ -85,15 +75,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   return (
     <MaintenanceErrorBoundary>
-      <Container
-        maxWidth={false}
-        sx={{
-          py: { xs: 2, sm: 3 },
-          px: { xs: 1, sm: 2, md: 3 },
-          backgroundColor: neutral.surfaceAlt,
-          minHeight: '100vh'
-        }}
-      >
+      <Container maxWidth='xl' sx={{ pt: 3, pb: { xs: 14, sm: 12 } }}>
         {/* Header with breadcrumbs */}
         <MaintenanceTicketHeader ticket={ticket} details={details} />
 
@@ -127,7 +109,6 @@ const MaintenanceTicketDetails: React.FC = () => {
               details={details}
             />
             <MaintenanceTicketSatisfactionCard ticket={ticket} />
-            <MaintenanceTicketQuickActions ticket={ticket} details={details} />
           </Grid>
         </Grid>
 

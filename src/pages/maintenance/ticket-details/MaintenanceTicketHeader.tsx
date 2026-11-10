@@ -4,8 +4,6 @@ import {
   IconButton,
   Tooltip,
   Button,
-  Breadcrumbs,
-  Link,
   ListItemIcon,
   ListItemText,
   CircularProgress,
@@ -18,30 +16,31 @@ import {
 } from '@mui/material'
 import {
   ArrowBack,
+  Build,
   Edit,
-  Save,
-  Cancel,
   PictureAsPdf,
   Refresh,
   ExpandMore,
   Print,
   NotificationsActive,
-  Science
+  Science,
+  Share
 } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import {
   MaintenanceTicket,
   MaintenanceStatus
 } from '../../../types/maintenance'
 import { formatDate } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketHeaderProps {
   ticket: MaintenanceTicket
   details: MaintenanceTicketDetailsState
 }
 
-/** Encabezado: migas, título, indicador de tiempo real, menú de PDFs y botones de edición. */
+/** Encabezado: volver, título del ticket, tiempo real, documentos PDF y editar. */
 const MaintenanceTicketHeader = ({
   ticket,
   details
@@ -50,498 +49,226 @@ const MaintenanceTicketHeader = ({
     isMobile,
     canEditTicket,
     isCustomerApprovalLocked,
-    updateTicketMutation,
     generateServiceOrderMutation,
     generateStatusReportMutation,
     generateServiceCertificateMutation,
     generateServiceInvoiceMutation,
-    handleSaveEdit,
     handleGenerateServiceOrder,
     handleGenerateTechnicalReport,
     handlePdfMenuOpen,
     handlePdfMenuClose,
     handleRefresh,
     handleBack,
+    showToast,
     pdfMenuAnchor,
     realTimeUpdatesEnabled,
     setRealTimeUpdatesEnabled,
     lastUpdate,
     handleEdit,
-    handleCancelEdit,
-    editMode,
-    isEditValid
+    editMode
   } = details
 
+  const generatingPdf =
+    generateServiceOrderMutation.isLoading ||
+    generateStatusReportMutation.isLoading ||
+    generateServiceCertificateMutation.isLoading ||
+    generateServiceInvoiceMutation.isLoading
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      showToast('Enlace copiado al portapapeles', 'success')
+    } catch {
+      showToast('No se pudo copiar el enlace', 'error')
+    }
+  }
+
+  const menuItemSx = {
+    borderRadius: '8px',
+    mx: 1,
+    mb: 0.5,
+    '&:hover': { backgroundColor: neutral.surfaceAlt }
+  }
+
   return (
-    <Box
-      mb={{ xs: 2, sm: 3 }}
-      sx={{
-        backgroundColor: neutral.surface,
-        borderRadius: '14px',
-        p: { xs: 2, sm: 3 },
-        boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
-        border: `1px solid ${neutral.border}`
-      }}
-    >
-      <Breadcrumbs
-        aria-label='breadcrumb'
+    <>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={handleBack}
+        aria-label='Volver al panel de mantenimiento'
         sx={{
-          mb: 2,
-          display: { xs: 'none', sm: 'flex' },
-          '& .MuiBreadcrumbs-separator': {
-            color: neutral.textFaint
-          }
+          mb: 1,
+          color: 'text.secondary',
+          textTransform: 'none',
+          fontWeight: 600
         }}
       >
-        <Link
-          color='inherit'
-          href='/maintenance'
-          underline='hover'
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            color: neutral.textBody,
-            '&:hover': {
-              color: neutral.text
-            }
-          }}
-          onClick={(e) => {
-            e.preventDefault()
-            handleBack()
-          }}
-        >
-          Panel de Mantenimiento
-        </Link>
-        <Typography
-          sx={{
-            color: neutral.text,
-            fontWeight: 600
-          }}
-        >
-          Ticket #{ticket.ticketCode}
-        </Typography>
-      </Breadcrumbs>
+        Volver al panel
+      </Button>
 
-      <Box
-        display='flex'
-        flexDirection={{ xs: 'column', sm: 'row' }}
-        justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        gap={{ xs: 2, sm: 0 }}
-      >
-        <Box
-          display='flex'
-          alignItems='center'
-          gap={{ xs: 1, sm: 2 }}
-          width={{ xs: '100%', sm: 'auto' }}
-        >
-          <IconButton
-            onClick={handleBack}
-            aria-label='Volver al panel de mantenimiento'
-            sx={{
-              minWidth: 48,
-              minHeight: 48,
-              backgroundColor: neutral.surface,
-              color: neutral.textBody,
-              borderRadius: '12px',
-              border: `1px solid ${neutral.border}`,
-              '&:hover': {
-                backgroundColor: neutral.surfaceAlt
-              }
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Box flex={1}>
-            <Typography
-              variant='h4'
-              component='h1'
-              sx={{
-                fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' },
-                fontWeight: 700,
-                color: neutral.text,
-                letterSpacing: '-0.02em'
-              }}
+      <LmsPageHeader
+        title={`Ticket ${ticket.ticketCode}`}
+        subtitle={`${ticket.customerName} - ${ticket.equipmentType}`}
+        icon={<Build />}
+        actions={
+          <>
+            <Box
+              display={{ xs: 'none', md: 'flex' }}
+              alignItems='center'
+              gap={1}
             >
-              Ticket #{ticket.ticketCode}
-            </Typography>
-            <Typography
-              variant='subtitle1'
-              color='text.secondary'
-              sx={{
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-                fontWeight: 500
-              }}
-            >
-              {ticket.customerName} - {ticket.equipmentType}
-            </Typography>
-          </Box>
-        </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={realTimeUpdatesEnabled}
+                    onChange={(e) =>
+                      setRealTimeUpdatesEnabled(e.target.checked)
+                    }
+                    size='small'
+                  />
+                }
+                label='Tiempo real'
+                sx={{ m: 0 }}
+              />
+              {lastUpdate && (
+                <Tooltip
+                  title={`Última actualización: ${formatDate(lastUpdate.toISOString())}`}
+                >
+                  <Badge color='primary' variant='dot'>
+                    <NotificationsActive fontSize='small' color='action' />
+                  </Badge>
+                </Tooltip>
+              )}
+            </Box>
 
-        <Box
-          display='flex'
-          gap={{ xs: 0.5, sm: 1 }}
-          alignItems='center'
-          flexWrap='wrap'
-          width={{ xs: '100%', sm: 'auto' }}
-        >
-          {/* Indicador de tiempo real (oculto en móvil) */}
-          <Box
-            display={{ xs: 'none', md: 'flex' }}
-            alignItems='center'
-            gap={1}
-            mr={2}
-          >
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={realTimeUpdatesEnabled}
-                  onChange={(e) => setRealTimeUpdatesEnabled(e.target.checked)}
-                  size='small'
-                />
-              }
-              label='Tiempo Real'
-              sx={{ m: 0 }}
-            />
-            {lastUpdate && (
-              <Tooltip
-                title={`Última actualización: ${formatDate(lastUpdate.toISOString())}`}
+            <Tooltip title='Actualizar datos'>
+              <IconButton
+                onClick={handleRefresh}
+                aria-label='Actualizar datos del ticket'
               >
-                <Badge color='primary' variant='dot'>
-                  <NotificationsActive fontSize='small' color='action' />
-                </Badge>
-              </Tooltip>
-            )}
-          </Box>
+                <Refresh />
+              </IconButton>
+            </Tooltip>
 
-          <Tooltip title='Actualizar datos'>
-            <IconButton
-              onClick={handleRefresh}
-              aria-label='Actualizar datos del ticket'
+            <Tooltip title='Copiar enlace del ticket'>
+              <IconButton
+                onClick={handleShare}
+                aria-label='Copiar enlace del ticket'
+              >
+                <Share />
+              </IconButton>
+            </Tooltip>
+
+            <Button
+              variant='outlined'
+              startIcon={
+                !isMobile &&
+                (generatingPdf ? (
+                  <CircularProgress size={16} />
+                ) : (
+                  <PictureAsPdf />
+                ))
+              }
+              onClick={handlePdfMenuOpen}
+              disabled={generatingPdf}
+              endIcon={<ExpandMore />}
+              aria-label='Menú de generación de documentos PDF'
+              aria-haspopup='menu'
+              aria-expanded={Boolean(pdfMenuAnchor)}
+              aria-controls='pdf-menu'
               sx={{
-                minWidth: 48,
-                minHeight: 48,
-                backgroundColor: neutral.surface,
-                color: neutral.textBody,
-                borderRadius: '12px',
-                border: `1px solid ${neutral.border}`,
-                '&:hover': {
-                  backgroundColor: neutral.surfaceAlt,
-                  color: neutral.text
+                color: brand.hover,
+                borderColor: brand.main,
+                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
+              }}
+            >
+              {isMobile ? <PictureAsPdf /> : 'Documentos'}
+            </Button>
+
+            <Menu
+              id='pdf-menu'
+              anchorEl={pdfMenuAnchor}
+              open={Boolean(pdfMenuAnchor)}
+              onClose={handlePdfMenuClose}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              sx={{
+                '& .MuiPaper-root': {
+                  backgroundColor: neutral.surface,
+                  borderRadius: '12px',
+                  boxShadow: `0 8px 24px ${withAlpha(neutral.text, 0.12)}`,
+                  border: `1px solid ${neutral.border}`,
+                  mt: 1
                 }
               }}
             >
-              <Refresh />
-            </IconButton>
-          </Tooltip>
-
-          {/* Menú de documentos PDF */}
-          <Button
-            variant='outlined'
-            startIcon={
-              !isMobile &&
-              (generateServiceOrderMutation.isLoading ||
-              generateStatusReportMutation.isLoading ||
-              generateServiceCertificateMutation.isLoading ||
-              generateServiceInvoiceMutation.isLoading ? (
-                <CircularProgress size={16} />
-              ) : (
-                <PictureAsPdf />
-              ))
-            }
-            onClick={handlePdfMenuOpen}
-            disabled={
-              generateServiceOrderMutation.isLoading ||
-              generateStatusReportMutation.isLoading ||
-              generateServiceCertificateMutation.isLoading ||
-              generateServiceInvoiceMutation.isLoading
-            }
-            size={isMobile ? 'small' : 'medium'}
-            endIcon={<ExpandMore />}
-            aria-label='Menú de generación de documentos PDF'
-            aria-haspopup='menu'
-            aria-expanded={Boolean(pdfMenuAnchor)}
-            aria-controls='pdf-menu'
-            sx={{
-              minHeight: 48,
-              fontSize: { xs: '0.813rem', sm: '0.875rem' },
-              borderColor: neutral.borderStrong,
-              color: neutral.textBody,
-              borderRadius: '12px',
-              '&:hover': {
-                borderColor: neutral.textFaint,
-                backgroundColor: neutral.surfaceAlt
-              }
-            }}
-          >
-            {isMobile ? <PictureAsPdf /> : 'Documentos'}
-          </Button>
-
-          <Menu
-            id='pdf-menu'
-            anchorEl={pdfMenuAnchor}
-            open={Boolean(pdfMenuAnchor)}
-            onClose={handlePdfMenuClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right'
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right'
-            }}
-            aria-labelledby='pdf-menu-button'
-            sx={{
-              '& .MuiPaper-root': {
-                backgroundColor: neutral.surface,
-                borderRadius: '12px',
-                boxShadow: `0 8px 24px ${withAlpha(neutral.text, 0.12)}`,
-                border: `1px solid ${neutral.border}`,
-                mt: 1
-              }
-            }}
-          >
-            <MenuList dense role='menu'>
-              <ListItemButton
-                onClick={handleGenerateServiceOrder}
-                role='menuitem'
-                aria-label='Generar orden de servicio'
-                sx={{
-                  borderRadius: '8px',
-                  mx: 1,
-                  mb: 0.5,
-                  '&:hover': {
-                    backgroundColor: neutral.surfaceAlt
-                  }
-                }}
-              >
-                <ListItemIcon>
-                  <Print
-                    fontSize='small'
-                    aria-hidden='true'
-                    sx={{ color: intent.successInk }}
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary='Orden de Servicio'
-                  secondary='Documento de trabajo'
-                />
-              </ListItemButton>
-              {ticket.status === MaintenanceStatus.COMPLETED && (
+              <MenuList dense role='menu'>
                 <ListItemButton
-                  onClick={handleGenerateTechnicalReport}
+                  onClick={handleGenerateServiceOrder}
                   role='menuitem'
-                  aria-label='Generar reporte técnico'
-                  sx={{
-                    borderRadius: '8px',
-                    mx: 1,
-                    mb: 0.5,
-                    '&:hover': {
-                      backgroundColor: neutral.surfaceAlt
-                    }
-                  }}
+                  aria-label='Generar orden de servicio'
+                  sx={menuItemSx}
                 >
                   <ListItemIcon>
-                    <Science
+                    <Print
                       fontSize='small'
                       aria-hidden='true'
-                      sx={{ color: intent.action }}
+                      sx={{ color: intent.successInk }}
                     />
                   </ListItemIcon>
                   <ListItemText
-                    primary='Reporte Técnico'
-                    secondary='Documento técnico de cierre'
+                    primary='Orden de Servicio'
+                    secondary='Documento de trabajo'
                   />
                 </ListItemButton>
-              )}
-              {/* 
-              <ListItemButton
-                onClick={handleGenerateServiceCertificate}
-                disabled={ticket.status !== MaintenanceStatus.COMPLETED}
-                role='menuitem'
-                aria-label='Generar certificado de servicio'
-                aria-disabled={ticket.status !== MaintenanceStatus.COMPLETED}
-                sx={{
-                  borderRadius: '8px',
-                  mx: 1,
-                  mb: 0.5,
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    background: ticket.status === MaintenanceStatus.COMPLETED
-                      ? withAlpha(intent.success, 0.1)
-                      : withAlpha(neutral.black, 0.04),
-                    transform: ticket.status === MaintenanceStatus.COMPLETED
-                      ? 'translateX(4px)'
-                      : 'none'
-                  },
-                  '&.Mui-disabled': {
-                    opacity: 0.5
-                  }
-                }}
-              >
-                <ListItemIcon>
-                  <AssignmentTurnedIn
-                    fontSize='small'
-                    aria-hidden='true'
-                    sx={{
-                      color: ticket.status === MaintenanceStatus.COMPLETED
-                        ? intent.successInk
-                        : 'text.disabled'
-                    }}
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary='Certificado de Servicio'
-                  secondary={
-                    ticket?.status !== MaintenanceStatus.COMPLETED
-                      ? 'Solo para tickets completados'
-                      : 'Certificado oficial'
-                  }
-                />
-              </ListItemButton>
+                {ticket.status === MaintenanceStatus.COMPLETED && (
+                  <ListItemButton
+                    onClick={handleGenerateTechnicalReport}
+                    role='menuitem'
+                    aria-label='Generar reporte técnico'
+                    sx={menuItemSx}
+                  >
+                    <ListItemIcon>
+                      <Science
+                        fontSize='small'
+                        aria-hidden='true'
+                        sx={{ color: intent.action }}
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary='Reporte Técnico'
+                      secondary='Documento técnico de cierre'
+                    />
+                  </ListItemButton>
+                )}
+              </MenuList>
+            </Menu>
 
-              <ListItemButton
-                onClick={handleGenerateInvoice}
-                disabled={!ticket.actualCost && !ticket.estimatedCost}
-                role='menuitem'
-                aria-label='Generar factura'
-                aria-disabled={!ticket.actualCost && !ticket.estimatedCost}
-                sx={{
-                  borderRadius: '8px',
-                  mx: 1,
-                  mb: 0.5,
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    background: (ticket.actualCost || ticket.estimatedCost)
-                      ? withAlpha(intent.success, 0.1)
-                      : withAlpha(neutral.black, 0.04),
-                    transform: (ticket.actualCost || ticket.estimatedCost)
-                      ? 'translateX(4px)'
-                      : 'none'
-                  },
-                  '&.Mui-disabled': {
-                    opacity: 0.5
-                  }
-                }}
-              >
-                <ListItemIcon>
-                  <Receipt
-                    fontSize='small'
-                    aria-hidden='true'
-                    sx={{
-                      color: (ticket.actualCost || ticket.estimatedCost)
-                        ? intent.successInk
-                        : 'text.disabled'
-                    }}
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary='Factura'
-                  secondary={
-                    !ticket?.actualCost && !ticket?.estimatedCost
-                      ? 'Requiere costo especificado'
-                      : 'Documento de facturación'
-                  }
-                />
-              </ListItemButton> */}
-            </MenuList>
-          </Menu>
-
-          {editMode ? (
-            <>
-              <Button
-                variant='outlined'
-                startIcon={!isMobile && <Cancel />}
-                onClick={handleCancelEdit}
-                aria-label='Cancelar edición'
-                disabled={updateTicketMutation.isLoading}
-                size={isMobile ? 'small' : 'medium'}
-                sx={{
-                  minHeight: 48,
-                  fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                  borderColor: intent.danger,
-                  color: intent.danger,
-                  borderRadius: '12px',
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    borderColor: intent.danger,
-                    background: withAlpha(intent.danger, 0.1),
-                    transform: 'translateY(-1px)'
-                  }
-                }}
-              >
-                {isMobile ? <Cancel /> : 'Cancelar'}
-              </Button>
+            {!editMode && (
               <Button
                 variant='contained'
-                startIcon={
-                  !isMobile &&
-                  (updateTicketMutation.isLoading ? (
-                    <CircularProgress size={16} />
-                  ) : (
-                    <Save />
-                  ))
-                }
-                onClick={handleSaveEdit}
-                aria-label='Guardar cambios'
-                disabled={updateTicketMutation.isLoading || !isEditValid}
-                size={isMobile ? 'small' : 'medium'}
+                startIcon={!isMobile && <Edit />}
+                onClick={handleEdit}
+                disabled={!canEditTicket || isCustomerApprovalLocked}
+                aria-label='Editar ticket'
                 sx={{
-                  minHeight: 48,
-                  fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                  background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
-                  borderRadius: '12px',
-                  boxShadow: `0 4px 12px ${withAlpha(intent.success, 0.3)}`,
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.success} 100%)`,
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 6px 20px ${withAlpha(intent.success, 0.4)}`
-                  },
-                  '&:disabled': {
-                    background: withAlpha(neutral.black, 0.12),
-                    color: withAlpha(neutral.black, 0.26)
-                  }
+                  bgcolor: brand.main,
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: brand.hover }
                 }}
               >
-                {isMobile ? (
-                  <Save />
-                ) : updateTicketMutation.isLoading ? (
-                  'Guardando...'
-                ) : (
-                  'Guardar'
-                )}
+                {isMobile ? <Edit /> : 'Editar'}
               </Button>
-            </>
-          ) : (
-            <Button
-              variant='contained'
-              startIcon={!isMobile && <Edit />}
-              onClick={handleEdit}
-              aria-label='Editar ticket'
-              disabled={!canEditTicket || isCustomerApprovalLocked}
-              size={isMobile ? 'small' : 'medium'}
-              sx={{
-                minHeight: 48,
-                fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
-                borderRadius: '12px',
-                boxShadow: `0 4px 12px ${withAlpha(intent.success, 0.3)}`,
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.success} 100%)`,
-                  transform: 'translateY(-2px)',
-                  boxShadow: `0 6px 20px ${withAlpha(intent.success, 0.4)}`
-                }
-              }}
-            >
-              {isMobile ? <Edit /> : 'Editar'}
-            </Button>
-          )}
-        </Box>
-      </Box>
-    </Box>
+            )}
+            {editMode && (
+              <Typography variant='body2' color='text.secondary'>
+                Editando: guarda o cancela desde la barra de abajo.
+              </Typography>
+            )}
+          </>
+        }
+      />
+    </>
   )
 }
 
