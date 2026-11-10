@@ -63,6 +63,7 @@ import {
   MaintenanceUpdateRequest,
   MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
+import MaintenanceTicketsTable from '../../Components/Maintenance/MaintenanceTicketsTable'
 import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicketCard'
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
 import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStatusBadge'
@@ -155,6 +156,14 @@ const MaintenanceDashboard: React.FC = () => {
   const canListTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
   const canCreateTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_CREATE)
   const canDeleteTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_DELETE)
+  // Solo se puede eliminar lo que aún no empezó o se canceló
+  const canDeleteTicket = (ticket: MaintenanceTicket) =>
+    canDeleteTickets &&
+    [
+      MaintenanceStatus.PENDING,
+      MaintenanceStatus.ASSIGNED,
+      MaintenanceStatus.CANCELLED
+    ].includes(ticket.status as MaintenanceStatus)
 
   // Correo del técnico en sesión (solo aplica si el usuario es técnico)
   const currentTechnicianEmail = useMemo(() => {
@@ -227,25 +236,6 @@ const MaintenanceDashboard: React.FC = () => {
   const uploadFilesMutation = useUploadMaintenanceFiles()
   const upsertTechnicalReportMutation = useUpsertMaintenanceTechnicalReport()
   const generateTechnicalReportMutation = useGenerateTechnicalReport()
-
-  const completionRate = useMemo(() => {
-    const total = stats?.metrics?.totalTickets || 0
-    const completed = stats?.metrics?.completedTickets || 0
-    if (!total) return 0
-    return Math.round((completed / total) * 100)
-  }, [stats?.metrics?.completedTickets, stats?.metrics?.totalTickets])
-
-  const urgentTickets = useMemo(() => {
-    return (
-      stats?.priorityStats?.find(
-        ({ priority }) => priority === MaintenancePriority.URGENT
-      )?.count || 0
-    )
-  }, [stats?.priorityStats])
-
-  const activeTickets = useMemo(() => {
-    return stats?.metrics?.pendingTickets || 0
-  }, [stats?.metrics?.pendingTickets])
 
   const avgResolutionTimeDisplay = useMemo(() => {
     const value = stats?.metrics?.avgResolutionTimeHours || 0
@@ -567,6 +557,24 @@ const MaintenanceDashboard: React.FC = () => {
     }
   }
 
+  // Los indicadores filtran la lista al hacer clic
+  const applyStatFilter = (status: MaintenanceStatus[]) => {
+    setFilters({ status })
+    setPage(1)
+  }
+  const activeStat = useMemo(() => {
+    const status = filters.status
+    if (!status || filters.search || filters.hasPending) return null
+    if (status.length === Object.values(MaintenanceStatus).length) return 'all'
+    if (status.length === 1 && status[0] === MaintenanceStatus.PENDING) {
+      return 'pending'
+    }
+    if (status.length === 1 && status[0] === MaintenanceStatus.COMPLETED) {
+      return 'completed'
+    }
+    return null
+  }, [filters])
+
   const handleRefresh = () => {
     refetchStats()
     refetchTickets()
@@ -664,6 +672,10 @@ const MaintenanceDashboard: React.FC = () => {
                 value={stats?.metrics?.totalTickets || 0}
                 icon={<Assignment />}
                 tone='teal'
+                active={activeStat === 'all'}
+                onClick={() =>
+                  applyStatFilter(Object.values(MaintenanceStatus))
+                }
               />
             </Grid>
             <Grid item xs={6} md={3}>
@@ -672,6 +684,8 @@ const MaintenanceDashboard: React.FC = () => {
                 value={stats?.metrics?.pendingTickets || 0}
                 icon={<Build />}
                 tone='orange'
+                active={activeStat === 'pending'}
+                onClick={() => applyStatFilter([MaintenanceStatus.PENDING])}
               />
             </Grid>
             <Grid item xs={6} md={3}>
@@ -680,6 +694,8 @@ const MaintenanceDashboard: React.FC = () => {
                 value={stats?.metrics?.completedTickets || 0}
                 icon={<CheckCircle />}
                 tone='green'
+                active={activeStat === 'completed'}
+                onClick={() => applyStatFilter([MaintenanceStatus.COMPLETED])}
               />
             </Grid>
             <Grid item xs={6} md={3}>
@@ -693,173 +709,6 @@ const MaintenanceDashboard: React.FC = () => {
             </Grid>
           </>
         )}
-      </Grid>
-
-      {/* Additional Stats */}
-      <Grid
-        container
-        spacing={{ xs: 2, sm: 2, md: 3 }}
-        mb={{ xs: 2, sm: 3, md: 3 }}
-      >
-        <Grid item xs={12} md={8}>
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3 },
-              ...surfaceSx
-            }}
-          >
-            <Box mb={3}>
-              <Typography
-                variant='h6'
-                gutterBottom
-                sx={{
-                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                  fontWeight: 600,
-                  color: neutral.text,
-                  mb: 0.5
-                }}
-              >
-                Tickets por Prioridad
-              </Typography>
-              <Typography variant='body2' sx={{ color: neutral.textMuted }}>
-                Vista rápida para detectar carga operativa y urgencias sin
-                saturar el tablero.
-              </Typography>
-            </Box>
-            <Grid container spacing={{ xs: 1, sm: 2 }}>
-              {stats?.priorityStats &&
-                stats.priorityStats.map(({ priority, count }) => (
-                  <Grid item xs={6} sm={4} key={priority}>
-                    <Box
-                      textAlign='center'
-                      sx={{
-                        p: { xs: 1.75, sm: 2 },
-                        borderRadius: '12px',
-                        backgroundColor: neutral.surfaceAlt,
-                        border: `1px solid ${neutral.border}`
-                      }}
-                    >
-                      <Typography
-                        variant='h5'
-                        sx={{
-                          fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                          fontWeight: 700,
-                          color: neutral.text,
-                          mb: 1
-                        }}
-                      >
-                        {count}
-                      </Typography>
-                      <MaintenancePriorityBadge
-                        priority={priority as MaintenancePriority}
-                        size='small'
-                      />
-                    </Box>
-                  </Grid>
-                ))}
-            </Grid>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3 },
-              height: '100%',
-              ...surfaceSx
-            }}
-          >
-            <Box mb={2.5}>
-              <Typography
-                variant='h6'
-                gutterBottom
-                sx={{
-                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                  fontWeight: 600,
-                  color: neutral.text,
-                  mb: 0.5
-                }}
-              >
-                Panorama Rápido
-              </Typography>
-              <Typography variant='body2' sx={{ color: neutral.textMuted }}>
-                Resumen operativo para leer el tablero de un vistazo.
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'grid', gap: 1.5 }}>
-              {[
-                {
-                  label: 'Cierre efectivo',
-                  value: `${completionRate}%`,
-                  helper: 'Tickets completados sobre el total',
-                  color: intent.successInk,
-                  background: intent.successSoft
-                },
-                {
-                  label: 'Carga activa',
-                  value: `${activeTickets}`,
-                  helper: 'Tickets que siguen en operación',
-                  color: intent.warningInk,
-                  background: intent.warningSoft
-                },
-                {
-                  label: 'Urgencias abiertas',
-                  value: `${urgentTickets}`,
-                  helper: 'Casos que necesitan más atención',
-                  color: intent.danger,
-                  background: intent.dangerSoft
-                }
-              ].map((item) => (
-                <Box
-                  key={item.label}
-                  sx={{
-                    borderRadius: '12px',
-                    border: `1px solid ${neutral.border}`,
-                    p: 1.75,
-                    backgroundColor: neutral.surface
-                  }}
-                >
-                  <Box
-                    display='flex'
-                    alignItems='center'
-                    justifyContent='space-between'
-                    gap={2}
-                  >
-                    <Box>
-                      <Typography
-                        variant='body2'
-                        sx={{ fontWeight: 600, color: neutral.text, mb: 0.25 }}
-                      >
-                        {item.label}
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        sx={{ color: neutral.textMuted }}
-                      >
-                        {item.helper}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        minWidth: 68,
-                        px: 1.25,
-                        py: 0.75,
-                        borderRadius: '999px',
-                        textAlign: 'center',
-                        fontWeight: 700,
-                        color: item.color,
-                        backgroundColor: item.background
-                      }}
-                    >
-                      {item.value}
-                    </Box>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-        </Grid>
       </Grid>
 
       {/* Filters */}
@@ -927,77 +776,76 @@ const MaintenanceDashboard: React.FC = () => {
               variant='body2'
               sx={{ mt: 0.5, color: neutral.textMuted }}
             >
-              Tarjetas más ligeras para priorizar lectura rápida y acciones
-              frecuentes.
+              Ordenados por prioridad y antigüedad. Doble clic en una fila para
+              abrir el ticket.
             </Typography>
           </Box>
         </Box>
 
-        {ticketsLoading ? (
-          <Grid
-            container
-            spacing={{ xs: 2, sm: 2, md: 3 }}
-            role='status'
-            aria-live='polite'
-          >
-            {[...Array(6)].map((_, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
-                <TicketCardSkeleton />
-              </Grid>
-            ))}
-          </Grid>
-        ) : !sortedTickets.length ? (
-          <Alert severity='info' role='status'>
-            No se encontraron tickets con los filtros aplicados.
-          </Alert>
-        ) : (
-          <>
-            <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
-              {sortedTickets.map((ticket) => (
-                <Grid item xs={12} sm={6} lg={4} key={ticket.id}>
-                  <MaintenanceTicketCard
-                    ticket={ticket}
-                    onView={handleViewTicket}
-                    onEdit={handleEditTicket}
-                    onDelete={
-                      canDeleteTickets &&
-                      [
-                        MaintenanceStatus.PENDING,
-                        MaintenanceStatus.ASSIGNED,
-                        MaintenanceStatus.CANCELLED
-                      ].includes(ticket.status as MaintenanceStatus)
-                        ? handleDeleteClick
-                        : undefined
-                    }
-                    showActions={true}
-                  />
+        {isMobile ? (
+          ticketsLoading ? (
+            <Grid
+              container
+              spacing={{ xs: 2, sm: 2, md: 3 }}
+              role='status'
+              aria-live='polite'
+            >
+              {[...Array(3)].map((_, index) => (
+                <Grid item xs={12} key={index}>
+                  <TicketCardSkeleton />
                 </Grid>
               ))}
             </Grid>
-
-            {/* Pagination */}
-            {ticketsData && ticketsData.pagination.totalPages > 1 && (
-              <Box display='flex' justifyContent='center' mt={{ xs: 2, sm: 3 }}>
-                <Pagination
-                  count={ticketsData.pagination.totalPages}
-                  page={page}
-                  onChange={(_, newPage) => setPage(newPage)}
-                  color='primary'
-                  aria-label='Paginación de tickets'
-                  size={isMobile ? 'small' : 'medium'}
-                  siblingCount={isMobile ? 0 : 1}
-                  boundaryCount={1}
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      minWidth: { xs: 32, sm: 36 },
-                      height: { xs: 32, sm: 36 },
-                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
-                    }
-                  }}
-                />
-              </Box>
-            )}
-          </>
+          ) : !sortedTickets.length ? (
+            <Alert severity='info' role='status'>
+              No se encontraron tickets con los filtros aplicados.
+            </Alert>
+          ) : (
+            <>
+              <Grid container spacing={2}>
+                {sortedTickets.map((ticket) => (
+                  <Grid item xs={12} key={ticket.id}>
+                    <MaintenanceTicketCard
+                      ticket={ticket}
+                      onView={handleViewTicket}
+                      onEdit={handleEditTicket}
+                      onDelete={
+                        canDeleteTicket(ticket) ? handleDeleteClick : undefined
+                      }
+                      showActions={true}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+              {ticketsData && ticketsData.pagination.totalPages > 1 && (
+                <Box display='flex' justifyContent='center' mt={2}>
+                  <Pagination
+                    count={ticketsData.pagination.totalPages}
+                    page={page}
+                    onChange={(_, newPage) => setPage(newPage)}
+                    color='primary'
+                    aria-label='Paginación de tickets'
+                    size='small'
+                    siblingCount={0}
+                    boundaryCount={1}
+                  />
+                </Box>
+              )}
+            </>
+          )
+        ) : (
+          <MaintenanceTicketsTable
+            tickets={sortedTickets}
+            loading={ticketsLoading}
+            page={page}
+            pageSize={limit}
+            totalItems={ticketsData?.pagination.totalItems ?? 0}
+            onPageChange={setPage}
+            onView={handleViewTicket}
+            onEdit={handleEditTicket}
+            canDelete={canDeleteTicket}
+            onDelete={handleDeleteClick}
+          />
         )}
       </Paper>
 
