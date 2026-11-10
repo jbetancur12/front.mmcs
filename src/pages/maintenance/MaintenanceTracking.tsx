@@ -78,7 +78,11 @@ const MaintenanceTracking: React.FC = () => {
     <MaintenanceErrorBoundary>
       <Container maxWidth='lg' sx={{ py: 4 }}>
         {/* Header */}
-        <Paper elevation={3} sx={{ p: 4, mb: 4 }} component='div'>
+        <Paper
+          variant='outlined'
+          sx={{ borderRadius: '12px', p: 4, mb: 4 }}
+          component='div'
+        >
           <Box textAlign='center' mb={4}>
             <Search color='primary' sx={{ fontSize: 48, mb: 2 }} />
             <Typography variant='h4' gutterBottom>
@@ -146,7 +150,10 @@ const MaintenanceTracking: React.FC = () => {
           <Grid container spacing={3}>
             {/* Main Ticket Info */}
             <Grid item xs={12} lg={8}>
-              <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+              <Paper
+                variant='outlined'
+                sx={{ borderRadius: '12px', p: 3, mb: 3 }}
+              >
                 <Box
                   display='flex'
                   justifyContent='space-between'
@@ -332,7 +339,10 @@ const MaintenanceTracking: React.FC = () => {
             {/* Sidebar */}
             <Grid item xs={12} lg={4}>
               {/* Dates */}
-              <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+              <Paper
+                variant='outlined'
+                sx={{ borderRadius: '12px', p: 3, mb: 3 }}
+              >
                 <Typography variant='h6' gutterBottom>
                   Fechas Importantes
                 </Typography>
@@ -383,7 +393,7 @@ const MaintenanceTracking: React.FC = () => {
 
               {/* Customer Satisfaction */}
               {trackingData.ticket.customerSatisfaction && (
-                <Paper elevation={2} sx={{ p: 3 }}>
+                <Paper variant='outlined' sx={{ borderRadius: '12px', p: 3 }}>
                   <Typography variant='h6' gutterBottom>
                     Calificación del Servicio
                   </Typography>
@@ -409,7 +419,15 @@ const MaintenanceTracking: React.FC = () => {
         )}
 
         {/* Help */}
-        <Paper elevation={1} sx={{ p: 3, mt: 4, bgcolor: neutral.surfaceAlt }}>
+        <Paper
+          variant='outlined'
+          sx={{
+            borderRadius: '12px',
+            p: 3,
+            mt: 4,
+            bgcolor: neutral.surfaceAlt
+          }}
+        >
           <Typography variant='h6' gutterBottom>
             ¿Necesita Ayuda?
           </Typography>

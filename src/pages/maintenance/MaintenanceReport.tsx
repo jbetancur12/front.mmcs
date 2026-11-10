@@ -504,7 +504,7 @@ const MaintenanceReport: React.FC = () => {
   if (submissionResult) {
     return (
       <Container maxWidth='md' sx={{ py: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper variant='outlined' sx={{ borderRadius: '12px', p: 4 }}>
           <Box textAlign='center'>
             {submissionResult.success ? (
               <>
@@ -565,7 +565,7 @@ const MaintenanceReport: React.FC = () => {
   return (
     <MaintenanceErrorBoundary>
       <Container maxWidth='md' sx={{ py: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper variant='outlined' sx={{ borderRadius: '12px', p: 4 }}>
           {/* Header */}
           <Box textAlign='center' mb={4}>
             <Build color='primary' sx={{ fontSize: 48, mb: 2 }} />
