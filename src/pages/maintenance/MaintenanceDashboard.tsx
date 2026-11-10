@@ -622,7 +622,7 @@ const MaintenanceDashboard: React.FC = () => {
             <Button
               variant='outlined'
               startIcon={!isMobile && <Assessment />}
-              href='/maintenance/analytics'
+              onClick={() => navigate('/maintenance/analytics')}
               sx={{
                 color: brand.hover,
                 borderColor: brand.main,

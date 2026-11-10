@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Dialog,
+  LinearProgress,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -21,7 +22,7 @@ import {
   getFilePreviewType
 } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, withAlpha } from 'src/theme/designTokens'
+import { neutral } from 'src/theme/designTokens'
 
 interface MaintenanceTicketDialogsProps {
   ticket: MaintenanceTicket
@@ -76,26 +77,23 @@ const MaintenanceTicketDialogs = ({
 
   return (
     <>
-      {/* Loading progress bar */}
+      {/* Barra fina arriba: avisa que se guarda sin tapar la pantalla */}
       {(ticketLoading ||
         timelineLoading ||
         updateTicketMutation.isLoading ||
         uploadFilesMutation.isLoading ||
         deleteFileMutation.isLoading ||
         addCommentMutation.isLoading) && (
-        <Box
+        <LinearProgress
+          aria-label='Guardando cambios'
           sx={{
             position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: withAlpha(neutral.surface, 0.6)
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999
           }}
-        >
-          <SignalLoader message='Guardando...' />
-        </Box>
+        />
       )}
 
       <Dialog
