@@ -1,6 +1,7 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useMemo, useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -40,10 +41,15 @@ import {
   useMaintenanceTechnicians
 } from '../../hooks/useMaintenance'
 import { MaintenanceAnalyticsFilters } from '../../types/maintenance'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
+import { formatDateOnly } from 'src/utils/dateOnly'
+import { getApiErrorMessage } from 'src/utils/apiError'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+
 const getDefaultDateRange = () => {
   const today = new Date()
   const start = new Date()
@@ -85,6 +91,16 @@ const formatHours = (value: number) => {
   return value >= 24 ? `${(value / 24).toFixed(1)} d` : `${value.toFixed(1)} h`
 }
 
+const TECHNICIAN_STATUS_LABELS: Record<string, string> = {
+  active: 'Activo',
+  inactive: 'Inactivo'
+}
+
+const getTechnicianStatusLabel = (status?: string) =>
+  (status && TECHNICIAN_STATUS_LABELS[status]) || status || ''
+
+const formatTrendDate = (value: string) => formatDateOnly(value) || value
+
 const surfaceSx = {
   backgroundColor: neutral.surface,
   borderRadius: '16px',
@@ -98,12 +114,17 @@ const MaintenanceAnalytics: React.FC = () => {
     getDefaultDateRange()
   )
 
+  const canListTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
+
   const {
     data: analytics,
+    error: analyticsError,
     refetch,
     isFetching
   } = useMaintenanceAnalytics(filters)
-  const { data: technicians = [] } = useMaintenanceTechnicians(true)
+  // Sin permiso para listar técnicos no se pide la lista (respondería 403) y el filtro queda en "Todos"
+  const { data: technicians = [] } =
+    useMaintenanceTechnicians(canListTechnicians)
 
   const topTechnicians = useMemo(() => {
     return [...(analytics?.technicianPerformance || [])]
@@ -122,7 +143,7 @@ const MaintenanceAnalytics: React.FC = () => {
       {
         'Fecha inicial': filters.startDate || 'Sin filtro',
         'Fecha final': filters.endDate || 'Sin filtro',
-        Tecnico:
+        Técnico:
           technicians.find((tech) => String(tech.id) === filters.technicianId)
             ?.name || 'Todos',
         'Total tickets': analytics.overview.totalTickets,
@@ -130,10 +151,10 @@ const MaintenanceAnalytics: React.FC = () => {
         'Tickets completados': analytics.overview.completedTickets,
         'Tickets cancelados': analytics.overview.cancelledTickets,
         'Urgentes abiertos': analytics.overview.urgentOpenTickets,
-        'Tiempo medio resolucion (h)':
+        'Tiempo medio resolución (h)':
           analytics.overview.avgResolutionTimeHours,
         'Costo promedio': analytics.overview.avgActualCost,
-        'Satisfaccion promedio': analytics.overview.avgCustomerSatisfaction,
+        'Satisfacción promedio': analytics.overview.avgCustomerSatisfaction,
         'Completados facturados': analytics.overview.invoicedCompletedTickets,
         'Completados pendientes de facturar':
           analytics.overview.notInvoicedCompletedTickets
@@ -143,9 +164,9 @@ const MaintenanceAnalytics: React.FC = () => {
 
     const techniciansSheet = XLSX.utils.json_to_sheet(
       analytics.technicianPerformance.map((tech) => ({
-        Tecnico: tech.name,
+        Técnico: tech.name,
         Email: tech.email,
-        Estado: tech.status,
+        Estado: getTechnicianStatusLabel(tech.status),
         Disponibilidad: tech.isAvailable ? 'Disponible' : 'No disponible',
         Pendientes: tech.pendingTickets,
         'Tickets asignados': tech.assignedTickets,
@@ -154,18 +175,18 @@ const MaintenanceAnalytics: React.FC = () => {
         'Tickets cancelados': tech.cancelledTickets,
         'Tickets gestionados en rango': tech.totalAssignedTickets,
         'Tasa cierre (%)': tech.completionRate,
-        'Tiempo medio resolucion (h)': tech.avgResolutionTimeHours,
-        'Satisfaccion promedio': tech.avgCustomerSatisfaction,
+        'Tiempo medio resolución (h)': tech.avgResolutionTimeHours,
+        'Satisfacción promedio': tech.avgCustomerSatisfaction,
         'Costo total registrado': tech.totalActualCost,
         'Carga actual': `${tech.workload}/${tech.maxWorkload}`,
-        'Historico completados': tech.historicalCompletedTickets
+        'Histórico completados': tech.historicalCompletedTickets
       }))
     )
-    XLSX.utils.book_append_sheet(workbook, techniciansSheet, 'Tecnicos')
+    XLSX.utils.book_append_sheet(workbook, techniciansSheet, 'Técnicos')
 
     const trendSheet = XLSX.utils.json_to_sheet(
       analytics.dailyTrend.map((point) => ({
-        Fecha: point.date,
+        Fecha: formatTrendDate(point.date),
         Creados: point.created,
         Completados: point.completed
       }))
@@ -284,13 +305,32 @@ const MaintenanceAnalytics: React.FC = () => {
               sx={{ height: '100%' }}
               onClick={() => setFilters(getDefaultDateRange())}
             >
-              Ultimos 30 dias
+              Últimos 30 días
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {!analytics ? (
+      {analyticsError && !analytics ? (
+        <Alert
+          severity='error'
+          action={
+            <Button
+              color='inherit'
+              size='small'
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              {isFetching ? 'Reintentando...' : 'Reintentar'}
+            </Button>
+          }
+        >
+          {getApiErrorMessage(
+            analyticsError,
+            'No se pudieron cargar las analíticas de mantenimiento.'
+          )}
+        </Alert>
+      ) : !analytics ? (
         <SignalLoader message='Cargando analíticas de mantenimiento...' />
       ) : (
         <>
@@ -351,8 +391,9 @@ const MaintenanceAnalytics: React.FC = () => {
                     Desempeño por técnico
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
-                    Asignados incluye tickets legacy en pendiente que ya tenían
-                    técnico; abiertos queda para estados operativos en curso.
+                    Asignados incluye tickets antiguos en pendiente que ya
+                    tenían técnico; abiertos queda para estados operativos en
+                    curso.
                   </Typography>
                 </Box>
                 <Divider />
@@ -401,7 +442,7 @@ const MaintenanceAnalytics: React.FC = () => {
                                   variant='caption'
                                   color='text.secondary'
                                 >
-                                  {technician.status}
+                                  {getTechnicianStatusLabel(technician.status)}
                                 </Typography>
                               </Stack>
                             </Stack>
@@ -552,7 +593,9 @@ const MaintenanceAnalytics: React.FC = () => {
                       justifyContent='space-between'
                       alignItems='center'
                     >
-                      <Typography variant='body2'>{point.date}</Typography>
+                      <Typography variant='body2'>
+                        {formatTrendDate(point.date)}
+                      </Typography>
                       <Stack direction='row' spacing={1.5}>
                         <Chip
                           size='small'
