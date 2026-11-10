@@ -163,6 +163,9 @@ const maintenanceAPI = {
         : null
     }
 
+    // Una fecha vacía significa "sin fecha": no se envía
+    if (requestData.scheduledDate === '') delete requestData.scheduledDate
+
     // Remove the frontend field name to avoid conflicts
     delete requestData.assignedTechnician
 
