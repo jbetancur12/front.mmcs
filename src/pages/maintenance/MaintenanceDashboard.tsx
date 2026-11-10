@@ -1,6 +1,8 @@
 import { getApiErrorReason } from 'src/utils/apiError'
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+import FormDialog from 'src/Components/Common/FormDialog'
 import {
   Container,
   Grid,
@@ -10,10 +12,6 @@ import {
   IconButton,
   Tooltip,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   FormControl,
   InputLabel,
@@ -37,7 +35,6 @@ import {
   Refresh,
   Add,
   FilterList,
-  Cancel,
   Help,
   Science,
   Assessment
@@ -850,82 +847,48 @@ const MaintenanceDashboard: React.FC = () => {
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmDialog
         open={deleteDialogOpen}
+        title='¿Eliminar ticket de mantenimiento?'
+        message={
+          <>
+            Vas a eliminar el ticket{' '}
+            <strong>{ticketToDelete?.ticketCode}</strong>. Esta acción no se
+            puede deshacer: se eliminan también sus comentarios y archivos.
+          </>
+        }
+        confirmLabel='Eliminar'
+        tone='danger'
+        loading={deleteTicketMutation.isLoading}
+        onConfirm={confirmDelete}
         onClose={() => setDeleteDialogOpen(false)}
-        aria-labelledby='alert-dialog-title'
-        aria-describedby='alert-dialog-description'
-      >
-        <DialogTitle id='alert-dialog-title'>
-          {'¿Eliminar ticket de mantenimiento?'}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant='body1' gutterBottom>
-            ¿Estás seguro de que deseas eliminar el ticket{' '}
-            <strong>#{ticketToDelete?.ticketCode}</strong>?
-          </Typography>
-          <Alert severity='warning' sx={{ mt: 2 }}>
-            Esta acción no se puede deshacer. Se eliminarán todos los
-            comentarios y archivos asociados.
-          </Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            color='primary'
-            disabled={deleteTicketMutation.isLoading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            color='error'
-            variant='contained'
-            autoFocus
-            disabled={deleteTicketMutation.isLoading}
-          >
-            {deleteTicketMutation.isLoading ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      />
 
       {/* Edit Ticket Dialog */}
-      <Dialog
+      <FormDialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
+        title='Editar ticket'
+        subtitle={selectedTicket?.ticketCode}
+        submitLabel='Guardar'
+        onSubmit={handleSaveEdit}
+        loading={updateTicketMutation.isLoading}
         maxWidth='sm'
-        fullWidth
-        fullScreen={isMobile}
-        aria-labelledby='edit-ticket-dialog-title'
-        aria-describedby='edit-ticket-dialog-description'
-      >
-        <DialogTitle id='edit-ticket-dialog-title'>
-          <Box
-            display='flex'
-            justifyContent='space-between'
-            alignItems='center'
-          >
-            <Typography
-              variant='h6'
-              sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+        extraActions={
+          selectedTicket?.status === MaintenanceStatus.COMPLETED ? (
+            <Button
+              onClick={() => handleOpenTechnicalReport(selectedTicket)}
+              variant='outlined'
+              startIcon={<Science />}
             >
-              Editar Ticket #{selectedTicket?.ticketCode}
-            </Typography>
-            {isMobile && (
-              <IconButton
-                onClick={() => setEditDialogOpen(false)}
-                aria-label='Cerrar'
-                sx={{ minWidth: 44, minHeight: 44 }}
-              >
-                <Cancel />
-              </IconButton>
-            )}
-          </Box>
-        </DialogTitle>
-        <DialogContent
-          id='edit-ticket-dialog-description'
-          sx={{ pt: { xs: 2.5, sm: 3 }, overflowY: 'auto' }}
-        >
+              {technicalReport?.updatedAt
+                ? `Reporte técnico ${technicalReportCompletion}%`
+                : 'Reporte técnico'}
+            </Button>
+          ) : undefined
+        }
+      >
+        <Box sx={{ overflowY: 'auto' }}>
           <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 0.5 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
@@ -1354,29 +1317,8 @@ const MaintenanceDashboard: React.FC = () => {
                 return null
               })()}
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          {selectedTicket?.status === MaintenanceStatus.COMPLETED && (
-            <Button
-              onClick={() => handleOpenTechnicalReport(selectedTicket)}
-              variant='outlined'
-              startIcon={<Science />}
-            >
-              {technicalReport?.updatedAt
-                ? `Reporte técnico ${technicalReportCompletion}%`
-                : 'Reporte técnico'}
-            </Button>
-          )}
-          <Button
-            onClick={handleSaveEdit}
-            variant='contained'
-            disabled={updateTicketMutation.isLoading}
-          >
-            {updateTicketMutation.isLoading ? 'Guardando...' : 'Guardar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </FormDialog>
 
       <MaintenanceTechnicalReportDialog
         open={technicalReportDialogOpen}
