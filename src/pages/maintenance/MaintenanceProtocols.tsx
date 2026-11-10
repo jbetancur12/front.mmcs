@@ -51,6 +51,9 @@ import type {
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { logger } from 'src/utils/logger'
+import { notify } from 'src/utils/notify'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 const surfaceSx = {
   borderRadius: '16px',
@@ -106,6 +109,7 @@ const toFormState = (protocol?: MaintenanceProtocolTemplate | null) => {
 
 const MaintenanceProtocols = () => {
   const navigate = useNavigate()
+  const canManageProtocols = useCan(PERMISSIONS.MAINTENANCE_PROTOCOL_MANAGE)
   const { data: protocols = [], isLoading } = useMaintenanceProtocolTemplates()
   const createProtocolMutation = useCreateMaintenanceProtocolTemplate()
   const updateProtocolMutation = useUpdateMaintenanceProtocolTemplate()
@@ -125,11 +129,32 @@ const MaintenanceProtocols = () => {
     [protocols]
   )
 
+  // Cambios en el formulario respecto a lo que se abrió (protocolo existente o formulario vacío)
+  const hasUnsavedChanges =
+    dialogOpen &&
+    JSON.stringify(formState) !== JSON.stringify(toFormState(currentProtocol))
+
   const resetDialog = () => {
     setCurrentProtocol(null)
     setFormState(defaultFormState)
     setFormError(null)
     setDialogOpen(false)
+  }
+
+  // Cerrar con cambios sin guardar pide confirmación para no perder lo digitado
+  const requestCloseDialog = async () => {
+    if (!hasUnsavedChanges) {
+      resetDialog()
+      return
+    }
+    const { isConfirmed } = await confirmDialog({
+      title: '¿Cerrar sin guardar?',
+      text: 'Hay cambios en el protocolo que aún no se han guardado. Si cierras ahora, se perderán.',
+      confirmLabel: 'Cerrar sin guardar',
+      cancelLabel: 'Seguir editando',
+      tone: 'danger'
+    })
+    if (isConfirmed) resetDialog()
   }
 
   const openCreateDialog = () => {
@@ -225,6 +250,11 @@ const MaintenanceProtocols = () => {
       } else {
         await createProtocolMutation.mutateAsync(payload)
       }
+      notify.success(
+        currentProtocol
+          ? 'Protocolo actualizado exitosamente.'
+          : 'Protocolo creado exitosamente.'
+      )
       resetDialog()
     } catch (error: unknown) {
       setFormError(
@@ -247,8 +277,12 @@ const MaintenanceProtocols = () => {
 
     try {
       await deleteProtocolMutation.mutateAsync(protocol.id)
+      notify.success('Protocolo eliminado exitosamente.')
     } catch (error) {
       logger.error(error)
+      notify.error(
+        getApiErrorReason(error) || 'No se pudo eliminar el protocolo.'
+      )
     }
   }
 
@@ -264,7 +298,7 @@ const MaintenanceProtocols = () => {
           fontWeight: 600
         }}
       >
-        Volver al dashboard
+        Volver al panel
       </Button>
 
       <LmsPageHeader
@@ -272,18 +306,20 @@ const MaintenanceProtocols = () => {
         subtitle='Catálogo editable de protocolos para el reporte técnico.'
         icon={<PlaylistAddCheck />}
         actions={
-          <Button
-            variant='contained'
-            startIcon={<Add />}
-            onClick={openCreateDialog}
-            sx={{
-              bgcolor: brand.main,
-              whiteSpace: 'nowrap',
-              '&:hover': { bgcolor: brand.hover }
-            }}
-          >
-            Nuevo protocolo
-          </Button>
+          canManageProtocols ? (
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={openCreateDialog}
+              sx={{
+                bgcolor: brand.main,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: brand.hover }
+              }}
+            >
+              Nuevo protocolo
+            </Button>
+          ) : undefined
         }
       />
 
@@ -307,8 +343,8 @@ const MaintenanceProtocols = () => {
         <Grid item xs={12} sm={4}>
           <LmsStatCard
             label='Uso esperado'
-            value='Presets'
-            caption='Disponibles como presets del reporte técnico'
+            value='Reporte técnico'
+            caption='Se ofrecen como base al diligenciar el reporte técnico'
             icon={<Assignment />}
             tone='blue'
           />
@@ -399,35 +435,42 @@ const MaintenanceProtocols = () => {
                         />
                       ))
                     ) : (
-                      <Chip size='small' label='Sin keywords' />
+                      <Chip size='small' label='Sin palabras clave' />
                     )}
                   </Stack>
                 </Box>
 
-                <Stack direction='row' spacing={1} sx={{ mt: 2 }}>
-                  <Button
-                    size='small'
-                    startIcon={<EditOutlined />}
-                    onClick={() => openEditDialog(protocol)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    size='small'
-                    color='error'
-                    startIcon={<DeleteOutline />}
-                    onClick={() => handleDelete(protocol)}
-                  >
-                    Eliminar
-                  </Button>
-                </Stack>
+                {canManageProtocols && (
+                  <Stack direction='row' spacing={1} sx={{ mt: 2 }}>
+                    <Button
+                      size='small'
+                      startIcon={<EditOutlined />}
+                      onClick={() => openEditDialog(protocol)}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      size='small'
+                      color='error'
+                      startIcon={<DeleteOutline />}
+                      onClick={() => handleDelete(protocol)}
+                    >
+                      Eliminar
+                    </Button>
+                  </Stack>
+                )}
               </Paper>
             </Grid>
           ))}
         </Grid>
       )}
 
-      <Dialog open={dialogOpen} onClose={resetDialog} fullWidth maxWidth='lg'>
+      <Dialog
+        open={dialogOpen}
+        onClose={requestCloseDialog}
+        fullWidth
+        maxWidth='lg'
+      >
         <DialogTitle>
           {currentProtocol ? 'Editar protocolo' : 'Nuevo protocolo'}
         </DialogTitle>
@@ -519,7 +562,7 @@ const MaintenanceProtocols = () => {
                 <TextField
                   fullWidth
                   label='Aplica a'
-                  helperText='Separa keywords por coma. Ej: monitor, signos vitales, spo2'
+                  helperText='Separa las palabras clave con coma. Ej: monitor, signos vitales, spo2'
                   value={formState.appliesToText}
                   onChange={(e) =>
                     setFormState((prev) => ({
@@ -698,6 +741,7 @@ const MaintenanceProtocols = () => {
                     )}
                     <Grid item xs={12} md={1}>
                       <IconButton
+                        aria-label={`Quitar herramienta ${index + 1}`}
                         onClick={() =>
                           setFormState((prev) => ({
                             ...prev,
@@ -789,6 +833,7 @@ const MaintenanceProtocols = () => {
                     </Grid>
                     <Grid item xs={12} md={1}>
                       <IconButton
+                        aria-label={`Quitar prueba ${index + 1}`}
                         onClick={() =>
                           setFormState((prev) => ({
                             ...prev,
@@ -809,7 +854,7 @@ const MaintenanceProtocols = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={resetDialog}>Cancelar</Button>
+          <Button onClick={requestCloseDialog}>Cancelar</Button>
           <Button
             variant='contained'
             onClick={handleSave}

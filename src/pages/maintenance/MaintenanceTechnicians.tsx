@@ -54,6 +54,8 @@ import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { notify } from 'src/utils/notify'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import { logger } from 'src/utils/logger'
 import { brand } from 'src/theme/designTokens'
 const validationSchema = Yup.object({
@@ -115,6 +117,10 @@ const MaintenanceTechnicians: React.FC = () => {
   const [statusConfirmDialogOpen, setStatusConfirmDialogOpen] = useState(false)
   const [technicianToToggle, setTechnicianToToggle] =
     useState<MaintenanceTechnician | null>(null)
+
+  const canCreateTechnician = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_CREATE)
+  const canUpdateTechnician = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_UPDATE)
+  const canDeleteTechnician = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_DELETE)
 
   // API hooks
   const { data: technicians, isLoading, refetch } = useMaintenanceTechnicians()
@@ -205,8 +211,16 @@ const MaintenanceTechnicians: React.FC = () => {
       setStatusConfirmDialogOpen(false)
       setTechnicianToToggle(null)
       refetch()
+      notify.success(
+        newStatus === 'active'
+          ? 'Técnico reactivado exitosamente.'
+          : 'Técnico desactivado exitosamente.'
+      )
     } catch (error) {
       logger.error('Error toggling technician status:', error)
+      notify.error(
+        getApiErrorReason(error) || 'No se pudo cambiar el estado del técnico.'
+      )
     }
   }
 
@@ -219,10 +233,12 @@ const MaintenanceTechnicians: React.FC = () => {
       setDeleteDialogOpen(false)
       setTechnicianToDelete(null)
       refetch()
+      notify.success('Técnico eliminado exitosamente.')
     } catch (error: unknown) {
       logger.error('Error deleting technician:', error)
       const message = getApiErrorReason(error) || 'Error al eliminar el técnico'
       setDeleteError(message)
+      notify.error(message)
     }
   }
 
@@ -265,7 +281,7 @@ const MaintenanceTechnicians: React.FC = () => {
             <Avatar
               sx={{
                 bgcolor: brand.main,
-                color: '#fff',
+                color: brand.onMain,
                 fontWeight: 600,
                 width: 36,
                 height: 36,
@@ -362,7 +378,7 @@ const MaintenanceTechnicians: React.FC = () => {
       },
       {
         accessorKey: 'rating',
-        header: 'Rating',
+        header: 'Calificación',
         size: 190,
         Cell: ({ row }) => (
           <Box display='flex' alignItems='center' gap={0.5}>
@@ -412,18 +428,20 @@ const MaintenanceTechnicians: React.FC = () => {
         subtitle='Administración del equipo de mantenimiento'
         icon={<People />}
         actions={
-          <Button
-            variant='contained'
-            startIcon={<Add />}
-            onClick={() => setDialogOpen(true)}
-            sx={{
-              bgcolor: brand.main,
-              whiteSpace: 'nowrap',
-              '&:hover': { bgcolor: brand.hover }
-            }}
-          >
-            Agregar Técnico
-          </Button>
+          canCreateTechnician ? (
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              onClick={() => setDialogOpen(true)}
+              sx={{
+                bgcolor: brand.main,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: brand.hover }
+              }}
+            >
+              Agregar Técnico
+            </Button>
+          ) : undefined
         }
       />
 
@@ -461,7 +479,7 @@ const MaintenanceTechnicians: React.FC = () => {
         </Grid>
         <Grid item xs={6} md={3}>
           <LmsStatCard
-            label='Rating Promedio'
+            label='Calificación Promedio'
             value={
               technicians && technicians.length > 0
                 ? (
@@ -489,7 +507,7 @@ const MaintenanceTechnicians: React.FC = () => {
             columnPinning: { right: ['mrt-row-actions'] },
             density: 'comfortable'
           }}
-          enableRowActions
+          enableRowActions={canUpdateTechnician || canDeleteTechnician}
           displayColumnDefOptions={{
             'mrt-row-actions': { header: 'Acciones', size: 150 }
           }}
@@ -497,52 +515,63 @@ const MaintenanceTechnicians: React.FC = () => {
             const technician = row.original
             return (
               <Box display='flex' gap={0.5}>
-                <Tooltip title='Editar'>
-                  <IconButton
-                    size='small'
-                    color='primary'
-                    onClick={() => handleEdit(technician)}
+                {canUpdateTechnician && (
+                  <Tooltip title='Editar'>
+                    <IconButton
+                      size='small'
+                      color='primary'
+                      aria-label={`Editar a ${technician.name}`}
+                      onClick={() => handleEdit(technician)}
+                    >
+                      <Edit />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {canUpdateTechnician && (
+                  <Tooltip
+                    title={
+                      technician.status === 'active'
+                        ? 'Desactivar'
+                        : 'Reactivar'
+                    }
                   >
-                    <Edit />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip
-                  title={
-                    technician.status === 'active' ? 'Desactivar' : 'Reactivar'
-                  }
-                >
-                  <IconButton
-                    size='small'
-                    onClick={() => {
-                      setTechnicianToToggle(technician)
-                      setStatusConfirmDialogOpen(true)
-                    }}
-                    sx={{
-                      color:
-                        technician.status === 'active'
-                          ? 'warning.main'
-                          : brand.main
-                    }}
-                  >
-                    {technician.status === 'active' ? (
-                      <PowerSettingsNew />
-                    ) : (
-                      <RestoreFromTrash />
-                    )}
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Eliminar'>
-                  <IconButton
-                    size='small'
-                    color='error'
-                    onClick={() => {
-                      setTechnicianToDelete(technician)
-                      setDeleteDialogOpen(true)
-                    }}
-                  >
-                    <Delete />
-                  </IconButton>
-                </Tooltip>
+                    <IconButton
+                      size='small'
+                      aria-label={`${technician.status === 'active' ? 'Desactivar' : 'Reactivar'} a ${technician.name}`}
+                      onClick={() => {
+                        setTechnicianToToggle(technician)
+                        setStatusConfirmDialogOpen(true)
+                      }}
+                      sx={{
+                        color:
+                          technician.status === 'active'
+                            ? 'warning.main'
+                            : brand.main
+                      }}
+                    >
+                      {technician.status === 'active' ? (
+                        <PowerSettingsNew />
+                      ) : (
+                        <RestoreFromTrash />
+                      )}
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {canDeleteTechnician && (
+                  <Tooltip title='Eliminar'>
+                    <IconButton
+                      size='small'
+                      color='error'
+                      aria-label={`Eliminar a ${technician.name}`}
+                      onClick={() => {
+                        setTechnicianToDelete(technician)
+                        setDeleteDialogOpen(true)
+                      }}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Box>
             )
           }}
