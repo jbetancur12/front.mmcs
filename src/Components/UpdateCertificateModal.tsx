@@ -49,8 +49,10 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
     }
   }, [open])
 
+  // Mientras se teclea una fecha a medias (p. ej. "05/1"), el selector avisa con una fecha inválida:
+  // toISOString lanzaría "Invalid time value". Se espera a que la fecha esté completa.
   const handleChangeCalibrationDate = (date: Date | null) => {
-    if (!date) return
+    if (!date || Number.isNaN(date.getTime())) return
     if (isFutureDay(date)) {
       notify.warning(
         'Fecha no válida',
@@ -174,9 +176,10 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
             <DatePicker
               label='Próxima calibración'
               value={nextDate ? new Date(nextDate) : null}
-              onChange={(date) =>
-                setNextDate(date ? new Date(date as Date).toISOString() : '')
-              }
+              onChange={(date) => {
+                if (date && Number.isNaN(new Date(date).getTime())) return
+                setNextDate(date ? new Date(date).toISOString() : '')
+              }}
               slotProps={{ textField: { required: true } }}
             />
           </LocalizationProvider>
