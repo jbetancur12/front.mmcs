@@ -77,6 +77,13 @@ const MaintenanceTicketEquipmentCard = ({
                   label={ticket.equipmentType}
                   sx={{
                     fontWeight: 'medium',
+                    height: 'auto',
+                    maxWidth: '100%',
+                    '& .MuiChip-label': {
+                      whiteSpace: 'normal',
+                      overflowWrap: 'anywhere',
+                      py: 0.5
+                    },
                     backgroundColor: brand.soft,
                     color: brand.ink,
                     borderRadius: '8px',
