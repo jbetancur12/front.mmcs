@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material'
 import { MaintenanceStatus } from '../../types/maintenance'
 import { MAINTENANCE_STATUS_LABELS } from './maintenanceLabels'
-import { neutral, intent, accent } from 'src/theme/designTokens'
+import { brand, neutral, intent, accent } from 'src/theme/designTokens'
 
 interface MaintenanceStatusBadgeProps {
   status: MaintenanceStatus
@@ -48,9 +48,9 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
       case MaintenanceStatus.IN_PROGRESS:
         return {
           label: MAINTENANCE_STATUS_LABELS[status],
-          backgroundColor: intent.successSoft,
-          textColor: intent.successInk,
-          borderColor: intent.successSoft,
+          backgroundColor: brand.soft,
+          textColor: brand.ink,
+          borderColor: brand.soft,
           icon: <Build />
         }
       case MaintenanceStatus.ON_HOLD:
@@ -80,9 +80,9 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
       case MaintenanceStatus.COMPLETED:
         return {
           label: MAINTENANCE_STATUS_LABELS[status],
-          backgroundColor: intent.successSoft,
-          textColor: intent.successInk,
-          borderColor: intent.successSoft,
+          backgroundColor: brand.soft,
+          textColor: brand.ink,
+          borderColor: brand.soft,
           icon: <CheckCircle />
         }
       case MaintenanceStatus.CANCELLED:

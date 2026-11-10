@@ -7,7 +7,7 @@ import {
   Warning
 } from '@mui/icons-material'
 import { MaintenancePriority } from '../../types/maintenance'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenancePriorityBadgeProps {
   priority: MaintenancePriority
@@ -27,9 +27,9 @@ const MaintenancePriorityBadge: React.FC<MaintenancePriorityBadgeProps> = ({
   const PRIORITY_STYLES = {
     [MaintenancePriority.LOW]: {
       label: 'Baja',
-      backgroundColor: intent.successSoft,
-      textColor: intent.successInk,
-      borderColor: intent.successSoft,
+      backgroundColor: brand.soft,
+      textColor: brand.ink,
+      borderColor: brand.soft,
       icon: <KeyboardArrowDown />
     },
     [MaintenancePriority.MEDIUM]: {
