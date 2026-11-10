@@ -432,6 +432,29 @@ const useMaintenanceTicketDetails = () => {
     }
   }
 
+  /** El cliente no quiso firmar: queda el motivo en el ticket y deja de contar como pendiente. */
+  const handleRefuseCustomerSignature = async (reason: string) => {
+    if (!ticket) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: ticket.id,
+        data: { customerSignatureRefusedReason: reason }
+      })
+      setSignaturesDialogOpen(false)
+      await refetchTicket()
+      await refetchTimeline()
+      showToast('Quedó registrado que el cliente no quiso firmar', 'success')
+    } catch (error: unknown) {
+      logger.error('Error registrando la negativa de firma:', error)
+      showToast(
+        getApiErrorReason(error) || 'No se pudo registrar el motivo',
+        'error'
+      )
+      throw error
+    }
+  }
+
   const handleRevokeCustomerSignature = async () => {
     if (!ticket || !canManageTechnicians) return
 
@@ -668,6 +691,7 @@ const useMaintenanceTicketDetails = () => {
     handleInvoice,
     handleAddComment,
     handleSavePendingSignatures,
+    handleRefuseCustomerSignature,
     handleRevokeCustomerSignature,
     handleUpdateComment,
     handleDeleteComment,

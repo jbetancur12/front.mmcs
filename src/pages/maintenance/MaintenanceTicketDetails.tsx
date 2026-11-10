@@ -22,6 +22,7 @@ import MaintenanceTicketMobileTabs, {
   TicketMobileTab
 } from './ticket-details/MaintenanceTicketMobileTabs'
 import MaintenanceTicketDialogs from './ticket-details/MaintenanceTicketDialogs'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 export { formatCurrency } from './ticket-details/maintenanceTicketDetailUtils'
@@ -35,6 +36,28 @@ const MaintenanceTicketDetails: React.FC = () => {
   const { ticket, ticketLoading, ticketError, handleBack, isMobile, editMode } =
     details
   const [mobileTab, setMobileTab] = useState<TicketMobileTab>('work')
+
+  // E edita el ticket y C lleva el cursor al cuadro de comentario (solo si la persona puede hacerlo)
+  useKeyboardShortcuts({
+    onEditTicket: () => {
+      if (
+        details.canEditTicket &&
+        !details.isCustomerApprovalLocked &&
+        !editMode
+      )
+        details.handleEdit()
+    },
+    onAddComment: () => {
+      details.setShowComments(true)
+      setTimeout(() => {
+        const box = document.querySelector<HTMLTextAreaElement>(
+          '#comments-section textarea'
+        )
+        box?.scrollIntoView({ block: 'center' })
+        box?.focus()
+      }, 50)
+    }
+  })
 
   // Loading state
   if (ticketLoading) {

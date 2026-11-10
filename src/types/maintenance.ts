@@ -133,6 +133,7 @@ export interface MaintenanceTicket {
   customerSignatureData?: string | null
   customerSignedAt?: string | null
   customerSignerName?: string | null
+  customerSignatureRefusedReason?: string | null
   technicalReport?: MaintenanceTechnicalReport | null
 }
 
@@ -381,6 +382,7 @@ export interface MaintenanceUpdateRequest {
   technicianSignatureData?: string | null
   customerSignatureData?: string | null
   customerSignerName?: string | null
+  customerSignatureRefusedReason?: string | null
 }
 
 export interface MaintenanceTechnicalReportRequest {

@@ -114,6 +114,8 @@ const MaintenanceDashboard: React.FC = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  // Tarjetas en vez de tabla hasta el ancho medio: la tabla corta columnas por debajo de 900 px
+  const useCards = useMediaQuery(theme.breakpoints.down('md'))
   const $userStore = useStore(userStore)
   // Por defecto, no mostrar los tickets completados
   const [filters, setFilters] = useState<MaintenanceFilters>({
@@ -812,14 +814,14 @@ const MaintenanceDashboard: React.FC = () => {
               variant='body2'
               sx={{ mt: 0.5, color: neutral.textMuted }}
             >
-              {isMobile
+              {useCards
                 ? 'Ordenados por prioridad y antigüedad.'
                 : 'Ordenados por prioridad y antigüedad. Doble clic en una fila para abrir el ticket.'}
             </Typography>
           </Box>
         </Box>
 
-        {isMobile ? (
+        {useCards ? (
           ticketsLoading ? (
             <Grid
               container
@@ -841,7 +843,7 @@ const MaintenanceDashboard: React.FC = () => {
             <>
               <Grid container spacing={1.5}>
                 {sortedTickets.map((ticket) => (
-                  <Grid item xs={12} key={ticket.id}>
+                  <Grid item xs={12} sm={6} key={ticket.id}>
                     <MaintenanceTicketMobileCard
                       ticket={ticket}
                       onView={handleViewTicket}

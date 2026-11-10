@@ -24,6 +24,8 @@ interface MaintenanceSignaturesDialogProps {
   open: boolean
   onClose: () => void
   onSave: (signatures: CompletionSignatureInput) => Promise<void>
+  /** Registra que el cliente no quiso firmar, con el motivo. */
+  onRefuse?: (reason: string) => Promise<void>
   loading?: boolean
   technicianName?: string
   storedTechnicianSignature?: string | null
@@ -53,6 +55,7 @@ const MaintenanceSignaturesDialog: React.FC<
   open,
   onClose,
   onSave,
+  onRefuse,
   loading = false,
   technicianName,
   storedTechnicianSignature,
@@ -64,6 +67,9 @@ const MaintenanceSignaturesDialog: React.FC<
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [step, setStep] = useState(0)
+  const [refusing, setRefusing] = useState(false)
+  const [refusalReason, setRefusalReason] = useState('')
+  const [refusalError, setRefusalError] = useState('')
   const [customerSignerName, setCustomerSignerName] = useState('')
   const [customerSignerNameError, setCustomerSignerNameError] = useState('')
   const [customerSignatureData, setCustomerSignatureData] = useState<
@@ -89,6 +95,9 @@ const MaintenanceSignaturesDialog: React.FC<
     if (!open) return
 
     setStep(0)
+    setRefusing(false)
+    setRefusalReason('')
+    setRefusalError('')
     setCustomerSignerName(currentCustomerSignerName || '')
     setCustomerSignatureData(currentCustomerSignature || null)
     setTechnicianSignatureData(fixedTechnicianSignature)
@@ -131,6 +140,14 @@ const MaintenanceSignaturesDialog: React.FC<
     }
     setTechnicianSignatureError('')
     return true
+  }
+
+  const handleRefuse = async () => {
+    if (refusalReason.trim().length < 5) {
+      setRefusalError('Escribe el motivo (mínimo 5 caracteres)')
+      return
+    }
+    await onRefuse?.(refusalReason.trim())
   }
 
   const handleNext = () => {
@@ -199,156 +216,224 @@ const MaintenanceSignaturesDialog: React.FC<
       </DialogTitle>
 
       <DialogContent dividers>
-        {!stepped && (
-          <Alert severity='info' sx={{ mb: 3 }}>
-            Este flujo te permite completar las firmas después del cierre, sin
-            reabrir ni cambiar el estado del ticket.
-          </Alert>
-        )}
+        {refusing ? (
+          <Box>
+            <Alert severity='warning' sx={{ mb: 2 }}>
+              Queda registrado en el historial que el cliente no quiso firmar y
+              el ticket deja de aparecer con «Falta firma del cliente».
+            </Alert>
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              autoFocus
+              label='Motivo por el que no firma'
+              value={refusalReason}
+              onChange={(e) => {
+                setRefusalReason(e.target.value)
+                if (refusalError) setRefusalError('')
+              }}
+              error={!!refusalError}
+              helperText={
+                refusalError || 'Ejemplo: el cliente no estaba en sitio.'
+              }
+            />
+          </Box>
+        ) : (
+          <>
+            {!stepped && (
+              <Alert severity='info' sx={{ mb: 3 }}>
+                Este flujo te permite completar las firmas después del cierre,
+                sin reabrir ni cambiar el estado del ticket.
+              </Alert>
+            )}
 
-        <Grid container spacing={3}>
-          {showCustomer && (
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label='Nombre de quien recibe el servicio'
-                value={customerSignerName}
-                onChange={(e) => {
-                  setCustomerSignerName(e.target.value)
-                  if (customerSignerNameError) setCustomerSignerNameError('')
-                }}
-                error={!!customerSignerNameError}
-                helperText={
-                  customerSignerNameError ||
-                  'Este nombre aparecerá en la orden de servicio.'
-                }
-                sx={{ mb: 2 }}
-              />
-              <SignaturePad
-                value={customerSignatureData}
-                onChange={(value) => {
-                  setCustomerSignatureData(value)
-                  if (customerSignatureError) setCustomerSignatureError('')
-                }}
-                disabled={loading}
-                height={padHeight}
-                label='Firma del cliente'
-                helperText={
-                  customerSignatureError ||
-                  'Pídele al cliente que firme aquí mismo con el dedo.'
-                }
-              />
-            </Grid>
-          )}
-
-          {showTechnician && (
-            <Grid item xs={12} md={6}>
-              {fixedTechnicianSignature ? (
-                <Box>
-                  <Typography
-                    variant='subtitle2'
-                    fontWeight={600}
-                    sx={{ mb: 1 }}
-                  >
-                    Firma del técnico
-                  </Typography>
-                  <Box
-                    sx={{
-                      border: `1px solid ${neutral.borderStrong}`,
-                      borderRadius: 2,
-                      backgroundColor: neutral.surface,
-                      minHeight: isMobile ? 120 : 180,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      p: 2
+            <Grid container spacing={3}>
+              {showCustomer && (
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label='Nombre de quien recibe el servicio'
+                    value={customerSignerName}
+                    onChange={(e) => {
+                      setCustomerSignerName(e.target.value)
+                      if (customerSignerNameError)
+                        setCustomerSignerNameError('')
                     }}
-                  >
-                    <Box
-                      component='img'
-                      src={fixedTechnicianSignature}
-                      alt={`Firma de ${technicianName || 'técnico'}`}
-                      sx={{
-                        maxWidth: '100%',
-                        maxHeight: 140,
-                        objectFit: 'contain'
+                    error={!!customerSignerNameError}
+                    helperText={
+                      customerSignerNameError ||
+                      'Este nombre aparecerá en la orden de servicio.'
+                    }
+                    sx={{ mb: 2 }}
+                  />
+                  <SignaturePad
+                    value={customerSignatureData}
+                    onChange={(value) => {
+                      setCustomerSignatureData(value)
+                      if (customerSignatureError) setCustomerSignatureError('')
+                    }}
+                    disabled={loading}
+                    height={padHeight}
+                    label='Firma del cliente'
+                    helperText={
+                      customerSignatureError ||
+                      'Pídele al cliente que firme aquí mismo con el dedo.'
+                    }
+                  />
+                </Grid>
+              )}
+
+              {showTechnician && (
+                <Grid item xs={12} md={6}>
+                  {fixedTechnicianSignature ? (
+                    <Box>
+                      <Typography
+                        variant='subtitle2'
+                        fontWeight={600}
+                        sx={{ mb: 1 }}
+                      >
+                        Firma del técnico
+                      </Typography>
+                      <Box
+                        sx={{
+                          border: `1px solid ${neutral.borderStrong}`,
+                          borderRadius: 2,
+                          backgroundColor: neutral.surface,
+                          minHeight: isMobile ? 120 : 180,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          p: 2
+                        }}
+                      >
+                        <Box
+                          component='img'
+                          src={fixedTechnicianSignature}
+                          alt={`Firma de ${technicianName || 'técnico'}`}
+                          sx={{
+                            maxWidth: '100%',
+                            maxHeight: 140,
+                            objectFit: 'contain'
+                          }}
+                        />
+                      </Box>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ mt: 1, display: 'block' }}
+                      >
+                        {currentTicketTechnicianSignature
+                          ? 'El ticket ya tiene firma del técnico registrada.'
+                          : `Usaremos la firma guardada de ${technicianName || 'este técnico'}.`}
+                      </Typography>
+                    </Box>
+                  ) : canCaptureTechnicianSignature ? (
+                    <SignaturePad
+                      value={technicianSignatureData}
+                      onChange={(value) => {
+                        setTechnicianSignatureData(value)
+                        if (technicianSignatureError)
+                          setTechnicianSignatureError('')
                       }}
+                      disabled={loading}
+                      height={padHeight}
+                      label='Firma del técnico'
+                      helperText={
+                        technicianSignatureError ||
+                        'La guardaremos para reutilizarla en próximos tickets.'
+                      }
                     />
-                  </Box>
-                  <Typography
-                    variant='caption'
-                    color='text.secondary'
-                    sx={{ mt: 1, display: 'block' }}
-                  >
-                    {currentTicketTechnicianSignature
-                      ? 'El ticket ya tiene firma del técnico registrada.'
-                      : `Usaremos la firma guardada de ${technicianName || 'este técnico'}.`}
-                  </Typography>
-                </Box>
-              ) : canCaptureTechnicianSignature ? (
-                <SignaturePad
-                  value={technicianSignatureData}
-                  onChange={(value) => {
-                    setTechnicianSignatureData(value)
-                    if (technicianSignatureError)
-                      setTechnicianSignatureError('')
-                  }}
-                  disabled={loading}
-                  height={padHeight}
-                  label='Firma del técnico'
-                  helperText={
-                    technicianSignatureError ||
-                    'La guardaremos para reutilizarla en próximos tickets.'
-                  }
-                />
-              ) : (
-                <Alert severity='warning'>
-                  No encontramos una firma guardada del técnico asignado. Si
-                  necesitas que también aparezca en el PDF, toca registrar su
-                  firma primero desde su perfil o con su sesión.
-                </Alert>
+                  ) : (
+                    <Alert severity='warning'>
+                      No encontramos una firma guardada del técnico asignado. Si
+                      necesitas que también aparezca en el PDF, toca registrar
+                      su firma primero desde su perfil o con su sesión.
+                    </Alert>
+                  )}
+                </Grid>
               )}
             </Grid>
-          )}
-        </Grid>
+          </>
+        )}
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        {stepped && step === 1 ? (
-          <Button
-            onClick={() => setStep(0)}
-            disabled={loading}
-            color='inherit'
-            sx={{ minHeight: 48, textTransform: 'none' }}
-          >
-            Atrás
-          </Button>
+        {refusing ? (
+          <>
+            <Button
+              onClick={() => setRefusing(false)}
+              disabled={loading}
+              color='inherit'
+              sx={{ minHeight: 48, textTransform: 'none' }}
+            >
+              Volver a firmar
+            </Button>
+            <Box sx={{ flex: 1 }} />
+            <Button
+              variant='contained'
+              onClick={handleRefuse}
+              disabled={loading}
+              sx={primaryButtonSx}
+            >
+              {loading ? 'Guardando...' : 'Registrar motivo'}
+            </Button>
+          </>
         ) : (
-          <Button
-            onClick={onClose}
-            disabled={loading}
-            color='inherit'
-            sx={{ minHeight: 48, textTransform: 'none' }}
-          >
-            Cancelar
-          </Button>
-        )}
-        {lastStep ? (
-          <Button
-            variant='contained'
-            onClick={handleSave}
-            disabled={loading}
-            startIcon={
-              loading ? <CircularProgress size={16} color='inherit' /> : null
-            }
-            sx={primaryButtonSx}
-          >
-            {loading ? 'Guardando...' : 'Guardar firmas'}
-          </Button>
-        ) : (
-          <Button variant='contained' onClick={handleNext} sx={primaryButtonSx}>
-            Siguiente
-          </Button>
+          <>
+            {onRefuse && !currentCustomerSignature && (
+              <Button
+                onClick={() => setRefusing(true)}
+                disabled={loading}
+                color='inherit'
+                sx={{ minHeight: 48, textTransform: 'none', mr: 'auto' }}
+              >
+                El cliente no quiere firmar
+              </Button>
+            )}
+            {stepped && step === 1 ? (
+              <Button
+                onClick={() => setStep(0)}
+                disabled={loading}
+                color='inherit'
+                sx={{ minHeight: 48, textTransform: 'none' }}
+              >
+                Atrás
+              </Button>
+            ) : (
+              <Button
+                onClick={onClose}
+                disabled={loading}
+                color='inherit'
+                sx={{ minHeight: 48, textTransform: 'none' }}
+              >
+                Cancelar
+              </Button>
+            )}
+            {lastStep ? (
+              <Button
+                variant='contained'
+                onClick={handleSave}
+                disabled={loading}
+                startIcon={
+                  loading ? (
+                    <CircularProgress size={16} color='inherit' />
+                  ) : null
+                }
+                sx={primaryButtonSx}
+              >
+                {loading ? 'Guardando...' : 'Guardar firmas'}
+              </Button>
+            ) : (
+              <Button
+                variant='contained'
+                onClick={handleNext}
+                sx={primaryButtonSx}
+              >
+                Siguiente
+              </Button>
+            )}
+          </>
         )}
       </DialogActions>
     </Dialog>

@@ -14,6 +14,7 @@ export const getTicketPendings = (
     | 'assignedTechnicianId'
     | 'technicalReport'
     | 'customerSignatureData'
+    | 'customerSignatureRefusedReason'
     | 'isInvoiced'
   >,
   signaturesEnabled: boolean = maintenanceSignaturesEnabled
@@ -25,7 +26,11 @@ export const getTicketPendings = (
 
   if (status === MaintenanceStatus.COMPLETED) {
     if (!ticket.technicalReport?.updatedAt) pendings.push('Sin reporte')
-    if (signaturesEnabled && !ticket.customerSignatureData) {
+    if (
+      signaturesEnabled &&
+      !ticket.customerSignatureData &&
+      !ticket.customerSignatureRefusedReason
+    ) {
       pendings.push('Falta firma del cliente')
     }
     if (!ticket.isInvoiced) pendings.push('Sin facturar')

@@ -48,6 +48,7 @@ const MaintenanceTicketDialogs = ({
     handleInvoice,
     canInvoice,
     handleSavePendingSignatures,
+    handleRefuseCustomerSignature,
     handleGenerateTechnicalReport,
     handleSaveTechnicalReport,
     costsDialogOpen,
@@ -276,6 +277,7 @@ const MaintenanceTicketDialogs = ({
           open={signaturesDialogOpen}
           onClose={() => setSignaturesDialogOpen(false)}
           onSave={handleSavePendingSignatures}
+          onRefuse={handleRefuseCustomerSignature}
           technicianName={ticket?.assignedTechnician?.name}
           storedTechnicianSignature={
             ticket?.technicianSignatureData ||
