@@ -1,5 +1,6 @@
 import { getApiErrorReason } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
+import FormDialog from 'src/Components/Common/FormDialog'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -10,10 +11,6 @@ import {
   Button,
   Chip,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControlLabel,
   Grid,
   IconButton,
@@ -465,408 +462,393 @@ const MaintenanceProtocols = () => {
         </Grid>
       )}
 
-      <Dialog
+      <FormDialog
         open={dialogOpen}
         onClose={requestCloseDialog}
-        fullWidth
-        maxWidth='lg'
+        title={currentProtocol ? 'Editar protocolo' : 'Nuevo protocolo'}
+        subtitle={currentProtocol?.name}
+        submitLabel={currentProtocol ? 'Guardar cambios' : 'Crear protocolo'}
+        onSubmit={handleSave}
+        loading={
+          createProtocolMutation.isLoading || updateProtocolMutation.isLoading
+        }
+        maxWidth='md'
       >
-        <DialogTitle>
-          {currentProtocol ? 'Editar protocolo' : 'Nuevo protocolo'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2.5} sx={{ mt: 1 }}>
-            {formError && <Alert severity='error'>{formError}</Alert>}
+        <Stack spacing={2.5} sx={{ mt: 1 }}>
+          {formError && <Alert severity='error'>{formError}</Alert>}
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={5}>
-                <TextField
-                  fullWidth
-                  label='Nombre'
-                  value={formState.name}
-                  onChange={(e) =>
-                    setFormState((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <TextField
-                  fullWidth
-                  label='Código'
-                  value={formState.code}
-                  onChange={(e) =>
-                    setFormState((prev) => ({ ...prev, code: e.target.value }))
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={2}>
-                <TextField
-                  fullWidth
-                  type='number'
-                  label='Orden'
-                  value={formState.sortOrder}
-                  onChange={(e) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      sortOrder: Number(e.target.value) || 0
-                    }))
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={2}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formState.isActive}
-                      onChange={(e) =>
-                        setFormState((prev) => ({
-                          ...prev,
-                          isActive: e.target.checked
-                        }))
-                      }
-                    />
-                  }
-                  label='Activo'
-                  sx={{ mt: 1 }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  label='Descripción'
-                  value={formState.description}
-                  onChange={(e) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      description: e.target.value
-                    }))
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='Clase de riesgo'
-                  value={formState.riskClass}
-                  onChange={(e) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      riskClass: e.target.value
-                    }))
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={8}>
-                <TextField
-                  fullWidth
-                  label='Aplica a'
-                  helperText='Separa las palabras clave con coma. Ej: monitor, signos vitales, spo2'
-                  value={formState.appliesToText}
-                  onChange={(e) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      appliesToText: e.target.value
-                    }))
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  label='Recomendaciones por defecto'
-                  value={formState.recommendations}
-                  onChange={(e) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      recommendations: e.target.value
-                    }))
-                  }
-                />
-              </Grid>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={5}>
+              <TextField
+                fullWidth
+                label='Nombre'
+                value={formState.name}
+                onChange={(e) =>
+                  setFormState((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
             </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                label='Código'
+                value={formState.code}
+                onChange={(e) =>
+                  setFormState((prev) => ({ ...prev, code: e.target.value }))
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <TextField
+                fullWidth
+                type='number'
+                label='Orden'
+                value={formState.sortOrder}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    sortOrder: Number(e.target.value) || 0
+                  }))
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formState.isActive}
+                    onChange={(e) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        isActive: e.target.checked
+                      }))
+                    }
+                  />
+                }
+                label='Activo'
+                sx={{ mt: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                label='Descripción'
+                value={formState.description}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    description: e.target.value
+                  }))
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label='Clase de riesgo'
+                value={formState.riskClass}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    riskClass: e.target.value
+                  }))
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={8}>
+              <TextField
+                fullWidth
+                label='Aplica a'
+                helperText='Separa las palabras clave con coma. Ej: monitor, signos vitales, spo2'
+                value={formState.appliesToText}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    appliesToText: e.target.value
+                  }))
+                }
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                label='Recomendaciones por defecto'
+                value={formState.recommendations}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    recommendations: e.target.value
+                  }))
+                }
+              />
+            </Grid>
+          </Grid>
 
-            <Paper variant='outlined' sx={{ p: 2 }}>
-              <Stack
-                direction='row'
-                justifyContent='space-between'
-                alignItems='center'
-                sx={{ mb: 2 }}
+          <Paper variant='outlined' sx={{ p: 2 }}>
+            <Stack
+              direction='row'
+              justifyContent='space-between'
+              alignItems='center'
+              sx={{ mb: 2 }}
+            >
+              <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
+                Herramientas por defecto
+              </Typography>
+              <Button
+                size='small'
+                startIcon={<Add />}
+                onClick={() =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    tools: [...prev.tools, emptyTool()]
+                  }))
+                }
               >
-                <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
-                  Herramientas por defecto
-                </Typography>
-                <Button
-                  size='small'
-                  startIcon={<Add />}
-                  onClick={() =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      tools: [...prev.tools, emptyTool()]
-                    }))
-                  }
-                >
-                  Herramienta
-                </Button>
-              </Stack>
-              <Stack spacing={1.5}>
-                {formState.tools.map((tool, index) => (
-                  <Grid container spacing={1} key={`protocol-tool-${index}`}>
-                    <Grid item xs={12} md={5}>
-                      <Autocomplete<
-                        MaintenanceToolEquipmentSummary,
-                        false,
-                        false,
-                        true
-                      >
-                        freeSolo
-                        options={toolEquipmentOptions}
-                        loading={toolSearchLoading}
-                        value={null}
-                        inputValue={tool.name || ''}
-                        onInputChange={(_, value) => {
-                          setToolSearch(value)
-                          updateTool(index, 'name', value)
-                        }}
-                        onChange={(_, value) => {
-                          if (!value || typeof value === 'string') return
+                Herramienta
+              </Button>
+            </Stack>
+            <Stack spacing={1.5}>
+              {formState.tools.map((tool, index) => (
+                <Grid container spacing={1} key={`protocol-tool-${index}`}>
+                  <Grid item xs={12} md={5}>
+                    <Autocomplete<
+                      MaintenanceToolEquipmentSummary,
+                      false,
+                      false,
+                      true
+                    >
+                      freeSolo
+                      options={toolEquipmentOptions}
+                      loading={toolSearchLoading}
+                      value={null}
+                      inputValue={tool.name || ''}
+                      onInputChange={(_, value) => {
+                        setToolSearch(value)
+                        updateTool(index, 'name', value)
+                      }}
+                      onChange={(_, value) => {
+                        if (!value || typeof value === 'string') return
 
-                          updateTool(index, 'name', value.equipmentName)
-                          updateTool(index, 'serial', value.serialNumber || '')
-                          updateTool(
-                            index,
-                            'internalCode',
-                            value.internalCode || ''
-                          )
-                          updateTool(index, 'location', value.location || '')
-                          updateTool(
-                            index,
-                            'calibrationDue',
-                            value.nextCalibrationDate
-                              ? String(value.nextCalibrationDate).slice(0, 10)
-                              : null
-                          )
-                        }}
-                        getOptionLabel={(option) =>
-                          typeof option === 'string'
-                            ? option
-                            : `${option.internalCode} - ${option.equipmentName}`
-                        }
-                        isOptionEqualToValue={(option, value) =>
-                          option.id === value.id
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            fullWidth
-                            label='Nombre'
-                            helperText='Busca un equipo del inventario o escribe manualmente.'
-                          />
-                        )}
-                        renderOption={(props, option) => (
-                          <Box component='li' {...props}>
-                            <Box>
-                              <Typography variant='body2' fontWeight={700}>
-                                {option.internalCode} - {option.equipmentName}
-                              </Typography>
-                              <Typography
-                                variant='caption'
-                                color='text.secondary'
-                              >
-                                {option.brand} {option.model} | Serie:{' '}
-                                {option.serialNumber}
-                                {option.nextCalibrationDate
-                                  ? ` | Vence: ${new Date(option.nextCalibrationDate).toLocaleDateString('es-CO')}`
-                                  : ''}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        fullWidth
-                        label='Serie'
-                        value={tool.serial || ''}
-                        onChange={(e) =>
-                          updateTool(index, 'serial', e.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        fullWidth
-                        type='date'
-                        label='Calibración vence'
-                        InputLabelProps={{ shrink: true }}
-                        value={tool.calibrationDue || ''}
-                        onChange={(e) =>
-                          updateTool(
-                            index,
-                            'calibrationDue',
-                            e.target.value || null
-                          )
-                        }
-                      />
-                    </Grid>
-                    {(tool.internalCode || tool.location) && (
-                      <Grid item xs={12} md={11}>
-                        <Stack
-                          direction={{ xs: 'column', sm: 'row' }}
-                          spacing={1}
-                          alignItems={{ xs: 'flex-start', sm: 'center' }}
-                        >
-                          {tool.internalCode && (
-                            <Chip
-                              size='small'
-                              color='primary'
-                              variant='outlined'
-                              label={`Código interno: ${tool.internalCode}`}
-                            />
-                          )}
-                          {tool.location && (
+                        updateTool(index, 'name', value.equipmentName)
+                        updateTool(index, 'serial', value.serialNumber || '')
+                        updateTool(
+                          index,
+                          'internalCode',
+                          value.internalCode || ''
+                        )
+                        updateTool(index, 'location', value.location || '')
+                        updateTool(
+                          index,
+                          'calibrationDue',
+                          value.nextCalibrationDate
+                            ? String(value.nextCalibrationDate).slice(0, 10)
+                            : null
+                        )
+                      }}
+                      getOptionLabel={(option) =>
+                        typeof option === 'string'
+                          ? option
+                          : `${option.internalCode} - ${option.equipmentName}`
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option.id === value.id
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          fullWidth
+                          label='Nombre'
+                          helperText='Busca un equipo del inventario o escribe manualmente.'
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component='li' {...props}>
+                          <Box>
+                            <Typography variant='body2' fontWeight={700}>
+                              {option.internalCode} - {option.equipmentName}
+                            </Typography>
                             <Typography
                               variant='caption'
                               color='text.secondary'
                             >
-                              Ubicación: {tool.location}
+                              {option.brand} {option.model} | Serie:{' '}
+                              {option.serialNumber}
+                              {option.nextCalibrationDate
+                                ? ` | Vence: ${new Date(option.nextCalibrationDate).toLocaleDateString('es-CO')}`
+                                : ''}
                             </Typography>
-                          )}
-                        </Stack>
-                      </Grid>
-                    )}
-                    <Grid item xs={12} md={1}>
-                      <IconButton
-                        aria-label={`Quitar herramienta ${index + 1}`}
-                        onClick={() =>
-                          setFormState((prev) => ({
-                            ...prev,
-                            tools:
-                              prev.tools.length > 1
-                                ? prev.tools.filter((_, idx) => idx !== index)
-                                : [emptyTool()]
-                          }))
-                        }
-                      >
-                        <DeleteOutline />
-                      </IconButton>
-                    </Grid>
+                          </Box>
+                        </Box>
+                      )}
+                    />
                   </Grid>
-                ))}
-              </Stack>
-            </Paper>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label='Serie'
+                      value={tool.serial || ''}
+                      onChange={(e) =>
+                        updateTool(index, 'serial', e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      type='date'
+                      label='Calibración vence'
+                      InputLabelProps={{ shrink: true }}
+                      value={tool.calibrationDue || ''}
+                      onChange={(e) =>
+                        updateTool(
+                          index,
+                          'calibrationDue',
+                          e.target.value || null
+                        )
+                      }
+                    />
+                  </Grid>
+                  {(tool.internalCode || tool.location) && (
+                    <Grid item xs={12} md={11}>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1}
+                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                      >
+                        {tool.internalCode && (
+                          <Chip
+                            size='small'
+                            color='primary'
+                            variant='outlined'
+                            label={`Código interno: ${tool.internalCode}`}
+                          />
+                        )}
+                        {tool.location && (
+                          <Typography variant='caption' color='text.secondary'>
+                            Ubicación: {tool.location}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Grid>
+                  )}
+                  <Grid item xs={12} md={1}>
+                    <IconButton
+                      aria-label={`Quitar herramienta ${index + 1}`}
+                      onClick={() =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          tools:
+                            prev.tools.length > 1
+                              ? prev.tools.filter((_, idx) => idx !== index)
+                              : [emptyTool()]
+                        }))
+                      }
+                    >
+                      <DeleteOutline />
+                    </IconButton>
+                  </Grid>
+                </Grid>
+              ))}
+            </Stack>
+          </Paper>
 
-            <Paper variant='outlined' sx={{ p: 2 }}>
-              <Stack
-                direction='row'
-                justifyContent='space-between'
-                alignItems='center'
-                sx={{ mb: 2 }}
+          <Paper variant='outlined' sx={{ p: 2 }}>
+            <Stack
+              direction='row'
+              justifyContent='space-between'
+              alignItems='center'
+              sx={{ mb: 2 }}
+            >
+              <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
+                Pruebas por defecto
+              </Typography>
+              <Button
+                size='small'
+                startIcon={<PlaylistAddCheck />}
+                onClick={() =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    tests: [...prev.tests, emptyTest()]
+                  }))
+                }
               >
-                <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
-                  Pruebas por defecto
-                </Typography>
-                <Button
-                  size='small'
-                  startIcon={<PlaylistAddCheck />}
-                  onClick={() =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      tests: [...prev.tests, emptyTest()]
-                    }))
-                  }
-                >
-                  Prueba
-                </Button>
-              </Stack>
-              <Stack spacing={1.5}>
-                {formState.tests.map((test, index) => (
-                  <Grid container spacing={1} key={`protocol-test-${index}`}>
-                    <Grid item xs={12} md={4}>
-                      <TextField
-                        fullWidth
-                        label='Parámetro'
-                        value={test.parameter}
-                        onChange={(e) =>
-                          updateTest(index, 'parameter', e.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        select
-                        fullWidth
-                        label='Resultado'
-                        value={test.result}
-                        onChange={(e) =>
-                          updateTest(index, 'result', e.target.value)
-                        }
-                      >
-                        <MenuItem value='PASA'>PASA</MenuItem>
-                        <MenuItem value='NO PASA'>NO PASA</MenuItem>
-                        <MenuItem value='OBSERVADO'>OBSERVADO</MenuItem>
-                      </TextField>
-                    </Grid>
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        fullWidth
-                        label='Valor'
-                        value={test.value || ''}
-                        onChange={(e) =>
-                          updateTest(index, 'value', e.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        fullWidth
-                        label='Notas'
-                        value={test.notes || ''}
-                        onChange={(e) =>
-                          updateTest(index, 'notes', e.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={1}>
-                      <IconButton
-                        aria-label={`Quitar prueba ${index + 1}`}
-                        onClick={() =>
-                          setFormState((prev) => ({
-                            ...prev,
-                            tests:
-                              prev.tests.length > 1
-                                ? prev.tests.filter((_, idx) => idx !== index)
-                                : [emptyTest()]
-                          }))
-                        }
-                      >
-                        <DeleteOutline />
-                      </IconButton>
-                    </Grid>
+                Prueba
+              </Button>
+            </Stack>
+            <Stack spacing={1.5}>
+              {formState.tests.map((test, index) => (
+                <Grid container spacing={1} key={`protocol-test-${index}`}>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label='Parámetro'
+                      value={test.parameter}
+                      onChange={(e) =>
+                        updateTest(index, 'parameter', e.target.value)
+                      }
+                    />
                   </Grid>
-                ))}
-              </Stack>
-            </Paper>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={requestCloseDialog}>Cancelar</Button>
-          <Button
-            variant='contained'
-            onClick={handleSave}
-            disabled={
-              createProtocolMutation.isLoading ||
-              updateProtocolMutation.isLoading
-            }
-          >
-            {currentProtocol ? 'Guardar cambios' : 'Crear protocolo'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+                  <Grid item xs={12} md={2}>
+                    <TextField
+                      select
+                      fullWidth
+                      label='Resultado'
+                      value={test.result}
+                      onChange={(e) =>
+                        updateTest(index, 'result', e.target.value)
+                      }
+                    >
+                      <MenuItem value='PASA'>PASA</MenuItem>
+                      <MenuItem value='NO PASA'>NO PASA</MenuItem>
+                      <MenuItem value='OBSERVADO'>OBSERVADO</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <TextField
+                      fullWidth
+                      label='Valor'
+                      value={test.value || ''}
+                      onChange={(e) =>
+                        updateTest(index, 'value', e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label='Notas'
+                      value={test.notes || ''}
+                      onChange={(e) =>
+                        updateTest(index, 'notes', e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={1}>
+                    <IconButton
+                      aria-label={`Quitar prueba ${index + 1}`}
+                      onClick={() =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          tests:
+                            prev.tests.length > 1
+                              ? prev.tests.filter((_, idx) => idx !== index)
+                              : [emptyTest()]
+                        }))
+                      }
+                    >
+                      <DeleteOutline />
+                    </IconButton>
+                  </Grid>
+                </Grid>
+              ))}
+            </Stack>
+          </Paper>
+        </Stack>
+      </FormDialog>
     </Container>
   )
 }

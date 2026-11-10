@@ -1,4 +1,5 @@
 import { getApiErrorReason } from 'src/utils/apiError'
+import FormDialog from 'src/Components/Common/FormDialog'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import React, { useMemo, useState } from 'react'
 import {
@@ -6,10 +7,6 @@ import {
   Typography,
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Grid,
   Avatar,
@@ -583,238 +580,214 @@ const MaintenanceTechnicians: React.FC = () => {
       />
 
       {/* Add/Edit Technician Dialog */}
-      <Dialog
+      <FormDialog
         open={dialogOpen}
         onClose={handleCloseDialog}
+        title={editingTechnician ? 'Editar técnico' : 'Agregar técnico'}
+        subtitle={editingTechnician?.name}
+        submitLabel={editingTechnician ? 'Actualizar' : 'Crear'}
+        onSubmit={() => formik.handleSubmit()}
+        loading={
+          createTechnicianMutation.isLoading ||
+          updateTechnicianMutation.isLoading
+        }
         maxWidth='md'
-        fullWidth
       >
-        <DialogTitle>
-          {editingTechnician ? 'Editar Técnico' : 'Agregar Técnico'}
-        </DialogTitle>
-        <form onSubmit={formik.handleSubmit}>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name='name'
-                  label='Nombre Completo'
-                  value={formik.values.name ?? ''}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.name && Boolean(formik.errors.name)}
-                  helperText={formik.touched.name && formik.errors.name}
-                  required
-                />
-              </Grid>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              name='name'
+              label='Nombre Completo'
+              value={formik.values.name ?? ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
+              required
+            />
+          </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name='email'
-                  label='Email'
-                  type='email'
-                  value={formik.values.email ?? ''}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.email && Boolean(formik.errors.email)}
-                  helperText={formik.touched.email && formik.errors.email}
-                  required
-                />
-              </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              name='email'
+              label='Email'
+              type='email'
+              value={formik.values.email ?? ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.email && Boolean(formik.errors.email)}
+              helperText={formik.touched.email && formik.errors.email}
+              required
+            />
+          </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name='phone'
-                  label='Teléfono'
-                  value={formik.values.phone ?? ''}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.phone && Boolean(formik.errors.phone)}
-                  helperText={formik.touched.phone && formik.errors.phone}
-                  required
-                />
-              </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              name='phone'
+              label='Teléfono'
+              value={formik.values.phone ?? ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.phone && Boolean(formik.errors.phone)}
+              helperText={formik.touched.phone && formik.errors.phone}
+              required
+            />
+          </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  select
-                  name='status'
-                  label='Estado'
-                  value={formik.values.status ?? 'active'}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.status && Boolean(formik.errors.status)}
-                  helperText={formik.touched.status && formik.errors.status}
-                  required
-                >
-                  {statusOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name='employeeId'
-                  label='ID Empleado'
-                  value={formik.values.employeeId ?? ''}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.employeeId &&
-                    Boolean(formik.errors.employeeId)
-                  }
-                  helperText={
-                    formik.touched.employeeId && formik.errors.employeeId
-                  }
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  type='number'
-                  name='maxWorkload'
-                  label='Carga Máxima de Trabajo'
-                  value={formik.values.maxWorkload ?? 10}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.maxWorkload &&
-                    Boolean(formik.errors.maxWorkload)
-                  }
-                  helperText={
-                    formik.touched.maxWorkload && formik.errors.maxWorkload
-                  }
-                  InputProps={{ inputProps: { min: 1, max: 50 } }}
-                  required
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Autocomplete
-                  freeSolo
-                  options={availableSpecializations}
-                  value={formik.values.specialization ?? ''}
-                  onChange={(_, value) =>
-                    formik.setFieldValue('specialization', value || '')
-                  }
-                  onBlur={() => formik.setFieldTouched('specialization', true)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label='Especialización'
-                      name='specialization'
-                      value={formik.values.specialization ?? ''}
-                      onChange={formik.handleChange}
-                      error={
-                        formik.touched.specialization &&
-                        Boolean(formik.errors.specialization)
-                      }
-                      helperText={
-                        formik.touched.specialization &&
-                        formik.errors.specialization
-                      }
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={2}
-                  name='certifications'
-                  label='Certificaciones'
-                  value={formik.values.certifications ?? ''}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.certifications &&
-                    Boolean(formik.errors.certifications)
-                  }
-                  helperText={
-                    formik.touched.certifications &&
-                    formik.errors.certifications
-                  }
-                  placeholder='Ej: Técnico en Electromedicina, Certificado en Ventiladores...'
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  name='notes'
-                  label='Notas'
-                  value={formik.values.notes ?? ''}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.notes && Boolean(formik.errors.notes)}
-                  helperText={formik.touched.notes && formik.errors.notes}
-                  placeholder='Notas adicionales sobre el técnico...'
-                />
-              </Grid>
-
-              {maintenanceSignaturesEnabled && (
-                <Grid item xs={12}>
-                  <SignaturePad
-                    value={formik.values.signatureData ?? null}
-                    onChange={(value) =>
-                      formik.setFieldValue('signatureData', value || '')
-                    }
-                    label='Firma guardada del técnico (opcional)'
-                    helperText='Si la guardas aquí, se usará automáticamente al cerrar órdenes de servicio.'
-                  />
-                </Grid>
-              )}
-
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formik.values.isAvailable}
-                      onChange={(e) =>
-                        formik.setFieldValue('isAvailable', e.target.checked)
-                      }
-                      name='isAvailable'
-                    />
-                  }
-                  label='Disponible para Asignaciones'
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancelar</Button>
-            <Button
-              type='submit'
-              variant='contained'
-              disabled={
-                createTechnicianMutation.isLoading ||
-                updateTechnicianMutation.isLoading
-              }
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              select
+              name='status'
+              label='Estado'
+              value={formik.values.status ?? 'active'}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.status && Boolean(formik.errors.status)}
+              helperText={formik.touched.status && formik.errors.status}
+              required
             >
-              {createTechnicianMutation.isLoading ||
-              updateTechnicianMutation.isLoading
-                ? 'Guardando...'
-                : editingTechnician
-                  ? 'Actualizar'
-                  : 'Crear'}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+              {statusOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              name='employeeId'
+              label='ID Empleado'
+              value={formik.values.employeeId ?? ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.employeeId && Boolean(formik.errors.employeeId)
+              }
+              helperText={formik.touched.employeeId && formik.errors.employeeId}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              type='number'
+              name='maxWorkload'
+              label='Carga Máxima de Trabajo'
+              value={formik.values.maxWorkload ?? 10}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.maxWorkload && Boolean(formik.errors.maxWorkload)
+              }
+              helperText={
+                formik.touched.maxWorkload && formik.errors.maxWorkload
+              }
+              InputProps={{ inputProps: { min: 1, max: 50 } }}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Autocomplete
+              freeSolo
+              options={availableSpecializations}
+              value={formik.values.specialization ?? ''}
+              onChange={(_, value) =>
+                formik.setFieldValue('specialization', value || '')
+              }
+              onBlur={() => formik.setFieldTouched('specialization', true)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label='Especialización'
+                  name='specialization'
+                  value={formik.values.specialization ?? ''}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.specialization &&
+                    Boolean(formik.errors.specialization)
+                  }
+                  helperText={
+                    formik.touched.specialization &&
+                    formik.errors.specialization
+                  }
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              name='certifications'
+              label='Certificaciones'
+              value={formik.values.certifications ?? ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.certifications &&
+                Boolean(formik.errors.certifications)
+              }
+              helperText={
+                formik.touched.certifications && formik.errors.certifications
+              }
+              placeholder='Ej: Técnico en Electromedicina, Certificado en Ventiladores...'
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              name='notes'
+              label='Notas'
+              value={formik.values.notes ?? ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.notes && Boolean(formik.errors.notes)}
+              helperText={formik.touched.notes && formik.errors.notes}
+              placeholder='Notas adicionales sobre el técnico...'
+            />
+          </Grid>
+
+          {maintenanceSignaturesEnabled && (
+            <Grid item xs={12}>
+              <SignaturePad
+                value={formik.values.signatureData ?? null}
+                onChange={(value) =>
+                  formik.setFieldValue('signatureData', value || '')
+                }
+                label='Firma guardada del técnico (opcional)'
+                helperText='Si la guardas aquí, se usará automáticamente al cerrar órdenes de servicio.'
+              />
+            </Grid>
+          )}
+
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formik.values.isAvailable}
+                  onChange={(e) =>
+                    formik.setFieldValue('isAvailable', e.target.checked)
+                  }
+                  name='isAvailable'
+                />
+              }
+              label='Disponible para Asignaciones'
+            />
+          </Grid>
+        </Grid>
+      </FormDialog>
 
       {/* Status Toggle Confirmation Dialog */}
       <ConfirmDialog
