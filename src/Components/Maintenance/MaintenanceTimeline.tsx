@@ -197,6 +197,9 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
             display: 'none'
           }
         },
+        '& .MuiTimelineOppositeContent-root': {
+          display: { xs: 'none', sm: 'block' }
+        },
         '& .MuiTimelineConnector-root': {
           backgroundColor: neutral.borderStrong,
           width: '3px'
@@ -244,13 +247,22 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
               {!isLast && <TimelineConnector />}
             </TimelineSeparator>
 
-            <TimelineContent sx={{ py: 0, px: 2, pb: compact ? 1.5 : 2.5 }}>
+            <TimelineContent
+              sx={{
+                py: 0,
+                px: { xs: 1.5, sm: 2 },
+                pb: compact ? 1.5 : 2.5,
+                minWidth: 0,
+                overflowWrap: 'anywhere'
+              }}
+            >
               <Box>
                 <Box
                   display='flex'
                   alignItems='center'
                   gap={1}
-                  sx={{ minHeight: 40 }}
+                  flexWrap='wrap'
+                  sx={{ minHeight: 40, py: { xs: 0.5, sm: 0 } }}
                 >
                   <Chip
                     size='small'
@@ -265,7 +277,12 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                   />
 
                   {entry.performedBy && (
-                    <Box display='flex' alignItems='center' gap={0.5}>
+                    <Box
+                      display='flex'
+                      alignItems='center'
+                      gap={0.5}
+                      sx={{ whiteSpace: 'nowrap' }}
+                    >
                       <Avatar
                         sx={{
                           width: 20,
@@ -283,6 +300,14 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                     </Box>
                   )}
                 </Box>
+
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: { xs: 'block', sm: 'none' }, mb: 0.25 }}
+                >
+                  {formatDate(entry.performedAt)}
+                </Typography>
 
                 <Typography variant={compact ? 'body2' : 'body1'}>
                   {entry.description}
