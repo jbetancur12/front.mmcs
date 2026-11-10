@@ -13,7 +13,7 @@ describe('maskContact', () => {
   })
 
   it('enmascara el teléfono dejando los últimos 4 dígitos', () => {
-    expect(maskPhone('+57 313 812 4282')).toBe('*******4282')
+    expect(maskPhone('+57 313 812 4282')).toBe('********4282')
     expect(maskPhone('******4282')).toBe('******4282')
     expect(maskPhone('123')).toBe('***')
   })
