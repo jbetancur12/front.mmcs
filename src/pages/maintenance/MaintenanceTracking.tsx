@@ -277,14 +277,6 @@ const MaintenanceTracking: React.FC = () => {
                             <Typography variant='body1' fontWeight='medium'>
                               {trackingData.ticket.assignedTechnician.name}
                             </Typography>
-                            {trackingData.ticket.assignedTechnician.email && (
-                              <Typography
-                                variant='body2'
-                                color='text.secondary'
-                              >
-                                {trackingData.ticket.assignedTechnician.email}
-                              </Typography>
-                            )}
                             {trackingData.ticket.assignedTechnician
                               .specialization && (
                               <Box mt={1}>
@@ -370,13 +362,13 @@ const MaintenanceTracking: React.FC = () => {
                   </Box>
                 )}
 
-                {trackingData.ticket.completedDate && (
+                {trackingData.ticket.actualCompletionDate && (
                   <Box mb={2}>
                     <Typography variant='body2' color='text.secondary'>
                       <strong>Completado:</strong>
                     </Typography>
                     <Typography variant='body2'>
-                      {formatDate(trackingData.ticket.completedDate)}
+                      {formatDate(trackingData.ticket.actualCompletionDate)}
                     </Typography>
                   </Box>
                 )}

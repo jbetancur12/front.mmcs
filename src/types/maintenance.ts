@@ -111,6 +111,7 @@ export interface MaintenanceTicket {
   assignedTechnicianId?: string
   scheduledDate?: string
   completedDate?: string
+  actualCompletionDate?: string
   estimatedCost?: number
   actualCost?: number
   technicianWorkMinutes?: number | null

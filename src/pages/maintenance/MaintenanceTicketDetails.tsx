@@ -116,12 +116,18 @@ const MaintenanceTicketDetails: React.FC = () => {
                   ticket={ticket}
                   details={details}
                 />
+                <MaintenanceTicketActivitySections
+                  ticket={ticket}
+                  details={details}
+                  part='files'
+                />
               </>
             )}
             {mobileTab === 'news' && (
               <MaintenanceTicketActivitySections
                 ticket={ticket}
                 details={details}
+                part='activity'
               />
             )}
             {mobileTab === 'close' && (

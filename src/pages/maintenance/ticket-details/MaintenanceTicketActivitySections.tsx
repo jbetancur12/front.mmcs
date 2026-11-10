@@ -12,12 +12,15 @@ import { neutral } from 'src/theme/designTokens'
 interface MaintenanceTicketActivitySectionsProps {
   ticket: MaintenanceTicket
   details: MaintenanceTicketDetailsState
+  /** Qué mostrar: todo (por defecto), solo historial y comentarios, o solo archivos. */
+  part?: 'all' | 'activity' | 'files'
 }
 
 /** Historial, comentarios y archivos del ticket (secciones plegables). */
 const MaintenanceTicketActivitySections = ({
   ticket,
-  details
+  details,
+  part = 'all'
 }: MaintenanceTicketActivitySectionsProps) => {
   const {
     $userStore,
@@ -42,154 +45,162 @@ const MaintenanceTicketActivitySections = ({
     handleFileView
   } = details
 
+  const showActivity = part !== 'files'
+  const showFilesPart = part !== 'activity'
+
   return (
     <>
-      {/* Timeline Section */}
-      <Paper
-        sx={{
-          ...surfaceSx,
-          p: 3,
-          mb: 3
-        }}
-        role='region'
-        aria-label='Historial del ticket'
-      >
-        <Box
-          display='flex'
-          justifyContent='space-between'
-          alignItems='center'
-          mb={2}
-        >
-          <Typography
-            variant='h6'
-            sx={{ color: neutral.text, fontWeight: 600 }}
+      {showActivity && (
+        <>
+          {/* Timeline Section */}
+          <Paper
+            sx={{
+              ...surfaceSx,
+              p: 3,
+              mb: 3
+            }}
+            role='region'
+            aria-label='Historial del ticket'
           >
-            Historial del Ticket
-          </Typography>
-          <IconButton
-            onClick={() => setShowTimeline(!showTimeline)}
-            sx={{ color: neutral.textBody }}
-            aria-label={
-              showTimeline ? 'Ocultar historial' : 'Mostrar historial'
-            }
-            aria-expanded={showTimeline}
-            aria-controls='timeline-section'
-          >
-            {showTimeline ? <ExpandLess /> : <ExpandMore />}
-          </IconButton>
-        </Box>
-
-        <Collapse in={showTimeline} id='timeline-section'>
-          {timelineLoading ? (
             <Box
               display='flex'
-              justifyContent='center'
-              py={3}
-              role='status'
-              aria-live='polite'
+              justifyContent='space-between'
+              alignItems='center'
+              mb={2}
             >
-              <SignalLoader size='small' message='Cargando historial' />
+              <Typography
+                variant='h6'
+                sx={{ color: neutral.text, fontWeight: 600 }}
+              >
+                Historial del Ticket
+              </Typography>
+              <IconButton
+                onClick={() => setShowTimeline(!showTimeline)}
+                sx={{ color: neutral.textBody }}
+                aria-label={
+                  showTimeline ? 'Ocultar historial' : 'Mostrar historial'
+                }
+                aria-expanded={showTimeline}
+                aria-controls='timeline-section'
+              >
+                {showTimeline ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
             </Box>
-          ) : (
-            <MaintenanceTimeline timeline={timelineData || []} />
-          )}
-        </Collapse>
-      </Paper>
 
-      {/* Comments Section */}
-      <Paper
-        sx={{
-          ...surfaceSx,
-          p: 3,
-          mb: 3
-        }}
-        role='region'
-        aria-label='Sección de comentarios'
-      >
-        <Box
-          display='flex'
-          justifyContent='space-between'
-          alignItems='center'
-          mb={2}
+            <Collapse in={showTimeline} id='timeline-section'>
+              {timelineLoading ? (
+                <Box
+                  display='flex'
+                  justifyContent='center'
+                  py={3}
+                  role='status'
+                  aria-live='polite'
+                >
+                  <SignalLoader size='small' message='Cargando historial' />
+                </Box>
+              ) : (
+                <MaintenanceTimeline timeline={timelineData || []} />
+              )}
+            </Collapse>
+          </Paper>
+
+          {/* Comments Section */}
+          <Paper
+            sx={{
+              ...surfaceSx,
+              p: 3,
+              mb: 3
+            }}
+            role='region'
+            aria-label='Sección de comentarios'
+          >
+            <Box
+              display='flex'
+              justifyContent='space-between'
+              alignItems='center'
+              mb={2}
+            >
+              <Typography
+                variant='h6'
+                sx={{ color: neutral.text, fontWeight: 600 }}
+              >
+                Comentarios
+              </Typography>
+              <IconButton
+                onClick={() => setShowComments(!showComments)}
+                sx={{ color: neutral.textBody }}
+                aria-label={
+                  showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'
+                }
+                aria-expanded={showComments}
+                aria-controls='comments-section'
+              >
+                {showComments ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </Box>
+
+            <Collapse in={showComments} id='comments-section'>
+              <MaintenanceCommentsList
+                comments={ticket.comments || []}
+                onAddComment={handleAddComment}
+                onUpdateComment={handleUpdateComment}
+                onDeleteComment={handleDeleteComment}
+                currentUserRole={currentUserRole}
+                currentUserEmail={$userStore.email}
+                loading={addCommentMutation.isLoading}
+              />
+            </Collapse>
+          </Paper>
+        </>
+      )}
+
+      {showFilesPart && (
+        <Paper
+          sx={{
+            ...surfaceSx,
+            p: 3,
+            mb: 3
+          }}
+          role='region'
+          aria-label='Archivos adjuntos'
         >
-          <Typography
-            variant='h6'
-            sx={{ color: neutral.text, fontWeight: 600 }}
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            alignItems='center'
+            mb={2}
           >
-            Comentarios
-          </Typography>
-          <IconButton
-            onClick={() => setShowComments(!showComments)}
-            sx={{ color: neutral.textBody }}
-            aria-label={
-              showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'
-            }
-            aria-expanded={showComments}
-            aria-controls='comments-section'
-          >
-            {showComments ? <ExpandLess /> : <ExpandMore />}
-          </IconButton>
-        </Box>
+            <Typography
+              variant='h6'
+              sx={{ color: neutral.text, fontWeight: 600 }}
+            >
+              Archivos Adjuntos
+            </Typography>
+            <IconButton
+              onClick={() => setShowFiles(!showFiles)}
+              sx={{ color: neutral.textBody }}
+              aria-label={showFiles ? 'Ocultar archivos' : 'Mostrar archivos'}
+              aria-expanded={showFiles}
+              aria-controls='files-section'
+            >
+              {showFiles ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
 
-        <Collapse in={showComments} id='comments-section'>
-          <MaintenanceCommentsList
-            comments={ticket.comments || []}
-            onAddComment={handleAddComment}
-            onUpdateComment={handleUpdateComment}
-            onDeleteComment={handleDeleteComment}
-            currentUserRole={currentUserRole}
-            currentUserEmail={$userStore.email}
-            loading={addCommentMutation.isLoading}
-          />
-        </Collapse>
-      </Paper>
-
-      {/* Files Section */}
-      <Paper
-        sx={{
-          ...surfaceSx,
-          p: 3,
-          mb: 3
-        }}
-        role='region'
-        aria-label='Archivos adjuntos'
-      >
-        <Box
-          display='flex'
-          justifyContent='space-between'
-          alignItems='center'
-          mb={2}
-        >
-          <Typography
-            variant='h6'
-            sx={{ color: neutral.text, fontWeight: 600 }}
-          >
-            Archivos Adjuntos
-          </Typography>
-          <IconButton
-            onClick={() => setShowFiles(!showFiles)}
-            sx={{ color: neutral.textBody }}
-            aria-label={showFiles ? 'Ocultar archivos' : 'Mostrar archivos'}
-            aria-expanded={showFiles}
-            aria-controls='files-section'
-          >
-            {showFiles ? <ExpandLess /> : <ExpandMore />}
-          </IconButton>
-        </Box>
-
-        <Collapse in={showFiles} id='files-section'>
-          <MaintenanceFileUpload
-            files={ticket.files || []}
-            maxFilesScope='perUpload'
-            onFilesChange={handleFileUpload}
-            onFileRemove={handleFileDelete}
-            onFileView={handleFileView}
-            getFilePreviewUrl={getFilePreviewUrl}
-            uploading={uploadFilesMutation.isLoading}
-            disabled={deleteFileMutation.isLoading}
-          />
-        </Collapse>
-      </Paper>
+          <Collapse in={showFiles} id='files-section'>
+            <MaintenanceFileUpload
+              files={ticket.files || []}
+              maxFilesScope='perUpload'
+              onFilesChange={handleFileUpload}
+              onFileRemove={handleFileDelete}
+              onFileView={handleFileView}
+              getFilePreviewUrl={getFilePreviewUrl}
+              uploading={uploadFilesMutation.isLoading}
+              disabled={deleteFileMutation.isLoading}
+            />
+          </Collapse>
+        </Paper>
+      )}
     </>
   )
 }
