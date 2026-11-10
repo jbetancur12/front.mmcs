@@ -18,6 +18,7 @@ import MaintenanceTicketSignaturesCard from './ticket-details/MaintenanceTicketS
 import MaintenanceTicketSatisfactionCard from './ticket-details/MaintenanceTicketSatisfactionCard'
 import MaintenanceTicketQuickActions from './ticket-details/MaintenanceTicketQuickActions'
 import MaintenanceTicketNextStep from './ticket-details/MaintenanceTicketNextStep'
+import MaintenanceTicketEditBar from './ticket-details/MaintenanceTicketEditBar'
 import MaintenanceTicketDialogs from './ticket-details/MaintenanceTicketDialogs'
 import { neutral, intent, withAlpha } from 'src/theme/designTokens'
 
@@ -43,7 +44,7 @@ const MaintenanceTicketDetails: React.FC = () => {
         maxWidth={false}
         sx={{
           pt: { xs: 2, sm: 3 },
-          pb: { xs: 14, sm: 3 },
+          pb: { xs: 14, sm: 12 },
           px: { xs: 1, sm: 2, md: 3 },
           backgroundColor: neutral.surfaceAlt,
           minHeight: '100vh'
@@ -131,6 +132,7 @@ const MaintenanceTicketDetails: React.FC = () => {
         </Grid>
 
         <MaintenanceTicketDialogs ticket={ticket} details={details} />
+        <MaintenanceTicketEditBar details={details} />
       </Container>
     </MaintenanceErrorBoundary>
   )
