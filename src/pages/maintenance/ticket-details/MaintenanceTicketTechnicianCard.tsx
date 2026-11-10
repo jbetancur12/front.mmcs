@@ -292,11 +292,15 @@ const MaintenanceTicketTechnicianCard = ({
                   .join('')
                   .toUpperCase()}
               </Avatar>
-              <Box flex={1}>
+              <Box flex={1} minWidth={0}>
                 <Typography variant='body1' fontWeight='bold'>
                   {ticket.assignedTechnician.name}
                 </Typography>
-                <Typography variant='body2' color='text.secondary'>
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ overflowWrap: 'anywhere' }}
+                >
                   {ticket.assignedTechnician.email}
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>

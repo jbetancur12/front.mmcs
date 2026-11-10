@@ -570,24 +570,6 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             ? 'Comentario interno'
                             : 'Comentario público'}
                         </Typography>
-                        <Tooltip
-                          title={
-                            isInternal
-                              ? 'Solo visible para técnicos y administradores'
-                              : 'Visible para todos los usuarios'
-                          }
-                        >
-                          <Box
-                            component='span'
-                            sx={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            {isInternal ? (
-                              <Lock fontSize='small' />
-                            ) : (
-                              <Public fontSize='small' />
-                            )}
-                          </Box>
-                        </Tooltip>
                       </Box>
                     }
                   />
