@@ -95,7 +95,11 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
     }
   })
 
-  const { data: reusableCodes = [] } = useReusableCodes()
+  // El listado monta este diálogo siempre, aunque esté cerrado o la persona no pueda crear equipos (el API pide
+  // calibration:datasheet:create y respondía 403). Solo se piden los códigos cuando se abre.
+  const { data: reusableCodes = [] } = useReusableCodes(undefined, {
+    enabled: open
+  })
 
   const normalizedServiceType = String(formik.values.serviceType ?? '')
     .normalize('NFD')

@@ -102,7 +102,10 @@ export const useDataSheetCounts = () => {
 }
 
 /** Códigos liberados que un equipo nuevo puede reutilizar. */
-export const useReusableCodes = (serviceType?: string) => {
+export const useReusableCodes = (
+  serviceType?: string,
+  { enabled = true }: { enabled?: boolean } = {}
+) => {
   const axiosPrivate = useAxiosPrivate()
 
   return useQuery(
@@ -114,6 +117,7 @@ export const useReusableCodes = (serviceType?: string) => {
       return Array.isArray(response.data) ? response.data : []
     },
     {
+      enabled,
       staleTime: 30 * 1000,
       onError: (error) => {
         logger.error('Error fetching reusable dataSheet codes:', error)
