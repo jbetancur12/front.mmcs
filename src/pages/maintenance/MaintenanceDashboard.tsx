@@ -1,5 +1,5 @@
 import { getApiErrorReason } from 'src/utils/apiError'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import FormDialog from 'src/Components/Common/FormDialog'
@@ -13,6 +13,7 @@ import {
   Tooltip,
   Button,
   TextField,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
@@ -37,7 +38,8 @@ import {
   FilterList,
   Help,
   Science,
-  Assessment
+  Assessment,
+  Search
 } from '@mui/icons-material'
 import {
   useMaintenanceStats,
@@ -61,7 +63,7 @@ import {
   MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
 import MaintenanceTicketsTable from '../../Components/Maintenance/MaintenanceTicketsTable'
-import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicketCard'
+import MaintenanceTicketMobileCard from '../../Components/Maintenance/MaintenanceTicketMobileCard'
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
 import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStatusBadge'
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
@@ -119,6 +121,18 @@ const MaintenanceDashboard: React.FC = () => {
   })
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
+  const [mobileSearch, setMobileSearch] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) =>
+        (prev.search || '') === mobileSearch.trim()
+          ? prev
+          : { ...prev, search: mobileSearch.trim() || undefined }
+      )
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [mobileSearch])
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] =
     useState<MaintenanceTicket | null>(null)
@@ -650,10 +664,15 @@ const MaintenanceDashboard: React.FC = () => {
       {/* Stats Cards */}
       <Grid
         container
-        spacing={3}
-        mb={3}
+        spacing={{ xs: 1.5, md: 3 }}
+        mb={{ xs: 2, md: 3 }}
         role='region'
         aria-label='Estadísticas del panel'
+        sx={{
+          flexWrap: { xs: 'nowrap', md: 'wrap' },
+          overflowX: { xs: 'auto', md: 'visible' },
+          pb: { xs: 0.5, md: 0 }
+        }}
       >
         {statsLoading ? (
           <>
@@ -663,7 +682,7 @@ const MaintenanceDashboard: React.FC = () => {
           </>
         ) : (
           <>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Total Tickets'
                 value={stats?.metrics?.totalTickets || 0}
@@ -675,7 +694,7 @@ const MaintenanceDashboard: React.FC = () => {
                 }
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Pendientes'
                 value={stats?.metrics?.pendingTickets || 0}
@@ -685,7 +704,7 @@ const MaintenanceDashboard: React.FC = () => {
                 onClick={() => applyStatFilter([MaintenanceStatus.PENDING])}
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Completados'
                 value={stats?.metrics?.completedTickets || 0}
@@ -695,7 +714,7 @@ const MaintenanceDashboard: React.FC = () => {
                 onClick={() => applyStatFilter([MaintenanceStatus.COMPLETED])}
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Tiempo Promedio'
                 value={avgResolutionTimeDisplay}
@@ -707,6 +726,26 @@ const MaintenanceDashboard: React.FC = () => {
           </>
         )}
       </Grid>
+
+      {isMobile && (
+        <TextField
+          fullWidth
+          size='small'
+          type='search'
+          value={mobileSearch}
+          onChange={(e) => setMobileSearch(e.target.value)}
+          placeholder='Buscar tickets'
+          inputProps={{ 'aria-label': 'Buscar tickets' }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>
+                <Search fontSize='small' />
+              </InputAdornment>
+            )
+          }}
+          sx={{ mb: 2 }}
+        />
+      )}
 
       {/* Filters */}
       {showFilters && (
@@ -773,8 +812,9 @@ const MaintenanceDashboard: React.FC = () => {
               variant='body2'
               sx={{ mt: 0.5, color: neutral.textMuted }}
             >
-              Ordenados por prioridad y antigüedad. Doble clic en una fila para
-              abrir el ticket.
+              {isMobile
+                ? 'Ordenados por prioridad y antigüedad.'
+                : 'Ordenados por prioridad y antigüedad. Doble clic en una fila para abrir el ticket.'}
             </Typography>
           </Box>
         </Box>
@@ -799,17 +839,16 @@ const MaintenanceDashboard: React.FC = () => {
             </Alert>
           ) : (
             <>
-              <Grid container spacing={2}>
+              <Grid container spacing={1.5}>
                 {sortedTickets.map((ticket) => (
                   <Grid item xs={12} key={ticket.id}>
-                    <MaintenanceTicketCard
+                    <MaintenanceTicketMobileCard
                       ticket={ticket}
                       onView={handleViewTicket}
                       onEdit={handleEditTicket}
                       onDelete={
                         canDeleteTicket(ticket) ? handleDeleteClick : undefined
                       }
-                      showActions={true}
                     />
                   </Grid>
                 ))}
