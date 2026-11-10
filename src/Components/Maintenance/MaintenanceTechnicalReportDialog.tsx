@@ -18,7 +18,9 @@ import {
   Stack,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import {
   Add,
@@ -42,6 +44,8 @@ import {
 } from '../../hooks/useMaintenance'
 import { neutral, intent, brand } from 'src/theme/designTokens'
 import { confirmDialog } from 'src/utils/confirm'
+import FormTabs, { FormTab } from 'src/Components/Common/FormTabs'
+import FormErrorSummary from 'src/Components/Common/FormErrorSummary'
 import { getTechnicalReportCompletion } from './technicalReportCompletion'
 
 interface Props {
@@ -54,6 +58,17 @@ interface Props {
   generatingPdf?: boolean
   onSave: (data: MaintenanceTechnicalReportRequest) => Promise<void> | void
   onGeneratePdf: () => void
+}
+
+type ReportTab = 'general' | 'diagnosis' | 'verification' | 'closing'
+
+const ERROR_TAB: Record<string, ReportTab> = {
+  finalDiagnosis: 'diagnosis',
+  rootCause: 'diagnosis',
+  activities: 'diagnosis',
+  verificationProtocolType: 'verification',
+  verificationTools: 'verification',
+  verificationTests: 'verification'
 }
 
 interface ValidationState {
@@ -162,6 +177,9 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
   const [formData, setFormData] =
     useState<MaintenanceTechnicalReportRequest>(defaultReportState)
   const [errors, setErrors] = useState<ValidationState>({})
+  const [tab, setTab] = useState<ReportTab>('general')
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [toolSearch, setToolSearch] = useState('')
   const { data: toolEquipmentOptions = [], isFetching: toolSearchLoading } =
     useMaintenanceToolEquipmentSearch(toolSearch)
@@ -183,6 +201,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
     if (open) {
       setFormData(toEditableReport(report))
       setErrors({})
+      setTab('general')
     }
   }, [open, report])
 
@@ -447,6 +466,8 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
     setErrors(nextErrors)
 
     if (Object.keys(nextErrors).length > 0) {
+      const firstWithError = Object.keys(nextErrors)[0]
+      setTab(ERROR_TAB[firstWithError] ?? 'general')
       return
     }
 
@@ -461,11 +482,40 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
     await onSave(payload)
   }
 
+  const countErrors = (tabKey: ReportTab) =>
+    Object.keys(errors).filter(
+      (key) => errors[key as keyof ValidationState] && ERROR_TAB[key] === tabKey
+    ).length
+  const tabs: FormTab[] = [
+    { key: 'general', label: 'General' },
+    {
+      key: 'diagnosis',
+      label: 'Diagnóstico e intervención',
+      errorCount: countErrors('diagnosis')
+    },
+    {
+      key: 'verification',
+      label: 'Verificación',
+      errorCount: countErrors('verification')
+    },
+    { key: 'closing', label: 'Conclusiones' }
+  ]
+  const totalErrors = Object.values(errors).filter(Boolean).length
+  const tabSx = (key: ReportTab) => ({
+    display: tab === key ? 'block' : 'none'
+  })
+
   const completionPct = getTechnicalReportCompletion(formData)
   const completionTone = getCompletionTone(completionPct)
 
   return (
-    <Dialog open={open} onClose={handleRequestClose} maxWidth='lg' fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleRequestClose}
+      maxWidth='lg'
+      fullWidth
+      fullScreen={fullScreen}
+    >
       <DialogTitle>
         <Box
           display='flex'
@@ -516,8 +566,28 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
           <SignalLoader message='Cargando estructura del reporte técnico...' />
         )}
 
-        <Stack spacing={2}>
-          <Paper sx={{ ...sectionCardSx, backgroundColor: neutral.surfaceAlt }}>
+        <FormTabs
+          tabs={tabs}
+          value={tab}
+          onChange={(k) => setTab(k as ReportTab)}
+        />
+        <FormErrorSummary count={totalErrors} />
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            mt: totalErrors ? 2 : 0
+          }}
+        >
+          <Paper
+            sx={{
+              ...sectionCardSx,
+              ...tabSx('general'),
+              backgroundColor: neutral.surfaceAlt
+            }}
+          >
             <Stack
               direction={{ xs: 'column', md: 'row' }}
               spacing={2}
@@ -556,7 +626,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             </Stack>
           </Paper>
 
-          <Paper sx={sectionCardSx}>
+          <Paper sx={{ ...sectionCardSx, ...tabSx('general') }}>
             <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 1.5 }}>
               Asistente de Protocolo
             </Typography>
@@ -595,7 +665,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             )}
           </Paper>
 
-          <Paper sx={sectionCardSx}>
+          <Paper sx={{ ...sectionCardSx, ...tabSx('general') }}>
             <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 2 }}>
               Resumen Técnico
             </Typography>
@@ -665,7 +735,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             </Grid>
           </Paper>
 
-          <Paper sx={sectionCardSx}>
+          <Paper sx={{ ...sectionCardSx, ...tabSx('diagnosis') }}>
             <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 2 }}>
               Diagnóstico
             </Typography>
@@ -695,7 +765,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             </Stack>
           </Paper>
 
-          <Paper sx={sectionCardSx}>
+          <Paper sx={{ ...sectionCardSx, ...tabSx('diagnosis') }}>
             <Box
               display='flex'
               alignItems='center'
@@ -819,7 +889,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             </Stack>
           </Paper>
 
-          <Paper sx={sectionCardSx}>
+          <Paper sx={{ ...sectionCardSx, ...tabSx('verification') }}>
             <Box
               display='flex'
               alignItems='center'
@@ -1140,7 +1210,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             )}
           </Paper>
 
-          <Paper sx={sectionCardSx}>
+          <Paper sx={{ ...sectionCardSx, ...tabSx('closing') }}>
             <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 2 }}>
               Conclusiones y Cláusulas
             </Typography>
@@ -1187,7 +1257,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               />
             </Stack>
           </Paper>
-        </Stack>
+        </Box>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
