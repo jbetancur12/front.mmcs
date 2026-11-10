@@ -180,6 +180,7 @@ const MaintenanceTicketActivitySections = ({
         <Collapse in={showFiles} id='files-section'>
           <MaintenanceFileUpload
             files={ticket.files || []}
+            maxFilesScope='perUpload'
             onFilesChange={handleFileUpload}
             onFileRemove={handleFileDelete}
             onFileView={handleFileView}

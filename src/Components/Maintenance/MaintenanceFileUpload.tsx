@@ -41,6 +41,11 @@ interface MaintenanceFileUploadProps {
   uploading?: boolean
   uploadProgress?: number
   failedFiles?: Set<string>
+  /**
+   * `total`: el tope cuenta lo ya cargado más lo nuevo (archivos que aún no se envían).
+   * `perUpload`: el tope es por cada subida; los archivos ya guardados no cuentan.
+   */
+  maxFilesScope?: 'total' | 'perUpload'
 }
 
 /**
@@ -52,6 +57,7 @@ interface MaintenanceFileUploadProps {
  * @param onFileRemove - Callback when a file is removed
  * @param onFileView - Callback when a file is viewed
  * @param maxFiles - Maximum number of files allowed
+ * @param maxFilesScope - Si el tope es del total o de cada subida
  * @param maxSizeInMB - Maximum file size in MB
  * @param acceptedFileTypes - Array of accepted file types
  * @param disabled - Whether the upload is disabled
@@ -77,7 +83,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
   disabled = false,
   uploading = false,
   uploadProgress = 0,
-  failedFiles = new Set()
+  failedFiles = new Set(),
+  maxFilesScope = 'total'
 }) => {
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -106,15 +113,16 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
         return
       }
 
-      // Check total file count
-      if (files.length + acceptedFiles.length > maxFiles) {
+      // Tope de archivos: del total pendiente, o de cada subida
+      const alreadyCounted = maxFilesScope === 'total' ? files.length : 0
+      if (alreadyCounted + acceptedFiles.length > maxFiles) {
         setError(`Máximo ${maxFiles} archivos permitidos`)
         return
       }
 
       onFilesChange(acceptedFiles)
     },
-    [files.length, maxFiles, maxSizeInMB, onFilesChange]
+    [files.length, maxFiles, maxFilesScope, maxSizeInMB, onFilesChange]
   )
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -307,7 +315,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           borderColor:
             dragActive || isDragActive ? intent.success : neutral.borderStrong,
           backgroundColor:
-            dragActive || isDragActive ? intent.successSoft : '#ffffff',
+            dragActive || isDragActive ? intent.successSoft : neutral.surface,
           borderRadius: '16px',
           boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
           cursor: disabled || uploading ? 'not-allowed' : 'pointer',
@@ -316,7 +324,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             borderColor:
               disabled || uploading ? neutral.borderStrong : intent.success,
             backgroundColor:
-              disabled || uploading ? '#ffffff' : neutral.surfaceAlt
+              disabled || uploading ? neutral.surface : neutral.surfaceAlt
           },
           '&:focus': {
             outline: `2px solid ${intent.successInk}`,
@@ -345,7 +353,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             <CloudUpload
               sx={{
                 fontSize: 40,
-                color: disabled || uploading ? 'grey.400' : intent.successInk
+                color:
+                  disabled || uploading ? neutral.textMuted : intent.successInk
               }}
             />
           </Box>
@@ -366,7 +375,9 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             color='text.secondary'
             sx={{ fontWeight: 500 }}
           >
-            Máximo {maxFiles} archivos, {maxSizeInMB}MB cada uno
+            {maxFilesScope === 'perUpload' ? 'Hasta' : 'Máximo'} {maxFiles}{' '}
+            archivos{maxFilesScope === 'perUpload' ? ' por subida' : ''},{' '}
+            {maxSizeInMB}MB cada uno
           </Typography>
           <Typography
             variant='caption'
@@ -447,7 +458,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               mb: 2
             }}
           >
-            Archivos ({files.length}/{maxFiles})
+            Archivos ({files.length}
+            {maxFilesScope === 'total' ? `/${maxFiles}` : ''})
           </Typography>
           <Grid container spacing={2}>
             {files.map((file) => (
@@ -456,7 +468,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                   sx={{
                     backgroundColor: failedFiles.has(file.id)
                       ? neutral.surfaceAlt
-                      : '#ffffff',
+                      : neutral.surface,
                     borderRadius: '12px',
                     boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
                     border: failedFiles.has(file.id)
@@ -535,6 +547,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                           <Tooltip title='Reintentar subida'>
                             <IconButton
                               size='small'
+                              aria-label={`Reintentar subida de ${file.originalName}`}
                               onClick={() => handleFileRetry(file)}
                               disabled={uploading}
                               sx={{
@@ -559,6 +572,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                           <Tooltip title='Ver archivo'>
                             <IconButton
                               size='small'
+                              aria-label={`Ver ${file.originalName}`}
                               onClick={() => onFileView(file)}
                               sx={{
                                 backgroundColor: intent.successSoft,
@@ -577,6 +591,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                         <Tooltip title='Eliminar archivo'>
                           <IconButton
                             size='small'
+                            aria-label={`Eliminar ${file.originalName}`}
                             onClick={() => onFileRemove(file.id)}
                             disabled={uploading}
                             sx={{
