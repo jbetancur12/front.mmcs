@@ -73,6 +73,9 @@ const MaintenanceTicketNextStep = ({
 
   const [assignOpen, setAssignOpen] = useState(false)
   const [scheduleOpen, setScheduleOpen] = useState(false)
+  const [startOpen, setStartOpen] = useState(false)
+  const [intakeCondition, setIntakeCondition] = useState('')
+  const [intakeAccessories, setIntakeAccessories] = useState('')
   const [technicianId, setTechnicianId] = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
   const [pauseAnchor, setPauseAnchor] = useState<HTMLElement | null>(null)
@@ -147,10 +150,9 @@ const MaintenanceTicketNextStep = ({
         setScheduleOpen(true)
         return
       case 'start':
-        await update(
-          { status: MaintenanceStatus.IN_PROGRESS },
-          'Servicio iniciado'
-        )
+        setIntakeCondition(ticket.intakePhysicalCondition ?? '')
+        setIntakeAccessories(ticket.receivedAccessories ?? '')
+        setStartOpen(true)
         return
       case 'resume':
         await update(
@@ -197,6 +199,22 @@ const MaintenanceTicketNextStep = ({
       'Técnico asignado'
     )
     if (ok) setAssignOpen(false)
+  }
+
+  const submitStart = async (withIntake: boolean) => {
+    const ok = await update(
+      {
+        status: MaintenanceStatus.IN_PROGRESS,
+        ...(withIntake
+          ? {
+              intakePhysicalCondition: intakeCondition.trim() || null,
+              receivedAccessories: intakeAccessories.trim() || null
+            }
+          : {})
+      },
+      'Servicio iniciado'
+    )
+    if (ok) setStartOpen(false)
   }
 
   const submitSchedule = async () => {
@@ -453,6 +471,52 @@ const MaintenanceTicketNextStep = ({
               </MenuItem>
             ))}
         </TextField>
+      </FormDialog>
+
+      <FormDialog
+        open={startOpen}
+        onClose={() => setStartOpen(false)}
+        title='Iniciar servicio'
+        subtitle={`Ticket ${ticket.ticketCode}`}
+        submitLabel='Iniciar servicio'
+        onSubmit={() => submitStart(true)}
+        loading={busy}
+        extraActions={
+          <Button
+            color='inherit'
+            disabled={busy}
+            onClick={() => submitStart(false)}
+            sx={{ textTransform: 'none' }}
+          >
+            Omitir
+          </Button>
+        }
+      >
+        <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+          Anota cómo recibes el equipo. Es opcional, pero queda en la orden de
+          servicio.
+        </Typography>
+        <TextField
+          fullWidth
+          multiline
+          minRows={3}
+          size='small'
+          label='Condición inicial del equipo'
+          placeholder='Rayones, golpes, faltantes o condición general'
+          value={intakeCondition}
+          onChange={(e) => setIntakeCondition(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          fullWidth
+          multiline
+          minRows={2}
+          size='small'
+          label='Accesorios disponibles'
+          placeholder='Cables, sensores, adaptadores, batería u otros'
+          value={intakeAccessories}
+          onChange={(e) => setIntakeAccessories(e.target.value)}
+        />
       </FormDialog>
 
       <FormDialog
