@@ -6,7 +6,7 @@ import {
 } from '../../../types/maintenance'
 import { formatDate } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketScheduleCardProps {
   ticket: MaintenanceTicket
@@ -51,7 +51,7 @@ const MaintenanceTicketScheduleCard = ({
               justifyContent: 'center'
             }}
           >
-            <Schedule sx={{ color: 'white', fontSize: 20 }} />
+            <Schedule sx={{ color: brand.onMain, fontSize: 20 }} />
           </Box>
           <Typography
             variant='h6'

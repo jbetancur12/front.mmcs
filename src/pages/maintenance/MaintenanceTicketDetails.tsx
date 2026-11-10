@@ -74,7 +74,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             }
           }}
         >
-          Volver al Dashboard
+          Volver al Panel
         </Button>
       </Container>
     )

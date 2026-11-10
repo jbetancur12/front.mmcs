@@ -89,45 +89,6 @@ const MaintenanceTicketQuickActions = ({
                 {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
               </Button>
             )}
-          {/* 
-          <Button
-            fullWidth
-            variant='outlined'
-            startIcon={<Assessment />}
-            onClick={handleGenerateStatusReport}
-            size='small'
-            disabled={generateStatusReportMutation.isLoading}
-          >
-            Reporte de Estado
-          </Button> */}
-          {/* 
-          <Button
-            fullWidth
-            variant='outlined'
-            startIcon={<AssignmentTurnedIn />}
-            onClick={handleGenerateServiceCertificate}
-            size='small'
-            disabled={
-              generateServiceCertificateMutation.isLoading ||
-              ticket.status !== MaintenanceStatus.COMPLETED
-            }
-          >
-            Certificado
-          </Button>
-
-          <Button
-            fullWidth
-            variant='outlined'
-            startIcon={<Receipt />}
-            onClick={handleGenerateInvoice}
-            size='small'
-            disabled={
-              generateServiceInvoiceMutation.isLoading ||
-              (!ticket.actualCost && !ticket.estimatedCost)
-            }
-          >
-            Factura
-          </Button> */}
 
           <Divider sx={{ my: 1 }} />
 

@@ -68,6 +68,8 @@ const useMaintenanceTicketDetails = () => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   // Asignar técnicos exige poder listarlos (GET /maintenance/technicians)
   const canManageTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
+  // Marcar el ticket como facturado exige la misma capacidad que la pantalla de Facturación
+  const canInvoice = useCan(PERMISSIONS.MAINTENANCE_INVOICING_MANAGE)
   const currentUserRole = $userStore.rol[0] || ROLES.USER
   // Sin alcance total sobre los tickets (capacidad), solo se ven y operan los asignados a uno mismo
   const isTechnician = !useCan(PERMISSIONS.MAINTENANCE_TICKET_MANAGE_ALL)
@@ -638,6 +640,7 @@ const useMaintenanceTicketDetails = () => {
     isMobile,
     navigate,
     canManageTechnicians,
+    canInvoice,
     currentUserRole,
     isTechnician,
     canEditTicket,

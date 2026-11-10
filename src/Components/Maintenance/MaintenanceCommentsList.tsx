@@ -275,7 +275,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 mb: 2,
                 backgroundColor: comment.isInternal
                   ? intent.warningSoft
-                  : '#ffffff',
+                  : neutral.surface,
                 border: comment.isInternal
                   ? `1px solid ${intent.warning}`
                   : `1px solid ${neutral.border}`,

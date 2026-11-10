@@ -39,11 +39,11 @@ interface CostsListDialogProps {
   open: boolean
   onClose: () => void
   costs?: Cost[]
-  // 1. Añadimos el estado de facturación como prop inicial
   isInitiallyInvoiced: boolean
-  // 2. Añadimos el manejador para la acción de facturar
   onInvoice: () => Promise<void>
   isProcessingInvoice: boolean // Estado de carga para la acción de facturar
+  /** Quien no puede facturar (capacidad de Facturación) ve el costo pero no el botón. */
+  canInvoice: boolean
 }
 
 // --- Componente Principal ---
@@ -54,7 +54,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
   costs: initialCosts = [],
   isInitiallyInvoiced,
   onInvoice,
-  isProcessingInvoice
+  isProcessingInvoice,
+  canInvoice
 }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -85,7 +86,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
     if (!isConfirmed) return
     try {
       await onInvoice()
-      // 3. Una vez que la acción del padre es exitosa, actualizamos el estado interno
+      // Una vez que la acción del padre es exitosa, actualizamos el estado interno
       setIsInvoiced(true)
       // Opcional: podrías cerrar el diálogo aquí, o dejarlo abierto.
       // onClose();
@@ -255,32 +256,33 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
         >
           Cerrar
         </Button>
-        {/* 👈 Botón de Facturar */}
-        <Button
-          onClick={handleInvoice}
-          color='primary'
-          variant='contained'
-          disabled={isInvoiced || isProcessingInvoice}
-          startIcon={
-            isProcessingInvoice ? (
-              <CircularProgress size={20} color='inherit' />
-            ) : (
-              <Receipt />
-            )
-          }
-          sx={{
-            backgroundColor: intent.successInk,
-            '&:hover': { backgroundColor: intent.successInk }
-          }}
-        >
-          {isProcessingInvoice
-            ? 'Facturando...'
-            : isInvoiced
-              ? 'Ya Facturado'
-              : initialCosts.length === 0
-                ? 'Marcar como Facturado'
-                : 'Facturar Costos'}
-        </Button>
+        {canInvoice && (
+          <Button
+            onClick={handleInvoice}
+            color='primary'
+            variant='contained'
+            disabled={isInvoiced || isProcessingInvoice}
+            startIcon={
+              isProcessingInvoice ? (
+                <CircularProgress size={20} color='inherit' />
+              ) : (
+                <Receipt />
+              )
+            }
+            sx={{
+              backgroundColor: intent.successInk,
+              '&:hover': { backgroundColor: intent.successInk }
+            }}
+          >
+            {isProcessingInvoice
+              ? 'Facturando...'
+              : isInvoiced
+                ? 'Ya Facturado'
+                : initialCosts.length === 0
+                  ? 'Marcar como Facturado'
+                  : 'Facturar Costos'}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   )

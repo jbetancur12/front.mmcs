@@ -111,7 +111,7 @@ const MaintenanceTicketHeader = ({
             handleBack()
           }}
         >
-          Dashboard de Mantenimiento
+          Panel de Mantenimiento
         </Link>
         <Typography
           sx={{
@@ -138,7 +138,7 @@ const MaintenanceTicketHeader = ({
         >
           <IconButton
             onClick={handleBack}
-            aria-label='Volver al dashboard de mantenimiento'
+            aria-label='Volver al panel de mantenimiento'
             sx={{
               minWidth: 48,
               minHeight: 48,
@@ -186,7 +186,7 @@ const MaintenanceTicketHeader = ({
           flexWrap='wrap'
           width={{ xs: '100%', sm: 'auto' }}
         >
-          {/* Real-time updates indicator - hide on mobile */}
+          {/* Indicador de tiempo real (oculto en móvil) */}
           <Box
             display={{ xs: 'none', md: 'flex' }}
             alignItems='center'
@@ -236,7 +236,7 @@ const MaintenanceTicketHeader = ({
             </IconButton>
           </Tooltip>
 
-          {/* PDF Generation Menu */}
+          {/* Menú de documentos PDF */}
           <Button
             variant='outlined'
             startIcon={
@@ -357,30 +357,6 @@ const MaintenanceTicketHeader = ({
               )}
               {/* 
               <ListItemButton
-                onClick={handleGenerateStatusReport}
-                role='menuitem'
-                aria-label='Generar reporte de estado'
-                sx={{
-                  borderRadius: '8px',
-                  mx: 1,
-                  mb: 0.5,
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    background: withAlpha(intent.success, 0.1),
-                    transform: 'translateX(4px)'
-                  }
-                }}
-              >
-                <ListItemIcon>
-                  <Assessment fontSize='small' aria-hidden='true' sx={{ color: intent.successInk }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary='Reporte de Estado'
-                  secondary='Estado actual del ticket'
-                />
-              </ListItemButton> */}
-              {/* 
-              <ListItemButton
                 onClick={handleGenerateServiceCertificate}
                 disabled={ticket.status !== MaintenanceStatus.COMPLETED}
                 role='menuitem'
@@ -478,6 +454,7 @@ const MaintenanceTicketHeader = ({
                 variant='outlined'
                 startIcon={!isMobile && <Cancel />}
                 onClick={handleCancelEdit}
+                aria-label='Cancelar edición'
                 disabled={updateTicketMutation.isLoading}
                 size={isMobile ? 'small' : 'medium'}
                 sx={{
@@ -507,6 +484,7 @@ const MaintenanceTicketHeader = ({
                   ))
                 }
                 onClick={handleSaveEdit}
+                aria-label='Guardar cambios'
                 disabled={updateTicketMutation.isLoading || !isEditValid}
                 size={isMobile ? 'small' : 'medium'}
                 sx={{
@@ -541,6 +519,7 @@ const MaintenanceTicketHeader = ({
               variant='contained'
               startIcon={!isMobile && <Edit />}
               onClick={handleEdit}
+              aria-label='Editar ticket'
               disabled={!canEditTicket || isCustomerApprovalLocked}
               size={isMobile ? 'small' : 'medium'}
               sx={{

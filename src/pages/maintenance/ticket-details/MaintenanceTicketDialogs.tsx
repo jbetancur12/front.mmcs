@@ -45,6 +45,7 @@ const MaintenanceTicketDialogs = ({
     generateTechnicalReportMutation,
     handleCompleteWithCosts,
     handleInvoice,
+    canInvoice,
     handleSavePendingSignatures,
     handleGenerateTechnicalReport,
     handleSaveTechnicalReport,
@@ -313,6 +314,7 @@ const MaintenanceTicketDialogs = ({
         isProcessingInvoice={updateTicketMutation.isLoading}
         isInitiallyInvoiced={ticket.isInvoiced || false}
         onInvoice={handleInvoice}
+        canInvoice={canInvoice}
       />
 
       <MaintenanceTechnicalReportDialog

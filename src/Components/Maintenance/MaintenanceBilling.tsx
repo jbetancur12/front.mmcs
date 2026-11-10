@@ -558,10 +558,18 @@ const MaintenanceBilling: React.FC = () => {
                       alignItems: 'center'
                     }}
                   >
-                    <Typography variant='h6' fontWeight={700} color='white'>
+                    <Typography
+                      variant='h6'
+                      fontWeight={700}
+                      color={brand.onMain}
+                    >
                       Total
                     </Typography>
-                    <Typography variant='h5' fontWeight={700} color='white'>
+                    <Typography
+                      variant='h5'
+                      fontWeight={700}
+                      color={brand.onMain}
+                    >
                       {formatCurrency(row.original.totalCost)}
                     </Typography>
                   </Box>

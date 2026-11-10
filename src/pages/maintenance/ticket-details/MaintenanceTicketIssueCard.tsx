@@ -53,10 +53,10 @@ const MaintenanceTicketIssueCard = ({
         <Box
           sx={{
             p: 2,
-            bgcolor: 'grey.50',
+            bgcolor: neutral.surfaceAlt,
             borderRadius: 1,
             border: '1px solid',
-            borderColor: 'grey.200'
+            borderColor: neutral.border
           }}
         >
           <Typography

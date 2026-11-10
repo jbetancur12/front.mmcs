@@ -20,7 +20,7 @@ import {
   MaintenanceStatus
 } from '../../../types/maintenance'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceTicketTechnicianCardProps {
   ticket: MaintenanceTicket
@@ -65,7 +65,7 @@ const MaintenanceTicketTechnicianCard = ({
               justifyContent: 'center'
             }}
           >
-            <Assignment sx={{ color: 'white', fontSize: 20 }} />
+            <Assignment sx={{ color: brand.onMain, fontSize: 20 }} />
           </Box>
           <Typography
             variant='h6'
@@ -310,7 +310,7 @@ const MaintenanceTicketTechnicianCard = ({
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <Typography variant='body2' color='text.secondary'>
-                  Rating
+                  Calificación
                 </Typography>
                 <Box display='flex' alignItems='center' gap={0.5}>
                   <Star color='warning' fontSize='small' />

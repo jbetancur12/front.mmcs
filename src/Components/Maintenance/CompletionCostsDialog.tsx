@@ -444,7 +444,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             inputProps={{ maxLength: 500 }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white'
+                backgroundColor: neutral.surface
               }
             }}
           />
@@ -493,7 +493,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             inputProps={{ min: 1, step: 1 }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white'
+                backgroundColor: neutral.surface
               }
             }}
           />
