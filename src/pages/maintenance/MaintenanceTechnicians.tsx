@@ -1,4 +1,5 @@
 import { getApiErrorReason } from 'src/utils/apiError'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import React, { useMemo, useState } from 'react'
 import {
   Container,
@@ -14,7 +15,6 @@ import {
   Avatar,
   Chip,
   IconButton,
-  Alert,
   FormControlLabel,
   Switch,
   Autocomplete,
@@ -817,97 +817,62 @@ const MaintenanceTechnicians: React.FC = () => {
       </Dialog>
 
       {/* Status Toggle Confirmation Dialog */}
-      <Dialog
+      <ConfirmDialog
         open={statusConfirmDialogOpen}
-        onClose={() => setStatusConfirmDialogOpen(false)}
-      >
-        <DialogTitle>
-          {technicianToToggle?.status === 'active'
-            ? 'Desactivar Técnico'
-            : 'Reactivar Técnico'}
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            ¿Está seguro de que desea{' '}
+        title={
+          technicianToToggle?.status === 'active'
+            ? 'Desactivar técnico'
+            : 'Reactivar técnico'
+        }
+        message={
+          <>
+            ¿Seguro que quieres{' '}
             {technicianToToggle?.status === 'active'
               ? 'desactivar'
               : 'reactivar'}{' '}
-            al técnico <strong>{technicianToToggle?.name}</strong>?
-          </Typography>
-          {technicianToToggle?.status === 'active' && (
-            <Alert severity='warning' sx={{ mt: 2 }}>
-              El técnico no podrá ser asignado a nuevos tickets.
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setStatusConfirmDialogOpen(false)}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleToggleStatus}
-            color={
-              technicianToToggle?.status === 'active' ? 'warning' : 'success'
-            }
-            variant='contained'
-            disabled={updateTechnicianMutation.isLoading}
-          >
-            {updateTechnicianMutation.isLoading
-              ? 'Procesando...'
-              : technicianToToggle?.status === 'active'
-                ? 'Desactivar'
-                : 'Reactivar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            a <strong>{technicianToToggle?.name}</strong>?
+            {technicianToToggle?.status === 'active' &&
+              ' No podrá ser asignado a nuevos tickets.'}
+          </>
+        }
+        confirmLabel={
+          technicianToToggle?.status === 'active' ? 'Desactivar' : 'Reactivar'
+        }
+        tone={technicianToToggle?.status === 'active' ? 'danger' : 'default'}
+        loading={updateTechnicianMutation.isLoading}
+        onConfirm={handleToggleStatus}
+        onClose={() => setStatusConfirmDialogOpen(false)}
+      />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmDialog
         open={deleteDialogOpen}
+        title={deleteError ? 'No se puede eliminar' : 'Eliminar técnico'}
+        message={
+          deleteError ?? (
+            <>
+              ¿Seguro que quieres eliminar a{' '}
+              <strong>{technicianToDelete?.name}</strong>? Esta acción no se
+              puede deshacer.
+            </>
+          )
+        }
+        confirmLabel={deleteError ? 'Cerrar' : 'Eliminar'}
+        tone={deleteError ? 'default' : 'danger'}
+        loading={deleteTechnicianMutation.isLoading}
+        onConfirm={() => {
+          if (deleteError) {
+            setDeleteDialogOpen(false)
+            setDeleteError(null)
+          } else {
+            handleDelete()
+          }
+        }}
         onClose={() => {
           setDeleteDialogOpen(false)
           setDeleteError(null)
         }}
-      >
-        <DialogTitle>
-          {deleteError ? 'No se puede eliminar' : 'Confirmar Eliminación'}
-        </DialogTitle>
-        <DialogContent>
-          {deleteError ? (
-            <Alert severity='error' sx={{ mt: 1 }}>
-              {deleteError}
-            </Alert>
-          ) : (
-            <Typography>
-              ¿Está seguro de que desea eliminar al técnico{' '}
-              <strong>{technicianToDelete?.name}</strong>? Esta acción no se
-              puede deshacer.
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setDeleteDialogOpen(false)
-              setDeleteError(null)
-            }}
-          >
-            {deleteError ? 'Cerrar' : 'Cancelar'}
-          </Button>
-          {!deleteError && (
-            <Button
-              onClick={handleDelete}
-              color='error'
-              variant='contained'
-              disabled={deleteTechnicianMutation.isLoading}
-            >
-              {deleteTechnicianMutation.isLoading
-                ? 'Eliminando...'
-                : 'Eliminar'}
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
+      />
     </Container>
   )
 }
