@@ -72,17 +72,17 @@ export const useResponsiveTicketGrid = () => {
 
     if (width >= 3840) {
       // 4K y superiores (3840x2160+) - Maximizar tickets
-      baseColumns = 8
+      baseColumns = 6
       baseCardWidth = 280
       cardSpacing = 16
     } else if (width >= 2560) {
       // 2K/QHD (2560x1440) - Más tickets
-      baseColumns = 6
+      baseColumns = 5
       baseCardWidth = 260
       cardSpacing = 16
     } else if (width >= 1920) {
-      // Full HD (1920x1080) - Optimizado para TV
-      baseColumns = 5
+      // Full HD (1920x1080) - Tarjetas grandes: se leen desde lejos
+      baseColumns = 4
       baseCardWidth = 240
       cardSpacing = 12
     } else if (width >= 1366) {
@@ -134,7 +134,7 @@ export const useResponsiveTicketGrid = () => {
       cardHeight = 194
     } else if (height >= 1080) {
       // Full HD vertical - Optimizado para TV
-      cardHeight = 208
+      cardHeight = 250
     } else if (height >= 768) {
       // Laptop/tablet común
       cardHeight = 188
@@ -154,7 +154,7 @@ export const useResponsiveTicketGrid = () => {
       1,
       Math.min(
         rows,
-        height >= 2160 ? 6 : height >= 1440 ? 5 : height >= 1080 ? 4 : 3
+        height >= 2160 ? 6 : height >= 1440 ? 5 : height >= 1080 ? 3 : 3
       )
     )
 

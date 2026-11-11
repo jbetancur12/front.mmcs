@@ -129,7 +129,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                     sx={{
                       fontWeight: 800,
                       color: colors.primary,
-                      fontSize: '1rem',
+                      fontSize: { xs: '1rem', xl: '1.45rem' },
                       lineHeight: 1.2
                     }}
                   >
@@ -161,7 +161,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    fontSize: '0.95rem',
+                    fontSize: { xs: '0.95rem', xl: '1.3rem' },
                     lineHeight: 1.2
                   }}
                 >
@@ -175,7 +175,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                     color: colors.textSecondary, // Color neutro para el cliente
                     mb: 0.35,
                     fontWeight: 500, // Menos negrita
-                    fontSize: '0.78rem',
+                    fontSize: { xs: '0.78rem', xl: '1.05rem' },
                     lineHeight: 1.15,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -225,7 +225,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                           ? colors.warning
                           : colors.textPrimary, // Color condicional
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: { xs: '0.78rem', xl: '1.05rem' },
                         lineHeight: 1.15,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -280,14 +280,17 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                       sx={{
                         color: colors.textSecondary,
                         fontWeight: 600,
-                        fontSize: '0.72rem',
+                        fontSize: { xs: '0.72rem', xl: '1rem' },
                         lineHeight: 1.1,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      Abierto hace: {getElapsedTime(ticket.createdAt)}
+                      {requiresTechnicalReport
+                        ? 'Sin reporte · creado hace'
+                        : 'Abierto hace'}{' '}
+                      {getElapsedTime(ticket.createdAt)}
                     </Typography>
                   </Box>
                 </Box>

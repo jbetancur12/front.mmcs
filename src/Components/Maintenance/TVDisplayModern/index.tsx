@@ -109,11 +109,12 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       ...(tickets.medium || []),
       ...(tickets.low || [])
     ].sort((a, b) => {
+      // Lo abierto va primero; los completados sin reporte técnico, al final
       if (a.requiresTechnicalReport && !b.requiresTechnicalReport) {
-        return -1
+        return 1
       }
       if (!a.requiresTechnicalReport && b.requiresTechnicalReport) {
-        return 1
+        return -1
       }
 
       // Primero por prioridad
@@ -217,7 +218,10 @@ const MaintenanceTVDisplayModern: React.FC = () => {
 
     const backendMetrics = tvDisplayData.metrics
     return {
-      totalTickets: backendMetrics.totalActive,
+      // «Total activos» son los abiertos; los completados sin reporte tienen su propio indicador
+      totalTickets:
+        backendMetrics.totalActive -
+        (backendMetrics.pendingTechnicalReport || 0),
       pendingTickets: backendMetrics.pending,
       assignedTickets: backendMetrics.assigned,
       inProgressTickets: backendMetrics.inProgress,
@@ -525,7 +529,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                 <TrendingUp
                   sx={{ fontSize: '1.7rem', color: modernColors.primary }}
                 />
-                Tickets en Gestión ({organizedTickets.paginatedTickets.length})
+                Tickets en Gestión ({metrics.totalTickets})
               </Typography>
 
               {metrics.pendingTechnicalReport > 0 && (
