@@ -479,7 +479,9 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
       verificationTests: normalizedTests
     }
 
+    // Si guardar falla, onSave lanza el error y el reporte sigue abierto para corregir
     await onSave(payload)
+    onClose()
   }
 
   const countErrors = (tabKey: ReportTab) =>
