@@ -1,7 +1,14 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState, useEffect, useMemo } from 'react'
-import { Box, Typography, Container, Card, Chip } from '@mui/material'
-import { Error as ErrorIcon } from '@mui/icons-material'
+import {
+  Box,
+  Typography,
+  Container,
+  Card,
+  Chip,
+  IconButton
+} from '@mui/material'
+import { Error as ErrorIcon, Fullscreen, WifiOff } from '@mui/icons-material'
 import { useTVDisplayDataWithWebSocket } from '../../../hooks/useMaintenancePublic'
 
 // Import modular components
@@ -13,7 +20,8 @@ import ReportsStrip from './components/ReportsStrip'
 // Import types and hooks
 import { TVMetrics, ConnectionStatus } from './types'
 import { useModernStyles } from './hooks/useModernStyles'
-import { intent, withAlpha } from 'src/theme/designTokens'
+import { useTvKiosk } from './hooks/useTvKiosk'
+import { brand, intent, neutral, withAlpha } from 'src/theme/designTokens'
 
 /**
  * MaintenanceTVDisplayModern - Modern TV display component for maintenance tickets
@@ -31,6 +39,8 @@ import { intent, withAlpha } from 'src/theme/designTokens'
  */
 const MaintenanceTVDisplayModern: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date())
+
+  const { isFullscreen, toggleFullscreen } = useTvKiosk()
 
   // Get modern styles
   const { modernColors } = useModernStyles()
@@ -142,8 +152,20 @@ const MaintenanceTVDisplayModern: React.FC = () => {
     tvDisplayData?.lastUpdated
   ])
 
-  // Error state
-  if (error) {
+  // Datos viejos: con el WebSocket conectado los datos se consideran al día; sin él,
+  // se espera una actualización cada 30 s, así que más de 2 minutos es una falla
+  const lastUpdate = tvDisplayData?.lastUpdated
+    ? new Date(tvDisplayData.lastUpdated)
+    : null
+  const staleMinutes = lastUpdate
+    ? Math.floor((currentTime.getTime() - lastUpdate.getTime()) / 60000)
+    : 0
+  const isStale =
+    Boolean(error) ||
+    (!isWebSocketConnected && !isSocketConnecting && staleMinutes >= 2)
+
+  // Error state: solo si nunca hubo datos; con datos viejos se avisa con un banner
+  if (error && !tvDisplayData) {
     return (
       <Box
         sx={{
@@ -244,6 +266,36 @@ const MaintenanceTVDisplayModern: React.FC = () => {
         showLogo={true}
       />
 
+      {isStale && (
+        <Box
+          role='alert'
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1.5,
+            py: 0.75,
+            bgcolor: intent.dangerInk,
+            color: neutral.surface
+          }}
+        >
+          <WifiOff sx={{ fontSize: { xs: '1.2rem', xl: '1.8rem' } }} />
+          <Typography
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '1rem', xl: '1.5rem' }
+            }}
+          >
+            Sin conexión: estos datos pueden estar desactualizados
+            {lastUpdate &&
+              ` (última actualización ${lastUpdate.toLocaleTimeString('es-CO', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })})`}
+          </Typography>
+        </Box>
+      )}
+
       {/* CSS Animations for TV Display */}
       <style>
         {`
@@ -297,6 +349,25 @@ const MaintenanceTVDisplayModern: React.FC = () => {
           <ReportsStrip tickets={reportTickets} />
         </Box>
       </Container>
+
+      {!isFullscreen && (
+        <IconButton
+          onClick={toggleFullscreen}
+          aria-label='Pantalla completa (tecla F)'
+          title='Pantalla completa (tecla F)'
+          sx={{
+            position: 'fixed',
+            right: 12,
+            bottom: 84,
+            color: brand.ink,
+            bgcolor: brand.soft,
+            opacity: 0.55,
+            '&:hover': { opacity: 1, bgcolor: brand.soft }
+          }}
+        >
+          <Fullscreen />
+        </IconButton>
+      )}
     </Box>
   )
 }

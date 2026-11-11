@@ -101,12 +101,22 @@ const ageColor = (days: number) =>
       ? intent.warningInk
       : neutral.textBody
 
+/** Segundos que se resalta un ticket nuevo o que cambió de estado. */
+const HIGHLIGHT_SECONDS = 25
+
+type ChangeKind = 'new' | 'moved'
+
 interface TicketRowProps {
   ticket: MaintenanceTicket
   showStatus: boolean
+  change?: ChangeKind
 }
 
-const TicketRow: React.FC<TicketRowProps> = ({ ticket, showStatus }) => {
+const TicketRow: React.FC<TicketRowProps> = ({
+  ticket,
+  showStatus,
+  change
+}) => {
   const days = ageDays(ticket.createdAt)
   const technician = ticket.assignedTechnician?.name
   const urgent = isUrgent(ticket)
@@ -126,7 +136,14 @@ const TicketRow: React.FC<TicketRowProps> = ({ ticket, showStatus }) => {
         border: `1px solid ${urgent ? intent.danger : neutral.border}`,
         borderLeft: `10px solid ${priorityColor(ticket)}`,
         bgcolor: urgent ? intent.dangerSoft : neutral.surface,
-        minWidth: 0
+        minWidth: 0,
+        ...(change && {
+          animation: 'tvChangePulse 1.4s ease-in-out infinite',
+          '@keyframes tvChangePulse': {
+            '0%, 100%': { boxShadow: `0 0 0 0 ${withAlpha(brand.main, 0.55)}` },
+            '50%': { boxShadow: `0 0 0 8px ${withAlpha(brand.main, 0)}` }
+          }
+        })
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
@@ -141,6 +158,21 @@ const TicketRow: React.FC<TicketRowProps> = ({ ticket, showStatus }) => {
         >
           {ticket.ticketCode}
         </Typography>
+        {change && (
+          <Typography
+            sx={{
+              fontWeight: 800,
+              color: brand.onMain,
+              bgcolor: brand.hover,
+              borderRadius: '6px',
+              px: 0.75,
+              fontSize: { xs: '0.7rem', xl: '1rem' },
+              textTransform: 'uppercase'
+            }}
+          >
+            {change === 'new' ? 'Nuevo' : 'Cambió'}
+          </Typography>
+        )}
         {flag && (
           <Typography
             sx={{
@@ -197,9 +229,14 @@ const TicketRow: React.FC<TicketRowProps> = ({ ticket, showStatus }) => {
 interface ColumnProps {
   column: BoardColumn
   tickets: MaintenanceTicket[]
+  changes: Map<string, ChangeKind>
 }
 
-const BoardColumnView: React.FC<ColumnProps> = ({ column, tickets }) => {
+const BoardColumnView: React.FC<ColumnProps> = ({
+  column,
+  tickets,
+  changes
+}) => {
   const listRef = useRef<HTMLDivElement>(null)
   const [perPage, setPerPage] = useState(6)
   const [page, setPage] = useState(0)
@@ -234,6 +271,12 @@ const BoardColumnView: React.FC<ColumnProps> = ({ column, tickets }) => {
     )
     return () => clearInterval(id)
   }, [pages])
+
+  // Si algo cambió en esta columna, se muestra la página donde está
+  useEffect(() => {
+    const index = tickets.findIndex((t) => changes.has(String(t.id)))
+    if (index >= 0) setPage(Math.floor(index / perPage))
+  }, [changes, tickets, perPage])
 
   const visible = tickets.slice(page * perPage, page * perPage + perPage)
 
@@ -320,6 +363,7 @@ const BoardColumnView: React.FC<ColumnProps> = ({ column, tickets }) => {
               key={ticket.id}
               ticket={ticket}
               showStatus={column.key === 'waiting'}
+              change={changes.get(String(ticket.id))}
             />
           ))
         )}
@@ -360,6 +404,36 @@ const StatusBoard: React.FC<StatusBoardProps> = ({ tickets }) => {
     [tickets]
   )
 
+  // Tickets nuevos o que cambiaron de estado desde la última actualización
+  const previous = useRef<Map<string, string> | null>(null)
+  const [changes, setChanges] = useState<Map<string, ChangeKind>>(new Map())
+
+  useEffect(() => {
+    const current = new Map(tickets.map((t) => [String(t.id), t.status]))
+    const before = previous.current
+    previous.current = current
+    if (!before) return
+
+    const found = new Map<string, ChangeKind>()
+    current.forEach((status, id) => {
+      if (!before.has(id)) found.set(id, 'new')
+      else if (before.get(id) !== status) found.set(id, 'moved')
+    })
+    if (found.size === 0) return
+
+    setChanges((prev) => new Map([...prev, ...found]))
+    // Sin limpiar el temporizador: cada cambio apaga su propio resaltado
+    setTimeout(
+      () =>
+        setChanges((prev) => {
+          const next = new Map(prev)
+          found.forEach((_, id) => next.delete(id))
+          return next
+        }),
+      HIGHLIGHT_SECONDS * 1000
+    )
+  }, [tickets])
+
   return (
     <Box
       sx={{
@@ -378,6 +452,7 @@ const StatusBoard: React.FC<StatusBoardProps> = ({ tickets }) => {
           key={column.key}
           column={column}
           tickets={columnTickets}
+          changes={changes}
         />
       ))}
     </Box>
