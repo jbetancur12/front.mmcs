@@ -1,5 +1,4 @@
 import type { MaintenanceTicket } from 'src/types/maintenance'
-import type { GridCalculation } from 'src/hooks/useResponsiveTicketGrid'
 
 export interface TVMetrics {
   totalTickets: number
@@ -91,21 +90,4 @@ export interface CriticalTicketsSectionProps {
   totalUrgentTickets?: number
   currentPage?: number
   totalPages?: number
-}
-
-export interface RegularTicketsGridProps {
-  tickets: MaintenanceTicket[]
-  gridCalculation: GridCalculation
-  colors: ModernColors
-  getElapsedTime: (createdAt: string) => string
-  displayColumns?: number
-  centerSparsePage?: boolean
-  sparseCardHeight?: number
-}
-
-export interface PaginationProgressProps {
-  slideIndex: number
-  totalTickets: number
-  ticketsPerPage: number
-  colors: ModernColors
 }

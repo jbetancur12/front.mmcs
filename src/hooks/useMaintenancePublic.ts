@@ -99,9 +99,12 @@ export const useTVDisplayDataWithWebSocket = () => {
 
     try {
       setIsSocketConnecting(true)
-      wsRef.current = new WebSocket(wsWithChannel)
+      // Cada manejador usa su propio socket: wsRef puede apuntar ya a uno más nuevo
+      // (doble montaje o reconexión) que todavía está conectando
+      const socket = new WebSocket(wsWithChannel)
+      wsRef.current = socket
 
-      wsRef.current.onopen = () => {
+      socket.onopen = () => {
         logger.log('TV Display WebSocket connected')
         reconnectAttempts.current = 0
         setRetryCount(0)
@@ -109,7 +112,8 @@ export const useTVDisplayDataWithWebSocket = () => {
         setIsSocketConnecting(false)
 
         // Send subscription message for TV display updates
-        wsRef.current?.send(
+        if (socket.readyState !== WebSocket.OPEN) return
+        socket.send(
           JSON.stringify({
             type: 'subscribe',
             channel: 'tv-display',
@@ -118,7 +122,7 @@ export const useTVDisplayDataWithWebSocket = () => {
         )
       }
 
-      wsRef.current.onmessage = (event) => {
+      socket.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data)
           handleWebSocketMessage(message)
@@ -127,7 +131,9 @@ export const useTVDisplayDataWithWebSocket = () => {
         }
       }
 
-      wsRef.current.onclose = (event) => {
+      socket.onclose = (event) => {
+        // Un socket reemplazado no debe reabrir otra conexión
+        if (wsRef.current !== socket) return
         logger.log(
           'TV Display WebSocket connection closed:',
           event.code,
@@ -159,7 +165,7 @@ export const useTVDisplayDataWithWebSocket = () => {
         }
       }
 
-      wsRef.current.onerror = (error) => {
+      socket.onerror = (error) => {
         logger.error('TV Display WebSocket error:', error)
         setIsWebSocketConnected(false)
       }
