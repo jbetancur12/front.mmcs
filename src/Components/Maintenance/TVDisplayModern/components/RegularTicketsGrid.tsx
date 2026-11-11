@@ -11,6 +11,16 @@ import MaintenancePriorityBadge from '../../MaintenancePriorityBadge'
 import MaintenanceStatusBadge from '../../MaintenanceStatusBadge'
 import { intent, withAlpha } from 'src/theme/designTokens'
 
+const priorityBarColor = (
+  priority: string | undefined,
+  isEmergency: boolean | undefined,
+  colors: { danger: string; warning: string; border: string }
+) => {
+  if (isEmergency || priority === 'urgent') return colors.danger
+  if (priority === 'high') return colors.warning
+  return colors.border
+}
+
 const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
   tickets,
   gridCalculation,
@@ -83,6 +93,8 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
               sx={{
                 ...cardStyles.base,
                 ...cardStyles.regular,
+                // Barra de color a la izquierda: la prioridad se lee de lejos
+                borderLeft: `10px solid ${priorityBarColor(ticket.priority, (ticket as { isEmergency?: boolean }).isEmergency, colors)}`,
                 ...(requiresTechnicalReport && {
                   border: `2px solid ${colors.warning}`,
                   backgroundColor: withAlpha(intent.warning, 0.06),

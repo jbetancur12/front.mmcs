@@ -104,11 +104,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
               ...(metric.isUrgent && {
                 border: `2px solid ${colors.danger}`,
                 backgroundColor: withAlpha(intent.danger, 0.02),
-                boxShadow: `0 4px 16px ${withAlpha(intent.danger, 0.15)}`,
-                '&:hover': {
-                  boxShadow: `0 8px 24px ${withAlpha(intent.danger, 0.25)}`,
-                  transform: 'translateY(-2px)'
-                }
+                boxShadow: `0 4px 16px ${withAlpha(intent.danger, 0.15)}`
               })
             }}
           >
@@ -137,7 +133,12 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                     ]
                   }}
                 >
-                  <metric.icon sx={{ fontSize: '1.25rem', color: 'white' }} />
+                  <metric.icon
+                    sx={{
+                      fontSize: { xs: '1.25rem', xl: '1.7rem' },
+                      color: brand.onMain
+                    }}
+                  />
                 </Box>
                 <Typography
                   variant='h3'
@@ -145,7 +146,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                     fontWeight: 800,
                     color: colors.textPrimary, // Mejor contraste
                     lineHeight: 1,
-                    fontSize: '2rem'
+                    fontSize: { xs: '2rem', xl: '2.9rem' }
                   }}
                 >
                   {metric.value}
@@ -156,8 +157,9 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                 sx={{
                   color: colors.textSecondary, // Mejor contraste
                   fontWeight: 600,
-                  fontSize: '0.82rem',
+                  fontSize: { xs: '0.82rem', xl: '0.9rem' },
                   textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
                   letterSpacing: '0.35px'
                 }}
               >

@@ -522,7 +522,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0.75,
-                  fontSize: '1.55rem',
+                  fontSize: { xs: '1.55rem', xl: '2rem' },
                   lineHeight: 1.1
                 }}
               >
@@ -570,7 +570,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                     sx={{
                       color: modernColors.primary,
                       fontWeight: 700,
-                      fontSize: '0.8rem'
+                      fontSize: { xs: '0.8rem', xl: '1.1rem' }
                     }}
                   >
                     Página {slideIndex + 1}/{paginationLayout.totalPages}
