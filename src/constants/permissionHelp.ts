@@ -139,10 +139,15 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Volver a calcular cuánto trabajo tiene cada técnico.',
     'Mantenimiento: carga de trabajo de los técnicos (acción de administración).'
   ],
+  'maintenance:stats:view': [
+    'Ver las cifras del panel de mantenimiento',
+    'Ver los totales de tickets en el panel (un técnico solo ve los suyos).',
+    'Mantenimiento: cifras del panel.'
+  ],
   'maintenance:analytics:view': [
     'Ver analítica de mantenimiento',
-    'Ver estadísticas y tableros de mantenimiento.',
-    'Mantenimiento: tablero y analítica.'
+    'Entrar a la pantalla de analíticas de mantenimiento.',
+    'Mantenimiento: pantalla de analíticas.'
   ],
   'maintenance:invoicing:view': [
     'Ver tickets por facturar',

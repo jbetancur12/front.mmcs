@@ -62,7 +62,9 @@ export const PERMISSIONS = {
   MAINTENANCE_TECHNICIAN_BE_ASSIGNED: 'maintenance:technician:be_assigned',
   /** Recalcular la carga de trabajo de los técnicos */
   MAINTENANCE_TECHNICIAN_RECALCULATE_WORKLOAD: 'maintenance:technician:recalculate_workload',
-  /** Ver estadísticas, tablero y analítica de mantenimiento */
+  /** Ver las cifras del panel de mantenimiento (totales, pendientes, completados; un técnico solo ve las suyas) */
+  MAINTENANCE_STATS_VIEW: 'maintenance:stats:view',
+  /** Ver la pantalla de analíticas de mantenimiento */
   MAINTENANCE_ANALYTICS_VIEW: 'maintenance:analytics:view',
   /** Ver tickets por facturar */
   MAINTENANCE_INVOICING_VIEW: 'maintenance:invoicing:view',

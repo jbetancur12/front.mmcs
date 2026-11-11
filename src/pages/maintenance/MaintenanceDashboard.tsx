@@ -167,6 +167,7 @@ const MaintenanceDashboard: React.FC = () => {
   // Sin alcance total sobre los tickets (capacidad), solo se ven y operan los asignados a uno mismo
   const isTechnician = !useCan(PERMISSIONS.MAINTENANCE_TICKET_MANAGE_ALL)
   const canListTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
+  const canViewAnalytics = useCan(PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW)
   const canCreateTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_CREATE)
   const canDeleteTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_DELETE)
   // Solo se puede eliminar lo que aún no empezó o se canceló
@@ -632,18 +633,20 @@ const MaintenanceDashboard: React.FC = () => {
             >
               {isMobile ? <FilterList /> : 'Filtros'}
             </Button>
-            <Button
-              variant='outlined'
-              startIcon={!isMobile && <Assessment />}
-              onClick={() => navigate('/maintenance/analytics')}
-              sx={{
-                color: brand.hover,
-                borderColor: brand.main,
-                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
-              }}
-            >
-              {isMobile ? <Assessment /> : 'Analíticas'}
-            </Button>
+            {canViewAnalytics && (
+              <Button
+                variant='outlined'
+                startIcon={!isMobile && <Assessment />}
+                onClick={() => navigate('/maintenance/analytics')}
+                sx={{
+                  color: brand.hover,
+                  borderColor: brand.main,
+                  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
+                }}
+              >
+                {isMobile ? <Assessment /> : 'Analíticas'}
+              </Button>
+            )}
             {canCreateTickets && (
               <Button
                 variant='contained'

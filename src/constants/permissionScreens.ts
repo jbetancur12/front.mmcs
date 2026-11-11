@@ -672,10 +672,10 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'maintenance:analytics:view': [
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'screen' },
+    { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'action' },
     { path: "/lms/admin/analytics", label: "Academia › Analíticas", kind: 'related' },
     { path: "/lms/admin/courses/:courseId/content", label: "Academia › Administración › Cursos › Contenido", kind: 'related' },
     { path: "/lms/admin/quiz-management", label: "Academia › Administración › Banco de preguntas", kind: 'related' },
-    { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
     { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
@@ -729,6 +729,13 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
   ],
   'maintenance:protocol:view': [
+    { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
+    { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
+    { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
+    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },
+    { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'related' }
+  ],
+  'maintenance:stats:view': [
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' },
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
