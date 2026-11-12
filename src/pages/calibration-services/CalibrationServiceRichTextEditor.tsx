@@ -39,8 +39,9 @@ const CalibrationServiceRichTextEditor = ({
   useEffect(() => {
     if (!containerRef.current || quillRef.current) return
 
+    const container = containerRef.current
     const host = document.createElement('div')
-    containerRef.current.appendChild(host)
+    container.appendChild(host)
 
     const quill = new Quill(host, {
       theme: 'snow',
@@ -58,10 +59,13 @@ const CalibrationServiceRichTextEditor = ({
 
     return () => {
       quillRef.current = null
-      if (containerRef.current && host.parentNode === containerRef.current) {
-        containerRef.current.removeChild(host)
+      if (host.parentNode === container) {
+        container.removeChild(host)
       }
     }
+    // Se crea Quill una sola vez; 'value' y 'disabled' los sincronizan los
+    // efectos siguientes (recrearlo aquí perdería el cursor y el historial)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

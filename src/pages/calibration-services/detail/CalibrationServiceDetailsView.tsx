@@ -108,7 +108,8 @@ const CalibrationServiceDetailsView = ({
   }, [
     canManageSequenceConfig,
     isLoadingSequenceConfig,
-    sequenceConfig?.initialized
+    sequenceConfig?.initialized,
+    setIsSequenceDialogOpen
   ])
 
   useEffect(() => {
@@ -125,7 +126,8 @@ const CalibrationServiceDetailsView = ({
     isOdsDialogOpen,
     requestedAction,
     searchParams,
-    setSearchParams
+    setSearchParams,
+    setIsOdsDialogOpen
   ])
 
   useEffect(() => {
@@ -146,7 +148,8 @@ const CalibrationServiceDetailsView = ({
     isScheduleDialogOpen,
     requestedAction,
     searchParams,
-    setSearchParams
+    setSearchParams,
+    setIsScheduleDialogOpen
   ])
 
   const {

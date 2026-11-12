@@ -225,9 +225,10 @@ const AssetLifeSheetsPage: React.FC = () => {
     })
 
   useEffect(() => {
-    if (!selectedAsset) return
-    const refreshedAsset = assets.find((asset) => asset.id === selectedAsset.id)
-    if (refreshedAsset) setSelectedAsset(refreshedAsset)
+    setSelectedAsset((current) => {
+      if (!current) return current
+      return assets.find((asset) => asset.id === current.id) ?? current
+    })
   }, [assets])
 
   // La foto está protegida por permisos: se pide con el token y se muestra desde una URL temporal
@@ -255,7 +256,7 @@ const AssetLifeSheetsPage: React.FC = () => {
       cancelled = true
       if (objectUrl) window.URL.revokeObjectURL(objectUrl)
     }
-  }, [selectedAssetId, selectedAssetImagePath])
+  }, [selectedAssetId, selectedAssetImagePath, axiosPrivate])
 
   const openCreate = () => {
     setEditingAssetId(null)

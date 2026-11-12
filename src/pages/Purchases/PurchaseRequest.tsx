@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { MRT_ColumnDef } from 'material-react-table'
 import {
   Avatar,
@@ -142,12 +142,18 @@ const PurchaseRequest: React.FC = () => {
   const isLoading = serverMode ? pageLoading : approvedLoading
 
   // Aprobadas (o pre-aprobadas) que todavía no tienen orden de compra
-  const needsOrder = (r: IPurchaseRequest) =>
-    (r.status === PurchaseRequestStatus.PreApproved ||
-      r.status === PurchaseRequestStatus.Accepted) &&
-    !r.hasOrder
-  const isLate = (r: IPurchaseRequest) =>
-    needsOrder(r) && differenceInDays(new Date(), new Date(r.createdAt)) > 7
+  const needsOrder = useCallback(
+    (r: IPurchaseRequest) =>
+      (r.status === PurchaseRequestStatus.PreApproved ||
+        r.status === PurchaseRequestStatus.Accepted) &&
+      !r.hasOrder,
+    []
+  )
+  const isLate = useCallback(
+    (r: IPurchaseRequest) =>
+      needsOrder(r) && differenceInDays(new Date(), new Date(r.createdAt)) > 7,
+    [needsOrder]
+  )
 
   const counts = useMemo(
     () => ({
@@ -155,7 +161,7 @@ const PurchaseRequest: React.FC = () => {
       toOrder: approvedRequests.filter(needsOrder).length,
       late: approvedRequests.filter(isLate).length
     }),
-    [approvedRequests, requestCounts]
+    [approvedRequests, requestCounts, needsOrder, isLate]
   )
 
   const purchaseRequests = useMemo(() => {
@@ -167,7 +173,7 @@ const PurchaseRequest: React.FC = () => {
       default:
         return requestsPage?.items ?? []
     }
-  }, [approvedRequests, requestsPage, quickFilter])
+  }, [approvedRequests, requestsPage, quickFilter, needsOrder, isLate])
 
   const changeQuickFilter = (value: QuickFilter) => {
     setQuickFilter(value)

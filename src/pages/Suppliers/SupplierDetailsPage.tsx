@@ -241,11 +241,12 @@ const SupplierDetailsPage: React.FC = () => {
           : juridicalDocumentTypes
       // Solo actualiza si los tipos de documentos realmente necesitan cambiar
       // para evitar re-renders innecesarios o pérdida de archivos seleccionados si no es necesario.
-      const currentDocIds = filesToUpload.map((f) => f.id).join(',')
       const newDocIds = currentDocTypes.map((d) => d.id).join(',')
-      if (currentDocIds !== newDocIds) {
-        setFilesToUpload(currentDocTypes.map((doc) => ({ ...doc, file: null })))
-      }
+      setFilesToUpload((prev) =>
+        prev.map((f) => f.id).join(',') !== newDocIds
+          ? currentDocTypes.map((doc) => ({ ...doc, file: null }))
+          : prev
+      )
       setApplyRetention(supplier.applyRetention || false)
     }
   }, [supplier])

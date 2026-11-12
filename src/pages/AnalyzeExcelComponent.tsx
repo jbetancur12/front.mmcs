@@ -361,6 +361,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
   useEffect(() => {
     analyzeCells2()
+    // Solo cuando cambia data2: analyzeCells2 se recrea en cada render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data2])
 
   const resetForm = () => {
