@@ -16,6 +16,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined'
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import TodayOutlinedIcon from '@mui/icons-material/TodayOutlined'
 import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined'
 import { useNavigate } from 'react-router-dom'
@@ -35,6 +36,7 @@ import { es } from 'date-fns/locale'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import ListItemCard from 'src/Components/Common/ListItemCard'
+import CalibrationServiceScheduleReportDialog from './CalibrationServiceScheduleReportDialog'
 import { CalibrationService } from '../../types/calibrationService'
 import { getOperationsSummary } from './calibrationServiceOtherFields'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
@@ -71,6 +73,7 @@ const CalibrationServiceSchedulePage = () => {
   const navigate = useNavigate()
   const todayKey = format(new Date(), 'yyyy-MM-dd')
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [reportOpen, setReportOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(todayKey)
 
   const { data, isLoading } = useQuery(
@@ -150,6 +153,20 @@ const CalibrationServiceSchedulePage = () => {
         title='Agenda de servicios'
         subtitle='Qué servicios están programados o en ejecución y qué días hay más carga.'
         icon={<CalendarMonthOutlinedIcon />}
+        actions={
+          <Button
+            variant='contained'
+            startIcon={<FileDownloadOutlinedIcon />}
+            onClick={() => setReportOpen(true)}
+          >
+            Descargar reporte
+          </Button>
+        }
+      />
+      <CalibrationServiceScheduleReportDialog
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        initialMonth={currentMonth}
       />
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
