@@ -95,6 +95,7 @@ const Table: React.FC = () => {
   const createDeviceMutation = useCreateDevice()
   const updateDeviceMutation = useUpdateDevice()
   const deleteDeviceMutation = useDeleteDevice()
+  const { mutateAsync: deleteDeviceAsync } = deleteDeviceMutation
   const [format, setFormat] = useState<{ label: string; value: number } | null>(
     null
   )
@@ -160,19 +161,22 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteUser = async (id: number) => {
-    try {
-      const response = await deleteDeviceMutation.mutateAsync(id)
+  const deleteUser = useCallback(
+    async (id: number) => {
+      try {
+        const response = await deleteDeviceAsync(id)
 
-      if (response.status === 204) {
-        notify.success('Equipo Eliminado Exitosamente!')
-      } else {
-        logger.error('Error al crear equipo')
+        if (response.status === 204) {
+          notify.success('Equipo Eliminado Exitosamente!')
+        } else {
+          logger.error('Error al crear equipo')
+        }
+      } catch (error) {
+        logger.error('Error de red:', error)
       }
-    } catch (error) {
-      logger.error('Error de red:', error)
-    }
-  }
+    },
+    [deleteDeviceAsync]
+  )
 
   const handleDeleteRow = useCallback(
     async (row: MRT_Row<DeviceData>) => {

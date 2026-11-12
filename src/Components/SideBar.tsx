@@ -923,6 +923,9 @@ const SideBar = ({
     if (!entry) return
     trackedPath.current = pathname
     recordVisit(userKey, entry.id)
+    // searchEntries se recrea en cada render: solo interesa al cambiar de ruta,
+    // de usuario o de permisos (la marca trackedPath evita contar dos veces)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, userKey, $userStore.permissions])
 
   // Sugerencias para el buscador sin texto: solo se calculan con el diálogo abierto.

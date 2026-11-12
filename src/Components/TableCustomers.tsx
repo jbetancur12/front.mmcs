@@ -66,6 +66,7 @@ const Table: React.FC = () => {
   const createCustomer = useCreateCustomer<Record<string, string>>()
   const updateCustomer = useUpdateCustomer<CustomerData>()
   const deleteCustomerMutation = useDeleteCustomer()
+  const { mutateAsync: deleteCustomerAsync } = deleteCustomerMutation
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -145,19 +146,22 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteCustomer = async (id: number) => {
-    try {
-      const response = await deleteCustomerMutation.mutateAsync(id)
+  const deleteCustomer = useCallback(
+    async (id: number) => {
+      try {
+        const response = await deleteCustomerAsync(id)
 
-      if (response.status === 204) {
-        notify.success('Cliente Eliminado Exitosamente!')
-      } else {
-        logger.error('Error al eliminar cliente')
+        if (response.status === 204) {
+          notify.success('Cliente Eliminado Exitosamente!')
+        } else {
+          logger.error('Error al eliminar cliente')
+        }
+      } catch (error) {
+        logger.error('Error de red:', error)
       }
-    } catch (error) {
-      logger.error('Error de red:', error)
-    }
-  }
+    },
+    [deleteCustomerAsync]
+  )
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<CustomerData>) => {
@@ -174,7 +178,7 @@ const Table: React.FC = () => {
         }
       })
     },
-    [filteredTableData]
+    [filteredTableData, deleteCustomer]
   )
 
   const getCommonEditTextFieldProps = useCallback(

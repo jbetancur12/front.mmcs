@@ -11,7 +11,6 @@ import {
 import { useQuery } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import DataTable from 'src/Components/Common/DataTable'
-import { useNavigate } from 'react-router-dom'
 import { CheckCircleOutline, HighlightOff } from '@mui/icons-material' // Icono para ver detalle de orden
 
 // Importar el tipo desde tu archivo central de tipos
@@ -31,7 +30,6 @@ const SupplierPurchaseHistoryTable: React.FC<
   SupplierPurchaseHistoryTableProps
 > = ({ supplierId }) => {
   const axiosPrivate = useAxiosPrivate()
-  const navigate = useNavigate()
 
   const {
     data: purchaseHistory = [], // Valor por defecto es un array vacío
