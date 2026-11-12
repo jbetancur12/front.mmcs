@@ -56,16 +56,24 @@ const EditUserModal: React.FC<EditModalProps> = ({
   )
 
   const form = useUserForm(initialValues)
-  const { values, errors, touched, hasUnsavedChanges, isFormValid } = form
+  const {
+    values,
+    errors,
+    touched,
+    hasUnsavedChanges,
+    isFormValid,
+    setValues: setFormValues,
+    resetState: resetFormState
+  } = form
   const [roleHelpOpen, setRoleHelpOpen] = useState(false)
 
   // Al cambiar de usuario, el formulario parte de sus datos
   useEffect(() => {
     if (userData) {
-      form.setValues(initialValues)
-      form.resetState()
+      setFormValues(initialValues)
+      resetFormState()
     }
-  }, [userData, initialValues])
+  }, [userData, initialValues, setFormValues, resetFormState])
 
   const handleSubmit = async () => {
     if (!isFormValid) {

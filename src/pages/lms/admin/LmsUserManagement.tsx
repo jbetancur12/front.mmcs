@@ -194,13 +194,17 @@ const LmsUserManagement: React.FC = () => {
   )
 
   const users = usersData?.data || []
-  const usersSummary = usersData?.summary || {
-    totalVisible: 0,
-    totalFiltered: 0,
-    lmsOnly: 0,
-    clients: 0,
-    inactive: 0
-  }
+  const usersSummary = useMemo(
+    () =>
+      usersData?.summary || {
+        totalVisible: 0,
+        totalFiltered: 0,
+        lmsOnly: 0,
+        clients: 0,
+        inactive: 0
+      },
+    [usersData?.summary]
+  )
   const totalUsers = usersData?.pagination?.total || 0
   const roleOptions = optionsData?.roles || []
   const customerOptions = optionsData?.customers || []

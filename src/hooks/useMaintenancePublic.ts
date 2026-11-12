@@ -79,6 +79,9 @@ export const useTVDisplayDataWithWebSocket = () => {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
+  const messageHandlerRef = useRef<
+    ((message: TVDisplayWebSocketMessage) => void) | null
+  >(null)
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false)
   const [isSocketConnecting, setIsSocketConnecting] = useState(true)
   const [retryCount, setRetryCount] = useState(0)
@@ -125,7 +128,7 @@ export const useTVDisplayDataWithWebSocket = () => {
       socket.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data)
-          handleWebSocketMessage(message)
+          messageHandlerRef.current?.(message)
         } catch (error) {
           logger.error('Error parsing TV Display WebSocket message:', error)
         }
@@ -196,6 +199,7 @@ export const useTVDisplayDataWithWebSocket = () => {
     },
     [queryClient]
   )
+  messageHandlerRef.current = handleWebSocketMessage
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

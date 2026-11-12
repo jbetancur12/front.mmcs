@@ -435,9 +435,18 @@ const LmsReporting: React.FC = () => {
     }
   )
 
-  const templates = templatesQuery.data || []
-  const recentReports = recentReportsQuery.data || []
-  const scheduledReports = scheduledReportsQuery.data || []
+  const templates = useMemo(
+    () => templatesQuery.data || [],
+    [templatesQuery.data]
+  )
+  const recentReports = useMemo(
+    () => recentReportsQuery.data || [],
+    [recentReportsQuery.data]
+  )
+  const scheduledReports = useMemo(
+    () => scheduledReportsQuery.data || [],
+    [scheduledReportsQuery.data]
+  )
   const complianceTemplate =
     templates.find((template) => template.type === 'compliance') || null
 

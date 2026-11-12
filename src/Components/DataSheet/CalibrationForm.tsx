@@ -93,22 +93,6 @@ const CalibrationForm: React.FC = () => {
   const saveCalibrationMutation = useSaveCalibration()
   const deleteCalibrationMutation = useDeleteDataSheetRecord()
 
-  useEffect(() => {
-    if (!calibrationData) return
-    // Solo precarga una vez por registro para no pisar lo que se esté editando
-    if (prefilledCalibrationId.current === calibrationData.id) return
-    prefilledCalibrationId.current = calibrationData.id
-    const data = calibrationData
-    setEditId(data.id)
-    formik.setValues({
-      ...data,
-      equipmentId: data.equipmentId,
-      date: data.date.split('T')[0],
-      comments: data.comments || '',
-      elaboratedBy: data.elaboratedBy || data.verifiedBy || ''
-    })
-  }, [calibrationData])
-
   // Fetch equipo: en edición usa calibrationData.equipmentId, en creación usa location.state.id
   const equipmentQueryId =
     isEdit && calibrationData && calibrationData.equipmentId
@@ -135,16 +119,6 @@ const CalibrationForm: React.FC = () => {
         : null,
     [equipmentData]
   )
-
-  // Actualizar valores del formulario cuando cambia equipmentInfo
-  useEffect(() => {
-    if (equipmentInfo) {
-      formik.setFieldValue(
-        'calibrationCycle',
-        equipmentInfo.calibrationCycle || ''
-      )
-    }
-  }, [equipmentInfo])
 
   const formik = useFormik<CalibrationData>({
     initialValues: {
@@ -182,6 +156,48 @@ const CalibrationForm: React.FC = () => {
     }
   })
 
+  const { setValues, setFieldValue } = formik
+
+  useEffect(() => {
+    if (!calibrationData) return
+    // Solo precarga una vez por registro para no pisar lo que se esté editando
+    if (prefilledCalibrationId.current === calibrationData.id) return
+    prefilledCalibrationId.current = calibrationData.id
+    const data = calibrationData
+    setEditId(data.id)
+    setValues({
+      ...data,
+      equipmentId: data.equipmentId,
+      date: data.date.split('T')[0],
+      comments: data.comments || '',
+      elaboratedBy: data.elaboratedBy || data.verifiedBy || ''
+    })
+  }, [calibrationData, setValues])
+
+  // Actualizar valores del formulario cuando cambia equipmentInfo
+  useEffect(() => {
+    if (equipmentInfo) {
+      setFieldValue('calibrationCycle', equipmentInfo.calibrationCycle || '')
+    }
+  }, [equipmentInfo, setFieldValue])
+
+  useEffect(() => {
+    if (formik.values.calibrationDate && equipmentInfo?.calibrationCycle) {
+      const parsedDate = new Date(formik.values.calibrationDate)
+      if (!isNaN(parsedDate.getTime())) {
+        const cycleMonths = Number(equipmentInfo.calibrationCycle)
+        setFieldValue(
+          'nextCalibrationDate',
+          addMonths(parsedDate, cycleMonths).toISOString()
+        )
+      }
+    }
+  }, [
+    formik.values.calibrationDate,
+    equipmentInfo?.calibrationCycle,
+    setFieldValue
+  ])
+
   const fieldLabels: { [key in keyof CalibrationData]: string } = {
     equipmentId: 'ID del equipo',
     date: 'Fecha',
@@ -192,19 +208,6 @@ const CalibrationForm: React.FC = () => {
     elaboratedBy: 'Elaborado por',
     calibrationCycle: 'Ciclo de calibración'
   }
-
-  useEffect(() => {
-    if (formik.values.calibrationDate && equipmentInfo?.calibrationCycle) {
-      const parsedDate = new Date(formik.values.calibrationDate)
-      if (!isNaN(parsedDate.getTime())) {
-        const cycleMonths = Number(equipmentInfo.calibrationCycle)
-        formik.setFieldValue(
-          'nextCalibrationDate',
-          addMonths(parsedDate, cycleMonths).toISOString()
-        )
-      }
-    }
-  }, [formik.values.calibrationDate, equipmentInfo?.calibrationCycle])
 
   const handleDelete = async () => {
     if (!editId) return

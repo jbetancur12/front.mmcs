@@ -96,7 +96,7 @@ const CalibrationServiceSchedulePage = () => {
     }
   )
 
-  const services = data || []
+  const services = useMemo(() => data || [], [data])
 
   const servicesByDate = useMemo(() => {
     const map = new Map<string, CalibrationService[]>()

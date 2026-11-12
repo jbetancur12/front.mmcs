@@ -249,7 +249,10 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
     }
   })
 
-  const notifications = data?.notifications || []
+  const notifications = useMemo(
+    () => data?.notifications || [],
+    [data?.notifications]
+  )
 
   const unreadCount = Number(
     data?.summary?.unread ??

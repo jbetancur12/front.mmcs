@@ -276,7 +276,7 @@ const MobilePage = () => {
   )
 
   const s = service
-  const items = s?.items || []
+  const items = useMemo(() => s?.items || [], [s?.items])
   const cuts = s?.cuts || []
   const status = s?.status || ''
   const scheduledDate = getScheduledDate(s)
@@ -364,6 +364,7 @@ const MobilePage = () => {
     setLogDeliverySig(existing.deliveredToClientSignature ?? null)
     setLogReceiptName(existing.receivedByClientName ?? '')
     setLogReceiptSig(existing.receivedByClientSignature ?? null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Solo al abrir la logística; 's' se vuelve a leer en cada refetch y pisaría lo que el usuario escribe
   }, [showLogistics])
 
   // Trace fields
@@ -464,6 +465,7 @@ const MobilePage = () => {
     const savedOps = getOps(s)
     setDeliveryName(savedOps.deliveryName || '')
     setDeliverySignature(savedOps.deliverySignatureData || null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Solo al cambiar de servicio; reinicializar con cada refetch pisaría la firma en edición
   }, [s?.id])
 
   // Los borradores se rehacen cuando cambia lo guardado (por ejemplo, al iniciar la ejecución el servidor mueve el estado de los ítems)
@@ -507,6 +509,7 @@ const MobilePage = () => {
     setDraftNotes(nextNotes)
     setDraftExecuted(nextExecuted)
     if (restored) notify.info('Recuperamos tu avance sin guardar')
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Solo al cambiar de servicio o de ítems guardados; 's' no debe reiniciar el borrador
   }, [s?.id, savedItemsKey])
 
   const allCompleted = useMemo(

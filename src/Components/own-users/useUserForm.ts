@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { Role, UserFormField, UserFormValues } from './types'
 import {
@@ -93,11 +93,11 @@ export const useUserForm = <T extends UserFormValues>(initialValues: T) => {
     })
   }
 
-  const resetState = () => {
+  const resetState = useCallback(() => {
     setErrors({})
     setTouched({})
     setHasUnsavedChanges(false)
-  }
+  }, [])
 
   const hasErrors =
     Object.keys(errors).some((key) => errors[key]) &&
