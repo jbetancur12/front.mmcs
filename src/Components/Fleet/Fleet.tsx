@@ -198,7 +198,7 @@ const Fleet = () => {
         logger.error('Error al guardar la edición:', error)
       }
     },
-    [saveRowEdits]
+    [saveRowEdits, customerId]
   )
 
   const handleDeleteRow = useCallback(
@@ -215,6 +215,8 @@ const Fleet = () => {
     },
     [deleteVehicle]
   )
+
+  const validateRequired = useCallback((value: string) => !!value.length, [])
 
   const getCommonEditTextFieldProps = useCallback(
     ({ cell }: { cell: MRT_Cell<Vehicle> }): TextFieldProps => ({
@@ -233,10 +235,8 @@ const Fleet = () => {
         }
       }
     }),
-    [validationErrors]
+    [validationErrors, validateRequired]
   )
-
-  const validateRequired = useCallback((value: string) => !!value.length, [])
 
   const columns = useMemo<MRT_ColumnDef<Vehicle>[]>(
     () => [

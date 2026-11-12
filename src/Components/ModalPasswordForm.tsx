@@ -149,7 +149,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
     if (settingsPasswords) {
       setWbPasswords(settingsPasswords)
     }
-  }, [settingsPasswords])
+  }, [settingsPasswords, setWbPasswords])
 
   return (
     <FormDialog

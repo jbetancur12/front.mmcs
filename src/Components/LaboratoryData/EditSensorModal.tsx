@@ -55,26 +55,6 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
     apiError?: string
   }>({})
 
-  // --- Efecto para inicializar el formulario cuando los datos del sensor cambian o el modal se abre ---
-  useEffect(() => {
-    if (sensorData) {
-      // Inicializar el estado del formulario con los datos del sensor a editar
-      setFormData({
-        name: sensorData.name,
-        location: sensorData.location, // Puede ser null
-        color: sensorData.color // Puede ser null
-      })
-      // Limpiar errores al abrir con nuevos datos
-      setFormErrors({})
-    } else {
-      // Limpiar el formulario si sensorData es null (cuando el modal se cierra)
-      setFormData({ name: '', location: null, color: null })
-      setFormErrors({})
-    }
-    // Resetear también el estado de la mutación (errores, carga)
-    updateSensorMutation.reset()
-  }, [sensorData]) // Depende de sensorData. Se ejecuta cuando sensorData cambia.
-
   // --- Configurar la mutación de actualización con React Query ---
   const updateSensorMutation = useMutation<
     ApiDeviceData,
@@ -137,6 +117,28 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({
       }
     }
   )
+
+  const { reset: resetUpdateSensor } = updateSensorMutation
+
+  // --- Efecto para inicializar el formulario cuando los datos del sensor cambian o el modal se abre ---
+  useEffect(() => {
+    if (sensorData) {
+      // Inicializar el estado del formulario con los datos del sensor a editar
+      setFormData({
+        name: sensorData.name,
+        location: sensorData.location, // Puede ser null
+        color: sensorData.color // Puede ser null
+      })
+      // Limpiar errores al abrir con nuevos datos
+      setFormErrors({})
+    } else {
+      // Limpiar el formulario si sensorData es null (cuando el modal se cierra)
+      setFormData({ name: '', location: null, color: null })
+      setFormErrors({})
+    }
+    // Resetear también el estado de la mutación (errores, carga)
+    resetUpdateSensor()
+  }, [sensorData, resetUpdateSensor]) // Depende de sensorData. Se ejecuta cuando sensorData cambia.
   // ---------------------------------------------
 
   // Handler para cambios en los inputs del formulario

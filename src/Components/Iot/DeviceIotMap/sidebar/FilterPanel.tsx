@@ -17,7 +17,7 @@ import {
   Search,
   Tune
 } from '@mui/icons-material'
-import { useCallback, useState } from 'react'
+import { useMemo, useState } from 'react'
 import AsyncSelect from 'react-select/async'
 import { debounce } from 'lodash'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -128,23 +128,24 @@ export const FilterPanel = ({
   const $userStore = useStore(userStore)
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
 
-  const loadOptionsClient = useCallback(
-    debounce(async (inputValue: string) => {
-      try {
-        const response = await axiosPrivate.get<CustomerSearchItem[]>(
-          `/customers`,
-          { params: { q: inputValue } }
-        )
-        return response.data.map((item) => ({
-          value: item.id,
-          label: item.nombre
-        }))
-      } catch (error) {
-        logger.error('Error al cargar opciones:', error)
-        throw error
-      }
-    }, 1000),
-    []
+  const loadOptionsClient = useMemo(
+    () =>
+      debounce(async (inputValue: string) => {
+        try {
+          const response = await axiosPrivate.get<CustomerSearchItem[]>(
+            `/customers`,
+            { params: { q: inputValue } }
+          )
+          return response.data.map((item) => ({
+            value: item.id,
+            label: item.nombre
+          }))
+        } catch (error) {
+          logger.error('Error al cargar opciones:', error)
+          throw error
+        }
+      }, 1000),
+    [axiosPrivate]
   )
 
   return (
