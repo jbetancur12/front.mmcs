@@ -44,6 +44,9 @@ export type RbacAuditAction =
   | 'role_deactivate'
   /** Se le dieron o quitaron roles a una persona: before/after = { userId, email, roles } */
   | 'user_roles_change'
+  /** Alguien empezó o terminó de suplantar a otra persona: after = { userId, email, roles } de la suplantada */
+  | 'impersonation_start'
+  | 'impersonation_end'
 
 export interface RbacAuditItem {
   id: number
