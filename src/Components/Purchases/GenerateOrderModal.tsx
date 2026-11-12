@@ -1,5 +1,5 @@
 // src/Components/Purchases/GenerateOrderModal.tsx
-import { useState, useEffect, FC, ChangeEvent } from 'react'
+import { useState, useEffect, useMemo, FC, ChangeEvent } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -167,28 +167,32 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     }
   }
 
-  const availableSuppliers: Supplier[] = Array.from(
-    new Set(
-      (purchaseRequest.items ?? [])
-        .filter((item) => !item.procesed)
-        .flatMap((item) =>
-          item.suppliers ? item.suppliers.map((s) => s.id.toString()) : []
+  const availableSuppliers: Supplier[] = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (purchaseRequest.items ?? [])
+            .filter((item) => !item.procesed)
+            .flatMap((item) =>
+              item.suppliers ? item.suppliers.map((s) => s.id.toString()) : []
+            )
         )
-    )
+      )
+        .map((supplierId: string) => {
+          const itemWithSupplier = (purchaseRequest.items ?? []).find(
+            (item) =>
+              !item.procesed &&
+              item.suppliers?.some((s) => s.id.toString() === supplierId)
+          )
+          return (
+            itemWithSupplier?.suppliers?.find(
+              (s) => s.id.toString() === supplierId
+            ) || null
+          )
+        })
+        .filter((s): s is Supplier => s !== null),
+    [purchaseRequest.items]
   )
-    .map((supplierId: string) => {
-      const itemWithSupplier = (purchaseRequest.items ?? []).find(
-        (item) =>
-          !item.procesed &&
-          item.suppliers?.some((s) => s.id.toString() === supplierId)
-      )
-      return (
-        itemWithSupplier?.suppliers?.find(
-          (s) => s.id.toString() === supplierId
-        ) || null
-      )
-    })
-    .filter((s): s is Supplier => s !== null)
 
   useEffect(() => {
     if (selectedSupplier) {
@@ -219,7 +223,13 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
       setSelectedSupplierFull(null)
       setAssignedItems([])
     }
-  }, [selectedSupplier, removedItems, purchaseRequest.items, fiscalSettings])
+  }, [
+    selectedSupplier,
+    removedItems,
+    purchaseRequest.items,
+    fiscalSettings,
+    availableSuppliers
+  ])
 
   const handleOrderChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target

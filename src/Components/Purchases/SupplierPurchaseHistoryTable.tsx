@@ -1,7 +1,7 @@
 // src/components/Purchases/SupplierPurchaseHistoryTable.tsx
 import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Box, Typography, Alert, Chip, Link } from '@mui/material'
 import {
   type MRT_Cell,
@@ -52,70 +52,70 @@ const SupplierPurchaseHistoryTable: React.FC<
     }
   )
 
-  const handleViewOrderReportPDF = async (
-    purchaseOrderId: number | string,
-    orderCode: string
-  ) => {
-    try {
-      busyDialog.show(
-        'Generando Reporte...',
-        `Por favor espera mientras se genera el PDF para la orden ${orderCode}.`
-      )
-
-      // El endpoint que mencionaste, ajusta la ruta base si es necesario (ej. si api() da /api)
-      const reportUrl = `/reports/fog-mmcs-13/${purchaseOrderId}`
-
-      const response = await axiosPrivate.get(reportUrl, {
-        responseType: 'blob' // Importante para manejar la respuesta como archivo
-      })
-
-      busyDialog.hide()
-
-      const effectiveMimeType =
-        headerText(response.headers, 'content-type') || 'application/pdf'
-      const blob = new Blob([response.data], { type: effectiveMimeType })
-      const fileURL = URL.createObjectURL(blob)
-
-      const newWindow = window.open(fileURL, '_blank')
-      if (newWindow) {
-        newWindow.focus()
-        setTimeout(() => {
-          // Dar tiempo a que la pestaña cargue antes de intentar cambiar el título
-          try {
-            newWindow.document.title = `Orden ${orderCode} - FOGC-MMCS-13`
-          } catch (e) {
-            logger.warn('No se pudo cambiar el título de la pestaña.')
-          }
-        }, 500)
-      } else {
-        notify.warning(
-          'Error de Navegador',
-          'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.'
+  const handleViewOrderReportPDF = useCallback(
+    async (purchaseOrderId: number | string, orderCode: string) => {
+      try {
+        busyDialog.show(
+          'Generando Reporte...',
+          `Por favor espera mientras se genera el PDF para la orden ${orderCode}.`
         )
-      }
-    } catch (err) {
-      busyDialog.hide()
-      logger.error(
-        `Error obteniendo el reporte PDF para la orden ID ${purchaseOrderId}:`,
-        err
-      )
-      let errorMessage =
-        'No se pudo generar o mostrar el reporte PDF de la orden de compra.'
-      if (isAxiosError(err)) {
-        if (err.response?.status === 404) {
-          errorMessage =
-            'Reporte o datos para la orden de compra no encontrados.'
-        } else if (getApiErrorReason(err)) {
-          errorMessage = getApiErrorReason(err) ?? errorMessage
-        } else if (err.message) {
+
+        // El endpoint que mencionaste, ajusta la ruta base si es necesario (ej. si api() da /api)
+        const reportUrl = `/reports/fog-mmcs-13/${purchaseOrderId}`
+
+        const response = await axiosPrivate.get(reportUrl, {
+          responseType: 'blob' // Importante para manejar la respuesta como archivo
+        })
+
+        busyDialog.hide()
+
+        const effectiveMimeType =
+          headerText(response.headers, 'content-type') || 'application/pdf'
+        const blob = new Blob([response.data], { type: effectiveMimeType })
+        const fileURL = URL.createObjectURL(blob)
+
+        const newWindow = window.open(fileURL, '_blank')
+        if (newWindow) {
+          newWindow.focus()
+          setTimeout(() => {
+            // Dar tiempo a que la pestaña cargue antes de intentar cambiar el título
+            try {
+              newWindow.document.title = `Orden ${orderCode} - FOGC-MMCS-13`
+            } catch (e) {
+              logger.warn('No se pudo cambiar el título de la pestaña.')
+            }
+          }, 500)
+        } else {
+          notify.warning(
+            'Error de Navegador',
+            'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.'
+          )
+        }
+      } catch (err) {
+        busyDialog.hide()
+        logger.error(
+          `Error obteniendo el reporte PDF para la orden ID ${purchaseOrderId}:`,
+          err
+        )
+        let errorMessage =
+          'No se pudo generar o mostrar el reporte PDF de la orden de compra.'
+        if (isAxiosError(err)) {
+          if (err.response?.status === 404) {
+            errorMessage =
+              'Reporte o datos para la orden de compra no encontrados.'
+          } else if (getApiErrorReason(err)) {
+            errorMessage = getApiErrorReason(err) ?? errorMessage
+          } else if (err.message) {
+            errorMessage = err.message
+          }
+        } else if (err instanceof Error) {
           errorMessage = err.message
         }
-      } else if (err instanceof Error) {
-        errorMessage = err.message
+        notify.error('Error', errorMessage)
       }
-      notify.error('Error', errorMessage)
-    }
-  }
+    },
+    [axiosPrivate]
+  )
 
   const columns = useMemo<MRT_ColumnDef<PurchaseHistoryEntry>[]>(
     () => [
@@ -211,7 +211,7 @@ const SupplierPurchaseHistoryTable: React.FC<
         }
       }
     ],
-    [navigate]
+    [handleViewOrderReportPDF]
   )
 
   if (isLoading && !purchaseHistory.length) {

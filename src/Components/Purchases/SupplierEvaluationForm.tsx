@@ -1,7 +1,7 @@
 // src/components/Purchases/SupplierEvaluationForm.tsx
 
 import { getApiErrorReason } from 'src/utils/apiError'
-import { useState, useEffect, FC, FormEvent, ChangeEvent } from 'react'
+import { useState, useEffect, useMemo, FC, FormEvent, ChangeEvent } from 'react'
 import {
   Box,
   Button,
@@ -113,19 +113,22 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
-  const initialFormData: EvaluationFormData = {
-    evaluationDate: new Date().toISOString().split('T')[0],
-    qualityScore: 0, // Default a 0 para 'No Calificado'
-    deliveryScore: 0,
-    supportScore: 0,
-    warrantyScore: 0,
-    nonConformityScore: 0,
-    invoiceScore: 0,
-    comments: '',
-    documentReference: 'FOGC-MMCS-15 V03', // Default del formato
-    preparedBy: 'Jessica Cardona Garcia',
-    approvedBy: 'Andres Felipe Bernal Meneses'
-  }
+  const initialFormData: EvaluationFormData = useMemo(
+    () => ({
+      evaluationDate: new Date().toISOString().split('T')[0],
+      qualityScore: 0, // Default a 0 para 'No Calificado'
+      deliveryScore: 0,
+      supportScore: 0,
+      warrantyScore: 0,
+      nonConformityScore: 0,
+      invoiceScore: 0,
+      comments: '',
+      documentReference: 'FOGC-MMCS-15 V03', // Default del formato
+      preparedBy: 'Jessica Cardona Garcia',
+      approvedBy: 'Andres Felipe Bernal Meneses'
+    }),
+    []
+  )
 
   const [formData, setFormData] = useState<EvaluationFormData>(initialFormData)
   const [calculatedTotal, setCalculatedTotal] = useState<number>(0)
@@ -155,7 +158,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
       // Resetear a valores por defecto si no hay existingEvaluation (ej. al cambiar de editar a crear, o al abrir para crear)
       setFormData(initialFormData)
     }
-  }, [existingEvaluation]) // Dependencia clave
+  }, [existingEvaluation, initialFormData]) // Dependencia clave
 
   useEffect(() => {
     const scores: number[] = [
