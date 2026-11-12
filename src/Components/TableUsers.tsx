@@ -176,7 +176,7 @@ const Table: React.FC = () => {
       if (!isConfirmed) return
       deleteUser(row.getValue('id'))
     },
-    [filteredTableData, deleteUser]
+    [deleteUser]
   )
 
   const getCommonEditTextFieldProps = useCallback(

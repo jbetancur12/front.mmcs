@@ -178,7 +178,7 @@ const Table: React.FC = () => {
         }
       })
     },
-    [filteredTableData, deleteCustomer]
+    [deleteCustomer]
   )
 
   const getCommonEditTextFieldProps = useCallback(

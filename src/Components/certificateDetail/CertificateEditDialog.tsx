@@ -65,6 +65,9 @@ const CertificateEditDialog: React.FC<CertificateEditDialogProps> = ({
       )
       .catch(() => notify.error('No se pudo cargar el catálogo de equipos'))
       .finally(() => setLoadingDevices(false))
+    // Solo al abrir el diálogo: 'initial' llega como objeto nuevo y pisaría
+    // lo que el usuario está editando
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   const setField =

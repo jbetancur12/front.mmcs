@@ -88,6 +88,9 @@ const BulkReassignDialog: React.FC<BulkReassignDialogProps> = ({
       })
       .catch(() => setError('No se pudo cargar el catálogo de equipos.'))
       .finally(() => setLoadingDevices(false))
+    // Solo al abrir el diálogo: reiniciar con cada cambio del equipo actual
+    // o de la función de carga borraría la selección del usuario
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   const handlePreview = async () => {

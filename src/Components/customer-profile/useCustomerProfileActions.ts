@@ -25,8 +25,10 @@ export const useCustomerProfileActions = (
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
-  const invalidateCustomer = () =>
-    queryClient.invalidateQueries(customerProfileKeys.customer(id))
+  const invalidateCustomer = useCallback(
+    () => queryClient.invalidateQueries(customerProfileKeys.customer(id)),
+    [queryClient, id]
+  )
   const invalidateLmsCourses = () =>
     queryClient.invalidateQueries(customerProfileKeys.lmsCourses(id))
 
