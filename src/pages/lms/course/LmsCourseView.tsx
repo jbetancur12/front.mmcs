@@ -58,6 +58,7 @@ import {
 } from '../../../hooks/useLms'
 import { queryKeys } from '../../../config/queryClient'
 import { api } from 'src/config'
+import { buildLmsResourceUrl } from 'src/utils/lmsSafeOutput'
 import {
   getCourseAudienceLabel,
   normalizeCourseAudience
@@ -917,13 +918,13 @@ const LmsCourseView: React.FC = () => {
       setPdfViewerOpen(true)
       return
     }
-    const href = resource.href
-    if (!href) return
-    const token = localStorage.getItem('accessToken')
-    const fullUrl = href.startsWith('http') ? href : `${api()}${href}`
-    const url = new URL(fullUrl)
-    if (token) url.searchParams.set('token', token)
-    window.open(url.toString(), '_blank', 'noopener,noreferrer')
+    const url = buildLmsResourceUrl(
+      resource.href,
+      localStorage.getItem('accessToken'),
+      api()
+    )
+    if (!url) return
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   // Early return states (must be after all hooks)
