@@ -21,6 +21,7 @@ import useCalibrationServicesListActions from './list/useCalibrationServicesList
 import useCalibrationServicesListData from './list/useCalibrationServicesListData'
 import { secondaryButtonSx } from './list/calibrationServicesListConstants'
 import { neutral } from 'src/theme/designTokens'
+import QuotationIndicatorsStrip from 'src/Components/Common/QuotationIndicatorsStrip'
 
 /** Bandeja de servicios de calibración: lista agrupada, tabla o kanban con filtros operativos. */
 const CalibrationServicesPage = () => {
@@ -157,6 +158,10 @@ const CalibrationServicesPage = () => {
         activeCutTask={filters.cutTaskFilter}
         onSelectCutTask={filters.setCutTaskFilter}
       />
+
+      {isTechnicalOnlyView ? null : (
+        <QuotationIndicatorsStrip kind='calibration' />
+      )}
 
       <CalibrationServicesPipeline
         statusCounts={data?.statusCounts}

@@ -44,6 +44,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
 import { toast } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import QuotationIndicatorsStrip from 'src/Components/Common/QuotationIndicatorsStrip'
 import ListItemCard from 'src/Components/Common/ListItemCard'
 import StagePipeline from 'src/Components/Common/StagePipeline'
 import StatusPill from 'src/Components/Common/StatusPill'
@@ -488,6 +489,8 @@ const EquipmentSalesPage = () => {
           ))}
         </Stack>
       </Stack>
+
+      <QuotationIndicatorsStrip kind='equipment' />
 
       {isLoading ? (
         <Box
