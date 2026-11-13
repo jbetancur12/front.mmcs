@@ -551,7 +551,7 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
   'release:certificate:upload': [
     'Cargar certificados a liberar',
     'Cargar certificados en PDF en masa y subir el PDF corregido de uno que requiere ajustes.',
-    'Certificados a liberar: botón Cargar certificado.'
+    'Certificados a liberar: botón Cargar certificados.'
   ],
   'release:certificate:review': [
     'Revisar certificados a liberar',

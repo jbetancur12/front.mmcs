@@ -170,6 +170,7 @@ const CalibrationServiceCutsTab = ({
       <CalibrationServiceReleaseCertificatesCard
         summary={service.releaseCertificates}
         cuts={service.cuts}
+        service={service}
       />
       <CalibrationServiceCutsPanel
         cuts={service.cuts || []}

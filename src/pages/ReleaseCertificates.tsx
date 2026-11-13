@@ -330,7 +330,7 @@ const ReleaseCertificates: React.FC = () => {
       onClick={() => setUploadOpen(true)}
       sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
     >
-      Cargar certificado
+      Cargar certificados
     </Button>
   )
 
@@ -555,7 +555,7 @@ const ReleaseCertificates: React.FC = () => {
           title='Aún no hay certificados cargados'
           hint={
             canUpload
-              ? 'Suelta los PDF con el botón Cargar certificado y el sistema los lee.'
+              ? 'Suelta los PDF con el botón Cargar certificados y el sistema los lee.'
               : 'Cuando se cargue uno aparecerá aquí.'
           }
           action={uploadButton || undefined}
@@ -664,6 +664,15 @@ const ReleaseCertificates: React.FC = () => {
       <ReleaseUploadDialog
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
+        onOpenCertificate={setViewingId}
+        // «Listo» deja la bandeja mostrando lo recién cargado: lo del usuario, sin filtro de estado.
+        onDone={() => {
+          // El usuario no trae su id en el store: se busca por nombre entre quienes han cargado.
+          const me = uploaders.find((u) => u.nombre === $userStore.nombre)
+          if (me) setUploadedBy(me.id)
+          setStatus(undefined)
+          setPagination((current) => ({ ...current, pageIndex: 0 }))
+        }}
       />
       <ReleaseDetailDialog
         certificateId={viewingId}

@@ -385,6 +385,7 @@ const CalibrationServiceDetailsView = ({
       ) : null}
       <CalibrationServiceReleaseCertificatesAlert
         summary={service.releaseCertificates}
+        service={service}
       />
       <CalibrationServiceStageTracker
         status={service.status}

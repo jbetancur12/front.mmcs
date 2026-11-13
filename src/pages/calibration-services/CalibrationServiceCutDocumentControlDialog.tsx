@@ -276,7 +276,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
                   borderColor: brand.main
                 }}
               >
-                Subir certificados
+                Cargar certificados
               </Button>
             )}
           </Box>
@@ -440,6 +440,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
           open={uploading}
           onClose={() => setUploading(false)}
           initialCutId={cut.id}
+          initialCutCode={cut.cutCode}
           initialService={{
             id: service.id,
             serviceCode: service.serviceCode,
