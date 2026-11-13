@@ -72,6 +72,8 @@ export interface ManagementReportMeta {
   currency: string
   profile: 'full' | 'no_amounts'
   includeLms: boolean
+  /** Indicadores que tienen una lista detrás (clic en el número). */
+  detailCodes?: string[]
 }
 
 /** Una fila del bloque Equipo (una persona, o el total). */
@@ -332,4 +334,36 @@ export interface StoredManagementReport {
   xlsxPath?: string | null
   sentAt: string | null
   createdAt: string
+}
+
+export interface ManagementReportDetailColumn {
+  key: string
+  label: string
+  type: 'text' | 'date' | 'money' | 'number'
+  money?: boolean
+}
+
+/** Una fila de la lista detrás de un indicador; `valor` solo con valores. */
+export interface ManagementReportDetailRow {
+  customer?: string
+  code?: string
+  link?: string | null
+  valor?: number
+  [key: string]: string | number | boolean | null | undefined
+}
+
+export interface ManagementReportDetail {
+  code: string
+  title: string
+  periodLabel: string
+  columns: ManagementReportDetailColumn[]
+  rows: ManagementReportDetailRow[]
+  page: number
+  pages: number
+  pageSize: number
+  /** Filas que quedan con la búsqueda. */
+  count: number
+  searched: boolean
+  /** El total coincide con el número de la tarjeta. */
+  totals: { label: string; count: number; valor?: number; summary?: string }
 }

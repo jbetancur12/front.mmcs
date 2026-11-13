@@ -17,6 +17,8 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Link,
+  Tooltip,
   Typography
 } from '@mui/material'
 import {
@@ -50,6 +52,7 @@ import ActionListsSection from 'src/Components/managementReport/ActionListsSecti
 import ExtrasSection, {
   extrasSummary
 } from 'src/Components/managementReport/ExtrasSection'
+import DetailDialog from 'src/Components/managementReport/DetailDialog'
 import TeamSection from 'src/Components/managementReport/TeamSection'
 import TrendSection from 'src/Components/managementReport/TrendSection'
 import LossReasonsSection from 'src/Components/managementReport/LossReasonsSection'
@@ -224,11 +227,31 @@ const INLINE_TABLE = {
   }
 } as const
 
-const METRIC_COLUMNS: MRT_ColumnDef<ManagementReportMetric>[] = [
+const buildMetricColumns = (
+  detailCodes: Set<string>,
+  open: (code: string) => void
+): MRT_ColumnDef<ManagementReportMetric>[] => [
   {
     accessorKey: 'label',
     header: 'Indicador',
-    muiTableBodyCellProps: { sx: { fontWeight: 600 } }
+    muiTableBodyCellProps: { sx: { fontWeight: 600 } },
+    // Con lista detrás, el nombre se ve y se comporta como un enlace
+    Cell: ({ row }) =>
+      detailCodes.has(row.original.code) ? (
+        <Tooltip title='Ver la lista que compone este número'>
+          <Link
+            component='button'
+            type='button'
+            underline='hover'
+            onClick={() => open(row.original.code)}
+            sx={{ color: brand.ink, fontWeight: 600, textAlign: 'left' }}
+          >
+            {row.original.label}
+          </Link>
+        </Tooltip>
+      ) : (
+        row.original.label
+      )
   },
   {
     accessorKey: 'display',
@@ -296,6 +319,7 @@ const ManagementReportPage = () => {
   const [includeLms, setIncludeLms] = useState(false)
   const [weeklyDigest, setWeeklyDigest] = useState(false)
   const [weeklyWhatsapp, setWeeklyWhatsapp] = useState(false)
+  const [detailCode, setDetailCode] = useState<string | null>(null)
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<HTMLElement | null>(null)
   const [pdfPagesFull, setPdfPagesFull] =
     useState<ManagementReportPdfPages>('summary')
@@ -335,6 +359,11 @@ const ManagementReportPage = () => {
     setGoalBilled(goalToText(config.goals?.billed))
     setGoalWinRate(goalToText(config.goals?.winRate))
   }, [config])
+
+  const detailCodes = useMemo(
+    () => new Set(report?.meta.detailCodes ?? []),
+    [report]
+  )
 
   const visibleHistory = useMemo(
     () =>
@@ -448,6 +477,11 @@ const ManagementReportPage = () => {
       )
     }
   }
+
+  const metricColumns = useMemo(
+    () => buildMetricColumns(detailCodes, setDetailCode),
+    [detailCodes]
+  )
 
   const historyColumns = useMemo<MRT_ColumnDef<StoredManagementReport>[]>(
     () => [
@@ -647,6 +681,11 @@ const ManagementReportPage = () => {
                   value={item.display}
                   icon={coverIcon(item.code)}
                   tone={STATUS_TONE[item.status]}
+                  onClick={
+                    detailCodes.has(item.code)
+                      ? () => setDetailCode(item.code)
+                      : undefined
+                  }
                   caption={
                     item.goal
                       ? `${Math.round(item.goal.progress * 100)} % de la meta`
@@ -719,7 +758,7 @@ const ManagementReportPage = () => {
               </Typography>
               <Box sx={{ overflowX: 'auto' }}>
                 <DataTable
-                  columns={METRIC_COLUMNS}
+                  columns={metricColumns}
                   data={block.metrics}
                   {...INLINE_TABLE}
                   enableTopToolbar={false}
@@ -977,6 +1016,13 @@ const ManagementReportPage = () => {
           </CollapsibleSection>
         </>
       ) : null}
+      <DetailDialog
+        open={detailCode !== null}
+        code={detailCode}
+        month={month}
+        profile={profile}
+        onClose={() => setDetailCode(null)}
+      />
     </Container>
   )
 }

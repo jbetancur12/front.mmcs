@@ -3,6 +3,7 @@ import { axiosPrivate } from 'src/utils/api'
 import { downloadPrivateFile } from 'src/utils/downloadBlob'
 import type {
   ManagementReport,
+  ManagementReportDetail,
   StoredManagementReport
 } from 'src/types/managementReport'
 
@@ -33,6 +34,34 @@ export const useManagementReport = ({
       staleTime: 5 * 60 * 1000,
       retry: false
     }
+  )
+
+/** Lista detrás de un número del reporte (paginada y con búsqueda en el servidor). */
+export const useManagementReportDetail = ({
+  month,
+  profile,
+  code,
+  page,
+  search,
+  enabled = true
+}: {
+  month: string
+  profile: 'full' | 'no_amounts'
+  code: string | null
+  page: number
+  search: string
+  enabled?: boolean
+}) =>
+  useQuery<ManagementReportDetail>(
+    [REPORT_KEY, 'detail', month, profile, code, page, search],
+    async () =>
+      (
+        await axiosPrivate.get<ManagementReportDetail>(
+          '/management-reports/monthly/detail',
+          { params: { month, profile, code, page, search } }
+        )
+      ).data,
+    { enabled, keepPreviousData: true, staleTime: 60 * 1000, retry: false }
   )
 
 export const useManagementReportHistory = (enabled = true) =>
