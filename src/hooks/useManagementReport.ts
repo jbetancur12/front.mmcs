@@ -48,19 +48,24 @@ export const useManagementReportHistory = (enabled = true) =>
     }
   )
 
+/** Alcance del PDF: `summary` son las dos primeras páginas, `full` las cuatro. */
+export type ManagementReportPdfPages = 'summary' | 'full'
+
 export const downloadManagementReport = ({
   month,
   profile,
-  format
+  format,
+  pages
 }: {
   month: string
   profile: 'full' | 'no_amounts'
   format: 'pdf' | 'xlsx'
+  pages?: ManagementReportPdfPages
 }) =>
   downloadPrivateFile(
     '/management-reports/monthly',
-    `reporte-gerencial_${month}_${profile}.${format}`,
-    { month, profile, format }
+    `reporte-gerencial_${month}_${profile}${pages === 'summary' ? '_resumen' : ''}.${format}`,
+    { month, profile, format, ...(format === 'pdf' && pages ? { pages } : {}) }
   )
 
 export const downloadStoredManagementReport = ({
@@ -88,6 +93,11 @@ export interface ManagementReportConfig {
   includeLms: boolean
   /** Aviso semanal (lunes 07:00) con las dos listas de acción; apagado por defecto. */
   weeklyDigestEnabled?: boolean
+  /** Alcance del PDF que recibe cada versión (envío, WhatsApp e historial). */
+  pdfPages?: {
+    full: ManagementReportPdfPages
+    no_amounts: ManagementReportPdfPages
+  }
   /** Metas mensuales opcionales; null = sin meta. */
   goals?: {
     approvedSales: number | string | null

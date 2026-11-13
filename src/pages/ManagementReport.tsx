@@ -9,6 +9,8 @@ import {
   CircularProgress,
   Container,
   FormControlLabel,
+  Menu,
+  MenuItem,
   Grid,
   Paper,
   Stack,
@@ -18,6 +20,7 @@ import {
   Typography
 } from '@mui/material'
 import {
+  ArrowDropDownOutlined,
   AssessmentOutlined,
   AttachMoneyOutlined,
   GroupsOutlined,
@@ -57,6 +60,7 @@ import { hasPermission, PERMISSIONS } from 'src/constants/permissions'
 import { brand, intent, neutral } from 'src/theme/designTokens'
 import {
   downloadManagementReport,
+  type ManagementReportPdfPages,
   downloadStoredManagementReport,
   saveManagementReportConfig,
   sendManagementReport,
@@ -291,6 +295,11 @@ const ManagementReportPage = () => {
   const [whatsappPhone, setWhatsappPhone] = useState('')
   const [includeLms, setIncludeLms] = useState(false)
   const [weeklyDigest, setWeeklyDigest] = useState(false)
+  const [pdfMenuAnchor, setPdfMenuAnchor] = useState<HTMLElement | null>(null)
+  const [pdfPagesFull, setPdfPagesFull] =
+    useState<ManagementReportPdfPages>('summary')
+  const [pdfPagesNoAmounts, setPdfPagesNoAmounts] =
+    useState<ManagementReportPdfPages>('full')
   const [goalSales, setGoalSales] = useState('')
   const [goalBilled, setGoalBilled] = useState('')
   const [goalWinRate, setGoalWinRate] = useState('')
@@ -318,6 +327,8 @@ const ManagementReportPage = () => {
     setWhatsappPhone(config.whatsappPhone || '')
     setIncludeLms(Boolean(config.includeLms))
     setWeeklyDigest(Boolean(config.weeklyDigestEnabled))
+    setPdfPagesFull(config.pdfPages?.full ?? 'summary')
+    setPdfPagesNoAmounts(config.pdfPages?.no_amounts ?? 'full')
     setGoalSales(goalToText(config.goals?.approvedSales))
     setGoalBilled(goalToText(config.goals?.billed))
     setGoalWinRate(goalToText(config.goals?.winRate))
@@ -329,10 +340,14 @@ const ManagementReportPage = () => {
     [history, canSeeAmounts]
   )
 
-  const handleDownload = async (format: 'pdf' | 'xlsx') => {
+  const handleDownload = async (
+    format: 'pdf' | 'xlsx',
+    pages?: ManagementReportPdfPages
+  ) => {
     try {
       setDownloading(format)
-      await downloadManagementReport({ month, profile, format })
+      setPdfMenuAnchor(null)
+      await downloadManagementReport({ month, profile, format, pages })
     } catch (downloadError) {
       notify.error(
         getApiErrorMessage(downloadError, 'No se pudo descargar el reporte')
@@ -381,6 +396,7 @@ const ManagementReportPage = () => {
         whatsappPhone: whatsappPhone.trim(),
         includeLms,
         weeklyDigestEnabled: weeklyDigest,
+        pdfPages: { full: pdfPagesFull, no_amounts: pdfPagesNoAmounts },
         goals: {
           approvedSales: textToGoal(goalSales),
           billed: textToGoal(goalBilled),
@@ -392,6 +408,8 @@ const ManagementReportPage = () => {
       setWhatsappPhone(saved.whatsappPhone || '')
       setIncludeLms(Boolean(saved.includeLms))
       setWeeklyDigest(Boolean(saved.weeklyDigestEnabled))
+      setPdfPagesFull(saved.pdfPages?.full ?? 'summary')
+      setPdfPagesNoAmounts(saved.pdfPages?.no_amounts ?? 'full')
       setGoalSales(goalToText(saved.goals?.approvedSales))
       setGoalBilled(goalToText(saved.goals?.billed))
       setGoalWinRate(goalToText(saved.goals?.winRate))
@@ -554,7 +572,9 @@ const ManagementReportPage = () => {
                   <PictureAsPdfOutlined />
                 )
               }
-              onClick={() => handleDownload('pdf')}
+              onClick={(event) => setPdfMenuAnchor(event.currentTarget)}
+              aria-haspopup='menu'
+              aria-expanded={Boolean(pdfMenuAnchor)}
               disabled={Boolean(downloading) || isLoading}
               sx={{
                 bgcolor: brand.main,
@@ -563,7 +583,20 @@ const ManagementReportPage = () => {
               }}
             >
               PDF
+              <ArrowDropDownOutlined />
             </Button>
+            <Menu
+              anchorEl={pdfMenuAnchor}
+              open={Boolean(pdfMenuAnchor)}
+              onClose={() => setPdfMenuAnchor(null)}
+            >
+              <MenuItem onClick={() => handleDownload('pdf', 'summary')}>
+                Resumen de 2 páginas
+              </MenuItem>
+              <MenuItem onClick={() => handleDownload('pdf', 'full')}>
+                Completo
+              </MenuItem>
+            </Menu>
             <Button
               variant='outlined'
               startIcon={
@@ -790,6 +823,43 @@ const ManagementReportPage = () => {
                   size='small'
                   fullWidth
                 />
+                <Typography variant='subtitle2'>
+                  PDF que recibe cada versión
+                </Typography>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <TextField
+                    select
+                    label='Gerencia (con valores)'
+                    value={pdfPagesFull}
+                    onChange={(event) =>
+                      setPdfPagesFull(
+                        event.target.value as ManagementReportPdfPages
+                      )
+                    }
+                    helperText='Aplica al envío, al WhatsApp y al historial'
+                    size='small'
+                    fullWidth
+                  >
+                    <MenuItem value='summary'>Resumen de 2 páginas</MenuItem>
+                    <MenuItem value='full'>Completo (4 páginas)</MenuItem>
+                  </TextField>
+                  <TextField
+                    select
+                    label='Coordinación (sin valores)'
+                    value={pdfPagesNoAmounts}
+                    onChange={(event) =>
+                      setPdfPagesNoAmounts(
+                        event.target.value as ManagementReportPdfPages
+                      )
+                    }
+                    helperText='Aplica al envío y al historial'
+                    size='small'
+                    fullWidth
+                  >
+                    <MenuItem value='summary'>Resumen de 2 páginas</MenuItem>
+                    <MenuItem value='full'>Completo (4 páginas)</MenuItem>
+                  </TextField>
+                </Stack>
                 <Typography variant='subtitle2'>
                   Metas del mes (opcionales)
                 </Typography>
