@@ -79,10 +79,46 @@ export interface ManagementReportTeamRow {
   waitingValue?: number
 }
 
+/** Aviso de que una sola cuenta concentra casi todos los registros. */
+export interface ManagementReportSharedAccountWarning {
+  name: string
+  count: number
+  total: number
+  share: number
+  message: string
+}
+
 export interface ManagementReportTeamTable {
   rows: ManagementReportTeamRow[]
   totals: ManagementReportTeamRow
+  sharedAccountWarning?: ManagementReportSharedAccountWarning | null
 }
+
+/** Fila de las áreas distintas de cotizaciones: cifras por nombre de campo. */
+export interface ManagementReportAreaRow {
+  key: number | string | null
+  name: string
+  [field: string]: number | string | boolean | null
+}
+
+export interface ManagementReportAreaTable {
+  rows: ManagementReportAreaRow[]
+  totals: ManagementReportAreaRow
+  sharedAccountWarning?: ManagementReportSharedAccountWarning | null
+  /** Compras: la atribución es por nombre escrito, no por usuario. */
+  approximate?: boolean
+}
+
+export type ManagementReportTeamArea =
+  | 'quotations'
+  | 'certificates'
+  | 'maintenance'
+  | 'purchases'
+
+export type ManagementReportAreaKey = Exclude<
+  ManagementReportTeamArea,
+  'quotations'
+>
 
 export type ManagementReportTeamKind = 'calibration' | 'equipment' | 'both'
 export type ManagementReportTeamRange = 'month' | 'year'
@@ -102,7 +138,13 @@ export interface ManagementReport {
   } & Record<
     ManagementReportTeamRange,
     Record<ManagementReportTeamKind, ManagementReportTeamTable>
-  >
+  > &
+    Partial<
+      Record<
+        ManagementReportAreaKey,
+        Record<ManagementReportTeamRange, ManagementReportAreaTable>
+      >
+    >
   definitions: {
     terms: Array<{ term: string; definition: string }>
     limitations: string[]
