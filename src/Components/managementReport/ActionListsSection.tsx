@@ -245,7 +245,7 @@ const ActionListsSection = ({
 
   return (
     <Grid container spacing={2} sx={{ mb: 3 }}>
-      <Grid item xs={12} lg={6}>
+      <Grid item xs={12}>
         <ListCard
           icon={<EventBusyOutlined />}
           title='Cotizaciones por vencer'
@@ -267,7 +267,7 @@ const ActionListsSection = ({
           />
         </ListCard>
       </Grid>
-      <Grid item xs={12} lg={6}>
+      <Grid item xs={12}>
         <ListCard
           icon={<PaymentsOutlined />}
           title='Quién debe'
