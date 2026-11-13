@@ -46,6 +46,7 @@ import LmsStatCard, {
   type LmsStatTone
 } from 'src/Components/lms/admin/LmsStatCard'
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import TeamSection from 'src/Components/managementReport/TeamSection'
 import DataTable from 'src/Components/Common/DataTable'
 import { type MRT_ColumnDef } from 'material-react-table'
 import { userStore } from 'src/store/userStore'
@@ -596,6 +597,13 @@ const ManagementReportPage = () => {
               )}
             </Paper>
           ))}
+
+          {report.team && (
+            <TeamSection
+              team={report.team}
+              periodLabel={report.meta.periodLabel}
+            />
+          )}
 
           {report.noData && report.noData.length > 0 && (
             <Alert severity='info' sx={{ mb: 3 }}>

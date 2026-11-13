@@ -59,6 +59,34 @@ export interface ManagementReportMeta {
   includeLms: boolean
 }
 
+/** Una fila del bloque Equipo (una persona, o el total). */
+export interface ManagementReportTeamRow {
+  userId: number | null
+  name: string
+  created: number
+  approved: number
+  rejected: number
+  expired: number
+  decisions: number
+  /** Fracción 0–1; null con menos de 5 decisiones. */
+  winRate: number | null
+  insufficientData: boolean
+  waiting: number
+  medianApprovalDays: number | null
+  /** Los tres valores solo vienen en la versión con valores. */
+  createdValue?: number
+  approvedValue?: number
+  waitingValue?: number
+}
+
+export interface ManagementReportTeamTable {
+  rows: ManagementReportTeamRow[]
+  totals: ManagementReportTeamRow
+}
+
+export type ManagementReportTeamKind = 'calibration' | 'equipment' | 'both'
+export type ManagementReportTeamRange = 'month' | 'year'
+
 export interface ManagementReport {
   meta: ManagementReportMeta
   cover: ManagementReportCoverItem[]
@@ -67,6 +95,14 @@ export interface ManagementReport {
   /** Indicadores sin información suficiente este mes. */
   noData?: Array<{ section: string; label: string; note?: string }>
   annexes?: Record<string, unknown>
+  team?: {
+    minDecisions: number
+    year: number
+    month: number
+  } & Record<
+    ManagementReportTeamRange,
+    Record<ManagementReportTeamKind, ManagementReportTeamTable>
+  >
   definitions: {
     terms: Array<{ term: string; definition: string }>
     limitations: string[]
