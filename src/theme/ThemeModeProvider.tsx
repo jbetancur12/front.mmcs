@@ -4,18 +4,27 @@ import { ThemeProvider } from '@mui/material'
 import { darkPalette, lightPalette, tokenVar } from './designTokens'
 import { darkTheme, lightTheme } from '../theme'
 
-export type ColorMode = 'light' | 'dark'
+/** Preferencia elegida; `system` sigue el tema del sistema operativo. */
+export type ColorMode = 'light' | 'dark' | 'system'
+export type ResolvedColorMode = 'light' | 'dark'
 
 const STORAGE_KEY = 'mm-color-scheme'
 const GROUPS = ['brand', 'neutral', 'intent', 'accent'] as const
+const DARK_QUERY = '(prefers-color-scheme: dark)'
+
+const systemPrefersDark = () =>
+  window.matchMedia?.(DARK_QUERY)?.matches ?? false
+
+const resolveMode = (mode: ColorMode): ResolvedColorMode =>
+  mode === 'system' ? (systemPrefersDark() ? 'dark' : 'light') : mode
 
 const storedMode = (): ColorMode => {
   const stored = window.localStorage.getItem(STORAGE_KEY)
-  return stored === 'dark' ? 'dark' : 'light'
+  return stored === 'dark' || stored === 'system' ? stored : 'light'
 }
 
 /** Escribe los tokens del modo en <html>; CSS variables + clase `dark` para Tailwind. */
-export const applyColorMode = (mode: ColorMode) => {
+export const applyColorMode = (mode: ResolvedColorMode) => {
   const palette = mode === 'dark' ? darkPalette : lightPalette
   const root = document.documentElement
   for (const group of GROUPS) {
@@ -29,12 +38,14 @@ export const applyColorMode = (mode: ColorMode) => {
 
 // Antes del primer render: evita el destello blanco si el modo guardado es oscuro.
 const initialMode = storedMode()
-applyColorMode(initialMode)
+applyColorMode(resolveMode(initialMode))
 
 type ColorModeContextValue = {
+  /** Preferencia elegida (incluye `system`). */
   mode: ColorMode
+  /** Modo realmente aplicado (`light` o `dark`). */
+  resolvedMode: ResolvedColorMode
   setMode: (mode: ColorMode) => void
-  toggleMode: () => void
 }
 
 const ColorModeContext = createContext<ColorModeContextValue | null>(null)
@@ -49,30 +60,41 @@ export const useColorMode = (): ColorModeContextValue => {
 
 export const ThemeModeProvider = ({ children }: { children: ReactNode }) => {
   const [mode, setModeState] = useState<ColorMode>(initialMode)
+  const [systemDark, setSystemDark] = useState(systemPrefersDark)
+
+  const resolvedMode: ResolvedColorMode =
+    mode === 'system' ? (systemDark ? 'dark' : 'light') : mode
 
   useEffect(() => {
-    applyColorMode(mode)
+    applyColorMode(resolvedMode)
+  }, [resolvedMode])
+
+  // Con `system`, seguir en vivo los cambios del tema del sistema operativo.
+  useEffect(() => {
+    if (mode !== 'system') return
+    const media = window.matchMedia?.(DARK_QUERY)
+    if (!media) return
+    const onChange = (event: MediaQueryListEvent) =>
+      setSystemDark(event.matches)
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
   }, [mode])
 
   const value = useMemo<ColorModeContextValue>(
     () => ({
       mode,
+      resolvedMode,
       setMode: (next) => {
-        window.localStorage.setItem(STORAGE_KEY, next)
-        setModeState(next)
-      },
-      toggleMode: () => {
-        const next = mode === 'dark' ? 'light' : 'dark'
         window.localStorage.setItem(STORAGE_KEY, next)
         setModeState(next)
       }
     }),
-    [mode]
+    [mode, resolvedMode]
   )
 
   return (
     <ColorModeContext.Provider value={value}>
-      <ThemeProvider theme={mode === 'dark' ? darkTheme : lightTheme}>
+      <ThemeProvider theme={resolvedMode === 'dark' ? darkTheme : lightTheme}>
         {children}
       </ThemeProvider>
     </ColorModeContext.Provider>

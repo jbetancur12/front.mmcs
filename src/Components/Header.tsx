@@ -5,12 +5,15 @@ import {
   IconButton,
   Box,
   Tooltip,
+  Menu,
+  MenuItem,
   useTheme,
   useMediaQuery
 } from '@mui/material'
 import { Menu as MenuIcon } from '@mui/icons-material'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
+import SettingsBrightnessOutlinedIcon from '@mui/icons-material/SettingsBrightnessOutlined'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import { useStore } from '@nanostores/react'
 import { Link } from 'react-router-dom'
@@ -37,7 +40,10 @@ interface HeaderProps {
 
 function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
   const theme = useTheme()
-  const { mode, toggleMode } = useColorMode()
+  const { mode, setMode } = useColorMode()
+  const [themeMenuAnchor, setThemeMenuAnchor] = useState<null | HTMLElement>(
+    null
+  )
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
@@ -174,31 +180,68 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
             )}
 
             <Tooltip
-              title={
-                mode === 'dark'
-                  ? 'Cambiar a modo claro'
-                  : 'Cambiar a modo oscuro'
-              }
+              title={`Tema: ${mode === 'dark' ? 'Oscuro' : mode === 'system' ? 'Sistema' : 'Claro'}`}
             >
               <IconButton
-                aria-label={
-                  mode === 'dark'
-                    ? 'Cambiar a modo claro'
-                    : 'Cambiar a modo oscuro'
-                }
-                onClick={toggleMode}
+                aria-label='Cambiar tema'
+                aria-haspopup='menu'
+                aria-expanded={Boolean(themeMenuAnchor)}
+                onClick={(event) => setThemeMenuAnchor(event.currentTarget)}
                 sx={{
                   color: neutral.textBody,
                   '&:hover': { bgcolor: neutral.surfaceHead }
                 }}
               >
                 {mode === 'dark' ? (
-                  <LightModeOutlinedIcon />
-                ) : (
                   <DarkModeOutlinedIcon />
+                ) : mode === 'system' ? (
+                  <SettingsBrightnessOutlinedIcon />
+                ) : (
+                  <LightModeOutlinedIcon />
                 )}
               </IconButton>
             </Tooltip>
+            <Menu
+              anchorEl={themeMenuAnchor}
+              open={Boolean(themeMenuAnchor)}
+              onClose={() => setThemeMenuAnchor(null)}
+            >
+              {(
+                [
+                  {
+                    value: 'light',
+                    label: 'Claro',
+                    icon: <LightModeOutlinedIcon sx={{ fontSize: 18 }} />
+                  },
+                  {
+                    value: 'dark',
+                    label: 'Oscuro',
+                    icon: <DarkModeOutlinedIcon sx={{ fontSize: 18 }} />
+                  },
+                  {
+                    value: 'system',
+                    label: 'Sistema',
+                    icon: (
+                      <SettingsBrightnessOutlinedIcon sx={{ fontSize: 18 }} />
+                    )
+                  }
+                ] as const
+              ).map((option) => (
+                <MenuItem
+                  key={option.value}
+                  selected={mode === option.value}
+                  onClick={() => {
+                    setMode(option.value)
+                    setThemeMenuAnchor(null)
+                  }}
+                >
+                  {option.icon}
+                  <Box component='span' sx={{ ml: 1 }}>
+                    {option.label}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Menu>
 
             <Box
               sx={{
