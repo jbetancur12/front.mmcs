@@ -772,6 +772,43 @@ const ManagementReportPage = () => {
                   size='small'
                   fullWidth
                 />
+                <Typography variant='subtitle2'>
+                  Metas del mes (opcionales)
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Con meta, el semáforo de ese indicador se calcula contra la
+                  meta y no contra el mes anterior. Déjela vacía para no usar
+                  meta.
+                </Typography>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <TextField
+                    label='Ventas aprobadas del mes'
+                    value={goalSales}
+                    onChange={(event) => setGoalSales(event.target.value)}
+                    helperText='Pesos, sin IVA'
+                    inputProps={{ inputMode: 'numeric' }}
+                    size='small'
+                    fullWidth
+                  />
+                  <TextField
+                    label='Facturado del mes'
+                    value={goalBilled}
+                    onChange={(event) => setGoalBilled(event.target.value)}
+                    helperText='Pesos, con IVA'
+                    inputProps={{ inputMode: 'numeric' }}
+                    size='small'
+                    fullWidth
+                  />
+                  <TextField
+                    label='Cotizaciones ganadas'
+                    value={goalWinRate}
+                    onChange={(event) => setGoalWinRate(event.target.value)}
+                    helperText='Porcentaje de 1 a 100'
+                    inputProps={{ inputMode: 'decimal' }}
+                    size='small'
+                    fullWidth
+                  />
+                </Stack>
                 <FormControlLabel
                   control={
                     <Checkbox
