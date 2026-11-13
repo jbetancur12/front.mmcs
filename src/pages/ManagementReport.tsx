@@ -289,6 +289,7 @@ const ManagementReportPage = () => {
   const [recipientsNoAmounts, setRecipientsNoAmounts] = useState('')
   const [whatsappPhone, setWhatsappPhone] = useState('')
   const [includeLms, setIncludeLms] = useState(false)
+  const [weeklyDigest, setWeeklyDigest] = useState(false)
   const [goalSales, setGoalSales] = useState('')
   const [goalBilled, setGoalBilled] = useState('')
   const [goalWinRate, setGoalWinRate] = useState('')
@@ -315,6 +316,7 @@ const ManagementReportPage = () => {
     setRecipientsNoAmounts(config.recipients.no_amounts.join(', '))
     setWhatsappPhone(config.whatsappPhone || '')
     setIncludeLms(Boolean(config.includeLms))
+    setWeeklyDigest(Boolean(config.weeklyDigestEnabled))
     setGoalSales(goalToText(config.goals?.approvedSales))
     setGoalBilled(goalToText(config.goals?.billed))
     setGoalWinRate(goalToText(config.goals?.winRate))
@@ -377,6 +379,7 @@ const ManagementReportPage = () => {
         },
         whatsappPhone: whatsappPhone.trim(),
         includeLms,
+        weeklyDigestEnabled: weeklyDigest,
         goals: {
           approvedSales: textToGoal(goalSales),
           billed: textToGoal(goalBilled),
@@ -387,6 +390,7 @@ const ManagementReportPage = () => {
       setRecipientsNoAmounts(saved.recipients.no_amounts.join(', '))
       setWhatsappPhone(saved.whatsappPhone || '')
       setIncludeLms(Boolean(saved.includeLms))
+      setWeeklyDigest(Boolean(saved.weeklyDigestEnabled))
       setGoalSales(goalToText(saved.goals?.approvedSales))
       setGoalBilled(goalToText(saved.goals?.billed))
       setGoalWinRate(goalToText(saved.goals?.winRate))
@@ -830,6 +834,17 @@ const ManagementReportPage = () => {
                     />
                   }
                   label='Incluir bloque de capacitación (LMS)'
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={weeklyDigest}
+                      onChange={(event) =>
+                        setWeeklyDigest(event.target.checked)
+                      }
+                    />
+                  }
+                  label='Aviso semanal por correo (lunes 7:00) con cotizaciones por vencer y quién debe'
                 />
                 <Box>
                   <Button

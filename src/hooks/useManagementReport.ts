@@ -86,6 +86,8 @@ export interface ManagementReportConfig {
   /** Un solo número: recibe por WhatsApp la versión de gerencia. */
   whatsappPhone?: string
   includeLms: boolean
+  /** Aviso semanal (lunes 07:00) con las dos listas de acción; apagado por defecto. */
+  weeklyDigestEnabled?: boolean
   /** Metas mensuales opcionales; null = sin meta. */
   goals?: {
     approvedSales: number | string | null
