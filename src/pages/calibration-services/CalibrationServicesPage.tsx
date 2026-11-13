@@ -160,7 +160,11 @@ const CalibrationServicesPage = () => {
       />
 
       {isTechnicalOnlyView ? null : (
-        <QuotationIndicatorsStrip kind='calibration' />
+        <QuotationIndicatorsStrip
+          kind='calibration'
+          userId={filters.createdByUserId}
+          onUserChange={filters.setCreatedByUserId}
+        />
       )}
 
       <CalibrationServicesPipeline

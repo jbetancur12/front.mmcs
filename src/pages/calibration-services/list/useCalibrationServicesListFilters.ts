@@ -85,6 +85,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     string | undefined
   >(undefined)
   const [certificateAlertsFilter, setCertificateAlertsFilter] = useState(false)
+  // Quién creó la cotización: lo comparten la franja de indicadores y el listado
+  const [createdByUserId, setCreatedByUserId] = useState<number | null>(null)
 
   // La bandeja carga de a PAGE_SIZE servicios; "Cargar más" amplía el límite
   const [limit, setLimit] = useState(PAGE_SIZE)
@@ -132,6 +134,10 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     queryFilters.certificateAlerts = 'true'
   }
 
+  if (createdByUserId !== null) {
+    queryFilters.createdByUserId = createdByUserId
+  }
+
   // Al cambiar lo que se consulta al servidor, se vuelve a la primera página
   useEffect(() => {
     setLimit(PAGE_SIZE)
@@ -143,7 +149,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     billingStatusFilter,
     paymentStatusFilter,
     certificateAlertsFilter,
-    cutTaskFilter
+    cutTaskFilter,
+    createdByUserId
   ])
 
   useEffect(() => {
@@ -205,6 +212,7 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     setShowOnlyMyLoad(false)
     setCutTaskFilter('')
     setCertificateAlertsFilter(false)
+    setCreatedByUserId(null)
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
     }
@@ -243,6 +251,8 @@ const useCalibrationServicesListFilters = (isTechnicalOnlyView: boolean) => {
     setPaymentStatusFilter,
     certificateAlertsFilter,
     setCertificateAlertsFilter,
+    createdByUserId,
+    setCreatedByUserId,
     queryFilters,
     limit,
     loadMore: () => setLimit((current) => current + PAGE_SIZE),

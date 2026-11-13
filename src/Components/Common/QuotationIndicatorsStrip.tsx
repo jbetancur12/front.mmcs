@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Grid, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import {
   CheckCircleOutlined,
@@ -19,17 +18,23 @@ const millions = (value?: number) =>
 
 interface QuotationIndicatorsStripProps {
   kind: QuotationIndicatorsKind
+  /** Quién creó las cotizaciones; el mismo valor filtra el listado en el servidor. */
+  userId: number | null
+  onUserChange: (userId: number | null) => void
 }
 
 /**
  * Franja de indicadores del mes en curso sobre el listado de cotizaciones:
  * creadas, aprobadas, % ganadas y en espera, con filtro por quien las creó.
  * Los números salen de un endpoint ligero (no del reporte gerencial); los
- * valores en pesos solo llegan a quien puede verlos. El filtro afecta solo la
- * franja: el listado no filtra por creador en el servidor.
+ * valores en pesos solo llegan a quien puede verlos. El filtro «Creada por» lo
+ * controla la pantalla para que franja y listado filtren juntos.
  */
-const QuotationIndicatorsStrip = ({ kind }: QuotationIndicatorsStripProps) => {
-  const [userId, setUserId] = useState<number | null>(null)
+const QuotationIndicatorsStrip = ({
+  kind,
+  userId,
+  onUserChange
+}: QuotationIndicatorsStripProps) => {
   const { data } = useQuotationIndicators(kind, userId)
   if (!data) return null
   const { totals } = data
@@ -56,7 +61,7 @@ const QuotationIndicatorsStrip = ({ kind }: QuotationIndicatorsStripProps) => {
           label='Creada por'
           value={userId === null ? '' : String(userId)}
           onChange={(event) =>
-            setUserId(event.target.value ? Number(event.target.value) : null)
+            onUserChange(event.target.value ? Number(event.target.value) : null)
           }
           SelectProps={{ displayEmpty: true }}
           InputLabelProps={{ shrink: true }}

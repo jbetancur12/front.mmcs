@@ -121,7 +121,11 @@ const EquipmentSalesPage = () => {
   const [templateOpen, setTemplateOpen] = useState(false)
   const [templateTerms, setTemplateTerms] = useState<Record<string, string>>({})
   const { data: templateData } = useEquipmentQuoteTermsTemplate()
-  const { data, isLoading } = useEquipmentQuotations({ limit: 500 })
+  const [createdByUserId, setCreatedByUserId] = useState<number | null>(null)
+  const { data, isLoading } = useEquipmentQuotations({
+    limit: 500,
+    ...(createdByUserId === null ? {} : { createdByUserId })
+  })
   const mutations = useEquipmentSalesMutations()
   const canResetSequence = useCan(PERMISSIONS.SALES_CONFIG_SEQUENCE_RESET)
   const { data: sequenceConfig } = useEquipmentSequenceConfig(canConfig)
@@ -490,7 +494,11 @@ const EquipmentSalesPage = () => {
         </Stack>
       </Stack>
 
-      <QuotationIndicatorsStrip kind='equipment' />
+      <QuotationIndicatorsStrip
+        kind='equipment'
+        userId={createdByUserId}
+        onUserChange={setCreatedByUserId}
+      />
 
       {isLoading ? (
         <Box
