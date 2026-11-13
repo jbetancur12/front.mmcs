@@ -69,6 +69,7 @@ import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStat
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { MaintenanceIndicatorsStrip } from 'src/Components/Common/QuotationIndicatorsStrip'
 import StatCardSkeleton from '../../Components/Maintenance/StatCardSkeleton'
 import TicketCardSkeleton from '../../Components/Maintenance/TicketCardSkeleton'
 import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
@@ -731,6 +732,8 @@ const MaintenanceDashboard: React.FC = () => {
           </>
         )}
       </Grid>
+
+      <MaintenanceIndicatorsStrip />
 
       {isMobile && (
         <TextField

@@ -45,3 +45,66 @@ export const useQuotationIndicators = (
       ).data,
     { enabled, staleTime: 2 * 60 * 1000, retry: false }
   )
+
+export interface FilterOption {
+  value: string
+  name: string
+  count: number
+}
+
+export interface PurchaseIndicators {
+  period: string
+  periodLabel: string
+  filter: string | null
+  totals: {
+    created: number
+    approved: number
+    sent: number
+    withoutOrder: number
+    /** Solo para quien puede ver valores. */
+    sentValue?: number
+  }
+  options: FilterOption[]
+}
+
+export interface MaintenanceIndicators {
+  period: string
+  periodLabel: string
+  filter: number | null
+  totals: {
+    created: number
+    completed: number
+    open: number
+    medianAttentionDays: number | null
+    actualCost?: number
+  }
+  options: FilterOption[]
+}
+
+/** Solicitudes de compra del mes; `person` es el nombre normalizado del solicitante. */
+export const usePurchaseIndicators = (person: string | null) =>
+  useQuery<PurchaseIndicators>(
+    ['purchase-indicators', person],
+    async () =>
+      (
+        await axiosPrivate.get<PurchaseIndicators>(
+          '/purchaseRequests/indicators',
+          { params: person === null ? undefined : { person } }
+        )
+      ).data,
+    { staleTime: 2 * 60 * 1000, retry: false }
+  )
+
+/** Tickets de mantenimiento del mes; `technicianId` es el técnico asignado. */
+export const useMaintenanceIndicators = (technicianId: number | null) =>
+  useQuery<MaintenanceIndicators>(
+    ['maintenance-indicators', technicianId],
+    async () =>
+      (
+        await axiosPrivate.get<MaintenanceIndicators>(
+          '/maintenance/tickets/indicators',
+          { params: technicianId === null ? undefined : { technicianId } }
+        )
+      ).data,
+    { staleTime: 2 * 60 * 1000, retry: false }
+  )

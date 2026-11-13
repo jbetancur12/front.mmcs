@@ -54,6 +54,7 @@ import {
 import ActiveFiltersIndicator from '../../Components/Table/ActiveFiltersIndicator'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { PurchaseIndicatorsStrip } from 'src/Components/Common/QuotationIndicatorsStrip'
 import DataTable from 'src/Components/Common/DataTable'
 import {
   PURCHASE_TEAL,
@@ -488,52 +489,55 @@ const PurchaseRequest: React.FC = () => {
           )
         }
         stats={
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard
-                variant='quiet'
-                label='Todas'
-                value={totalRecords}
-                icon={<ListAlt />}
-                tone='teal'
-                active={quickFilter === 'all'}
-                onClick={() => changeQuickFilter('all')}
-              />
+          <>
+            <PurchaseIndicatorsStrip />
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={6} md={3}>
+                <LmsStatCard
+                  variant='quiet'
+                  label='Todas'
+                  value={totalRecords}
+                  icon={<ListAlt />}
+                  tone='teal'
+                  active={quickFilter === 'all'}
+                  onClick={() => changeQuickFilter('all')}
+                />
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <LmsStatCard
+                  variant='quiet'
+                  label='Pendientes de aprobar'
+                  value={counts.pending}
+                  icon={<AccessTime />}
+                  tone='orange'
+                  active={quickFilter === 'pending'}
+                  onClick={() => toggleQuick('pending')}
+                />
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <LmsStatCard
+                  variant='quiet'
+                  label='Por generar orden'
+                  value={counts.toOrder}
+                  icon={<ShoppingCartCheckout />}
+                  tone='blue'
+                  active={quickFilter === 'toOrder'}
+                  onClick={() => toggleQuick('toOrder')}
+                />
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <LmsStatCard
+                  variant='quiet'
+                  label='Sin orden hace más de 7 días'
+                  value={counts.late}
+                  icon={<ErrorOutline />}
+                  tone='red'
+                  active={quickFilter === 'late'}
+                  onClick={() => toggleQuick('late')}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard
-                variant='quiet'
-                label='Pendientes de aprobar'
-                value={counts.pending}
-                icon={<AccessTime />}
-                tone='orange'
-                active={quickFilter === 'pending'}
-                onClick={() => toggleQuick('pending')}
-              />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard
-                variant='quiet'
-                label='Por generar orden'
-                value={counts.toOrder}
-                icon={<ShoppingCartCheckout />}
-                tone='blue'
-                active={quickFilter === 'toOrder'}
-                onClick={() => toggleQuick('toOrder')}
-              />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <LmsStatCard
-                variant='quiet'
-                label='Sin orden hace más de 7 días'
-                value={counts.late}
-                icon={<ErrorOutline />}
-                tone='red'
-                active={quickFilter === 'late'}
-                onClick={() => toggleQuick('late')}
-              />
-            </Grid>
-          </Grid>
+          </>
         }
       >
         <ActiveFiltersIndicator
