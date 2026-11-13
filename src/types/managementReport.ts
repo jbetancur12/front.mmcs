@@ -183,6 +183,56 @@ export interface ManagementReportLossBlock {
   }>
 }
 
+/** Cotización que pide seguimiento. `valor` solo viene con valores. */
+export interface ManagementReportExpiringRow {
+  id: number
+  kind: 'Calibración' | 'Equipos'
+  customerName: string
+  code: string
+  valor?: number
+  daysLeft: number | null
+  daysSinceSent: number
+  createdByName: string
+  reason: string
+  /** Ruta de la pantalla del servicio o de la cotización. */
+  link: string
+}
+
+/** Cartera de un cliente. Los `openValue*` solo vienen con valores. */
+export interface ManagementReportDebtorRow {
+  customerId: number
+  customerName: string
+  invoices: number
+  count0a30: number
+  count31a60: number
+  count61a90: number
+  countOver90: number
+  openValue0a30?: number
+  openValue31a60?: number
+  openValue61a90?: number
+  openValueOver90?: number
+  openValue?: number
+  oldestDays: number | null
+  oldestCode: string | null
+}
+
+export interface ManagementReportActionLists {
+  cutoff: string
+  expiringQuotes: {
+    horizonDays: number
+    staleDays: number
+    count: number
+    totalValue?: number
+    rows: ManagementReportExpiringRow[]
+  }
+  debtors: {
+    count: number
+    invoices: number
+    openValue?: number
+    rows: ManagementReportDebtorRow[]
+  }
+}
+
 export interface ManagementReportConfidenceItem {
   code: string | null
   label: string
@@ -196,6 +246,7 @@ export interface ManagementReportDataConfidence {
 
 export interface ManagementReport {
   dataConfidence?: ManagementReportDataConfidence
+  actionLists?: ManagementReportActionLists
   meta: ManagementReportMeta
   cover: ManagementReportCoverItem[]
   blocks: Record<string, ManagementReportBlock>

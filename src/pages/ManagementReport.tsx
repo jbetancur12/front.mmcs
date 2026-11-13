@@ -43,6 +43,7 @@ import LmsStatCard, {
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import CollapsibleSection from 'src/Components/managementReport/CollapsibleSection'
 import DataConfidenceStrip from 'src/Components/managementReport/DataConfidenceStrip'
+import ActionListsSection from 'src/Components/managementReport/ActionListsSection'
 import TeamSection from 'src/Components/managementReport/TeamSection'
 import TrendSection from 'src/Components/managementReport/TrendSection'
 import LossReasonsSection from 'src/Components/managementReport/LossReasonsSection'
@@ -617,6 +618,13 @@ const ManagementReportPage = () => {
                 ))}
               </Stack>
             </Paper>
+          )}
+
+          {report.actionLists && (
+            <ActionListsSection
+              lists={report.actionLists}
+              onDownloadExcel={() => handleDownload('xlsx')}
+            />
           )}
 
           {report.trend && <TrendSection series={report.trend.series} />}
