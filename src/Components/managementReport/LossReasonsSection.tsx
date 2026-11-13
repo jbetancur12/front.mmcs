@@ -128,16 +128,7 @@ const LossReasonsSection = ({ loss, periodLabel }: LossReasonsSectionProps) => {
   const noResponse = block.categories.find((item) => item.key === 'no_response')
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2,
-        mb: 3,
-        border: `1px solid ${neutral.border}`,
-        borderRadius: 3,
-        overflowX: 'auto'
-      }}
-    >
+    <Paper elevation={0} sx={{ overflowX: 'auto' }}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent='space-between'
@@ -146,9 +137,6 @@ const LossReasonsSection = ({ loss, periodLabel }: LossReasonsSectionProps) => {
         mb={2}
       >
         <Box>
-          <Typography variant='h6' sx={{ color: brand.ink }}>
-            ¿Por qué se pierde?
-          </Typography>
           <Typography variant='body2' color='text.secondary'>
             Cotizaciones de calibración y equipos que no se vendieron:
             rechazadas y vencidas sin respuesta.

@@ -17,7 +17,7 @@ import {
   XAxis,
   YAxis
 } from 'recharts'
-import { accent, brand, intent, neutral } from 'src/theme/designTokens'
+import { brand, intent, neutral } from 'src/theme/designTokens'
 import type { ManagementReportTrendPoint } from 'src/types/managementReport'
 
 type Row = ManagementReportTrendPoint &
@@ -89,65 +89,6 @@ const VIEWS: View[] = [
         label: 'Cortes cobrados',
         color: intent.warning,
         value: (p) => p.paidCount
-      }
-    ]
-  },
-  {
-    id: 'split',
-    label: 'Calibración y equipos',
-    money: false,
-    lines: [
-      {
-        key: 'calibration',
-        label: 'Calibración aprobada',
-        color: brand.main,
-        value: (p) => p.salesCalibrationCount
-      },
-      {
-        key: 'equipment',
-        label: 'Equipos aprobados',
-        color: accent.main,
-        value: (p) => p.salesEquipmentCount
-      }
-    ]
-  },
-  {
-    id: 'quotes',
-    label: 'Cotizaciones creadas',
-    money: false,
-    lines: [
-      {
-        key: 'created',
-        label: 'Cotizaciones creadas',
-        color: intent.info,
-        value: (p) => p.createdCount
-      }
-    ]
-  },
-  {
-    id: 'win',
-    label: '% ganadas',
-    money: false,
-    percent: true,
-    lines: [
-      {
-        key: 'win',
-        label: 'Cotizaciones ganadas (%)',
-        color: intent.success,
-        value: (p) => (p.winRate === null ? null : p.winRate * 100)
-      }
-    ]
-  },
-  {
-    id: 'open',
-    label: 'Por cobrar al cierre',
-    money: true,
-    lines: [
-      {
-        key: 'open',
-        label: 'Dinero por cobrar',
-        color: intent.danger,
-        value: (p) => p.openValue ?? 0
       }
     ]
   }

@@ -89,6 +89,9 @@ export interface ManagementReportSharedAccountWarning {
 }
 
 export interface ManagementReportTeamTable {
+  /** false cuando no hay nada que comparar entre personas; `reason` dice por qué. */
+  usable?: boolean
+  reason?: string | null
   rows: ManagementReportTeamRow[]
   totals: ManagementReportTeamRow
   sharedAccountWarning?: ManagementReportSharedAccountWarning | null
@@ -102,6 +105,8 @@ export interface ManagementReportAreaRow {
 }
 
 export interface ManagementReportAreaTable {
+  usable?: boolean
+  reason?: string | null
   rows: ManagementReportAreaRow[]
   totals: ManagementReportAreaRow
   sharedAccountWarning?: ManagementReportSharedAccountWarning | null

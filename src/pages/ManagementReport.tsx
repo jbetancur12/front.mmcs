@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -11,7 +8,6 @@ import {
   Chip,
   CircularProgress,
   Container,
-  Divider,
   FormControlLabel,
   Grid,
   Paper,
@@ -28,7 +24,6 @@ import {
   HourglassTopOutlined,
   PaymentsOutlined,
   TrendingUpOutlined,
-  ExpandMoreOutlined,
   GridOnOutlined,
   HistoryOutlined,
   PercentOutlined,
@@ -46,6 +41,7 @@ import LmsStatCard, {
   type LmsStatTone
 } from 'src/Components/lms/admin/LmsStatCard'
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import CollapsibleSection from 'src/Components/managementReport/CollapsibleSection'
 import TeamSection from 'src/Components/managementReport/TeamSection'
 import TrendSection from 'src/Components/managementReport/TrendSection'
 import LossReasonsSection from 'src/Components/managementReport/LossReasonsSection'
@@ -64,6 +60,8 @@ import {
   useManagementReportHistory
 } from 'src/hooks/useManagementReport'
 import type {
+  ManagementReportBlock,
+  ManagementReportLossBlock,
   ManagementReportMetric,
   ManagementReportStatus,
   StoredManagementReport
@@ -133,6 +131,30 @@ const changeText = (item: { variationDisplay: string; comparison?: string }) =>
     ? 'sin comparación'
     : `${item.variationDisplay} vs ${item.comparison || 'mes anterior'}`
 
+// Con valor pero sin con qué compararlo: la celda queda vacía (un guion)
+const hasComparison = (metric: ManagementReportMetric) =>
+  !(
+    metric.value !== null &&
+    (metric.variationDisplay === 'Sin dato' || metric.variationDisplay === '—')
+  )
+
+// Resumen de una línea de un bloque, para su cabecera plegada
+const lossSummary = (loss: ManagementReportLossBlock) =>
+  loss.total === 0
+    ? 'No hubo cotizaciones perdidas este mes'
+    : `${loss.total} cotizaciones perdidas este mes`
+
+const blockSummary = (block: ManagementReportBlock) => {
+  const alerts = block.metrics.filter((metric) => metric.status === 'red')
+  const watch = block.metrics.filter((metric) => metric.status === 'yellow')
+  const parts = [
+    `${block.metrics.length} indicadores`,
+    ...(alerts.length ? [`${alerts.length} en alerta`] : []),
+    ...(watch.length ? [`${watch.length} en atención`] : [])
+  ]
+  return parts.join(' · ')
+}
+
 // En gris puede faltar el dato o solo la comparación: no son lo mismo
 const statusLabel = (metric: ManagementReportMetric) =>
   metric.status === 'gray' && metric.value !== null
@@ -175,7 +197,8 @@ const METRIC_COLUMNS: MRT_ColumnDef<ManagementReportMetric>[] = [
   {
     accessorKey: 'variationDisplay',
     header: 'Cambio',
-    Cell: ({ row }) => changeText(row.original),
+    Cell: ({ row }) =>
+      hasComparison(row.original) ? changeText(row.original) : '—',
     muiTableHeadCellProps: { align: 'right' },
     muiTableBodyCellProps: { align: 'right', sx: { whiteSpace: 'nowrap' } }
   },
@@ -189,14 +212,17 @@ const METRIC_COLUMNS: MRT_ColumnDef<ManagementReportMetric>[] = [
     header: 'Estado',
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
-    Cell: ({ row }) => (
-      <Chip
-        size='small'
-        variant='outlined'
-        label={statusLabel(row.original)}
-        color={STATUS_CHIP[row.original.status]}
-      />
-    )
+    Cell: ({ row }) =>
+      hasComparison(row.original) || row.original.value === null ? (
+        <Chip
+          size='small'
+          variant='outlined'
+          label={statusLabel(row.original)}
+          color={STATUS_CHIP[row.original.status]}
+        />
+      ) : (
+        '—'
+      )
   }
 ]
 
@@ -524,8 +550,6 @@ const ManagementReportPage = () => {
             ))}
           </Grid>
 
-          {report.trend && <TrendSection series={report.trend.series} />}
-
           {report.alerts.length > 0 && (
             <Paper
               elevation={0}
@@ -557,194 +581,170 @@ const ManagementReportPage = () => {
             </Paper>
           )}
 
+          {report.trend && <TrendSection series={report.trend.series} />}
+
           {Object.values(report.blocks).map((block) => (
-            <Paper
+            <CollapsibleSection
               key={block.key}
-              elevation={0}
-              sx={{
-                p: 2,
-                mb: 3,
-                border: `1px solid ${neutral.border}`,
-                borderRadius: 3,
-                overflowX: 'auto'
-              }}
+              id={`block-${block.key}`}
+              title={block.title}
+              summary={blockSummary(block)}
             >
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                justifyContent='space-between'
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                mb={1}
-              >
-                <Typography variant='h6' sx={{ color: brand.ink }}>
-                  {block.title}
-                </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  {block.question}
-                </Typography>
-              </Stack>
-              <DataTable
-                columns={METRIC_COLUMNS}
-                data={block.metrics}
-                {...INLINE_TABLE}
-                enableTopToolbar={false}
-                enableBottomToolbar={false}
-                enablePagination={false}
-                enableSorting={false}
-                enableGlobalFilter={false}
-                enableColumnFilters={false}
-                getRowId={(metric) => metric.code}
-              />
+              <Typography variant='body2' color='text.secondary' mb={1}>
+                {block.question}
+              </Typography>
+              <Box sx={{ overflowX: 'auto' }}>
+                <DataTable
+                  columns={METRIC_COLUMNS}
+                  data={block.metrics}
+                  {...INLINE_TABLE}
+                  enableTopToolbar={false}
+                  enableBottomToolbar={false}
+                  enablePagination={false}
+                  enableSorting={false}
+                  enableGlobalFilter={false}
+                  enableColumnFilters={false}
+                  getRowId={(metric) => metric.code}
+                />
+              </Box>
               {block.action && (
                 <Alert severity='info' sx={{ mt: 1 }}>
                   {block.action}
                 </Alert>
               )}
-            </Paper>
+            </CollapsibleSection>
           ))}
 
           {report.lossReasons && (
-            <LossReasonsSection
-              loss={report.lossReasons}
-              periodLabel={report.meta.periodLabel}
-            />
+            <CollapsibleSection
+              id='loss-reasons'
+              title='¿Por qué se pierde?'
+              summary={lossSummary(report.lossReasons.month)}
+            >
+              <LossReasonsSection
+                loss={report.lossReasons}
+                periodLabel={report.meta.periodLabel}
+              />
+            </CollapsibleSection>
           )}
 
           {report.team && (
-            <TeamSection
-              team={report.team}
-              periodLabel={report.meta.periodLabel}
-            />
+            <CollapsibleSection
+              id='team'
+              title='Equipo'
+              summary='Cotizaciones, certificados, mantenimiento y compras por persona'
+            >
+              <TeamSection
+                team={report.team}
+                periodLabel={report.meta.periodLabel}
+              />
+            </CollapsibleSection>
           )}
 
           {report.noData && report.noData.length > 0 && (
-            <Alert severity='info' sx={{ mb: 3 }}>
-              <Typography variant='body2' fontWeight={600}>
-                Sin información suficiente este mes
-              </Typography>
+            <CollapsibleSection
+              id='no-data'
+              title='Sin información suficiente'
+              summary={`${report.noData.length} indicadores sin datos este mes`}
+            >
               <Typography variant='body2'>
                 {report.noData.map((item) => item.label).join(' · ')}. Mientras
                 no se registren estos datos, el reporte no los muestra.
               </Typography>
-            </Alert>
+            </CollapsibleSection>
           )}
 
           {canSeeAmounts && (
-            <Accordion
-              elevation={0}
-              sx={{
-                mb: 3,
-                border: `1px solid ${neutral.border}`,
-                borderRadius: 3,
-                '&:before': { display: 'none' }
-              }}
+            <CollapsibleSection
+              id='recipients'
+              title='Destinatarios y envío automático'
+              summary='Correos, WhatsApp y bloque de capacitación'
+              icon={<SettingsOutlined />}
             >
-              <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
-                <Stack direction='row' spacing={1} alignItems='center'>
-                  <SettingsOutlined sx={{ color: brand.ink }} />
-                  <Typography variant='h6'>
-                    Destinatarios y envío automático
-                  </Typography>
-                </Stack>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography
-                  variant='body2'
-                  color='text.secondary'
-                  sx={{ mb: 2 }}
-                >
-                  El reporte se genera el día 3 de cada mes a las 07:00. Si no
-                  hay destinatarios ni WhatsApp configurados, se guarda sin
-                  enviar.
-                </Typography>
-                <Stack spacing={2}>
-                  <TextField
-                    label='Gerencia (con valores)'
-                    value={recipientsFull}
-                    onChange={(event) => setRecipientsFull(event.target.value)}
-                    helperText='Separe varios correos con coma'
-                    size='small'
-                    fullWidth
-                  />
-                  <TextField
-                    label='Coordinación (sin valores)'
-                    value={recipientsNoAmounts}
-                    onChange={(event) =>
-                      setRecipientsNoAmounts(event.target.value)
-                    }
-                    helperText='Separe varios correos con coma'
-                    size='small'
-                    fullWidth
-                  />
-                  <TextField
-                    label='WhatsApp de gerencia (un solo número)'
-                    value={whatsappPhone}
-                    onChange={(event) => setWhatsappPhone(event.target.value)}
-                    helperText='Recibe el PDF con valores. Un solo número, por ejemplo 318 185 9446. Déjelo vacío para no enviar por WhatsApp.'
-                    inputProps={{ inputMode: 'tel' }}
-                    size='small'
-                    fullWidth
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={includeLms}
-                        onChange={(event) =>
-                          setIncludeLms(event.target.checked)
-                        }
-                      />
-                    }
-                    label='Incluir bloque de capacitación (LMS)'
-                  />
-                  <Box>
-                    <Button
-                      variant='contained'
-                      onClick={handleSaveConfig}
-                      disabled={savingConfig}
-                      sx={{
-                        bgcolor: brand.main,
-                        textTransform: 'none',
-                        '&:hover': { bgcolor: brand.hover }
-                      }}
-                    >
-                      {savingConfig ? 'Guardando…' : 'Guardar destinatarios'}
-                    </Button>
-                  </Box>
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                El reporte se genera el día 3 de cada mes a las 07:00. Si no hay
+                destinatarios ni WhatsApp configurados, se guarda sin enviar.
+              </Typography>
+              <Stack spacing={2}>
+                <TextField
+                  label='Gerencia (con valores)'
+                  value={recipientsFull}
+                  onChange={(event) => setRecipientsFull(event.target.value)}
+                  helperText='Separe varios correos con coma'
+                  size='small'
+                  fullWidth
+                />
+                <TextField
+                  label='Coordinación (sin valores)'
+                  value={recipientsNoAmounts}
+                  onChange={(event) =>
+                    setRecipientsNoAmounts(event.target.value)
+                  }
+                  helperText='Separe varios correos con coma'
+                  size='small'
+                  fullWidth
+                />
+                <TextField
+                  label='WhatsApp de gerencia (un solo número)'
+                  value={whatsappPhone}
+                  onChange={(event) => setWhatsappPhone(event.target.value)}
+                  helperText='Recibe el PDF con valores. Un solo número, por ejemplo 318 185 9446. Déjelo vacío para no enviar por WhatsApp.'
+                  inputProps={{ inputMode: 'tel' }}
+                  size='small'
+                  fullWidth
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={includeLms}
+                      onChange={(event) => setIncludeLms(event.target.checked)}
+                    />
+                  }
+                  label='Incluir bloque de capacitación (LMS)'
+                />
+                <Box>
+                  <Button
+                    variant='contained'
+                    onClick={handleSaveConfig}
+                    disabled={savingConfig}
+                    sx={{
+                      bgcolor: brand.main,
+                      textTransform: 'none',
+                      '&:hover': { bgcolor: brand.hover }
+                    }}
+                  >
+                    {savingConfig ? 'Guardando…' : 'Guardar destinatarios'}
+                  </Button>
+                </Box>
+              </Stack>
+            </CollapsibleSection>
           )}
 
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              border: `1px solid ${neutral.border}`,
-              borderRadius: 3,
-              overflowX: 'auto'
-            }}
+          <CollapsibleSection
+            id='history'
+            title='Historial'
+            summary={`${visibleHistory.length} reportes guardados`}
+            icon={<HistoryOutlined />}
           >
-            <Stack direction='row' spacing={1} alignItems='center' mb={1}>
-              <HistoryOutlined sx={{ color: brand.ink }} />
-              <Typography variant='h6'>Historial</Typography>
-            </Stack>
-            <Divider sx={{ mb: 1 }} />
-            {visibleHistory.length === 0 ? (
-              <Typography variant='body2' color='text.secondary'>
-                Todavía no hay reportes guardados.
-              </Typography>
-            ) : (
-              <DataTable
-                columns={historyColumns}
-                data={visibleHistory}
-                {...INLINE_TABLE}
-                enableTopToolbar={false}
-                enablePagination={visibleHistory.length > 10}
-                enableGlobalFilter={false}
-                enableColumnFilters={false}
-                getRowId={(row) => String(row.id)}
-              />
-            )}
-          </Paper>
+            <Box sx={{ overflowX: 'auto' }}>
+              {visibleHistory.length === 0 ? (
+                <Typography variant='body2' color='text.secondary'>
+                  Todavía no hay reportes guardados.
+                </Typography>
+              ) : (
+                <DataTable
+                  columns={historyColumns}
+                  data={visibleHistory}
+                  {...INLINE_TABLE}
+                  enableTopToolbar={false}
+                  enablePagination={visibleHistory.length > 10}
+                  enableGlobalFilter={false}
+                  enableColumnFilters={false}
+                  getRowId={(row) => String(row.id)}
+                />
+              )}
+            </Box>
+          </CollapsibleSection>
         </>
       ) : null}
     </Container>

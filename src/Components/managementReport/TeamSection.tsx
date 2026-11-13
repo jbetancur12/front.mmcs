@@ -26,7 +26,7 @@ import DataTable from 'src/Components/Common/DataTable'
 import LmsStatCard, {
   type LmsStatTone
 } from 'src/Components/lms/admin/LmsStatCard'
-import { brand, neutral } from 'src/theme/designTokens'
+import { neutral } from 'src/theme/designTokens'
 import type {
   ManagementReport,
   ManagementReportAreaKey,
@@ -374,10 +374,14 @@ const AREAS: Record<ManagementReportAreaKey, AreaConfig> = {
   }
 }
 
+// Columnas que se ocultan cuando ninguna fila tiene dato
+const HIDE_WHEN_EMPTY = ['satisfaction', 'actualCost']
+
 const buildAreaColumns = (
   config: AreaConfig,
   totals: AreaRow,
-  showMoney: boolean
+  showMoney: boolean,
+  rows: AreaRow[]
 ): MRT_ColumnDef<AreaRow>[] => [
   {
     accessorKey: 'name',
@@ -387,6 +391,11 @@ const buildAreaColumns = (
   },
   ...config.columns
     .filter((column) => !column.money || showMoney)
+    .filter(
+      (column) =>
+        !HIDE_WHEN_EMPTY.includes(column.field) ||
+        rows.some((row) => (num(row, column.field) ?? 0) > 0)
+    )
     .map(
       (column): MRT_ColumnDef<AreaRow> => ({
         id: column.field,
@@ -473,6 +482,9 @@ const QuotationsView = ({
     () => buildQuotationColumns(totals, showMoney),
     [totals, showMoney]
   )
+  if (table.usable === false) {
+    return <Alert severity='info'>{table.reason}</Alert>
+  }
   return (
     <>
       <Cards
@@ -542,13 +554,19 @@ const AreaView = ({
     table && config.columns.some((c) => c.money && c.field in table.totals)
   )
   const columns = useMemo(
-    () => (table ? buildAreaColumns(config, table.totals, showMoney) : []),
+    () =>
+      table
+        ? buildAreaColumns(config, table.totals, showMoney, table.rows)
+        : [],
     [config, table, showMoney]
   )
   if (!table) {
     return (
       <Alert severity='info'>Este reporte no trae datos de esta área.</Alert>
     )
+  }
+  if (table.usable === false) {
+    return <Alert severity='info'>{table.reason}</Alert>
   }
   return (
     <>
@@ -596,16 +614,7 @@ const TeamSection = ({ team, periodLabel }: TeamSectionProps) => {
   const [range, setRange] = useState<ManagementReportTeamRange>('month')
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2,
-        mb: 3,
-        border: `1px solid ${neutral.border}`,
-        borderRadius: 3,
-        overflowX: 'auto'
-      }}
-    >
+    <Paper elevation={0} sx={{ overflowX: 'auto' }}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent='space-between'
@@ -614,9 +623,6 @@ const TeamSection = ({ team, periodLabel }: TeamSectionProps) => {
         mb={2}
       >
         <Box>
-          <Typography variant='h6' sx={{ color: brand.ink }}>
-            Equipo
-          </Typography>
           <Typography variant='body2' color='text.secondary'>
             {area === 'quotations'
               ? '¿Quién está trayendo negocio? Cada cotización se cuenta a quien la creó.'
