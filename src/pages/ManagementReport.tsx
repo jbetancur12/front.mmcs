@@ -295,6 +295,7 @@ const ManagementReportPage = () => {
   const [whatsappPhone, setWhatsappPhone] = useState('')
   const [includeLms, setIncludeLms] = useState(false)
   const [weeklyDigest, setWeeklyDigest] = useState(false)
+  const [weeklyWhatsapp, setWeeklyWhatsapp] = useState(false)
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<HTMLElement | null>(null)
   const [pdfPagesFull, setPdfPagesFull] =
     useState<ManagementReportPdfPages>('summary')
@@ -327,6 +328,7 @@ const ManagementReportPage = () => {
     setWhatsappPhone(config.whatsappPhone || '')
     setIncludeLms(Boolean(config.includeLms))
     setWeeklyDigest(Boolean(config.weeklyDigestEnabled))
+    setWeeklyWhatsapp(Boolean(config.weeklyWhatsappEnabled))
     setPdfPagesFull(config.pdfPages?.full ?? 'summary')
     setPdfPagesNoAmounts(config.pdfPages?.no_amounts ?? 'full')
     setGoalSales(goalToText(config.goals?.approvedSales))
@@ -396,6 +398,7 @@ const ManagementReportPage = () => {
         whatsappPhone: whatsappPhone.trim(),
         includeLms,
         weeklyDigestEnabled: weeklyDigest,
+        weeklyWhatsappEnabled: weeklyWhatsapp,
         pdfPages: { full: pdfPagesFull, no_amounts: pdfPagesNoAmounts },
         goals: {
           approvedSales: textToGoal(goalSales),
@@ -408,6 +411,7 @@ const ManagementReportPage = () => {
       setWhatsappPhone(saved.whatsappPhone || '')
       setIncludeLms(Boolean(saved.includeLms))
       setWeeklyDigest(Boolean(saved.weeklyDigestEnabled))
+      setWeeklyWhatsapp(Boolean(saved.weeklyWhatsappEnabled))
       setPdfPagesFull(saved.pdfPages?.full ?? 'summary')
       setPdfPagesNoAmounts(saved.pdfPages?.no_amounts ?? 'full')
       setGoalSales(goalToText(saved.goals?.approvedSales))
@@ -915,7 +919,18 @@ const ManagementReportPage = () => {
                       }
                     />
                   }
-                  label='Aviso semanal por correo (lunes 7:00) con cotizaciones por vencer y quién debe'
+                  label='Aviso semanal por correo (lunes 7:00): cómo va el mes, cotizaciones por vencer y quién debe'
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={weeklyWhatsapp}
+                      onChange={(event) =>
+                        setWeeklyWhatsapp(event.target.checked)
+                      }
+                    />
+                  }
+                  label='Aviso semanal por WhatsApp al número de gerencia (requiere la plantilla aprobada en Meta)'
                 />
                 <Box>
                   <Button

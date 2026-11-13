@@ -93,6 +93,8 @@ export interface ManagementReportConfig {
   includeLms: boolean
   /** Aviso semanal (lunes 07:00) con las dos listas de acción; apagado por defecto. */
   weeklyDigestEnabled?: boolean
+  /** Aviso semanal por WhatsApp al número de gerencia; apagado por defecto. */
+  weeklyWhatsappEnabled?: boolean
   /** Alcance del PDF que recibe cada versión (envío, WhatsApp e historial). */
   pdfPages?: {
     full: ManagementReportPdfPages
