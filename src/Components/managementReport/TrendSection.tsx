@@ -245,8 +245,9 @@ const TrendSection = ({ series, goals }: TrendSectionProps) => {
         {view.id === 'open'
           ? 'Lo que seguía sin pago al cierre de cada mes, reconstruido con las fechas de pago. '
           : ''}
-        Valores sin IVA, salvo facturado, cobrado y por cobrar, que incluyen
-        IVA.
+        {hasMoney
+          ? 'Valores sin IVA, salvo facturado, cobrado y por cobrar, que incluyen IVA.'
+          : 'Cantidades de negocios aprobados y de cortes facturados y cobrados en cada mes.'}
       </Typography>
     </Paper>
   )
