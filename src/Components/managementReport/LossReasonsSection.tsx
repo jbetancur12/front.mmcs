@@ -179,8 +179,7 @@ const LossReasonsSection = ({ loss, periodLabel }: LossReasonsSectionProps) => {
             >
               De {block.total} cotizaciones perdidas, {noResponse.count} (
               {percent(noResponse.share)}) fueron porque el cliente no
-              respondió. Solo {block.coverage.rejected} se rechazaron
-              expresamente.
+              respondió. Rechazadas expresamente: {block.coverage.rejected}.
             </Alert>
           )}
           {block.insufficientData && (
