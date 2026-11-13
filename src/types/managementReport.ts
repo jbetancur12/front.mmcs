@@ -123,6 +123,54 @@ export type ManagementReportAreaKey = Exclude<
 export type ManagementReportTeamKind = 'calibration' | 'equipment' | 'both'
 export type ManagementReportTeamRange = 'month' | 'year'
 
+/** Un mes de la tendencia. Los campos *Value solo vienen con valores. */
+export interface ManagementReportTrendPoint {
+  key: string
+  label: string
+  createdCount: number
+  createdValue?: number
+  salesCalibrationCount: number
+  salesCalibrationValue?: number
+  salesEquipmentCount: number
+  salesEquipmentValue?: number
+  decisions: number
+  /** Fracción 0–1; null con menos de 5 decisiones. */
+  winRate: number | null
+  billedCount: number
+  billedValue?: number
+  paidCount: number
+  paidValue?: number
+  openCount: number
+  openValue?: number
+}
+
+export interface ManagementReportLossCategory {
+  key: string
+  label: string
+  count: number
+  share: number | null
+  lostValue?: number
+}
+
+export interface ManagementReportLossBlock {
+  minRecords: number
+  total: number
+  insufficientData: boolean
+  lostValue?: number
+  noResponseShare: number | null
+  coverage: { rejected: number; withReason: number; share: number | null }
+  categories: ManagementReportLossCategory[]
+  topCustomers: Array<{ name: string; count: number; lostValue?: number }>
+  byPerson: Array<{
+    key: number | null
+    name: string
+    lost: number
+    noResponse: number
+    rejected: number
+    lostValue?: number
+  }>
+}
+
 export interface ManagementReport {
   meta: ManagementReportMeta
   cover: ManagementReportCoverItem[]
@@ -131,6 +179,8 @@ export interface ManagementReport {
   /** Indicadores sin información suficiente este mes. */
   noData?: Array<{ section: string; label: string; note?: string }>
   annexes?: Record<string, unknown>
+  trend?: { months: number; series: ManagementReportTrendPoint[] }
+  lossReasons?: Record<'month' | 'year', ManagementReportLossBlock>
   team?: {
     minDecisions: number
     year: number

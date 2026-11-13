@@ -47,6 +47,8 @@ import LmsStatCard, {
 } from 'src/Components/lms/admin/LmsStatCard'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import TeamSection from 'src/Components/managementReport/TeamSection'
+import TrendSection from 'src/Components/managementReport/TrendSection'
+import LossReasonsSection from 'src/Components/managementReport/LossReasonsSection'
 import DataTable from 'src/Components/Common/DataTable'
 import { type MRT_ColumnDef } from 'material-react-table'
 import { userStore } from 'src/store/userStore'
@@ -522,6 +524,8 @@ const ManagementReportPage = () => {
             ))}
           </Grid>
 
+          {report.trend && <TrendSection series={report.trend.series} />}
+
           {report.alerts.length > 0 && (
             <Paper
               elevation={0}
@@ -597,6 +601,13 @@ const ManagementReportPage = () => {
               )}
             </Paper>
           ))}
+
+          {report.lossReasons && (
+            <LossReasonsSection
+              loss={report.lossReasons}
+              periodLabel={report.meta.periodLabel}
+            />
+          )}
 
           {report.team && (
             <TeamSection
