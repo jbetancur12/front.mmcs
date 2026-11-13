@@ -106,6 +106,15 @@ const STATUS_CHIP: Record<
   registry: 'default'
 }
 
+// Metas: el texto de la pantalla (con o sin puntos) y el número que se guarda
+const goalToText = (value?: number | string | null) =>
+  value === null || value === undefined ? '' : String(value)
+
+const textToGoal = (text: string, money = true): string | null => {
+  const clean = text.replace(money ? /[s$.]/g : /[s%]/g, '')
+  return clean || null
+}
+
 const previousMonthKey = () => {
   const now = new Date()
   const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1)
@@ -277,6 +286,9 @@ const ManagementReportPage = () => {
   const [recipientsNoAmounts, setRecipientsNoAmounts] = useState('')
   const [whatsappPhone, setWhatsappPhone] = useState('')
   const [includeLms, setIncludeLms] = useState(false)
+  const [goalSales, setGoalSales] = useState('')
+  const [goalBilled, setGoalBilled] = useState('')
+  const [goalWinRate, setGoalWinRate] = useState('')
   const [savingConfig, setSavingConfig] = useState(false)
 
   useEffect(() => {
@@ -300,6 +312,9 @@ const ManagementReportPage = () => {
     setRecipientsNoAmounts(config.recipients.no_amounts.join(', '))
     setWhatsappPhone(config.whatsappPhone || '')
     setIncludeLms(Boolean(config.includeLms))
+    setGoalSales(goalToText(config.goals?.approvedSales))
+    setGoalBilled(goalToText(config.goals?.billed))
+    setGoalWinRate(goalToText(config.goals?.winRate))
   }, [config])
 
   const visibleHistory = useMemo(
@@ -358,13 +373,22 @@ const ManagementReportPage = () => {
           no_amounts: parseEmails(recipientsNoAmounts)
         },
         whatsappPhone: whatsappPhone.trim(),
-        includeLms
+        includeLms,
+        goals: {
+          approvedSales: textToGoal(goalSales),
+          billed: textToGoal(goalBilled),
+          winRate: textToGoal(goalWinRate, false)
+        }
       })
       setRecipientsFull(saved.recipients.full.join(', '))
       setRecipientsNoAmounts(saved.recipients.no_amounts.join(', '))
       setWhatsappPhone(saved.whatsappPhone || '')
       setIncludeLms(Boolean(saved.includeLms))
-      notify.success('Destinatarios guardados')
+      setGoalSales(goalToText(saved.goals?.approvedSales))
+      setGoalBilled(goalToText(saved.goals?.billed))
+      setGoalWinRate(goalToText(saved.goals?.winRate))
+      notify.success('Configuración guardada')
+      refetch()
     } catch (configError) {
       notify.error(
         getApiErrorMessage(
@@ -578,7 +602,11 @@ const ManagementReportPage = () => {
                   value={item.display}
                   icon={coverIcon(item.code)}
                   tone={STATUS_TONE[item.status]}
-                  caption={changeText(item)}
+                  caption={
+                    item.goal
+                      ? `${Math.round(item.goal.progress * 100)} % de la meta`
+                      : changeText(item)
+                  }
                   compact
                 />
               </Grid>
@@ -627,7 +655,12 @@ const ManagementReportPage = () => {
             />
           )}
 
-          {report.trend && <TrendSection series={report.trend.series} />}
+          {report.trend && (
+            <TrendSection
+              series={report.trend.series}
+              goals={report.trend.goals}
+            />
+          )}
 
           {Object.values(report.blocks).map((block) => (
             <CollapsibleSection
@@ -703,8 +736,8 @@ const ManagementReportPage = () => {
           {canSeeAmounts && (
             <CollapsibleSection
               id='recipients'
-              title='Destinatarios y envío automático'
-              summary='Correos, WhatsApp y bloque de capacitación'
+              title='Destinatarios, metas y envío automático'
+              summary='Correos, WhatsApp, metas y bloque de capacitación'
               icon={<SettingsOutlined />}
             >
               <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
@@ -759,7 +792,7 @@ const ManagementReportPage = () => {
                       '&:hover': { bgcolor: brand.hover }
                     }}
                   >
-                    {savingConfig ? 'Guardando…' : 'Guardar destinatarios'}
+                    {savingConfig ? 'Guardando…' : 'Guardar configuración'}
                   </Button>
                 </Box>
               </Stack>

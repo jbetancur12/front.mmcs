@@ -25,6 +25,13 @@ export interface ManagementReportMetric {
   countLabel?: string | null
   detail?: unknown
   dependsOnRecord?: boolean
+  /** Meta mensual, si la hay: el semáforo se calcula contra ella. */
+  goal?: {
+    key: string
+    target: number
+    progress: number
+    targetDisplay: string
+  }
 }
 
 export interface ManagementReportBlock {
@@ -44,6 +51,7 @@ export interface ManagementReportCoverItem {
   comparison?: string
   hasValue?: boolean
   note?: string
+  goal?: { progress: number; targetDisplay: string }
 }
 
 export interface ManagementReportAlert {
@@ -254,7 +262,16 @@ export interface ManagementReport {
   /** Indicadores sin información suficiente este mes. */
   noData?: Array<{ section: string; label: string; note?: string }>
   annexes?: Record<string, unknown>
-  trend?: { months: number; series: ManagementReportTrendPoint[] }
+  trend?: {
+    months: number
+    series: ManagementReportTrendPoint[]
+    /** Metas para las líneas de referencia; el dinero solo con valores. */
+    goals?: {
+      salesGoalValue?: number
+      billedGoalValue?: number
+      winRateGoal?: number
+    }
+  }
   lossReasons?: Record<'month' | 'year', ManagementReportLossBlock>
   team?: {
     minDecisions: number

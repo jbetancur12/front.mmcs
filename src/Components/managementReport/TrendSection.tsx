@@ -12,6 +12,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -104,9 +105,13 @@ const shortMonth = (label: string) => {
 
 interface TrendSectionProps {
   series: ManagementReportTrendPoint[]
+  goals?: {
+    salesGoalValue?: number
+    billedGoalValue?: number
+  }
 }
 
-const TrendSection = ({ series }: TrendSectionProps) => {
+const TrendSection = ({ series, goals }: TrendSectionProps) => {
   const hasMoney = series.some(
     (point) => point.salesCalibrationValue !== undefined
   )
@@ -192,6 +197,32 @@ const TrendSection = ({ series }: TrendSectionProps) => {
               }
             />
             <Legend />
+            {view.id === 'money' && goals?.salesGoalValue !== undefined && (
+              <ReferenceLine
+                y={goals.salesGoalValue}
+                stroke={brand.main}
+                strokeDasharray='6 4'
+                label={{
+                  value: 'Meta de ventas',
+                  position: 'insideTopRight',
+                  fill: brand.ink,
+                  fontSize: 12
+                }}
+              />
+            )}
+            {view.id === 'money' && goals?.billedGoalValue !== undefined && (
+              <ReferenceLine
+                y={goals.billedGoalValue}
+                stroke={intent.info}
+                strokeDasharray='6 4'
+                label={{
+                  value: 'Meta de facturado',
+                  position: 'insideBottomRight',
+                  fill: intent.infoInk,
+                  fontSize: 12
+                }}
+              />
+            )}
             {view.lines.map((line) => (
               <Line
                 key={line.key}

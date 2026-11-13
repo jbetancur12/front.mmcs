@@ -86,6 +86,13 @@ export interface ManagementReportConfig {
   /** Un solo número: recibe por WhatsApp la versión de gerencia. */
   whatsappPhone?: string
   includeLms: boolean
+  /** Metas mensuales opcionales; null = sin meta. */
+  goals?: {
+    approvedSales: number | string | null
+    billed: number | string | null
+    /** Porcentaje de 1 a 100. */
+    winRate: number | string | null
+  }
 }
 
 export const useManagementReportConfig = (enabled = true) =>
