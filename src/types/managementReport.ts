@@ -131,6 +131,7 @@ export interface ManagementReportAreaTable {
 
 export type ManagementReportTeamArea =
   | 'quotations'
+  | 'adjustments'
   | 'certificates'
   | 'maintenance'
   | 'purchases'
@@ -252,7 +253,37 @@ export interface ManagementReportDataConfidence {
   dependsOnRecord: ManagementReportConfidenceItem[]
 }
 
+/** Indicadores adicionales: renovaciones, clientes nuevos y trabajo en cola. */
+export interface ManagementReportExtras {
+  renewals?: {
+    expired: number
+    renewed: number
+    share: number | null
+    customers: Array<{
+      customerId: number
+      customerName: string
+      expired: number
+      renewed: number
+      share: number | null
+    }>
+  }
+  customerMix?: {
+    newCustomers: number
+    recurringCustomers: number
+    newShare: number | null
+    newValue?: number
+    recurringValue?: number
+  }
+  queue?: {
+    queueValue?: number
+    monthlyAverage?: number | null
+    monthsCounted: number
+    months: number | null
+  }
+}
+
 export interface ManagementReport {
+  extras?: ManagementReportExtras
   dataConfidence?: ManagementReportDataConfidence
   actionLists?: ManagementReportActionLists
   meta: ManagementReportMeta

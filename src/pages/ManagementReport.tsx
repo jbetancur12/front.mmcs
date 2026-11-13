@@ -44,6 +44,9 @@ import SignalLoader from 'src/Components/Common/SignalLoader'
 import CollapsibleSection from 'src/Components/managementReport/CollapsibleSection'
 import DataConfidenceStrip from 'src/Components/managementReport/DataConfidenceStrip'
 import ActionListsSection from 'src/Components/managementReport/ActionListsSection'
+import ExtrasSection, {
+  extrasSummary
+} from 'src/Components/managementReport/ExtrasSection'
 import TeamSection from 'src/Components/managementReport/TeamSection'
 import TrendSection from 'src/Components/managementReport/TrendSection'
 import LossReasonsSection from 'src/Components/managementReport/LossReasonsSection'
@@ -704,6 +707,16 @@ const ManagementReportPage = () => {
                 loss={report.lossReasons}
                 periodLabel={report.meta.periodLabel}
               />
+            </CollapsibleSection>
+          )}
+
+          {report.extras && (
+            <CollapsibleSection
+              id='extras'
+              title='Más indicadores'
+              summary={extrasSummary(report.extras)}
+            >
+              <ExtrasSection extras={report.extras} />
             </CollapsibleSection>
           )}
 

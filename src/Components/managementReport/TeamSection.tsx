@@ -217,6 +217,49 @@ const hours = (minutes: number | null) =>
     : `${(minutes / 60).toLocaleString('es-CO', { maximumFractionDigits: 1 })} h`
 
 const AREAS: Record<ManagementReportAreaKey, AreaConfig> = {
+  adjustments: {
+    label: 'Novedades',
+    question: '¿Quién reporta y quién revisa las novedades de los servicios?',
+    firstColumn: 'Persona',
+    columns: [
+      { field: 'reported', header: 'Reportadas' },
+      { field: 'reviewed', header: 'Revisadas' },
+      { field: 'approved', header: 'Aprobadas por quien revisa' },
+      { field: 'rejected', header: 'Rechazadas por quien revisa' },
+      {
+        field: 'medianReviewDays',
+        header: 'Días de revisión',
+        format: (row) => days(num(row, 'medianReviewDays'))
+      }
+    ],
+    cards: [
+      {
+        label: 'Reportadas',
+        icon: <DescriptionOutlined />,
+        tone: 'blue',
+        value: (totals) => num(totals, 'reported') ?? 0
+      },
+      {
+        label: 'Revisadas',
+        icon: <CheckCircleOutlined />,
+        tone: 'green',
+        value: (totals) => num(totals, 'reviewed') ?? 0
+      },
+      {
+        label: 'Rechazadas',
+        icon: <ReplayOutlined />,
+        tone: 'orange',
+        value: (totals) => num(totals, 'rejected') ?? 0
+      },
+      {
+        label: 'Días de revisión',
+        icon: <AccessTimeOutlined />,
+        tone: 'teal',
+        value: (totals) => days(num(totals, 'medianReviewDays'))
+      }
+    ],
+    note: 'Una novedad es un cambio de precio o un ítem extra que se reporta sobre un servicio aprobado. Los días de revisión se cuentan a quien la revisa.'
+  },
   certificates: {
     label: 'Certificados',
     question: '¿Quién mueve los certificados hasta liberarlos?',
@@ -421,6 +464,7 @@ const buildAreaColumns = (
 
 const AREA_LABEL: Record<ManagementReportTeamArea, string> = {
   quotations: 'Cotizaciones',
+  adjustments: AREAS.adjustments.label,
   certificates: AREAS.certificates.label,
   maintenance: AREAS.maintenance.label,
   purchases: AREAS.purchases.label
