@@ -9,14 +9,9 @@ export type ColorMode = 'light' | 'dark'
 const STORAGE_KEY = 'mm-color-scheme'
 const GROUPS = ['brand', 'neutral', 'intent', 'accent'] as const
 
-const systemMode = (): ColorMode =>
-  window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
-    ? 'dark'
-    : 'light'
-
 const storedMode = (): ColorMode => {
   const stored = window.localStorage.getItem(STORAGE_KEY)
-  return stored === 'light' || stored === 'dark' ? stored : systemMode()
+  return stored === 'dark' ? 'dark' : 'light'
 }
 
 /** Escribe los tokens del modo en <html>; CSS variables + clase `dark` para Tailwind. */
