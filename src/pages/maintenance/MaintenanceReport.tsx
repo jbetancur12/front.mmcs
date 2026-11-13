@@ -1,6 +1,7 @@
 import { getApiErrorReason } from 'src/utils/apiError'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Container,
   Paper,
@@ -70,6 +71,7 @@ const steps = [
  * This is accessible without authentication for customers to report equipment issues
  */
 const MaintenanceReport: React.FC = () => {
+  const navigate = useNavigate()
   const [activeStep, setActiveStep] = useState(0)
   const [files, setFiles] = useState<File[]>([])
   const [submissionResult, setSubmissionResult] = useState<{
@@ -502,12 +504,12 @@ const MaintenanceReport: React.FC = () => {
   if (submissionResult) {
     return (
       <Container maxWidth='md' sx={{ py: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper variant='outlined' sx={{ borderRadius: '12px', p: 4 }}>
           <Box textAlign='center'>
             {submissionResult.success ? (
               <>
-                <CheckCircle color='success' sx={{ fontSize: 64, mb: 2 }} />
-                <Typography variant='h4' gutterBottom color='success.main'>
+                <CheckCircle color='primary' sx={{ fontSize: 64, mb: 2 }} />
+                <Typography variant='h4' gutterBottom color='primary.main'>
                   ¡Solicitud Enviada!
                 </Typography>
                 <Typography variant='h6' gutterBottom>
@@ -524,9 +526,7 @@ const MaintenanceReport: React.FC = () => {
                 <Box mt={3}>
                   <Button
                     variant='contained'
-                    onClick={() =>
-                      (window.location.href = '/maintenance/tracking')
-                    }
+                    onClick={() => navigate('/maintenance/tracking')}
                     sx={{ mr: 2 }}
                   >
                     Hacer Seguimiento
@@ -565,7 +565,7 @@ const MaintenanceReport: React.FC = () => {
   return (
     <MaintenanceErrorBoundary>
       <Container maxWidth='md' sx={{ py: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper variant='outlined' sx={{ borderRadius: '12px', p: 4 }}>
           {/* Header */}
           <Box textAlign='center' mb={4}>
             <Build color='primary' sx={{ fontSize: 48, mb: 2 }} />

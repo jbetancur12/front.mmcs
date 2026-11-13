@@ -344,12 +344,14 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     courses: Course[]
     total: number
   }>(
-    ['lms-courses', page, rowsPerPage],
+    // Todos los cursos: alimentan el selector y el filtro, no la tabla (que
+    // pagina las asignaciones). Con la página de la tabla solo llegaban 10; el API admite hasta 100.
+    ['lms-courses', 'all-for-assignment'],
     async () => {
       const response = await axiosPrivate.get('/lms/courses', {
         params: {
-          page: page + 1,
-          limit: rowsPerPage,
+          page: 1,
+          limit: 100,
           include: 'modules,assignments,_count'
         }
       })
@@ -556,7 +558,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
   )
 
-  const courses = coursesResponse?.courses || []
+  const courses = useMemo(
+    () => coursesResponse?.courses || [],
+    [coursesResponse]
+  )
   const assignableCourses = courses.filter(
     (course) => course.audience !== 'client'
   )
@@ -952,23 +957,31 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   flexWrap: 'wrap'
                 }}
               >
-                <FormControl size='small' sx={{ minWidth: 280 }}>
-                  <InputLabel>Filtrar por curso</InputLabel>
-                  <Select
-                    value={selectedCourse}
-                    label='Filtrar por curso'
-                    onChange={(e) =>
-                      handleCourseSelection((e.target.value as number) || '')
-                    }
-                  >
-                    <MenuItem value=''>Todos los cursos</MenuItem>
-                    {assignableCourses.map((course) => (
-                      <MenuItem key={course.id} value={course.id}>
-                        {course.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  size='small'
+                  sx={{ minWidth: 280 }}
+                  options={assignableCourses}
+                  value={
+                    assignableCourses.find(
+                      (course) => course.id === selectedCourse
+                    ) || null
+                  }
+                  getOptionLabel={(course) => course.title}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
+                  onChange={(_, course) =>
+                    handleCourseSelection(course ? course.id : '')
+                  }
+                  noOptionsText='Ningún curso coincide'
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label='Filtrar por curso'
+                      placeholder='Todos los cursos'
+                    />
+                  )}
+                />
                 <FormControl size='small' sx={{ minWidth: 180 }}>
                   <InputLabel>Estado</InputLabel>
                   <Select
@@ -1297,24 +1310,29 @@ const LmsCourseAssignmentInterface: React.FC = () => {
               <CardContent>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>Seleccionar Curso</InputLabel>
-                      <Select
-                        value={selectedCourse}
-                        label='Seleccionar Curso'
-                        onChange={(e) =>
-                          handleCourseSelection(e.target.value as number)
-                        }
-                      >
-                        {assignableCourses.map((course) => (
-                          <MenuItem key={course.id} value={course.id}>
-                            {course.duration
-                              ? `${course.title} (${course.duration})`
-                              : course.title}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <Autocomplete
+                      options={assignableCourses}
+                      value={
+                        assignableCourses.find(
+                          (course) => course.id === selectedCourse
+                        ) || null
+                      }
+                      getOptionLabel={(course) =>
+                        course.duration
+                          ? `${course.title} (${course.duration})`
+                          : course.title
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option.id === value.id
+                      }
+                      onChange={(_, course) =>
+                        handleCourseSelection(course ? course.id : '')
+                      }
+                      noOptionsText='Ningún curso coincide'
+                      renderInput={(params) => (
+                        <TextField {...params} label='Seleccionar Curso' />
+                      )}
+                    />
                   </Grid>
 
                   {selectedCourseData &&

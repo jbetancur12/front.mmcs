@@ -53,6 +53,8 @@ export const useRelativeTime = (
     } catch {
       return null
     }
+    // 'forceUpdate' se lee a propósito: cada tick del intervalo recalcula el texto
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, addSuffix, showSeconds, forceUpdate])
 
   const absoluteTime = useMemo(() => {

@@ -10,8 +10,8 @@ interface AppConfig {
 }
 
 export const APP_CONFIG: AppConfig = {
-  VERSION: '1.10.1',
-  BUILD_DATE: '2026-10-21',
+  VERSION: '1.11.0',
+  BUILD_DATE: '2026-11-06',
   ENVIRONMENT:
     typeof import.meta !== 'undefined' && import.meta.env
       ? import.meta.env.VITE_ENV || 'development'
@@ -30,7 +30,7 @@ export const APP_CONFIG: AppConfig = {
     '1.6.9': 'Filtro por estado en equipos del cliente',
     '1.6.10': 'Compras: control de envío de la orden de compra',
     '1.8.0': 'Compras: control de envío de órdenes y rediseño de tablas, acciones y modales',
-    '1.10.1': 'Nueva barra superior con menú de cuenta'
+    '1.11.0': 'Biblioteca, tecnovigilancia, calibracion y mejoras'
   } as Record<string, string>,
 
   // Configuración de limpieza

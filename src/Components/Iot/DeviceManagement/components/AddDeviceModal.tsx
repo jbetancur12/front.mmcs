@@ -83,10 +83,11 @@ const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
       }
     }
   })
+  const { setValues } = formik
 
   useEffect(() => {
     if (device) {
-      formik.setValues({
+      setValues({
         imei: device.imei,
         name: device.name,
         location: device.location,
@@ -94,7 +95,7 @@ const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
         customer: device.customer
       })
     }
-  }, [device])
+  }, [device, setValues])
 
   const handleClose = () => {
     formik.resetForm()

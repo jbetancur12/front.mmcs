@@ -38,6 +38,7 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import { ROLES } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
+import { getTechnicalReportCompletion } from '../../../Components/Maintenance/technicalReportCompletion'
 import { useCan } from '@utils/functions'
 import useMaintenanceTicketFeedback from './useMaintenanceTicketFeedback'
 import useMaintenanceFilePreview from './useMaintenanceFilePreview'
@@ -67,6 +68,8 @@ const useMaintenanceTicketDetails = () => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   // Asignar técnicos exige poder listarlos (GET /maintenance/technicians)
   const canManageTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
+  // Marcar el ticket como facturado exige la misma capacidad que la pantalla de Facturación
+  const canInvoice = useCan(PERMISSIONS.MAINTENANCE_INVOICING_MANAGE)
   const currentUserRole = $userStore.rol[0] || ROLES.USER
   // Sin alcance total sobre los tickets (capacidad), solo se ven y operan los asignados a uno mismo
   const isTechnician = !useCan(PERMISSIONS.MAINTENANCE_TICKET_MANAGE_ALL)
@@ -171,7 +174,7 @@ const useMaintenanceTicketDetails = () => {
       return (
         <Chip
           label='Facturado'
-          color='success'
+          color='primary'
           icon={<Receipt />}
           size='small'
         />
@@ -187,24 +190,10 @@ const useMaintenanceTicketDetails = () => {
     )
   }, [ticket?.isInvoiced])
 
-  const technicalReportCompletion = useMemo(() => {
-    if (!technicalReport) return 0
-
-    const checkpoints = [
-      technicalReport.finalDiagnosis,
-      technicalReport.rootCause,
-      technicalReport.activities?.length,
-      technicalReport.parts?.length,
-      technicalReport.verificationProtocolType,
-      technicalReport.verificationTests?.length,
-      technicalReport.recommendations,
-      technicalReport.scopeClause,
-      technicalReport.responsibilityClause
-    ]
-
-    const completed = checkpoints.filter(Boolean).length
-    return Math.round((completed / checkpoints.length) * 100)
-  }, [technicalReport])
+  const technicalReportCompletion = useMemo(
+    () => getTechnicalReportCompletion(technicalReport),
+    [technicalReport]
+  )
   const handleSaveEdit = async () => {
     if (!ticket) return
 
@@ -352,7 +341,6 @@ const useMaintenanceTicketDetails = () => {
   }
 
   const handleInvoice = async () => {
-    logger.log(ticket)
     if (!ticket) return
 
     try {
@@ -365,11 +353,11 @@ const useMaintenanceTicketDetails = () => {
       setBriefCostsDialogOpen(false)
       await refetchTicket()
       await refetchTimeline()
-      showToast('Ticket completado exitosamente', 'success')
+      showToast('Ticket marcado como facturado', 'success')
     } catch (error: unknown) {
-      logger.error('Error completing ticket:', error)
+      logger.error('Error al marcar el ticket como facturado:', error)
       const errorMessage =
-        getApiErrorReason(error) || 'Error al completar el ticket'
+        getApiErrorReason(error) || 'Error al marcar el ticket como facturado'
       showToast(errorMessage, 'error')
       throw error
     }
@@ -440,6 +428,29 @@ const useMaintenanceTicketDetails = () => {
       const errorMessage =
         getApiErrorReason(error) || 'Error al guardar las firmas'
       showToast(errorMessage, 'error')
+      throw error
+    }
+  }
+
+  /** El cliente no quiso firmar: queda el motivo en el ticket y deja de contar como pendiente. */
+  const handleRefuseCustomerSignature = async (reason: string) => {
+    if (!ticket) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: ticket.id,
+        data: { customerSignatureRefusedReason: reason }
+      })
+      setSignaturesDialogOpen(false)
+      await refetchTicket()
+      await refetchTimeline()
+      showToast('Quedó registrado que el cliente no quiso firmar', 'success')
+    } catch (error: unknown) {
+      logger.error('Error registrando la negativa de firma:', error)
+      showToast(
+        getApiErrorReason(error) || 'No se pudo registrar el motivo',
+        'error'
+      )
       throw error
     }
   }
@@ -652,6 +663,7 @@ const useMaintenanceTicketDetails = () => {
     isMobile,
     navigate,
     canManageTechnicians,
+    canInvoice,
     currentUserRole,
     isTechnician,
     canEditTicket,
@@ -679,6 +691,7 @@ const useMaintenanceTicketDetails = () => {
     handleInvoice,
     handleAddComment,
     handleSavePendingSignatures,
+    handleRefuseCustomerSignature,
     handleRevokeCustomerSignature,
     handleUpdateComment,
     handleDeleteComment,

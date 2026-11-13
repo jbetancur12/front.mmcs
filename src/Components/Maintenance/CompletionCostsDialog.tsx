@@ -14,6 +14,8 @@ import {
   Avatar,
   Alert,
   AlertTitle,
+  Checkbox,
+  FormControlLabel,
   CircularProgress,
   Collapse,
   useMediaQuery,
@@ -33,6 +35,9 @@ import MaintenanceFileUpload from './MaintenanceFileUpload'
 import SignaturePad from './SignaturePad'
 import type { MaintenanceFile } from '../../types/maintenance'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+
+/** Total mínimo para cerrar con costos: por debajo se debe marcar «Sin costo / garantía». */
+const MIN_BILLABLE_TOTAL = 1000
 
 export interface CompletionCost {
   name: string
@@ -102,6 +107,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const [errors, setErrors] = useState<
     Record<number, { name?: string; amount?: string }>
   >({})
+  // Sin costo / garantía: se cierra sin cobrar; si no, el total debe llegar al mínimo
+  const [noCost, setNoCost] = useState(false)
   const [showPhotoUpload, setShowPhotoUpload] = useState(false)
   const [completionPhotos, setCompletionPhotos] = useState<
     CompletionPhotoInput[]
@@ -119,6 +126,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       setTechnicianWorkMinutesError('')
       setCosts([{ name: '', description: '', amount: '' }])
       setErrors({})
+      setNoCost(false)
       setShowPhotoUpload(false)
       setCompletionPhotos([])
       setTechnicianSignatureData(storedTechnicianSignature || null)
@@ -321,6 +329,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     }).format(value)
   }
 
+  const totalMeetsMinimum = calculateTotal() >= MIN_BILLABLE_TOTAL
+
   const isFormValid = useMemo(() => {
     const workValid = workPerformed.trim().length >= 20
     const timeValid =
@@ -334,8 +344,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
         !isNaN(parseFloat(cost.amount as string)) &&
         parseFloat(cost.amount as string) >= 0
     )
-    return workValid && timeValid && costsValid
-  }, [costs, workPerformed, technicianWorkMinutes])
+    return workValid && timeValid && costsValid && totalMeetsMinimum
+  }, [costs, workPerformed, technicianWorkMinutes, totalMeetsMinimum])
 
   const isWorkPerformedValid = useMemo(() => {
     return (
@@ -369,8 +379,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       >
         <Avatar
           sx={{
-            backgroundColor: intent.successSoft,
-            color: intent.successInk,
+            backgroundColor: brand.soft,
+            color: brand.ink,
             width: 48,
             height: 48
           }}
@@ -444,7 +454,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             inputProps={{ maxLength: 500 }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white'
+                backgroundColor: neutral.surface
               }
             }}
           />
@@ -493,7 +503,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             inputProps={{ min: 1, step: 1 }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white'
+                backgroundColor: neutral.surface
               }
             }}
           />
@@ -518,8 +528,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               minHeight: 44,
               ...(showPhotoUpload
                 ? {
-                    backgroundColor: intent.successInk,
-                    '&:hover': { backgroundColor: intent.successInk }
+                    backgroundColor: brand.main,
+                    '&:hover': { backgroundColor: brand.hover }
                   }
                 : {
                     borderColor: neutral.borderStrong,
@@ -693,151 +703,179 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           </Paper>
         )}
 
-        {/* Costs Section Header */}
-        <Typography
-          variant='h6'
-          fontWeight={600}
-          gutterBottom
-          sx={{ mb: 2, color: brand.main }}
-        >
-          Costos del Servicio (Opcional)
-        </Typography>
+        <FormControlLabel
+          sx={{ mb: 2, display: 'flex' }}
+          control={
+            <Checkbox
+              checked={noCost}
+              onChange={(e) => setNoCost(e.target.checked)}
+              disabled={loading}
+            />
+          }
+          label='Sin costo / garantía (el servicio no se cobra)'
+        />
 
-        {/* Costs List */}
-        {costs.map((cost, index) => (
-          <Paper
-            key={index}
-            elevation={0}
-            sx={{
-              p: 3,
-              mb: 2,
-              borderRadius: '12px',
-              border: `1px solid ${neutral.border}`,
-              backgroundColor: neutral.surfaceAlt,
-              position: 'relative'
-            }}
-          >
-            {/* Delete Button */}
-            <IconButton
-              onClick={() => handleRemoveCost(index)}
-              disabled={costs.length === 1}
+        {noCost ? (
+          <Alert severity='info'>El ticket se completará sin costos.</Alert>
+        ) : (
+          <>
+            {/* Costs Section Header */}
+            <Typography
+              variant='h6'
+              fontWeight={600}
+              gutterBottom
+              sx={{ mb: 2, color: brand.main }}
+            >
+              Costos del Servicio
+            </Typography>
+
+            {/* Costs List */}
+            {costs.map((cost, index) => (
+              <Paper
+                key={index}
+                elevation={0}
+                sx={{
+                  p: 3,
+                  mb: 2,
+                  borderRadius: '12px',
+                  border: `1px solid ${neutral.border}`,
+                  backgroundColor: neutral.surfaceAlt,
+                  position: 'relative'
+                }}
+              >
+                {/* Delete Button */}
+                <IconButton
+                  onClick={() => handleRemoveCost(index)}
+                  disabled={costs.length === 1}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    color: intent.danger,
+                    '&:disabled': { opacity: 0.3 }
+                  }}
+                >
+                  <Delete />
+                </IconButton>
+
+                <Grid container spacing={2}>
+                  {/* Name */}
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      required
+                      label='Nombre del Costo'
+                      placeholder='Ej: Repuesto filtro, Transporte, Mano de obra'
+                      value={cost.name}
+                      onChange={(e) =>
+                        handleCostChange(index, 'name', e.target.value)
+                      }
+                      error={!!errors[index]?.name}
+                      helperText={
+                        errors[index]?.name || 'Tipo de costo o concepto'
+                      }
+                      inputProps={{ maxLength: 200 }}
+                    />
+                  </Grid>
+
+                  {/* Description */}
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={2}
+                      label='Descripción (Opcional)'
+                      placeholder='Detalles adicionales...'
+                      value={cost.description}
+                      onChange={(e) =>
+                        handleCostChange(index, 'description', e.target.value)
+                      }
+                      inputProps={{ maxLength: 500 }}
+                    />
+                  </Grid>
+
+                  {/* Amount */}
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      required
+                      type='number'
+                      label='Monto'
+                      placeholder='0'
+                      value={cost.amount}
+                      onChange={(e) =>
+                        handleCostChange(index, 'amount', e.target.value)
+                      }
+                      error={!!errors[index]?.amount}
+                      helperText={errors[index]?.amount}
+                      InputProps={{
+                        startAdornment: (
+                          <AttachMoney sx={{ color: brand.main, mr: 0.5 }} />
+                        )
+                      }}
+                      inputProps={{ min: 0, step: 0.01 }}
+                    />
+                  </Grid>
+                </Grid>
+              </Paper>
+            ))}
+
+            {/* Add Button */}
+            <Button
+              fullWidth
+              variant='outlined'
+              startIcon={<Add />}
+              onClick={handleAddCost}
+              disabled={loading}
               sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                color: intent.danger,
-                '&:disabled': { opacity: 0.3 }
+                borderRadius: '12px',
+                borderColor: brand.main,
+                color: brand.main,
+                borderStyle: 'dashed',
+                borderWidth: 2,
+                py: 1.5,
+                '&:hover': {
+                  borderColor: brand.ink,
+                  backgroundColor: neutral.surfaceAlt,
+                  borderStyle: 'solid'
+                }
               }}
             >
-              <Delete />
-            </IconButton>
+              Agregar otro costo
+            </Button>
 
-            <Grid container spacing={2}>
-              {/* Name */}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Nombre del Costo'
-                  placeholder='Ej: Repuesto filtro, Transporte, Mano de obra'
-                  value={cost.name}
-                  onChange={(e) =>
-                    handleCostChange(index, 'name', e.target.value)
-                  }
-                  error={!!errors[index]?.name}
-                  helperText={errors[index]?.name || 'Tipo de costo o concepto'}
-                  inputProps={{ maxLength: 200 }}
-                />
-              </Grid>
+            {/* Total */}
+            <Paper
+              sx={{
+                ...surfaceSx,
+                p: 2,
+                mt: 3,
+                borderColor: brand.soft
+              }}
+            >
+              <Box
+                display='flex'
+                justifyContent='space-between'
+                alignItems='center'
+              >
+                <Typography variant='h6' fontWeight={600}>
+                  Total de Costos
+                </Typography>
+                <Typography variant='h4' fontWeight={700} color={brand.ink}>
+                  {formatCurrency(calculateTotal())}
+                </Typography>
+              </Box>
+            </Paper>
 
-              {/* Description */}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={2}
-                  label='Descripción (Opcional)'
-                  placeholder='Detalles adicionales...'
-                  value={cost.description}
-                  onChange={(e) =>
-                    handleCostChange(index, 'description', e.target.value)
-                  }
-                  inputProps={{ maxLength: 500 }}
-                />
-              </Grid>
-
-              {/* Amount */}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  required
-                  type='number'
-                  label='Monto'
-                  placeholder='0'
-                  value={cost.amount}
-                  onChange={(e) =>
-                    handleCostChange(index, 'amount', e.target.value)
-                  }
-                  error={!!errors[index]?.amount}
-                  helperText={errors[index]?.amount}
-                  InputProps={{
-                    startAdornment: (
-                      <AttachMoney sx={{ color: brand.main, mr: 0.5 }} />
-                    )
-                  }}
-                  inputProps={{ min: 0, step: 0.01 }}
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-        ))}
-
-        {/* Add Button */}
-        <Button
-          fullWidth
-          variant='outlined'
-          startIcon={<Add />}
-          onClick={handleAddCost}
-          disabled={loading}
-          sx={{
-            borderRadius: '12px',
-            borderColor: brand.main,
-            color: brand.main,
-            borderStyle: 'dashed',
-            borderWidth: 2,
-            py: 1.5,
-            '&:hover': {
-              borderColor: intent.successInk,
-              backgroundColor: neutral.surfaceAlt,
-              borderStyle: 'solid'
-            }
-          }}
-        >
-          Agregar otro costo
-        </Button>
-
-        {/* Total */}
-        <Paper
-          sx={{
-            ...surfaceSx,
-            p: 2,
-            mt: 3,
-            borderColor: intent.successSoft
-          }}
-        >
-          <Box
-            display='flex'
-            justifyContent='space-between'
-            alignItems='center'
-          >
-            <Typography variant='h6' fontWeight={600}>
-              Total de Costos
-            </Typography>
-            <Typography variant='h4' fontWeight={700} color={intent.successInk}>
-              {formatCurrency(calculateTotal())}
-            </Typography>
-          </Box>
-        </Paper>
+            {!totalMeetsMinimum && (
+              <Alert severity='warning' sx={{ mt: 2 }}>
+                El total debe ser al menos {formatCurrency(MIN_BILLABLE_TOTAL)}.
+                Si el servicio no se cobra (garantía o cortesía), marca «Sin
+                costo / garantía».
+              </Alert>
+            )}
+          </>
+        )}
       </DialogContent>
 
       {/* Actions */}
@@ -862,40 +900,17 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
         <Box sx={{ flex: 1 }} />
 
         <Button
-          onClick={handleCompleteWithoutCosts}
-          disabled={loading || !isWorkPerformedValid}
-          variant='outlined'
-          sx={{
-            borderRadius: '12px',
-            borderColor: neutral.borderStrong,
-            color: neutral.textBody,
-            minHeight: 48,
-            fontWeight: 600,
-            '&:hover': {
-              borderColor: neutral.textFaint,
-              backgroundColor: neutral.surfaceAlt
-            },
-            '&:disabled': {
-              borderColor: neutral.border,
-              color: neutral.textFaint
-            }
-          }}
-        >
-          Completar sin costos
-        </Button>
-
-        <Button
-          onClick={handleSubmit}
-          disabled={loading || !isFormValid}
+          onClick={noCost ? handleCompleteWithoutCosts : handleSubmit}
+          disabled={loading || (noCost ? !isWorkPerformedValid : !isFormValid)}
           variant='contained'
           startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
           sx={{
             borderRadius: '12px',
-            backgroundColor: intent.successInk,
+            backgroundColor: brand.main,
             minHeight: 48,
             fontWeight: 600,
             '&:hover': {
-              backgroundColor: intent.successInk
+              backgroundColor: brand.main
             },
             '&:disabled': {
               background: neutral.border,
@@ -903,7 +918,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             }
           }}
         >
-          {loading ? 'Completando...' : 'Completar con costos'}
+          {loading
+            ? 'Completando...'
+            : noCost
+              ? 'Completar sin costo'
+              : 'Completar con costos'}
         </Button>
       </DialogActions>
     </Dialog>

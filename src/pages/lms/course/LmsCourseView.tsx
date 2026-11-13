@@ -58,6 +58,7 @@ import {
 } from '../../../hooks/useLms'
 import { queryKeys } from '../../../config/queryClient'
 import { api } from 'src/config'
+import { buildLmsResourceUrl } from 'src/utils/lmsSafeOutput'
 import {
   getCourseAudienceLabel,
   normalizeCourseAudience
@@ -72,6 +73,7 @@ import PDFViewer from 'src/Components/PDFViewer'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
 import { logger } from 'src/utils/logger'
+import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 const fadeIn = { animation: 'fadeSlideIn 0.35s ease-out' }
 const styles = `
@@ -213,6 +215,8 @@ const LmsCourseView: React.FC = () => {
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
   const [latestQuizOutcome, setLatestQuizOutcome] =
     useState<QuizOutcomeSummary | null>(null)
+  // El resultado del quiz no se guardó en el servidor (motivo para mostrarlo)
+  const [quizSaveError, setQuizSaveError] = useState<string | null>(null)
   const [certificateReadyNoticeVisible, setCertificateReadyNoticeVisible] =
     useState(false)
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
@@ -680,6 +684,7 @@ const LmsCourseView: React.FC = () => {
     // Start lesson timer
     setLessonStartTime(new Date())
     setLatestQuizOutcome(null)
+    setQuizSaveError(null)
   }, [currentModuleIndex, currentLessonIndex])
 
   useEffect(() => {
@@ -736,6 +741,7 @@ const LmsCourseView: React.FC = () => {
         course.modules[currentModuleIndex].lessons[currentLessonIndex]
       if (!currentLesson) return
 
+      setQuizSaveError(null)
       try {
         // Transform answers to service schema: object with questionId as key, answer array as value
         const formattedAnswers: Record<number, number[]> = {}
@@ -784,6 +790,12 @@ const LmsCourseView: React.FC = () => {
         }
       } catch (error) {
         logger.error('Error completing quiz:', error)
+        setQuizSaveError(
+          getStructuredApiErrorMessage(
+            error,
+            'No se pudo guardar el resultado.'
+          )
+        )
       }
     },
     [
@@ -906,13 +918,13 @@ const LmsCourseView: React.FC = () => {
       setPdfViewerOpen(true)
       return
     }
-    const href = resource.href
-    if (!href) return
-    const token = localStorage.getItem('accessToken')
-    const fullUrl = href.startsWith('http') ? href : `${api()}${href}`
-    const url = new URL(fullUrl)
-    if (token) url.searchParams.set('token', token)
-    window.open(url.toString(), '_blank', 'noopener,noreferrer')
+    const url = buildLmsResourceUrl(
+      resource.href,
+      localStorage.getItem('accessToken'),
+      api()
+    )
+    if (!url) return
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   // Early return states (must be after all hooks)
@@ -1566,6 +1578,13 @@ const LmsCourseView: React.FC = () => {
                           </Button>
                         </Box>
                       )}
+
+                    {currentLesson.type === 'quiz' && quizSaveError && (
+                      <Alert severity='error' sx={{ mb: 2 }}>
+                        El resultado de este intento no se guardó y la lección
+                        no se completó. {quizSaveError} Vuelve a intentarlo.
+                      </Alert>
+                    )}
 
                     {currentLesson.type === 'quiz' &&
                       latestQuizOutcome &&

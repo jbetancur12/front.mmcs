@@ -7,6 +7,7 @@ import {
   TextField,
   Typography
 } from '@mui/material'
+import { DevicesOtherOutlined } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers'
 import { format, parseISO } from 'date-fns'
 import { useFormik } from 'formik'
@@ -16,10 +17,13 @@ import React, { useEffect } from 'react'
 import FormDialog, { FormDialogSection } from '../../Common/FormDialog'
 import { notify } from 'src/utils/notify'
 
+import FileDropZone from '../../Common/FileDropZone'
 import {
   createServiceTypeOptions,
   DataSheetFormValues,
   initialDataSheetFormValues,
+  MANUAL_ACCEPT,
+  MANUAL_MAX_MB,
   validationSchema
 } from './constants'
 import { DataSheetData } from './types'
@@ -40,7 +44,13 @@ type FieldKey = keyof DataSheetFormValues
 const FULL_ROW = { gridColumn: { sm: '1 / -1' } }
 
 // Campos que el formulario de creación no muestra
-const HIDDEN_FIELDS = ['id', 'invoiceUrl', 'internalCode', 'status']
+const HIDDEN_FIELDS = [
+  'id',
+  'invoiceUrl',
+  'manualUrl',
+  'internalCode',
+  'status'
+]
 
 /** Crea una hoja de datos de equipo: foto y datos en dos columnas. */
 export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
@@ -59,6 +69,11 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       Object.keys(values).forEach((key) => {
         const value = values[key as FieldKey]
         if (key === 'internalCode' && !String(value ?? '').trim()) return
+        if (key === 'manualFile') {
+          // Solo viaja si "Tiene manual" sigue activo.
+          if (values.manual && value) formData.append(key, value as Blob)
+          return
+        }
         formData.append(key, value as string | Blob)
       })
 
@@ -80,7 +95,11 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
     }
   })
 
-  const { data: reusableCodes = [] } = useReusableCodes()
+  // El listado monta este diálogo siempre, aunque esté cerrado o la persona no pueda crear equipos (el API pide
+  // calibration:datasheet:create y respondía 403). Solo se piden los códigos cuando se abre.
+  const { data: reusableCodes = [] } = useReusableCodes(undefined, {
+    enabled: open
+  })
 
   const normalizedServiceType = String(formik.values.serviceType ?? '')
     .normalize('NFD')
@@ -123,8 +142,16 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                   ? URL.createObjectURL(formik.values.picture)
                   : ''
               }
-              sx={{ width: 96, height: 96, mx: 'auto', bgcolor: brand.soft }}
-            />
+              sx={{
+                width: 96,
+                height: 96,
+                mx: 'auto',
+                bgcolor: brand.soft,
+                color: brand.ink
+              }}
+            >
+              <DevicesOtherOutlined sx={{ fontSize: 44 }} />
+            </Avatar>
             <Typography
               variant='body2'
               sx={{ mt: 1, color: brand.ink, fontWeight: 600 }}
@@ -155,22 +182,46 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
 
     if (key === 'manual') {
       return (
-        <FormControlLabel
-          key={column.accessorKey}
-          control={
-            <Switch
-              checked={formik.values.manual}
-              onChange={formik.handleChange}
-              name='manual'
-              onBlur={formik.handleBlur}
-              sx={{
-                '& .Mui-checked': { color: brand.main },
-                '& .Mui-checked + .MuiSwitch-track': { bgcolor: brand.main }
-              }}
-            />
-          }
-          label='Tiene manual'
-        />
+        <Box key={column.accessorKey} sx={FULL_ROW}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formik.values.manual}
+                onChange={(event) => {
+                  formik.handleChange(event)
+                  if (!event.target.checked) {
+                    formik.setFieldValue('manualFile', null)
+                  }
+                }}
+                name='manual'
+                onBlur={formik.handleBlur}
+                sx={{
+                  '& .Mui-checked': { color: brand.main },
+                  '& .Mui-checked + .MuiSwitch-track': { bgcolor: brand.main }
+                }}
+              />
+            }
+            label='Tiene manual'
+          />
+          {formik.values.manual && (
+            <Box sx={{ mt: 1 }}>
+              <FileDropZone
+                file={formik.values.manualFile}
+                onFileSelected={(file) =>
+                  formik.setFieldValue('manualFile', file)
+                }
+                onReject={(message) =>
+                  notify.error('Archivo no válido', message)
+                }
+                accept={MANUAL_ACCEPT}
+                acceptLabel='PDF o imagen'
+                title='Arrastra el manual aquí o haz clic para elegirlo'
+                hint={`PDF, JPG, PNG o WEBP, hasta ${MANUAL_MAX_MB} MB. Es opcional: también puedes subirlo después desde Editar.`}
+                maxSizeMb={MANUAL_MAX_MB}
+              />
+            </Box>
+          )}
+        </Box>
       )
     }
 
@@ -257,6 +308,14 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       maxWidth='md'
     >
       <FormDialogSection title='Datos del equipo'>
+        {/* La foto abre el formulario; el tipo de servicio define el prefijo del
+            código, por eso va antes que el código interno. */}
+        {columns
+          .filter((column) => column.accessorKey === 'pictureUrl')
+          .map(renderField)}
+        {columns
+          .filter((column) => column.accessorKey === 'serviceType')
+          .map(renderField)}
         <TextField
           select
           fullWidth
@@ -291,6 +350,8 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
           .filter(
             (column) =>
               column.accessorKey &&
+              column.accessorKey !== 'serviceType' &&
+              column.accessorKey !== 'pictureUrl' &&
               !HIDDEN_FIELDS.includes(column.accessorKey as string)
           )
           .map(renderField)}

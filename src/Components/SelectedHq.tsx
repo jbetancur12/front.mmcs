@@ -163,7 +163,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
         throw error
       }
     },
-    [axiosPrivate, id, selectedSede]
+    [id, selectedSede]
   )
 
   const handleDownloadExcel = useCallback(

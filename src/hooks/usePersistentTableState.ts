@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   MRT_ColumnFiltersState,
   MRT_PaginationState,
@@ -136,10 +136,13 @@ export const usePersistentTableState = (
   } = options
 
   // Merge default state with provided default state
-  const mergedDefaultState: TableState = {
-    ...DEFAULT_TABLE_STATE,
-    ...defaultState
-  }
+  const mergedDefaultState: TableState = useMemo(
+    () => ({
+      ...DEFAULT_TABLE_STATE,
+      ...defaultState
+    }),
+    [defaultState]
+  )
 
   // Initialize state
   const [tableState, setTableState] = useState<TableState>(() =>

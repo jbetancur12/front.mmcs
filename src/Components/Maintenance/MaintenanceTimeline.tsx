@@ -151,9 +151,9 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
   ) => {
     switch (color) {
       case 'primary':
-        return { bg: intent.successSoft, fg: intent.successInk }
+        return { bg: brand.soft, fg: brand.ink }
       case 'success':
-        return { bg: intent.successSoft, fg: brand.hover }
+        return { bg: brand.soft, fg: brand.hover }
       case 'error':
         return { bg: intent.dangerSoft, fg: intent.danger }
       case 'secondary':
@@ -197,6 +197,9 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
             display: 'none'
           }
         },
+        '& .MuiTimelineOppositeContent-root': {
+          display: { xs: 'none', sm: 'block' }
+        },
         '& .MuiTimelineConnector-root': {
           backgroundColor: neutral.borderStrong,
           width: '3px'
@@ -212,7 +215,8 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
           <TimelineItem key={entry.id}>
             <TimelineOppositeContent
               sx={{
-                m: 'auto 0',
+                m: 0,
+                py: 0,
                 flex: compact ? 0.3 : 0.4,
                 px: 1
               }}
@@ -221,6 +225,7 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                 variant={compact ? 'caption' : 'body2'}
                 color='text.secondary'
                 fontWeight='medium'
+                sx={{ lineHeight: '40px' }}
               >
                 {formatDate(entry.performedAt)}
               </Typography>
@@ -242,9 +247,23 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
               {!isLast && <TimelineConnector />}
             </TimelineSeparator>
 
-            <TimelineContent sx={{ py: compact ? 1 : 2, px: 2 }}>
+            <TimelineContent
+              sx={{
+                py: 0,
+                px: { xs: 1.5, sm: 2 },
+                pb: compact ? 1.5 : 2.5,
+                minWidth: 0,
+                overflowWrap: 'anywhere'
+              }}
+            >
               <Box>
-                <Box display='flex' alignItems='center' gap={1} mb={0.5}>
+                <Box
+                  display='flex'
+                  alignItems='center'
+                  gap={1}
+                  flexWrap='wrap'
+                  sx={{ minHeight: 40, py: { xs: 0.5, sm: 0 } }}
+                >
                   <Chip
                     size='small'
                     label={config.label}
@@ -258,14 +277,19 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                   />
 
                   {entry.performedBy && (
-                    <Box display='flex' alignItems='center' gap={0.5}>
+                    <Box
+                      display='flex'
+                      alignItems='center'
+                      gap={0.5}
+                      sx={{ whiteSpace: 'nowrap' }}
+                    >
                       <Avatar
                         sx={{
                           width: 20,
                           height: 20,
                           fontSize: '0.65rem',
-                          backgroundColor: intent.successSoft,
-                          color: intent.successInk
+                          backgroundColor: brand.soft,
+                          color: brand.ink
                         }}
                       >
                         {getInitials(entry.performedBy)}
@@ -276,6 +300,14 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                     </Box>
                   )}
                 </Box>
+
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: { xs: 'block', sm: 'none' }, mb: 0.25 }}
+                >
+                  {formatDate(entry.performedAt)}
+                </Typography>
 
                 <Typography variant={compact ? 'body2' : 'body1'}>
                   {entry.description}

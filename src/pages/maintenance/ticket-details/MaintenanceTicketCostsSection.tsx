@@ -25,7 +25,7 @@ import {
   surfaceSx
 } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTicketCostsSectionProps {
   ticket: MaintenanceTicket
@@ -51,176 +51,6 @@ const MaintenanceTicketCostsSection = ({
 
   return (
     <>
-      {/* Costs */}
-      {/* <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 3, 
-          mb: 3,
-          background: withAlpha(neutral.surface, 0.95),
-          backdropFilter: 'blur(10px)',
-          borderRadius: '16px',
-          boxShadow: `0 4px 20px ${withAlpha(neutral.black, 0.08)}`,
-          border: `1px solid ${withAlpha(intent.success, 0.1)}`,
-          transition: 'all 0.3s ease-in-out',
-          '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: `0 8px 30px ${withAlpha(intent.success, 0.12)}`
-          }
-        }}
-      >
-        <Box display='flex' alignItems='center' gap={1} mb={2}>
-          <Box
-            sx={{
-              background: `linear-gradient(135deg, ${intent.successInk} 0%, ${intent.successInk} 100%)`,
-              borderRadius: '8px',
-              p: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <AttachMoney sx={{ color: 'white', fontSize: 20 }} />
-          </Box>
-          <Typography 
-            variant='h6'
-            sx={{
-              fontWeight: 600,
-              color: intent.successInk
-            }}
-          >
-            Costos
-          </Typography>
-        </Box>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Box mb={2}>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                gutterBottom
-              >
-                Costo Estimado
-              </Typography>
-              {editMode ? (
-                <TextField
-                  fullWidth
-                  id='detail-estimated-cost'
-                  label='Costo estimado'
-                  type='number'
-                  value={editData.estimatedCost || ''}
-                  onChange={(e) =>
-                    setEditData((prev) => ({
-                      ...prev,
-                      estimatedCost: e.target.value
-                        ? Number(e.target.value)
-                        : undefined
-                    }))
-                  }
-                  size='small'
-                  InputProps={{
-                    startAdornment: '$'
-                  }}
-                  helperText={
-                    editErrors.estimatedCost ||
-                    'Costo estimado del servicio'
-                  }
-                  error={!!editErrors.estimatedCost}
-                  aria-label='Ingresar costo estimado del servicio'
-                  aria-invalid={!!editErrors.estimatedCost}
-                  aria-describedby={editErrors.estimatedCost ? 'estimated-cost-error' : 'estimated-cost-helper'}
-                />
-              ) : (
-                <Typography variant='h6' color='warning.main'>
-                  {formatCurrency(ticket.estimatedCost)}
-                </Typography>
-              )}
-            </Box>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Box mb={2}>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                gutterBottom
-              >
-                Costo Real
-              </Typography>
-              {editMode ? (
-                <TextField
-                  fullWidth
-                  id='detail-actual-cost'
-                  label='Costo real'
-                  type='number'
-                  value={editData.actualCost || ''}
-                  onChange={(e) =>
-                    setEditData((prev) => ({
-                      ...prev,
-                      actualCost: e.target.value
-                        ? Number(e.target.value)
-                        : undefined
-                    }))
-                  }
-                  size='small'
-                  InputProps={{
-                    startAdornment: '$'
-                  }}
-                  helperText={
-                    editErrors.actualCost || 'Costo final del servicio'
-                  }
-                  error={!!editErrors.actualCost}
-                  aria-label='Ingresar costo real del servicio'
-                  aria-invalid={!!editErrors.actualCost}
-                  aria-describedby={editErrors.actualCost ? 'actual-cost-error' : 'actual-cost-helper'}
-                />
-              ) : (
-                <Typography variant='h6' color='success.main'>
-                  {formatCurrency(ticket.actualCost)}
-                </Typography>
-              )}
-            </Box>
-          </Grid>
-
-          {ticket.estimatedCost && ticket.actualCost && (
-            <Grid item xs={12}>
-              <Divider sx={{ my: 1 }} />
-              <Box>
-                <Typography
-                  variant='body2'
-                  color='text.secondary'
-                  gutterBottom
-                >
-                  Variación
-                </Typography>
-                <Typography
-                  variant='body1'
-                  fontWeight='medium'
-                  color={
-                    ticket.actualCost <= ticket.estimatedCost
-                      ? 'success.main'
-                      : 'error.main'
-                  }
-                >
-                  {ticket.actualCost <= ticket.estimatedCost ? '-' : '+'}
-                  {formatCurrency(
-                    Math.abs(ticket.actualCost - ticket.estimatedCost)
-                  )}{' '}
-                  (
-                  {(
-                    ((ticket.actualCost - ticket.estimatedCost) /
-                      ticket.estimatedCost) *
-                    100
-                  ).toFixed(1)}
-                  %)
-                </Typography>
-              </Box>
-            </Grid>
-          )}
-        </Grid>
-      </Paper> */}
-
       {/* Service Costs */}
       {ticket.costs && ticket.costs.length > 0 && (
         <Paper
@@ -246,8 +76,8 @@ const MaintenanceTicketCostsSection = ({
             {/* 1. Avatar (Ícono) */}
             <Avatar
               sx={{
-                backgroundColor: intent.successSoft,
-                color: intent.successInk,
+                backgroundColor: brand.soft,
+                color: brand.ink,
                 width: 48,
                 height: 48,
                 flexShrink: 0
@@ -292,8 +122,8 @@ const MaintenanceTicketCostsSection = ({
                 )
               )}
               sx={{
-                backgroundColor: intent.successSoft,
-                color: intent.successInk,
+                backgroundColor: brand.soft,
+                color: brand.ink,
                 fontWeight: 700,
                 fontSize: '0.9rem',
                 height: 40,
@@ -418,7 +248,7 @@ const MaintenanceTicketCostsSection = ({
                 {technicalReport?.serviceFinalStatus && (
                   <Chip
                     size='small'
-                    color='success'
+                    color='primary'
                     label={technicalReport.serviceFinalStatus.replace(
                       /_/g,
                       ' '

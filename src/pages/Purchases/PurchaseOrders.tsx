@@ -50,7 +50,7 @@ const PurchaseOrders: React.FC = () => {
     useState<IPurchaseOrder | null>(null)
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all')
 
-  const purchaseOrders = data ?? []
+  const purchaseOrders = useMemo(() => data ?? [], [data])
 
   const unsentCount = purchaseOrders.filter((o) => !o.sentAt).length
   const overdueCount = purchaseOrders.filter((o) => o.sendOverdue).length

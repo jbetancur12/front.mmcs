@@ -290,6 +290,7 @@ const CustomerModulesMatrix: React.FC = () => {
       }))
     ],
     // requestCellChange solo usa setters y apply; se recrea con los módulos y el permiso
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [modules, canAssign]
   )
 

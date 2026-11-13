@@ -74,6 +74,7 @@ const Table: React.FC = () => {
   const registerUser = useRegisterUser<Record<string, string>>()
   const updateUserById = useUpdateUserById()
   const deleteUserById = useDeleteUserById()
+  const { mutateAsync: deleteUserAsync } = deleteUserById
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -144,22 +145,25 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteUser = async (id: number) => {
-    try {
-      const response = await deleteUserById.mutateAsync(id)
+  const deleteUser = useCallback(
+    async (id: number) => {
+      try {
+        const response = await deleteUserAsync(id)
 
-      if (response.status === 201) {
-        toast.success('Usuario Eliminado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
-      } else {
-        logger.error('Error al crear usuario')
+        if (response.status === 201) {
+          toast.success('Usuario Eliminado Exitosamente!', {
+            duration: 4000,
+            position: 'top-center'
+          })
+        } else {
+          logger.error('Error al crear usuario')
+        }
+      } catch (error) {
+        logger.error('Error de red:', error)
       }
-    } catch (error) {
-      logger.error('Error de red:', error)
-    }
-  }
+    },
+    [deleteUserAsync]
+  )
 
   const handleDeleteRow = useCallback(
     async (row: MRT_Row<UserData>) => {
@@ -172,7 +176,7 @@ const Table: React.FC = () => {
       if (!isConfirmed) return
       deleteUser(row.getValue('id'))
     },
-    [filteredTableData]
+    [deleteUser]
   )
 
   const getCommonEditTextFieldProps = useCallback(

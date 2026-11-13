@@ -23,8 +23,7 @@ import {
   SpeedOutlined,
   StorefrontOutlined,
   VerifiedOutlined,
-  LocalLibraryOutlined,
-  FactCheckOutlined
+  LocalLibraryOutlined
 } from '@mui/icons-material'
 
 import DropdownButton from './DropdownButton'
@@ -145,15 +144,6 @@ const sidebarItems = ($userStore: UserData) => [
     permission: PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE,
     icon: <BusinessOutlined />,
     roles: ROLE_GROUPS.METROLOGY_STAFF,
-    moduleName: 'Basic'
-  },
-  {
-    type: 'link',
-    label: 'Certificados a liberar',
-    to: '/release-certificates',
-    icon: <FactCheckOutlined />,
-    roles: [] as string[],
-    permission: PERMISSIONS.RELEASE_CERTIFICATE_VIEW,
     moduleName: 'Basic'
   },
 
@@ -388,7 +378,10 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.CALIBRATION_DEVICE_VIEW,
       PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE,
       PERMISSIONS.CALIBRATION_FILE_CREATE,
-      PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
+      PERMISSIONS.CALIBRATION_TEMPLATE_VIEW,
+      ...(releaseCertificatesEnabled
+        ? [PERMISSIONS.RELEASE_CERTIFICATE_VIEW]
+        : [])
     ] as readonly PermissionKey[],
     moduleName: 'Basic',
     icon: <SpeedOutlined />,
@@ -417,7 +410,17 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Plantillas',
         url: 'calibraciones/templates',
         permission: PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
-      }
+      },
+      // Oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts)
+      ...(releaseCertificatesEnabled
+        ? [
+            {
+              label: 'Certificados a liberar',
+              url: 'release-certificates',
+              permission: PERMISSIONS.RELEASE_CERTIFICATE_VIEW
+            }
+          ]
+        : [])
     ]
   },
   {
@@ -465,7 +468,8 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.MAINTENANCE_TICKET_VIEW,
       PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST,
       PERMISSIONS.MAINTENANCE_PROTOCOL_MANAGE,
-      PERMISSIONS.MAINTENANCE_INVOICING_VIEW
+      PERMISSIONS.MAINTENANCE_INVOICING_VIEW,
+      PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW
     ] as readonly PermissionKey[],
     moduleName: 'Basic',
     icon: <BuildOutlined />,
@@ -489,6 +493,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Facturación',
         url: 'maintenance/billing',
         permission: PERMISSIONS.MAINTENANCE_INVOICING_VIEW
+      },
+      {
+        label: 'Analíticas',
+        url: 'maintenance/analytics',
+        permission: PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW
       }
     ]
   },
@@ -782,15 +791,6 @@ const SideBar = ({
     if (!libraryEnabled && 'to' in item && item.to === '/library') {
       return false
     }
-    // Certificados a liberar oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts)
-    if (
-      !releaseCertificatesEnabled &&
-      'to' in item &&
-      item.to === '/release-certificates'
-    ) {
-      return false
-    }
-
     if (
       isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
       !isLmsSidebarItem(item)
@@ -933,6 +933,9 @@ const SideBar = ({
     if (!entry) return
     trackedPath.current = pathname
     recordVisit(userKey, entry.id)
+    // searchEntries se recrea en cada render: solo interesa al cambiar de ruta,
+    // de usuario o de permisos (la marca trackedPath evita contar dos veces)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, userKey, $userStore.permissions])
 
   // Sugerencias para el buscador sin texto: solo se calculan con el diálogo abierto.

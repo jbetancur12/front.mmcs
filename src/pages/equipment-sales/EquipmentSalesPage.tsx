@@ -127,7 +127,7 @@ const EquipmentSalesPage = () => {
   const [configAnchor, setConfigAnchor] = useState<null | HTMLElement>(null)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
 
-  const quotations = data?.data || []
+  const quotations = useMemo(() => data?.data || [], [data?.data])
 
   const filteredQuotations = useMemo(() => {
     if (!statusFilter) return quotations

@@ -46,8 +46,9 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
       .get('/version')
       .then((response) => setApiVersion(response.data?.version ?? null))
       .catch(() => setApiVersion(null))
-    // Solo al montar: la versión de la API no cambia durante la sesión.
-  }, [])
+    // Solo al montar: la versión de la API no cambia durante la sesión
+    // (axiosPrivate es una instancia única, no vuelve a disparar el efecto).
+  }, [axiosPrivate])
   const [impersonationDialogOpen, setImpersonationDialogOpen] = useState(false)
   const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false)
   useSessionGuard()

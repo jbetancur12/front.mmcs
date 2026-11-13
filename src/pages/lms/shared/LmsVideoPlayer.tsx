@@ -234,7 +234,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
         URL.revokeObjectURL(objectUrl)
       }
     }
-  }, [src, videoSource])
+  }, [src, videoSource, axiosPrivate])
 
   // Handle video errors
   const handleError = () => {

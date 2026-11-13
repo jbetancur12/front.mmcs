@@ -1,7 +1,11 @@
 import { notify } from 'src/utils/notify'
 import { getApiErrorMessage } from 'src/utils/apiError'
 
-import { useDataSheetMutations, useDownloadInvoice } from './useDataSheets'
+import {
+  useDataSheetMutations,
+  useDownloadInvoice,
+  useDownloadManual
+} from './useDataSheets'
 import { downloadBlob } from './utils'
 
 import { logger } from 'src/utils/logger'
@@ -16,9 +20,11 @@ export const useDataSheetActions = () => {
     retireDataSheet,
     restoreDataSheet,
     uploadImage,
-    uploadInvoice
+    uploadInvoice,
+    uploadManual
   } = useDataSheetMutations()
   const downloadInvoice = useDownloadInvoice()
+  const downloadManual = useDownloadManual()
 
   const saveDataSheet = async (
     id: number,
@@ -136,7 +142,35 @@ export const useDataSheetActions = () => {
     }
   }
 
+  const handleUploadManual = async (
+    id: number,
+    manualFile: File
+  ): Promise<void> => {
+    try {
+      const response = await uploadManual.mutateAsync({ id, manualFile })
+      if (response.status === 200) notify.success('Manual subido correctamente')
+    } catch (error) {
+      notify.error(getApiErrorMessage(error, 'Error subiendo el manual.'))
+    }
+  }
+
+  const handleDownloadManual = async (id: number): Promise<void> => {
+    try {
+      const response = await downloadManual(id)
+      const blob = response.data as Blob
+      const ext =
+        { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[
+          blob.type
+        ] ?? 'pdf'
+      downloadBlob(blob, `manual-${id}.${ext}`)
+    } catch (error) {
+      notify.error('Error descargando el manual')
+    }
+  }
+
   return {
+    handleUploadManual,
+    handleDownloadManual,
     saveDataSheet,
     removeDataSheet,
     retireDataSheetWithReason,

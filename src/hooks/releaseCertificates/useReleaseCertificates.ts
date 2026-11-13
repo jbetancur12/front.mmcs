@@ -11,8 +11,7 @@ import {
   ReleasePlacement,
   ReleaseSignatory,
   ReleaseSignPlan,
-  ReleaseServiceOption,
-  ReleaseUploadResult
+  ReleaseServiceOption
 } from 'src/Components/ReleaseCertificates/ReleaseCertificates.types'
 
 export const RELEASE_QUERY_KEYS = {
@@ -59,33 +58,6 @@ export const useReleaseCertificate = (id: number | null) => {
         .get(`/release-certificates/${id}`)
         .then((response) => response.data),
     { enabled: id !== null }
-  )
-}
-
-/** Carga masiva: devuelve el resultado de cada PDF (uno inválido no detiene el lote). */
-export const useUploadReleaseCertificates = () => {
-  const axiosPrivate = useAxiosPrivate()
-  const queryClient = useQueryClient()
-  return useMutation(
-    async ({
-      files,
-      serviceId,
-      cutId
-    }: {
-      files: File[]
-      serviceId?: number | null
-      cutId?: number | null
-      confirmOtherCustomer?: boolean
-    }): Promise<ReleaseUploadResult[]> => {
-      const data = new FormData()
-      // El servicio va antes de los archivos: el API lo lee del cuerpo del formulario.
-      if (serviceId) data.append('serviceId', String(serviceId))
-      if (serviceId && cutId) data.append('cutId', String(cutId))
-      files.forEach((file) => data.append('files', file))
-      const response = await axiosPrivate.post('/release-certificates', data)
-      return response.data.results
-    },
-    { onSuccess: () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all) }
   )
 }
 

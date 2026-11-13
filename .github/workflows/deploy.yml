@@ -1,7 +1,8 @@
 name: Deploy
 
-# Se lanza en cada push a main que cambie código de la app, y también a mano:
-# Actions -> Deploy -> Run workflow (solo desde main).
+# En cada push a main que cambie código de la app solo corren los checks (job verificar).
+# El deploy lo lanza el workflow Deploy del API cuando termina bien (así el front nunca
+# sale antes que el API que necesita), o a mano: Actions -> Deploy -> Run workflow (solo desde main).
 # Corre los checks y luego el job deploy queda ESPERANDO tu aprobación (revisor obligatorio
 # del entorno production: Settings -> Environments -> production -> Required reviewers).
 # Sin ese revisor, el despliegue arrancaría solo al pasar los checks.
@@ -42,6 +43,8 @@ jobs:
 
   deploy:
     needs: verificar
+    # Un push solo verifica; publicar se pide con workflow_dispatch (a mano o desde el API).
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     environment: production
     steps:

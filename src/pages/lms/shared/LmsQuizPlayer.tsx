@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Box,
   Card,
@@ -195,6 +195,15 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     setUserAnswers(new Array(questions.length).fill(undefined))
   }, [quizConfig, userAttempts, isPreview])
 
+  // Siempre apunta al envío más reciente: al agotarse el tiempo se califican
+  // las respuestas actuales (no las del render en que se creó el temporizador)
+  const handleSubmitQuizRef = useRef<(timeUp?: boolean) => void>(() => {})
+  const handleTimeUp = useCallback(() => {
+    if (!showResults) {
+      handleSubmitQuizRef.current(true)
+    }
+  }, [showResults])
+
   // Timer effect
   useEffect(() => {
     if (startTime && quizConfig.timeLimitMinutes && timeRemaining !== null) {
@@ -210,7 +219,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
       return () => clearInterval(timer)
     }
-  }, [startTime, quizConfig.timeLimitMinutes, timeRemaining])
+  }, [startTime, quizConfig.timeLimitMinutes, timeRemaining, handleTimeUp])
 
   // Cooldown timer
   useEffect(() => {
@@ -242,12 +251,6 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     }
     setCurrentAttempt(attempt)
   }
-
-  const handleTimeUp = useCallback(() => {
-    if (!showResults) {
-      handleSubmitQuiz(true)
-    }
-  }, [showResults])
 
   const handleAnswerChange = (value: number | number[]) => {
     const newAnswers = [...userAnswers]
@@ -294,6 +297,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
     finishQuiz()
   }
+  handleSubmitQuizRef.current = handleSubmitQuiz
 
   const finishQuiz = () => {
     const endTime = new Date()

@@ -44,6 +44,8 @@ export interface DataSheetData {
   isCalibrationDueSoon: boolean
   isInspectionDueSoon: boolean
   invoiceUrl: string
+  /** Archivo del manual (PDF o imagen); vacío si aún no se ha subido. */
+  manualUrl?: string | null
   isRetired?: boolean
   retiredAt?: string | null
   retiredReason?: string | null

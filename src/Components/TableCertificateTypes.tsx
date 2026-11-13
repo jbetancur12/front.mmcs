@@ -65,6 +65,8 @@ const Table: React.FC = () => {
   const createCertificateTypeMutation = useCreateCertificateType()
   const updateCertificateTypeMutation = useUpdateCertificateType()
   const deleteCertificateTypeMutation = useDeleteCertificateType()
+  const { mutateAsync: deleteCertificateTypeAsync } =
+    deleteCertificateTypeMutation
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -133,30 +135,36 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const removeRowFromCache = (id: number) => {
-    queryClient.setQueryData<CertificateTypeData[]>(
-      CERTIFICATE_TYPE_QUERY_KEYS.list(),
-      (prev = []) => prev.filter((item) => item.id !== id)
-    )
-  }
+  const removeRowFromCache = useCallback(
+    (id: number) => {
+      queryClient.setQueryData<CertificateTypeData[]>(
+        CERTIFICATE_TYPE_QUERY_KEYS.list(),
+        (prev = []) => prev.filter((item) => item.id !== id)
+      )
+    },
+    [queryClient]
+  )
 
-  const deleteUser = async (id: number) => {
-    try {
-      const response = await deleteCertificateTypeMutation.mutateAsync(id)
+  const deleteUser = useCallback(
+    async (id: number) => {
+      try {
+        const response = await deleteCertificateTypeAsync(id)
 
-      if (response.status === 201) {
-        toast.success('Equipo Eliminado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
-        removeRowFromCache(id)
-      } else {
-        logger.error('Error al crear tipo de certificado')
+        if (response.status === 201) {
+          toast.success('Equipo Eliminado Exitosamente!', {
+            duration: 4000,
+            position: 'top-center'
+          })
+          removeRowFromCache(id)
+        } else {
+          logger.error('Error al crear tipo de certificado')
+        }
+      } catch (error) {
+        logger.error('Error de red:', error)
       }
-    } catch (error) {
-      logger.error('Error de red:', error)
-    }
-  }
+    },
+    [deleteCertificateTypeAsync, removeRowFromCache]
+  )
 
   const handleDeleteRow = useCallback(
     async (row: MRT_Row<CertificateTypeData>) => {
@@ -170,7 +178,7 @@ const Table: React.FC = () => {
       deleteUser(row.getValue('id'))
       removeRowFromCache(row.getValue('id'))
     },
-    [deleteUser]
+    [deleteUser, removeRowFromCache]
   )
 
   const getCommonEditTextFieldProps = useCallback(

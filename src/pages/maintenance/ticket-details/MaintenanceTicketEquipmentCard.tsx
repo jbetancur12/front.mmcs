@@ -3,7 +3,7 @@ import { Build } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../../types/maintenance'
 import { surfaceSx } from './maintenanceTicketDetailUtils'
 import { MaintenanceTicketDetailsState } from './useMaintenanceTicketDetails'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, brand } from 'src/theme/designTokens'
 
 interface MaintenanceTicketEquipmentCardProps {
   ticket: MaintenanceTicket
@@ -32,7 +32,7 @@ const MaintenanceTicketEquipmentCard = ({
         <Box display='flex' alignItems='center' gap={1} mb={2}>
           <Box
             sx={{
-              backgroundColor: intent.successSoft,
+              backgroundColor: brand.soft,
               borderRadius: '8px',
               p: 1,
               display: 'flex',
@@ -40,10 +40,7 @@ const MaintenanceTicketEquipmentCard = ({
               justifyContent: 'center'
             }}
           >
-            <Build
-              sx={{ color: intent.successInk, fontSize: 20 }}
-              aria-hidden='true'
-            />
+            <Build sx={{ color: brand.ink, fontSize: 20 }} aria-hidden='true' />
           </Box>
           <Typography
             variant='h6'
@@ -56,9 +53,9 @@ const MaintenanceTicketEquipmentCard = ({
           </Typography>
         </Box>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+        <Grid container spacing={{ xs: 1, md: 3 }}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Tipo de Equipo
               </Typography>
@@ -80,18 +77,25 @@ const MaintenanceTicketEquipmentCard = ({
                   label={ticket.equipmentType}
                   sx={{
                     fontWeight: 'medium',
-                    backgroundColor: intent.successSoft,
-                    color: intent.successInk,
+                    height: 'auto',
+                    maxWidth: '100%',
+                    '& .MuiChip-label': {
+                      whiteSpace: 'normal',
+                      overflowWrap: 'anywhere',
+                      py: 0.5
+                    },
+                    backgroundColor: brand.soft,
+                    color: brand.ink,
                     borderRadius: '8px',
-                    border: `1px solid ${intent.successSoft}`
+                    border: `1px solid ${brand.soft}`
                   }}
                 />
               )}
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Marca
               </Typography>
@@ -116,8 +120,8 @@ const MaintenanceTicketEquipmentCard = ({
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Modelo
               </Typography>
@@ -140,8 +144,8 @@ const MaintenanceTicketEquipmentCard = ({
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Box mb={2}>
+          <Grid item xs={editMode ? 12 : 6} md={6}>
+            <Box mb={{ xs: 1, md: 2 }}>
               <Typography variant='body2' color='text.secondary' gutterBottom>
                 Número de Serie
               </Typography>

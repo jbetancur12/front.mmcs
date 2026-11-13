@@ -1,6 +1,6 @@
 // src/Components/Purchases/UploadQuotationModal.tsx
 import { getApiErrorReason } from 'src/utils/apiError'
-import React, { useEffect, useState, useCallback, FC, ChangeEvent } from 'react'
+import React, { useEffect, useState, useMemo, FC, ChangeEvent } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -144,10 +144,11 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
     }
   }, [open, purchaseRequest])
 
-  const debouncedSetSearch = useCallback(
-    debounce((value: string) => {
-      setDebouncedSearchTerm(value)
-    }, 500),
+  const debouncedSetSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setDebouncedSearchTerm(value)
+      }, 500),
     []
   )
 

@@ -111,6 +111,7 @@ export interface MaintenanceTicket {
   assignedTechnicianId?: string
   scheduledDate?: string
   completedDate?: string
+  actualCompletionDate?: string
   estimatedCost?: number
   actualCost?: number
   technicianWorkMinutes?: number | null
@@ -132,6 +133,7 @@ export interface MaintenanceTicket {
   customerSignatureData?: string | null
   customerSignedAt?: string | null
   customerSignerName?: string | null
+  customerSignatureRefusedReason?: string | null
   technicalReport?: MaintenanceTechnicalReport | null
 }
 
@@ -380,6 +382,7 @@ export interface MaintenanceUpdateRequest {
   technicianSignatureData?: string | null
   customerSignatureData?: string | null
   customerSignerName?: string | null
+  customerSignatureRefusedReason?: string | null
 }
 
 export interface MaintenanceTechnicalReportRequest {
@@ -413,6 +416,8 @@ export interface MaintenanceFilters {
   equipmentType?: string[]
   search?: string
   customerEmail?: string
+  /** Solo tickets con algo pendiente (sin técnico, sin reporte, sin firma o sin facturar). */
+  hasPending?: boolean
 }
 
 export interface FilterPreset {

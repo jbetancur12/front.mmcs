@@ -5,6 +5,7 @@ import {
   Edit,
   Engineering,
   ExitToApp,
+  MenuBookOutlined,
   MoreVert,
   Restore,
   Visibility
@@ -156,6 +157,20 @@ const DataSheetRowActions = ({
           </MuiMenuItem>
         )}
 
+        {row.original.manualUrl && canViewDetail && (
+          <MuiMenuItem
+            onClick={() => {
+              handleMenuClose()
+              actions.handleDownloadManual(id)
+            }}
+          >
+            <ListItemIcon>
+              <MenuBookOutlined fontSize='small' sx={{ color: brand.ink }} />
+            </ListItemIcon>
+            Descargar manual
+          </MuiMenuItem>
+        )}
+
         <Divider sx={{ my: 0.5 }} />
 
         {!isRetired && canUpdateDataSheet && (
@@ -226,6 +241,7 @@ const DataSheetRowActions = ({
           equipmentName={row.original.equipmentName as string | undefined}
           onUploadImage={(image) => actions.handleUpload({ id, image })}
           onUploadInvoice={(pdfFile) => actions.handleUploadPdf(id, pdfFile)}
+          onUploadManual={(file) => actions.handleUploadManual(id, file)}
           onEditOther={() => onEditData(row.original)}
         />
       )}

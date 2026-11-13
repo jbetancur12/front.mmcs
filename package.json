@@ -1,7 +1,7 @@
 {
   "name": "metromedics",
   "private": true,
-  "version": "1.10.1",
+  "version": "1.11.0",
   "type": "module",
   "prettier": "prettier-config-standard",
   "scripts": {
@@ -14,7 +14,7 @@
     "quick-search:check": "node scripts/check-quick-search.mjs",
     "password-policy": "node scripts/gen-password-policy.mjs",
     "password-policy:check": "node scripts/gen-password-policy.mjs --check",
-    "lint": "eslint src --report-unused-disable-directives --max-warnings 68 && npm run format:check && node scripts/check-colors.mjs",
+    "lint": "eslint src --report-unused-disable-directives --max-warnings 0 && npm run format:check && node scripts/check-colors.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "colors:check": "node scripts/check-colors.mjs",
@@ -90,6 +90,7 @@
     "react-window": "^1.8.11",
     "recharts": "^2.15.1",
     "tw-elements": "^1.0.0",
+    "workbox-window": "^7.4.1",
     "xlsx": "^0.18.5",
     "xlsx-populate": "^1.21.0",
     "yup": "^1.4.0"
@@ -133,8 +134,10 @@
     "typescript-eslint": "^7.8.0",
     "vite": "^4.4.5",
     "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-pwa": "^0.17.5",
     "vite-tsconfig-paths": "^5.0.1",
-    "vitest": "^0.34.6"
+    "vitest": "^0.34.6",
+    "workbox-build": "^7.4.1"
   },
   "config": {
     "commitizen": {

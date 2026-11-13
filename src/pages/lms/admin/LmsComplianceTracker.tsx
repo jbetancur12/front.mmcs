@@ -105,6 +105,7 @@ interface ComplianceRecord {
   completedDate?: string | null
   status: MandatoryTrainingStatus
   progress: number
+  newLessonsPending: number
   daysUntilDeadline: number | null
   isOverdue: boolean
   reminderSummary?: AssignmentReminderSummary
@@ -325,6 +326,7 @@ const LmsComplianceTracker: React.FC = () => {
         deadline: training.deadline,
         completedDate: training.completedDate,
         progress: training.progress || 0,
+        newLessonsPending: training.newLessonsPending || 0,
         status: training.status,
         daysUntilDeadline: training.daysUntilDeadline ?? null,
         isOverdue: training.isOverdue || false,
@@ -815,6 +817,17 @@ const LmsComplianceTracker: React.FC = () => {
               sx={{ flex: 1, height: 6, borderRadius: 3 }}
             />
             <Typography variant='caption'>{row.original.progress}%</Typography>
+            {row.original.newLessonsPending > 0 && (
+              <Tooltip
+                title={`${row.original.newLessonsPending} lecciones nuevas desde que terminó el curso`}
+              >
+                <Chip
+                  size='small'
+                  variant='outlined'
+                  label={`+${row.original.newLessonsPending} nuevas`}
+                />
+              </Tooltip>
+            )}
           </Box>
         )
       },
@@ -1463,6 +1476,13 @@ const LmsComplianceTracker: React.FC = () => {
                                   <Typography variant='caption'>
                                     {record.progress}%
                                   </Typography>
+                                  {record.newLessonsPending > 0 && (
+                                    <Chip
+                                      size='small'
+                                      variant='outlined'
+                                      label={`+${record.newLessonsPending} nuevas`}
+                                    />
+                                  )}
                                 </Box>
                               </TableCell>
                               <TableCell>
@@ -1825,6 +1845,13 @@ const LmsComplianceTracker: React.FC = () => {
                         {detailsRecord.progress}%
                       </Typography>
                     </Box>
+                    {detailsRecord.newLessonsPending > 0 && (
+                      <Typography variant='caption' color='text.secondary'>
+                        Terminó el curso con certificado; se agregaron{' '}
+                        {detailsRecord.newLessonsPending} lecciones nuevas
+                        después.
+                      </Typography>
+                    )}
                     <LinearProgress
                       variant='determinate'
                       value={detailsRecord.progress}

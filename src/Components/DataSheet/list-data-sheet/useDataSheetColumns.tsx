@@ -10,6 +10,9 @@ import React, { useCallback, useMemo, useState } from 'react'
 
 import {
   InvoiceCell,
+  MANUAL_FILTER_OPTIONS,
+  ManualCell,
+  manualFilterFn,
   ManualEdit,
   ServiceTypeEdit,
   StatusCell
@@ -217,7 +220,11 @@ export const useDataSheetColumns = () => {
         accessorKey: 'manual',
         header: 'Manual',
         size: 150,
-        Edit: ManualEdit
+        Edit: ManualEdit,
+        Cell: ManualCell,
+        filterVariant: 'select',
+        filterSelectOptions: MANUAL_FILTER_OPTIONS,
+        filterFn: manualFilterFn
       },
       text('magnitude', 'Magnitud'),
       text('units', 'Unidades'),

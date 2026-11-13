@@ -11,7 +11,7 @@ import {
   Paper
 } from '@mui/material'
 import { Keyboard, Close } from '@mui/icons-material'
-import { neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { neutral, intent, withAlpha, brand } from 'src/theme/designTokens'
 
 interface KeyboardShortcutsHelpProps {
   open: boolean
@@ -23,10 +23,6 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   onClose
 }) => {
   const globalShortcuts = [
-    { key: 'Ctrl + K', description: 'Enfocar búsqueda' },
-    { key: 'Ctrl + N', description: 'Nuevo ticket' },
-    { key: 'Ctrl + F', description: 'Alternar filtros' },
-    { key: 'Ctrl + R', description: 'Actualizar datos' },
     { key: 'Shift + ?', description: 'Mostrar esta ayuda' },
     { key: 'Esc', description: 'Cerrar modal/diálogo' }
   ]
@@ -107,8 +103,8 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           sx={{
             p: 2,
             mb: 2,
-            background: withAlpha(intent.success, 0.05),
-            border: `1px solid ${withAlpha(intent.success, 0.1)}`,
+            background: withAlpha(brand.main, 0.05),
+            border: `1px solid ${withAlpha(brand.main, 0.1)}`,
             borderRadius: '8px'
           }}
         >

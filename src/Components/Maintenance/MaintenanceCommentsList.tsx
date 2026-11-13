@@ -32,6 +32,7 @@ import { es } from 'date-fns/locale'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
+import { confirmDialog } from 'src/utils/confirm'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 interface MaintenanceCommentsListProps {
   comments: MaintenanceComment[]
@@ -204,6 +205,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
   }
 
   const handleDelete = async (commentId: string) => {
+    const { isConfirmed } = await confirmDialog({
+      title: '¿Eliminar el comentario?',
+      text: 'El comentario se borrará del ticket y no se puede recuperar.',
+      confirmLabel: 'Eliminar comentario',
+      tone: 'danger'
+    })
+    if (!isConfirmed) return
     try {
       await onDeleteComment(commentId)
     } catch (error) {
@@ -267,7 +275,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 mb: 2,
                 backgroundColor: comment.isInternal
                   ? intent.warningSoft
-                  : '#ffffff',
+                  : neutral.surface,
                 border: comment.isInternal
                   ? `1px solid ${intent.warning}`
                   : `1px solid ${neutral.border}`,
@@ -298,7 +306,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       backgroundColor:
                         getRoleColor(comment.authorType || comment.userRole) ===
                         'primary'
-                          ? intent.successSoft
+                          ? brand.soft
                           : getRoleColor(
                                 comment.authorType || comment.userRole
                               ) === 'error'
@@ -306,7 +314,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             : getRoleColor(
                                   comment.authorType || comment.userRole
                                 ) === 'success'
-                              ? intent.successSoft
+                              ? brand.soft
                               : getRoleColor(
                                     comment.authorType || comment.userRole
                                   ) === 'info'
@@ -315,7 +323,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       color:
                         getRoleColor(comment.authorType || comment.userRole) ===
                         'primary'
-                          ? intent.successInk
+                          ? brand.ink
                           : getRoleColor(
                                 comment.authorType || comment.userRole
                               ) === 'error'
@@ -351,13 +359,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             getRoleColor(
                               comment.authorType || comment.userRole
                             ) === 'primary'
-                              ? intent.successSoft
+                              ? brand.soft
                               : undefined,
                           color:
                             getRoleColor(
                               comment.authorType || comment.userRole
                             ) === 'primary'
-                              ? intent.successInk
+                              ? brand.ink
                               : undefined,
                           border:
                             getRoleColor(
@@ -417,6 +425,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       <Tooltip title='Editar comentario'>
                         <IconButton
                           size='small'
+                          aria-label='Editar comentario'
                           onClick={() => handleStartEdit(comment)}
                           disabled={loading}
                         >
@@ -426,6 +435,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       <Tooltip title='Eliminar comentario'>
                         <IconButton
                           size='small'
+                          aria-label='Eliminar comentario'
                           onClick={() => handleDelete(comment.id)}
                           disabled={loading}
                         >
@@ -524,14 +534,14 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: intent.success
+                    borderColor: brand.main
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: intent.successInk
+                    borderColor: brand.ink
                   }
                 },
                 '& .MuiInputLabel-root.Mui-focused': {
-                  color: intent.successInk
+                  color: brand.ink
                 }
               }}
             />
@@ -560,24 +570,6 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             ? 'Comentario interno'
                             : 'Comentario público'}
                         </Typography>
-                        <Tooltip
-                          title={
-                            isInternal
-                              ? 'Solo visible para técnicos y administradores'
-                              : 'Visible para todos los usuarios'
-                          }
-                        >
-                          <Box
-                            component='span'
-                            sx={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            {isInternal ? (
-                              <Lock fontSize='small' />
-                            ) : (
-                              <Public fontSize='small' />
-                            )}
-                          </Box>
-                        </Tooltip>
                       </Box>
                     }
                   />
@@ -591,10 +583,10 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 disabled={!newComment.trim() || submitting || loading}
                 size='small'
                 sx={{
-                  backgroundColor: intent.successInk,
+                  backgroundColor: brand.main,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: intent.successInk
+                    backgroundColor: brand.main
                   },
                   '&:disabled': {
                     background: withAlpha(neutral.black, 0.12),

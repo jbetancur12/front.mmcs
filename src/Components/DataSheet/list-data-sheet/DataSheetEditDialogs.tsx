@@ -11,14 +11,16 @@ import {
   Close,
   EditOutlined,
   ImageOutlined,
+  MenuBookOutlined,
   PictureAsPdfOutlined
 } from '@mui/icons-material'
+import { MANUAL_ACCEPT, MANUAL_MAX_MB } from './constants'
 import FormDialog from 'src/Components/Common/FormDialog'
 import FileDropZone from 'src/Components/Common/FileDropZone'
 import { notify } from 'src/utils/notify'
 import { brand, neutral } from 'src/theme/designTokens'
 
-export type EditStep = 'options' | 'image' | 'invoice' | null
+export type EditStep = 'options' | 'image' | 'invoice' | 'manual' | null
 
 interface DataSheetEditDialogsProps {
   step: EditStep
@@ -29,6 +31,8 @@ interface DataSheetEditDialogsProps {
   onUploadImage: (image: File) => Promise<void>
   /** Sube la factura en PDF. */
   onUploadInvoice: (pdf: File) => Promise<void>
+  /** Sube el manual (PDF o imagen). */
+  onUploadManual: (manual: File) => Promise<void>
   /** Abre la edición de los demás datos en la tabla. */
   onEditOther: () => void
 }
@@ -127,6 +131,7 @@ const DataSheetEditDialogs: React.FC<DataSheetEditDialogsProps> = ({
   equipmentName,
   onUploadImage,
   onUploadInvoice,
+  onUploadManual,
   onEditOther
 }) => {
   const [file, setFile] = useState<File | null>(null)
@@ -196,6 +201,12 @@ const DataSheetEditDialogs: React.FC<DataSheetEditDialogsProps> = ({
             onClick={() => onStepChange('invoice')}
           />
           <Option
+            icon={<MenuBookOutlined />}
+            title='Subir el manual'
+            description='Carga o reemplaza el manual (PDF o imagen).'
+            onClick={() => onStepChange('manual')}
+          />
+          <Option
             icon={<EditOutlined />}
             title='Editar los datos'
             description='Cambia nombre, marca, modelo y demás campos.'
@@ -244,6 +255,28 @@ const DataSheetEditDialogs: React.FC<DataSheetEditDialogsProps> = ({
           onReject={rejectFile}
           accept='application/pdf'
           acceptLabel='PDF'
+          disabled={loading}
+        />
+      </FormDialog>
+
+      <FormDialog
+        open={step === 'manual'}
+        onClose={onClose}
+        title='Subir el manual'
+        subtitle={equipmentName}
+        submitLabel='Subir manual'
+        onSubmit={() => submit(onUploadManual)}
+        loading={loading}
+      >
+        <FileDropZone
+          file={file}
+          onFileSelected={setFile}
+          onReject={rejectFile}
+          accept={MANUAL_ACCEPT}
+          acceptLabel='PDF o imagen'
+          title='Arrastra el manual aquí o haz clic para elegirlo'
+          hint={`PDF, JPG, PNG o WEBP, hasta ${MANUAL_MAX_MB} MB`}
+          maxSizeMb={MANUAL_MAX_MB}
           disabled={loading}
         />
       </FormDialog>

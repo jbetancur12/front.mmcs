@@ -83,7 +83,7 @@ const MaintenanceTicketSatisfactionCard = ({
                 }
                 color={
                   ticket.customerSatisfaction >= 4.5
-                    ? 'success'
+                    ? 'primary'
                     : ticket.customerSatisfaction >= 3.5
                       ? 'primary'
                       : ticket.customerSatisfaction >= 2.5

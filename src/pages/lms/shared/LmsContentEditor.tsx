@@ -163,8 +163,9 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ value, onChange }) => {
       return
     }
 
+    const container = containerRef.current
     const host = document.createElement('div')
-    containerRef.current.appendChild(host)
+    container.appendChild(host)
 
     const quill = new Quill(host, {
       theme: 'snow',
@@ -181,10 +182,13 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ value, onChange }) => {
 
     return () => {
       quillRef.current = null
-      if (containerRef.current && host.parentNode === containerRef.current) {
-        containerRef.current.removeChild(host)
+      if (host.parentNode === container) {
+        container.removeChild(host)
       }
     }
+    // Se crea Quill una sola vez; los cambios de 'value' los sincroniza el
+    // efecto siguiente (recrearlo aquí perdería el cursor y el historial)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

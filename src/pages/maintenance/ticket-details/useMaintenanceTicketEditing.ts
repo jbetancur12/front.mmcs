@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   MaintenanceStatus,
   MaintenanceTicket,
@@ -37,13 +37,6 @@ const useMaintenanceTicketEditing = ({
     }
   }, [ticket, editMode, isTechnician])
 
-  // Validate edit data when it changes
-  useEffect(() => {
-    if (editMode) {
-      validateEditData()
-    }
-  }, [editData, editMode])
-
   const handleEdit = () => {
     if (!canEditTicket) {
       showToast('Solo puedes editar tickets asignados a tu usuario', 'warning')
@@ -68,7 +61,7 @@ const useMaintenanceTicketEditing = ({
     }
   }
 
-  const validateEditData = () => {
+  const validateEditData = useCallback(() => {
     const errors: Record<string, string> = {}
 
     if (editData.estimatedCost !== undefined && editData.estimatedCost < 0) {
@@ -117,7 +110,14 @@ const useMaintenanceTicketEditing = ({
     const valid = Object.keys(errors).length === 0
     setIsEditValid(valid)
     return valid
-  }
+  }, [editData, ticket?.status])
+
+  // Validate edit data when it changes
+  useEffect(() => {
+    if (editMode) {
+      validateEditData()
+    }
+  }, [editMode, validateEditData])
 
   return {
     handleEdit,

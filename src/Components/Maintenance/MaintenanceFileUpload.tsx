@@ -26,7 +26,13 @@ import type { FileRejection } from 'react-dropzone'
 import { MaintenanceFile } from '../../types/maintenance'
 
 import { logger } from 'src/utils/logger'
-import { neutral, intent, accent, withAlpha } from 'src/theme/designTokens'
+import {
+  neutral,
+  intent,
+  accent,
+  withAlpha,
+  brand
+} from 'src/theme/designTokens'
 interface MaintenanceFileUploadProps {
   files: MaintenanceFile[]
   onFilesChange: (files: File[]) => void
@@ -41,6 +47,11 @@ interface MaintenanceFileUploadProps {
   uploading?: boolean
   uploadProgress?: number
   failedFiles?: Set<string>
+  /**
+   * `total`: el tope cuenta lo ya cargado más lo nuevo (archivos que aún no se envían).
+   * `perUpload`: el tope es por cada subida; los archivos ya guardados no cuentan.
+   */
+  maxFilesScope?: 'total' | 'perUpload'
 }
 
 /**
@@ -52,6 +63,7 @@ interface MaintenanceFileUploadProps {
  * @param onFileRemove - Callback when a file is removed
  * @param onFileView - Callback when a file is viewed
  * @param maxFiles - Maximum number of files allowed
+ * @param maxFilesScope - Si el tope es del total o de cada subida
  * @param maxSizeInMB - Maximum file size in MB
  * @param acceptedFileTypes - Array of accepted file types
  * @param disabled - Whether the upload is disabled
@@ -77,7 +89,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
   disabled = false,
   uploading = false,
   uploadProgress = 0,
-  failedFiles = new Set()
+  failedFiles = new Set(),
+  maxFilesScope = 'total'
 }) => {
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -106,15 +119,16 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
         return
       }
 
-      // Check total file count
-      if (files.length + acceptedFiles.length > maxFiles) {
+      // Tope de archivos: del total pendiente, o de cada subida
+      const alreadyCounted = maxFilesScope === 'total' ? files.length : 0
+      if (alreadyCounted + acceptedFiles.length > maxFiles) {
         setError(`Máximo ${maxFiles} archivos permitidos`)
         return
       }
 
       onFilesChange(acceptedFiles)
     },
-    [files.length, maxFiles, maxSizeInMB, onFilesChange]
+    [files.length, maxFiles, maxFilesScope, maxSizeInMB, onFilesChange]
   )
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -252,7 +266,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           borderRadius: '12px 12px 0 0',
           background: isPdfFile(file)
             ? `linear-gradient(135deg, ${withAlpha(intent.danger, 0.1)} 0%, ${withAlpha(intent.danger, 0.16)} 100%)`
-            : `linear-gradient(135deg, ${withAlpha(intent.success, 0.08)} 0%, ${withAlpha(neutral.textMuted, 0.16)} 100%)`
+            : `linear-gradient(135deg, ${withAlpha(brand.main, 0.08)} 0%, ${withAlpha(neutral.textMuted, 0.16)} 100%)`
         }}
       >
         {isPdfFile(file) ? (
@@ -305,21 +319,21 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
         sx={{
           border: '2px dashed',
           borderColor:
-            dragActive || isDragActive ? intent.success : neutral.borderStrong,
+            dragActive || isDragActive ? brand.main : neutral.borderStrong,
           backgroundColor:
-            dragActive || isDragActive ? intent.successSoft : '#ffffff',
+            dragActive || isDragActive ? brand.soft : neutral.surface,
           borderRadius: '16px',
           boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
           cursor: disabled || uploading ? 'not-allowed' : 'pointer',
           transition: 'border-color 0.2s ease, background-color 0.2s ease',
           '&:hover': {
             borderColor:
-              disabled || uploading ? neutral.borderStrong : intent.success,
+              disabled || uploading ? neutral.borderStrong : brand.main,
             backgroundColor:
-              disabled || uploading ? '#ffffff' : neutral.surfaceAlt
+              disabled || uploading ? neutral.surface : neutral.surfaceAlt
           },
           '&:focus': {
-            outline: `2px solid ${intent.successInk}`,
+            outline: `2px solid ${brand.ink}`,
             outlineOffset: '2px'
           }
         }}
@@ -329,9 +343,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           <Box
             sx={{
               backgroundColor:
-                disabled || uploading
-                  ? neutral.surfaceHead
-                  : intent.successSoft,
+                disabled || uploading ? neutral.surfaceHead : brand.soft,
               borderRadius: '50%',
               width: 80,
               height: 80,
@@ -339,13 +351,13 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px',
-              border: `1px solid ${intent.successSoft}`
+              border: `1px solid ${brand.soft}`
             }}
           >
             <CloudUpload
               sx={{
                 fontSize: 40,
-                color: disabled || uploading ? 'grey.400' : intent.successInk
+                color: disabled || uploading ? neutral.textMuted : brand.ink
               }}
             />
           </Box>
@@ -366,7 +378,9 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             color='text.secondary'
             sx={{ fontWeight: 500 }}
           >
-            Máximo {maxFiles} archivos, {maxSizeInMB}MB cada uno
+            {maxFilesScope === 'perUpload' ? 'Hasta' : 'Máximo'} {maxFiles}{' '}
+            archivos{maxFilesScope === 'perUpload' ? ' por subida' : ''},{' '}
+            {maxSizeInMB}MB cada uno
           </Typography>
           <Typography
             variant='caption'
@@ -411,7 +425,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               borderRadius: 4,
               backgroundColor: neutral.border,
               '& .MuiLinearProgress-bar': {
-                backgroundColor: intent.successInk,
+                backgroundColor: brand.main,
                 borderRadius: 4
               }
             }}
@@ -447,7 +461,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               mb: 2
             }}
           >
-            Archivos ({files.length}/{maxFiles})
+            Archivos ({files.length}
+            {maxFilesScope === 'total' ? `/${maxFiles}` : ''})
           </Typography>
           <Grid container spacing={2}>
             {files.map((file) => (
@@ -456,7 +471,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                   sx={{
                     backgroundColor: failedFiles.has(file.id)
                       ? neutral.surfaceAlt
-                      : '#ffffff',
+                      : neutral.surface,
                     borderRadius: '12px',
                     boxShadow: `0 1px 3px ${withAlpha(neutral.text, 0.08)}`,
                     border: failedFiles.has(file.id)
@@ -522,8 +537,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                         size='small'
                         label={getLocalizedFileType(file)}
                         sx={{
-                          backgroundColor: intent.successSoft,
-                          color: intent.successInk,
+                          backgroundColor: brand.soft,
+                          color: brand.ink,
                           borderRadius: '6px',
                           fontWeight: 500,
                           border: 'none'
@@ -535,6 +550,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                           <Tooltip title='Reintentar subida'>
                             <IconButton
                               size='small'
+                              aria-label={`Reintentar subida de ${file.originalName}`}
                               onClick={() => handleFileRetry(file)}
                               disabled={uploading}
                               sx={{
@@ -559,13 +575,14 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                           <Tooltip title='Ver archivo'>
                             <IconButton
                               size='small'
+                              aria-label={`Ver ${file.originalName}`}
                               onClick={() => onFileView(file)}
                               sx={{
-                                backgroundColor: intent.successSoft,
-                                color: intent.successInk,
+                                backgroundColor: brand.soft,
+                                color: brand.ink,
                                 borderRadius: '6px',
                                 '&:hover': {
-                                  backgroundColor: intent.successSoft
+                                  backgroundColor: brand.soft
                                 }
                               }}
                             >
@@ -577,6 +594,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                         <Tooltip title='Eliminar archivo'>
                           <IconButton
                             size='small'
+                            aria-label={`Eliminar ${file.originalName}`}
                             onClick={() => onFileRemove(file.id)}
                             disabled={uploading}
                             sx={{

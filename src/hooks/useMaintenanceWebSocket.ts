@@ -46,6 +46,11 @@ export const useMaintenanceWebSocket = ({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
+  // Siempre apunta al manejador más reciente: así 'connect' no se recrea (ni
+  // se reconecta el socket) cuando cambian los callbacks del padre
+  const messageHandlerRef = useRef<
+    ((message: MaintenanceWebSocketMessage) => void) | null
+  >(null)
 
   const connect = useCallback(() => {
     if (!enabled) return
@@ -78,7 +83,7 @@ export const useMaintenanceWebSocket = ({
       wsRef.current.onmessage = (event) => {
         try {
           const message: MaintenanceWebSocketMessage = JSON.parse(event.data)
-          handleWebSocketMessage(message)
+          messageHandlerRef.current?.(message)
         } catch (error) {
           logger.error('Error parsing WebSocket message:', error)
         }
@@ -121,28 +126,6 @@ export const useMaintenanceWebSocket = ({
     }
   }, [enabled])
 
-  const handleWebSocketMessage = useCallback(
-    (message: MaintenanceWebSocketMessage) => {
-      switch (message.type) {
-        case 'ticket_updated':
-          handleTicketUpdate(message.data)
-          break
-
-        case 'notification':
-          handleNotification(message.data)
-          break
-
-        case 'technician_status_changed':
-          handleTechnicianStatusChange(message.data)
-          break
-
-        default:
-          logger.log('Unknown WebSocket message:', message)
-      }
-    },
-    [onNotification, onTicketUpdate, queryClient]
-  )
-
   const handleTicketUpdate = useCallback(
     (ticket: MaintenanceTicket) => {
       // Update React Query cache
@@ -176,6 +159,29 @@ export const useMaintenanceWebSocket = ({
     },
     [queryClient]
   )
+
+  const handleWebSocketMessage = useCallback(
+    (message: MaintenanceWebSocketMessage) => {
+      switch (message.type) {
+        case 'ticket_updated':
+          handleTicketUpdate(message.data)
+          break
+
+        case 'notification':
+          handleNotification(message.data)
+          break
+
+        case 'technician_status_changed':
+          handleTechnicianStatusChange(message.data)
+          break
+
+        default:
+          logger.log('Unknown WebSocket message:', message)
+      }
+    },
+    [handleTicketUpdate, handleNotification, handleTechnicianStatusChange]
+  )
+  messageHandlerRef.current = handleWebSocketMessage
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

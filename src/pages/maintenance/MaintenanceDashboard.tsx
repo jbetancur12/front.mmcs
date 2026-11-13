@@ -1,6 +1,8 @@
 import { getApiErrorReason } from 'src/utils/apiError'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
+import FormDialog from 'src/Components/Common/FormDialog'
 import {
   Container,
   Grid,
@@ -10,11 +12,8 @@ import {
   IconButton,
   Tooltip,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
@@ -37,10 +36,10 @@ import {
   Refresh,
   Add,
   FilterList,
-  Cancel,
   Help,
   Science,
-  Assessment
+  Assessment,
+  Search
 } from '@mui/icons-material'
 import {
   useMaintenanceStats,
@@ -63,7 +62,8 @@ import {
   MaintenanceUpdateRequest,
   MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
-import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicketCard'
+import MaintenanceTicketsTable from '../../Components/Maintenance/MaintenanceTicketsTable'
+import MaintenanceTicketMobileCard from '../../Components/Maintenance/MaintenanceTicketMobileCard'
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
 import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStatusBadge'
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
@@ -76,6 +76,7 @@ import useAxiosPrivate from '../../utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import NewMaintenanceRequestDialog from '../../Components/Maintenance/NewMaintenanceRequestDialog'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
@@ -89,7 +90,21 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { notify } from 'src/utils/notify'
 import { logger } from 'src/utils/logger'
-import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
+import { getTechnicalReportCompletion } from '../../Components/Maintenance/technicalReportCompletion'
+
+const isDefaultStatusFilter = (
+  status: MaintenanceStatus[] | undefined,
+  defaults: MaintenanceStatus[]
+) =>
+  Boolean(status) &&
+  status!.length === defaults.length &&
+  defaults.every((item) => status!.includes(item))
+
+const DEFAULT_STATUS_FILTER = Object.values(MaintenanceStatus).filter(
+  (status) => status !== MaintenanceStatus.COMPLETED
+)
+
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -99,15 +114,27 @@ const MaintenanceDashboard: React.FC = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  // Tarjetas en vez de tabla hasta el ancho medio: la tabla corta columnas por debajo de 900 px
+  const useCards = useMediaQuery(theme.breakpoints.down('md'))
   const $userStore = useStore(userStore)
   // Por defecto, no mostrar los tickets completados
   const [filters, setFilters] = useState<MaintenanceFilters>({
-    status: Object.values(MaintenanceStatus).filter(
-      (s) => s !== MaintenanceStatus.COMPLETED
-    )
+    status: DEFAULT_STATUS_FILTER
   })
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
+  const [mobileSearch, setMobileSearch] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) =>
+        (prev.search || '') === mobileSearch.trim()
+          ? prev
+          : { ...prev, search: mobileSearch.trim() || undefined }
+      )
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [mobileSearch])
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] =
     useState<MaintenanceTicket | null>(null)
@@ -116,6 +143,7 @@ const MaintenanceDashboard: React.FC = () => {
   const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
     useState(false)
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
+  const [newRequestOpen, setNewRequestOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [ticketToDelete, setTicketToDelete] =
     useState<MaintenanceTicket | null>(null)
@@ -139,25 +167,44 @@ const MaintenanceDashboard: React.FC = () => {
   // Sin alcance total sobre los tickets (capacidad), solo se ven y operan los asignados a uno mismo
   const isTechnician = !useCan(PERMISSIONS.MAINTENANCE_TICKET_MANAGE_ALL)
   const canListTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
+  const canViewAnalytics = useCan(PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW)
   const canCreateTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_CREATE)
+  const canDeleteTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_DELETE)
+  // Solo se puede eliminar lo que aún no empezó o se canceló
+  const canDeleteTicket = (ticket: MaintenanceTicket) =>
+    canDeleteTickets &&
+    [
+      MaintenanceStatus.PENDING,
+      MaintenanceStatus.ASSIGNED,
+      MaintenanceStatus.CANCELLED
+    ].includes(ticket.status as MaintenanceStatus)
 
-  // Get technician ID if user is a technician
+  // Correo del técnico en sesión (solo aplica si el usuario es técnico)
   const currentTechnicianEmail = useMemo(() => {
     if (!isTechnician) return null
-    logger.log('User email:', $userStore)
-    // Hardcode technician ID 4 for kat34433@laoia.com for testing
     return $userStore.email
   }, [isTechnician, $userStore.email])
 
-  // For technicians, filter to only show their assigned tickets
+  // Con texto en el buscador, o con «Solo con pendientes», se recorren todos los estados (si no, un ticket
+  // completado no aparece por su número); solo se respeta el estado si la persona lo cambió a mano
+  const searchOverridesStatus =
+    (Boolean(filters.search?.trim()) || Boolean(filters.hasPending)) &&
+    isDefaultStatusFilter(filters.status, DEFAULT_STATUS_FILTER)
+
+  const queryFilters = useMemo(
+    () => (searchOverridesStatus ? { ...filters, status: undefined } : filters),
+    [filters, searchOverridesStatus]
+  )
+
+  // Un técnico solo ve los tickets asignados a él
   const technicianFilters = useMemo(() => {
-    if (!isTechnician || !currentTechnicianEmail) return filters
+    if (!isTechnician || !currentTechnicianEmail) return queryFilters
 
     return {
-      ...filters,
-      assignedTechnicianEmail: currentTechnicianEmail // Using numeric technician ID
+      ...queryFilters,
+      assignedTechnicianEmail: currentTechnicianEmail
     }
-  }, [filters, isTechnician, currentTechnicianEmail])
+  }, [queryFilters, isTechnician, currentTechnicianEmail])
 
   // Filter allowed statuses for technicians (they can't change to 'new' or 'assigned')
   const allowedStatuses = useMemo(() => {
@@ -204,25 +251,6 @@ const MaintenanceDashboard: React.FC = () => {
   const upsertTechnicalReportMutation = useUpsertMaintenanceTechnicalReport()
   const generateTechnicalReportMutation = useGenerateTechnicalReport()
 
-  const completionRate = useMemo(() => {
-    const total = stats?.metrics?.totalTickets || 0
-    const completed = stats?.metrics?.completedTickets || 0
-    if (!total) return 0
-    return Math.round((completed / total) * 100)
-  }, [stats?.metrics?.completedTickets, stats?.metrics?.totalTickets])
-
-  const urgentTickets = useMemo(() => {
-    return (
-      stats?.priorityStats?.find(
-        ({ priority }) => priority === MaintenancePriority.URGENT
-      )?.count || 0
-    )
-  }, [stats?.priorityStats])
-
-  const activeTickets = useMemo(() => {
-    return stats?.metrics?.pendingTickets || 0
-  }, [stats?.metrics?.pendingTickets])
-
   const avgResolutionTimeDisplay = useMemo(() => {
     const value = stats?.metrics?.avgResolutionTimeHours || 0
     if (value >= 24) {
@@ -232,71 +260,24 @@ const MaintenanceDashboard: React.FC = () => {
     return value >= 10 ? `${Math.round(value)}h` : `${value.toFixed(1)}h`
   }, [stats?.metrics?.avgResolutionTimeHours])
 
-  const technicalReportCompletion = useMemo(() => {
-    if (!technicalReport) return 0
-
-    const checkpoints = [
-      technicalReport.finalDiagnosis,
-      technicalReport.rootCause,
-      technicalReport.activities?.length,
-      technicalReport.parts?.length,
-      technicalReport.verificationProtocolType,
-      technicalReport.verificationTests?.length,
-      technicalReport.recommendations,
-      technicalReport.scopeClause,
-      technicalReport.responsibilityClause
-    ]
-
-    const completed = checkpoints.filter(Boolean).length
-    return Math.round((completed / checkpoints.length) * 100)
-  }, [technicalReport])
+  const technicalReportCompletion = useMemo(
+    () => getTechnicalReportCompletion(technicalReport),
+    [technicalReport]
+  )
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
-    onTicketUpdate: (ticket) => {
-      logger.log('Ticket updated via WebSocket:', ticket)
+    onTicketUpdate: () => {
       refetchTickets()
       refetchStats()
     },
-    onNotification: (notification) => {
-      logger.log('New notification:', notification)
-      // You could integrate with a notification system here
+    onNotification: () => {
+      // Sin acciones: el panel solo se refresca con onTicketUpdate
     }
   })
 
-  // Keyboard shortcuts
+  // Atajos de teclado
   useKeyboardShortcuts({
-    onNewTicket: () => {
-      if (canCreateTickets) {
-        navigate('/maintenance/new')
-      }
-    },
-    onToggleFilters: () => {
-      setShowFilters((prev) => !prev)
-    },
-    onRefreshData: () => {
-      refetchTickets()
-      refetchStats()
-      showToast('Datos actualizados', 'success')
-    },
-    onFocusSearch: () => {
-      // Focus search field in filters
-      const searchField = document.getElementById('quick-search-field')
-      if (searchField) {
-        searchField.focus()
-      } else {
-        // If filters are collapsed, expand them first
-        if (!showFilters) {
-          setShowFilters(true)
-          // Focus after a brief delay to allow expansion
-          setTimeout(() => {
-            const searchFieldDelayed =
-              document.getElementById('quick-search-field')
-            searchFieldDelayed?.focus()
-          }, 100)
-        }
-      }
-    },
     onShowHelp: () => {
       setShortcutsHelpOpen(true)
     },
@@ -361,7 +342,6 @@ const MaintenanceDashboard: React.FC = () => {
     }
 
     setSelectedTicket(ticket)
-    logger.log('🚀 ~ handleEditTicket ~ ticket:', ticket)
     setEditData({
       status: ticket.status,
       assignedTechnician: ticket.assignedTechnicianId || '',
@@ -591,6 +571,24 @@ const MaintenanceDashboard: React.FC = () => {
     }
   }
 
+  // Los indicadores filtran la lista al hacer clic
+  const applyStatFilter = (status: MaintenanceStatus[]) => {
+    setFilters({ status })
+    setPage(1)
+  }
+  const activeStat = useMemo(() => {
+    const status = filters.status
+    if (!status || filters.search || filters.hasPending) return null
+    if (status.length === Object.values(MaintenanceStatus).length) return 'all'
+    if (status.length === 1 && status[0] === MaintenanceStatus.PENDING) {
+      return 'pending'
+    }
+    if (status.length === 1 && status[0] === MaintenanceStatus.COMPLETED) {
+      return 'completed'
+    }
+    return null
+  }, [filters])
+
   const handleRefresh = () => {
     refetchStats()
     refetchTickets()
@@ -599,7 +597,7 @@ const MaintenanceDashboard: React.FC = () => {
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
-        title='Dashboard de Mantenimiento'
+        title='Panel de Mantenimiento'
         subtitle='Gestión integral de tickets y técnicos'
         icon={<Dashboard />}
         actions={
@@ -607,7 +605,7 @@ const MaintenanceDashboard: React.FC = () => {
             <Tooltip title='Actualizar datos'>
               <IconButton
                 onClick={handleRefresh}
-                aria-label='Actualizar datos del dashboard'
+                aria-label='Actualizar datos del panel'
               >
                 <Refresh />
               </IconButton>
@@ -635,23 +633,26 @@ const MaintenanceDashboard: React.FC = () => {
             >
               {isMobile ? <FilterList /> : 'Filtros'}
             </Button>
-            <Button
-              variant='outlined'
-              startIcon={!isMobile && <Assessment />}
-              href='/maintenance/analytics'
-              sx={{
-                color: brand.hover,
-                borderColor: brand.main,
-                '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
-              }}
-            >
-              {isMobile ? <Assessment /> : 'Analíticas'}
-            </Button>
-            {!isTechnician && (
+            {canViewAnalytics && (
+              <Button
+                variant='outlined'
+                startIcon={!isMobile && <Assessment />}
+                onClick={() => navigate('/maintenance/analytics')}
+                sx={{
+                  color: brand.hover,
+                  borderColor: brand.main,
+                  '&:hover': { borderColor: brand.hover, bgcolor: brand.soft }
+                }}
+              >
+                {isMobile ? <Assessment /> : 'Analíticas'}
+              </Button>
+            )}
+            {canCreateTickets && (
               <Button
                 variant='contained'
                 startIcon={!isMobile && <Add />}
-                href='/maintenance/report'
+                onClick={() => setNewRequestOpen(true)}
+                aria-label='Nueva solicitud'
                 sx={{
                   bgcolor: brand.main,
                   whiteSpace: 'nowrap',
@@ -668,10 +669,15 @@ const MaintenanceDashboard: React.FC = () => {
       {/* Stats Cards */}
       <Grid
         container
-        spacing={3}
-        mb={3}
+        spacing={{ xs: 1.5, md: 3 }}
+        mb={{ xs: 2, md: 3 }}
         role='region'
-        aria-label='Estadísticas del dashboard'
+        aria-label='Estadísticas del panel'
+        sx={{
+          flexWrap: { xs: 'nowrap', md: 'wrap' },
+          overflowX: { xs: 'auto', md: 'visible' },
+          pb: { xs: 0.5, md: 0 }
+        }}
       >
         {statsLoading ? (
           <>
@@ -681,31 +687,39 @@ const MaintenanceDashboard: React.FC = () => {
           </>
         ) : (
           <>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Total Tickets'
                 value={stats?.metrics?.totalTickets || 0}
                 icon={<Assignment />}
                 tone='teal'
+                active={activeStat === 'all'}
+                onClick={() =>
+                  applyStatFilter(Object.values(MaintenanceStatus))
+                }
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Pendientes'
                 value={stats?.metrics?.pendingTickets || 0}
                 icon={<Build />}
                 tone='orange'
+                active={activeStat === 'pending'}
+                onClick={() => applyStatFilter([MaintenanceStatus.PENDING])}
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Completados'
                 value={stats?.metrics?.completedTickets || 0}
                 icon={<CheckCircle />}
                 tone='green'
+                active={activeStat === 'completed'}
+                onClick={() => applyStatFilter([MaintenanceStatus.COMPLETED])}
               />
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid item xs='auto' md={3} sx={{ minWidth: { xs: 168, md: 0 } }}>
               <LmsStatCard
                 label='Tiempo Promedio'
                 value={avgResolutionTimeDisplay}
@@ -718,198 +732,25 @@ const MaintenanceDashboard: React.FC = () => {
         )}
       </Grid>
 
-      {/* Additional Stats */}
-      <Grid
-        container
-        spacing={{ xs: 2, sm: 2, md: 3 }}
-        mb={{ xs: 2, sm: 3, md: 3 }}
-      >
-        <Grid item xs={12} md={8}>
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3 },
-              ...surfaceSx
-            }}
-          >
-            <Box mb={3}>
-              <Typography
-                variant='h6'
-                gutterBottom
-                sx={{
-                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                  fontWeight: 600,
-                  color: neutral.text,
-                  mb: 0.5
-                }}
-              >
-                Tickets por Prioridad
-              </Typography>
-              <Typography variant='body2' sx={{ color: neutral.textMuted }}>
-                Vista rápida para detectar carga operativa y urgencias sin
-                saturar el tablero.
-              </Typography>
-            </Box>
-            <Grid container spacing={{ xs: 1, sm: 2 }}>
-              {stats?.priorityStats &&
-                stats.priorityStats.map(({ priority, count }) => (
-                  <Grid item xs={6} sm={4} key={priority}>
-                    <Box
-                      textAlign='center'
-                      sx={{
-                        p: { xs: 1.75, sm: 2 },
-                        borderRadius: '12px',
-                        backgroundColor: neutral.surfaceAlt,
-                        border: `1px solid ${neutral.border}`
-                      }}
-                    >
-                      <Typography
-                        variant='h5'
-                        sx={{
-                          fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                          fontWeight: 700,
-                          color: neutral.text,
-                          mb: 1
-                        }}
-                      >
-                        {count}
-                      </Typography>
-                      <MaintenancePriorityBadge
-                        priority={priority as MaintenancePriority}
-                        size='small'
-                      />
-                    </Box>
-                  </Grid>
-                ))}
-            </Grid>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3 },
-              height: '100%',
-              ...surfaceSx
-            }}
-          >
-            <Box mb={2.5}>
-              <Typography
-                variant='h6'
-                gutterBottom
-                sx={{
-                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                  fontWeight: 600,
-                  color: neutral.text,
-                  mb: 0.5
-                }}
-              >
-                Panorama Rápido
-              </Typography>
-              <Typography variant='body2' sx={{ color: neutral.textMuted }}>
-                Resumen operativo para leer el tablero de un vistazo.
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'grid', gap: 1.5 }}>
-              {[
-                {
-                  label: 'Cierre efectivo',
-                  value: `${completionRate}%`,
-                  helper: 'Tickets completados sobre el total',
-                  color: intent.successInk,
-                  background: intent.successSoft
-                },
-                {
-                  label: 'Carga activa',
-                  value: `${activeTickets}`,
-                  helper: 'Tickets que siguen en operación',
-                  color: intent.warningInk,
-                  background: intent.warningSoft
-                },
-                {
-                  label: 'Urgencias abiertas',
-                  value: `${urgentTickets}`,
-                  helper: 'Casos que necesitan más atención',
-                  color: intent.danger,
-                  background: intent.dangerSoft
-                }
-              ].map((item) => (
-                <Box
-                  key={item.label}
-                  sx={{
-                    borderRadius: '12px',
-                    border: `1px solid ${neutral.border}`,
-                    p: 1.75,
-                    backgroundColor: neutral.surface
-                  }}
-                >
-                  <Box
-                    display='flex'
-                    alignItems='center'
-                    justifyContent='space-between'
-                    gap={2}
-                  >
-                    <Box>
-                      <Typography
-                        variant='body2'
-                        sx={{ fontWeight: 600, color: neutral.text, mb: 0.25 }}
-                      >
-                        {item.label}
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        sx={{ color: neutral.textMuted }}
-                      >
-                        {item.helper}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        minWidth: 68,
-                        px: 1.25,
-                        py: 0.75,
-                        borderRadius: '999px',
-                        textAlign: 'center',
-                        fontWeight: 700,
-                        color: item.color,
-                        backgroundColor: item.background
-                      }}
-                    >
-                      {item.value}
-                    </Box>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Información Financiera
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Ingresos Totales
-                </Typography>
-                <Typography variant="h5" color="success.main">
-                  ${stats?.totalRevenue?.toLocaleString() || 0}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Costo Promedio
-                </Typography>
-                <Typography variant="h5" color="primary">
-                  ${stats?.averageCost?.toLocaleString() || 0}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid> */}
-      </Grid>
+      {isMobile && (
+        <TextField
+          fullWidth
+          size='small'
+          type='search'
+          value={mobileSearch}
+          onChange={(e) => setMobileSearch(e.target.value)}
+          placeholder='Buscar tickets'
+          inputProps={{ 'aria-label': 'Buscar tickets' }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>
+                <Search fontSize='small' />
+              </InputAdornment>
+            )
+          }}
+          sx={{ mb: 2 }}
+        />
+      )}
 
       {/* Filters */}
       {showFilters && (
@@ -921,6 +762,7 @@ const MaintenanceDashboard: React.FC = () => {
         >
           <MaintenanceFiltersComponent
             filters={filters}
+            searchOverridesStatus={searchOverridesStatus}
             onFiltersChange={(newFilters) => setFilters({ ...newFilters })}
             technicians={technicians || []}
             equipmentTypes={equipmentTypes}
@@ -959,13 +801,13 @@ const MaintenanceDashboard: React.FC = () => {
               }}
             >
               Tickets de Mantenimiento
-              {ticketsData?.pagination.totalItems && (
+              {(ticketsData?.pagination.totalItems ?? 0) > 0 && (
                 <Chip
-                  label={`${ticketsData.pagination.totalItems} total`}
+                  label={`${ticketsData?.pagination.totalItems} total`}
                   size='small'
                   sx={{
-                    backgroundColor: intent.successSoft,
-                    color: intent.successInk,
+                    backgroundColor: brand.soft,
+                    color: brand.ink,
                     fontWeight: 600
                   }}
                 />
@@ -975,157 +817,122 @@ const MaintenanceDashboard: React.FC = () => {
               variant='body2'
               sx={{ mt: 0.5, color: neutral.textMuted }}
             >
-              Tarjetas más ligeras para priorizar lectura rápida y acciones
-              frecuentes.
+              {useCards
+                ? 'Ordenados por prioridad y antigüedad.'
+                : 'Ordenados por prioridad y antigüedad. Doble clic en una fila para abrir el ticket.'}
             </Typography>
           </Box>
         </Box>
 
-        {ticketsLoading ? (
-          <Grid
-            container
-            spacing={{ xs: 2, sm: 2, md: 3 }}
-            role='status'
-            aria-live='polite'
-          >
-            {[...Array(6)].map((_, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
-                <TicketCardSkeleton />
-              </Grid>
-            ))}
-          </Grid>
-        ) : !sortedTickets.length ? (
-          <Alert severity='info' role='status'>
-            No se encontraron tickets con los filtros aplicados.
-          </Alert>
-        ) : (
-          <>
-            <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
-              {sortedTickets.map((ticket) => (
-                <Grid item xs={12} sm={6} lg={4} key={ticket.id}>
-                  <MaintenanceTicketCard
-                    ticket={ticket}
-                    onView={handleViewTicket}
-                    onEdit={handleEditTicket}
-                    onDelete={
-                      !isTechnician &&
-                      [
-                        MaintenanceStatus.PENDING,
-                        MaintenanceStatus.ASSIGNED,
-                        MaintenanceStatus.CANCELLED
-                      ].includes(ticket.status as MaintenanceStatus)
-                        ? handleDeleteClick
-                        : undefined
-                    }
-                    showActions={true}
-                  />
+        {useCards ? (
+          ticketsLoading ? (
+            <Grid
+              container
+              spacing={{ xs: 2, sm: 2, md: 3 }}
+              role='status'
+              aria-live='polite'
+            >
+              {[...Array(3)].map((_, index) => (
+                <Grid item xs={12} key={index}>
+                  <TicketCardSkeleton />
                 </Grid>
               ))}
             </Grid>
-
-            {/* Pagination */}
-            {ticketsData && ticketsData.pagination.totalPages > 1 && (
-              <Box display='flex' justifyContent='center' mt={{ xs: 2, sm: 3 }}>
-                <Pagination
-                  count={ticketsData.pagination.totalPages}
-                  page={page}
-                  onChange={(_, newPage) => setPage(newPage)}
-                  color='primary'
-                  aria-label='Paginación de tickets'
-                  size={isMobile ? 'small' : 'medium'}
-                  siblingCount={isMobile ? 0 : 1}
-                  boundaryCount={1}
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      minWidth: { xs: 32, sm: 36 },
-                      height: { xs: 32, sm: 36 },
-                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
-                    }
-                  }}
-                />
-              </Box>
-            )}
-          </>
+          ) : !sortedTickets.length ? (
+            <Alert severity='info' role='status'>
+              No se encontraron tickets con los filtros aplicados.
+            </Alert>
+          ) : (
+            <>
+              <Grid container spacing={1.5}>
+                {sortedTickets.map((ticket) => (
+                  <Grid item xs={12} sm={6} key={ticket.id}>
+                    <MaintenanceTicketMobileCard
+                      ticket={ticket}
+                      onView={handleViewTicket}
+                      onEdit={handleEditTicket}
+                      onDelete={
+                        canDeleteTicket(ticket) ? handleDeleteClick : undefined
+                      }
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+              {ticketsData && ticketsData.pagination.totalPages > 1 && (
+                <Box display='flex' justifyContent='center' mt={2}>
+                  <Pagination
+                    count={ticketsData.pagination.totalPages}
+                    page={page}
+                    onChange={(_, newPage) => setPage(newPage)}
+                    color='primary'
+                    aria-label='Paginación de tickets'
+                    size='small'
+                    siblingCount={0}
+                    boundaryCount={1}
+                  />
+                </Box>
+              )}
+            </>
+          )
+        ) : (
+          <MaintenanceTicketsTable
+            tickets={sortedTickets}
+            loading={ticketsLoading}
+            page={page}
+            pageSize={limit}
+            totalItems={ticketsData?.pagination.totalItems ?? 0}
+            onPageChange={setPage}
+            onView={handleViewTicket}
+            onEdit={handleEditTicket}
+            canDelete={canDeleteTicket}
+            onDelete={handleDeleteClick}
+          />
         )}
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmDialog
         open={deleteDialogOpen}
+        title='¿Eliminar ticket de mantenimiento?'
+        message={
+          <>
+            Vas a eliminar el ticket{' '}
+            <strong>{ticketToDelete?.ticketCode}</strong>. Esta acción no se
+            puede deshacer: se eliminan también sus comentarios y archivos.
+          </>
+        }
+        confirmLabel='Eliminar'
+        tone='danger'
+        loading={deleteTicketMutation.isLoading}
+        onConfirm={confirmDelete}
         onClose={() => setDeleteDialogOpen(false)}
-        aria-labelledby='alert-dialog-title'
-        aria-describedby='alert-dialog-description'
-      >
-        <DialogTitle id='alert-dialog-title'>
-          {'¿Eliminar ticket de mantenimiento?'}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant='body1' gutterBottom>
-            ¿Estás seguro de que deseas eliminar el ticket{' '}
-            <strong>#{ticketToDelete?.ticketCode}</strong>?
-          </Typography>
-          <Alert severity='warning' sx={{ mt: 2 }}>
-            Esta acción no se puede deshacer. Se eliminarán todos los
-            comentarios y archivos asociados.
-          </Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            color='primary'
-            disabled={deleteTicketMutation.isLoading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            color='error'
-            variant='contained'
-            autoFocus
-            disabled={deleteTicketMutation.isLoading}
-          >
-            {deleteTicketMutation.isLoading ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      />
 
       {/* Edit Ticket Dialog */}
-      <Dialog
+      <FormDialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
+        title='Editar ticket'
+        subtitle={selectedTicket?.ticketCode}
+        submitLabel='Guardar'
+        onSubmit={handleSaveEdit}
+        loading={updateTicketMutation.isLoading}
         maxWidth='sm'
-        fullWidth
-        fullScreen={isMobile}
-        aria-labelledby='edit-ticket-dialog-title'
-        aria-describedby='edit-ticket-dialog-description'
-      >
-        <DialogTitle id='edit-ticket-dialog-title'>
-          <Box
-            display='flex'
-            justifyContent='space-between'
-            alignItems='center'
-          >
-            <Typography
-              variant='h6'
-              sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+        extraActions={
+          selectedTicket?.status === MaintenanceStatus.COMPLETED ? (
+            <Button
+              onClick={() => handleOpenTechnicalReport(selectedTicket)}
+              variant='outlined'
+              startIcon={<Science />}
             >
-              Editar Ticket #{selectedTicket?.ticketCode}
-            </Typography>
-            {isMobile && (
-              <IconButton
-                onClick={() => setEditDialogOpen(false)}
-                aria-label='Cerrar'
-                sx={{ minWidth: 44, minHeight: 44 }}
-              >
-                <Cancel />
-              </IconButton>
-            )}
-          </Box>
-        </DialogTitle>
-        <DialogContent
-          id='edit-ticket-dialog-description'
-          sx={{ pt: { xs: 2.5, sm: 3 }, overflowY: 'auto' }}
-        >
+              {technicalReport?.updatedAt
+                ? `Reporte técnico ${technicalReportCompletion}%`
+                : 'Reporte técnico'}
+            </Button>
+          ) : undefined
+        }
+      >
+        <Box sx={{ overflowY: 'auto' }}>
           <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 0.5 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
@@ -1359,7 +1166,7 @@ const MaintenanceDashboard: React.FC = () => {
                                       ? 'error.main'
                                       : isNearFull
                                         ? 'warning.main'
-                                        : 'success.main'
+                                        : 'primary.main'
                                   }}
                                 >
                                   {technician.name
@@ -1397,7 +1204,7 @@ const MaintenanceDashboard: React.FC = () => {
                                         ? 'error'
                                         : isNearFull
                                           ? 'warning'
-                                          : 'success'
+                                          : 'primary'
                                     }
                                     variant='outlined'
                                   />
@@ -1420,7 +1227,7 @@ const MaintenanceDashboard: React.FC = () => {
                                       ? 'error'
                                       : isNearFull
                                         ? 'warning'
-                                        : 'success'
+                                        : 'primary'
                                   }
                                   sx={{ height: 4, borderRadius: 2 }}
                                 />
@@ -1554,29 +1361,8 @@ const MaintenanceDashboard: React.FC = () => {
                 return null
               })()}
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          {selectedTicket?.status === MaintenanceStatus.COMPLETED && (
-            <Button
-              onClick={() => handleOpenTechnicalReport(selectedTicket)}
-              variant='outlined'
-              startIcon={<Science />}
-            >
-              {technicalReport?.updatedAt
-                ? `Reporte técnico ${technicalReportCompletion}%`
-                : 'Reporte técnico'}
-            </Button>
-          )}
-          <Button
-            onClick={handleSaveEdit}
-            variant='contained'
-            disabled={updateTicketMutation.isLoading}
-          >
-            {updateTicketMutation.isLoading ? 'Guardando...' : 'Guardar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </FormDialog>
 
       <MaintenanceTechnicalReportDialog
         open={technicalReportDialogOpen}
@@ -1617,6 +1403,12 @@ const MaintenanceDashboard: React.FC = () => {
           uploadFilesMutation.isLoading ||
           updateTechnicianMutation.isLoading
         }
+      />
+
+      <NewMaintenanceRequestDialog
+        open={newRequestOpen}
+        onClose={() => setNewRequestOpen(false)}
+        onCreated={(ticketId) => navigate(`/maintenance/tickets/${ticketId}`)}
       />
 
       {/* Keyboard Shortcuts Help Modal */}

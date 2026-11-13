@@ -36,6 +36,7 @@ import type {
 import { notify } from 'src/utils/notify'
 
 import { logger } from 'src/utils/logger'
+import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 
 /**
  * Opciones extra de una consulta. Se escriben a mano (en vez de
@@ -576,6 +577,14 @@ export const useSubmitQuiz = (
     ({ quizId, data }: { quizId: number; data: SubmitQuizRequest }) =>
       lmsService.submitQuiz(quizId, data),
     {
+      // Un rechazo del servidor (4xx, como el 429 o "demasiado rápido") no mejora
+      // al repetirlo y gasta otro cupo del limitador: solo se reintenta un corte
+      // de red o un error 5xx
+      retry: (failureCount, error) => {
+        const status = (error as { response?: { status?: number } })?.response
+          ?.status
+        return (!status || status >= 500) && failureCount < 1
+      },
       ...options,
       onSuccess: (data, variables, context) => {
         // Invalidate quiz attempts
@@ -600,7 +609,10 @@ export const useSubmitQuiz = (
         options?.onSuccess?.(data, variables, context)
       },
       onError: (error, variables, context) => {
-        notify.error('Error al enviar quiz', error.message)
+        notify.error(
+          'Error al enviar quiz',
+          getStructuredApiErrorMessage(error, error.message)
+        )
 
         options?.onError?.(error, variables, context)
       }

@@ -30,6 +30,8 @@ import MaintenanceTimeline from '../../Components/Maintenance/MaintenanceTimelin
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { neutral } from 'src/theme/designTokens'
+import { maskEmail, maskPhone } from 'src/utils/maskContact'
 
 /**
  * MaintenanceTracking component provides a public interface for tracking maintenance tickets
@@ -76,7 +78,11 @@ const MaintenanceTracking: React.FC = () => {
     <MaintenanceErrorBoundary>
       <Container maxWidth='lg' sx={{ py: 4 }}>
         {/* Header */}
-        <Paper elevation={3} sx={{ p: 4, mb: 4 }} component='div'>
+        <Paper
+          variant='outlined'
+          sx={{ borderRadius: '12px', p: 4, mb: 4 }}
+          component='div'
+        >
           <Box textAlign='center' mb={4}>
             <Search color='primary' sx={{ fontSize: 48, mb: 2 }} />
             <Typography variant='h4' gutterBottom>
@@ -98,7 +104,7 @@ const MaintenanceTracking: React.FC = () => {
             >
               <TextField
                 label='Número de Ticket'
-                placeholder='Ej: MTN-2024-001'
+                placeholder='Ej: MNT-20261008-006'
                 value={ticketNumber}
                 onChange={(e) => setTicketNumber(e.target.value)}
                 sx={{ minWidth: 300 }}
@@ -144,7 +150,10 @@ const MaintenanceTracking: React.FC = () => {
           <Grid container spacing={3}>
             {/* Main Ticket Info */}
             <Grid item xs={12} lg={8}>
-              <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+              <Paper
+                variant='outlined'
+                sx={{ borderRadius: '12px', p: 3, mb: 3 }}
+              >
                 <Box
                   display='flex'
                   justifyContent='space-between'
@@ -183,7 +192,7 @@ const MaintenanceTracking: React.FC = () => {
                           <Email fontSize='small' color='action' />
                           <Typography variant='body2'>
                             <strong>Email:</strong>{' '}
-                            {trackingData.ticket.customerEmail}
+                            {maskEmail(trackingData.ticket.customerEmail)}
                           </Typography>
                         </Box>
                       </Grid>
@@ -192,7 +201,7 @@ const MaintenanceTracking: React.FC = () => {
                           <Phone fontSize='small' color='action' />
                           <Typography variant='body2'>
                             <strong>Teléfono:</strong>{' '}
-                            {trackingData.ticket.customerPhone}
+                            {maskPhone(trackingData.ticket.customerPhone)}
                           </Typography>
                         </Box>
                         <Box display='flex' alignItems='center' gap={1}>
@@ -268,14 +277,6 @@ const MaintenanceTracking: React.FC = () => {
                             <Typography variant='body1' fontWeight='medium'>
                               {trackingData.ticket.assignedTechnician.name}
                             </Typography>
-                            {trackingData.ticket.assignedTechnician.email && (
-                              <Typography
-                                variant='body2'
-                                color='text.secondary'
-                              >
-                                {trackingData.ticket.assignedTechnician.email}
-                              </Typography>
-                            )}
                             {trackingData.ticket.assignedTechnician
                               .specialization && (
                               <Box mt={1}>
@@ -330,7 +331,10 @@ const MaintenanceTracking: React.FC = () => {
             {/* Sidebar */}
             <Grid item xs={12} lg={4}>
               {/* Dates */}
-              <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+              <Paper
+                variant='outlined'
+                sx={{ borderRadius: '12px', p: 3, mb: 3 }}
+              >
                 <Typography variant='h6' gutterBottom>
                   Fechas Importantes
                 </Typography>
@@ -358,13 +362,13 @@ const MaintenanceTracking: React.FC = () => {
                   </Box>
                 )}
 
-                {trackingData.ticket.completedDate && (
+                {trackingData.ticket.actualCompletionDate && (
                   <Box mb={2}>
                     <Typography variant='body2' color='text.secondary'>
                       <strong>Completado:</strong>
                     </Typography>
                     <Typography variant='body2'>
-                      {formatDate(trackingData.ticket.completedDate)}
+                      {formatDate(trackingData.ticket.actualCompletionDate)}
                     </Typography>
                   </Box>
                 )}
@@ -381,7 +385,7 @@ const MaintenanceTracking: React.FC = () => {
 
               {/* Customer Satisfaction */}
               {trackingData.ticket.customerSatisfaction && (
-                <Paper elevation={2} sx={{ p: 3 }}>
+                <Paper variant='outlined' sx={{ borderRadius: '12px', p: 3 }}>
                   <Typography variant='h6' gutterBottom>
                     Calificación del Servicio
                   </Typography>
@@ -407,7 +411,15 @@ const MaintenanceTracking: React.FC = () => {
         )}
 
         {/* Help */}
-        <Paper elevation={1} sx={{ p: 3, mt: 4, bgcolor: 'grey.50' }}>
+        <Paper
+          variant='outlined'
+          sx={{
+            borderRadius: '12px',
+            p: 3,
+            mt: 4,
+            bgcolor: neutral.surfaceAlt
+          }}
+        >
           <Typography variant='h6' gutterBottom>
             ¿Necesita Ayuda?
           </Typography>
@@ -420,7 +432,7 @@ const MaintenanceTracking: React.FC = () => {
               <strong>Email:</strong> mantenimiento@metromedicslab.com.co
             </Typography>
             <Typography variant='body2'>
-              <strong>Teléfono:</strong> (601) 123-4567
+              <strong>Teléfono:</strong> (+57) 606 352 6161
             </Typography>
             <Typography variant='body2'>
               <strong>Horario:</strong> Lunes a Viernes, 8:00 AM - 6:00 PM

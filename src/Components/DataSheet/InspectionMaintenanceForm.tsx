@@ -196,22 +196,6 @@ const InspectionMaintenanceDataForm: React.FC = () => {
   const saveInspectionMutation = useSaveInspectionMaintenance()
   const deleteInspectionMutation = useDeleteDataSheetRecord()
 
-  useEffect(() => {
-    if (!editData) return
-    // Solo precarga una vez por registro para no pisar lo que se esté editando
-    if (prefilledRecordId.current === editData.id) return
-    prefilledRecordId.current = editData.id
-    const data = editData
-    setEditId(data.id)
-    formik.setValues({
-      ...data,
-      equipmentId: data.equipmentId,
-      date: data.date.split('T')[0],
-      comentarios: data.comments || '',
-      elaboradoPor: data.verifiedBy || ''
-    })
-  }, [editData])
-
   const options = ['Bueno', 'Malo', 'No Aplica']
 
   const today = new Date()
@@ -268,6 +252,24 @@ const InspectionMaintenanceDataForm: React.FC = () => {
       }
     }
   })
+
+  const { setValues } = formik
+
+  useEffect(() => {
+    if (!editData) return
+    // Solo precarga una vez por registro para no pisar lo que se esté editando
+    if (prefilledRecordId.current === editData.id) return
+    prefilledRecordId.current = editData.id
+    const data = editData
+    setEditId(data.id)
+    setValues({
+      ...data,
+      equipmentId: data.equipmentId,
+      date: data.date.split('T')[0],
+      comentarios: data.comments || '',
+      elaboradoPor: data.verifiedBy || ''
+    })
+  }, [editData, setValues])
 
   const handleDelete = async () => {
     if (!editId) return

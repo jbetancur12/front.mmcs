@@ -138,6 +138,8 @@ const TripsTable = () => {
     [deleteTrip]
   )
 
+  const validateRequired = useCallback((value: string) => !!value.length, [])
+
   const getCommonEditTextFieldProps = useCallback(
     ({ cell }: { cell: MRT_Cell<Trip> }): TextFieldProps => ({
       error: !!validationErrors[cell.id],
@@ -155,10 +157,8 @@ const TripsTable = () => {
         }
       }
     }),
-    [validationErrors]
+    [validationErrors, validateRequired]
   )
-
-  const validateRequired = useCallback((value: string) => !!value.length, [])
 
   const columns = useMemo<MRT_ColumnDef<Trip>[]>(
     () => [

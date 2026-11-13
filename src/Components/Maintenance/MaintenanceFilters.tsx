@@ -12,6 +12,8 @@ import {
   Button,
   Grid,
   Autocomplete,
+  FormControlLabel,
+  Switch,
   Accordion,
   AccordionSummary,
   AccordionDetails
@@ -26,7 +28,11 @@ import {
 } from '../../types/maintenance'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
 import MaintenancePriorityBadge from './MaintenancePriorityBadge'
-import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import {
+  MAINTENANCE_PRIORITY_LABELS,
+  MAINTENANCE_STATUS_LABELS
+} from './maintenanceLabels'
+import { brand, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface MaintenanceFiltersProps {
   filters: IMaintenanceFilters
@@ -35,6 +41,8 @@ interface MaintenanceFiltersProps {
   equipmentTypes: string[]
   loading?: boolean
   resultsCount?: number
+  /** Hay texto en la búsqueda y el estado es el de por defecto: la búsqueda recorre todos los estados. */
+  searchOverridesStatus?: boolean
 }
 
 /**
@@ -46,13 +54,15 @@ interface MaintenanceFiltersProps {
  * @param equipmentTypes - Array of available equipment types
  * @param loading - Whether data is loading
  * @param resultsCount - Number of results matching current filters
+ * @param searchOverridesStatus - Si la búsqueda por texto ignora el filtro de estado por defecto
  */
 const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
   filters,
   onFiltersChange,
   technicians,
   equipmentTypes,
-  resultsCount
+  resultsCount,
+  searchOverridesStatus = false
 }) => {
   const [localFilters, setLocalFilters] = useState<IMaintenanceFilters>(filters)
 
@@ -77,11 +87,12 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
 
   const getActiveFiltersCount = () => {
     let count = 0
-    if (localFilters.status?.length) count++
+    if (localFilters.status?.length && !searchOverridesStatus) count++
     if (localFilters.priority?.length) count++
     if (localFilters.assignedTechnician?.length) count++
     if (localFilters.equipmentType?.length) count++
     if (localFilters.search) count++
+    if (localFilters.hasPending) count++
     if (localFilters.customerEmail) count++
     if (localFilters.dateRange) count++
     return count
@@ -92,14 +103,14 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
   const statusSummary =
     localFilters.status && localFilters.status.length > 0
       ? localFilters.status.length === 1
-        ? localFilters.status[0]
+        ? MAINTENANCE_STATUS_LABELS[localFilters.status[0]]
         : `${localFilters.status.length} estados`
       : null
 
   const prioritySummary =
     localFilters.priority && localFilters.priority.length > 0
       ? localFilters.priority.length === 1
-        ? localFilters.priority[0]
+        ? MAINTENANCE_PRIORITY_LABELS[localFilters.priority[0]]
         : `${localFilters.priority.length} prioridades`
       : null
 
@@ -123,7 +134,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
         flexWrap='wrap'
       >
         <Box display='flex' alignItems='center' gap={1}>
-          <FilterList sx={{ color: intent.successInk }} />
+          <FilterList sx={{ color: brand.ink }} />
           <Typography
             variant='h6'
             sx={{ fontSize: '1.125rem', fontWeight: 600, color: neutral.text }}
@@ -138,7 +149,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 height: 24,
                 fontWeight: 700,
                 backgroundColor: brand.main,
-                color: '#ffffff'
+                color: neutral.surface
               }}
             />
           )}
@@ -166,7 +177,12 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             size='small'
             id='quick-search-field'
             label='Búsqueda rápida'
-            placeholder='Buscar tickets...'
+            placeholder='Número de ticket, cliente, equipo o problema'
+            helperText={
+              searchOverridesStatus
+                ? 'Con texto en la búsqueda o con pendientes se incluyen todos los estados, también los completados.'
+                : undefined
+            }
             value={localFilters.search || ''}
             onChange={(e) => handleFilterChange('search', e.target.value)}
             InputProps={{
@@ -248,6 +264,20 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={Boolean(localFilters.hasPending)}
+                onChange={(e) =>
+                  handleFilterChange('hasPending', e.target.checked)
+                }
+              />
+            }
+            label='Solo con pendientes (sin técnico, sin reporte, sin firma o sin facturar)'
+          />
+        </Grid>
       </Grid>
 
       {activeFiltersCount > 0 && (
@@ -296,6 +326,15 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 sx={{ backgroundColor: neutral.surface }}
               />
             )}
+            {localFilters.hasPending && (
+              <Chip
+                label='Solo con pendientes'
+                onDelete={() => handleFilterChange('hasPending', false)}
+                size='small'
+                variant='outlined'
+                sx={{ backgroundColor: neutral.surface }}
+              />
+            )}
             {prioritySummary && (
               <Chip
                 label={`Prioridad: ${prioritySummary}`}
@@ -305,7 +344,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 sx={{ backgroundColor: neutral.surface }}
               />
             )}
-            {statusSummary && (
+            {statusSummary && !searchOverridesStatus && (
               <Chip
                 label={`Estado: ${statusSummary}`}
                 onDelete={() => handleFilterChange('status', [])}
