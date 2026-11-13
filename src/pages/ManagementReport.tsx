@@ -42,6 +42,7 @@ import LmsStatCard, {
 } from 'src/Components/lms/admin/LmsStatCard'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import CollapsibleSection from 'src/Components/managementReport/CollapsibleSection'
+import DataConfidenceStrip from 'src/Components/managementReport/DataConfidenceStrip'
 import TeamSection from 'src/Components/managementReport/TeamSection'
 import TrendSection from 'src/Components/managementReport/TrendSection'
 import LossReasonsSection from 'src/Components/managementReport/LossReasonsSection'
@@ -73,21 +74,24 @@ const STATUS_TONE: Record<ManagementReportStatus, LmsStatTone> = {
   green: 'green',
   yellow: 'orange',
   red: 'red',
-  gray: 'gray'
+  gray: 'gray',
+  registry: 'gray'
 }
 
 const STATUS_LABEL: Record<ManagementReportStatus, string> = {
   green: 'Bien',
   yellow: 'Atención',
   red: 'Alerta',
-  gray: 'Sin dato'
+  gray: 'Sin dato',
+  registry: 'Depende del registro'
 }
 
 const STATUS_COLOR: Record<ManagementReportStatus, string> = {
   green: intent.successInk,
   yellow: intent.warningInk,
   red: intent.dangerInk,
-  gray: neutral.textMuted
+  gray: neutral.textMuted,
+  registry: neutral.textMuted
 }
 
 const STATUS_CHIP: Record<
@@ -97,7 +101,8 @@ const STATUS_CHIP: Record<
   green: 'success',
   yellow: 'warning',
   red: 'error',
-  gray: 'default'
+  gray: 'default',
+  registry: 'default'
 }
 
 const previousMonthKey = () => {
@@ -126,17 +131,43 @@ const coverIcon = (code: string) => {
 }
 
 // "-12 % vs mes anterior" o, si no hay con qué comparar, "sin comparación"
-const changeText = (item: { variationDisplay: string; comparison?: string }) =>
-  item.variationDisplay === 'Sin dato' || item.variationDisplay === '—'
-    ? 'sin comparación'
-    : `${item.variationDisplay} vs ${item.comparison || 'mes anterior'}`
+const changeText = (item: {
+  variationDisplay: string
+  comparison?: string
+  status?: ManagementReportStatus
+}) =>
+  item.status === 'registry'
+    ? 'Depende del registro'
+    : item.variationDisplay === 'Sin dato' || item.variationDisplay === '—'
+      ? 'sin comparación'
+      : `${item.variationDisplay} vs ${item.comparison || 'mes anterior'}`
 
 // Con valor pero sin con qué compararlo: la celda queda vacía (un guion)
 const hasComparison = (metric: ManagementReportMetric) =>
+  metric.status !== 'registry' &&
   !(
     metric.value !== null &&
     (metric.variationDisplay === 'Sin dato' || metric.variationDisplay === '—')
   )
+
+// Lectura del indicador; en las cotizaciones en espera suma lo esperable
+const millionsText = (value: number) =>
+  `${(value / 1_000_000).toLocaleString('es-CO', { maximumFractionDigits: 0 })} M`
+
+const metricNote = (metric: ManagementReportMetric) => {
+  const detail = metric.detail as
+    | { expectedValue?: number | null; winRate?: number | null }
+    | undefined
+  if (
+    metric.code === 'C16' &&
+    metric.value !== null &&
+    typeof detail?.expectedValue === 'number'
+  ) {
+    const rate = Math.round((detail.winRate ?? 0) * 100)
+    return `${metric.note} De ${millionsText(metric.value)} en espera, lo esperable es ${millionsText(detail.expectedValue)}: en los últimos 12 meses se ganó el ${rate} % de lo que se decidió.`
+  }
+  return metric.note
+}
 
 // Resumen de una línea de un bloque, para su cabecera plegada
 const lossSummary = (loss: ManagementReportLossBlock) =>
@@ -205,6 +236,7 @@ const METRIC_COLUMNS: MRT_ColumnDef<ManagementReportMetric>[] = [
   {
     accessorKey: 'note',
     header: 'Lectura',
+    Cell: ({ row }) => metricNote(row.original),
     muiTableBodyCellProps: { sx: { color: neutral.textMuted } }
   },
   {
@@ -213,7 +245,9 @@ const METRIC_COLUMNS: MRT_ColumnDef<ManagementReportMetric>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
     Cell: ({ row }) =>
-      hasComparison(row.original) || row.original.value === null ? (
+      hasComparison(row.original) ||
+      row.original.value === null ||
+      row.original.status === 'registry' ? (
         <Chip
           size='small'
           variant='outlined'
@@ -549,6 +583,10 @@ const ManagementReportPage = () => {
               </Grid>
             ))}
           </Grid>
+
+          {report.dataConfidence && (
+            <DataConfidenceStrip confidence={report.dataConfidence} />
+          )}
 
           {report.alerts.length > 0 && (
             <Paper

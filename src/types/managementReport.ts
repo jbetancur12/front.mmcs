@@ -1,4 +1,10 @@
-export type ManagementReportStatus = 'green' | 'yellow' | 'red' | 'gray'
+/** `registry`: depende de que se registre el trabajo, no es un resultado. */
+export type ManagementReportStatus =
+  | 'green'
+  | 'yellow'
+  | 'red'
+  | 'gray'
+  | 'registry'
 
 export interface ManagementReportMetric {
   code: string
@@ -18,6 +24,7 @@ export interface ManagementReportMetric {
   count?: number | null
   countLabel?: string | null
   detail?: unknown
+  dependsOnRecord?: boolean
 }
 
 export interface ManagementReportBlock {
@@ -176,7 +183,19 @@ export interface ManagementReportLossBlock {
   }>
 }
 
+export interface ManagementReportConfidenceItem {
+  code: string | null
+  label: string
+  reason: string
+}
+
+export interface ManagementReportDataConfidence {
+  firm: ManagementReportConfidenceItem[]
+  dependsOnRecord: ManagementReportConfidenceItem[]
+}
+
 export interface ManagementReport {
+  dataConfidence?: ManagementReportDataConfidence
   meta: ManagementReportMeta
   cover: ManagementReportCoverItem[]
   blocks: Record<string, ManagementReportBlock>
