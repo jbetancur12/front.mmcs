@@ -103,14 +103,14 @@ export const ui = {
   textSecondary: neutral.textBody,
   muted: neutral.textMuted,
   border: neutral.border,
-  surface: neutral.surfaceHead,
   white: '#ffffff',
+  surface: neutral.surface,
   glass: withAlpha(neutral.surface, 0.75)
 }
 
 // Tarjeta del sistema de diseño: blanca, borde gris, sin vidrio ni brillo
 export const softCardSx = {
-  background: ui.white,
+  background: ui.surface,
   border: `1px solid ${ui.border}`,
   borderRadius: '16px',
   boxShadow: 'none',
@@ -144,7 +144,7 @@ export const secondaryButtonSx = {
   minHeight: 40,
   borderColor: ui.border,
   color: neutral.textBody,
-  backgroundColor: ui.white,
+  backgroundColor: ui.surface,
   '&:hover': {
     borderColor: brand.hover,
     color: brand.ink,

@@ -2,7 +2,7 @@ import { ThemeProvider } from '@mui/material'
 import { createRoot } from 'react-dom/client'
 
 import ActivationLinkDialog from '../Components/ActivationLinkDialog'
-import { theme } from '../theme'
+import { darkTheme, lightTheme } from '../theme'
 
 import type { ActivationLinkInfo } from './activationLink'
 
@@ -26,7 +26,13 @@ export const showActivationLinkDialog = (
     }
 
     root.render(
-      <ThemeProvider theme={theme}>
+      <ThemeProvider
+        theme={
+          document.documentElement.classList.contains('dark')
+            ? darkTheme
+            : lightTheme
+        }
+      >
         <ActivationLinkDialog open info={info} onClose={close} />
       </ThemeProvider>
     )

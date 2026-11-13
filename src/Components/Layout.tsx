@@ -34,7 +34,7 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
         />
       )}
       {/* min-h-screen: el fondo llega al borde de la ventana aunque el contenido sea corto */}
-      <div className='flex min-h-screen pt-[calc(4rem+var(--imp-h,0px))] overflow-hidden bg-neutral-alt dark:bg-neutral-text'>
+      <div className='flex min-h-screen pt-[calc(4rem+var(--imp-h,0px))] overflow-hidden bg-neutral-alt'>
         {!isCourseView && (
           <SideBar
             sidebarMinimized={sidebarMinimized}
@@ -48,7 +48,7 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           />
         )}
         <div
-          className={`relative w-full h-full overflow-y-auto bg-neutral-alt dark:bg-neutral-text ${!isCourseView ? (userMinimized ? 'lg:ml-20' : 'lg:ml-64') : ''}`}
+          className={`relative w-full h-full overflow-y-auto bg-neutral-alt ${!isCourseView ? (userMinimized ? 'lg:ml-20' : 'lg:ml-64') : ''}`}
         >
           <PlatformBillingBanner />
           <SessionExpiryBanner />

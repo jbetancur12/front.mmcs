@@ -69,8 +69,12 @@ const StageButton: React.FC<{
           : count > 0
             ? TEAL
             : neutral.borderStrong,
-        bgcolor: active ? TEAL_INK : '#fff',
-        color: active ? '#fff' : count > 0 ? TEAL_INK : neutral.textMuted,
+        bgcolor: active ? TEAL_INK : neutral.surface,
+        color: active
+          ? neutral.surface
+          : count > 0
+            ? TEAL_INK
+            : neutral.textMuted,
         fontWeight: 700,
         fontSize: compact ? 13 : 15,
         fontVariantNumeric: 'tabular-nums'

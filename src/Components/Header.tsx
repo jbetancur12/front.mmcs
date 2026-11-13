@@ -9,6 +9,8 @@ import {
   useMediaQuery
 } from '@mui/material'
 import { Menu as MenuIcon } from '@mui/icons-material'
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import { useStore } from '@nanostores/react'
 import { Link } from 'react-router-dom'
@@ -28,12 +30,14 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { openAnalyticsConsentPreferences } from 'src/utils/analyticsConsent'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { useColorMode } from 'src/theme/ThemeModeProvider'
 interface HeaderProps {
   toggleMobileMenu: () => void
 }
 
 function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
   const theme = useTheme()
+  const { mode, toggleMode } = useColorMode()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
@@ -138,6 +142,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
                 component='img'
                 src='/images/logo2.png'
                 alt='Metromedics'
+                className='brand-logo'
                 sx={{ height: { xs: 32, md: 40 }, width: 'auto' }}
               />
             </Box>
@@ -167,6 +172,33 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
                 </IconButton>
               </Tooltip>
             )}
+
+            <Tooltip
+              title={
+                mode === 'dark'
+                  ? 'Cambiar a modo claro'
+                  : 'Cambiar a modo oscuro'
+              }
+            >
+              <IconButton
+                aria-label={
+                  mode === 'dark'
+                    ? 'Cambiar a modo claro'
+                    : 'Cambiar a modo oscuro'
+                }
+                onClick={toggleMode}
+                sx={{
+                  color: neutral.textBody,
+                  '&:hover': { bgcolor: neutral.surfaceHead }
+                }}
+              >
+                {mode === 'dark' ? (
+                  <LightModeOutlinedIcon />
+                ) : (
+                  <DarkModeOutlinedIcon />
+                )}
+              </IconButton>
+            </Tooltip>
 
             <Box
               sx={{
