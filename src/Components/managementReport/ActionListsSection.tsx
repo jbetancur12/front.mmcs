@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material'
 import { type MRT_ColumnDef } from 'material-react-table'
 import DataTable from 'src/Components/Common/DataTable'
+import { formatInt } from 'src/utils/formatNumber'
 import { brand, neutral } from 'src/theme/designTokens'
 import type {
   ManagementReportActionLists,
@@ -198,7 +199,7 @@ const ListCard = ({
     {total > shown && (
       <Stack direction='row' alignItems='center' spacing={1} mt={1}>
         <Typography variant='body2' color='text.secondary'>
-          Se muestran {shown} de {total}.
+          Se muestran {formatInt(shown)} de {formatInt(total)}.
         </Typography>
         <Button
           size='small'
@@ -251,7 +252,7 @@ const ActionListsSection = ({
           title='Cotizaciones por vencer'
           summary={
             expiringQuotes.count
-              ? `${expiringQuotes.count} cotizaciones para llamar: calibración que vence en los próximos ${expiringQuotes.horizonDays} días y equipos sin respuesta hace más de ${expiringQuotes.staleDays} días${showMoney && expiringQuotes.totalValue !== undefined ? `, por ${millions(expiringQuotes.totalValue)}` : ''}.`
+              ? `${formatInt(expiringQuotes.count)} cotizaciones para llamar: calibración que vence en los próximos ${expiringQuotes.horizonDays} días y equipos sin respuesta hace más de ${expiringQuotes.staleDays} días${showMoney && expiringQuotes.totalValue !== undefined ? `, por ${millions(expiringQuotes.totalValue)}` : ''}.`
               : 'No hay cotizaciones por vencer.'
           }
           shown={expiringRows.length}
@@ -273,7 +274,7 @@ const ActionListsSection = ({
           title='Quién debe'
           summary={
             debtors.count
-              ? `${debtors.invoices} facturas sin pago de ${debtors.count} clientes${showMoney && debtors.openValue !== undefined ? `, por ${millions(debtors.openValue)}` : ''}. Primero, los de más de 90 días.`
+              ? `${formatInt(debtors.invoices)} facturas sin pago de ${formatInt(debtors.count)} clientes${showMoney && debtors.openValue !== undefined ? `, por ${millions(debtors.openValue)}` : ''}. Primero, los de más de 90 días.`
               : 'No hay facturas pendientes de pago.'
           }
           shown={debtorRows.length}

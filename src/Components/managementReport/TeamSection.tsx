@@ -27,6 +27,7 @@ import LmsStatCard, {
   type LmsStatTone
 } from 'src/Components/lms/admin/LmsStatCard'
 import { neutral } from 'src/theme/designTokens'
+import { formatInt } from 'src/utils/formatNumber'
 import type {
   ManagementReport,
   ManagementReportAreaKey,
@@ -484,8 +485,8 @@ const SharedAccountNotice = ({
   warning ? (
     <Alert severity='warning' sx={{ mt: 1 }}>
       {warning.message} Hoy “{warning.name}” concentra{' '}
-      {Math.round(warning.share * 100)} % de los registros ({warning.count} de{' '}
-      {warning.total}).
+      {Math.round(warning.share * 100)} % de los registros (
+      {formatInt(warning.count)} de {formatInt(warning.total)}).
     </Alert>
   ) : null
 

@@ -73,6 +73,7 @@ import type {
 } from 'src/types/managementReport'
 import { getApiErrorMessage } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
+import { formatInt } from 'src/utils/formatNumber'
 
 const STATUS_TONE: Record<ManagementReportStatus, LmsStatTone> = {
   green: 'green',
@@ -186,7 +187,7 @@ const metricNote = (metric: ManagementReportMetric) => {
 const lossSummary = (loss: ManagementReportLossBlock) =>
   loss.total === 0
     ? 'No hubo cotizaciones perdidas este mes'
-    : `${loss.total} cotizaciones perdidas este mes`
+    : `${formatInt(loss.total)} cotizaciones perdidas este mes`
 
 const blockSummary = (block: ManagementReportBlock) => {
   const alerts = block.metrics.filter((metric) => metric.status === 'red')
@@ -741,7 +742,7 @@ const ManagementReportPage = () => {
             <CollapsibleSection
               id='no-data'
               title='Sin información suficiente'
-              summary={`${report.noData.length} indicadores sin datos este mes`}
+              summary={`${formatInt(report.noData.length)} indicadores sin datos este mes`}
             >
               <Typography variant='body2'>
                 {report.noData.map((item) => item.label).join(' · ')}. Mientras
@@ -867,7 +868,7 @@ const ManagementReportPage = () => {
           <CollapsibleSection
             id='history'
             title='Historial'
-            summary={`${visibleHistory.length} reportes guardados`}
+            summary={`${formatInt(visibleHistory.length)} reportes guardados`}
             icon={<HistoryOutlined />}
           >
             <Box sx={{ overflowX: 'auto' }}>

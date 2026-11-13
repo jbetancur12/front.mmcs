@@ -22,6 +22,7 @@ import {
 import { type MRT_ColumnDef } from 'material-react-table'
 import DataTable from 'src/Components/Common/DataTable'
 import { brand, intent, neutral } from 'src/theme/designTokens'
+import { formatInt } from 'src/utils/formatNumber'
 import type {
   ManagementReportLossBlock,
   ManagementReportTeamRange
@@ -165,9 +166,10 @@ const LossReasonsSection = ({ loss, periodLabel }: LossReasonsSectionProps) => {
               severity={(noResponse.share ?? 0) >= 0.5 ? 'warning' : 'info'}
               sx={{ mb: 2 }}
             >
-              De {block.total} cotizaciones perdidas, {noResponse.count} (
-              {percent(noResponse.share)}) fueron porque el cliente no
-              respondió. Rechazadas expresamente: {block.coverage.rejected}.
+              De {formatInt(block.total)} cotizaciones perdidas,{' '}
+              {formatInt(noResponse.count)} ({percent(noResponse.share)}) fueron
+              porque el cliente no respondió. Rechazadas expresamente:{' '}
+              {formatInt(block.coverage.rejected)}.
             </Alert>
           )}
           {block.insufficientData && (
@@ -229,7 +231,7 @@ const LossReasonsSection = ({ loss, periodLabel }: LossReasonsSectionProps) => {
           >
             {block.coverage.rejected === 0
               ? 'No hubo rechazos con motivo que revisar.'
-              : `Motivo escrito en ${block.coverage.withReason} de ${block.coverage.rejected} rechazadas (${percent(block.coverage.share)}). Las vencidas no tienen motivo: no hubo respuesta.`}
+              : `Motivo escrito en ${formatInt(block.coverage.withReason)} de ${formatInt(block.coverage.rejected)} rechazadas (${percent(block.coverage.share)}). Las vencidas no tienen motivo: no hubo respuesta.`}
             {showMoney
               ? ` Valor perdido: ${money(block.lostValue)} (sin IVA).`
               : ''}

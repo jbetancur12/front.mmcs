@@ -5,6 +5,7 @@ import {
   PersonAddAltOutlined
 } from '@mui/icons-material'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { formatInt } from 'src/utils/formatNumber'
 import type { ManagementReportExtras } from 'src/types/managementReport'
 
 const percent = (value: number | null | undefined) =>
@@ -27,12 +28,12 @@ export const extrasSummary = (extras: ManagementReportExtras) => {
   const parts: string[] = []
   if (extras.renewals?.expired) {
     parts.push(
-      `${extras.renewals.renewed} de ${extras.renewals.expired} equipos vencidos recalibrados`
+      `${formatInt(extras.renewals.renewed)} de ${formatInt(extras.renewals.expired)} equipos vencidos recalibrados`
     )
   }
   if (extras.customerMix) {
     parts.push(
-      `${extras.customerMix.newCustomers} clientes nuevos y ${extras.customerMix.recurringCustomers} recurrentes`
+      `${formatInt(extras.customerMix.newCustomers)} clientes nuevos y ${formatInt(extras.customerMix.recurringCustomers)} recurrentes`
     )
   }
   if (extras.queue?.months !== undefined && extras.queue.months !== null) {
@@ -50,7 +51,7 @@ const ExtrasSection = ({ extras }: { extras: ManagementReportExtras }) => {
           <Grid item xs={12} md={4}>
             <LmsStatCard
               label='Renovaciones'
-              value={`${renewals.renewed} de ${renewals.expired}`}
+              value={`${formatInt(renewals.renewed)} de ${formatInt(renewals.expired)}`}
               icon={<AutorenewOutlined />}
               tone='teal'
               caption={`${percent(renewals.share)} de los equipos vencidos al cierre del mes anterior se recalibró este mes`}
@@ -62,7 +63,7 @@ const ExtrasSection = ({ extras }: { extras: ManagementReportExtras }) => {
           <Grid item xs={12} md={4}>
             <LmsStatCard
               label='Clientes nuevos y recurrentes'
-              value={`${customerMix.newCustomers} y ${customerMix.recurringCustomers}`}
+              value={`${formatInt(customerMix.newCustomers)} y ${formatInt(customerMix.recurringCustomers)}`}
               icon={<PersonAddAltOutlined />}
               tone='blue'
               caption={
