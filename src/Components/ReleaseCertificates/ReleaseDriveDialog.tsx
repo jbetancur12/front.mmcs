@@ -18,13 +18,20 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material'
-import { ContentCopyRounded } from '@mui/icons-material'
+import {
+  ArrowDownwardRounded,
+  ArrowUpwardRounded,
+  CloseRounded,
+  ContentCopyRounded
+} from '@mui/icons-material'
 import ReleaseDriveGuideDialog from './ReleaseDriveGuideDialog'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import {
   DriveLevel,
+  DRIVE_LEVEL_OPTIONS,
   DRIVE_LEVEL_PRESETS,
+  MAX_DRIVE_LEVELS,
   useDriveActions,
   useDriveStatus
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
@@ -64,7 +71,9 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
   const [clientId, setClientId] = useState('')
   const [clientSecret, setClientSecret] = useState('')
   const [rootFolderId, setRootFolderId] = useState('')
-  const [preset, setPreset] = useState(0)
+  const [levels, setLevels] = useState<DriveLevel[]>(
+    DRIVE_LEVEL_PRESETS[0].levels
+  )
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
 
@@ -72,16 +81,28 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
     if (!status) return
     setRootFolderId(status.rootFolderId ?? '')
     if (status.mode) setMode(status.mode)
-    const index = DRIVE_LEVEL_PRESETS.findIndex((p) =>
-      sameLevels(p.levels, status.levels)
-    )
-    setPreset(index >= 0 ? index : 0)
+    if (status.levels?.length) setLevels(status.levels)
   }, [status])
 
   const fail = (message: string) => (error: unknown) =>
     notify.error(message, getApiErrorReason(error) ?? undefined)
 
-  const levels = DRIVE_LEVEL_PRESETS[preset].levels
+  const presetIndex = DRIVE_LEVEL_PRESETS.findIndex((p) =>
+    sameLevels(p.levels, levels)
+  )
+  const remaining = (Object.keys(DRIVE_LEVEL_OPTIONS) as DriveLevel[]).filter(
+    (level) => !levels.includes(level)
+  )
+  const move = (index: number, delta: number) =>
+    setLevels((current) => {
+      const next = [...current]
+      const [item] = next.splice(index, 1)
+      next.splice(index + delta, 0, item)
+      return next
+    })
+  const preview = levels
+    .map((level) => DRIVE_LEVEL_OPTIONS[level].example)
+    .join(' / ')
 
   const save = () =>
     actions.save.mutate(
@@ -358,20 +379,127 @@ const ReleaseDriveDialog: React.FC<ReleaseDriveDialogProps> = ({
               helperText='Es el final de la dirección de la carpeta en Drive.'
               sx={{ mb: 2 }}
             />
+            <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 0.5 }}>
+              Estructura de carpetas
+            </Typography>
             <TextField
               select
               fullWidth
               size='small'
-              label='Estructura de carpetas'
-              value={preset}
-              onChange={(event) => setPreset(Number(event.target.value))}
+              label='Plantilla'
+              value={presetIndex}
+              onChange={(event) =>
+                setLevels(
+                  DRIVE_LEVEL_PRESETS[Number(event.target.value)].levels
+                )
+              }
+              SelectProps={{ displayEmpty: true }}
+              InputLabelProps={{ shrink: true }}
+              sx={{ mb: 1.5 }}
             >
+              <MenuItem value={-1} disabled>
+                Personalizada
+              </MenuItem>
               {DRIVE_LEVEL_PRESETS.map((option, index) => (
                 <MenuItem key={option.label} value={index}>
                   {option.label}
                 </MenuItem>
               ))}
             </TextField>
+            <Box sx={{ mb: 1 }}>
+              {levels.map((level, index) => (
+                <Box
+                  key={level}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    py: 0.25
+                  }}
+                >
+                  <Typography variant='caption' sx={{ width: 20 }}>
+                    {index + 1}.
+                  </Typography>
+                  <Chip
+                    size='small'
+                    label={DRIVE_LEVEL_OPTIONS[level].label}
+                    sx={{ fontWeight: 600 }}
+                  />
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ flex: 1, minWidth: 0 }}
+                  >
+                    {DRIVE_LEVEL_OPTIONS[level].hint ?? ''}
+                  </Typography>
+                  <IconButton
+                    size='small'
+                    aria-label={`Subir ${DRIVE_LEVEL_OPTIONS[level].label}`}
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                  >
+                    <ArrowUpwardRounded fontSize='small' />
+                  </IconButton>
+                  <IconButton
+                    size='small'
+                    aria-label={`Bajar ${DRIVE_LEVEL_OPTIONS[level].label}`}
+                    disabled={index === levels.length - 1}
+                    onClick={() => move(index, 1)}
+                  >
+                    <ArrowDownwardRounded fontSize='small' />
+                  </IconButton>
+                  <IconButton
+                    size='small'
+                    aria-label={`Quitar ${DRIVE_LEVEL_OPTIONS[level].label}`}
+                    disabled={levels.length === 1}
+                    onClick={() =>
+                      setLevels((current) => current.filter((l) => l !== level))
+                    }
+                  >
+                    <CloseRounded fontSize='small' />
+                  </IconButton>
+                </Box>
+              ))}
+            </Box>
+            <TextField
+              select
+              fullWidth
+              size='small'
+              label='Agregar nivel'
+              value=''
+              disabled={levels.length >= MAX_DRIVE_LEVELS || !remaining.length}
+              onChange={(event) =>
+                setLevels((current) => [
+                  ...current,
+                  event.target.value as DriveLevel
+                ])
+              }
+              helperText={
+                levels.length >= MAX_DRIVE_LEVELS
+                  ? `Máximo ${MAX_DRIVE_LEVELS} niveles`
+                  : 'Cada nivel sale de un dato real del certificado'
+              }
+              sx={{ mb: 1.5 }}
+            >
+              {remaining.map((level) => (
+                <MenuItem key={level} value={level}>
+                  {DRIVE_LEVEL_OPTIONS[level].label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Alert severity='info' icon={false}>
+              <Typography variant='caption' display='block' fontWeight={700}>
+                Así quedaría una carpeta
+              </Typography>
+              <Typography variant='body2' sx={{ wordBreak: 'break-word' }}>
+                {preview}
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                Cambiar la estructura solo afecta a lo que se libere después; lo
+                ya copiado se queda donde está. Si a un certificado le falta un
+                dato, su carpeta se llama «Sin …».
+              </Typography>
+            </Alert>
           </>
         )}
       </DialogContent>

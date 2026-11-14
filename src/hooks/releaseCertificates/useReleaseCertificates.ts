@@ -353,7 +353,51 @@ export const useSignatoryImage = (id: number) => {
   )
 }
 
-export type DriveLevel = 'categoria' | 'cliente' | 'anio'
+export type DriveLevel =
+  | 'categoria'
+  | 'cliente'
+  | 'anio'
+  | 'sede'
+  | 'tipo_equipo'
+  | 'magnitud'
+  | 'tipo_certificado'
+  | 'mes'
+  | 'ods'
+
+/** Máximo de carpetas anidadas (igual que el API). */
+export const MAX_DRIVE_LEVELS = 5
+
+/** Niveles posibles: de dónde sale cada carpeta y un ejemplo para la vista previa. */
+export const DRIVE_LEVEL_OPTIONS: Record<
+  DriveLevel,
+  { label: string; example: string; hint?: string }
+> = {
+  categoria: {
+    label: 'Categoría',
+    example: 'Biomédico',
+    hint: 'Sale del prefijo del número (BIO, P, T, M…)'
+  },
+  cliente: { label: 'Cliente', example: 'ESE Hospital San Marcos' },
+  anio: { label: 'Año', example: '2026', hint: 'Año de emisión' },
+  sede: {
+    label: 'Sede del cliente',
+    example: 'Sede Centro',
+    hint: 'La del equipo al liberar; si falta, «Sin sede»'
+  },
+  tipo_equipo: { label: 'Tipo de equipo', example: 'Tensiómetro' },
+  magnitud: { label: 'Magnitud', example: 'Presión' },
+  tipo_certificado: {
+    label: 'Tipo de certificado',
+    example: 'Calibración',
+    hint: 'Calibración, verificación, validación o seguridad eléctrica'
+  },
+  mes: { label: 'Mes', example: '2026-10', hint: 'Año-mes de emisión' },
+  ods: {
+    label: 'ODS / servicio',
+    example: 'SCL-2026-0001',
+    hint: 'Solo si se cargó con servicio; si no, «Sin ODS»'
+  }
+}
 
 /** Estructuras de carpetas ofrecidas; la regla es configurable, no está fija en el código. */
 export const DRIVE_LEVEL_PRESETS: { label: string; levels: DriveLevel[] }[] = [
