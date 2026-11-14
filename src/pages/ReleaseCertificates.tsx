@@ -11,6 +11,7 @@ import {
   MenuItem,
   Switch,
   TextField,
+  Typography,
   Tooltip,
   useMediaQuery,
   useTheme
@@ -82,6 +83,10 @@ const STATUS_CARDS: {
   { status: 'firmado', tone: 'blue', icon: <VerifiedOutlined /> },
   { status: 'liberado', tone: 'green', icon: <AssignmentTurnedInOutlined /> }
 ]
+
+/** Verificado y principal: ya se puede marcar y firmar. */
+const readyToSign = (certificate: ReleaseCertificate) =>
+  certificate.status === 'verificado' && certificate.kind === 'principal'
 
 const formatDate = (value: string | null) =>
   value ? value.split('-').reverse().join('/') : '—'
@@ -253,8 +258,23 @@ const ReleaseCertificates: React.FC = () => {
         accessorKey: 'status',
         header: 'Estado',
         size: 190,
-        Cell: ({ cell }) => (
-          <ReleaseStatusPill status={cell.getValue<ReleaseStatus>()} />
+        Cell: ({ cell, row }) => (
+          <Box>
+            <ReleaseStatusPill status={cell.getValue<ReleaseStatus>()} />
+            {canSign && readyToSign(row.original) && (
+              <Typography
+                variant='caption'
+                sx={{
+                  display: 'block',
+                  mt: 0.25,
+                  fontWeight: 700,
+                  color: 'brand.ink'
+                }}
+              >
+                Listo para firmar
+              </Typography>
+            )}
+          </Box>
         )
       },
       {
@@ -320,7 +340,7 @@ const ReleaseCertificates: React.FC = () => {
           new Date(cell.getValue<string>()).toLocaleDateString('es-CO')
       }
     ],
-    [isMobile]
+    [isMobile, canSign]
   )
 
   const uploadButton = canUpload && (
@@ -567,10 +587,7 @@ const ReleaseCertificates: React.FC = () => {
           itemLabel={['certificado', 'certificados']}
           enableGlobalFilter={false}
           enableRowSelection={(row) =>
-            canSign &&
-            !isMobile &&
-            row.original.status === 'verificado' &&
-            row.original.kind === 'principal'
+            canSign && !isMobile && readyToSign(row.original)
           }
           getRowId={(row) => String(row.id)}
           onRowSelectionChange={setSelection}
@@ -603,7 +620,15 @@ const ReleaseCertificates: React.FC = () => {
           }}
           muiTableBodyRowProps={({ row }) => ({
             onDoubleClick: () => setViewingId(row.original.id),
-            sx: { cursor: 'pointer' }
+            sx: {
+              cursor: 'pointer',
+              // Lo que ya se puede firmar se distingue de un vistazo: fondo suave y borde turquesa a la izquierda.
+              ...(canSign &&
+                readyToSign(row.original) && {
+                  bgcolor: brand.softer,
+                  boxShadow: `inset 3px 0 0 ${brand.main}`
+                })
+            }
           })}
           renderRowActions={({ row }) => {
             const certificate = row.original
