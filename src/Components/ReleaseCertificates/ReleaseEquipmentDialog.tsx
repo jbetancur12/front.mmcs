@@ -50,6 +50,9 @@ const SEARCH_DEBOUNCE_MS = 300
 const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleDateString('es-CO') : '—'
 
+/** Valor del selector de sede cuando la sede no está en la lista del cliente. */
+const OTHER_SITE = '__otra__'
+
 const EMPTY: ReleaseNewEquipment = {
   deviceId: '',
   certificateTypeId: '',
@@ -227,6 +230,40 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
   }, [data])
 
   const creating = choice === NEW
+  const sites = useMemo(() => data?.sites ?? [], [data])
+  // La sede del equipo es el nombre de una sede del cliente; «otra» solo para una sede nueva.
+  const [otherSite, setOtherSite] = useState(false)
+  useEffect(() => {
+    if (!data) return
+    const known = data.sites.some(
+      (site) => site.name === data.prefill.headquarter
+    )
+    setOtherSite(
+      !known && (data.sites.length === 0 || Boolean(data.prefill.headquarter))
+    )
+  }, [data])
+  const siteValue = otherSite
+    ? OTHER_SITE
+    : sites.some((site) => site.name === form.headquarter)
+      ? form.headquarter
+      : ''
+  const chooseSite = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value
+    if (value === OTHER_SITE) {
+      setOtherSite(true)
+      setForm((current) => ({ ...current, headquarter: '' }))
+      return
+    }
+    setOtherSite(false)
+    const site = sites.find((item) => item.name === value)
+    setForm((current) => ({
+      ...current,
+      headquarter: value,
+      // Al elegir una sede se propone su ciudad y su dirección.
+      city: site?.city || current.city,
+      sede: site?.address || current.sede
+    }))
+  }
   const selected = useMemo(
     () =>
       creating
@@ -467,11 +504,50 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
                     ))}
                   </TextField>
                 </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select
+                    fullWidth
+                    size='small'
+                    label='Sede del cliente'
+                    value={siteValue}
+                    onChange={chooseSite}
+                    SelectProps={{ displayEmpty: true }}
+                    InputLabelProps={{ shrink: true }}
+                    helperText={
+                      sites.length
+                        ? 'Elige la sede donde está el equipo: así queda ligado a ella.'
+                        : 'Este cliente no tiene sedes registradas: escribe la sede y se creará.'
+                    }
+                  >
+                    <MenuItem value='' disabled>
+                      Elige una sede
+                    </MenuItem>
+                    {sites.map((site) => (
+                      <MenuItem key={site.id} value={site.name}>
+                        {site.name}
+                        {site.city ? ` · ${site.city}` : ''}
+                      </MenuItem>
+                    ))}
+                    <MenuItem value={OTHER_SITE}>Otra sede (escribir)</MenuItem>
+                  </TextField>
+                </Grid>
+                {otherSite && (
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      size='small'
+                      label='Nombre de la sede nueva'
+                      value={form.headquarter}
+                      onChange={set('headquarter')}
+                      helperText='Se crea como sede nueva del cliente al liberar, con la dirección y la ciudad de abajo.'
+                    />
+                  </Grid>
+                )}
                 {(
                   [
                     ['city', 'Ciudad'],
                     ['sede', 'Sede (dirección)'],
-                    ['headquarter', 'Sede del cliente'],
                     ['location', 'Ubicación'],
                     ['serie', 'Serie'],
                     ['activoFijo', 'Activo fijo']

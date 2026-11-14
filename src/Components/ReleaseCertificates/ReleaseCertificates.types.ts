@@ -197,6 +197,13 @@ export interface ReleaseEquipmentMatches {
   candidates: ReleaseEquipmentCandidate[]
   sameType: ReleaseEquipmentCandidate[]
   deviceSuggestions: { id: number; name: string; source: string }[]
+  /** Sedes del cliente: el equipo nuevo se liga a una de ellas por su nombre. */
+  sites: {
+    id: number
+    name: string
+    address: string | null
+    city: string | null
+  }[]
   prefill: {
     deviceId: number | null
     certificateTypeId: number | null
