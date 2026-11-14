@@ -10,7 +10,7 @@ import {
 } from '@mui/material'
 import { CloudUploadOutlined } from '@mui/icons-material'
 import ReleaseUploadDialog from 'src/Components/ReleaseCertificates/ReleaseUploadDialog'
-import { releaseCertificatesEnabled } from 'src/features/releaseCertificatesFlags'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from 'src/utils/functions'
 import ReleaseStatusPill from 'src/Components/ReleaseCertificates/ReleaseStatusPill'
@@ -43,6 +43,7 @@ const UploadForServiceButton = ({
 }) => {
   const [open, setOpen] = useState(false)
   const canUpload = useCan(PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD)
+  const releaseCertificatesEnabled = useFeature('release_certificates')
   if (!service || !canUpload || !releaseCertificatesEnabled) return null
   return (
     <>
@@ -79,8 +80,9 @@ const UploadForServiceButton = ({
 }
 
 /** Número del certificado como enlace a la bandeja (abre su detalle). */
-const CertificateLink = ({ id, label }: { id: number; label: string }) =>
-  releaseCertificatesEnabled ? (
+const CertificateLink = ({ id, label }: { id: number; label: string }) => {
+  const releaseCertificatesEnabled = useFeature('release_certificates')
+  return releaseCertificatesEnabled ? (
     <Link
       component={RouterLink}
       to={certificateHref(id)}
@@ -92,6 +94,7 @@ const CertificateLink = ({ id, label }: { id: number; label: string }) =>
   ) : (
     <>{label}</>
   )
+}
 
 /**
  * Certificados de este servicio que ya pasaron por «Certificados a liberar». Solo informa: no cambia el corte ni la

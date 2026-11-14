@@ -1058,6 +1058,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'system:billing:view': [
     { path: "/settings/cloud-billing", label: "Ajustes › Facturación de la nube", kind: 'screen' }
   ],
+  'system:feature_flags:manage': [
+    { path: "/settings/features", label: "Ajustes › Funciones", kind: 'screen' }
+  ],
   'system:settings:manage': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }
   ],

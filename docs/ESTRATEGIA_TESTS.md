@@ -18,7 +18,7 @@ Lógica pura, rápida de probar y estable. Un error ahí es silencioso y llega a
 | 3         | `src/utils/quickSearchUsage.ts`                                                     | Conteo de visitas con decaimiento a 14 días.                                                                                                                                                             |
 | 3         | `src/utils/tableStateUtils.ts`                                                      | Estado persistente de las tablas.                                                                                                                                                                        |
 
-Ya cubiertos: `apiError.ts`, `clientErrors.ts`, `features/libraryFlags.ts`.
+Ya cubiertos: `apiError.ts`, `clientErrors.ts`.
 
 Cada archivo de esta lista se prueba con un `*.test.ts` junto al código, sin renderizar nada y sin mocks de la API.
 

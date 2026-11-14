@@ -30,6 +30,8 @@ export const unassignableText = (role: AssignableRole): string | null => {
   switch (role.reason) {
     case 'inactive':
       return 'Rol desactivado'
+    case 'code_only':
+      return 'Este rol solo se asigna por código'
     case 'privileged_only':
       return 'Solo quien puede dar cualquier rol puede dar este rol'
     case 'missing_permissions': {

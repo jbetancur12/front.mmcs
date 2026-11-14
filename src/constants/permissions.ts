@@ -268,6 +268,8 @@ export const PERMISSIONS = {
   SYSTEM_BILLING_MANAGE: 'system:billing:manage',
   /** Recibir en tiempo real todos los datos de la plataforma (IoT, mantenimiento, turnos) */
   SYSTEM_REALTIME_VIEW: 'system:realtime:view',
+  /** Panel de desarrollador: encender o apagar funciones en construcción sin desplegar */
+  SYSTEM_FEATURE_FLAGS_MANAGE: 'system:feature_flags:manage',
   /** Crear, editar y eliminar las contraseñas de libros Excel guardadas (Subir Excel) */
   SYSTEM_SETTINGS_MANAGE: 'system:settings:manage',
   /** Ver los servicios de calibración, su línea de tiempo, documentos, notificaciones, SLA y configuración de WhatsApp */

@@ -4,9 +4,12 @@ import Header from './Header'
 import SideBar from './SideBar'
 import SessionExpiryBanner from './Authentication/SessionExpiryBanner'
 import PlatformBillingBanner from './PlatformBillingBanner'
+import { useFeatureFlagsSync } from 'src/hooks/useFeatureFlags'
 
 const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const location = useLocation()
+  // Estado de las funciones (Ajustes › Funciones): decide menús y rutas en toda la sesión
+  useFeatureFlagsSync()
   const isCourseView = location.pathname.match(/^\/lms\/course\/\d+$/)
   const [userMinimized, setUserMinimized] = useState(false)
   // hovered: si el mouse está sobre el sidebar
