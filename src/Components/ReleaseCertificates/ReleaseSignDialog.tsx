@@ -26,7 +26,9 @@ import * as pdfjs from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
+  ReleaseSignCategory,
   releaseFileUrl,
+  useSignCategories,
   useSignPlan,
   useSignReleaseCertificates
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
@@ -55,6 +57,8 @@ interface ReleaseSignDialogProps {
   ids: number[]
   onClose: () => void
   onDone?: () => void
+  /** Reduce el lote a un grupo de la misma categoría (cuando se mezclaron plantillas). */
+  onNarrow?: (ids: number[]) => void
 }
 
 /**
@@ -65,7 +69,8 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
   open,
   ids,
   onClose,
-  onDone
+  onDone,
+  onNarrow
 }) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
@@ -73,6 +78,30 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
   const firstId = open ? ids[0] ?? null : null
   const { data: plan, isLoading, error } = useSignPlan(firstId)
   const sign = useSignReleaseCertificates()
+  // Varios certificados se firman con la misma posición: solo si comparten categoría (plantilla).
+  const multi = open && ids.length > 1
+  const { data: categories, isLoading: loadingCategories } = useSignCategories(
+    multi ? ids : null
+  )
+  const groups = useMemo(() => {
+    const map = new Map<
+      string,
+      { label: string; items: ReleaseSignCategory[] }
+    >()
+    for (const item of categories ?? []) {
+      const group = map.get(item.category.key) ?? {
+        label: item.category.label,
+        items: []
+      }
+      group.items.push(item)
+      map.set(item.category.key, group)
+    }
+    return [...map.values()]
+  }, [categories])
+  const mixed = groups.length > 1
+  const [confirmedSame, setConfirmedSame] = useState(false)
+  useEffect(() => setConfirmedSame(false), [open, ids])
+  const batchReady = !multi || (!loadingCategories && !mixed && confirmedSame)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -349,14 +378,52 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
             {getApiErrorReason(error) ?? 'No se pudo preparar la firma.'}
           </Alert>
         )}
-        {plan && (
+        {multi && mixed && (
+          <Alert severity='error' sx={{ mb: 2 }}>
+            <Typography variant='body2' fontWeight={700}>
+              Seleccionaste certificados de {groups.length} categorías
+            </Typography>
+            <Typography variant='body2' sx={{ mb: 1 }}>
+              La firma cambia de posición entre plantillas, así que no se firman
+              juntos. Elige un grupo y firma el resto después.
+            </Typography>
+            {groups.map((group) => (
+              <Box key={group.label} sx={{ mb: 0.5 }}>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  onClick={() => onNarrow?.(group.items.map((item) => item.id))}
+                >
+                  Firmar solo {group.label} ({group.items.length})
+                </Button>
+              </Box>
+            ))}
+          </Alert>
+        )}
+        {plan && !mixed && (
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}>
               {ids.length > 1 && (
                 <Alert severity='info' sx={{ mb: 1.5 }}>
                   Estás viendo el primero. La misma posición se aplica a los{' '}
-                  {ids.length} seleccionados: firma juntos solo los de una misma
-                  categoría ({plan.category.label}).
+                  {ids.length} seleccionados, todos de la categoría{' '}
+                  {plan.category.label}:{' '}
+                  {(categories ?? [])
+                    .map((item) => item.documentNumber ?? `#${item.id}`)
+                    .join(', ')}
+                  .
+                  <FormControlLabel
+                    sx={{ display: 'block', mt: 0.5 }}
+                    control={
+                      <Checkbox
+                        checked={confirmedSame}
+                        onChange={(event) =>
+                          setConfirmedSame(event.target.checked)
+                        }
+                      />
+                    }
+                    label='Revisé que el campo de firma está en el mismo lugar en todos'
+                  />
                 </Alert>
               )}
               {plan.source === 'layout' && (
@@ -645,7 +712,9 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
         </Button>
         <Button
           variant='contained'
-          disabled={placements.length === 0 || sign.isLoading || !plan}
+          disabled={
+            placements.length === 0 || sign.isLoading || !plan || !batchReady
+          }
           onClick={submit}
           sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
         >

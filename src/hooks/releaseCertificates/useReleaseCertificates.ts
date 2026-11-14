@@ -239,6 +239,26 @@ export const useSignReleaseCertificates = () => {
   )
 }
 
+export interface ReleaseSignCategory {
+  id: number
+  documentNumber: string | null
+  instrument: string | null
+  category: { key: string; label: string }
+}
+
+/** Categoría (plantilla) de cada certificado de un lote: solo los de la misma se firman juntos. */
+export const useSignCategories = (ids: number[] | null) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseSignCategory[]>(
+    ['releaseCertificates', 'sign-categories', ids],
+    () =>
+      axiosPrivate
+        .post('/release-certificates/sign-categories', { ids })
+        .then((response) => response.data.items),
+    { enabled: ids !== null && ids.length > 1, cacheTime: 0 }
+  )
+}
+
 /** Registro de firmas del laboratorio (con las inactivas si `all`). */
 export const useSignatories = (enabled: boolean, all = false) => {
   const axiosPrivate = useAxiosPrivate()

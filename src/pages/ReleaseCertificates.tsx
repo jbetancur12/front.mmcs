@@ -660,6 +660,7 @@ const ReleaseCertificates: React.FC = () => {
         ids={signIds ?? []}
         onClose={() => setSignIds(null)}
         onDone={() => setSelection({})}
+        onNarrow={setSignIds}
       />
       <ReleaseUploadDialog
         open={uploadOpen}
