@@ -797,6 +797,14 @@ const SideBar = ({
     if (!isFeatureOn('library') && 'to' in item && item.to === '/library') {
       return false
     }
+    // Reporte gerencial oculto mientras la función esté apagada (Ajustes › Funciones)
+    if (
+      !isFeatureOn('management_report') &&
+      'to' in item &&
+      item.to === '/management-report'
+    ) {
+      return false
+    }
     if (
       isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
       !isLmsSidebarItem(item)

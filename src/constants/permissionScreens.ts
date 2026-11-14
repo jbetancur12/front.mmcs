@@ -974,9 +974,6 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'release:certificate:view': [
     { path: "/release-certificates", label: "Calibraciones › Certificados a liberar", kind: 'screen' }
   ],
-  'reports:management:financial': [
-    { path: "/management-report", label: "Reporte gerencial", kind: 'action' }
-  ],
   'reports:management:view': [
     { path: "/management-report", label: "Reporte gerencial", kind: 'screen' }
   ],
@@ -1069,7 +1066,8 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/settings/cloud-billing", label: "Ajustes › Facturación de la nube", kind: 'screen' }
   ],
   'system:feature_flags:manage': [
-    { path: "/settings/features", label: "Ajustes › Funciones", kind: 'screen' }
+    { path: "/settings/features", label: "Ajustes › Funciones", kind: 'screen' },
+    { path: "/management-report", label: "Reporte gerencial", kind: 'related' }
   ],
   'system:settings:manage': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }

@@ -5,10 +5,14 @@ import { map } from 'nanostores'
  * (`api.mmcs/services/featureFlags.service.js`); este store guarda el último estado conocido para decidir menús y
  * rutas. Las claves y los valores por defecto deben coincidir con el catálogo del backend.
  */
-export type FeatureFlagKey = 'release_certificates' | 'library'
+export type FeatureFlagKey =
+  | 'release_certificates'
+  | 'management_report'
+  | 'library'
 
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlagKey, boolean> = {
   release_certificates: false,
+  management_report: false,
   library: true
 }
 
