@@ -70,7 +70,7 @@ const QuickFilter: React.FC<{
       fontWeight: 600,
       fontSize: 14,
       borderColor: active ? TEAL_INK : neutral.border,
-      bgcolor: active ? brand.soft : '#fff',
+      bgcolor: active ? brand.soft : neutral.surface,
       color: active ? TEAL_INK : neutral.textBody,
       '&&:hover': { bgcolor: active ? brand.soft : neutral.surfaceHead }
     }}
@@ -249,7 +249,7 @@ const CalibrationServicesFiltersCard = ({
             sx={{
               '& .MuiBadge-badge': {
                 bgcolor: TEAL_INK,
-                color: '#fff',
+                color: neutral.surface,
                 fontWeight: 700
               }
             }}

@@ -64,7 +64,7 @@ const CalibrationScale: React.FC<{ compact?: boolean }> = ({ compact }) => (
       x2={SCALE_START + SCALE_STEP * (TICKS - 1)}
       y1={compact ? 44 : 50}
       y2={compact ? 44 : 50}
-      stroke={brand.soft}
+      stroke={brand.onPanel}
       strokeOpacity={0.6}
     />
     {Array.from({ length: TICKS }, (_, i) => {
@@ -80,7 +80,7 @@ const CalibrationScale: React.FC<{ compact?: boolean }> = ({ compact }) => (
             x2={x}
             y1={base - length}
             y2={base}
-            stroke={brand.soft}
+            stroke={brand.onPanel}
             strokeOpacity={major ? 1 : 0.7}
             strokeWidth={major ? 2 : 1.2}
           />
@@ -89,7 +89,7 @@ const CalibrationScale: React.FC<{ compact?: boolean }> = ({ compact }) => (
               x={x}
               y={base + 22}
               textAnchor='middle'
-              fill={brand.soft}
+              fill={brand.onPanel}
               fontSize={12}
               style={{ fontVariantNumeric: 'tabular-nums' }}
             >
@@ -127,13 +127,13 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         display: { xs: 'none', md: 'flex' },
         flexDirection: 'column',
         justifyContent: 'space-between',
-        bgcolor: brand.ink,
-        color: '#ffffff',
+        bgcolor: brand.panel,
+        color: brand.onPanel,
         px: { md: 6, lg: 8 },
         py: 6
       }}
     >
-      <Typography sx={{ fontWeight: 600, fontSize: 15, color: brand.soft }}>
+      <Typography sx={{ fontWeight: 600, fontSize: 15, color: brand.onPanel }}>
         Ingeniería y laboratorio de metrología
       </Typography>
 
@@ -150,7 +150,9 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         >
           Tus equipos y certificados de calibración, en un solo lugar.
         </Typography>
-        <Typography sx={{ fontSize: 16, lineHeight: 1.6, color: brand.soft }}>
+        <Typography
+          sx={{ fontSize: 16, lineHeight: 1.6, color: brand.onPanel }}
+        >
           Consulta el estado de cada equipo, descarga certificados y sigue los
           servicios en curso.
         </Typography>
@@ -163,7 +165,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
       <Box
         sx={{
           display: { xs: 'block', md: 'none' },
-          bgcolor: brand.ink,
+          bgcolor: brand.panel,
           px: 2,
           pt: 1.5
         }}
@@ -187,6 +189,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
             component='img'
             src='/images/logo2.png'
             alt='Metromedics'
+            className='brand-logo'
             sx={{ display: 'block', height: 52, width: 'auto', mb: 5 }}
           />
           <Typography

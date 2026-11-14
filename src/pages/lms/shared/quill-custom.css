@@ -1,50 +1,69 @@
-/* Custom styles for React Quill editor */
+/* Estilos del editor Quill (LMS), con tokens del sistema: sirven en claro y oscuro. */
 .ql-editor {
   min-height: 200px;
   font-family: inherit;
   font-size: 14px;
   line-height: 1.5;
+  color: var(--mm-neutral-text);
 }
 
 .ql-editor.ql-blank::before {
-  color: #999;
+  color: var(--mm-neutral-text-muted);
   font-style: italic;
 }
 
 .ql-toolbar {
-  border-top: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+  border: 1px solid var(--mm-neutral-border);
   border-bottom: none;
+  background-color: var(--mm-neutral-surface-alt);
 }
 
 .ql-container {
-  border-bottom: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+  border: 1px solid var(--mm-neutral-border);
   border-top: none;
+  background-color: var(--mm-neutral-surface);
 }
 
-/* Dark theme support */
-.MuiPaper-root .ql-toolbar {
-  background-color: #f5f5f5;
+/* Iconos y selectores del toolbar de Quill (el tema snow los fija en #444). */
+.ql-snow .ql-stroke,
+.ql-snow .ql-stroke-miter {
+  stroke: var(--mm-neutral-text-body);
 }
 
-.MuiPaper-root .ql-container {
-  background-color: white;
+.ql-snow .ql-fill,
+.ql-snow .ql-stroke.ql-fill {
+  fill: var(--mm-neutral-text-body);
 }
 
-/* Focus styles */
-.ql-container.ql-snow {
-  border: 1px solid #ccc;
+.ql-snow .ql-picker {
+  color: var(--mm-neutral-text-body);
 }
 
+.ql-snow .ql-picker-options,
+.ql-snow .ql-tooltip {
+  background-color: var(--mm-neutral-surface);
+  border-color: var(--mm-neutral-border);
+  color: var(--mm-neutral-text);
+}
+
+.ql-snow .ql-tooltip input[type='text'] {
+  background-color: var(--mm-neutral-surface);
+  border-color: var(--mm-neutral-border);
+  color: var(--mm-neutral-text);
+}
+
+.ql-snow .ql-toolbar .ql-picker.ql-expanded .ql-picker-label,
+.ql-snow .ql-toolbar .ql-picker.ql-expanded .ql-picker-options {
+  border-color: var(--mm-neutral-border);
+}
+
+/* Focus */
 .ql-container.ql-snow:focus-within {
-  border-color: #1976d2;
-  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  border-color: var(--mm-brand-hover);
+  box-shadow: 0 0 0 2px var(--mm-brand-soft);
 }
 
-/* Custom button styles */
+/* Toolbar: hover y activo */
 .ql-toolbar .ql-formats {
   margin-right: 15px;
 }
@@ -54,21 +73,25 @@
   margin: 2px;
 }
 
-.ql-toolbar button:hover {
-  background-color: #e0e0e0;
+.ql-toolbar button:hover,
+.ql-snow.ql-toolbar button:hover,
+.ql-snow .ql-toolbar button:hover {
+  background-color: var(--mm-neutral-surface-head);
   border-radius: 3px;
 }
 
 .ql-toolbar button.ql-active {
-  background-color: #1976d2;
-  color: white;
+  background-color: var(--mm-brand-soft);
+  color: var(--mm-brand-ink);
   border-radius: 3px;
 }
 
-/* Code block styling */
-.ql-editor pre.ql-syntax {
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
+/* Código */
+.ql-editor pre.ql-syntax,
+.ql-snow .ql-editor .ql-code-block-container {
+  background-color: var(--mm-neutral-surface-head);
+  color: var(--mm-neutral-text);
+  border: 1px solid var(--mm-neutral-border);
   border-radius: 4px;
   padding: 10px;
   margin: 10px 0;
@@ -76,33 +99,35 @@
 }
 
 .ql-editor code {
-  background-color: #f5f5f5;
+  background-color: var(--mm-neutral-surface-head);
+  color: var(--mm-neutral-text);
   padding: 2px 4px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
 }
 
-/* Blockquote styling */
+/* Cita */
 .ql-editor blockquote {
-  border-left: 4px solid #1976d2;
+  border-left: 4px solid var(--mm-brand-main);
   padding-left: 16px;
   margin-left: 0;
   margin-right: 0;
-  color: #666;
+  color: var(--mm-neutral-text-muted);
   font-style: italic;
 }
 
-/* Link styling */
-.ql-editor a {
-  color: #1976d2;
+/* Enlaces */
+.ql-editor a,
+.ql-snow a {
+  color: var(--mm-brand-ink);
   text-decoration: underline;
 }
 
 .ql-editor a:hover {
-  color: #115293;
+  color: var(--mm-brand-hover);
 }
 
-/* List styling */
+/* Listas */
 .ql-editor ul,
 .ql-editor ol {
   padding-left: 20px;
@@ -112,21 +137,20 @@
   margin-bottom: 5px;
 }
 
-/* Image styling */
+/* Imágenes */
 .ql-editor img {
   max-width: 100%;
   height: auto;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--mm-neutral-shadow, rgba(0, 0, 0, 0.1));
 }
 
-/* Video styling */
 .ql-editor iframe {
   max-width: 100%;
   border-radius: 4px;
 }
 
-/* Table styling */
+/* Tablas */
 .ql-editor table {
   border-collapse: collapse;
   width: 100%;
@@ -135,17 +159,16 @@
 
 .ql-editor table td,
 .ql-editor table th {
-  border: 1px solid #ddd;
+  border: 1px solid var(--mm-neutral-border);
   padding: 8px;
   text-align: left;
 }
 
 .ql-editor table th {
-  background-color: #f5f5f5;
+  background-color: var(--mm-neutral-surface-head);
   font-weight: bold;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .ql-toolbar {
     flex-wrap: wrap;
@@ -162,9 +185,8 @@
   }
 }
 
-/* Accessibility improvements */
 .ql-toolbar button:focus {
-  outline: 2px solid #1976d2;
+  outline: 2px solid var(--mm-brand-hover);
   outline-offset: 2px;
 }
 
@@ -172,7 +194,7 @@
   outline: none;
 }
 
-/* Custom color palette */
+/* Paleta del selector de color */
 .ql-color .ql-picker-options,
 .ql-background .ql-picker-options {
   width: 168px;
@@ -188,5 +210,5 @@
 
 .ql-color .ql-picker-item:hover,
 .ql-background .ql-picker-item:hover {
-  border-color: #000;
+  border-color: var(--mm-neutral-text);
 }

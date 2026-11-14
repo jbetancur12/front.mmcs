@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Chip, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+
 import { ui } from './calibrationServicesListConstants'
 import { CalibrationServicesKanbanColumn } from './calibrationServicesListTypes'
 import { getCompactColumnTitle } from './calibrationServicesListUtils'
 import CalibrationServiceKanbanCard from './CalibrationServiceKanbanCard'
-import { neutral } from 'src/theme/designTokens'
+import { neutral, withAlpha } from 'src/theme/designTokens'
 
 interface CalibrationServicesKanbanProps {
   columns: CalibrationServicesKanbanColumn[]
@@ -50,12 +50,12 @@ const CalibrationServicesKanban = ({
           overflowY: 'hidden',
           height: 12,
           borderRadius: '999px',
-          bgcolor: alpha(ui.textSecondary, 0.08),
+          bgcolor: withAlpha(ui.textSecondary, 0.08),
           '&::-webkit-scrollbar': {
             height: 10
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: alpha(ui.textSecondary, 0.28),
+            backgroundColor: withAlpha(ui.textSecondary, 0.28),
             borderRadius: '999px'
           }
         }}
@@ -103,7 +103,7 @@ const CalibrationServicesKanban = ({
                 <Box
                   sx={{
                     p: 2,
-                    borderBottom: `1px solid ${alpha(column.accent, 0.14)}`
+                    borderBottom: `1px solid ${withAlpha(column.accent, 0.14)}`
                   }}
                 >
                   <Stack
@@ -143,7 +143,7 @@ const CalibrationServicesKanban = ({
                           : column.services.length
                       }
                       sx={{
-                        bgcolor: alpha(column.accent, 0.14),
+                        bgcolor: withAlpha(column.accent, 0.14),
                         color: column.accent,
                         fontWeight: 800
                       }}
@@ -166,8 +166,8 @@ const CalibrationServicesKanban = ({
                       sx={{
                         p: 1.5,
                         borderRadius: '16px',
-                        border: `1px dashed ${alpha(column.accent, 0.24)}`,
-                        bgcolor: alpha(column.accent, 0.04),
+                        border: `1px dashed ${withAlpha(column.accent, 0.24)}`,
+                        bgcolor: withAlpha(column.accent, 0.04),
                         minHeight: 72,
                         display: 'flex',
                         alignItems: 'center'
