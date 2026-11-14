@@ -707,6 +707,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Ver las contraseñas guardadas de los libros de Excel que se suben.',
     'Utilidades › Subir Excel.'
   ],
+  'system:feature_flags:manage': [
+    'Panel de desarrollador',
+    'Permite encender o apagar funciones en construcción (por ejemplo Certificados a liberar) sin desplegar una versión nueva.',
+    'Ajustes › Funciones.'
+  ],
   'system:settings:manage': [
     'Gestionar contraseñas de libros Excel',
     'Crear, editar y eliminar las contraseñas guardadas de los libros de Excel.',

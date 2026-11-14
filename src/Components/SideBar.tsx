@@ -59,9 +59,7 @@ import {
   PermissionKey
 } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
-import { libraryEnabled } from 'src/features/libraryFlags'
-import { releaseCertificatesEnabled } from 'src/features/releaseCertificatesFlags'
-import { brand } from 'src/theme/designTokens'
+import { featureFlagsStore, isFeatureOn } from 'src/store/featureFlagsStore'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -379,7 +377,7 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE,
       PERMISSIONS.CALIBRATION_FILE_CREATE,
       PERMISSIONS.CALIBRATION_TEMPLATE_VIEW,
-      ...(releaseCertificatesEnabled
+      ...(isFeatureOn('release_certificates')
         ? [PERMISSIONS.RELEASE_CERTIFICATE_VIEW]
         : [])
     ] as readonly PermissionKey[],
@@ -411,8 +409,8 @@ const sidebarItems = ($userStore: UserData) => [
         url: 'calibraciones/templates',
         permission: PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
       },
-      // Oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts)
-      ...(releaseCertificatesEnabled
+      // Oculto mientras la función esté apagada (Ajustes › Funciones)
+      ...(isFeatureOn('release_certificates')
         ? [
             {
               label: 'Certificados a liberar',
@@ -510,7 +508,8 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.USERS_USER_LIST,
       PERMISSIONS.RBAC_VIEW,
       PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW,
-      PERMISSIONS.SYSTEM_BILLING_VIEW
+      PERMISSIONS.SYSTEM_BILLING_VIEW,
+      PERMISSIONS.SYSTEM_FEATURE_FLAGS_MANAGE
     ] as PermissionKey[],
     moduleName: 'Basic',
     icon: <SettingsOutlined />,
@@ -534,6 +533,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Facturación de la nube',
         url: 'settings/cloud-billing',
         permission: PERMISSIONS.SYSTEM_BILLING_VIEW
+      },
+      {
+        label: 'Funciones',
+        url: 'settings/features',
+        permission: PERMISSIONS.SYSTEM_FEATURE_FLAGS_MANAGE
       }
     ]
   }
@@ -663,6 +667,8 @@ const SideBar = ({
   setMobileMenuOpen
 }: SideBarProps) => {
   const $userStore = useStore(userStore)
+  // Re-dibuja el menú cuando una función se enciende o se apaga (Ajustes › Funciones)
+  useStore(featureFlagsStore)
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const posthog = usePostHog()
@@ -787,8 +793,8 @@ const SideBar = ({
 
   // El usuario puede ver el ítem del menú (rol/capacidad, módulo y LMS).
   const canSeeItem = (item: SidebarItem) => {
-    // Biblioteca oculta hasta darla por lista (src/features/libraryFlags.ts)
-    if (!libraryEnabled && 'to' in item && item.to === '/library') {
+    // Biblioteca oculta mientras la función esté apagada (Ajustes › Funciones)
+    if (!isFeatureOn('library') && 'to' in item && item.to === '/library') {
       return false
     }
     if (
@@ -965,7 +971,7 @@ const SideBar = ({
           aria-label='Búsqueda rápida'
           aria-keyshortcuts='Control+K'
           title='Búsqueda rápida (Ctrl K)'
-          className={`flex w-full items-center rounded-xl border border-neutral-border bg-neutral-surface text-sm text-neutral-muted hover:border-[${brand.main}] hover:text-neutral-body focus-visible:outline focus-visible:outline-2 focus-visible:outline-[${brand.main}] ${
+          className={`flex w-full items-center rounded-xl border border-neutral-border bg-neutral-surface text-sm text-neutral-muted hover:border-brand hover:text-neutral-body focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand ${
             minimized ? 'justify-center py-2.5' : 'gap-2 px-3 py-2'
           }`}
         >
@@ -992,9 +998,9 @@ const SideBar = ({
       <div className='hidden lg:block flex-shrink-0 border-t border-neutral-border px-3 py-2'>
         {isLmsRoute && !minimized && !isLmsHintDismissed && (
           <div
-            className={`mb-3 flex items-start gap-2 rounded-lg bg-[${brand.soft}] p-3`}
+            className={`mb-3 flex items-start gap-2 rounded-lg bg-brand-soft p-3`}
           >
-            <p className={`flex-1 text-xs leading-5 text-[${brand.ink}]`}>
+            <p className={`flex-1 text-xs leading-5 text-brand-ink`}>
               <span className='block font-semibold'>
                 Gana espacio en Academia
               </span>
@@ -1004,7 +1010,7 @@ const SideBar = ({
             <button
               type='button'
               onClick={dismissLmsHint}
-              className={`rounded p-0.5 text-[${brand.ink}] hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[${brand.ink}]`}
+              className={`rounded p-0.5 text-brand-ink hover:bg-brand-softer focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-ink`}
               aria-label='Cerrar sugerencia'
             >
               <Close sx={{ fontSize: 16 }} />

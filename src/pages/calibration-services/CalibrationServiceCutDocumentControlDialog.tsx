@@ -11,7 +11,7 @@ import {
 } from '../../types/calibrationService'
 import CalibrationServiceCertificateRows from './CalibrationServiceCertificateRows'
 import ReleaseUploadDialog from '../../Components/ReleaseCertificates/ReleaseUploadDialog'
-import { releaseCertificatesEnabled } from '../../features/releaseCertificatesFlags'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 import { CALIBRATION_SERVICE_QUERY_KEYS } from '../../hooks/useCalibrationServices'
 import { PERMISSIONS } from '../../constants/permissions'
 import { useCan } from '../../utils/functions'
@@ -63,6 +63,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
   const [notes, setNotes] = useState('')
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
+  const releaseCertificatesEnabled = useFeature('release_certificates')
   const canUploadCertificates =
     useCan(PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD) &&
     releaseCertificatesEnabled &&

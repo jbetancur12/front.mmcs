@@ -3,8 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import Router from './router.tsx'
-import { ThemeProvider } from '@mui/material'
-import { theme } from './theme.tsx'
+import { ThemeModeProvider } from './theme/ThemeModeProvider'
 // import * as Sentry from '@sentry/react'
 
 import { PostHogProvider } from 'posthog-js/react'
@@ -47,7 +46,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     >
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <ThemeProvider theme={theme}>
+          <ThemeModeProvider>
             <WebSocketProvider>
               <Router />
             </WebSocketProvider>
@@ -55,7 +54,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <AnalyticsConsentBanner />
             <AppToaster />
             <DialogHost />
-          </ThemeProvider>
+          </ThemeModeProvider>
         </BrowserRouter>
         {/* React Query DevTools - only in development */}
         {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}

@@ -110,7 +110,8 @@ const G = {
   gray600: neutral.textBody,
   gray800: neutral.text,
   dark: neutral.text,
-  white: '#ffffff'
+  white: '#ffffff',
+  surface: neutral.surface
 }
 
 const BANNER_BG = `linear-gradient(135deg, ${detail.from}, ${detail.to})`
@@ -699,7 +700,7 @@ const MobilePage = () => {
     p: 2,
     borderRadius: '16px',
     border: `1px solid ${G.gray100}`,
-    bgcolor: G.white,
+    bgcolor: G.surface,
     cursor: 'pointer',
     textAlign: 'left',
     width: '100%',
@@ -1247,7 +1248,7 @@ const MobilePage = () => {
                                           getReleased(item)
                                       }
                                       sx={{
-                                        bgcolor: G.white,
+                                        bgcolor: G.surface,
                                         border: `1px solid ${G.gray200}`,
                                         width: 44,
                                         height: 44
@@ -1438,7 +1439,7 @@ const MobilePage = () => {
                     textTransform: 'none',
                     fontWeight: 700,
                     fontSize: '1rem',
-                    bgcolor: G.white
+                    bgcolor: G.surface
                   }}
                 >
                   Reportar novedad
@@ -1639,7 +1640,7 @@ const MobilePage = () => {
                         variant='outlined'
                         startIcon={<AddCircleOutlineIcon />}
                         onClick={() => setShowCut(true)}
-                        sx={{ ...outlineSx, bgcolor: G.white }}
+                        sx={{ ...outlineSx, bgcolor: G.surface }}
                       >
                         Crear corte
                       </Button>
@@ -2590,7 +2591,7 @@ const MobilePage = () => {
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  bgcolor: G.white,
+                  bgcolor: G.surface,
                   borderTop: `1px solid ${G.gray100}`,
                   px: 2,
                   py: 1.5
@@ -2992,7 +2993,7 @@ const MobilePage = () => {
                               onClick={() => setQty(sel.qty - 1)}
                               disabled={sel.qty <= 1}
                               sx={{
-                                bgcolor: G.white,
+                                bgcolor: G.surface,
                                 border: `1px solid ${G.gray200}`,
                                 width: 40,
                                 height: 40

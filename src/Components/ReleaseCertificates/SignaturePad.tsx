@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Box, Typography } from '@mui/material'
-import { neutral, intent } from 'src/theme/designTokens'
+import { neutral, lightPalette } from 'src/theme/designTokens'
 
 export interface SignaturePadHandle {
   clear: () => void
@@ -15,7 +15,8 @@ interface SignaturePadProps {
 
 const HEIGHT = 160
 const LINE_WIDTH = 2.4
-const INK = intent.infoInk
+// El canvas no entiende `var()`: la tinta es el hex del modo claro (la firma se guarda como PNG).
+const INK = lightPalette.intent.infoInk
 const CROP_MARGIN = 6
 
 /**

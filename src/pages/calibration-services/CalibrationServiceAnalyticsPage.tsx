@@ -80,8 +80,8 @@ const ui = {
   text: neutral.text,
   muted: neutral.textMuted,
   border: neutral.border,
-  surface: neutral.surfaceAlt,
-  white: '#ffffff'
+  white: '#ffffff',
+  surface: neutral.surface
 }
 
 const statusOptions: Array<{
@@ -189,7 +189,7 @@ const cardSx = {
   border: `1px solid ${ui.border}`,
   borderRadius: '16px',
   boxShadow: 'none',
-  backgroundColor: ui.white
+  backgroundColor: ui.surface
 }
 
 const secondaryButtonSx = {
@@ -199,7 +199,7 @@ const secondaryButtonSx = {
   minHeight: 42,
   borderColor: ui.border,
   color: ui.text,
-  backgroundColor: ui.white,
+  backgroundColor: ui.surface,
   '&:hover': {
     borderColor: ui.green,
     color: ui.greenDark,

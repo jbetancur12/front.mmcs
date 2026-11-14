@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Box, Button, Stack, Typography } from '@mui/material'
 import { BorderColor, Clear, UploadFile } from '@mui/icons-material'
-import { neutral, withAlpha } from 'src/theme/designTokens'
+import { lightPalette, neutral, withAlpha } from 'src/theme/designTokens'
 
 interface SignaturePadProps {
   value?: string | null
@@ -27,7 +27,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   const [hasSignature, setHasSignature] = useState(Boolean(value))
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const strokeColor = useMemo(() => neutral.text, [])
+  // El canvas no entiende `var()` y la firma se guarda como imagen sobre blanco:
+  // la tinta es siempre la del modo claro, también en modo oscuro.
+  const strokeColor = useMemo(() => lightPalette.neutral.text, [])
 
   const normalizeSignatureImage = React.useCallback(
     (source: HTMLCanvasElement | HTMLImageElement) => {

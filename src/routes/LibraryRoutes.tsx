@@ -4,14 +4,12 @@ import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import { PERMISSIONS } from 'src/constants/permissions'
 import Box from '@mui/material/Box'
-import { libraryEnabled } from 'src/features/libraryFlags'
+import FeatureGate from 'src/Components/Common/FeatureGate'
 
 const LibraryPage = lazy(() => import('src/pages/Library'))
 
 const LibraryRoutes = (role: string[]) => {
-  // Oculta hasta darla por lista (src/features/libraryFlags.ts): sin ruta, /library cae en la página no encontrada
-  if (!libraryEnabled) return null
-
+  // Con la función apagada en Ajustes › Funciones, FeatureGate lleva a la página no encontrada
   return (
     <Route
       element={
@@ -39,7 +37,9 @@ const LibraryRoutes = (role: string[]) => {
               </Box>
             }
           >
-            <LibraryPage />
+            <FeatureGate flag='library'>
+              <LibraryPage />
+            </FeatureGate>
           </Suspense>
         }
       />

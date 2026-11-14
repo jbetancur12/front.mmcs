@@ -6,6 +6,24 @@
 /* DM Sans font for LMS course view */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
 
+:root {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--mm-neutral-surface-alt);
+  color: var(--mm-neutral-text);
+}
+
+/* El logo trae texto oscuro: en modo oscuro se invierte para que se lea. */
+html.dark .brand-logo {
+  filter: brightness(0) invert(1);
+}
+
 /* En tu archivo de estilos principal */
 .custom-marker-icon.blinking {
   animation: alarm-blink 1s infinite;

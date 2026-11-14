@@ -106,7 +106,7 @@ const QuietStatCard: React.FC<Omit<LmsStatCardProps, 'variant'>> = ({
         borderColor: active ? brand.ink : neutral.border,
         // El borde de 2px del filtro activo no debe mover el contenido
         boxShadow: active ? `inset 0 0 0 1px ${brand.ink}` : 'none',
-        bgcolor: active ? brand.softer : '#fff',
+        bgcolor: active ? brand.softer : neutral.surface,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'border-color .15s, box-shadow .15s, background-color .15s',
         '&:hover': onClick

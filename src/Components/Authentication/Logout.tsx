@@ -54,7 +54,7 @@ const LogoutButton: React.FC = () => {
     <a
       href='#'
       onClick={handleLogout}
-      className='block px-4 py-2 text-sm text-neutral-body hover:bg-neutral-head dark:text-neutral-border-strong dark:hover:bg-neutral-body dark:hover:text-white'
+      className='block px-4 py-2 text-sm text-neutral-body hover:bg-neutral-head'
     >
       {' '}
       Cerrar Sesión
