@@ -268,6 +268,8 @@ export const PERMISSIONS = {
   SYSTEM_BILLING_MANAGE: 'system:billing:manage',
   /** Recibir en tiempo real todos los datos de la plataforma (IoT, mantenimiento, turnos) */
   SYSTEM_REALTIME_VIEW: 'system:realtime:view',
+  /** Panel de desarrollador: encender o apagar funciones en construcción sin desplegar */
+  SYSTEM_FEATURE_FLAGS_MANAGE: 'system:feature_flags:manage',
   /** Crear, editar y eliminar las contraseñas de libros Excel guardadas (Subir Excel) */
   SYSTEM_SETTINGS_MANAGE: 'system:settings:manage',
   /** Ver los servicios de calibración, su línea de tiempo, documentos, notificaciones, SLA y configuración de WhatsApp */
@@ -486,7 +488,11 @@ export const PERMISSIONS = {
   /** Otorgar o quitar capacidades sensibles desde el panel de roles */
   RBAC_SENSITIVE_MANAGE: 'rbac:sensitive:manage',
   /** Crear roles y activar o desactivar capacidades */
-  RBAC_MANAGE: 'rbac:manage'
+  RBAC_MANAGE: 'rbac:manage',
+  /** Ver el reporte gerencial mensual (versión sin valores si no se tiene la capacidad financiera) */
+  REPORTS_MANAGEMENT_VIEW: 'reports:management:view',
+  /** Ver y enviar los valores en dinero del reporte gerencial mensual */
+  REPORTS_MANAGEMENT_FINANCIAL: 'reports:management:financial'
 } as const
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

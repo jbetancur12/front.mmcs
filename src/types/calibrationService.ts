@@ -567,6 +567,8 @@ export interface CalibrationServiceFilters {
   paymentStatus?: 'pagado' | 'pendiente'
   /** Servicios con algún certificado al que el laboratorio le pidió ajustes. */
   certificateAlerts?: 'true'
+  /** Solo las cotizaciones que creó este usuario (filtro del servidor). */
+  createdByUserId?: number
   limit?: number
   offset?: number
 }

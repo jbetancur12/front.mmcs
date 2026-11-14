@@ -4,16 +4,14 @@ import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import { PERMISSIONS } from 'src/constants/permissions'
 import Box from '@mui/material/Box'
-import { releaseCertificatesEnabled } from 'src/features/releaseCertificatesFlags'
+import FeatureGate from 'src/Components/Common/FeatureGate'
 
 const ReleaseCertificatesPage = lazy(
   () => import('src/pages/ReleaseCertificates')
 )
 
 const ReleaseCertificatesRoutes = (role: string[]) => {
-  // Oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts): sin ruta, cae en la página no encontrada
-  if (!releaseCertificatesEnabled) return null
-
+  // Con la función apagada en Ajustes › Funciones, FeatureGate lleva a la página no encontrada
   return (
     <Route
       element={
@@ -41,7 +39,9 @@ const ReleaseCertificatesRoutes = (role: string[]) => {
               </Box>
             }
           >
-            <ReleaseCertificatesPage />
+            <FeatureGate flag='release_certificates'>
+              <ReleaseCertificatesPage />
+            </FeatureGate>
           </Suspense>
         }
       />

@@ -11,7 +11,12 @@ export interface AssignableRole extends Role {
   /** Claves de las capacidades del rol */
   permissions: string[]
   assignable: boolean
-  reason: 'inactive' | 'privileged_only' | 'missing_permissions' | null
+  reason:
+    | 'inactive'
+    | 'code_only'
+    | 'privileged_only'
+    | 'missing_permissions'
+    | null
   /** Capacidades del rol que quien asigna no tiene (solo si reason es missing_permissions) */
   missing: string[]
 }

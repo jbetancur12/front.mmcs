@@ -808,9 +808,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'maintenance:ticket:view': [
     { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'screen' },
     { path: "/maintenance/tickets/:ticketId", label: "Mantenimiento › Tickets", kind: 'screen' },
+    { path: "/equipment-sales", label: "Venta de equipos", kind: 'related' },
     { path: "/maintenance/analytics", label: "Mantenimiento › Analíticas", kind: 'related' },
     { path: "/maintenance/protocols", label: "Mantenimiento › Protocolos", kind: 'related' },
-    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' }
+    { path: "/maintenance/technicians", label: "Mantenimiento › Técnicos", kind: 'related' },
+    { path: "/purchases/requests", label: "Compras › Solicitudes de compra", kind: 'related' }
   ],
   'nonconform:report:view': [
     { path: "/non-conform-work-reports", label: "Trabajo no conforme", kind: 'screen' },
@@ -895,7 +897,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/purchases/requests", label: "Compras › Solicitudes de compra", kind: 'related' }
   ],
   'purchases:request:view': [
-    { path: "/purchases/requests", label: "Compras › Solicitudes de compra", kind: 'screen' }
+    { path: "/purchases/requests", label: "Compras › Solicitudes de compra", kind: 'screen' },
+    { path: "/equipment-sales", label: "Venta de equipos", kind: 'related' },
+    { path: "/maintenance", label: "Mantenimiento › Panel de mantenimiento", kind: 'related' }
   ],
   'purchases:statistics:view': [
     { path: "/purchases/statistics", label: "Compras › Estadísticas", kind: 'screen' }
@@ -969,6 +973,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'release:certificate:view': [
     { path: "/release-certificates", label: "Calibraciones › Certificados a liberar", kind: 'screen' }
+  ],
+  'reports:management:view': [
+    { path: "/management-report", label: "Reporte gerencial", kind: 'screen' }
   ],
   'repositories:repository:manage': [
     { path: "/repository", label: "Repositorio", kind: 'action' }
@@ -1057,6 +1064,10 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'system:billing:view': [
     { path: "/settings/cloud-billing", label: "Ajustes › Facturación de la nube", kind: 'screen' }
+  ],
+  'system:feature_flags:manage': [
+    { path: "/settings/features", label: "Ajustes › Funciones", kind: 'screen' },
+    { path: "/management-report", label: "Reporte gerencial", kind: 'related' }
   ],
   'system:settings:manage': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }

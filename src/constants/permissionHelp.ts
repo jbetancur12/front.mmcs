@@ -707,6 +707,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Ver las contraseñas guardadas de los libros de Excel que se suben.',
     'Utilidades › Subir Excel.'
   ],
+  'system:feature_flags:manage': [
+    'Panel de desarrollador',
+    'Permite encender o apagar funciones en construcción (por ejemplo Certificados a liberar) sin desplegar una versión nueva.',
+    'Ajustes › Funciones.'
+  ],
   'system:settings:manage': [
     'Gestionar contraseñas de libros Excel',
     'Crear, editar y eliminar las contraseñas guardadas de los libros de Excel.',
@@ -1226,6 +1231,17 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Gestionar el repositorio de archivos',
     'Subir, editar y eliminar archivos del repositorio.',
     'Repositorios.'
+  ],
+  // --- Reporte gerencial
+  'reports:management:view': [
+    'Ver el reporte gerencial',
+    'Consultar el reporte mensual de gerencia. Sin la capacidad financiera se muestra la versión sin valores.',
+    'Reporte gerencial.'
+  ],
+  'reports:management:financial': [
+    'Ver los valores del reporte gerencial',
+    'Ver y enviar los montos en dinero del reporte gerencial mensual.',
+    'Reporte gerencial.'
   ],
   // --- Administración de permisos
   'rbac:view': [

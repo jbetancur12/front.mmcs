@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AccountTreeOutlined,
+  AssessmentOutlined,
   AssignmentTurnedInOutlined,
   LocalShippingOutlined,
   BuildOutlined,
@@ -58,8 +59,7 @@ import {
   PermissionKey
 } from 'src/constants/permissions'
 import { logger } from 'src/utils/logger'
-import { libraryEnabled } from 'src/features/libraryFlags'
-import { releaseCertificatesEnabled } from 'src/features/releaseCertificatesFlags'
+import { featureFlagsStore, isFeatureOn } from 'src/store/featureFlagsStore'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -116,6 +116,15 @@ const sidebarItems = ($userStore: UserData) => [
     to: '/',
     icon: <DashboardOutlined />,
     roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
+    moduleName: 'Basic'
+  },
+  {
+    type: 'link',
+    label: 'Reporte gerencial',
+    to: '/management-report',
+    icon: <AssessmentOutlined />,
+    roles: [] as string[],
+    permission: PERMISSIONS.REPORTS_MANAGEMENT_VIEW,
     moduleName: 'Basic'
   },
   {
@@ -368,7 +377,7 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE,
       PERMISSIONS.CALIBRATION_FILE_CREATE,
       PERMISSIONS.CALIBRATION_TEMPLATE_VIEW,
-      ...(releaseCertificatesEnabled
+      ...(isFeatureOn('release_certificates')
         ? [PERMISSIONS.RELEASE_CERTIFICATE_VIEW]
         : [])
     ] as readonly PermissionKey[],
@@ -400,8 +409,8 @@ const sidebarItems = ($userStore: UserData) => [
         url: 'calibraciones/templates',
         permission: PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
       },
-      // Oculto hasta darlo por listo (src/features/releaseCertificatesFlags.ts)
-      ...(releaseCertificatesEnabled
+      // Oculto mientras la función esté apagada (Ajustes › Funciones)
+      ...(isFeatureOn('release_certificates')
         ? [
             {
               label: 'Certificados a liberar',
@@ -499,7 +508,8 @@ const sidebarItems = ($userStore: UserData) => [
       PERMISSIONS.USERS_USER_LIST,
       PERMISSIONS.RBAC_VIEW,
       PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW,
-      PERMISSIONS.SYSTEM_BILLING_VIEW
+      PERMISSIONS.SYSTEM_BILLING_VIEW,
+      PERMISSIONS.SYSTEM_FEATURE_FLAGS_MANAGE
     ] as PermissionKey[],
     moduleName: 'Basic',
     icon: <SettingsOutlined />,
@@ -523,6 +533,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Facturación de la nube',
         url: 'settings/cloud-billing',
         permission: PERMISSIONS.SYSTEM_BILLING_VIEW
+      },
+      {
+        label: 'Funciones',
+        url: 'settings/features',
+        permission: PERMISSIONS.SYSTEM_FEATURE_FLAGS_MANAGE
       }
     ]
   }
@@ -652,6 +667,8 @@ const SideBar = ({
   setMobileMenuOpen
 }: SideBarProps) => {
   const $userStore = useStore(userStore)
+  // Re-dibuja el menú cuando una función se enciende o se apaga (Ajustes › Funciones)
+  useStore(featureFlagsStore)
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const posthog = usePostHog()
@@ -776,8 +793,16 @@ const SideBar = ({
 
   // El usuario puede ver el ítem del menú (rol/capacidad, módulo y LMS).
   const canSeeItem = (item: SidebarItem) => {
-    // Biblioteca oculta hasta darla por lista (src/features/libraryFlags.ts)
-    if (!libraryEnabled && 'to' in item && item.to === '/library') {
+    // Biblioteca oculta mientras la función esté apagada (Ajustes › Funciones)
+    if (!isFeatureOn('library') && 'to' in item && item.to === '/library') {
+      return false
+    }
+    // Reporte gerencial oculto mientras la función esté apagada (Ajustes › Funciones)
+    if (
+      !isFeatureOn('management_report') &&
+      'to' in item &&
+      item.to === '/management-report'
+    ) {
       return false
     }
     if (

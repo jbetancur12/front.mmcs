@@ -2,7 +2,7 @@ import React from 'react'
 import { Box, Card, CardContent, Typography } from '@mui/material'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
 
-export type LmsStatTone = 'blue' | 'green' | 'orange' | 'red' | 'teal'
+export type LmsStatTone = 'blue' | 'green' | 'orange' | 'red' | 'teal' | 'gray'
 
 // Mismos degradados de las tarjetas del inicio de la aplicación
 const GRADIENTS: Record<LmsStatTone, { background: string; ring: string }> = {
@@ -25,6 +25,10 @@ const GRADIENTS: Record<LmsStatTone, { background: string; ring: string }> = {
   teal: {
     background: `linear-gradient(135deg, ${brand.hover} 0%, ${brand.main} 100%)`,
     ring: withAlpha(brand.main, 0.35)
+  },
+  gray: {
+    background: `linear-gradient(135deg, ${neutral.textMuted} 0%, ${neutral.textMuted} 100%)`,
+    ring: withAlpha(neutral.textMuted, 0.35)
   }
 }
 
@@ -35,7 +39,8 @@ const QUIET: Record<LmsStatTone, { ink: string; soft: string }> = {
   green: { ink: intent.successInk, soft: intent.successSoft },
   orange: { ink: intent.warningInk, soft: intent.warningSoft },
   red: { ink: intent.dangerInk, soft: intent.dangerSoft },
-  teal: { ink: brand.ink, soft: brand.soft }
+  teal: { ink: brand.ink, soft: brand.soft },
+  gray: { ink: neutral.textMuted, soft: neutral.surfaceHead }
 }
 const QUIET_IDLE = { ink: neutral.textBody, soft: neutral.surfaceHead }
 
