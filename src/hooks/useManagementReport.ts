@@ -9,6 +9,17 @@ import type {
 
 const REPORT_KEY = 'management-report'
 
+/** El API responde 202 mientras arma el reporte por primera vez (puede tardar un minuto). */
+interface ManagementReportGenerating {
+  status: 'generating'
+  message?: string
+}
+
+const isGenerating = (
+  data: ManagementReport | ManagementReportGenerating | undefined
+): data is ManagementReportGenerating =>
+  Boolean(data && 'status' in data && data.status === 'generating')
+
 export const useManagementReport = ({
   month,
   profile,
@@ -17,12 +28,12 @@ export const useManagementReport = ({
   month: string
   profile: 'full' | 'no_amounts'
   enabled?: boolean
-}) =>
-  useQuery<ManagementReport>(
+}) => {
+  const query = useQuery<ManagementReport | ManagementReportGenerating>(
     [REPORT_KEY, month, profile],
     async () =>
       (
-        await axiosPrivate.get<ManagementReport>(
+        await axiosPrivate.get<ManagementReport | ManagementReportGenerating>(
           '/management-reports/monthly',
           {
             params: { month, profile, format: 'json' }
@@ -32,9 +43,19 @@ export const useManagementReport = ({
     {
       enabled,
       staleTime: 5 * 60 * 1000,
-      retry: false
+      retry: false,
+      // Mientras el servidor arma el reporte, vuelve a preguntar cada 5 s
+      refetchInterval: (data) => (isGenerating(data) ? 5000 : false)
     }
   )
+  const generating = isGenerating(query.data)
+  return {
+    ...query,
+    data: generating ? undefined : (query.data as ManagementReport | undefined),
+    isLoading: query.isLoading || generating,
+    isGenerating: generating
+  }
+}
 
 /** Lista detrás de un número del reporte (paginada y con búsqueda en el servidor). */
 export const useManagementReportDetail = ({

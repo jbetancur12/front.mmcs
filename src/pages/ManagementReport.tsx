@@ -340,7 +340,8 @@ const ManagementReportPage = () => {
     isError,
     error,
     refetch,
-    isFetching
+    isFetching,
+    isGenerating
   } = useManagementReport({ month, profile, enabled: Boolean(month) })
   const { data: history = [] } = useManagementReportHistory(true)
   const { data: config } = useManagementReportConfig(canSeeAmounts)
@@ -666,7 +667,15 @@ const ManagementReportPage = () => {
       </Paper>
 
       {isLoading ? (
-        <SignalLoader />
+        <>
+          {isGenerating && (
+            <Alert severity='info' sx={{ mb: 2 }}>
+              El reporte se está armando. Puede tardar un minuto; se muestra
+              solo cuando esté listo.
+            </Alert>
+          )}
+          <SignalLoader />
+        </>
       ) : isError ? (
         <Alert severity='error'>
           {getApiErrorMessage(error, 'No se pudo cargar el reporte gerencial')}
