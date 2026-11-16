@@ -181,6 +181,9 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
   useEffect(() => {
     if (!doc) return
     let cancelled = false
+    // La tarea de dibujo en curso: se cancela antes de empezar otra, porque dos dibujos a la vez sobre el mismo lienzo
+    // lo dejan volteado y cortado.
+    let task: pdfjs.RenderTask | null = null
     void (async () => {
       const page = await doc.getPage(pageNo)
       if (cancelled) return
@@ -194,12 +197,22 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
       canvas.width = viewport.width
       canvas.height = viewport.height
       setStageHeight(base.height * scale)
-      await page.render({ canvasContext: context, viewport }).promise
-    })().catch(() => {
-      if (!cancelled) setLoadProblem('No se pudo mostrar la página.')
+      task = page.render({ canvasContext: context, viewport })
+      await task.promise
+      // Un dibujo que termina bien borra el aviso de uno anterior que falló.
+      if (!cancelled) setLoadProblem(null)
+    })().catch((error: unknown) => {
+      // Cancelar el dibujo anterior lanza este error a propósito: no es un fallo.
+      if (
+        cancelled ||
+        (error as { name?: string })?.name === 'RenderingCancelledException'
+      )
+        return
+      setLoadProblem('No se pudo mostrar la página.')
     })
     return () => {
       cancelled = true
+      task?.cancel()
     }
     // El recuadro solo existe cuando ya llegó el plan: se vuelve a dibujar en ese momento.
   }, [doc, pageNo, plan?.certificateId])
