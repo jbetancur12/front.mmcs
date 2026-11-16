@@ -26,9 +26,7 @@ import * as pdfjs from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
-  ReleaseSignCategory,
   releaseFileUrl,
-  useSignCategories,
   useSignPreview,
   useSignPlan,
   useSignReleaseCertificates
@@ -79,27 +77,8 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
   const firstId = open ? ids[0] ?? null : null
   const { data: plan, isLoading, error } = useSignPlan(firstId)
   const sign = useSignReleaseCertificates()
-  // Varios certificados se firman con la misma posición: solo si comparten categoría (plantilla).
+  // Varios certificados: la posición de cada firma se ubica en cada PDF por el texto impreso (ver la vista previa).
   const multi = open && ids.length > 1
-  const { data: categories, isLoading: loadingCategories } = useSignCategories(
-    multi ? ids : null
-  )
-  const groups = useMemo(() => {
-    const map = new Map<
-      string,
-      { label: string; items: ReleaseSignCategory[] }
-    >()
-    for (const item of categories ?? []) {
-      const group = map.get(item.category.key) ?? {
-        label: item.category.label,
-        items: []
-      }
-      group.items.push(item)
-      map.set(item.category.key, group)
-    }
-    return [...map.values()]
-  }, [categories])
-  const mixed = groups.length > 1
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -122,18 +101,12 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
     const timer = window.setTimeout(() => setSettled(placementsForApi), 500)
     return () => window.clearTimeout(timer)
   }, [placementsForApi])
-  const preview = useSignPreview(
-    multi && !mixed && !loadingCategories ? ids : null,
-    settled,
-    firstId
-  )
+  const preview = useSignPreview(multi ? ids : null, settled, firstId)
   const previewItems = preview.data ?? []
   const unresolved = previewItems.filter((item) => !item.ok)
   const batchReady =
     !multi ||
-    (!loadingCategories &&
-      !mixed &&
-      settled === placementsForApi &&
+    (settled === placementsForApi &&
       !preview.isFetching &&
       previewItems.some((item) => item.ok))
   const [loadProblem, setLoadProblem] = useState<string | null>(null)
@@ -414,38 +387,16 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
             {getApiErrorReason(error) ?? 'No se pudo preparar la firma.'}
           </Alert>
         )}
-        {multi && mixed && (
-          <Alert severity='error' sx={{ mb: 2 }}>
-            <Typography variant='body2' fontWeight={700}>
-              Seleccionaste certificados de {groups.length} categorías
-            </Typography>
-            <Typography variant='body2' sx={{ mb: 1 }}>
-              La firma cambia de posición entre plantillas, así que no se firman
-              juntos. Elige un grupo y firma el resto después.
-            </Typography>
-            {groups.map((group) => (
-              <Box key={group.label} sx={{ mb: 0.5 }}>
-                <Button
-                  size='small'
-                  variant='outlined'
-                  onClick={() => onNarrow?.(group.items.map((item) => item.id))}
-                >
-                  Firmar solo {group.label} ({group.items.length})
-                </Button>
-              </Box>
-            ))}
-          </Alert>
-        )}
-        {plan && !mixed && (
+        {plan && (
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}>
               {ids.length > 1 && (
                 <Alert severity='info' sx={{ mb: 1.5 }}>
-                  Estás viendo el primero. Cada firma se ubica en los demás
-                  (todos de la categoría {plan.category.label}) por el texto
-                  impreso, como «Aprobado por» o «Verificado por», no por su
-                  posición en la página: así sirve aunque la plantilla tenga
-                  otra escala o márgenes.
+                  Estás viendo el primero. Cada firma se ubica en los demás por
+                  el texto impreso, como «Aprobado por» o «Verificado por», no
+                  por su posición en la página: así sirve aunque la plantilla
+                  tenga otra escala o márgenes. Solo se firman los que tienen el
+                  mismo bloque de firmas.
                   <Box component='ul' sx={{ m: 0, mt: 0.5, pl: 2 }}>
                     {previewItems.map((item) => (
                       <li key={item.id}>
@@ -464,16 +415,34 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
                     ))}
                   </Box>
                   {unresolved.length > 0 && (
-                    <Typography
-                      variant='caption'
-                      color='error'
-                      display='block'
-                      sx={{ mt: 0.5 }}
-                    >
-                      {unresolved.length === 1
-                        ? 'Ese certificado no se firmará en este lote.'
-                        : `Esos ${unresolved.length} certificados no se firmarán en este lote.`}
-                    </Typography>
+                    <Box sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant='caption'
+                        color='error'
+                        display='block'
+                      >
+                        {unresolved.length === 1
+                          ? 'Ese certificado no se firmará en este lote.'
+                          : `Esos ${unresolved.length} certificados no se firmarán en este lote.`}
+                      </Typography>
+                      {previewItems.some((item) => item.ok) && (
+                        <Button
+                          size='small'
+                          variant='outlined'
+                          sx={{ mt: 0.5 }}
+                          onClick={() =>
+                            onNarrow?.(
+                              previewItems
+                                .filter((item) => item.ok)
+                                .map((item) => item.id)
+                            )
+                          }
+                        >
+                          Firmar solo los compatibles (
+                          {previewItems.filter((item) => item.ok).length})
+                        </Button>
+                      )}
+                    </Box>
                   )}
                 </Alert>
               )}
