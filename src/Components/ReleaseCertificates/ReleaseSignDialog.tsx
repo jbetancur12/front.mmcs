@@ -88,7 +88,8 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
   useEffect(() => {
     if (!open) setManual(false)
   }, [open])
-  const autoMode = multi && hasPosts && !manual
+  // Con puestos asignados, la firma es automática también para un solo certificado.
+  const autoMode = open && hasPosts && !manual
   const [allowNameMismatch, setAllowNameMismatch] = useState(false)
   useEffect(() => {
     setAllowNameMismatch(false)
