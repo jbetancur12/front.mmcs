@@ -27,12 +27,15 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
   releaseFileUrl,
+  useSignAutoPreview,
+  useSignatories,
   useSignPreview,
   useSignPlan,
   useSignReleaseCertificates
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
+import AutoSignPanel from './AutoSignPanel'
 import ReleaseSignatoriesDialog from './ReleaseSignatoriesDialog'
 import SignatoryImage, { SealImage } from './SignatoryImage'
 import { ReleasePlacement, ReleaseSignatory } from './ReleaseCertificates.types'
@@ -75,10 +78,29 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
   const axiosPrivate = useAxiosPrivate()
   const firstId = open ? ids[0] ?? null : null
-  const { data: plan, isLoading, error } = useSignPlan(firstId)
   const sign = useSignReleaseCertificates()
-  // Varios certificados: la posición de cada firma se ubica en cada PDF por el texto impreso (ver la vista previa).
+  // Varios certificados: si las firmas del registro tienen puesto, cada PDF se ubica solo por puesto (automático);
+  // si no, o si la analista lo pide, la posición se coloca a mano en el primero y se ubica en los demás por el texto impreso.
   const multi = open && ids.length > 1
+  const { data: registry } = useSignatories(open)
+  const hasPosts = (registry ?? []).some((s) => (s.slots ?? []).length > 0)
+  const [manual, setManual] = useState(false)
+  useEffect(() => {
+    if (!open) setManual(false)
+  }, [open])
+  const autoMode = multi && hasPosts && !manual
+  const [allowNameMismatch, setAllowNameMismatch] = useState(false)
+  useEffect(() => {
+    setAllowNameMismatch(false)
+  }, [open, ids])
+  const autoPreview = useSignAutoPreview(
+    autoMode ? ids : null,
+    allowNameMismatch
+  )
+  const autoItems = autoPreview.data ?? []
+  // En automático no hace falta ver ni preparar el primer PDF.
+  const viewId = autoMode ? null : firstId
+  const { data: plan, isLoading, error } = useSignPlan(viewId)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -101,14 +123,19 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
     const timer = window.setTimeout(() => setSettled(placementsForApi), 500)
     return () => window.clearTimeout(timer)
   }, [placementsForApi])
-  const preview = useSignPreview(multi ? ids : null, settled, firstId)
+  const preview = useSignPreview(
+    multi && !autoMode ? ids : null,
+    settled,
+    firstId
+  )
   const previewItems = preview.data ?? []
   const unresolved = previewItems.filter((item) => !item.ok)
-  const batchReady =
-    !multi ||
-    (settled === placementsForApi &&
-      !preview.isFetching &&
-      previewItems.some((item) => item.ok))
+  const batchReady = autoMode
+    ? !autoPreview.isFetching && autoItems.some((item) => item.ok)
+    : !multi ||
+      (settled === placementsForApi &&
+        !preview.isFetching &&
+        previewItems.some((item) => item.ok))
   const [loadProblem, setLoadProblem] = useState<string | null>(null)
   const [registryOpen, setRegistryOpen] = useState(false)
   const [seenPlan, setSeenPlan] = useState<number | null>(null)
@@ -144,13 +171,13 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
 
   // PDF del primer certificado
   useEffect(() => {
-    if (firstId === null) return
+    if (viewId === null) return
     let cancelled = false
     let loaded: pdfjs.PDFDocumentProxy | null = null
     setDoc(null)
     setLoadProblem(null)
     axiosPrivate
-      .get(releaseFileUrl(firstId), { responseType: 'arraybuffer' })
+      .get(releaseFileUrl(viewId), { responseType: 'arraybuffer' })
       .then(
         (response) =>
           pdfjs.getDocument({ data: new Uint8Array(response.data) }).promise
@@ -170,7 +197,7 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
       cancelled = true
       if (loaded) void loaded.destroy()
     }
-  }, [firstId, axiosPrivate])
+  }, [viewId, axiosPrivate])
 
   // Página actual en el recuadro
   useEffect(() => {
@@ -326,12 +353,14 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
 
   const submit = () => {
     sign.mutate(
-      {
-        ids,
-        remember,
-        referenceId: firstId ?? undefined,
-        placements: placements.map(({ key: _key, ...rest }) => rest)
-      },
+      autoMode
+        ? { ids, auto: true, allowNameMismatch }
+        : {
+            ids,
+            remember,
+            referenceId: firstId ?? undefined,
+            placements: placements.map(({ key: _key, ...rest }) => rest)
+          },
       {
         onSuccess: (results) => {
           const failed = results.filter((result) => !result.ok)
@@ -386,6 +415,16 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
           <Alert severity='error'>
             {getApiErrorReason(error) ?? 'No se pudo preparar la firma.'}
           </Alert>
+        )}
+        {autoMode && (
+          <AutoSignPanel
+            items={autoItems}
+            loading={autoPreview.isFetching}
+            allowNameMismatch={allowNameMismatch}
+            onAllowNameMismatch={setAllowNameMismatch}
+            onManual={() => setManual(true)}
+            onNarrow={onNarrow}
+          />
         )}
         {plan && (
           <Grid container spacing={2}>
@@ -733,7 +772,12 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
         <Button
           variant='contained'
           disabled={
-            placements.length === 0 || sign.isLoading || !plan || !batchReady
+            autoMode
+              ? sign.isLoading || !batchReady
+              : placements.length === 0 ||
+                sign.isLoading ||
+                !plan ||
+                !batchReady
           }
           onClick={submit}
           sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}

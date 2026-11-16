@@ -59,9 +59,11 @@ import {
   releaseFileUrl,
   useReleaseCertificates,
   useReleaseCustomerSearch,
+  useFetchReadyToSign,
   useReleaseUploaders
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { userStore } from 'src/store/userStore'
+import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 import { brand, intent } from 'src/theme/designTokens'
 
@@ -136,6 +138,8 @@ const ReleaseCertificates: React.FC = () => {
   const { data: customerOptions = [], isFetching: loadingCustomers } =
     useReleaseCustomerSearch(customerSearch)
   const { data: uploaders = [] } = useReleaseUploaders()
+  const fetchReadyToSign = useFetchReadyToSign()
+  const [loadingReady, setLoadingReady] = useState(false)
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [pagination, setPagination] = useState<MRT_PaginationState>({
@@ -414,6 +418,35 @@ const ReleaseCertificates: React.FC = () => {
                   : `${selectedIds.length} seleccionados`}
               </Button>
             )}
+            {canSign &&
+              selectedIds.length === 0 &&
+              (data?.counts.verificado ?? 0) > 0 && (
+                <Button
+                  variant='outlined'
+                  startIcon={<VerifiedOutlined />}
+                  disabled={loadingReady}
+                  onClick={async () => {
+                    setLoadingReady(true)
+                    try {
+                      const ready = await fetchReadyToSign()
+                      if (ready.length === 0)
+                        notify.info(
+                          'No hay certificados verificados para firmar'
+                        )
+                      else setSignIds(ready.map((item) => item.id))
+                    } catch (error) {
+                      notify.error(
+                        'No se pudo traer los certificados verificados',
+                        getApiErrorReason(error) ?? undefined
+                      )
+                    } finally {
+                      setLoadingReady(false)
+                    }
+                  }}
+                >
+                  Firmar todos los verificados ({data?.counts.verificado})
+                </Button>
+              )}
             {uploadButton || null}
           </Box>
         }

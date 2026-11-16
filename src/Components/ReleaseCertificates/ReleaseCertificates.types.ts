@@ -256,6 +256,15 @@ export interface ReleaseSignatory {
   role: string | null
   active: boolean
   mimeType: string
+  /** Puestos en los que firma: en el PDF se ubica sola bajo el texto de ese puesto. */
+  slots: SignatorySlot[]
+}
+
+export type SignatorySlot = 'aprobado' | 'verificado'
+
+export const SIGNATORY_SLOT_LABELS: Record<SignatorySlot, string> = {
+  aprobado: 'Aprobado por',
+  verificado: 'Verificado por'
 }
 
 /** Una firma o el sello en el documento. `x`, `y` (esquina superior izquierda) y `w` son fracciones de la página. */

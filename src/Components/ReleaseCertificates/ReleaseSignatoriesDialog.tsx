@@ -8,6 +8,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Tab,
   Tabs,
   TextField,
@@ -23,7 +24,11 @@ import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 import SignaturePad, { SignaturePadHandle } from './SignaturePad'
 import SignatoryImage from './SignatoryImage'
-import { ReleaseSignatory } from './ReleaseCertificates.types'
+import {
+  ReleaseSignatory,
+  SIGNATORY_SLOT_LABELS,
+  SignatorySlot
+} from './ReleaseCertificates.types'
 import { brand, neutral } from 'src/theme/designTokens'
 
 const MAX_SIZE = 1024 * 1024
@@ -52,6 +57,7 @@ const ReleaseSignatoriesDialog: React.FC<ReleaseSignatoriesDialogProps> = ({
   const [editing, setEditing] = useState<ReleaseSignatory | 'new' | null>(null)
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
+  const [slots, setSlots] = useState<SignatorySlot[]>([])
   const [mode, setMode] = useState<Mode>('draw')
   const [hasStroke, setHasStroke] = useState(false)
   const [picked, setPicked] = useState<File | null>(null)
@@ -77,6 +83,7 @@ const ReleaseSignatoriesDialog: React.FC<ReleaseSignatoriesDialogProps> = ({
     if (signatory !== 'new') {
       setName(signatory.name)
       setRole(signatory.role ?? '')
+      setSlots(signatory.slots ?? [])
     }
   }
 
@@ -129,13 +136,13 @@ const ReleaseSignatoriesDialog: React.FC<ReleaseSignatoriesDialogProps> = ({
         return
       }
       save.mutate(
-        { name, role, file },
+        { name, role, slots, file },
         { onSuccess: () => done('Firma agregada'), onError: failed }
       )
       return
     }
     save.mutate(
-      { id: editing.id, name, role, file },
+      { id: editing.id, name, role, slots, file },
       { onSuccess: () => done('Firma actualizada'), onError: failed }
     )
   }
@@ -146,6 +153,7 @@ const ReleaseSignatoriesDialog: React.FC<ReleaseSignatoriesDialogProps> = ({
         id: signatory.id,
         name: signatory.name,
         role: signatory.role ?? '',
+        slots: signatory.slots,
         active: !signatory.active
       },
       {
@@ -220,6 +228,16 @@ const ReleaseSignatoriesDialog: React.FC<ReleaseSignatoriesDialogProps> = ({
                     <Typography variant='caption' color='text.secondary'>
                       {signatory.role ?? 'Sin cargo'}
                     </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {(signatory.slots ?? []).map((slot) => (
+                        <Chip
+                          key={slot}
+                          size='small'
+                          label={SIGNATORY_SLOT_LABELS[slot]}
+                          sx={{ bgcolor: brand.soft, color: brand.ink }}
+                        />
+                      ))}
+                    </Box>
                   </Box>
                   {!signatory.active && (
                     <Chip size='small' label='Inactiva' variant='outlined' />
@@ -266,8 +284,35 @@ const ReleaseSignatoriesDialog: React.FC<ReleaseSignatoriesDialogProps> = ({
               value={role}
               onChange={(event) => setRole(event.target.value)}
               inputProps={{ maxLength: 120 }}
-              sx={{ mb: 2 }}
+              sx={{ mb: 1.5 }}
             />
+            <TextField
+              select
+              fullWidth
+              size='small'
+              label='Puestos en los que firma'
+              value={slots}
+              SelectProps={{
+                multiple: true,
+                renderValue: (selected) =>
+                  (selected as SignatorySlot[])
+                    .map((slot) => SIGNATORY_SLOT_LABELS[slot])
+                    .join(', ')
+              }}
+              onChange={(event) =>
+                setSlots(event.target.value as unknown as SignatorySlot[])
+              }
+              helperText='Con un puesto, su firma se ubica sola bajo ese texto en cada PDF, sea cual sea el nombre impreso. Puede tener más de uno.'
+              sx={{ mb: 2 }}
+            >
+              {(Object.keys(SIGNATORY_SLOT_LABELS) as SignatorySlot[]).map(
+                (slot) => (
+                  <MenuItem key={slot} value={slot}>
+                    {SIGNATORY_SLOT_LABELS[slot]}
+                  </MenuItem>
+                )
+              )}
+            </TextField>
             {editing !== 'new' && (
               <Typography
                 variant='caption'

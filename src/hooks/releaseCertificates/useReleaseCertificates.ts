@@ -10,6 +10,7 @@ import {
   ReleaseListResponse,
   ReleasePlacement,
   ReleaseSignatory,
+  SignatorySlot,
   ReleaseSignPlan,
   ReleaseServiceOption
 } from 'src/Components/ReleaseCertificates/ReleaseCertificates.types'
@@ -225,10 +226,13 @@ export const useSignReleaseCertificates = () => {
   return useMutation(
     async (payload: {
       ids: number[]
-      placements: ReleasePlacement[]
-      remember: boolean
+      placements?: ReleasePlacement[]
+      remember?: boolean
       /** Certificado sobre el que se colocaron las firmas; en los demás se ubican por el texto impreso. */
       referenceId?: number
+      /** Firma automática por puesto: no se envían posiciones, cada PDF se ubica solo. */
+      auto?: boolean
+      allowNameMismatch?: boolean
     }): Promise<{ id: number; ok: boolean; error?: string }[]> =>
       (await axiosPrivate.post('/release-certificates/sign', payload)).data
         .results,
@@ -277,6 +281,49 @@ export const useSignPreview = (
   )
 }
 
+export interface ReleaseAutoPreviewItem {
+  id: number
+  documentNumber: string | null
+  ok: boolean
+  code?: string
+  error?: string
+  /** Nombres impresos bajo cada puesto del PDF. */
+  printedNames?: string[]
+  /** Dónde quedaría cada firma y el sello (fracciones de la página). */
+  placements?: ReleasePlacement[]
+}
+
+/** Dónde quedaría cada firma en cada certificado, por puesto, sin firmar nada. */
+export const useSignAutoPreview = (
+  ids: number[] | null,
+  allowNameMismatch: boolean
+) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseAutoPreviewItem[]>(
+    ['releaseCertificates', 'sign-auto-preview', ids, allowNameMismatch],
+    () =>
+      axiosPrivate
+        .post('/release-certificates/sign-auto-preview', {
+          ids,
+          allowNameMismatch
+        })
+        .then((response) => response.data.items),
+    { enabled: ids !== null && ids.length > 0, cacheTime: 0 }
+  )
+}
+
+/** Certificados verificados que ya se pueden firmar (todos, no solo los de la página). */
+export const useFetchReadyToSign = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return () =>
+    axiosPrivate
+      .get('/release-certificates/ready-to-sign')
+      .then(
+        (response) =>
+          response.data.items as { id: number; documentNumber: string | null }[]
+      )
+}
+
 /** Registro de firmas del laboratorio (con las inactivas si `all`). */
 export const useSignatories = (enabled: boolean, all = false) => {
   const axiosPrivate = useAxiosPrivate()
@@ -301,12 +348,14 @@ export const useSaveSignatory = () => {
       id?: number
       name: string
       role: string
+      slots?: SignatorySlot[]
       active?: boolean
       file?: File
     }) => {
       const data = new FormData()
       data.append('name', input.name)
       data.append('role', input.role)
+      if (input.slots) data.append('slots', input.slots.join(','))
       if (input.active !== undefined)
         data.append('active', String(input.active))
       if (input.file) data.append('signature', input.file)
