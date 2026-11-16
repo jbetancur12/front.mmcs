@@ -227,6 +227,8 @@ export const useSignReleaseCertificates = () => {
       ids: number[]
       placements: ReleasePlacement[]
       remember: boolean
+      /** Certificado sobre el que se colocaron las firmas; en los demás se ubican por el texto impreso. */
+      referenceId?: number
     }): Promise<{ id: number; ok: boolean; error?: string }[]> =>
       (await axiosPrivate.post('/release-certificates/sign', payload)).data
         .results,
@@ -256,6 +258,42 @@ export const useSignCategories = (ids: number[] | null) => {
         .post('/release-certificates/sign-categories', { ids })
         .then((response) => response.data.items),
     { enabled: ids !== null && ids.length > 1, cacheTime: 0 }
+  )
+}
+
+export interface ReleaseSignPreviewItem {
+  id: number
+  documentNumber: string | null
+  ok: boolean
+  /** directo: un solo certificado; referencia: el que se ve; texto: ubicado por el texto impreso. */
+  mode?: 'directo' | 'referencia' | 'texto'
+  error?: string
+  /** Texto de referencia de cada firma (null si va por su posición). */
+  anchors?: (string | null)[]
+}
+
+/** Dónde quedaría la firma en cada certificado del lote (por el texto impreso), sin firmar nada. */
+export const useSignPreview = (
+  ids: number[] | null,
+  placements: ReleasePlacement[],
+  referenceId: number | null
+) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<ReleaseSignPreviewItem[]>(
+    ['releaseCertificates', 'sign-preview', ids, placements, referenceId],
+    () =>
+      axiosPrivate
+        .post('/release-certificates/sign-preview', {
+          ids,
+          placements,
+          referenceId
+        })
+        .then((response) => response.data.items),
+    {
+      enabled: ids !== null && ids.length > 1 && placements.length > 0,
+      cacheTime: 0,
+      keepPreviousData: true
+    }
   )
 }
 

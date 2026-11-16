@@ -29,6 +29,7 @@ import {
   ReleaseSignCategory,
   releaseFileUrl,
   useSignCategories,
+  useSignPreview,
   useSignPlan,
   useSignReleaseCertificates
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
@@ -99,9 +100,6 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
     return [...map.values()]
   }, [categories])
   const mixed = groups.length > 1
-  const [confirmedSame, setConfirmedSame] = useState(false)
-  useEffect(() => setConfirmedSame(false), [open, ids])
-  const batchReady = !multi || (!loadingCategories && !mixed && confirmedSame)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -114,6 +112,30 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
   const [placements, setPlacements] = useState<Placed[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [remember, setRemember] = useState(true)
+  // Dónde quedaría la firma en cada certificado del lote (con una pequeña espera mientras la analista mueve las firmas).
+  const placementsForApi = useMemo(
+    () => placements.map(({ key: _key, ...rest }) => rest),
+    [placements]
+  )
+  const [settled, setSettled] = useState(placementsForApi)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSettled(placementsForApi), 500)
+    return () => window.clearTimeout(timer)
+  }, [placementsForApi])
+  const preview = useSignPreview(
+    multi && !mixed && !loadingCategories ? ids : null,
+    settled,
+    firstId
+  )
+  const previewItems = preview.data ?? []
+  const unresolved = previewItems.filter((item) => !item.ok)
+  const batchReady =
+    !multi ||
+    (!loadingCategories &&
+      !mixed &&
+      settled === placementsForApi &&
+      !preview.isFetching &&
+      previewItems.some((item) => item.ok))
   const [loadProblem, setLoadProblem] = useState<string | null>(null)
   const [registryOpen, setRegistryOpen] = useState(false)
   const [seenPlan, setSeenPlan] = useState<number | null>(null)
@@ -334,6 +356,7 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
       {
         ids,
         remember,
+        referenceId: firstId ?? undefined,
         placements: placements.map(({ key: _key, ...rest }) => rest)
       },
       {
@@ -418,25 +441,40 @@ const ReleaseSignDialog: React.FC<ReleaseSignDialogProps> = ({
             <Grid item xs={12} md={8}>
               {ids.length > 1 && (
                 <Alert severity='info' sx={{ mb: 1.5 }}>
-                  Estás viendo el primero. La misma posición se aplica a los{' '}
-                  {ids.length} seleccionados, todos de la categoría{' '}
-                  {plan.category.label}:{' '}
-                  {(categories ?? [])
-                    .map((item) => item.documentNumber ?? `#${item.id}`)
-                    .join(', ')}
-                  .
-                  <FormControlLabel
-                    sx={{ display: 'block', mt: 0.5 }}
-                    control={
-                      <Checkbox
-                        checked={confirmedSame}
-                        onChange={(event) =>
-                          setConfirmedSame(event.target.checked)
-                        }
-                      />
-                    }
-                    label='Revisé que el campo de firma está en el mismo lugar en todos'
-                  />
+                  Estás viendo el primero. Cada firma se ubica en los demás
+                  (todos de la categoría {plan.category.label}) por el texto
+                  impreso, como «Aprobado por» o «Verificado por», no por su
+                  posición en la página: así sirve aunque la plantilla tenga
+                  otra escala o márgenes.
+                  <Box component='ul' sx={{ m: 0, mt: 0.5, pl: 2 }}>
+                    {previewItems.map((item) => (
+                      <li key={item.id}>
+                        <Typography
+                          variant='caption'
+                          sx={{ color: item.ok ? undefined : 'error.main' }}
+                        >
+                          {item.documentNumber ?? `#${item.id}`}:{' '}
+                          {item.ok
+                            ? item.mode === 'referencia'
+                              ? 'el que ves'
+                              : `ubicada por «${[...new Set((item.anchors ?? []).filter(Boolean))].join('», «')}»`
+                            : item.error}
+                        </Typography>
+                      </li>
+                    ))}
+                  </Box>
+                  {unresolved.length > 0 && (
+                    <Typography
+                      variant='caption'
+                      color='error'
+                      display='block'
+                      sx={{ mt: 0.5 }}
+                    >
+                      {unresolved.length === 1
+                        ? 'Ese certificado no se firmará en este lote.'
+                        : `Esos ${unresolved.length} certificados no se firmarán en este lote.`}
+                    </Typography>
+                  )}
                 </Alert>
               )}
               {plan.source === 'layout' && (
