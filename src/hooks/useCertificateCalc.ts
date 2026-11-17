@@ -4,9 +4,9 @@ import { axiosPrivate as axiosPrivateRaw } from '@utils/api'
 
 /** Un punto de medición: valor de referencia, seis lecturas y tolerancia (%). Vacío = ''. */
 export interface CalcPoint {
-  nominal: number | ''
-  lecturas: Array<number | ''>
-  tolerancia: number | ''
+  nominal: number | string
+  lecturas: Array<number | string>
+  tolerancia: number | string
 }
 
 export interface CalcData {
@@ -30,16 +30,16 @@ export interface CalcData {
   patronSerie: string | number
   patronCalibradoPor: string
   unidad: string
-  resolucionEquipo: number | ''
-  resolucionPatron: number | ''
-  exactitudPatronPct: number | ''
-  exactitudPatronAbs: number | ''
-  exactitudEquipoPct: number | ''
-  exactitudEquipoAbs: number | ''
-  tempInicial: number | ''
-  tempFinal: number | ''
-  humInicial: number | ''
-  humFinal: number | ''
+  resolucionEquipo: number | string
+  resolucionPatron: number | string
+  exactitudPatronPct: number | string
+  exactitudPatronAbs: number | string
+  exactitudEquipoPct: number | string
+  exactitudEquipoAbs: number | string
+  tempInicial: number | string
+  tempFinal: number | string
+  humInicial: number | string
+  humFinal: number | string
   puntos: CalcPoint[]
 }
 
@@ -47,6 +47,37 @@ export interface CalcTemplate {
   key: string
   name: string
 }
+
+/**
+ * Convierte lo que el usuario tiene escrito en lo que entiende el API: «-76,5» → -76.5; un texto a medias («-», «1,»)
+ * o vacío → vacío. En pantalla se conserva lo escrito tal cual para poder teclear el signo menos o la coma.
+ */
+const cleanNumber = (value: number | string): number | '' => {
+  if (typeof value === 'number') return value
+  const text = value.trim().replace(',', '.')
+  if (text === '') return ''
+  const n = Number(text)
+  return Number.isFinite(n) ? n : ''
+}
+
+export const cleanCalcData = (data: CalcData): CalcData => ({
+  ...data,
+  resolucionEquipo: cleanNumber(data.resolucionEquipo),
+  resolucionPatron: cleanNumber(data.resolucionPatron),
+  exactitudPatronPct: cleanNumber(data.exactitudPatronPct),
+  exactitudPatronAbs: cleanNumber(data.exactitudPatronAbs),
+  exactitudEquipoPct: cleanNumber(data.exactitudEquipoPct),
+  exactitudEquipoAbs: cleanNumber(data.exactitudEquipoAbs),
+  tempInicial: cleanNumber(data.tempInicial),
+  tempFinal: cleanNumber(data.tempFinal),
+  humInicial: cleanNumber(data.humInicial),
+  humFinal: cleanNumber(data.humFinal),
+  puntos: data.puntos.map((p) => ({
+    nominal: cleanNumber(p.nominal),
+    lecturas: p.lecturas.map(cleanNumber),
+    tolerancia: cleanNumber(p.tolerancia)
+  }))
+})
 
 export interface CalcDefaults {
   template: { key: string; name: string }

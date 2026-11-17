@@ -28,6 +28,7 @@ import { getApiErrorMessage } from 'src/utils/apiError'
 import {
   CalcData,
   CalcPreview,
+  cleanCalcData,
   openIssuedPdf,
   useCalcDefaults,
   useCalcTemplates,
@@ -44,11 +45,8 @@ type TextKey = {
   [K in keyof CalcData]: CalcData[K] extends string | number ? K : never
 }[keyof CalcData]
 
-const toNumber = (raw: string): number | '' => {
-  if (raw.trim() === '') return ''
-  const n = Number(raw.replace(',', '.'))
-  return Number.isFinite(n) ? n : ''
-}
+// Se guarda lo escrito tal cual (con «-» o «1,» a medias); cleanCalcData lo convierte al enviar.
+const toNumber = (raw: string): string => raw
 
 interface WorkspaceProps {
   template: string
@@ -82,7 +80,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
     if (!data) return undefined
     const timer = window.setTimeout(
       () =>
-        requestPreview(data, {
+        requestPreview(cleanCalcData(data), {
           onSuccess: setPreview,
           onError: (error) =>
             notify.error(
@@ -181,7 +179,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
       confirmLabel: 'Emitir'
     })
     if (!isConfirmed) return
-    issueMutation.mutate(data, {
+    issueMutation.mutate(cleanCalcData(data), {
       onSuccess: (issued) => {
         notify.success('Certificado emitido', issued.numero)
         void openIssuedPdf(issued.id)
