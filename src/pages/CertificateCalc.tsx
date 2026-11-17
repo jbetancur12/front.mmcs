@@ -30,6 +30,7 @@ import {
   CalcPreview,
   openIssuedPdf,
   useCalcDefaults,
+  useCalcTemplates,
   useCalcPreview,
   useIssueCalcCertificate,
   useIssuedCertificates,
@@ -37,7 +38,6 @@ import {
   VerifyResult
 } from 'src/hooks/useCertificateCalc'
 
-const TEMPLATE = 'aspirador'
 const A4_WIDTH_PX = 794
 
 type TextKey = {
@@ -50,16 +50,25 @@ const toNumber = (raw: string): number | '' => {
   return Number.isFinite(n) ? n : ''
 }
 
-const CertificateCalc: React.FC = () => {
-  const defaultsQuery = useCalcDefaults(TEMPLATE)
+interface WorkspaceProps {
+  template: string
+  onTemplateChange: (template: string) => void
+}
+
+const CalcWorkspace: React.FC<WorkspaceProps> = ({
+  template,
+  onTemplateChange
+}) => {
+  const templatesQuery = useCalcTemplates()
+  const defaultsQuery = useCalcDefaults(template)
   const [data, setData] = useState<CalcData | null>(null)
   const [preview, setPreview] = useState<CalcPreview | null>(null)
   const [verifications, setVerifications] = useState<
     Record<string, VerifyResult>
   >({})
   const frameRef = useRef<HTMLIFrameElement>(null)
-  const previewMutation = useCalcPreview(TEMPLATE)
-  const issueMutation = useIssueCalcCertificate(TEMPLATE)
+  const previewMutation = useCalcPreview(template)
+  const issueMutation = useIssueCalcCertificate(template)
   const verifyMutation = useVerifyIssuedCertificate()
   const issuedQuery = useIssuedCertificates()
 
@@ -191,7 +200,16 @@ const CertificateCalc: React.FC = () => {
         notify.error(getApiErrorMessage(error, 'No se pudo verificar'))
     })
 
-  const units = defaultsQuery.data?.units ?? []
+  const units = Array.from(
+    new Set([
+      ...(defaultsQuery.data?.units ?? []),
+      ...(data?.unidad ? [data.unidad] : [])
+    ])
+  )
+  const readingCount = data?.puntos[0]?.lecturas.length ?? 0
+  const showEquipmentAccuracy =
+    defaultsQuery.data?.data.exactitudEquipoPct !== '' ||
+    defaultsQuery.data?.data.exactitudEquipoAbs !== ''
   const noticeCount =
     blocking.length +
     (preview?.warnings.length ?? 0) +
@@ -213,7 +231,21 @@ const CertificateCalc: React.FC = () => {
         icon={<CalculateOutlined />}
         actions={
           <>
-            <Chip label='Demo · aspiradores' size='small' variant='outlined' />
+            <TextField
+              select
+              size='small'
+              label='Tipo de equipo'
+              value={template}
+              onChange={(event) => onTemplateChange(event.target.value)}
+              sx={{ minWidth: 220 }}
+            >
+              {(templatesQuery.data ?? []).map((t) => (
+                <MenuItem key={t.key} value={t.key}>
+                  {t.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Chip label='Demo' size='small' variant='outlined' />
             <Button
               variant='contained'
               startIcon={<PictureAsPdfOutlined />}
@@ -339,6 +371,10 @@ const CertificateCalc: React.FC = () => {
             {numberField('Resolución del patrón', 'resolucionPatron')}
             {numberField('Exactitud del patrón (%)', 'exactitudPatronPct')}
             {numberField('Exactitud del patrón (abs.)', 'exactitudPatronAbs')}
+            {showEquipmentAccuracy &&
+              numberField('Exactitud del equipo (%)', 'exactitudEquipoPct')}
+            {showEquipmentAccuracy &&
+              numberField('Exactitud del equipo (abs.)', 'exactitudEquipoAbs')}
             {numberField('Temperatura inicial (°C)', 'tempInicial')}
             {numberField('Temperatura final (°C)', 'tempFinal')}
             {numberField('Humedad inicial (%)', 'humInicial')}
@@ -363,9 +399,11 @@ const CertificateCalc: React.FC = () => {
                 <thead>
                   <tr>
                     <th>Referencia</th>
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
-                      <th key={n}>Lectura {n}</th>
-                    ))}
+                    {Array.from({ length: readingCount }, (_, i) => i + 1).map(
+                      (n) => (
+                        <th key={n}>Lectura {n}</th>
+                      )
+                    )}
                     <th>Tol. %</th>
                   </tr>
                 </thead>
@@ -505,6 +543,16 @@ const CertificateCalc: React.FC = () => {
               >
                 <Typography sx={{ fontWeight: 600, flex: '1 1 220px' }}>
                   {item.numero}
+                  <Typography
+                    component='span'
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ ml: 1 }}
+                  >
+                    {(templatesQuery.data ?? []).find(
+                      (t) => t.key === item.template
+                    )?.name ?? item.template}
+                  </Typography>
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
                   {new Date(item.emittedAt).toLocaleString('es-CO')}
@@ -564,6 +612,18 @@ const CertificateCalc: React.FC = () => {
         )}
       </Paper>
     </Container>
+  )
+}
+
+// Al cambiar de tipo de equipo el espacio de trabajo se vuelve a montar: ningún dato del tipo anterior se arrastra.
+const CertificateCalc: React.FC = () => {
+  const [template, setTemplate] = useState('aspirador')
+  return (
+    <CalcWorkspace
+      key={template}
+      template={template}
+      onTemplateChange={setTemplate}
+    />
   )
 }
 
