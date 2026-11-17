@@ -45,6 +45,16 @@ type TextKey = {
   [K in keyof CalcData]: CalcData[K] extends string | number ? K : never
 }[keyof CalcData]
 
+// Mientras se teclea solo se aceptan dígitos, un menos al inicio y una coma o punto; lo demás se ignora.
+const NUMBER_TYPING = new RegExp('^-?[0-9]*[.,]?[0-9]*$')
+// Un número completo: -76 · 2,5 · .5 · -0,25. Un «-», un «,» o un «1,» solos están a medias.
+const NUMBER_COMPLETE = new RegExp('^-?([0-9]+([.,][0-9]+)?|[.,][0-9]+)$')
+const isCompleteNumber = (value: unknown): boolean =>
+  value === '' ||
+  value == null ||
+  typeof value === 'number' ||
+  (typeof value === 'string' && NUMBER_COMPLETE.test(value.trim()))
+
 // Se guarda lo escrito tal cual (con «-» o «1,» a medias); cleanCalcData lo convierte al enviar.
 const toNumber = (raw: string): string => raw
 
@@ -106,12 +116,14 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
   const setText = (key: TextKey, value: string) =>
     setData((d) => (d ? { ...d, [key]: value } : d))
   const setNum = (key: keyof CalcData, raw: string) =>
+    NUMBER_TYPING.test(raw) &&
     setData((d) => (d ? { ...d, [key]: toNumber(raw) } : d))
   const setPoint = (
     index: number,
     field: 'nominal' | 'tolerancia',
     raw: string
   ) =>
+    NUMBER_TYPING.test(raw) &&
     setData((d) =>
       d
         ? {
@@ -123,6 +135,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
         : d
     )
   const setReading = (index: number, reading: number, raw: string) =>
+    NUMBER_TYPING.test(raw) &&
     setData((d) =>
       d
         ? {
@@ -157,17 +170,34 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
       label={label}
       size='small'
       value={data ? String(data[key] ?? '') : ''}
+      error={!!data && !isCompleteNumber(data[key])}
       onChange={(event) => setNum(key, event.target.value)}
       inputProps={{ inputMode: 'decimal' }}
       fullWidth
     />
   )
 
+  const incompleteNumbers = data
+    ? [
+        data.resolucionEquipo,
+        data.resolucionPatron,
+        data.exactitudPatronPct,
+        data.exactitudPatronAbs,
+        data.exactitudEquipoPct,
+        data.exactitudEquipoAbs,
+        data.tempInicial,
+        data.tempFinal,
+        data.humInicial,
+        data.humFinal,
+        ...data.puntos.flatMap((p) => [p.nominal, ...p.lecturas, p.tolerancia])
+      ].filter((v) => !isCompleteNumber(v)).length
+    : 0
   const blocking = preview?.blocking ?? []
   const canIssue =
     !!data &&
     !!preview &&
     blocking.length === 0 &&
+    incompleteNumbers === 0 &&
     preview.calcErrors.length === 0 &&
     !issueMutation.isLoading
 
@@ -209,6 +239,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
     defaultsQuery.data?.data.exactitudEquipoPct !== '' ||
     defaultsQuery.data?.data.exactitudEquipoAbs !== ''
   const noticeCount =
+    incompleteNumbers +
     blocking.length +
     (preview?.warnings.length ?? 0) +
     (preview?.calcErrors.length ?? 0)
@@ -290,6 +321,15 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
         >
           {noticeCount > 0 && (
             <Box sx={{ display: 'grid', gap: 1 }}>
+              {incompleteNumbers > 0 && (
+                <Alert severity='error' variant='outlined'>
+                  {incompleteNumbers === 1
+                    ? 'Hay 1 campo con un número incompleto'
+                    : `Hay ${incompleteNumbers} campos con un número incompleto`}{' '}
+                  (por ejemplo «-» o «1,»). Escriba un número como -76,5 o 2 y
+                  complételo o bórrelo.
+                </Alert>
+              )}
               {blocking.map((message) => (
                 <Alert key={message} severity='error' variant='outlined'>
                   {message}
@@ -420,6 +460,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
                         <TextField
                           size='small'
                           value={point.nominal}
+                          error={!isCompleteNumber(point.nominal)}
                           onChange={(event) =>
                             setPoint(index, 'nominal', event.target.value)
                           }
@@ -434,6 +475,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
                           <TextField
                             size='small'
                             value={reading}
+                            error={!isCompleteNumber(reading)}
                             onChange={(event) =>
                               setReading(index, j, event.target.value)
                             }
@@ -448,6 +490,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
                         <TextField
                           size='small'
                           value={point.tolerancia}
+                          error={!isCompleteNumber(point.tolerancia)}
                           onChange={(event) =>
                             setPoint(index, 'tolerancia', event.target.value)
                           }
