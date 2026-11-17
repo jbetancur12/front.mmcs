@@ -385,7 +385,7 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
                 sx={{
                   borderCollapse: 'collapse',
                   width: '100%',
-                  minWidth: 520,
+                  minWidth: Math.max(520, (readingCount + 2) * 92),
                   '& th': {
                     color: neutral.textMuted,
                     fontSize: 12,
@@ -393,7 +393,15 @@ const CalcWorkspace: React.FC<WorkspaceProps> = ({
                     textAlign: 'left',
                     pb: 0.5
                   },
-                  '& td': { p: 0.25 }
+                  '& td': { p: 0.25 },
+                  // Campos de la tabla: más anchos y con menos relleno para que quepan cifras como 2002,5 sin cortarse
+                  '& .MuiTextField-root': { width: '100%', minWidth: 84 },
+                  '& .MuiOutlinedInput-input': {
+                    px: 1,
+                    py: 0.75,
+                    fontSize: 13,
+                    textAlign: 'right'
+                  }
                 }}
               >
                 <thead>
