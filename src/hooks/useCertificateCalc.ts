@@ -34,11 +34,18 @@ export interface CalcData {
   resolucionPatron: number | ''
   exactitudPatronPct: number | ''
   exactitudPatronAbs: number | ''
+  exactitudEquipoPct: number | ''
+  exactitudEquipoAbs: number | ''
   tempInicial: number | ''
   tempFinal: number | ''
   humInicial: number | ''
   humFinal: number | ''
   puntos: CalcPoint[]
+}
+
+export interface CalcTemplate {
+  key: string
+  name: string
 }
 
 export interface CalcDefaults {
@@ -76,8 +83,21 @@ export interface VerifyResult {
 }
 
 export const CALC_QUERY_KEYS = {
+  templates: ['certificateCalc', 'templates'],
   defaults: (template: string) => ['certificateCalc', 'defaults', template],
   issued: ['certificateCalc', 'issued']
+}
+
+export const useCalcTemplates = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<CalcTemplate[]>(
+    CALC_QUERY_KEYS.templates,
+    () =>
+      axiosPrivate
+        .get('/certificate-calc/templates')
+        .then((response) => response.data.data),
+    { staleTime: Infinity, refetchOnWindowFocus: false }
+  )
 }
 
 export const useCalcDefaults = (template: string) => {
