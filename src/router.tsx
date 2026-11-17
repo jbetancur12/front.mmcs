@@ -31,6 +31,7 @@ import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
 import LibraryRoutes from './routes/LibraryRoutes'
 import ReleaseCertificatesRoutes from './routes/ReleaseCertificatesRoutes'
+import CertificateCalcRoutes from './routes/CertificateCalcRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
 import RbacRoutes from './routes/RbacRoutes'
 import PlatformBillingRoutes from './routes/PlatformBillingRoutes'
@@ -77,6 +78,7 @@ function Router() {
           {NonConformRoutes($userStore.rol)}
           {LibraryRoutes($userStore.rol)}
           {ReleaseCertificatesRoutes($userStore.rol)}
+          {CertificateCalcRoutes($userStore.rol)}
           {MaintenanceRoutes($userStore.rol)}
           {RbacRoutes($userStore.rol)}
           {PlatformBillingRoutes($userStore.rol)}
