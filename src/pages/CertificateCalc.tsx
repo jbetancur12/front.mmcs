@@ -240,10 +240,24 @@ const CertificateCalc: React.FC = () => {
             xs: 'minmax(0, 1fr)',
             lg: 'minmax(380px, 5fr) minmax(0, 7fr)'
           },
-          alignItems: 'start'
+          alignItems: 'start',
+          // En pantallas anchas el formulario se desplaza dentro de su columna y la vista previa queda quieta
+          // (position: sticky no sirve: el contenedor del layout tiene overflow y lo anula).
+          height: { lg: 'calc(100vh - 210px)' },
+          minHeight: { lg: 520 }
         }}
       >
-        <Box sx={{ display: 'grid', gap: 3, minWidth: 0 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 3,
+            minWidth: 0,
+            alignContent: 'start',
+            height: { lg: '100%' },
+            overflowY: { lg: 'auto' },
+            pr: { lg: 1 }
+          }}
+        >
           {noticeCount > 0 && (
             <Box sx={{ display: 'grid', gap: 1 }}>
               {blocking.map((message) => (
@@ -409,9 +423,10 @@ const CertificateCalc: React.FC = () => {
 
         <Box
           sx={{
-            position: { lg: 'sticky' },
-            top: { lg: 16 },
-            minWidth: 0
+            minWidth: 0,
+            height: { lg: '100%' },
+            display: { lg: 'flex' },
+            flexDirection: { lg: 'column' }
           }}
         >
           <Box
@@ -446,7 +461,9 @@ const CertificateCalc: React.FC = () => {
             onLoad={fitPreview}
             sx={{
               width: '100%',
-              height: { xs: '70vh', lg: 'calc(100vh - 200px)' },
+              height: { xs: '70vh', lg: 'auto' },
+              flex: { lg: 1 },
+              minHeight: { lg: 0 },
               border: `1px solid ${neutral.border}`,
               borderRadius: '12px',
               bgcolor: neutral.surfaceHead
