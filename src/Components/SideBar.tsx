@@ -418,6 +418,16 @@ const sidebarItems = ($userStore: UserData) => [
               permission: PERMISSIONS.RELEASE_CERTIFICATE_VIEW
             }
           ]
+        : []),
+      // Demo: oculto mientras la función esté apagada (Ajustes › Funciones)
+      ...(isFeatureOn('certificate_calculation')
+        ? [
+            {
+              label: 'Certificados calculados',
+              url: 'certificate-calc',
+              permission: PERMISSIONS.RELEASE_CERTIFICATE_VIEW
+            }
+          ]
         : [])
     ]
   },
