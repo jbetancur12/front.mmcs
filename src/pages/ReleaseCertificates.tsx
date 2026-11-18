@@ -30,6 +30,7 @@ import { useStore } from '@nanostores/react'
 import { useSearchParams } from 'react-router-dom'
 import {
   MRT_ColumnDef,
+  MRT_ExpandedState,
   MRT_PaginationState,
   MRT_RowSelectionState
 } from 'material-react-table'
@@ -68,6 +69,9 @@ import { notify } from 'src/utils/notify'
 import { brand, intent } from 'src/theme/designTokens'
 
 const PAGE_SIZE = 25
+// Agrupada por cliente se trae una página grande para que cada cliente quede casi siempre entero en una sola página.
+const GROUPED_PAGE_SIZE = 100
+const GROUP_STORAGE_KEY = 'releaseCertificates.groupByCustomer'
 const SEARCH_DEBOUNCE_MS = 350
 
 const STATUS_CARDS: {
@@ -125,6 +129,15 @@ const ReleaseCertificates: React.FC = () => {
   const [signatureOpen, setSignatureOpen] = useState(false)
   const [signIds, setSignIds] = useState<number[] | null>(null)
   const [selection, setSelection] = useState<MRT_RowSelectionState>({})
+  // Agrupar la bandeja por cliente (se recuerda): los certificados de cada cliente quedan juntos y no mezclados con los demás.
+  const [grouped, setGrouped] = useState(() => {
+    try {
+      return window.localStorage.getItem(GROUP_STORAGE_KEY) === 'true'
+    } catch {
+      return false
+    }
+  })
+  const [expanded, setExpanded] = useState<MRT_ExpandedState>(true)
   const [status, setStatus] = useState<ReleaseStatus | undefined>()
   const [kind, setKind] = useState<ReleaseKind | ''>('')
   const [withAnomalies, setWithAnomalies] = useState(false)
@@ -144,7 +157,7 @@ const ReleaseCertificates: React.FC = () => {
   const [search, setSearch] = useState('')
   const [pagination, setPagination] = useState<MRT_PaginationState>({
     pageIndex: 0,
-    pageSize: PAGE_SIZE
+    pageSize: grouped ? GROUPED_PAGE_SIZE : PAGE_SIZE
   })
   const [uploadOpen, setUploadOpen] = useState(false)
   // Los avisos de ajustes abren el certificado con ?id=
@@ -206,9 +219,29 @@ const ReleaseCertificates: React.FC = () => {
     customerId: customer?.id ?? null,
     withoutCustomer,
     uploadedBy: uploadedBy === '' ? null : uploadedBy,
+    sort: grouped ? 'customer' : undefined,
     page: pagination.pageIndex + 1,
     limit: pagination.pageSize
   })
+
+  const toggleGrouped = (value: boolean) => {
+    setGrouped(value)
+    setExpanded(true)
+    setPagination({
+      pageIndex: 0,
+      pageSize: value ? GROUPED_PAGE_SIZE : PAGE_SIZE
+    })
+    try {
+      window.localStorage.setItem(GROUP_STORAGE_KEY, String(value))
+    } catch {
+      // Sin almacenamiento se agrupa igual, solo que no se recuerda.
+    }
+  }
+
+  // Cada página nueva de la agrupada abre sus clientes desplegados.
+  useEffect(() => {
+    setExpanded(true)
+  }, [pagination.pageIndex, grouped])
 
   const columns = useMemo<MRT_ColumnDef<ReleaseCertificate>[]>(
     () => [
@@ -315,6 +348,18 @@ const ReleaseCertificates: React.FC = () => {
               </Box>
             </Box>
           )
+      },
+      {
+        // Solo sirve para agrupar: el nombre del cliente (o el del PDF si no se identificó) como título de cada grupo.
+        id: 'customerGroup',
+        header: 'Cliente',
+        accessorFn: (row) =>
+          row.customer?.nombre ??
+          (row.customerName
+            ? `Sin identificar · ${row.customerName}`
+            : 'Cliente sin identificar'),
+        enableGrouping: true,
+        size: 240
       },
       {
         id: 'service',
@@ -559,6 +604,21 @@ const ReleaseCertificates: React.FC = () => {
         <FormControlLabel
           control={
             <Switch
+              checked={grouped}
+              onChange={(event) => toggleGrouped(event.target.checked)}
+              sx={{
+                '& .MuiSwitch-switchBase.Mui-checked': { color: brand.main },
+                '& .MuiSwitch-track': {
+                  bgcolor: grouped ? brand.main : undefined
+                }
+              }}
+            />
+          }
+          label='Agrupar por cliente'
+        />
+        <FormControlLabel
+          control={
+            <Switch
               checked={status === 'descartado'}
               onChange={(event) =>
                 setStatus(event.target.checked ? 'descartado' : undefined)
@@ -619,8 +679,22 @@ const ReleaseCertificates: React.FC = () => {
           data={data?.items ?? []}
           itemLabel={['certificado', 'certificados']}
           enableGlobalFilter={false}
+          enableGrouping={grouped}
+          groupedColumnMode='reorder'
+          onExpandedChange={setExpanded}
+          // Quitar el grupo desde el aviso de la tabla es lo mismo que apagar el interruptor.
+          onGroupingChange={(updater) => {
+            const next =
+              typeof updater === 'function'
+                ? updater(grouped ? ['customerGroup'] : [])
+                : updater
+            if (next.length === 0) toggleGrouped(false)
+          }}
           enableRowSelection={(row) =>
-            canSign && !isMobile && readyToSign(row.original)
+            !row.getIsGrouped() &&
+            canSign &&
+            !isMobile &&
+            readyToSign(row.original)
           }
           getRowId={(row) => String(row.id)}
           onRowSelectionChange={setSelection}
@@ -631,9 +705,12 @@ const ReleaseCertificates: React.FC = () => {
             pagination,
             showProgressBars: isFetching,
             rowSelection: selection,
-            // En celular solo lo esencial: número, estado y cliente
+            grouping: grouped ? ['customerGroup'] : [],
+            expanded,
+            // En celular solo lo esencial: número, estado y cliente. Agrupada, el cliente es el título de cada grupo.
             columnVisibility: isMobile
               ? {
+                  customerGroup: false,
                   status: false,
                   customer: false,
                   kind: false,
@@ -643,7 +720,9 @@ const ReleaseCertificates: React.FC = () => {
                   uploader: false,
                   createdAt: false
                 }
-              : {}
+              : grouped
+                ? { customer: false }
+                : { customerGroup: false }
           }}
           muiTablePaginationProps={{ rowsPerPageOptions: [25, 50, 100] }}
           enableRowActions
@@ -652,11 +731,13 @@ const ReleaseCertificates: React.FC = () => {
             'mrt-row-actions': { header: 'Acciones', size: 110 }
           }}
           muiTableBodyRowProps={({ row }) => ({
-            onDoubleClick: () => setViewingId(row.original.id),
+            onDoubleClick: () =>
+              row.getIsGrouped() ? undefined : setViewingId(row.original.id),
             sx: {
               cursor: 'pointer',
               // Lo que ya se puede firmar se distingue de un vistazo: fondo suave y borde turquesa a la izquierda.
-              ...(canSign &&
+              ...(!row.getIsGrouped() &&
+                canSign &&
                 readyToSign(row.original) && {
                   bgcolor: brand.softer,
                   boxShadow: `inset 3px 0 0 ${brand.main}`
@@ -664,6 +745,7 @@ const ReleaseCertificates: React.FC = () => {
             }
           })}
           renderRowActions={({ row }) => {
+            if (row.getIsGrouped()) return null
             const certificate = row.original
             const label =
               certificate.documentNumber ?? `certificado ${certificate.id}`

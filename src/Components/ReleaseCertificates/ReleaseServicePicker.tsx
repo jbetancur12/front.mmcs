@@ -17,7 +17,7 @@ const certificatesLabel = (option: ReleaseServiceOption) =>
     ? 'sin certificados'
     : `${option.certificates.released} de ${option.certificates.total} liberados`
 
-/** Elige el servicio de calibración (ODS) al que pertenece el certificado. Es opcional. */
+/** Elige el servicio de calibración al que pertenece el certificado; se busca por el SCL, la ODS o la oferta. Es opcional. */
 const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
   value,
   onChange,
@@ -58,8 +58,8 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
       }}
       noOptionsText={
         customerId
-          ? 'Este cliente no tiene servicios abiertos; escribe el código para buscar en todos'
-          : 'Escribe el código de la ODS'
+          ? 'Este cliente no tiene servicios abiertos; escribe el SCL, la ODS o la oferta para buscar en todos'
+          : 'Escribe el SCL, la ODS o la oferta'
       }
       renderOption={(props, option) => (
         <li {...props} key={option.id}>
@@ -76,6 +76,8 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
               }
             >
               {[
+                option.odsCode ? `ODS ${option.odsCode}` : null,
+                option.quoteCode ? `Oferta ${option.quoteCode}` : null,
                 option.sameCustomer === false ? 'Otro cliente' : null,
                 option.customerName,
                 certificatesLabel(option)
@@ -89,7 +91,7 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
       renderInput={(params) => (
         <TextField
           {...params}
-          label='Servicio de calibración (ODS)'
+          label='Servicio (SCL, ODS u oferta)'
           placeholder='Opcional'
           helperText={helperText}
         />

@@ -98,7 +98,11 @@ export interface ReleaseServiceCut {
 /** Servicio que se puede elegir al ligar un certificado. */
 export interface ReleaseServiceOption {
   id: number
+  /** SCL: el código del servicio al que queda ligado el certificado. */
   serviceCode: string
+  odsCode?: string | null
+  /** Oferta (cotización) del servicio. */
+  quoteCode?: string | null
   status: string
   customerId: number | null
   customerName: string | null
@@ -159,6 +163,8 @@ export interface ReleaseFilters {
   uploadedBy?: number | null
   search?: string
   withAnomalies?: boolean
+  /** `customer`: ordenada por cliente, para poder agruparla. */
+  sort?: 'customer'
   page: number
   limit: number
 }

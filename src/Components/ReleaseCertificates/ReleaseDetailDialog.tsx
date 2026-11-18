@@ -37,6 +37,7 @@ import {
   useReleaseReview
 } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import { notify } from 'src/utils/notify'
+import { promptDialog } from 'src/utils/confirm'
 import ReleaseStatusPill from './ReleaseStatusPill'
 import {
   RELEASE_KIND_LABELS,
@@ -417,14 +418,14 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                         disabled={review.isLoading}
                         helperText={
                           certificate.customerId
-                            ? 'Opcional. Se ofrecen los de este cliente; escribe el código para buscar en todos (servicio para un tercero).'
+                            ? 'Opcional. Se ofrecen los de este cliente; escribe el SCL, la ODS o la oferta para buscar en todos (servicio para un tercero).'
                             : 'Opcional. Al elegir un servicio se toma su cliente.'
                         }
                         onChange={(option) => linkService(option)}
                       />
                     ) : (
                       <Field
-                        label='Servicio de calibración (ODS)'
+                        label='Servicio (SCL)'
                         value={
                           certificate.service?.serviceCode ?? 'Sin servicio'
                         }
@@ -805,6 +806,38 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
               sx={{ bgcolor: brand.hover, '&:hover': { bgcolor: brand.ink } }}
             >
               Firmar
+            </Button>
+          )}
+        {certificate &&
+          canSign &&
+          !asking &&
+          !undoing &&
+          !editing &&
+          certificate.kind === 'principal' &&
+          certificate.status === 'verificado' && (
+            <Button
+              onClick={async () => {
+                // El PDF ya trae la firma: no se estampa nada, solo se deja constancia del motivo.
+                const { value } = await promptDialog({
+                  title: 'El PDF ya viene firmado',
+                  label: 'Motivo',
+                  placeholder: 'Ej.: lo firmó el proveedor o el director',
+                  helperText:
+                    'No se estampa ninguna firma: el PDF queda tal como está. En el historial quedará quién lo marcó y por qué.',
+                  confirmLabel: 'Marcar como firmado'
+                })
+                if (!value?.trim()) return
+                run(
+                  {
+                    type: 'already-signed',
+                    id: certificate.id,
+                    observation: value.trim()
+                  },
+                  'Marcado como firmado: ya se puede liberar'
+                )
+              }}
+            >
+              Ya viene firmado
             </Button>
           )}
         {certificate &&

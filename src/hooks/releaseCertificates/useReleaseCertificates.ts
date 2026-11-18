@@ -42,7 +42,8 @@ export const useReleaseCertificates = (filters: ReleaseFilters) => {
             withoutCustomer: filters.withoutCustomer ? 'true' : undefined,
             uploadedBy: filters.uploadedBy || undefined,
             search: filters.search || undefined,
-            withAnomalies: filters.withAnomalies ? 'true' : undefined
+            withAnomalies: filters.withAnomalies ? 'true' : undefined,
+            sort: filters.sort || undefined
           }
         })
         .then((response) => response.data),
@@ -95,6 +96,7 @@ export type ReleaseReviewAction =
     }
   | { type: 'version'; id: number; file: File }
   | { type: 'drive-retry'; id: number }
+  | { type: 'already-signed'; id: number; observation: string }
   | {
       type: 'discard' | 'reopen' | 'revert'
       id: number
@@ -138,6 +140,10 @@ export const useReleaseReview = () => {
             observation: action.observation,
             reasons: action.reasons
           })
+        case 'already-signed':
+          return axiosPrivate.post(`${base}/already-signed`, {
+            observation: action.observation
+          })
         case 'drive-retry':
           return axiosPrivate.post(`${base}/drive-retry`)
         case 'release':
@@ -170,7 +176,7 @@ export const useReleaseCustomerSearch = (search: string) => {
   )
 }
 
-/** Servicios abiertos para ligar un certificado: por cliente y/o por código de la ODS. */
+/** Servicios abiertos para ligar un certificado: por cliente y/o por SCL, ODS u oferta. */
 export const useReleaseServiceSearch = (
   customerId: number | null,
   search: string
