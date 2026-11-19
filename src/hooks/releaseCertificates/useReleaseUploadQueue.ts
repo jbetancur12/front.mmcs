@@ -14,6 +14,8 @@ import { RELEASE_QUERY_KEYS } from './useReleaseCertificates'
 interface QueueTarget {
   serviceId?: number | null
   cutId?: number | null
+  /** Cliente de todo el lote (opcional). */
+  customerId?: number | null
 }
 
 let rowCounter = 0
@@ -43,9 +45,11 @@ export const useReleaseUploadQueue = () => {
 
   const uploadOne = useCallback(
     async (file: File): Promise<ReleaseUploadResult> => {
-      const { serviceId, cutId } = targetRef.current
+      const { serviceId, cutId, customerId } = targetRef.current
       const data = new FormData()
       // El servicio va antes de los archivos: el API lo lee del cuerpo del formulario.
+      // El cliente y el servicio van antes de los archivos: el API los lee del cuerpo del formulario.
+      if (customerId) data.append('customerId', String(customerId))
       if (serviceId) data.append('serviceId', String(serviceId))
       if (serviceId && cutId) data.append('cutId', String(cutId))
       data.append('files', file)

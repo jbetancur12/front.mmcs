@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Dialog,
@@ -10,6 +11,7 @@ import {
   IconButton,
   LinearProgress,
   Link,
+  TextField,
   Typography,
   useMediaQuery,
   useTheme
@@ -24,6 +26,7 @@ import {
   WarningAmberRounded
 } from '@mui/icons-material'
 import { useReleaseUploadQueue } from 'src/hooks/releaseCertificates/useReleaseUploadQueue'
+import { useReleaseCustomerSearch } from 'src/hooks/releaseCertificates/useReleaseCertificates'
 import ReleaseServicePicker from './ReleaseServicePicker'
 import { ReleaseServiceOption } from './ReleaseCertificates.types'
 import {
@@ -117,6 +120,14 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   const [notices, setNotices] = useState<string[]>([])
   const [dragOver, setDragOver] = useState(false)
   const [service, setService] = useState<ReleaseServiceOption | null>(null)
+  // Cliente de todo el lote (opcional): los certificados quedan a su nombre y se avisa si algún PDF dice otro cliente.
+  const [customer, setCustomer] = useState<{
+    id: number
+    nombre: string
+  } | null>(null)
+  const [customerSearch, setCustomerSearch] = useState('')
+  const { data: customerOptions = [], isFetching: loadingCustomers } =
+    useReleaseCustomerSearch(customerSearch)
   const queue = useReleaseUploadQueue()
   const { rows, running } = queue
 
@@ -134,6 +145,8 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
     setNotices([])
     setDragOver(false)
     setService(initialService)
+    setCustomer(null)
+    setCustomerSearch('')
     queue.reset()
   }
 
@@ -220,6 +233,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
       entries.map((entry) => entry.file),
       {
         serviceId: service?.id ?? null,
+        customerId: customer?.id ?? null,
         // El corte solo vale mientras siga el servicio con el que se abrió.
         cutId: cutStillApplies ? initialCutId : null
       }
@@ -361,10 +375,51 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
         {selecting && (
           <>
             <Box sx={{ mb: 2 }}>
+              <Autocomplete
+                size='small'
+                options={customerOptions}
+                value={customer}
+                loading={loadingCustomers}
+                getOptionLabel={(option) => option.nombre}
+                isOptionEqualToValue={(a, b) => a.id === b.id}
+                filterOptions={(all) => all}
+                onChange={(_event, value) => {
+                  setCustomer(value)
+                  // Un servicio de otro cliente ya no sirve con este cliente.
+                  if (
+                    value &&
+                    service?.customerId &&
+                    service.customerId !== value.id
+                  )
+                    setService(null)
+                }}
+                onInputChange={(_event, value, reason) => {
+                  if (reason === 'input') setCustomerSearch(value)
+                }}
+                noOptionsText='Escribe al menos 2 letras del cliente'
+                sx={{ mb: 2 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Cliente'
+                    placeholder='Opcional'
+                    helperText='Si todo el lote es de un cliente, elígelo: los certificados quedan a su nombre y se avisa si algún PDF dice otro cliente.'
+                  />
+                )}
+              />
               <ReleaseServicePicker
                 value={service}
-                onChange={setService}
-                helperText='Opcional. Si eliges uno, el cliente se toma del servicio.'
+                customerId={customer?.id ?? null}
+                onChange={(option) => {
+                  setService(option)
+                  // Al elegir un servicio, su cliente pasa a ser el del lote.
+                  if (option?.customerId && option.customerName)
+                    setCustomer({
+                      id: option.customerId,
+                      nombre: option.customerName
+                    })
+                }}
+                helperText='Opcional. Se busca por SCL, ODS u oferta; si eliges uno, el cliente se toma del servicio.'
               />
             </Box>
             <Box
