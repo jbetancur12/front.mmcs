@@ -112,6 +112,8 @@ const ReleaseCertificates: React.FC = () => {
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_SIGN
   )
+  // Quien solo carga ve lo que cargó él (el servidor lo impone); revisión y firma ven toda la bandeja.
+  const seesAll = canReview || canSign
   const canManageDrive = hasPermission(
     $userStore.permissions,
     PERMISSIONS.RELEASE_DRIVE_MANAGE
@@ -510,6 +512,7 @@ const ReleaseCertificates: React.FC = () => {
         <ReleaseByCustomerView
           canSign={canSign}
           canReview={canReview}
+          uploadedBy={uploadedBy === '' ? null : uploadedBy}
           onOpen={setViewingId}
           onSign={setSignIds}
         />
@@ -554,25 +557,27 @@ const ReleaseCertificates: React.FC = () => {
                 />
               )}
             />
-            <TextField
-              select
-              size='small'
-              label='Cargado por'
-              value={uploadedBy}
-              onChange={(event) =>
-                setUploadedBy(
-                  event.target.value === '' ? '' : Number(event.target.value)
-                )
-              }
-              sx={{ minWidth: 180, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
-            >
-              <MenuItem value=''>Todos</MenuItem>
-              {uploaders.map((user) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.nombre}
-                </MenuItem>
-              ))}
-            </TextField>
+            {seesAll && (
+              <TextField
+                select
+                size='small'
+                label='Cargado por'
+                value={uploadedBy}
+                onChange={(event) =>
+                  setUploadedBy(
+                    event.target.value === '' ? '' : Number(event.target.value)
+                  )
+                }
+                sx={{ minWidth: 180, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+              >
+                <MenuItem value=''>Todos</MenuItem>
+                {uploaders.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.nombre}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
             <TextField
               select
               size='small'

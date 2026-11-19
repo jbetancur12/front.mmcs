@@ -44,6 +44,7 @@ export const useReleaseCertificates = (filters: ReleaseFilters) => {
             uploadedBy: filters.uploadedBy || undefined,
             search: filters.search || undefined,
             withAnomalies: filters.withAnomalies ? 'true' : undefined,
+            showReleased: filters.showReleased ? 'true' : undefined,
             pdfCustomerName: filters.pdfCustomerName
           }
         })
@@ -338,6 +339,8 @@ export const useCustomersSummary = (params: {
   search: string
   page: number
   limit: number
+  uploadedBy?: number | null
+  showReleased?: boolean
 }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery<{
@@ -349,7 +352,15 @@ export const useCustomersSummary = (params: {
     ['releaseCertificates', 'customers-summary', params],
     () =>
       axiosPrivate
-        .get('/release-certificates/customers-summary', { params })
+        .get('/release-certificates/customers-summary', {
+          params: {
+            search: params.search || undefined,
+            page: params.page,
+            limit: params.limit,
+            uploadedBy: params.uploadedBy || undefined,
+            showReleased: params.showReleased ? 'true' : undefined
+          }
+        })
         .then((response) => response.data),
     { keepPreviousData: true }
   )
