@@ -181,11 +181,12 @@ export const useReleaseCustomerSearch = (search: string) => {
 /** Servicios abiertos para ligar un certificado: por cliente y/o por SCL, ODS u oferta. */
 export const useReleaseServiceSearch = (
   customerId: number | null,
-  search: string
+  search: string,
+  listAll = false
 ) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery<ReleaseServiceOption[]>(
-    ['releaseCertificates', 'services', customerId, search],
+    ['releaseCertificates', 'services', customerId, search, listAll],
     () =>
       axiosPrivate
         .get('/release-certificates/services', {
@@ -196,7 +197,7 @@ export const useReleaseServiceSearch = (
         })
         .then((response) => response.data),
     {
-      enabled: Boolean(customerId) || search.length >= 2,
+      enabled: listAll || Boolean(customerId) || search.length >= 2,
       keepPreviousData: true
     }
   )

@@ -10,6 +10,8 @@ interface ReleaseServicePickerProps {
   customerId?: number | null
   disabled?: boolean
   helperText?: string
+  /** Obligatorio: ya no dice «Opcional» y trae la lista sin escribir (el servidor la limita a las órdenes del usuario). */
+  required?: boolean
 }
 
 const certificatesLabel = (option: ReleaseServiceOption) =>
@@ -23,7 +25,8 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
   onChange,
   customerId = null,
   disabled = false,
-  helperText
+  helperText,
+  required = false
 }) => {
   const [input, setInput] = useState('')
   const [debounced, setDebounced] = useState('')
@@ -34,7 +37,8 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
 
   const { data: options = [], isFetching } = useReleaseServiceSearch(
     customerId,
-    debounced
+    debounced,
+    required
   )
   // El valor actual siempre es una opción, aunque ya no salga en la búsqueda.
   const all =
@@ -92,7 +96,8 @@ const ReleaseServicePicker: React.FC<ReleaseServicePickerProps> = ({
         <TextField
           {...params}
           label='Servicio (SCL, ODS u oferta)'
-          placeholder='Opcional'
+          required={required}
+          placeholder={required ? 'Elige tu orden' : 'Opcional'}
           helperText={helperText}
         />
       )}
