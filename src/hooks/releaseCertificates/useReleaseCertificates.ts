@@ -99,6 +99,8 @@ export type ReleaseReviewAction =
   | { type: 'version'; id: number; file: File }
   | { type: 'drive-retry'; id: number }
   | { type: 'already-signed'; id: number; observation: string }
+  /** Confirma que el nombre que dice el PDF es del cliente asignado: no se vuelve a avisar. */
+  | { type: 'customer-alias'; id: number }
   | {
       type: 'discard' | 'reopen' | 'revert'
       id: number
@@ -148,6 +150,8 @@ export const useReleaseReview = () => {
           })
         case 'drive-retry':
           return axiosPrivate.post(`${base}/drive-retry`)
+        case 'customer-alias':
+          return axiosPrivate.post(`${base}/customer-alias`)
         case 'release':
           return axiosPrivate.post(`${base}/release`, {
             confirm: true,
