@@ -366,6 +366,26 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
                       </li>
                     ))}
                   </Box>
+                  {canReview &&
+                    certificate.customer &&
+                    certificate.customerName &&
+                    certificate.anomalies.some((anomaly) =>
+                      anomaly.code.startsWith('CLIENTE_DISTINTO')
+                    ) && (
+                      <Button
+                        size='small'
+                        sx={{ mt: 1 }}
+                        disabled={review.isLoading}
+                        onClick={() =>
+                          run(
+                            { type: 'customer-alias', id: certificate.id },
+                            `Listo: «${certificate.customerName}» es de ${certificate.customer?.nombre}. No se vuelve a avisar`
+                          )
+                        }
+                      >
+                        Es el mismo cliente: no volver a avisar
+                      </Button>
+                    )}
                 </Alert>
               )}
               <Typography variant='caption' color='text.secondary'>
