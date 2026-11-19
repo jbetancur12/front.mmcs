@@ -11,8 +11,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   Pagination,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -53,6 +55,10 @@ interface ReleaseByCustomerViewProps {
   canReview: boolean
   onOpen: (id: number) => void
   onSign: (ids: number[]) => void
+  /** Solo lo que cargó esta persona (la lista de arriba lo elige); sin valor, todo. */
+  uploadedBy?: number | null
+  /** Los liberados salen de la vista; con esto vuelven. */
+  showReleased?: boolean
 }
 
 const formatDate = (value: string | null) =>
@@ -259,7 +265,9 @@ const PanelBody: React.FC<PanelBodyProps> = ({
   canSign,
   canReview,
   onOpen,
-  onSign
+  onSign,
+  uploadedBy,
+  showReleased
 }) => {
   const [limit, setLimit] = useState(ITEMS_STEP)
   const [assigning, setAssigning] = useState(false)
@@ -269,6 +277,8 @@ const PanelBody: React.FC<PanelBodyProps> = ({
     pdfCustomerName: customer.identified
       ? undefined
       : customer.key.replace(/^pdf:/, ''),
+    uploadedBy,
+    showReleased,
     page: 1,
     limit
   })
@@ -492,10 +502,13 @@ const ReleaseByCustomerView: React.FC<ReleaseByCustomerViewProps> = (props) => {
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [showReleased, setShowReleased] = useState(false)
   const { data, isLoading } = useCustomersSummary({
     search,
     page,
-    limit: PAGE_SIZE
+    limit: PAGE_SIZE,
+    uploadedBy: props.uploadedBy,
+    showReleased
   })
 
   useEffect(() => {
@@ -513,7 +526,20 @@ const ReleaseByCustomerView: React.FC<ReleaseByCustomerViewProps> = (props) => {
         label='Buscar cliente'
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
-        sx={{ mb: 2, minWidth: 280 }}
+        sx={{ mb: 2, mr: 2, minWidth: 280 }}
+      />
+      <FormControlLabel
+        sx={{ mb: 2 }}
+        control={
+          <Switch
+            checked={showReleased}
+            onChange={(event) => {
+              setShowReleased(event.target.checked)
+              setPage(1)
+            }}
+          />
+        }
+        label='Ver también los liberados'
       />
       {isLoading && (
         <Typography variant='body2' color='text.secondary'>
@@ -576,7 +602,11 @@ const ReleaseByCustomerView: React.FC<ReleaseByCustomerViewProps> = (props) => {
             </Box>
           </AccordionSummary>
           <AccordionDetails>
-            <PanelBody customer={customer} {...props} />
+            <PanelBody
+              customer={customer}
+              {...props}
+              showReleased={showReleased}
+            />
           </AccordionDetails>
         </Accordion>
       ))}

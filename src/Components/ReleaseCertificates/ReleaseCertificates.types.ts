@@ -163,6 +163,8 @@ export interface ReleaseFilters {
   uploadedBy?: number | null
   search?: string
   withAnomalies?: boolean
+  /** Los liberados salen de la bandeja; con esto vuelven a verse (también se ven eligiendo el estado «Liberado»). */
+  showReleased?: boolean
   /** Sin cliente identificado: los que traen ese nombre en el PDF (vacío = el PDF no trae nombre). */
   pdfCustomerName?: string
   page: number
