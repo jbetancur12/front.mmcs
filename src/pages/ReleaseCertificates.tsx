@@ -11,6 +11,8 @@ import {
   MenuItem,
   Switch,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   Tooltip,
   useMediaQuery,
@@ -30,13 +32,13 @@ import { useStore } from '@nanostores/react'
 import { useSearchParams } from 'react-router-dom'
 import {
   MRT_ColumnDef,
-  MRT_ExpandedState,
   MRT_PaginationState,
   MRT_RowSelectionState
 } from 'material-react-table'
 import { downloadPrivateFile } from '@utils/downloadBlob'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import ReleaseByCustomerView from 'src/Components/ReleaseCertificates/ReleaseByCustomerView'
 import DataTable from 'src/Components/Common/DataTable'
 import EmptyState from 'src/Components/Common/EmptyState'
 import ReleaseDetailDialog from 'src/Components/ReleaseCertificates/ReleaseDetailDialog'
@@ -69,9 +71,7 @@ import { notify } from 'src/utils/notify'
 import { brand, intent } from 'src/theme/designTokens'
 
 const PAGE_SIZE = 25
-// Agrupada por cliente se trae una página grande para que cada cliente quede casi siempre entero en una sola página.
-const GROUPED_PAGE_SIZE = 100
-const GROUP_STORAGE_KEY = 'releaseCertificates.groupByCustomer'
+const VIEW_STORAGE_KEY = 'releaseCertificates.view'
 const SEARCH_DEBOUNCE_MS = 350
 
 const STATUS_CARDS: {
@@ -104,6 +104,10 @@ const ReleaseCertificates: React.FC = () => {
     PERMISSIONS.RELEASE_CERTIFICATE_UPLOAD
   )
 
+  const canReview = hasPermission(
+    $userStore.permissions,
+    PERMISSIONS.RELEASE_CERTIFICATE_REVIEW
+  )
   const canSign = hasPermission(
     $userStore.permissions,
     PERMISSIONS.RELEASE_CERTIFICATE_SIGN
@@ -129,15 +133,24 @@ const ReleaseCertificates: React.FC = () => {
   const [signatureOpen, setSignatureOpen] = useState(false)
   const [signIds, setSignIds] = useState<number[] | null>(null)
   const [selection, setSelection] = useState<MRT_RowSelectionState>({})
-  // Agrupar la bandeja por cliente (se recuerda): los certificados de cada cliente quedan juntos y no mezclados con los demás.
-  const [grouped, setGrouped] = useState(() => {
+  // Dos vistas: la lista de siempre o «Por cliente» (un acordeón por cliente). Se recuerda la última.
+  const [view, setView] = useState<'list' | 'customers'>(() => {
     try {
-      return window.localStorage.getItem(GROUP_STORAGE_KEY) === 'true'
+      return window.localStorage.getItem(VIEW_STORAGE_KEY) === 'customers'
+        ? 'customers'
+        : 'list'
     } catch {
-      return false
+      return 'list'
     }
   })
-  const [expanded, setExpanded] = useState<MRT_ExpandedState>(true)
+  const changeView = (next: 'list' | 'customers') => {
+    setView(next)
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, next)
+    } catch {
+      // Sin almacenamiento la vista cambia igual, solo que no se recuerda.
+    }
+  }
   const [status, setStatus] = useState<ReleaseStatus | undefined>()
   const [kind, setKind] = useState<ReleaseKind | ''>('')
   const [withAnomalies, setWithAnomalies] = useState(false)
@@ -157,7 +170,7 @@ const ReleaseCertificates: React.FC = () => {
   const [search, setSearch] = useState('')
   const [pagination, setPagination] = useState<MRT_PaginationState>({
     pageIndex: 0,
-    pageSize: grouped ? GROUPED_PAGE_SIZE : PAGE_SIZE
+    pageSize: PAGE_SIZE
   })
   const [uploadOpen, setUploadOpen] = useState(false)
   // Los avisos de ajustes abren el certificado con ?id=
@@ -219,29 +232,9 @@ const ReleaseCertificates: React.FC = () => {
     customerId: customer?.id ?? null,
     withoutCustomer,
     uploadedBy: uploadedBy === '' ? null : uploadedBy,
-    sort: grouped ? 'customer' : undefined,
     page: pagination.pageIndex + 1,
     limit: pagination.pageSize
   })
-
-  const toggleGrouped = (value: boolean) => {
-    setGrouped(value)
-    setExpanded(true)
-    setPagination({
-      pageIndex: 0,
-      pageSize: value ? GROUPED_PAGE_SIZE : PAGE_SIZE
-    })
-    try {
-      window.localStorage.setItem(GROUP_STORAGE_KEY, String(value))
-    } catch {
-      // Sin almacenamiento se agrupa igual, solo que no se recuerda.
-    }
-  }
-
-  // Cada página nueva de la agrupada abre sus clientes desplegados.
-  useEffect(() => {
-    setExpanded(true)
-  }, [pagination.pageIndex, grouped])
 
   const columns = useMemo<MRT_ColumnDef<ReleaseCertificate>[]>(
     () => [
@@ -348,18 +341,6 @@ const ReleaseCertificates: React.FC = () => {
               </Box>
             </Box>
           )
-      },
-      {
-        // Solo sirve para agrupar: el nombre del cliente (o el del PDF si no se identificó) como título de cada grupo.
-        id: 'customerGroup',
-        header: 'Cliente',
-        accessorFn: (row) =>
-          row.customer?.nombre ??
-          (row.customerName
-            ? `Sin identificar · ${row.customerName}`
-            : 'Cliente sin identificar'),
-        enableGrouping: true,
-        size: 240
       },
       {
         id: 'service',
@@ -513,270 +494,264 @@ const ReleaseCertificates: React.FC = () => {
         ))}
       </Grid>
 
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 2,
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          mb: 2
-        }}
+      <ToggleButtonGroup
+        exclusive
+        size='small'
+        value={view}
+        onChange={(_event, next) => next && changeView(next)}
+        aria-label='Vista de la bandeja'
+        sx={{ mb: 2 }}
       >
-        <TextField
-          size='small'
-          label='Buscar'
-          placeholder='Número, cliente, instrumento o serie'
-          value={searchInput}
-          onChange={(event) => setSearchInput(event.target.value)}
-          sx={{ minWidth: 280, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
-        />
-        <Autocomplete
-          size='small'
-          options={customerOptions}
-          value={customer}
-          loading={loadingCustomers}
-          getOptionLabel={(option) => option.nombre}
-          isOptionEqualToValue={(a, b) => a.id === b.id}
-          filterOptions={(all) => all}
-          onChange={(_event, value) => setCustomer(value)}
-          onInputChange={(_event, value, reason) => {
-            if (reason === 'input') setCustomerSearch(value)
-          }}
-          noOptionsText='Escribe al menos 2 letras del cliente'
-          sx={{ minWidth: 240, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label='Cliente'
-              placeholder='Buscar cliente'
-            />
-          )}
-        />
-        <TextField
-          select
-          size='small'
-          label='Cargado por'
-          value={uploadedBy}
-          onChange={(event) =>
-            setUploadedBy(
-              event.target.value === '' ? '' : Number(event.target.value)
-            )
-          }
-          sx={{ minWidth: 180, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
-        >
-          <MenuItem value=''>Todos</MenuItem>
-          {uploaders.map((user) => (
-            <MenuItem key={user.id} value={user.id}>
-              {user.nombre}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
-          size='small'
-          label='Tipo'
-          value={kind}
-          onChange={(event) => setKind(event.target.value as ReleaseKind | '')}
-          sx={{ minWidth: 160, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
-        >
-          <MenuItem value=''>Todos</MenuItem>
-          {(Object.keys(RELEASE_KIND_LABELS) as ReleaseKind[]).map((value) => (
-            <MenuItem key={value} value={value}>
-              {RELEASE_KIND_LABELS[value]}
-            </MenuItem>
-          ))}
-        </TextField>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={withAnomalies}
-              onChange={(event) => setWithAnomalies(event.target.checked)}
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': { color: brand.hover },
-                '& .MuiSwitch-track': {
-                  bgcolor: withAnomalies ? brand.main : undefined
-                }
-              }}
-            />
-          }
-          label='Solo con rarezas por revisar'
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={grouped}
-              onChange={(event) => toggleGrouped(event.target.checked)}
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': { color: brand.main },
-                '& .MuiSwitch-track': {
-                  bgcolor: grouped ? brand.main : undefined
-                }
-              }}
-            />
-          }
-          label='Agrupar por cliente'
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={status === 'descartado'}
-              onChange={(event) =>
-                setStatus(event.target.checked ? 'descartado' : undefined)
-              }
-            />
-          }
-          label={`Ver descartados (${data?.counts.descartado ?? 0})`}
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={withoutCustomer}
-              onChange={(event) => setWithoutCustomer(event.target.checked)}
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: intent.warningInk
-                },
-                '& .MuiSwitch-track': {
-                  bgcolor: withoutCustomer ? intent.warning : undefined
-                }
-              }}
-            />
-          }
-          label='Solo sin cliente identificado'
-        />
-        {hasFilters && (
-          <Button
-            onClick={() => {
-              setStatus(undefined)
-              setKind('')
-              setWithAnomalies(false)
-              setWithoutCustomer(false)
-              setSearchInput('')
-              setCustomer(null)
-              setCustomerSearch('')
-              setUploadedBy('')
-            }}
-          >
-            Limpiar filtros
-          </Button>
-        )}
-      </Box>
+        <ToggleButton value='list'>Lista</ToggleButton>
+        <ToggleButton value='customers'>Por cliente</ToggleButton>
+      </ToggleButtonGroup>
 
-      {!isLoading && data?.total === 0 && !hasFilters ? (
-        <EmptyState
-          icon={<CloudUploadOutlined />}
-          title='Aún no hay certificados cargados'
-          hint={
-            canUpload
-              ? 'Suelta los PDF con el botón Cargar certificados y el sistema los lee.'
-              : 'Cuando se cargue uno aparecerá aquí.'
-          }
-          action={uploadButton || undefined}
+      {view === 'customers' ? (
+        <ReleaseByCustomerView
+          canSign={canSign}
+          canReview={canReview}
+          onOpen={setViewingId}
+          onSign={setSignIds}
         />
       ) : (
-        <DataTable
-          columns={columns}
-          data={data?.items ?? []}
-          itemLabel={['certificado', 'certificados']}
-          enableGlobalFilter={false}
-          enableGrouping={grouped}
-          groupedColumnMode='reorder'
-          onExpandedChange={setExpanded}
-          // Quitar el grupo desde el aviso de la tabla es lo mismo que apagar el interruptor.
-          onGroupingChange={(updater) => {
-            const next =
-              typeof updater === 'function'
-                ? updater(grouped ? ['customerGroup'] : [])
-                : updater
-            if (next.length === 0) toggleGrouped(false)
-          }}
-          enableRowSelection={(row) =>
-            !row.getIsGrouped() &&
-            canSign &&
-            !isMobile &&
-            readyToSign(row.original)
-          }
-          getRowId={(row) => String(row.id)}
-          onRowSelectionChange={setSelection}
-          manualPagination
-          rowCount={data?.total ?? 0}
-          onPaginationChange={setPagination}
-          state={{
-            pagination,
-            showProgressBars: isFetching,
-            rowSelection: selection,
-            grouping: grouped ? ['customerGroup'] : [],
-            expanded,
-            // En celular solo lo esencial: número, estado y cliente. Agrupada, el cliente es el título de cada grupo.
-            columnVisibility: isMobile
-              ? {
-                  customerGroup: false,
-                  status: false,
-                  customer: false,
-                  kind: false,
-                  instrument: false,
-                  serie: false,
-                  calibrationDate: false,
-                  uploader: false,
-                  createdAt: false
-                }
-              : grouped
-                ? { customer: false }
-                : { customerGroup: false }
-          }}
-          muiTablePaginationProps={{ rowsPerPageOptions: [25, 50, 100] }}
-          enableRowActions
-          positionActionsColumn='last'
-          displayColumnDefOptions={{
-            'mrt-row-actions': { header: 'Acciones', size: 110 }
-          }}
-          muiTableBodyRowProps={({ row }) => ({
-            onDoubleClick: () =>
-              row.getIsGrouped() ? undefined : setViewingId(row.original.id),
-            sx: {
-              cursor: 'pointer',
-              // Lo que ya se puede firmar se distingue de un vistazo: fondo suave y borde turquesa a la izquierda.
-              ...(!row.getIsGrouped() &&
-                canSign &&
-                readyToSign(row.original) && {
-                  bgcolor: brand.softer,
-                  boxShadow: `inset 3px 0 0 ${brand.main}`
-                })
-            }
-          })}
-          renderRowActions={({ row }) => {
-            if (row.getIsGrouped()) return null
-            const certificate = row.original
-            const label =
-              certificate.documentNumber ?? `certificado ${certificate.id}`
-            return (
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                <Tooltip title='Revisar'>
-                  <IconButton
-                    aria-label={`Revisar ${label}`}
-                    sx={{ color: brand.ink }}
-                    onClick={() => setViewingId(certificate.id)}
-                  >
-                    <VisibilityOutlined fontSize='small' />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Descargar PDF'>
-                  <IconButton
-                    aria-label={`Descargar PDF de ${label}`}
-                    onClick={() =>
-                      downloadPrivateFile(
-                        releaseFileUrl(certificate.id),
-                        `${label}.pdf`
-                      ).catch(() => notify.error('No se pudo descargar el PDF'))
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              mb: 2
+            }}
+          >
+            <TextField
+              size='small'
+              label='Buscar'
+              placeholder='Número, cliente, instrumento o serie'
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              sx={{ minWidth: 280, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+            />
+            <Autocomplete
+              size='small'
+              options={customerOptions}
+              value={customer}
+              loading={loadingCustomers}
+              getOptionLabel={(option) => option.nombre}
+              isOptionEqualToValue={(a, b) => a.id === b.id}
+              filterOptions={(all) => all}
+              onChange={(_event, value) => setCustomer(value)}
+              onInputChange={(_event, value, reason) => {
+                if (reason === 'input') setCustomerSearch(value)
+              }}
+              noOptionsText='Escribe al menos 2 letras del cliente'
+              sx={{ minWidth: 240, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label='Cliente'
+                  placeholder='Buscar cliente'
+                />
+              )}
+            />
+            <TextField
+              select
+              size='small'
+              label='Cargado por'
+              value={uploadedBy}
+              onChange={(event) =>
+                setUploadedBy(
+                  event.target.value === '' ? '' : Number(event.target.value)
+                )
+              }
+              sx={{ minWidth: 180, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+            >
+              <MenuItem value=''>Todos</MenuItem>
+              {uploaders.map((user) => (
+                <MenuItem key={user.id} value={user.id}>
+                  {user.nombre}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              size='small'
+              label='Tipo'
+              value={kind}
+              onChange={(event) =>
+                setKind(event.target.value as ReleaseKind | '')
+              }
+              sx={{ minWidth: 160, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+            >
+              <MenuItem value=''>Todos</MenuItem>
+              {(Object.keys(RELEASE_KIND_LABELS) as ReleaseKind[]).map(
+                (value) => (
+                  <MenuItem key={value} value={value}>
+                    {RELEASE_KIND_LABELS[value]}
+                  </MenuItem>
+                )
+              )}
+            </TextField>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={withAnomalies}
+                  onChange={(event) => setWithAnomalies(event.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: brand.hover
+                    },
+                    '& .MuiSwitch-track': {
+                      bgcolor: withAnomalies ? brand.main : undefined
                     }
-                  >
-                    <FileDownloadOutlined fontSize='small' />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            )
-          }}
-        />
+                  }}
+                />
+              }
+              label='Solo con rarezas por revisar'
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={status === 'descartado'}
+                  onChange={(event) =>
+                    setStatus(event.target.checked ? 'descartado' : undefined)
+                  }
+                />
+              }
+              label={`Ver descartados (${data?.counts.descartado ?? 0})`}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={withoutCustomer}
+                  onChange={(event) => setWithoutCustomer(event.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: intent.warningInk
+                    },
+                    '& .MuiSwitch-track': {
+                      bgcolor: withoutCustomer ? intent.warning : undefined
+                    }
+                  }}
+                />
+              }
+              label='Solo sin cliente identificado'
+            />
+            {hasFilters && (
+              <Button
+                onClick={() => {
+                  setStatus(undefined)
+                  setKind('')
+                  setWithAnomalies(false)
+                  setWithoutCustomer(false)
+                  setSearchInput('')
+                  setCustomer(null)
+                  setCustomerSearch('')
+                  setUploadedBy('')
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            )}
+          </Box>
+
+          {!isLoading && data?.total === 0 && !hasFilters ? (
+            <EmptyState
+              icon={<CloudUploadOutlined />}
+              title='Aún no hay certificados cargados'
+              hint={
+                canUpload
+                  ? 'Suelta los PDF con el botón Cargar certificados y el sistema los lee.'
+                  : 'Cuando se cargue uno aparecerá aquí.'
+              }
+              action={uploadButton || undefined}
+            />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={data?.items ?? []}
+              itemLabel={['certificado', 'certificados']}
+              enableGlobalFilter={false}
+              enableRowSelection={(row) =>
+                canSign && !isMobile && readyToSign(row.original)
+              }
+              getRowId={(row) => String(row.id)}
+              onRowSelectionChange={setSelection}
+              manualPagination
+              rowCount={data?.total ?? 0}
+              onPaginationChange={setPagination}
+              state={{
+                pagination,
+                showProgressBars: isFetching,
+                rowSelection: selection,
+                // En celular solo lo esencial: número, estado y cliente
+                columnVisibility: isMobile
+                  ? {
+                      status: false,
+                      customer: false,
+                      kind: false,
+                      instrument: false,
+                      serie: false,
+                      calibrationDate: false,
+                      uploader: false,
+                      createdAt: false
+                    }
+                  : {}
+              }}
+              muiTablePaginationProps={{ rowsPerPageOptions: [25, 50, 100] }}
+              enableRowActions
+              positionActionsColumn='last'
+              displayColumnDefOptions={{
+                'mrt-row-actions': { header: 'Acciones', size: 110 }
+              }}
+              muiTableBodyRowProps={({ row }) => ({
+                onDoubleClick: () => setViewingId(row.original.id),
+                sx: {
+                  cursor: 'pointer',
+                  // Lo que ya se puede firmar se distingue de un vistazo: fondo suave y borde turquesa a la izquierda.
+                  ...(canSign &&
+                    readyToSign(row.original) && {
+                      bgcolor: brand.softer,
+                      boxShadow: `inset 3px 0 0 ${brand.main}`
+                    })
+                }
+              })}
+              renderRowActions={({ row }) => {
+                const certificate = row.original
+                const label =
+                  certificate.documentNumber ?? `certificado ${certificate.id}`
+                return (
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Tooltip title='Revisar'>
+                      <IconButton
+                        aria-label={`Revisar ${label}`}
+                        sx={{ color: brand.ink }}
+                        onClick={() => setViewingId(certificate.id)}
+                      >
+                        <VisibilityOutlined fontSize='small' />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Descargar PDF'>
+                      <IconButton
+                        aria-label={`Descargar PDF de ${label}`}
+                        onClick={() =>
+                          downloadPrivateFile(
+                            releaseFileUrl(certificate.id),
+                            `${label}.pdf`
+                          ).catch(() =>
+                            notify.error('No se pudo descargar el PDF')
+                          )
+                        }
+                      >
+                        <FileDownloadOutlined fontSize='small' />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                )
+              }}
+            />
+          )}
+        </>
       )}
 
       <ReleaseAnalystGuideDialog

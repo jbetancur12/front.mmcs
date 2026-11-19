@@ -12,7 +12,8 @@ import {
   ReleaseSignatory,
   SignatorySlot,
   ReleaseSignPlan,
-  ReleaseServiceOption
+  ReleaseServiceOption,
+  ReleaseCustomerSummary
 } from 'src/Components/ReleaseCertificates/ReleaseCertificates.types'
 
 export const RELEASE_QUERY_KEYS = {
@@ -43,7 +44,7 @@ export const useReleaseCertificates = (filters: ReleaseFilters) => {
             uploadedBy: filters.uploadedBy || undefined,
             search: filters.search || undefined,
             withAnomalies: filters.withAnomalies ? 'true' : undefined,
-            sort: filters.sort || undefined
+            pdfCustomerName: filters.pdfCustomerName
           }
         })
         .then((response) => response.data),
@@ -321,13 +322,82 @@ export const useSignAutoPreview = (
 /** Certificados verificados que ya se pueden firmar (todos, no solo los de la página). */
 export const useFetchReadyToSign = () => {
   const axiosPrivate = useAxiosPrivate()
-  return () =>
+  return (customerId?: number | null) =>
     axiosPrivate
-      .get('/release-certificates/ready-to-sign')
+      .get('/release-certificates/ready-to-sign', {
+        params: { customerId: customerId || undefined }
+      })
       .then(
         (response) =>
           response.data.items as { id: number; documentNumber: string | null }[]
       )
+}
+
+/** Clientes con sus contadores por estado (vista «Por cliente»). */
+export const useCustomersSummary = (params: {
+  search: string
+  page: number
+  limit: number
+}) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<{
+    items: ReleaseCustomerSummary[]
+    total: number
+    page: number
+    limit: number
+  }>(
+    ['releaseCertificates', 'customers-summary', params],
+    () =>
+      axiosPrivate
+        .get('/release-certificates/customers-summary', { params })
+        .then((response) => response.data),
+    { keepPreviousData: true }
+  )
+}
+
+/** Acciones en lote sobre los certificados de un cliente. */
+export const useCustomerBulkActions = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  const refresh = () => queryClient.invalidateQueries(RELEASE_QUERY_KEYS.all)
+  return {
+    verifyClean: useMutation(
+      (customerId: number) =>
+        axiosPrivate
+          .post('/release-certificates/bulk-verify', { customerId })
+          .then(
+            (response) =>
+              response.data as {
+                results: {
+                  id: number
+                  documentNumber: string | null
+                  ok: boolean
+                  error?: string
+                }[]
+                skipped: number
+              }
+          ),
+      { onSuccess: refresh }
+    ),
+    linkService: useMutation(
+      (input: {
+        ids: number[]
+        serviceId: number | null
+        cutId?: number | null
+      }) =>
+        axiosPrivate
+          .post('/release-certificates/bulk-link-service', input)
+          .then(
+            (response) =>
+              response.data.results as {
+                id: number
+                ok: boolean
+                error?: string
+              }[]
+          ),
+      { onSuccess: refresh }
+    )
+  }
 }
 
 /** Registro de firmas del laboratorio (con las inactivas si `all`). */

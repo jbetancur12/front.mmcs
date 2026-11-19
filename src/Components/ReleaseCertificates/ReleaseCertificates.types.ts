@@ -163,8 +163,8 @@ export interface ReleaseFilters {
   uploadedBy?: number | null
   search?: string
   withAnomalies?: boolean
-  /** `customer`: ordenada por cliente, para poder agruparla. */
-  sort?: 'customer'
+  /** Sin cliente identificado: los que traen ese nombre en el PDF (vacío = el PDF no trae nombre). */
+  pdfCustomerName?: string
   page: number
   limit: number
 }
@@ -293,4 +293,17 @@ export interface ReleaseSignPlan {
   source: 'layout' | 'names' | 'none'
   placements: ReleasePlacement[]
   signatories: ReleaseSignatory[]
+}
+
+/** Un cliente de la vista «Por cliente», con cuántos certificados tiene en cada estado. */
+export interface ReleaseCustomerSummary {
+  key: string
+  customerId: number | null
+  name: string
+  /** Falso cuando se agrupa por el nombre que trae el PDF porque el cliente no se identificó. */
+  identified: boolean
+  counts: Record<Exclude<ReleaseStatus, 'descartado'>, number>
+  total: number
+  withAnomalies: number
+  withoutService: number
 }
