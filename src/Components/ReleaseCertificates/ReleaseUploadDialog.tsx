@@ -56,6 +56,8 @@ interface ReleaseUploadDialogProps {
   onDone?: () => void
   /** Abre el certificado en el mismo lugar; sin esto el enlace abre la bandeja en otra pestaña. */
   onOpenCertificate?: (id: number) => void
+  /** Quien solo carga: la orden es obligatoria (solo las suyas) y el cliente se toma de ella. */
+  requireService?: boolean
 }
 
 interface Entry {
@@ -110,7 +112,8 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   initialCutCode = null,
   onUploaded,
   onDone,
-  onOpenCertificate
+  onOpenCertificate,
+  requireService = false
 }) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
@@ -228,6 +231,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
   }
 
   const cutStillApplies = service?.id === initialService?.id
+  const missingService = requireService && !service
   const send = () => {
     queue.start(
       entries.map((entry) => entry.file),
@@ -375,41 +379,43 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
         {selecting && (
           <>
             <Box sx={{ mb: 2 }}>
-              <Autocomplete
-                size='small'
-                options={customerOptions}
-                value={customer}
-                loading={loadingCustomers}
-                getOptionLabel={(option) => option.nombre}
-                isOptionEqualToValue={(a, b) => a.id === b.id}
-                filterOptions={(all) => all}
-                onChange={(_event, value) => {
-                  setCustomer(value)
-                  // Un servicio de otro cliente ya no sirve con este cliente.
-                  if (
-                    value &&
-                    service?.customerId &&
-                    service.customerId !== value.id
-                  )
-                    setService(null)
-                }}
-                onInputChange={(_event, value, reason) => {
-                  if (reason === 'input') setCustomerSearch(value)
-                }}
-                noOptionsText='Escribe al menos 2 letras del cliente'
-                sx={{ mb: 2 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Cliente'
-                    placeholder='Opcional'
-                    helperText='Si todo el lote es de un cliente, elígelo: los certificados quedan a su nombre y se avisa si algún PDF dice otro cliente.'
-                  />
-                )}
-              />
+              {!requireService && (
+                <Autocomplete
+                  size='small'
+                  options={customerOptions}
+                  value={customer}
+                  loading={loadingCustomers}
+                  getOptionLabel={(option) => option.nombre}
+                  isOptionEqualToValue={(a, b) => a.id === b.id}
+                  filterOptions={(all) => all}
+                  onChange={(_event, value) => {
+                    setCustomer(value)
+                    // Un servicio de otro cliente ya no sirve con este cliente.
+                    if (
+                      value &&
+                      service?.customerId &&
+                      service.customerId !== value.id
+                    )
+                      setService(null)
+                  }}
+                  onInputChange={(_event, value, reason) => {
+                    if (reason === 'input') setCustomerSearch(value)
+                  }}
+                  noOptionsText='Escribe al menos 2 letras del cliente'
+                  sx={{ mb: 2 }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label='Cliente'
+                      placeholder='Opcional'
+                      helperText='Si todo el lote es de un cliente, elígelo: los certificados quedan a su nombre y se avisa si algún PDF dice otro cliente.'
+                    />
+                  )}
+                />
+              )}
               <ReleaseServicePicker
                 value={service}
-                customerId={customer?.id ?? null}
+                customerId={requireService ? null : customer?.id ?? null}
                 onChange={(option) => {
                   setService(option)
                   // Al elegir un servicio, su cliente pasa a ser el del lote.
@@ -419,8 +425,18 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
                       nombre: option.customerName
                     })
                 }}
-                helperText='Opcional. Se busca por SCL, ODS u oferta; si eliges uno, el cliente se toma del servicio.'
+                required={requireService}
+                helperText={
+                  requireService
+                    ? 'Solo salen las órdenes programadas donde estás asignado. El cliente se toma de la orden.'
+                    : 'Opcional. Se busca por SCL, ODS u oferta; si eliges uno, el cliente se toma del servicio.'
+                }
               />
+              {requireService && service?.customerName && (
+                <Typography variant='body2' sx={{ mt: 1 }}>
+                  Cliente: <strong>{service.customerName}</strong>
+                </Typography>
+              )}
             </Box>
             <Box
               role='button'
@@ -550,7 +566,7 @@ const ReleaseUploadDialog: React.FC<ReleaseUploadDialogProps> = ({
             <Button onClick={close}>Cancelar</Button>
             <Button
               variant='contained'
-              disabled={entries.length === 0}
+              disabled={entries.length === 0 || missingService}
               onClick={send}
               sx={BUTTON_SX}
             >

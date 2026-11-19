@@ -786,6 +786,7 @@ const ReleaseCertificates: React.FC = () => {
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
         onOpenCertificate={setViewingId}
+        requireService={!seesAll}
         // «Listo» deja la bandeja mostrando lo recién cargado: lo del usuario, sin filtro de estado.
         onDone={() => {
           // El usuario no trae su id en el store: se busca por nombre entre quienes han cargado.
