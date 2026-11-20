@@ -18,6 +18,10 @@ import {
   CalibrationServiceCutType
 } from '../../types/calibrationService'
 import { brand, neutral } from 'src/theme/designTokens'
+import CalibrationServiceItemLabel, {
+  buildServiceItemNumbers,
+  getServiceItemDetail
+} from './CalibrationServiceItemLabel'
 
 type CalibrationServiceCutDialogItem = NonNullable<
   CalibrationService['items']
@@ -25,8 +29,9 @@ type CalibrationServiceCutDialogItem = NonNullable<
 
 interface DraftCutItem {
   serviceItemId: number
+  number: number
   itemName: string
-  instrumentName: string
+  detail: string
   quantityAvailable: number
   selected: boolean
   quantity: number
@@ -93,8 +98,10 @@ const buildDraftItems = (
   service: CalibrationService,
   preselectAll = false,
   editingCut: CalibrationServiceCut | null = null
-): DraftCutItem[] =>
-  (service.items || [])
+): DraftCutItem[] => {
+  const itemNumbers = buildServiceItemNumbers(service.items)
+
+  return (service.items || [])
     .filter((item) =>
       ['completed', 'in_progress'].includes(getOperationalStatus(item))
     )
@@ -112,8 +119,9 @@ const buildDraftItems = (
 
       return {
         serviceItemId: item.id,
+        number: itemNumbers.get(item.id) ?? 0,
         itemName: item.itemName,
-        instrumentName: item.instrumentName || 'Sin instrumento',
+        detail: getServiceItemDetail(item),
         quantityAvailable,
         selected: inCut ? true : preselectAll && quantityAvailable > 0,
         quantity: inCut
@@ -126,6 +134,7 @@ const buildDraftItems = (
       }
     })
     .filter((item) => item.quantityAvailable > 0)
+}
 
 const getItemQuantityError = (item: DraftCutItem) => {
   if (!item.selected) {
@@ -362,14 +371,12 @@ const CalibrationServiceCutDialog = ({
                       />
                     }
                     label={
-                      <>
-                        <Typography variant='body2' fontWeight={600}>
-                          {item.itemName}
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          {item.instrumentName}
-                        </Typography>
-                      </>
+                      <CalibrationServiceItemLabel
+                        number={item.number}
+                        name={item.itemName}
+                        detail={item.detail || 'Sin instrumento'}
+                        selected
+                      />
                     }
                   />
                   <Typography

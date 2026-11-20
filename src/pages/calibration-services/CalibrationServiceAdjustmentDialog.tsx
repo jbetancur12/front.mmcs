@@ -23,6 +23,10 @@ import {
 } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS } from '../../constants/calibrationServices'
+import CalibrationServiceItemLabel, {
+  buildServiceItemNumbers,
+  getServiceItemDetail
+} from './CalibrationServiceItemLabel'
 import {
   CalibrationService,
   CalibrationServiceAdjustmentType
@@ -53,6 +57,8 @@ interface CalibrationServiceAdjustmentDialogProps {
 
 interface DraftAdjustmentItem {
   serviceItemId: number
+  number: number
+  detail: string
   itemName: string
   quotedQuantity: number
   actualQuantity: string
@@ -103,6 +109,11 @@ const CalibrationServiceAdjustmentDialog = ({
     [service.items, itemsWithAdjustment]
   )
 
+  const itemNumbers = useMemo(
+    () => buildServiceItemNumbers(service.items),
+    [service.items]
+  )
+
   const [serviceItemId, setServiceItemId] = useState<string>('')
   const [changeType, setChangeType] =
     useState<CalibrationServiceAdjustmentType>(DEFAULT_TYPE)
@@ -134,6 +145,8 @@ const CalibrationServiceAdjustmentDialog = ({
     setSelectedItems(
       eligibleItems.map((item) => ({
         serviceItemId: item.id,
+        number: itemNumbers.get(item.id) ?? 0,
+        detail: getServiceItemDetail(item),
         itemName: item.itemName,
         quotedQuantity: item.quantity || 0,
         actualQuantity: String(item.quantity || 0),
@@ -148,7 +161,7 @@ const CalibrationServiceAdjustmentDialog = ({
     setSupportReference('')
     setPage(0)
     setSearchQuery('')
-  }, [eligibleItems, open])
+  }, [eligibleItems, itemNumbers, open])
 
   useEffect(() => {
     const selectedItem = eligibleItems.find(
@@ -236,7 +249,7 @@ const CalibrationServiceAdjustmentDialog = ({
     if (!searchQuery.trim()) return selectedItems
     const q = searchQuery.toLowerCase().trim()
     return selectedItems.filter((item) =>
-      item.itemName.toLowerCase().includes(q)
+      `${item.number} ${item.itemName} ${item.detail}`.toLowerCase().includes(q)
     )
   }, [selectedItems, searchQuery])
 
@@ -364,7 +377,11 @@ const CalibrationServiceAdjustmentDialog = ({
                   <MenuItem value=''>Sin item relacionado</MenuItem>
                   {eligibleItems.map((item) => (
                     <MenuItem key={item.id} value={String(item.id)}>
-                      {item.itemName} · Cant. {item.quantity}
+                      N.º {itemNumbers.get(item.id)} · {item.itemName}
+                      {getServiceItemDetail(item)
+                        ? ` (${getServiceItemDetail(item)})`
+                        : ''}{' '}
+                      · Cant. {item.quantity}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -482,18 +499,12 @@ const CalibrationServiceAdjustmentDialog = ({
                               />
                             </TableCell>
                             <TableCell>
-                              <Typography
-                                variant='body2'
-                                sx={{
-                                  fontWeight: item.selected ? 500 : 400,
-                                  maxWidth: 280,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                {item.itemName}
-                              </Typography>
+                              <CalibrationServiceItemLabel
+                                number={item.number}
+                                name={item.itemName}
+                                detail={item.detail}
+                                selected={item.selected}
+                              />
                             </TableCell>
                             <TableCell>
                               <Typography
