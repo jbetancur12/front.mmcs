@@ -1,6 +1,8 @@
 # Código sin uso en `src/`
 
-Última revisión: 2026-10-30. Se borraron **55 archivos** (unas 8.100 líneas) del front en la rama `chore/codigo-sin-uso` (un commit por carpeta, `npm run check` en 0 errores tras cada una y `vite build` correcto). Antes, el 2026-10-23, se habían borrado 8 (commit e6a67d5).
+Revisión del 2026-11-20: `knip` listó 3 archivos. Se borró `dataSheetDialogs.ts` (9 líneas, `confirmDeleteDataSheet` no la importa nadie en ninguna rama). Se dejaron `MaintenanceTicketCard.tsx` y `useRelativeTime.ts` (este solo lo usa la tarjeta): en `main` ya nadie los importa desde que el panel móvil de Mantenimiento cambió a tarjetas compactas (7b38821a), pero `MaintenanceDashboard.tsx` de la rama `fix/mantenimiento-fase-2` (copia `metromedics-wt/mant-front`) todavía los importa, y borrarlos en `main` rompería esa rama al integrarla. Revisar de nuevo cuando esa rama se fusione.
+
+Última revisión anterior: 2026-10-30. Se borraron **55 archivos** (unas 8.100 líneas) del front en la rama `chore/codigo-sin-uso` (un commit por carpeta, `npm run check` en 0 errores tras cada una y `vite build` correcto). Antes, el 2026-10-23, se habían borrado 8 (commit e6a67d5).
 
 ## Cómo se detecta
 
