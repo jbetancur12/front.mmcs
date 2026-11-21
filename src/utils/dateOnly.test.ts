@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { formatDateOnly, isFutureDay } from './dateOnly'
+import { formatDateOnly, isFutureDay, pickerDateToInput } from './dateOnly'
+
+describe('pickerDateToInput', () => {
+  it('convierte una fecha completa a yyyy-MM-dd en hora local', () => {
+    expect(pickerDateToInput(new Date(2026, 10, 5))).toBe('2026-11-05')
+  })
+
+  it('una fecha borrada da cadena vacía', () => {
+    expect(pickerDateToInput(null)).toBe('')
+  })
+
+  it('una fecha tecleada a medias (inválida) da null en vez de lanzar "Invalid time value"', () => {
+    expect(() => pickerDateToInput(new Date(NaN))).not.toThrow()
+    expect(pickerDateToInput(new Date(NaN))).toBeNull()
+  })
+})
 
 describe('isFutureDay', () => {
   const now = new Date(2026, 10, 4, 15, 30)

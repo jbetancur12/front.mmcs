@@ -9,13 +9,14 @@ import {
 } from '@mui/material'
 import { DevicesOtherOutlined } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers'
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 import { useFormik } from 'formik'
 import { type MRT_ColumnDef } from 'material-react-table'
 import React, { useEffect } from 'react'
 
 import FormDialog, { FormDialogSection } from '../../Common/FormDialog'
 import { notify } from 'src/utils/notify'
+import { pickerDateToInput } from 'src/utils/dateOnly'
 
 import FileDropZone from '../../Common/FileDropZone'
 import {
@@ -232,10 +233,9 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
           label={column.header}
           value={formik.values[key] ? parseISO(formik.values[key]) : null}
           onChange={(newValue: Date | null) => {
-            formik.setFieldValue(
-              key,
-              newValue ? format(newValue, 'yyyy-MM-dd') : ''
-            )
+            // Una fecha tecleada a medias llega inválida: se espera a que esté completa
+            const value = pickerDateToInput(newValue)
+            if (value !== null) formik.setFieldValue(key, value)
           }}
           slotProps={{
             textField: {

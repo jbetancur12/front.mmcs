@@ -17,6 +17,16 @@ export const formatDateOnly = (value?: string | null): string | null => {
 }
 
 /**
+ * Valor `yyyy-MM-dd` de la fecha que entrega un selector (`DatePicker`). `''` si la borraron y `null` si está a
+ * medias (inválida, p. ej. mientras se teclea "05/1"): no se debe guardar, y `format` de date-fns lanzaría
+ * "Invalid time value".
+ */
+export const pickerDateToInput = (date: Date | null): string | null => {
+  if (!date) return ''
+  return isValid(date) ? format(date, 'yyyy-MM-dd') : null
+}
+
+/**
  * `true` si `value` cae después de hoy, comparando solo el día de calendario
  * (la hora no cuenta para decidir si una fecha es futura). Una fecha inválida
  * no se considera futura.
