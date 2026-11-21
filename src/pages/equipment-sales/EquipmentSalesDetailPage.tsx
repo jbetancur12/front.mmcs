@@ -1,4 +1,5 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import { dateInputToIso } from 'src/utils/dateOnly'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -221,9 +222,7 @@ const EquipmentSalesDetailPage = () => {
         evidenceDocumentId = uploadedDocument.id
       }
 
-      const decisionIsoDate = values.decisionDate
-        ? new Date(`${values.decisionDate}T12:00:00`).toISOString()
-        : undefined
+      const decisionIsoDate = dateInputToIso(values.decisionDate)
 
       if (decisionMode === 'approve') {
         await mutations.approveQuotation.mutateAsync({

@@ -3,6 +3,7 @@ import {
   CalibrationServiceCustomerResponseType,
   CalibrationServiceSendPreviewResult
 } from '../../../types/calibrationService'
+import { todayInputValue } from 'src/utils/dateOnly'
 import { brand, neutral } from 'src/theme/designTokens'
 
 export type DetailTab =
@@ -181,7 +182,7 @@ export const getEmailSendPreview = (
 export const formatDateValue = (value?: string | null) =>
   value ? new Date(value).toLocaleDateString('es-CO') : 'Sin registrar'
 
-export const buildTodayValue = () => new Date().toISOString().slice(0, 10)
+export const buildTodayValue = () => todayInputValue()
 
 export const getCustomerResponseType = (
   otherFields: Record<string, unknown> | undefined

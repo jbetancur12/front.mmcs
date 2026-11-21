@@ -1,4 +1,5 @@
 import { CALIBRATION_QUOTE_LOSS_REASON_LABELS } from '../../constants/calibrationServices'
+import { todayInputValue } from 'src/utils/dateOnly'
 import { Box, MenuItem, TextField } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -41,12 +42,10 @@ interface CalibrationServiceApprovalDialogProps {
   onSubmit: (values: CalibrationServiceDecisionValues) => Promise<void> | void
 }
 
-const buildTodayValue = () => new Date().toISOString().slice(0, 10)
-
 const createInitialValues = (): CalibrationServiceDecisionValues => ({
   approvalChannel: '',
   approvalReference: '',
-  decisionDate: buildTodayValue(),
+  decisionDate: todayInputValue(),
   notes: '',
   lossReason: '',
   evidenceFile: null,
@@ -174,6 +173,7 @@ const CalibrationServiceApprovalDialog = ({
           label='Fecha'
           value={values.decisionDate}
           disabled={isLoading}
+          inputProps={{ max: todayInputValue() }}
           onChange={(event) =>
             setValues((previous) => ({
               ...previous,

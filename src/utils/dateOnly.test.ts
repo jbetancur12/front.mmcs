@@ -1,10 +1,45 @@
 import { describe, expect, it } from 'vitest'
 import {
+  dateInputToIso,
   formatDateOnly,
   isFutureDay,
   pickerDateToInput,
-  pickerDateToIso
+  pickerDateToIso,
+  todayInputValue
 } from './dateOnly'
+
+describe('todayInputValue', () => {
+  it('da el día local, no el UTC: de noche en Colombia no es "mañana"', () => {
+    // 20 de noviembre, 23:30 hora local: en UTC-5 el día UTC ya sería el 21
+    expect(todayInputValue(new Date(2026, 10, 20, 23, 30))).toBe('2026-11-20')
+    expect(todayInputValue(new Date(2026, 10, 20, 0, 5))).toBe('2026-11-20')
+  })
+})
+
+describe('dateInputToIso', () => {
+  it('hoy va con la hora actual, no a mediodía: por la mañana el mediodía sería futuro y el API lo rechaza', () => {
+    const morning = new Date(2026, 10, 20, 9, 15)
+    expect(dateInputToIso('2026-11-20', morning)).toBe(morning.toISOString())
+    expect(
+      new Date(dateInputToIso('2026-11-20', morning)!).getTime()
+    ).toBeLessThanOrEqual(morning.getTime())
+  })
+
+  it('otro día va a mediodía local', () => {
+    const now = new Date(2026, 10, 20, 9, 15)
+    expect(dateInputToIso('2026-11-19', now)).toBe(
+      new Date(2026, 10, 19, 12, 0, 0).toISOString()
+    )
+  })
+
+  it('vacía o inválida da undefined, sin lanzar', () => {
+    expect(dateInputToIso('')).toBeUndefined()
+    expect(dateInputToIso(null)).toBeUndefined()
+    expect(dateInputToIso(undefined)).toBeUndefined()
+    expect(() => dateInputToIso('no-es-fecha')).not.toThrow()
+    expect(dateInputToIso('no-es-fecha')).toBeUndefined()
+  })
+})
 
 describe('pickerDateToIso', () => {
   it('convierte una fecha completa a ISO', () => {

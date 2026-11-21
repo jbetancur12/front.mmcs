@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { dateInputToIso, todayInputValue } from 'src/utils/dateOnly'
 import { MenuItem, Stack, TextField, Typography } from '@mui/material'
 import FormDialog from '../../Components/Common/FormDialog'
 import FileDropZone from '../../Components/Common/FileDropZone'
@@ -19,8 +20,6 @@ interface CalibrationServiceCutInvoiceDialogProps {
   }) => void | Promise<void>
 }
 
-const buildTodayValue = () => new Date().toISOString().slice(0, 10)
-
 /** Registra la factura de un corte; si el cliente no tiene crédito, luego se pide el pago. */
 const CalibrationServiceCutInvoiceDialog = ({
   open,
@@ -30,7 +29,7 @@ const CalibrationServiceCutInvoiceDialog = ({
   onSubmit
 }: CalibrationServiceCutInvoiceDialogProps) => {
   const [invoiceReference, setInvoiceReference] = useState('')
-  const [invoicedAt, setInvoicedAt] = useState(buildTodayValue())
+  const [invoicedAt, setInvoicedAt] = useState(todayInputValue())
   const [invoiceNotes, setInvoiceNotes] = useState('')
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
   const [customerHasCredit, setCustomerHasCredit] = useState<boolean | null>(
@@ -47,7 +46,7 @@ const CalibrationServiceCutInvoiceDialog = ({
     setInvoicedAt(
       cut.invoicedAt
         ? new Date(cut.invoicedAt).toISOString().slice(0, 10)
-        : buildTodayValue()
+        : todayInputValue()
     )
     setInvoiceNotes(cut.invoiceNotes || '')
     setInvoiceFile(null)
@@ -64,7 +63,7 @@ const CalibrationServiceCutInvoiceDialog = ({
 
     void onSubmit({
       invoiceReference: trimmedReference,
-      invoicedAt: new Date(`${invoicedAt}T12:00:00`).toISOString(),
+      invoicedAt: dateInputToIso(invoicedAt) ?? new Date().toISOString(),
       invoiceNotes: invoiceNotes.trim() || null,
       invoiceFile,
       customerHasCredit
@@ -116,6 +115,7 @@ const CalibrationServiceCutInvoiceDialog = ({
           label='Fecha de facturación'
           type='date'
           value={invoicedAt}
+          inputProps={{ max: todayInputValue() }}
           onChange={(event) => setInvoicedAt(event.target.value)}
           InputLabelProps={{ shrink: true }}
         />

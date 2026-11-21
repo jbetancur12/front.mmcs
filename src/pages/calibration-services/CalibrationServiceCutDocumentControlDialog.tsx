@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { dateInputToIso } from 'src/utils/dateOnly'
 import { useQueryClient } from 'react-query'
 import { Alert, Box, Button, TextField, Typography } from '@mui/material'
 import FormDialog, {
@@ -165,7 +166,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
       sentCertificates: normalizedSent,
       sendChannel: sendChannel.trim() || null,
       sentTo: sentTo.trim() || null,
-      sentAt: sentAt ? new Date(`${sentAt}T12:00:00`).toISOString() : null,
+      sentAt: dateInputToIso(sentAt) ?? null,
       evidenceFile,
       notes: notes.trim() || null
     })

@@ -33,6 +33,29 @@ export const pickerDateToIso = (date: Date | null): string | null => {
 }
 
 /**
+ * Hoy en hora local (`yyyy-MM-dd`), para el valor inicial de un `<input type='date'>`.
+ * `new Date().toISOString().slice(0, 10)` da el día UTC: pasadas las 19:00 en Colombia ya es «mañana» y el API
+ * rechazaba la fecha como futura.
+ */
+export const todayInputValue = (now: Date = new Date()): string =>
+  format(now, 'yyyy-MM-dd')
+
+/**
+ * Fecha de un `<input type='date'>` como instante ISO para el API. Si es hoy, va la hora actual: el mediodía de hoy,
+ * por la mañana, queda en el futuro y el API responde 400 («no puede estar en el futuro»). Otro día va a mediodía
+ * local, que no cambia de día con la zona horaria. `undefined` si está vacía o es inválida.
+ */
+export const dateInputToIso = (
+  value: string | null | undefined,
+  now: Date = new Date()
+): string | undefined => {
+  if (!value) return undefined
+  if (value === todayInputValue(now)) return now.toISOString()
+  const date = new Date(`${value}T12:00:00`)
+  return isValid(date) ? date.toISOString() : undefined
+}
+
+/**
  * `true` si `value` cae después de hoy, comparando solo el día de calendario
  * (la hora no cuenta para decidir si una fecha es futura). Una fecha inválida
  * no se considera futura.

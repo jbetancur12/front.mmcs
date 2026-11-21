@@ -14,6 +14,7 @@ import {
   TextField,
   Typography
 } from '@mui/material'
+import { todayInputValue } from 'src/utils/dateOnly'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { useEffect, useState } from 'react'
 import { notify } from 'src/utils/notify'
@@ -48,12 +49,10 @@ interface EquipmentQuotationApprovalDialogProps {
   onSubmit: (values: EquipmentQuotationDecisionValues) => Promise<void> | void
 }
 
-const buildTodayValue = () => new Date().toISOString().slice(0, 10)
-
 const createInitialValues = (): EquipmentQuotationDecisionValues => ({
   approvalChannel: '',
   approvalReference: '',
-  decisionDate: buildTodayValue(),
+  decisionDate: todayInputValue(),
   notes: '',
   evidenceFile: null
 })

@@ -1,4 +1,5 @@
 import { toast } from 'react-hot-toast'
+import { dateInputToIso } from 'src/utils/dateOnly'
 import {
   CalibrationService,
   CalibrationServiceItemProgressEntryPayload
@@ -216,9 +217,7 @@ const useCalibrationServiceWorkflowActions = ({
         evidenceDocumentId = uploadedDocument.id
       }
 
-      const decisionIsoDate = values.decisionDate
-        ? new Date(`${values.decisionDate}T12:00:00`).toISOString()
-        : undefined
+      const decisionIsoDate = dateInputToIso(values.decisionDate)
 
       if (decisionMode === 'approve') {
         await approveService.mutateAsync({
