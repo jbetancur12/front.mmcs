@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { formatDateOnly, isFutureDay, pickerDateToInput } from './dateOnly'
+import {
+  formatDateOnly,
+  isFutureDay,
+  pickerDateToInput,
+  pickerDateToIso
+} from './dateOnly'
+
+describe('pickerDateToIso', () => {
+  it('convierte una fecha completa a ISO', () => {
+    const date = new Date(Date.UTC(2026, 10, 5, 12))
+    expect(pickerDateToIso(date)).toBe('2026-11-05T12:00:00.000Z')
+  })
+
+  it('una fecha borrada da cadena vacía y una inválida da null, sin lanzar', () => {
+    expect(pickerDateToIso(null)).toBe('')
+    expect(() => pickerDateToIso(new Date(NaN))).not.toThrow()
+    expect(pickerDateToIso(new Date(NaN))).toBeNull()
+  })
+})
 
 describe('pickerDateToInput', () => {
   it('convierte una fecha completa a yyyy-MM-dd en hora local', () => {

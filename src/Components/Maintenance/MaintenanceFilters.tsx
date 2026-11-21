@@ -33,6 +33,7 @@ import {
   MAINTENANCE_STATUS_LABELS
 } from './maintenanceLabels'
 import { brand, neutral, withAlpha } from 'src/theme/designTokens'
+import { pickerDateToIso } from 'src/utils/dateOnly'
 
 interface MaintenanceFiltersProps {
   filters: IMaintenanceFilters
@@ -508,14 +509,14 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                     : null
                 }
                 onChange={(date) => {
+                  // Una fecha tecleada a medias llega inválida: se espera a que esté completa
+                  const from = pickerDateToIso(date)
+                  if (from === null) return
                   const dateRange = localFilters.dateRange ?? {
                     from: '',
                     to: ''
                   }
-                  handleFilterChange('dateRange', {
-                    ...dateRange,
-                    from: date ? date.toISOString() : ''
-                  })
+                  handleFilterChange('dateRange', { ...dateRange, from })
                 }}
                 slotProps={{
                   textField: {
@@ -535,14 +536,13 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                     : null
                 }
                 onChange={(date) => {
+                  const to = pickerDateToIso(date)
+                  if (to === null) return
                   const dateRange = localFilters.dateRange ?? {
                     from: '',
                     to: ''
                   }
-                  handleFilterChange('dateRange', {
-                    ...dateRange,
-                    to: date ? date.toISOString() : ''
-                  })
+                  handleFilterChange('dateRange', { ...dateRange, to })
                 }}
                 slotProps={{
                   textField: {

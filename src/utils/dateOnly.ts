@@ -26,6 +26,12 @@ export const pickerDateToInput = (date: Date | null): string | null => {
   return isValid(date) ? format(date, 'yyyy-MM-dd') : null
 }
 
+/** Igual que `pickerDateToInput`, pero con la fecha completa en ISO (`toISOString` lanzaría con una fecha inválida). */
+export const pickerDateToIso = (date: Date | null): string | null => {
+  if (!date) return ''
+  return isValid(date) ? date.toISOString() : null
+}
+
 /**
  * `true` si `value` cae después de hoy, comparando solo el día de calendario
  * (la hora no cuenta para decidir si una fecha es futura). Una fecha inválida
