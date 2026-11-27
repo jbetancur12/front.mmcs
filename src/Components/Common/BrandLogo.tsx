@@ -36,7 +36,8 @@ function ThemedLogo({ dark }: { dark: boolean }): React.ReactElement {
         src={`${NEW_LOGO_PATH}/logo-${file}.png`}
         alt='Metromedics'
         sx={{
-          height: { xs: 30, md: 44 },
+          height: { xs: 26, md: 28 },
+          ml: { md: 1 },
           width: 'auto',
           display,
           'html.dark &': { display: darkDisplay },
