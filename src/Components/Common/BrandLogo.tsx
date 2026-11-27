@@ -6,6 +6,7 @@ import { useFeature } from 'src/hooks/useFeatureFlags'
 import { canSeeNewLogo } from 'src/utils/newLogo'
 
 const NEW_LOGO_PATH = '/images/logo-nuevo'
+const NARROW = '(max-width: 439.95px)'
 
 /** Cambia el ícono de la pestaña y lo restaura al salir. */
 const useNewFavicon = (enabled: boolean) => {
@@ -13,14 +14,14 @@ const useNewFavicon = (enabled: boolean) => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
     if (!enabled || !link) return
     const previous = link.getAttribute('href') ?? ''
-    link.setAttribute('href', `${NEW_LOGO_PATH}/favicon.svg`)
+    link.setAttribute('href', `${NEW_LOGO_PATH}/favicon.png`)
     return () => link.setAttribute('href', previous)
   }, [enabled])
 }
 
 /**
- * Imagen del logo en claro u oscuro. El nombre va dibujado en el SVG (Inter en
- * trazos), así se ve igual en cualquier equipo.
+ * Imagen del logo en claro u oscuro, sin descriptor. En móviles angostos el
+ * nombre chocaría con los íconos: solo el símbolo.
  */
 function ThemedLogo({ dark }: { dark: boolean }): React.ReactElement {
   const display = dark ? 'none' : 'block'
@@ -29,19 +30,17 @@ function ThemedLogo({ dark }: { dark: boolean }): React.ReactElement {
 
   return (
     <picture>
-      <source
-        media='(max-width: 379.95px)'
-        srcSet={`${NEW_LOGO_PATH}/isotipo-${file}.svg`}
-      />
+      <source media={NARROW} srcSet={`${NEW_LOGO_PATH}/simbolo-${file}.png`} />
       <Box
         component='img'
-        src={`${NEW_LOGO_PATH}/logo-${file}.svg`}
+        src={`${NEW_LOGO_PATH}/logo-${file}.png`}
         alt='Metromedics'
         sx={{
-          height: { xs: 28, md: 40 },
+          height: { xs: 30, md: 44 },
           width: 'auto',
           display,
-          'html.dark &': { display: darkDisplay }
+          'html.dark &': { display: darkDisplay },
+          [`@media ${NARROW}`]: { height: 32 }
         }}
       />
     </picture>
