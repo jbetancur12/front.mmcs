@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react'
-import { Box, Typography } from '@mui/material'
+import { Box } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import { useFeature } from 'src/hooks/useFeatureFlags'
 import { canSeeNewLogo } from 'src/utils/newLogo'
-import { neutral } from 'src/theme/designTokens'
 
 const NEW_LOGO_PATH = '/images/logo-nuevo'
 
@@ -17,6 +16,36 @@ const useNewFavicon = (enabled: boolean) => {
     link.setAttribute('href', `${NEW_LOGO_PATH}/favicon.svg`)
     return () => link.setAttribute('href', previous)
   }, [enabled])
+}
+
+/**
+ * Imagen del logo en claro u oscuro. El nombre va dibujado en el SVG (Inter en
+ * trazos), así se ve igual en cualquier equipo.
+ */
+function ThemedLogo({ dark }: { dark: boolean }): React.ReactElement {
+  const display = dark ? 'none' : 'block'
+  const darkDisplay = dark ? 'block' : 'none'
+  const file = dark ? 'oscuro' : 'claro'
+
+  return (
+    <picture>
+      <source
+        media='(max-width: 379.95px)'
+        srcSet={`${NEW_LOGO_PATH}/isotipo-${file}.svg`}
+      />
+      <Box
+        component='img'
+        src={`${NEW_LOGO_PATH}/logo-${file}.svg`}
+        alt='Metromedics'
+        sx={{
+          height: { xs: 28, md: 40 },
+          width: 'auto',
+          display,
+          'html.dark &': { display: darkDisplay }
+        }}
+      />
+    </picture>
+  )
 }
 
 /** Logo del encabezado: el nuevo para quienes lo revisan, el actual para el resto. */
@@ -38,44 +67,11 @@ function BrandLogo(): React.ReactElement {
     )
   }
 
-  const isotype = { height: { xs: 28, md: 40 }, width: 'auto' }
-
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-      <Box
-        component='img'
-        src={`${NEW_LOGO_PATH}/isotipo-claro.svg`}
-        alt=''
-        sx={{
-          ...isotype,
-          display: 'block',
-          'html.dark &': { display: 'none' }
-        }}
-      />
-      <Box
-        component='img'
-        src={`${NEW_LOGO_PATH}/isotipo-oscuro.svg`}
-        alt=''
-        sx={{
-          ...isotype,
-          display: 'none',
-          'html.dark &': { display: 'block' }
-        }}
-      />
-      <Typography
-        component='span'
-        sx={{
-          fontSize: { xs: 16, sm: 20, md: 24 },
-          fontWeight: 700,
-          lineHeight: 1,
-          color: neutral.text,
-          // En móviles muy angostos el nombre chocaría con los íconos.
-          '@media (max-width: 379.95px)': { display: 'none' }
-        }}
-      >
-        Metromedics
-      </Typography>
-    </Box>
+    <>
+      <ThemedLogo dark={false} />
+      <ThemedLogo dark />
+    </>
   )
 }
 
