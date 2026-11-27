@@ -306,6 +306,8 @@ const CalibrationServiceOperationsPanel = ({
   }
 
   const itemNumbers = buildServiceItemNumbers(service.items)
+  const managedByVisits = Boolean(service.managedByVisits)
+  const canEditQuantities = canEditProgress && !managedByVisits
   return (
     <Stack spacing={3}>
       {pendingFormalAdjustments.length ? (
@@ -428,6 +430,14 @@ const CalibrationServiceOperationsPanel = ({
         </Tooltip>
       </Stack>
 
+      {managedByVisits ? (
+        <Alert severity='info'>
+          Las cantidades de esta orden se registran en la pestaña{' '}
+          <strong>Visitas</strong>, con «Registrar ejecución». Aquí se consultan
+          y se escriben las notas técnicas.
+        </Alert>
+      ) : null}
+
       {service.items?.length ? (
         <Box
           sx={{
@@ -484,7 +494,7 @@ const CalibrationServiceOperationsPanel = ({
                     </TableCell>
                     <TableCell align='right'>{effectiveQuantity}</TableCell>
                     <TableCell align='right' sx={{ minWidth: 100 }}>
-                      {canEditProgress ? (
+                      {canEditQuantities ? (
                         <TextField
                           size='small'
                           type='number'
@@ -514,7 +524,7 @@ const CalibrationServiceOperationsPanel = ({
                     </TableCell>
                     <TableCell align='right'>{pendingQuantity}</TableCell>
                     <TableCell sx={{ minWidth: 140 }}>
-                      {canEditProgress ? (
+                      {canEditQuantities ? (
                         <TextField
                           select
                           fullWidth
@@ -606,7 +616,7 @@ const CalibrationServiceOperationsPanel = ({
                 '&:hover': { bgcolor: brand.hover }
               }}
             >
-              Guardar avance técnico
+              {managedByVisits ? 'Guardar notas' : 'Guardar avance técnico'}
             </Button>
           ) : null}
         </Stack>

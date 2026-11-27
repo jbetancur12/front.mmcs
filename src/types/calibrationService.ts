@@ -466,6 +466,8 @@ export interface CalibrationServiceReleaseCertificates {
 
 export interface CalibrationService {
   releaseCertificates?: CalibrationServiceReleaseCertificates | null
+  /** Las cantidades de esta orden solo se registran en sus visitas. */
+  managedByVisits?: boolean
   availableActions?: CalibrationServiceAvailableAction[]
   /** Siguiente tarea del flujo para el usuario y capacidad que la resuelve. */
   nextAction?: string | null

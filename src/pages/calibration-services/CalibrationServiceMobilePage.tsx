@@ -500,7 +500,7 @@ const MobilePage = () => {
       nextItems[item.id] = itemFieldsOf(item).operationalStatus || 'pending'
       nextNotes[item.id] = itemFieldsOf(item).technicalNotes || ''
       nextExecuted[item.id] = getSavedExecuted(item, s.adjustments)
-      if (stored) {
+      if (stored && !s.managedByVisits) {
         const st = stored.items[item.id]
         if (st !== undefined && st !== nextItems[item.id]) restored = true
         if (st !== undefined) nextItems[item.id] = st
@@ -601,6 +601,7 @@ const MobilePage = () => {
 
   const visitsOn = useFeature('calibration_visits')
   const itemNumbers = buildServiceItemNumbers(s?.items)
+  const managedByVisits = Boolean(s?.managedByVisits)
   type MobileTab = 'work' | 'intake' | 'issues' | 'close'
   const [tab, setTab] = useState<MobileTab>('work')
   const [openNotes, setOpenNotes] = useState<Record<number, boolean>>({})
@@ -1103,7 +1104,8 @@ const MobilePage = () => {
                     <Typography sx={sectionTitle}>
                       Ítems ({items.length})
                     </Typography>
-                    {pendingCount > 0 &&
+                    {!managedByVisits &&
+                      pendingCount > 0 &&
                       items.length > 0 &&
                       !paused &&
                       ['scheduled', 'in_execution'].includes(status) && (
@@ -1122,6 +1124,12 @@ const MobilePage = () => {
                         </Button>
                       )}
                   </Stack>
+                  {managedByVisits && (
+                    <Alert severity='info' sx={{ mb: 1.25 }}>
+                      Las cantidades se registran en cada visita, arriba. Aquí
+                      puedes dejar observaciones.
+                    </Alert>
+                  )}
                   <Stack spacing={1.25}>
                     {items.map((item) => {
                       const current = draftItems[item.id] || 'pending'
@@ -1175,141 +1183,155 @@ const MobilePage = () => {
                                   x{getEffectiveQty(item, s?.adjustments)}
                                 </Typography>
                               </Stack>
-                              <ToggleButtonGroup
-                                exclusive
-                                fullWidth
-                                size='small'
-                                value={current}
-                                aria-label={`Estado de ${item.itemName}`}
-                                disabled={!canEditItems}
-                                onChange={(_, v) => {
-                                  if (v) setItemStatus(item, v)
-                                }}
-                              >
-                                {STATUS_FLOW.map((k) => (
-                                  <ToggleButton
-                                    key={k}
-                                    value={k}
-                                    sx={{
-                                      minHeight: 44,
-                                      px: 0.5,
-                                      textTransform: 'none',
-                                      fontSize: '0.72rem',
-                                      fontWeight: 600,
-                                      color: G.gray600,
-                                      borderColor: G.gray200,
-                                      '&.Mui-selected':
-                                        k === 'completed'
-                                          ? {
-                                              bgcolor: G.green,
-                                              color: 'white',
-                                              borderColor: G.green,
-                                              '&:hover': {
-                                                bgcolor: G.greenDark
-                                              }
-                                            }
-                                          : {
-                                              bgcolor: G.greenLight,
-                                              color: G.greenDark,
-                                              borderColor: G.green,
-                                              fontWeight: 700
-                                            }
-                                    }}
-                                  >
-                                    {
-                                      CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[
-                                        k
-                                      ]
-                                    }
-                                  </ToggleButton>
-                                ))}
-                              </ToggleButtonGroup>
-                              {current === 'in_progress' && (
-                                <Stack
-                                  direction='row'
-                                  alignItems='center'
-                                  justifyContent='space-between'
-                                  sx={{
-                                    bgcolor: G.gray50,
-                                    borderRadius: '12px',
-                                    p: 0.75
+                              {managedByVisits ? (
+                                <Typography
+                                  variant='body2'
+                                  fontWeight={600}
+                                  sx={{ color: G.gray600 }}
+                                >
+                                  {`Calibrados ${getSavedExecuted(item, s?.adjustments)} de ${getEffectiveQty(item, s?.adjustments)} · ${CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[current]}`}
+                                </Typography>
+                              ) : (
+                                <ToggleButtonGroup
+                                  exclusive
+                                  fullWidth
+                                  size='small'
+                                  value={current}
+                                  aria-label={`Estado de ${item.itemName}`}
+                                  disabled={!canEditItems}
+                                  onChange={(_, v) => {
+                                    if (v) setItemStatus(item, v)
                                   }}
                                 >
-                                  <Box sx={{ pl: 1 }}>
-                                    <Typography
-                                      variant='body2'
-                                      fontWeight={600}
-                                      sx={{ color: G.gray600 }}
+                                  {STATUS_FLOW.map((k) => (
+                                    <ToggleButton
+                                      key={k}
+                                      value={k}
+                                      sx={{
+                                        minHeight: 44,
+                                        px: 0.5,
+                                        textTransform: 'none',
+                                        fontSize: '0.72rem',
+                                        fontWeight: 600,
+                                        color: G.gray600,
+                                        borderColor: G.gray200,
+                                        '&.Mui-selected':
+                                          k === 'completed'
+                                            ? {
+                                                bgcolor: G.green,
+                                                color: 'white',
+                                                borderColor: G.green,
+                                                '&:hover': {
+                                                  bgcolor: G.greenDark
+                                                }
+                                              }
+                                            : {
+                                                bgcolor: G.greenLight,
+                                                color: G.greenDark,
+                                                borderColor: G.green,
+                                                fontWeight: 700
+                                              }
+                                      }}
                                     >
-                                      Ejecutados
-                                    </Typography>
-                                    {getReleased(item) > 0 && (
-                                      <Typography
-                                        variant='caption'
-                                        sx={{ color: G.gray400 }}
-                                      >
-                                        {getReleased(item)} ya en corte
-                                      </Typography>
-                                    )}
-                                  </Box>
+                                      {
+                                        CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[
+                                          k
+                                        ]
+                                      }
+                                    </ToggleButton>
+                                  ))}
+                                </ToggleButtonGroup>
+                              )}
+                              {!managedByVisits &&
+                                current === 'in_progress' && (
                                   <Stack
                                     direction='row'
                                     alignItems='center'
-                                    spacing={0.5}
+                                    justifyContent='space-between'
+                                    sx={{
+                                      bgcolor: G.gray50,
+                                      borderRadius: '12px',
+                                      p: 0.75
+                                    }}
                                   >
-                                    <IconButton
-                                      aria-label='Restar uno'
-                                      onClick={() => changeExecuted(item, -1)}
-                                      disabled={
-                                        paused ||
-                                        (draftExecuted[item.id] ?? 0) <=
-                                          getReleased(item)
-                                      }
-                                      sx={{
-                                        bgcolor: G.surface,
-                                        border: `1px solid ${G.gray200}`,
-                                        width: 44,
-                                        height: 44
-                                      }}
+                                    <Box sx={{ pl: 1 }}>
+                                      <Typography
+                                        variant='body2'
+                                        fontWeight={600}
+                                        sx={{ color: G.gray600 }}
+                                      >
+                                        Ejecutados
+                                      </Typography>
+                                      {getReleased(item) > 0 && (
+                                        <Typography
+                                          variant='caption'
+                                          sx={{ color: G.gray400 }}
+                                        >
+                                          {getReleased(item)} ya en corte
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                    <Stack
+                                      direction='row'
+                                      alignItems='center'
+                                      spacing={0.5}
                                     >
-                                      <RemoveIcon />
-                                    </IconButton>
-                                    <Typography
-                                      fontWeight={700}
-                                      sx={{
-                                        minWidth: 64,
-                                        textAlign: 'center',
-                                        color: G.dark
-                                      }}
-                                    >
-                                      {draftExecuted[item.id] ?? 0} de{' '}
-                                      {getEffectiveQty(item, s?.adjustments)}
-                                    </Typography>
-                                    <IconButton
-                                      aria-label='Sumar uno'
-                                      onClick={() => changeExecuted(item, 1)}
-                                      disabled={
-                                        paused ||
-                                        (draftExecuted[item.id] ?? 0) >=
-                                          getEffectiveQty(item, s?.adjustments)
-                                      }
-                                      sx={{
-                                        bgcolor: G.green,
-                                        color: 'white',
-                                        width: 44,
-                                        height: 44,
-                                        '&:hover': { bgcolor: G.greenDark },
-                                        '&.Mui-disabled': {
-                                          bgcolor: G.gray100,
-                                          color: G.gray300
+                                      <IconButton
+                                        aria-label='Restar uno'
+                                        onClick={() => changeExecuted(item, -1)}
+                                        disabled={
+                                          paused ||
+                                          (draftExecuted[item.id] ?? 0) <=
+                                            getReleased(item)
                                         }
-                                      }}
-                                    >
-                                      <AddIcon />
-                                    </IconButton>
+                                        sx={{
+                                          bgcolor: G.surface,
+                                          border: `1px solid ${G.gray200}`,
+                                          width: 44,
+                                          height: 44
+                                        }}
+                                      >
+                                        <RemoveIcon />
+                                      </IconButton>
+                                      <Typography
+                                        fontWeight={700}
+                                        sx={{
+                                          minWidth: 64,
+                                          textAlign: 'center',
+                                          color: G.dark
+                                        }}
+                                      >
+                                        {draftExecuted[item.id] ?? 0} de{' '}
+                                        {getEffectiveQty(item, s?.adjustments)}
+                                      </Typography>
+                                      <IconButton
+                                        aria-label='Sumar uno'
+                                        onClick={() => changeExecuted(item, 1)}
+                                        disabled={
+                                          paused ||
+                                          (draftExecuted[item.id] ?? 0) >=
+                                            getEffectiveQty(
+                                              item,
+                                              s?.adjustments
+                                            )
+                                        }
+                                        sx={{
+                                          bgcolor: G.green,
+                                          color: 'white',
+                                          width: 44,
+                                          height: 44,
+                                          '&:hover': { bgcolor: G.greenDark },
+                                          '&.Mui-disabled': {
+                                            bgcolor: G.gray100,
+                                            color: G.gray300
+                                          }
+                                        }}
+                                      >
+                                        <AddIcon />
+                                      </IconButton>
+                                    </Stack>
                                   </Stack>
-                                </Stack>
-                              )}
+                                )}
                               {showNote ? (
                                 <TextField
                                   size='small'

@@ -471,6 +471,7 @@ const CalibrationServiceDetailsView = ({
                 {service.odsCode ? (
                   <>
                     {service.status === 'in_execution' &&
+                    !service.managedByVisits &&
                     !allItemsOperationallyCompleted ? (
                       <Alert severity='info' sx={{ mb: 2 }}>
                         Para finalizar la ejecución técnica, primero marca todos
