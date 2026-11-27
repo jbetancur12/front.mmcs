@@ -36,6 +36,7 @@ import CalibrationServiceStageDecisionHelp from '../CalibrationServiceStageDecis
 import CalibrationNotificationBell from '../CalibrationNotificationBell'
 import CalibrationServiceQuoteLifecycleActions from './CalibrationServiceQuoteLifecycleActions'
 import CalibrationServiceOdsReissueAction from './CalibrationServiceOdsReissueAction'
+import ScheduleVisitButton from '../visits/ScheduleVisitButton'
 import { BlockedActionTooltip } from './CalibrationServiceDetailLayout'
 import {
   formatDateValue,
@@ -343,6 +344,7 @@ const CalibrationServiceDetailHeader = ({
             Emitir ODS
           </Button>
         ) : null}
+        <ScheduleVisitButton service={service} sx={primaryActionSx} />
         {canScheduleService ? (
           <Button
             variant='contained'

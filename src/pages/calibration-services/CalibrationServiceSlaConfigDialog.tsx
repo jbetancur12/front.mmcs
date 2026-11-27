@@ -55,7 +55,9 @@ const DEFAULT_SLA_CONFIG: CalibrationServiceSlaConfigPayload = {
   reviewWarningBusinessDays: 2,
   reviewTargetBusinessDays: 3,
   adjustmentWarningBusinessDays: 1,
-  adjustmentTargetBusinessDays: 1
+  adjustmentTargetBusinessDays: 1,
+  nextVisitWarningBusinessDays: 3,
+  nextVisitTargetBusinessDays: 5
 }
 
 const slaPhaseRows: SlaPhaseRow[] = [
@@ -115,6 +117,12 @@ const certificateRows: SlaPhaseRow[] = [
     startsAt: 'Devolución',
     warningKey: 'adjustmentWarningBusinessDays',
     targetKey: 'adjustmentTargetBusinessDays'
+  },
+  {
+    label: 'Orden sin próxima visita',
+    startsAt: 'Última visita ejecutada, si quedan equipos',
+    warningKey: 'nextVisitWarningBusinessDays',
+    targetKey: 'nextVisitTargetBusinessDays'
   }
 ]
 

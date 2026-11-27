@@ -744,6 +744,8 @@ export interface CalibrationServiceSlaConfig {
   reviewTargetBusinessDays: number
   adjustmentWarningBusinessDays: number
   adjustmentTargetBusinessDays: number
+  nextVisitWarningBusinessDays: number
+  nextVisitTargetBusinessDays: number
   updatedAt?: string | null
   updatedByName?: string | null
 }

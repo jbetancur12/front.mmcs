@@ -52,6 +52,8 @@ export interface CertificateDeadlines {
   reviewTargetBusinessDays: number
   adjustmentWarningBusinessDays: number
   adjustmentTargetBusinessDays: number
+  nextVisitWarningBusinessDays: number
+  nextVisitTargetBusinessDays: number
 }
 
 export interface VisitQuantities {

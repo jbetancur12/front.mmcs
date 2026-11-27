@@ -294,7 +294,9 @@ const DEFAULT_SLA_CONFIG: Required<
   reviewWarningBusinessDays: 2,
   reviewTargetBusinessDays: 3,
   adjustmentWarningBusinessDays: 1,
-  adjustmentTargetBusinessDays: 1
+  adjustmentTargetBusinessDays: 1,
+  nextVisitWarningBusinessDays: 3,
+  nextVisitTargetBusinessDays: 5
 }
 
 const formatBusinessDays = (value: number) =>

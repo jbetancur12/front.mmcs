@@ -895,137 +895,151 @@ const MobilePage = () => {
                   </Card>
                 )}
 
-                {!paused && ['scheduled', 'in_execution'].includes(status) && (
-                  <Card elevation={0} sx={cardSx}>
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Stack spacing={1.5}>
-                        {status === 'scheduled' && (
-                          <>
-                            <Typography sx={sectionTitle}>
-                              Todo listo para empezar
-                            </Typography>
-                            <Button
-                              fullWidth
-                              variant='contained'
-                              disableElevation
-                              startIcon={<PlayArrowIcon />}
-                              onClick={() =>
-                                handleAction(
-                                  'start',
-                                  () =>
-                                    apiCall(
-                                      'post',
-                                      `/calibration-services/${serviceId}/start-execution`,
-                                      { startedAt: new Date().toISOString() }
-                                    ),
-                                  'Ejecución iniciada'
-                                )
-                              }
-                              disabled={actionLoading === 'start'}
-                              sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}
-                            >
-                              Iniciar ejecución
-                            </Button>
-                          </>
-                        )}
-                        {status === 'in_execution' && (
-                          <>
-                            <Stack
-                              direction='row'
-                              justifyContent='space-between'
-                              alignItems='baseline'
-                            >
+                {/* Con visitas, la ejecución arranca al registrar la primera: no hay botón aparte. */}
+                {!paused &&
+                  (status === 'in_execution' ||
+                    (status === 'scheduled' && !visitsOn)) && (
+                    <Card elevation={0} sx={cardSx}>
+                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                        <Stack spacing={1.5}>
+                          {status === 'scheduled' && (
+                            <>
                               <Typography sx={sectionTitle}>
-                                Avance del servicio
+                                Todo listo para empezar
                               </Typography>
-                              <Typography
-                                variant='body2'
-                                fontWeight={700}
-                                sx={{ color: G.greenDark }}
-                              >
-                                {completedCount} de {items.length}
-                              </Typography>
-                            </Stack>
-                            <LinearProgress
-                              variant='determinate'
-                              value={
-                                items.length
-                                  ? (completedCount / items.length) * 100
-                                  : 0
-                              }
-                              sx={{
-                                height: 10,
-                                borderRadius: 999,
-                                bgcolor: G.greenLight,
-                                '& .MuiLinearProgress-bar': {
-                                  borderRadius: 999,
-                                  bgcolor: G.green
-                                }
-                              }}
-                            />
-                            <Button
-                              fullWidth
-                              variant='contained'
-                              disableElevation
-                              startIcon={<CheckCircleIcon />}
-                              onClick={() =>
-                                handleAction(
-                                  'complete',
-                                  () =>
-                                    apiCall(
-                                      'post',
-                                      `/calibration-services/${serviceId}/complete-execution`,
-                                      {
-                                        technicallyCompletedAt:
-                                          new Date().toISOString()
-                                      }
-                                    ),
-                                  'Ejecución finalizada'
-                                )
-                              }
-                              disabled={
-                                !allCompleted ||
-                                dirty ||
-                                actionLoading === 'complete'
-                              }
-                              sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}
-                            >
-                              {!allCompleted
-                                ? `Faltan ${pendingCount} ítem${pendingCount === 1 ? '' : 's'}`
-                                : dirty
-                                  ? 'Guarda el avance primero'
-                                  : 'Finalizar ejecución'}
-                            </Button>
-                            {!paused && (
                               <Button
                                 fullWidth
-                                variant='text'
-                                color='warning'
-                                startIcon={<PauseIcon />}
+                                variant='contained'
+                                disableElevation
+                                startIcon={<PlayArrowIcon />}
                                 onClick={() =>
                                   handleAction(
-                                    'pause',
+                                    'start',
                                     () =>
                                       apiCall(
                                         'post',
-                                        `/calibration-services/${serviceId}/pause`,
-                                        { pauseReason: 'Pausado desde móvil' }
+                                        `/calibration-services/${serviceId}/start-execution`,
+                                        { startedAt: new Date().toISOString() }
                                       ),
-                                    'Servicio pausado'
+                                    'Ejecución iniciada'
                                   )
                                 }
-                                disabled={actionLoading === 'pause'}
-                                sx={{ textTransform: 'none', fontWeight: 600 }}
+                                disabled={actionLoading === 'start'}
+                                sx={{
+                                  ...primarySx,
+                                  py: 1.75,
+                                  fontSize: '1rem'
+                                }}
                               >
-                                Pausar servicio
+                                Iniciar ejecución
                               </Button>
-                            )}
-                          </>
-                        )}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                )}
+                            </>
+                          )}
+                          {status === 'in_execution' && (
+                            <>
+                              <Stack
+                                direction='row'
+                                justifyContent='space-between'
+                                alignItems='baseline'
+                              >
+                                <Typography sx={sectionTitle}>
+                                  Avance del servicio
+                                </Typography>
+                                <Typography
+                                  variant='body2'
+                                  fontWeight={700}
+                                  sx={{ color: G.greenDark }}
+                                >
+                                  {completedCount} de {items.length}
+                                </Typography>
+                              </Stack>
+                              <LinearProgress
+                                variant='determinate'
+                                value={
+                                  items.length
+                                    ? (completedCount / items.length) * 100
+                                    : 0
+                                }
+                                sx={{
+                                  height: 10,
+                                  borderRadius: 999,
+                                  bgcolor: G.greenLight,
+                                  '& .MuiLinearProgress-bar': {
+                                    borderRadius: 999,
+                                    bgcolor: G.green
+                                  }
+                                }}
+                              />
+                              <Button
+                                fullWidth
+                                variant='contained'
+                                disableElevation
+                                startIcon={<CheckCircleIcon />}
+                                onClick={() =>
+                                  handleAction(
+                                    'complete',
+                                    () =>
+                                      apiCall(
+                                        'post',
+                                        `/calibration-services/${serviceId}/complete-execution`,
+                                        {
+                                          technicallyCompletedAt:
+                                            new Date().toISOString()
+                                        }
+                                      ),
+                                    'Ejecución finalizada'
+                                  )
+                                }
+                                disabled={
+                                  !allCompleted ||
+                                  dirty ||
+                                  actionLoading === 'complete'
+                                }
+                                sx={{
+                                  ...primarySx,
+                                  py: 1.75,
+                                  fontSize: '1rem'
+                                }}
+                              >
+                                {!allCompleted
+                                  ? `Faltan ${pendingCount} ítem${pendingCount === 1 ? '' : 's'}`
+                                  : dirty
+                                    ? 'Guarda el avance primero'
+                                    : 'Finalizar ejecución'}
+                              </Button>
+                              {!paused && (
+                                <Button
+                                  fullWidth
+                                  variant='text'
+                                  color='warning'
+                                  startIcon={<PauseIcon />}
+                                  onClick={() =>
+                                    handleAction(
+                                      'pause',
+                                      () =>
+                                        apiCall(
+                                          'post',
+                                          `/calibration-services/${serviceId}/pause`,
+                                          { pauseReason: 'Pausado desde móvil' }
+                                        ),
+                                      'Servicio pausado'
+                                    )
+                                  }
+                                  disabled={actionLoading === 'pause'}
+                                  sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 600
+                                  }}
+                                >
+                                  Pausar servicio
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  )}
 
                 {/* Contacto y accesos rápidos */}
                 <Card elevation={0} sx={cardSx}>
