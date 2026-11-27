@@ -3,6 +3,8 @@ import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import { PERMISSIONS } from 'src/constants/permissions'
 
+import FeatureGate from 'src/Components/Common/FeatureGate'
+import FeatureSwitch from 'src/Components/Common/FeatureSwitch'
 const CalibrationServicesPage = lazy(
   () => import('../pages/calibration-services/CalibrationServicesPage')
 )
@@ -26,6 +28,12 @@ const CalibrationServiceAnalyticsPage = lazy(
 )
 const CalibrationServiceSchedulePage = lazy(
   () => import('../pages/calibration-services/CalibrationServiceSchedulePage')
+)
+const CalibrationVisitsAgenda = lazy(
+  () => import('../pages/calibration-services/visits/CalibrationVisitsAgenda')
+)
+const CalibrationPendingPage = lazy(
+  () => import('../pages/calibration-services/visits/CalibrationPendingPage')
 )
 const CalibrationNotificationCenter = lazy(
   () => import('../pages/calibration-services/CalibrationNotificationCenter')
@@ -88,7 +96,21 @@ const CalibrationServiceRoutes = (role: string[]) => {
         </Route>
         <Route
           path='calibration-services/schedule'
-          element={<CalibrationServiceSchedulePage />}
+          element={
+            <FeatureSwitch
+              flag='calibration_visits'
+              on={<CalibrationVisitsAgenda />}
+              off={<CalibrationServiceSchedulePage />}
+            />
+          }
+        />
+        <Route
+          path='calibration-services/pendientes'
+          element={
+            <FeatureGate flag='calibration_visits'>
+              <CalibrationPendingPage />
+            </FeatureGate>
+          }
         />
         <Route
           path='calibration-services/mobile/:serviceId'

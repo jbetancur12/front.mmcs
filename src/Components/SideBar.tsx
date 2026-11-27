@@ -892,6 +892,7 @@ const SideBar = ({
           (page) =>
             !known.has(page.path) &&
             hasPermission($userStore.permissions, page.permission) &&
+            (!page.feature || isFeatureOn(page.feature)) &&
             hasModuleAccess(page.moduleName ?? 'Basic')
         ).map((page): CommandEntry => {
           const owner = items.find((item) => itemKey(item) === page.parents[0])

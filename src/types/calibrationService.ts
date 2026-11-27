@@ -466,6 +466,8 @@ export interface CalibrationServiceReleaseCertificates {
 
 export interface CalibrationService {
   releaseCertificates?: CalibrationServiceReleaseCertificates | null
+  /** Las cantidades de esta orden solo se registran en sus visitas. */
+  managedByVisits?: boolean
   availableActions?: CalibrationServiceAvailableAction[]
   /** Siguiente tarea del flujo para el usuario y capacidad que la resuelve. */
   nextAction?: string | null
@@ -736,6 +738,14 @@ export interface CalibrationServiceSlaConfig {
   documentControlTargetBusinessDays: number
   finalCloseWarningBusinessDays: number
   finalCloseTargetBusinessDays: number
+  uploadWarningBusinessDays: number
+  uploadTargetBusinessDays: number
+  reviewWarningBusinessDays: number
+  reviewTargetBusinessDays: number
+  adjustmentWarningBusinessDays: number
+  adjustmentTargetBusinessDays: number
+  nextVisitWarningBusinessDays: number
+  nextVisitTargetBusinessDays: number
   updatedAt?: string | null
   updatedByName?: string | null
 }
@@ -921,6 +931,8 @@ export interface CalibrationServicePhysicalTraceabilityPayload {
 
 export interface CalibrationServiceUpdateLogisticsControlPayload {
   serviceId: string
+  /** Crea otra visita de ingreso en vez de corregir la pendiente. No se guarda en la ficha. */
+  newBatch?: boolean
   intakeDate?: string | null
   deliveryDate?: string | null
   requesterCompanyName?: string | null

@@ -37,6 +37,8 @@ import CalibrationServiceCutsTab from './CalibrationServiceCutsTab'
 import CalibrationServiceDetailDialogsHost from './CalibrationServiceDetailDialogs'
 import CalibrationServiceDetailHeader from './CalibrationServiceDetailHeader'
 import CalibrationServiceItemsTab from './CalibrationServiceItemsTab'
+import CalibrationVisitsPanel from '../visits/CalibrationVisitsPanel'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 import CalibrationServiceSummaryTab from './CalibrationServiceSummaryTab'
 import { getCalibrationServiceDetailData } from './calibrationServiceDetailData'
 import useCalibrationServiceDetailDialogs from './useCalibrationServiceDetailDialogs'
@@ -346,6 +348,7 @@ const CalibrationServiceDetailsView = ({
     handleViewDocument
   } = actions
 
+  const visitsOn = useFeature('calibration_visits')
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <CalibrationServiceDetailHeader
@@ -425,6 +428,9 @@ const CalibrationServiceDetailsView = ({
                   value='items'
                 />
                 <Tab label='Operación' value='operations' />
+                {visitsOn && service.odsCode ? (
+                  <Tab label='Visitas' value='visits' />
+                ) : null}
                 <Tab
                   label={`Novedades (${service.adjustments?.length || 0})`}
                   value='adjustments'
@@ -465,6 +471,7 @@ const CalibrationServiceDetailsView = ({
                 {service.odsCode ? (
                   <>
                     {service.status === 'in_execution' &&
+                    !service.managedByVisits &&
                     !allItemsOperationallyCompleted ? (
                       <Alert severity='info' sx={{ mb: 2 }}>
                         Para finalizar la ejecución técnica, primero marca todos
@@ -504,6 +511,12 @@ const CalibrationServiceDetailsView = ({
                   </Alert>
                 )}
               </DetailTabPanel>
+
+              {visitsOn && service.odsCode ? (
+                <DetailTabPanel value={activeTab} tab='visits'>
+                  <CalibrationVisitsPanel service={service} />
+                </DetailTabPanel>
+              ) : null}
 
               <DetailTabPanel value={activeTab} tab='adjustments'>
                 {canStillRegisterAdjustmentsAfterTechnicalCompletion ? (

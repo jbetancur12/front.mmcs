@@ -319,11 +319,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:execute': [
+    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'action' },
     { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
-    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'action' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
-    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:execution_customer': [
@@ -389,19 +389,19 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:reschedule': [
+    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'action' },
     { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
-    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'action' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
-    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:schedule': [
+    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'action' },
     { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' },
-    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'action' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
     { path: "/calibration-services/analytics", label: "Servicios de calibración › Analíticas", kind: 'related' },
-    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/new", label: "Servicios de calibración › Nuevo", kind: 'related' }
   ],
   'calibration:service:traceability': [
@@ -428,6 +428,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'screen' },
     { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'screen' },
     { path: "/calibration-services/notifications", label: "Servicios de calibración › Notificaciones", kind: 'screen' },
+    { path: "/calibration-services/pendientes", label: "Servicios de calibración › pendientes", kind: 'screen' },
     { path: "/calibration-services/productos-y-servicios", label: "Servicios de calibración › Productos y servicios", kind: 'screen' },
     { path: "/calibration-services/schedule", label: "Servicios de calibración › Programación", kind: 'screen' },
     { path: "/calibration-services/:serviceId/edit", label: "Servicios de calibración › Editar", kind: 'related' },
@@ -1068,6 +1069,11 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'system:feature_flags:manage': [
     { path: "/settings/features", label: "Ajustes › Funciones", kind: 'screen' },
+    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
+    { path: "/calibration-services/pendientes", label: "Servicios de calibración › pendientes", kind: 'related' },
+    { path: "/calibration-services/schedule", label: "Servicios de calibración › Programación", kind: 'related' },
     { path: "/management-report", label: "Reporte gerencial", kind: 'related' }
   ],
   'system:queues:view': [

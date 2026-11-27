@@ -12,6 +12,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined'
+import HourglassBottomIcon from '@mui/icons-material/HourglassBottom'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
@@ -25,6 +26,7 @@ import { GuideDialog as BillingGuideDialog } from '../CalibrationBillingGuide'
 import { CalibrationServicesListPermissions } from './useCalibrationServicesListPermissions'
 import { CalibrationServicesListActions } from './useCalibrationServicesListActions'
 import { brand } from 'src/theme/designTokens'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 
 interface CalibrationServicesHeaderActionsProps {
   permissions: CalibrationServicesListPermissions
@@ -46,6 +48,7 @@ const CalibrationServicesHeaderActions = ({
   permissions,
   actions
 }: CalibrationServicesHeaderActionsProps) => {
+  const visitsOn = useFeature('calibration_visits')
   const navigate = useNavigate()
   const canInvoice = useCan(PERMISSIONS.CALIBRATION_SERVICE_INVOICING)
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
@@ -99,6 +102,16 @@ const CalibrationServicesHeaderActions = ({
           sx={OUTLINED_SX}
         >
           Agenda
+        </Button>
+      ) : null}
+      {canViewModule && visitsOn ? (
+        <Button
+          variant='outlined'
+          startIcon={<HourglassBottomIcon />}
+          onClick={() => navigate('/calibration-services/pendientes')}
+          sx={OUTLINED_SX}
+        >
+          Pendientes
         </Button>
       ) : null}
       <CalibrationNotificationBell />

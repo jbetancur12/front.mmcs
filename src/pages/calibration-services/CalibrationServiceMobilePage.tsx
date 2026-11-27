@@ -1,4 +1,11 @@
 import { getApiErrorReason } from 'src/utils/apiError'
+import CalibrationVisitsPanel from './visits/CalibrationVisitsPanel'
+import NewBatchField from './visits/NewBatchField'
+import CalibrationServiceItemLabel, {
+  buildServiceItemNumbers,
+  getServiceItemDetail
+} from './CalibrationServiceItemLabel'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -386,6 +393,7 @@ const MobilePage = () => {
 
   // Logistics fields
   const [logIntake, setLogIntake] = useState('')
+  const [logNewBatch, setLogNewBatch] = useState(false)
   const [logDelivery, setLogDelivery] = useState('')
   const [logCompany, setLogCompany] = useState('')
   const [logOffer, setLogOffer] = useState('')
@@ -494,7 +502,7 @@ const MobilePage = () => {
       nextItems[item.id] = itemFieldsOf(item).operationalStatus || 'pending'
       nextNotes[item.id] = itemFieldsOf(item).technicalNotes || ''
       nextExecuted[item.id] = getSavedExecuted(item, s.adjustments)
-      if (stored) {
+      if (stored && !s.managedByVisits) {
         const st = stored.items[item.id]
         if (st !== undefined && st !== nextItems[item.id]) restored = true
         if (st !== undefined) nextItems[item.id] = st
@@ -593,6 +601,9 @@ const MobilePage = () => {
     setSaving(false)
   }
 
+  const visitsOn = useFeature('calibration_visits')
+  const itemNumbers = buildServiceItemNumbers(s?.items)
+  const managedByVisits = Boolean(s?.managedByVisits)
   type MobileTab = 'work' | 'intake' | 'issues' | 'close'
   const [tab, setTab] = useState<MobileTab>('work')
   const [openNotes, setOpenNotes] = useState<Record<number, boolean>>({})
@@ -793,6 +804,9 @@ const MobilePage = () => {
             {/* ===== TRABAJO ===== */}
             {tab === 'work' && (
               <Stack spacing={2}>
+                {visitsOn && s.odsCode ? (
+                  <CalibrationVisitsPanel service={s} />
+                ) : null}
                 {/* Paso principal */}
                 {paused && (
                   <Card
@@ -883,137 +897,151 @@ const MobilePage = () => {
                   </Card>
                 )}
 
-                {!paused && ['scheduled', 'in_execution'].includes(status) && (
-                  <Card elevation={0} sx={cardSx}>
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Stack spacing={1.5}>
-                        {status === 'scheduled' && (
-                          <>
-                            <Typography sx={sectionTitle}>
-                              Todo listo para empezar
-                            </Typography>
-                            <Button
-                              fullWidth
-                              variant='contained'
-                              disableElevation
-                              startIcon={<PlayArrowIcon />}
-                              onClick={() =>
-                                handleAction(
-                                  'start',
-                                  () =>
-                                    apiCall(
-                                      'post',
-                                      `/calibration-services/${serviceId}/start-execution`,
-                                      { startedAt: new Date().toISOString() }
-                                    ),
-                                  'Ejecución iniciada'
-                                )
-                              }
-                              disabled={actionLoading === 'start'}
-                              sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}
-                            >
-                              Iniciar ejecución
-                            </Button>
-                          </>
-                        )}
-                        {status === 'in_execution' && (
-                          <>
-                            <Stack
-                              direction='row'
-                              justifyContent='space-between'
-                              alignItems='baseline'
-                            >
+                {/* Con visitas, la ejecución arranca al registrar la primera: no hay botón aparte. */}
+                {!paused &&
+                  (status === 'in_execution' ||
+                    (status === 'scheduled' && !visitsOn)) && (
+                    <Card elevation={0} sx={cardSx}>
+                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                        <Stack spacing={1.5}>
+                          {status === 'scheduled' && (
+                            <>
                               <Typography sx={sectionTitle}>
-                                Avance del servicio
+                                Todo listo para empezar
                               </Typography>
-                              <Typography
-                                variant='body2'
-                                fontWeight={700}
-                                sx={{ color: G.greenDark }}
-                              >
-                                {completedCount} de {items.length}
-                              </Typography>
-                            </Stack>
-                            <LinearProgress
-                              variant='determinate'
-                              value={
-                                items.length
-                                  ? (completedCount / items.length) * 100
-                                  : 0
-                              }
-                              sx={{
-                                height: 10,
-                                borderRadius: 999,
-                                bgcolor: G.greenLight,
-                                '& .MuiLinearProgress-bar': {
-                                  borderRadius: 999,
-                                  bgcolor: G.green
-                                }
-                              }}
-                            />
-                            <Button
-                              fullWidth
-                              variant='contained'
-                              disableElevation
-                              startIcon={<CheckCircleIcon />}
-                              onClick={() =>
-                                handleAction(
-                                  'complete',
-                                  () =>
-                                    apiCall(
-                                      'post',
-                                      `/calibration-services/${serviceId}/complete-execution`,
-                                      {
-                                        technicallyCompletedAt:
-                                          new Date().toISOString()
-                                      }
-                                    ),
-                                  'Ejecución finalizada'
-                                )
-                              }
-                              disabled={
-                                !allCompleted ||
-                                dirty ||
-                                actionLoading === 'complete'
-                              }
-                              sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}
-                            >
-                              {!allCompleted
-                                ? `Faltan ${pendingCount} ítem${pendingCount === 1 ? '' : 's'}`
-                                : dirty
-                                  ? 'Guarda el avance primero'
-                                  : 'Finalizar ejecución'}
-                            </Button>
-                            {!paused && (
                               <Button
                                 fullWidth
-                                variant='text'
-                                color='warning'
-                                startIcon={<PauseIcon />}
+                                variant='contained'
+                                disableElevation
+                                startIcon={<PlayArrowIcon />}
                                 onClick={() =>
                                   handleAction(
-                                    'pause',
+                                    'start',
                                     () =>
                                       apiCall(
                                         'post',
-                                        `/calibration-services/${serviceId}/pause`,
-                                        { pauseReason: 'Pausado desde móvil' }
+                                        `/calibration-services/${serviceId}/start-execution`,
+                                        { startedAt: new Date().toISOString() }
                                       ),
-                                    'Servicio pausado'
+                                    'Ejecución iniciada'
                                   )
                                 }
-                                disabled={actionLoading === 'pause'}
-                                sx={{ textTransform: 'none', fontWeight: 600 }}
+                                disabled={actionLoading === 'start'}
+                                sx={{
+                                  ...primarySx,
+                                  py: 1.75,
+                                  fontSize: '1rem'
+                                }}
                               >
-                                Pausar servicio
+                                Iniciar ejecución
                               </Button>
-                            )}
-                          </>
-                        )}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                )}
+                            </>
+                          )}
+                          {status === 'in_execution' && (
+                            <>
+                              <Stack
+                                direction='row'
+                                justifyContent='space-between'
+                                alignItems='baseline'
+                              >
+                                <Typography sx={sectionTitle}>
+                                  Avance del servicio
+                                </Typography>
+                                <Typography
+                                  variant='body2'
+                                  fontWeight={700}
+                                  sx={{ color: G.greenDark }}
+                                >
+                                  {completedCount} de {items.length}
+                                </Typography>
+                              </Stack>
+                              <LinearProgress
+                                variant='determinate'
+                                value={
+                                  items.length
+                                    ? (completedCount / items.length) * 100
+                                    : 0
+                                }
+                                sx={{
+                                  height: 10,
+                                  borderRadius: 999,
+                                  bgcolor: G.greenLight,
+                                  '& .MuiLinearProgress-bar': {
+                                    borderRadius: 999,
+                                    bgcolor: G.green
+                                  }
+                                }}
+                              />
+                              <Button
+                                fullWidth
+                                variant='contained'
+                                disableElevation
+                                startIcon={<CheckCircleIcon />}
+                                onClick={() =>
+                                  handleAction(
+                                    'complete',
+                                    () =>
+                                      apiCall(
+                                        'post',
+                                        `/calibration-services/${serviceId}/complete-execution`,
+                                        {
+                                          technicallyCompletedAt:
+                                            new Date().toISOString()
+                                        }
+                                      ),
+                                    'Ejecución finalizada'
+                                  )
+                                }
+                                disabled={
+                                  !allCompleted ||
+                                  dirty ||
+                                  actionLoading === 'complete'
+                                }
+                                sx={{
+                                  ...primarySx,
+                                  py: 1.75,
+                                  fontSize: '1rem'
+                                }}
+                              >
+                                {!allCompleted
+                                  ? `Faltan ${pendingCount} ítem${pendingCount === 1 ? '' : 's'}`
+                                  : dirty
+                                    ? 'Guarda el avance primero'
+                                    : 'Finalizar ejecución'}
+                              </Button>
+                              {!paused && (
+                                <Button
+                                  fullWidth
+                                  variant='text'
+                                  color='warning'
+                                  startIcon={<PauseIcon />}
+                                  onClick={() =>
+                                    handleAction(
+                                      'pause',
+                                      () =>
+                                        apiCall(
+                                          'post',
+                                          `/calibration-services/${serviceId}/pause`,
+                                          { pauseReason: 'Pausado desde móvil' }
+                                        ),
+                                      'Servicio pausado'
+                                    )
+                                  }
+                                  disabled={actionLoading === 'pause'}
+                                  sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 600
+                                  }}
+                                >
+                                  Pausar servicio
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  )}
 
                 {/* Contacto y accesos rápidos */}
                 <Card elevation={0} sx={cardSx}>
@@ -1092,7 +1120,8 @@ const MobilePage = () => {
                     <Typography sx={sectionTitle}>
                       Ítems ({items.length})
                     </Typography>
-                    {pendingCount > 0 &&
+                    {!managedByVisits &&
+                      pendingCount > 0 &&
                       items.length > 0 &&
                       !paused &&
                       ['scheduled', 'in_execution'].includes(status) && (
@@ -1111,6 +1140,12 @@ const MobilePage = () => {
                         </Button>
                       )}
                   </Stack>
+                  {managedByVisits && (
+                    <Alert severity='info' sx={{ mb: 1.25 }}>
+                      Las cantidades se registran en cada visita, arriba. Aquí
+                      puedes dejar observaciones.
+                    </Alert>
+                  )}
                   <Stack spacing={1.25}>
                     {items.map((item) => {
                       const current = draftItems[item.id] || 'pending'
@@ -1144,7 +1179,14 @@ const MobilePage = () => {
                                     lineHeight: 1.35
                                   }}
                                 >
-                                  {item.itemName}
+                                  {`N.º ${itemNumbers.get(item.id)} ${item.itemName}`}
+                                  <Typography
+                                    component='span'
+                                    variant='caption'
+                                    sx={{ display: 'block', color: G.gray600 }}
+                                  >
+                                    {getServiceItemDetail(item)}
+                                  </Typography>
                                 </Typography>
                                 <Typography
                                   variant='body2'
@@ -1157,141 +1199,155 @@ const MobilePage = () => {
                                   x{getEffectiveQty(item, s?.adjustments)}
                                 </Typography>
                               </Stack>
-                              <ToggleButtonGroup
-                                exclusive
-                                fullWidth
-                                size='small'
-                                value={current}
-                                aria-label={`Estado de ${item.itemName}`}
-                                disabled={!canEditItems}
-                                onChange={(_, v) => {
-                                  if (v) setItemStatus(item, v)
-                                }}
-                              >
-                                {STATUS_FLOW.map((k) => (
-                                  <ToggleButton
-                                    key={k}
-                                    value={k}
-                                    sx={{
-                                      minHeight: 44,
-                                      px: 0.5,
-                                      textTransform: 'none',
-                                      fontSize: '0.72rem',
-                                      fontWeight: 600,
-                                      color: G.gray600,
-                                      borderColor: G.gray200,
-                                      '&.Mui-selected':
-                                        k === 'completed'
-                                          ? {
-                                              bgcolor: G.green,
-                                              color: 'white',
-                                              borderColor: G.green,
-                                              '&:hover': {
-                                                bgcolor: G.greenDark
-                                              }
-                                            }
-                                          : {
-                                              bgcolor: G.greenLight,
-                                              color: G.greenDark,
-                                              borderColor: G.green,
-                                              fontWeight: 700
-                                            }
-                                    }}
-                                  >
-                                    {
-                                      CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[
-                                        k
-                                      ]
-                                    }
-                                  </ToggleButton>
-                                ))}
-                              </ToggleButtonGroup>
-                              {current === 'in_progress' && (
-                                <Stack
-                                  direction='row'
-                                  alignItems='center'
-                                  justifyContent='space-between'
-                                  sx={{
-                                    bgcolor: G.gray50,
-                                    borderRadius: '12px',
-                                    p: 0.75
+                              {managedByVisits ? (
+                                <Typography
+                                  variant='body2'
+                                  fontWeight={600}
+                                  sx={{ color: G.gray600 }}
+                                >
+                                  {`Calibrados ${getSavedExecuted(item, s?.adjustments)} de ${getEffectiveQty(item, s?.adjustments)} · ${CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[current]}`}
+                                </Typography>
+                              ) : (
+                                <ToggleButtonGroup
+                                  exclusive
+                                  fullWidth
+                                  size='small'
+                                  value={current}
+                                  aria-label={`Estado de ${item.itemName}`}
+                                  disabled={!canEditItems}
+                                  onChange={(_, v) => {
+                                    if (v) setItemStatus(item, v)
                                   }}
                                 >
-                                  <Box sx={{ pl: 1 }}>
-                                    <Typography
-                                      variant='body2'
-                                      fontWeight={600}
-                                      sx={{ color: G.gray600 }}
+                                  {STATUS_FLOW.map((k) => (
+                                    <ToggleButton
+                                      key={k}
+                                      value={k}
+                                      sx={{
+                                        minHeight: 44,
+                                        px: 0.5,
+                                        textTransform: 'none',
+                                        fontSize: '0.72rem',
+                                        fontWeight: 600,
+                                        color: G.gray600,
+                                        borderColor: G.gray200,
+                                        '&.Mui-selected':
+                                          k === 'completed'
+                                            ? {
+                                                bgcolor: G.green,
+                                                color: 'white',
+                                                borderColor: G.green,
+                                                '&:hover': {
+                                                  bgcolor: G.greenDark
+                                                }
+                                              }
+                                            : {
+                                                bgcolor: G.greenLight,
+                                                color: G.greenDark,
+                                                borderColor: G.green,
+                                                fontWeight: 700
+                                              }
+                                      }}
                                     >
-                                      Ejecutados
-                                    </Typography>
-                                    {getReleased(item) > 0 && (
-                                      <Typography
-                                        variant='caption'
-                                        sx={{ color: G.gray400 }}
-                                      >
-                                        {getReleased(item)} ya en corte
-                                      </Typography>
-                                    )}
-                                  </Box>
+                                      {
+                                        CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[
+                                          k
+                                        ]
+                                      }
+                                    </ToggleButton>
+                                  ))}
+                                </ToggleButtonGroup>
+                              )}
+                              {!managedByVisits &&
+                                current === 'in_progress' && (
                                   <Stack
                                     direction='row'
                                     alignItems='center'
-                                    spacing={0.5}
+                                    justifyContent='space-between'
+                                    sx={{
+                                      bgcolor: G.gray50,
+                                      borderRadius: '12px',
+                                      p: 0.75
+                                    }}
                                   >
-                                    <IconButton
-                                      aria-label='Restar uno'
-                                      onClick={() => changeExecuted(item, -1)}
-                                      disabled={
-                                        paused ||
-                                        (draftExecuted[item.id] ?? 0) <=
-                                          getReleased(item)
-                                      }
-                                      sx={{
-                                        bgcolor: G.surface,
-                                        border: `1px solid ${G.gray200}`,
-                                        width: 44,
-                                        height: 44
-                                      }}
+                                    <Box sx={{ pl: 1 }}>
+                                      <Typography
+                                        variant='body2'
+                                        fontWeight={600}
+                                        sx={{ color: G.gray600 }}
+                                      >
+                                        Ejecutados
+                                      </Typography>
+                                      {getReleased(item) > 0 && (
+                                        <Typography
+                                          variant='caption'
+                                          sx={{ color: G.gray400 }}
+                                        >
+                                          {getReleased(item)} ya en corte
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                    <Stack
+                                      direction='row'
+                                      alignItems='center'
+                                      spacing={0.5}
                                     >
-                                      <RemoveIcon />
-                                    </IconButton>
-                                    <Typography
-                                      fontWeight={700}
-                                      sx={{
-                                        minWidth: 64,
-                                        textAlign: 'center',
-                                        color: G.dark
-                                      }}
-                                    >
-                                      {draftExecuted[item.id] ?? 0} de{' '}
-                                      {getEffectiveQty(item, s?.adjustments)}
-                                    </Typography>
-                                    <IconButton
-                                      aria-label='Sumar uno'
-                                      onClick={() => changeExecuted(item, 1)}
-                                      disabled={
-                                        paused ||
-                                        (draftExecuted[item.id] ?? 0) >=
-                                          getEffectiveQty(item, s?.adjustments)
-                                      }
-                                      sx={{
-                                        bgcolor: G.green,
-                                        color: 'white',
-                                        width: 44,
-                                        height: 44,
-                                        '&:hover': { bgcolor: G.greenDark },
-                                        '&.Mui-disabled': {
-                                          bgcolor: G.gray100,
-                                          color: G.gray300
+                                      <IconButton
+                                        aria-label='Restar uno'
+                                        onClick={() => changeExecuted(item, -1)}
+                                        disabled={
+                                          paused ||
+                                          (draftExecuted[item.id] ?? 0) <=
+                                            getReleased(item)
                                         }
-                                      }}
-                                    >
-                                      <AddIcon />
-                                    </IconButton>
+                                        sx={{
+                                          bgcolor: G.surface,
+                                          border: `1px solid ${G.gray200}`,
+                                          width: 44,
+                                          height: 44
+                                        }}
+                                      >
+                                        <RemoveIcon />
+                                      </IconButton>
+                                      <Typography
+                                        fontWeight={700}
+                                        sx={{
+                                          minWidth: 64,
+                                          textAlign: 'center',
+                                          color: G.dark
+                                        }}
+                                      >
+                                        {draftExecuted[item.id] ?? 0} de{' '}
+                                        {getEffectiveQty(item, s?.adjustments)}
+                                      </Typography>
+                                      <IconButton
+                                        aria-label='Sumar uno'
+                                        onClick={() => changeExecuted(item, 1)}
+                                        disabled={
+                                          paused ||
+                                          (draftExecuted[item.id] ?? 0) >=
+                                            getEffectiveQty(
+                                              item,
+                                              s?.adjustments
+                                            )
+                                        }
+                                        sx={{
+                                          bgcolor: G.green,
+                                          color: 'white',
+                                          width: 44,
+                                          height: 44,
+                                          '&:hover': { bgcolor: G.greenDark },
+                                          '&.Mui-disabled': {
+                                            bgcolor: G.gray100,
+                                            color: G.gray300
+                                          }
+                                        }}
+                                      >
+                                        <AddIcon />
+                                      </IconButton>
+                                    </Stack>
                                   </Stack>
-                                </Stack>
-                              )}
+                                )}
                               {showNote ? (
                                 <TextField
                                   size='small'
@@ -1890,6 +1946,14 @@ const MobilePage = () => {
                         >
                           Fecha ingreso
                         </Typography>
+                        {visitsOn &&
+                          s?.onSiteCalibration === false &&
+                          controlSheet.intakeDate && (
+                            <NewBatchField
+                              checked={logNewBatch}
+                              onChange={setLogNewBatch}
+                            />
+                          )}
                         <TextField
                           fullWidth
                           size='small'
@@ -2627,6 +2691,7 @@ const MobilePage = () => {
                             `/calibration-services/${serviceId}/logistics-control`,
                             {
                               intakeDate: logIntake || null,
+                              newBatch: logNewBatch,
                               deliveryDate: logDelivery || null,
                               requesterCompanyName: logCompany || null,
                               requesterOfferNumber: logOffer || null,
@@ -2667,7 +2732,10 @@ const MobilePage = () => {
                           )
                         },
                         'Control guardado',
-                        () => setShowLogistics(false)
+                        () => {
+                          setShowLogistics(false)
+                          setLogNewBatch(false)
+                        }
                       )
                     }
                     disabled={actionLoading === 'log'}
@@ -2776,7 +2844,11 @@ const MobilePage = () => {
                   >
                     {items.map((i) => (
                       <MenuItem key={i.id} value={String(i.id)}>
-                        {i.itemName}
+                        <CalibrationServiceItemLabel
+                          number={itemNumbers.get(i.id)}
+                          name={i.itemName}
+                          detail={getServiceItemDetail(i)}
+                        />
                       </MenuItem>
                     ))}
                   </Select>
@@ -2969,7 +3041,13 @@ const MobilePage = () => {
                               fontWeight={700}
                               sx={{ color: G.dark, lineHeight: 1.3 }}
                             >
-                              {c.item.itemName}
+                              {`N.º ${itemNumbers.get(c.item.id)} ${c.item.itemName}`}
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              sx={{ display: 'block', color: G.gray600 }}
+                            >
+                              {getServiceItemDetail(c.item)}
                             </Typography>
                             <Typography
                               variant='caption'

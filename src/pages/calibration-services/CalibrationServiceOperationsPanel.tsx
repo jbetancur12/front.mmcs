@@ -33,6 +33,10 @@ import {
   CalibrationServiceOperationsSummary
 } from '../../types/calibrationService'
 
+import CalibrationServiceItemLabel, {
+  buildServiceItemNumbers,
+  getServiceItemDetail
+} from './CalibrationServiceItemLabel'
 import { DetailField } from './CalibrationServiceDetailBlocks'
 import { brand, neutral } from 'src/theme/designTokens'
 type CalibrationServiceOperationalItem = NonNullable<
@@ -301,6 +305,9 @@ const CalibrationServiceOperationsPanel = ({
     await onGenerateProgressPdf?.()
   }
 
+  const itemNumbers = buildServiceItemNumbers(service.items)
+  const managedByVisits = Boolean(service.managedByVisits)
+  const canEditQuantities = canEditProgress && !managedByVisits
   return (
     <Stack spacing={3}>
       {pendingFormalAdjustments.length ? (
@@ -423,6 +430,14 @@ const CalibrationServiceOperationsPanel = ({
         </Tooltip>
       </Stack>
 
+      {managedByVisits ? (
+        <Alert severity='info'>
+          Las cantidades de esta orden se registran en la pestaña{' '}
+          <strong>Visitas</strong>, con «Registrar ejecución». Aquí se consultan
+          y se escriben las notas técnicas.
+        </Alert>
+      ) : null}
+
       {service.items?.length ? (
         <Box
           sx={{
@@ -460,37 +475,26 @@ const CalibrationServiceOperationsPanel = ({
                   effectiveQuantity - executedQuantity,
                   0
                 )
-                const calibrationPointsInfo =
-                  item.otherFields?.hasCalibrationPoints !== false
-                    ? [
-                        item.otherFields?.calibrationPointCount
-                          ? `Puntos: ${item.otherFields.calibrationPointCount}`
-                          : '',
-                        item.otherFields?.measurementRange
-                          ? `Rango: ${item.otherFields.measurementRange}`
-                          : ''
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')
+                const points =
+                  item.otherFields?.hasCalibrationPoints !== false &&
+                  item.otherFields?.calibrationPointCount
+                    ? `Puntos: ${item.otherFields.calibrationPointCount}`
                     : ''
 
                 return (
                   <TableRow key={item.id}>
-                    <TableCell sx={{ minWidth: 160 }}>
-                      {item.itemName}
-                      {calibrationPointsInfo ? (
-                        <Typography
-                          variant='caption'
-                          color='text.secondary'
-                          display='block'
-                        >
-                          {calibrationPointsInfo}
-                        </Typography>
-                      ) : null}
+                    <TableCell sx={{ minWidth: 220 }}>
+                      <CalibrationServiceItemLabel
+                        number={itemNumbers.get(item.id)}
+                        name={item.itemName}
+                        detail={[getServiceItemDetail(item), points]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      />
                     </TableCell>
                     <TableCell align='right'>{effectiveQuantity}</TableCell>
                     <TableCell align='right' sx={{ minWidth: 100 }}>
-                      {canEditProgress ? (
+                      {canEditQuantities ? (
                         <TextField
                           size='small'
                           type='number'
@@ -520,7 +524,7 @@ const CalibrationServiceOperationsPanel = ({
                     </TableCell>
                     <TableCell align='right'>{pendingQuantity}</TableCell>
                     <TableCell sx={{ minWidth: 140 }}>
-                      {canEditProgress ? (
+                      {canEditQuantities ? (
                         <TextField
                           select
                           fullWidth
@@ -612,7 +616,7 @@ const CalibrationServiceOperationsPanel = ({
                 '&:hover': { bgcolor: brand.hover }
               }}
             >
-              Guardar avance técnico
+              {managedByVisits ? 'Guardar notas' : 'Guardar avance técnico'}
             </Button>
           ) : null}
         </Stack>

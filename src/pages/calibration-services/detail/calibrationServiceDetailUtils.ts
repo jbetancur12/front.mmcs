@@ -10,6 +10,7 @@ export type DetailTab =
   | 'summary'
   | 'items'
   | 'operations'
+  | 'visits'
   | 'adjustments'
   | 'cuts'
   | 'documents'
@@ -21,6 +22,7 @@ export const detailTabs: readonly DetailTab[] = [
   'summary',
   'items',
   'operations',
+  'visits',
   'adjustments',
   'cuts',
   'documents',
@@ -32,6 +34,12 @@ export const detailTabs: readonly DetailTab[] = [
 export const getStoredDetailTab = (serviceId?: string): DetailTab => {
   if (!serviceId || typeof window === 'undefined') {
     return 'summary'
+  }
+
+  // Un enlace con ?tab= (avisos, agenda, pendientes) manda sobre la pestaña recordada.
+  const linkedTab = new URLSearchParams(window.location.search).get('tab')
+  if (detailTabs.includes(linkedTab as DetailTab)) {
+    return linkedTab as DetailTab
   }
 
   const storedTab = window.sessionStorage.getItem(

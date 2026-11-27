@@ -42,10 +42,13 @@ import {
   CalibrationServiceLogisticsControlItem,
   CalibrationServiceLogisticsControlSheet
 } from '../../types/calibrationService'
+import NewBatchField from './visits/NewBatchField'
 import { neutral, withAlpha } from 'src/theme/designTokens'
 
 export interface CalibrationServiceLogisticsControlDialogValues
-  extends CalibrationServiceLogisticsControlSheet {}
+  extends CalibrationServiceLogisticsControlSheet {
+  newBatch?: boolean
+}
 
 interface Props {
   open: boolean
@@ -53,6 +56,8 @@ interface Props {
   serviceCode: string
   initialValues: CalibrationServiceLogisticsControlDialogValues
   isLoading?: boolean
+  /** Orden de laboratorio que ya tiene un ingreso guardado. */
+  canStartNewBatch?: boolean
   onClose: () => void
   onSubmit: (
     values: CalibrationServiceLogisticsControlDialogValues
@@ -107,6 +112,7 @@ const CalibrationServiceLogisticsControlDialog = ({
   serviceCode,
   initialValues,
   isLoading = false,
+  canStartNewBatch = false,
   onClose,
   onSubmit
 }: Props) => {
@@ -272,6 +278,16 @@ const CalibrationServiceLogisticsControlDialog = ({
 
           <Paper {...sectionPaperProps}>
             <Grid container spacing={3}>
+              {canStartNewBatch && (
+                <Grid item xs={12}>
+                  <NewBatchField
+                    checked={Boolean(values.newBatch)}
+                    onChange={(newBatch) =>
+                      setValues((current) => ({ ...current, newBatch }))
+                    }
+                  />
+                </Grid>
+              )}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
