@@ -238,8 +238,9 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         y se reenvía).
       </>,
       <>
-        Si pasan 30 días sin respuesta, la cotización <b>vence sola</b>. Se
-        puede <b>Reabrir</b> si el cliente vuelve a interesarse.
+        Sin respuesta, la cotización <b>vence</b> al pasar su vigencia (o 30
+        días si no la tiene). Se puede <b>Reabrir</b> si el cliente vuelve a
+        interesarse.
       </>
     ],
     needs: [
@@ -411,8 +412,9 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       </>,
       <>
         Se indica la descripción, la observación técnica y si necesita ajuste
-        comercial para facturar. Una novedad de <i>cantidad menor</i> se aplica
-        sola; las demás pasan por revisión.
+        comercial para facturar. Las de <i>cantidad menor</i> o{' '}
+        <i>ítem no recibido</i> quedan aplicadas con la revisión técnica; las
+        que tienen valor siguen a la revisión económica.
       </>,
       <>
         La <b>revisión técnica</b> valida lo ocurrido; la{' '}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -23,11 +23,11 @@ import { useCan } from '@utils/functions'
 import { useFeature } from 'src/hooks/useFeatureFlags'
 import CalibrationFlowDiagram from './CalibrationFlowDiagram'
 import CalibrationBillingGuide from '../CalibrationBillingGuide'
+import { GuideSection } from './calibrationFlowGuideContent'
 import {
-  GUIDE_SECTIONS,
-  GUIDE_TROUBLESHOOTING,
-  GuideSection
-} from './calibrationFlowGuideContent'
+  getGuideSections,
+  getGuideTroubleshooting
+} from './calibrationFlowGuideVisits'
 import { brand, neutral } from 'src/theme/designTokens'
 
 const TEAL = brand.main
@@ -237,12 +237,17 @@ const SectionCard = ({
 /** Guía general del flujo de servicios de calibración, de la cotización al cierre. */
 const CalibrationFlowGuidePage = () => {
   const navigate = useNavigate()
-  const [active, setActive] = useState(GUIDE_SECTIONS[0].id)
+  const [active, setActive] = useState('vision')
   const navRef = useRef<HTMLElement | null>(null)
   // El diagrama describe el flujo con visitas: solo aparece con esa función encendida.
   const visitsOn = useFeature('calibration_visits')
   const [searchParams, setSearchParams] = useSearchParams()
   const showDiagram = visitsOn && searchParams.get('vista') === 'diagrama'
+  const releaseOn = useFeature('release_certificates')
+  const sections = useMemo(
+    () => getGuideSections({ visitsOn, releaseOn }),
+    [visitsOn, releaseOn]
+  )
 
   // El layout envuelve las páginas en contenedores con overflow (auto/hidden) que no son los que
   // se desplazan; atrapan el `sticky` del índice. Mientras la guía está abierta se pasan a `clip`,
@@ -276,12 +281,12 @@ const CalibrationFlowGuidePage = () => {
       },
       { rootMargin: '-80px 0px -70% 0px' }
     )
-    GUIDE_SECTIONS.forEach((section) => {
+    sections.forEach((section) => {
       const element = document.getElementById(section.id)
       if (element) observer.observe(element)
     })
     return () => observer.disconnect()
-  }, [showDiagram])
+  }, [showDiagram, sections])
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -349,7 +354,7 @@ const CalibrationFlowGuidePage = () => {
               bgcolor: neutral.surface
             }}
           >
-            {GUIDE_SECTIONS.map((section, index) => (
+            {sections.map((section, index) => (
               <Link
                 key={section.id}
                 href={`#${section.id}`}
@@ -372,7 +377,7 @@ const CalibrationFlowGuidePage = () => {
           </Box>
 
           <Stack spacing={3}>
-            {GUIDE_SECTIONS.map((section, index) => (
+            {sections.map((section, index) => (
               <SectionCard key={section.id} section={section} index={index} />
             ))}
 
@@ -388,7 +393,7 @@ const CalibrationFlowGuidePage = () => {
                 Si algo no sale como esperabas
               </Typography>
               <Stack spacing={1.5}>
-                {GUIDE_TROUBLESHOOTING.map((item) => (
+                {getGuideTroubleshooting(visitsOn).map((item) => (
                   <Box key={item.problem}>
                     <Typography variant='subtitle2' fontWeight={700}>
                       {item.problem}
