@@ -9,12 +9,14 @@ export type FeatureFlagKey =
   | 'release_certificates'
   | 'certificate_calculation'
   | 'management_report'
+  | 'maintenance_ticket_emails'
   | 'library'
 
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlagKey, boolean> = {
   release_certificates: false,
   certificate_calculation: false,
   management_report: false,
+  maintenance_ticket_emails: false,
   library: true
 }
 
