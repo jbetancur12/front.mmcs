@@ -3,6 +3,7 @@ import {
   getApiErrorCode,
   getApiErrorMessage,
   getApiErrorReason,
+  getBlobApiErrorReason,
   parseApiError
 } from './apiError'
 
@@ -141,5 +142,28 @@ describe('getApiErrorPayload y código de la raíz', () => {
 
   it('sin respuesta devuelve un objeto vacío', () => {
     expect(getApiErrorPayload(new Error('x'))).toEqual({})
+  })
+})
+
+describe('getBlobApiErrorReason', () => {
+  // El Blob de jsdom no trae text(), que sí existe en los navegadores
+  const blobError = (body: string) => ({
+    response: {
+      status: 404,
+      data: Object.assign(new Blob([body]), { text: async () => body })
+    }
+  })
+
+  it('lee el motivo del cuerpo de una descarga fallida', async () => {
+    const body = JSON.stringify({
+      error: { code: 'FILE_NOT_AVAILABLE', message: 'No está disponible.' }
+    })
+    expect(await getBlobApiErrorReason(blobError(body))).toBe(
+      'No está disponible.'
+    )
+  })
+
+  it('devuelve null si el cuerpo no es JSON', async () => {
+    expect(await getBlobApiErrorReason(blobError('<html>'))).toBeNull()
   })
 })

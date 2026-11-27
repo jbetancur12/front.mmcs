@@ -7,6 +7,8 @@ import { buildMinioObjectUrl } from '@utils/minio'
 
 import { logger } from 'src/utils/logger'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { getBlobApiErrorReason } from 'src/utils/apiError'
+
 const PDFViewer = ({
   path,
   bucket = 'first-bucket',
@@ -79,10 +81,11 @@ const PDFViewer = ({
         }
       } catch (loadError) {
         logger.error('Error loading PDF preview:', loadError)
+        const reason = await getBlobApiErrorReason(loadError)
 
         if (isMounted) {
           setViewerUrl('')
-          setError('No se pudo cargar la vista previa del PDF.')
+          setError(reason || 'No se pudo cargar la vista previa del PDF.')
           setLoading(false)
         }
       }

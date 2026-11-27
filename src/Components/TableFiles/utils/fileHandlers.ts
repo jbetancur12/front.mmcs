@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import { toast } from 'react-hot-toast'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { getBlobApiErrorReason } from 'src/utils/apiError'
 
 export const handleDownload = async (
   filePath: string,
@@ -22,12 +23,15 @@ export const handleDownload = async (
       document.body.removeChild(link)
     }
   } catch (error) {
-    handleDownloadError(error as AxiosError)
+    await handleDownloadError(error as AxiosError)
   }
 }
 
-const handleDownloadError = (error: AxiosError) => {
-  if (axios.isAxiosError(error)) {
+const handleDownloadError = async (error: AxiosError) => {
+  const reason = await getBlobApiErrorReason(error)
+  if (reason) {
+    toast.error(reason)
+  } else if (axios.isAxiosError(error)) {
     toast.error(
       error.response
         ? `Error: ${error.response.statusText}`

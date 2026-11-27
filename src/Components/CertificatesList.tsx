@@ -27,6 +27,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import { logger } from 'src/utils/logger'
 import { neutral, intent } from 'src/theme/designTokens'
+import { getBlobApiErrorReason } from 'src/utils/apiError'
 
 type Certificate = CertificateHistoryItem
 
@@ -105,7 +106,10 @@ function CertificatesList() {
         document.body.removeChild(link)
       }
     } catch (error: unknown) {
-      if (isAxiosError(error)) {
+      const reason = await getBlobApiErrorReason(error)
+      if (reason) {
+        notify.error(reason)
+      } else if (isAxiosError(error)) {
         const axiosError = error as AxiosError
         notify.error(
           `Error al descargar el archivo: ${

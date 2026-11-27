@@ -113,6 +113,23 @@ export const getApiErrorMessage = (error: unknown, fallback: string) => {
   return reason ? `${fallback} ${reason}` : fallback
 }
 
+/**
+ * Motivo de un error en una descarga (`responseType: 'blob'`): ahí el cuerpo del
+ * error llega como Blob y hay que leerlo antes de interpretarlo.
+ */
+export const getBlobApiErrorReason = async (
+  error: unknown
+): Promise<string | null> => {
+  const response = (error as ApiErrorLike)?.response
+  if (!(response?.data instanceof Blob)) return getApiErrorReason(error)
+  try {
+    const data: unknown = JSON.parse(await response.data.text())
+    return getApiErrorReason({ response: { status: response.status, data } })
+  } catch {
+    return null
+  }
+}
+
 /** Código de error del backend (`{ error: { code } }`), si lo hay. */
 export const getApiErrorCode = (error: unknown): string | null =>
   parseApiError(error).code
