@@ -22,6 +22,7 @@ import { useLogout } from './Authentication/Logout'
 import ActiveSessionsListDialog from './Authentication/ActiveSessionsListDialog'
 import useSessionGuard from 'src/hooks/useSessionGuard'
 import UserMenu from './Common/UserMenu'
+import BrandLogo from './Common/BrandLogo'
 import useAxiosPrivate from '@utils/use-axios-private'
 import AlertsBell from './DataSheet/AlertsBell'
 import { useImpersonation } from '../hooks/useImpersonation'
@@ -144,13 +145,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
                 }
               }}
             >
-              <Box
-                component='img'
-                src='/images/logo2.png'
-                alt='Metromedics'
-                className='brand-logo'
-                sx={{ height: { xs: 32, md: 40 }, width: 'auto' }}
-              />
+              <BrandLogo />
             </Box>
           </Box>
 

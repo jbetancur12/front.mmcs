@@ -11,13 +11,15 @@ export type FeatureFlagKey =
   | 'management_report'
   | 'maintenance_ticket_emails'
   | 'library'
+  | 'new_logo'
 
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlagKey, boolean> = {
   release_certificates: false,
   certificate_calculation: false,
   management_report: false,
   maintenance_ticket_emails: false,
-  library: true
+  library: true,
+  new_logo: false
 }
 
 const STORAGE_KEY = 'featureFlags'
