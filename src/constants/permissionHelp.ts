@@ -712,6 +712,11 @@ export const PERMISSION_HELP: Record<string, PermissionHelp> = {
     'Permite encender o apagar funciones en construcción (por ejemplo Certificados a liberar) sin desplegar una versión nueva.',
     'Ajustes › Funciones.'
   ],
+  'system:queues:view': [
+    'Ver colas de envío',
+    'Permite ver cuántos correos y reportes están en espera, completados o fallidos, y por qué fallaron. No permite reintentar ni borrar.',
+    'Ajustes › Colas de envío.'
+  ],
   'system:settings:manage': [
     'Gestionar contraseñas de libros Excel',
     'Crear, editar y eliminar las contraseñas guardadas de los libros de Excel.',

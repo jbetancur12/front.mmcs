@@ -1070,6 +1070,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/settings/features", label: "Ajustes › Funciones", kind: 'screen' },
     { path: "/management-report", label: "Reporte gerencial", kind: 'related' }
   ],
+  'system:queues:view': [
+    { path: "/settings/queues", label: "Ajustes › Colas de envío", kind: 'screen' }
+  ],
   'system:settings:manage': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }
   ],

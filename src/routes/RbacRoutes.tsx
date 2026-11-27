@@ -6,6 +6,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 const RolesPermissions = lazy(() => import('../pages/Admin/RolesPermissions'))
 const RolesHelp = lazy(() => import('../pages/Admin/RolesHelp'))
 const FeatureFlagsPage = lazy(() => import('../pages/Admin/FeatureFlagsPage'))
+const QueueMonitorPage = lazy(() => import('../pages/Admin/QueueMonitorPage'))
 
 /** Panel "Roles y permisos": entra quien el backend dice que tiene `rbac:view`. */
 const RbacRoutes = (role: string[]) => {
@@ -34,6 +35,18 @@ const RbacRoutes = (role: string[]) => {
         }
       >
         <Route path='settings/features' element={<FeatureFlagsPage />} />
+      </Route>
+      {/* Panel de desarrollador: estado de las colas de envío, solo lectura */}
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            permission={PERMISSIONS.SYSTEM_QUEUES_VIEW}
+          />
+        }
+      >
+        <Route path='settings/queues' element={<QueueMonitorPage />} />
       </Route>
     </>
   )

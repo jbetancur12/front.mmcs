@@ -548,6 +548,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Funciones',
         url: 'settings/features',
         permission: PERMISSIONS.SYSTEM_FEATURE_FLAGS_MANAGE
+      },
+      {
+        label: 'Colas de envío',
+        url: 'settings/queues',
+        permission: PERMISSIONS.SYSTEM_QUEUES_VIEW
       }
     ]
   }
