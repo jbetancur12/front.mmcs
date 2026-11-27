@@ -14,7 +14,7 @@ const useNewFavicon = (enabled: boolean) => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
     if (!enabled || !link) return
     const previous = link.getAttribute('href') ?? ''
-    link.setAttribute('href', `${NEW_LOGO_PATH}/favicon.png`)
+    link.setAttribute('href', `${NEW_LOGO_PATH}/favicon.svg`)
     return () => link.setAttribute('href', previous)
   }, [enabled])
 }
@@ -30,7 +30,7 @@ function ThemedLogo({ dark }: { dark: boolean }): React.ReactElement {
 
   return (
     <picture>
-      <source media={NARROW} srcSet={`${NEW_LOGO_PATH}/simbolo-${file}.png`} />
+      <source media={NARROW} srcSet={`${NEW_LOGO_PATH}/simbolo-${file}.svg`} />
       <Box
         component='img'
         src={`${NEW_LOGO_PATH}/logo-${file}.png`}
