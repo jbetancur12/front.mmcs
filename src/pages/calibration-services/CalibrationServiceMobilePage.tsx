@@ -1,5 +1,9 @@
 import { getApiErrorReason } from 'src/utils/apiError'
 import CalibrationVisitsPanel from './visits/CalibrationVisitsPanel'
+import CalibrationServiceItemLabel, {
+  buildServiceItemNumbers,
+  getServiceItemDetail
+} from './CalibrationServiceItemLabel'
 import { useFeature } from 'src/hooks/useFeatureFlags'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useMemo, useState } from 'react'
@@ -596,6 +600,7 @@ const MobilePage = () => {
   }
 
   const visitsOn = useFeature('calibration_visits')
+  const itemNumbers = buildServiceItemNumbers(s?.items)
   type MobileTab = 'work' | 'intake' | 'issues' | 'close'
   const [tab, setTab] = useState<MobileTab>('work')
   const [openNotes, setOpenNotes] = useState<Record<number, boolean>>({})
@@ -1150,7 +1155,14 @@ const MobilePage = () => {
                                     lineHeight: 1.35
                                   }}
                                 >
-                                  {item.itemName}
+                                  {`N.º ${itemNumbers.get(item.id)} ${item.itemName}`}
+                                  <Typography
+                                    component='span'
+                                    variant='caption'
+                                    sx={{ display: 'block', color: G.gray600 }}
+                                  >
+                                    {getServiceItemDetail(item)}
+                                  </Typography>
                                 </Typography>
                                 <Typography
                                   variant='body2'
@@ -2782,7 +2794,11 @@ const MobilePage = () => {
                   >
                     {items.map((i) => (
                       <MenuItem key={i.id} value={String(i.id)}>
-                        {i.itemName}
+                        <CalibrationServiceItemLabel
+                          number={itemNumbers.get(i.id)}
+                          name={i.itemName}
+                          detail={getServiceItemDetail(i)}
+                        />
                       </MenuItem>
                     ))}
                   </Select>
@@ -2975,7 +2991,13 @@ const MobilePage = () => {
                               fontWeight={700}
                               sx={{ color: G.dark, lineHeight: 1.3 }}
                             >
-                              {c.item.itemName}
+                              {`N.º ${itemNumbers.get(c.item.id)} ${c.item.itemName}`}
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              sx={{ display: 'block', color: G.gray600 }}
+                            >
+                              {getServiceItemDetail(c.item)}
                             </Typography>
                             <Typography
                               variant='caption'

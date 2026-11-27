@@ -33,6 +33,10 @@ import {
   CalibrationServiceOperationsSummary
 } from '../../types/calibrationService'
 
+import CalibrationServiceItemLabel, {
+  buildServiceItemNumbers,
+  getServiceItemDetail
+} from './CalibrationServiceItemLabel'
 import { DetailField } from './CalibrationServiceDetailBlocks'
 import { brand, neutral } from 'src/theme/designTokens'
 type CalibrationServiceOperationalItem = NonNullable<
@@ -301,6 +305,7 @@ const CalibrationServiceOperationsPanel = ({
     await onGenerateProgressPdf?.()
   }
 
+  const itemNumbers = buildServiceItemNumbers(service.items)
   return (
     <Stack spacing={3}>
       {pendingFormalAdjustments.length ? (
@@ -460,33 +465,22 @@ const CalibrationServiceOperationsPanel = ({
                   effectiveQuantity - executedQuantity,
                   0
                 )
-                const calibrationPointsInfo =
-                  item.otherFields?.hasCalibrationPoints !== false
-                    ? [
-                        item.otherFields?.calibrationPointCount
-                          ? `Puntos: ${item.otherFields.calibrationPointCount}`
-                          : '',
-                        item.otherFields?.measurementRange
-                          ? `Rango: ${item.otherFields.measurementRange}`
-                          : ''
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')
+                const points =
+                  item.otherFields?.hasCalibrationPoints !== false &&
+                  item.otherFields?.calibrationPointCount
+                    ? `Puntos: ${item.otherFields.calibrationPointCount}`
                     : ''
 
                 return (
                   <TableRow key={item.id}>
-                    <TableCell sx={{ minWidth: 160 }}>
-                      {item.itemName}
-                      {calibrationPointsInfo ? (
-                        <Typography
-                          variant='caption'
-                          color='text.secondary'
-                          display='block'
-                        >
-                          {calibrationPointsInfo}
-                        </Typography>
-                      ) : null}
+                    <TableCell sx={{ minWidth: 220 }}>
+                      <CalibrationServiceItemLabel
+                        number={itemNumbers.get(item.id)}
+                        name={item.itemName}
+                        detail={[getServiceItemDetail(item), points]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      />
                     </TableCell>
                     <TableCell align='right'>{effectiveQuantity}</TableCell>
                     <TableCell align='right' sx={{ minWidth: 100 }}>

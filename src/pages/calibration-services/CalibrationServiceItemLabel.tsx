@@ -26,7 +26,10 @@ export const getServiceItemDetail = (item: ServiceItem): string => {
   const instrument = item.instrumentName?.trim() || ''
   const repeatsName =
     instrument.toLowerCase() === (item.itemName || '').trim().toLowerCase()
+  const note = item.notes?.trim()
   return [
+    // La nota de la cotización va primero: suele ser lo único que cambia entre líneas iguales (sede, equipo).
+    note ? `Nota: ${note}` : '',
     repeatsName ? '' : instrument,
     range ? `Rango: ${range}` : '',
     item.intervalText?.trim()

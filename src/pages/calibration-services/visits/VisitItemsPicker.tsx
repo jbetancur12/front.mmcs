@@ -3,6 +3,10 @@ import { TextField, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { CalibrationService } from '../../../types/calibrationService'
 import { CalibrationVisit } from '../../../types/calibrationVisit'
+import {
+  buildServiceItemNumbers,
+  getServiceItemDetail
+} from '../CalibrationServiceItemLabel'
 import { getEffectiveServiceItemQuantity } from '../detail/calibrationServiceDetailUtils'
 import { neutral } from 'src/theme/designTokens'
 
@@ -21,8 +25,9 @@ export const buildPickerItems = (
   service: CalibrationService,
   visits: CalibrationVisit[] = [],
   currentVisitId?: number
-): VisitPickerItem[] =>
-  (service.items || []).map((item, index) => {
+): VisitPickerItem[] => {
+  const numbers = buildServiceItemNumbers(service.items)
+  return (service.items || []).map((item) => {
     const contracted = getEffectiveServiceItemQuantity(service, item)
     const taken = visits
       .filter((v) => v.status !== 'cancelled' && v.id !== currentVisitId)
@@ -37,19 +42,18 @@ export const buildPickerItems = (
       }, 0)
     return {
       id: item.id,
-      line: index + 1,
+      line: numbers.get(item.id) ?? 0,
       name: item.itemName,
-      detail: [item.instrumentName, item.intervalText]
-        .filter((text) => text && text !== item.itemName)
-        .join(' · '),
+      detail: getServiceItemDetail(item),
       contracted,
       pending: Math.max(contracted - taken, 0)
     }
   })
+}
 
 const describe = (item: VisitPickerItem) =>
   [
-    `Línea ${item.line}`,
+    `N.º ${item.line}`,
     item.detail,
     `pendientes ${item.pending} de ${item.contracted}`
   ]
@@ -152,7 +156,7 @@ const VisitItemsPicker = ({
                 {renderFields(item)}
                 <IconButton
                   size='small'
-                  aria-label={`Quitar línea ${item.line}`}
+                  aria-label={`Quitar el ítem ${item.line}`}
                   onClick={() => onRemove(item.id)}
                 >
                   <CloseIcon fontSize='small' />
