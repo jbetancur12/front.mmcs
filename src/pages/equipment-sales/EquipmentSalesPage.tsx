@@ -120,7 +120,8 @@ const EquipmentSalesPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [templateOpen, setTemplateOpen] = useState(false)
   const [templateTerms, setTemplateTerms] = useState<Record<string, string>>({})
-  const { data: templateData } = useEquipmentQuoteTermsTemplate()
+  // El API exige sales:config:manage para leerla: sin el permiso daba 403 en cada visita
+  const { data: templateData } = useEquipmentQuoteTermsTemplate(canConfig)
   const [createdByUserId, setCreatedByUserId] = useState<number | null>(null)
   const { data, isLoading } = useEquipmentQuotations({
     limit: 500,
