@@ -214,6 +214,16 @@ const CalibrationVisitCard = ({
         </Box>
       )}
 
+      {permissions.execute && scheduled && !finished && (
+        // A la vista: un botón deshabilitado no muestra su explicación, y en celular no hay cursor.
+        <Typography
+          variant='body2'
+          sx={{ mt: 1.5, color: intent.warningInk, fontWeight: 600 }}
+        >
+          {`Podrás registrar la ejecución desde el ${formatDay(visit.endDate, "d 'de' MMMM")}. Si la visita ya se hizo, pide a coordinación corregir la fecha.`}
+        </Typography>
+      )}
+
       {!cancelled && (
         <Stack
           direction='row'
