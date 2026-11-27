@@ -8,16 +8,20 @@ import {
   Container,
   Link,
   Stack,
+  Tab,
+  Tabs,
   Typography
 } from '@mui/material'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 import { PERMISSION_HELP } from 'src/constants/permissionHelp'
 import { useCan } from '@utils/functions'
+import { useFeature } from 'src/hooks/useFeatureFlags'
+import CalibrationFlowDiagram from './CalibrationFlowDiagram'
 import CalibrationBillingGuide from '../CalibrationBillingGuide'
 import {
   GUIDE_SECTIONS,
@@ -235,6 +239,10 @@ const CalibrationFlowGuidePage = () => {
   const navigate = useNavigate()
   const [active, setActive] = useState(GUIDE_SECTIONS[0].id)
   const navRef = useRef<HTMLElement | null>(null)
+  // El diagrama describe el flujo con visitas: solo aparece con esa función encendida.
+  const visitsOn = useFeature('calibration_visits')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const showDiagram = visitsOn && searchParams.get('vista') === 'diagrama'
 
   // El layout envuelve las páginas en contenedores con overflow (auto/hidden) que no son los que
   // se desplazan; atrapan el `sticky` del índice. Mientras la guía está abierta se pasan a `clip`,
@@ -256,7 +264,7 @@ const CalibrationFlowGuidePage = () => {
     }
     return () =>
       changed.forEach(([node, value]) => (node.style.overflow = value))
-  }, [])
+  }, [showDiagram])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -273,7 +281,7 @@ const CalibrationFlowGuidePage = () => {
       if (element) observer.observe(element)
     })
     return () => observer.disconnect()
-  }, [])
+  }, [showDiagram])
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -298,84 +306,103 @@ const CalibrationFlowGuidePage = () => {
         }
       />
 
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 3,
-          alignItems: 'start',
-          gridTemplateColumns: {
-            xs: 'minmax(0, 1fr)',
-            md: '240px minmax(0, 1fr)'
+      {visitsOn && (
+        <Tabs
+          value={showDiagram ? 'diagrama' : 'guia'}
+          onChange={(_, value: string) =>
+            setSearchParams(value === 'diagrama' ? { vista: value } : {}, {
+              replace: true
+            })
           }
-        }}
-      >
+          sx={{ mb: 3 }}
+        >
+          <Tab label='Guía paso a paso' value='guia' />
+          <Tab label='Diagrama de flujo' value='diagrama' />
+        </Tabs>
+      )}
+
+      {showDiagram ? (
+        <CalibrationFlowDiagram />
+      ) : (
         <Box
-          component='nav'
-          ref={navRef}
-          aria-label='Índice de la guía'
           sx={{
-            display: { xs: 'none', md: 'block' },
-            position: 'sticky',
-            top: 80,
-            p: 1.5,
-            border: `1px solid ${neutral.border}`,
-            borderRadius: '16px',
-            bgcolor: neutral.surface
+            display: 'grid',
+            gap: 3,
+            alignItems: 'start',
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr)',
+              md: '240px minmax(0, 1fr)'
+            }
           }}
         >
-          {GUIDE_SECTIONS.map((section, index) => (
-            <Link
-              key={section.id}
-              href={`#${section.id}`}
-              underline='none'
-              sx={{
-                display: 'block',
-                px: 1.5,
-                py: 0.75,
-                borderRadius: 2,
-                fontSize: 14,
-                color: active === section.id ? brand.ink : 'text.secondary',
-                fontWeight: active === section.id ? 700 : 500,
-                bgcolor: active === section.id ? brand.soft : 'transparent',
-                '&:hover': { bgcolor: neutral.surfaceHead }
-              }}
-            >
-              {index + 1}. {section.title}
-            </Link>
-          ))}
-        </Box>
-
-        <Stack spacing={3}>
-          {GUIDE_SECTIONS.map((section, index) => (
-            <SectionCard key={section.id} section={section} index={index} />
-          ))}
-
-          <Card
-            elevation={0}
+          <Box
+            component='nav'
+            ref={navRef}
+            aria-label='Índice de la guía'
             sx={{
-              p: { xs: 2, md: 3 },
+              display: { xs: 'none', md: 'block' },
+              position: 'sticky',
+              top: 80,
+              p: 1.5,
               border: `1px solid ${neutral.border}`,
-              borderRadius: '16px'
+              borderRadius: '16px',
+              bgcolor: neutral.surface
             }}
           >
-            <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
-              Si algo no sale como esperabas
-            </Typography>
-            <Stack spacing={1.5}>
-              {GUIDE_TROUBLESHOOTING.map((item) => (
-                <Box key={item.problem}>
-                  <Typography variant='subtitle2' fontWeight={700}>
-                    {item.problem}
-                  </Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    {item.answer}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </Card>
-        </Stack>
-      </Box>
+            {GUIDE_SECTIONS.map((section, index) => (
+              <Link
+                key={section.id}
+                href={`#${section.id}`}
+                underline='none'
+                sx={{
+                  display: 'block',
+                  px: 1.5,
+                  py: 0.75,
+                  borderRadius: 2,
+                  fontSize: 14,
+                  color: active === section.id ? brand.ink : 'text.secondary',
+                  fontWeight: active === section.id ? 700 : 500,
+                  bgcolor: active === section.id ? brand.soft : 'transparent',
+                  '&:hover': { bgcolor: neutral.surfaceHead }
+                }}
+              >
+                {index + 1}. {section.title}
+              </Link>
+            ))}
+          </Box>
+
+          <Stack spacing={3}>
+            {GUIDE_SECTIONS.map((section, index) => (
+              <SectionCard key={section.id} section={section} index={index} />
+            ))}
+
+            <Card
+              elevation={0}
+              sx={{
+                p: { xs: 2, md: 3 },
+                border: `1px solid ${neutral.border}`,
+                borderRadius: '16px'
+              }}
+            >
+              <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
+                Si algo no sale como esperabas
+              </Typography>
+              <Stack spacing={1.5}>
+                {GUIDE_TROUBLESHOOTING.map((item) => (
+                  <Box key={item.problem}>
+                    <Typography variant='subtitle2' fontWeight={700}>
+                      {item.problem}
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      {item.answer}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Card>
+          </Stack>
+        </Box>
+      )}
     </Container>
   )
 }

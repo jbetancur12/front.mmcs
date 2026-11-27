@@ -112,7 +112,17 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     path: '/calibration-services/guia',
     parents: ['Servicios de calibración'],
     permission: PERMISSIONS.CALIBRATION_SERVICE_VIEW,
-    keywords: ['ayuda', 'guia', 'manual', 'tutorial', 'como', 'flujo', 'pasos']
+    keywords: [
+      'ayuda',
+      'guia',
+      'manual',
+      'tutorial',
+      'como',
+      'flujo',
+      'pasos',
+      'diagrama',
+      'certificados'
+    ]
   },
   {
     label: 'Agenda',
