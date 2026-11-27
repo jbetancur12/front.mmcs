@@ -931,6 +931,8 @@ export interface CalibrationServicePhysicalTraceabilityPayload {
 
 export interface CalibrationServiceUpdateLogisticsControlPayload {
   serviceId: string
+  /** Crea otra visita de ingreso en vez de corregir la pendiente. No se guarda en la ficha. */
+  newBatch?: boolean
   intakeDate?: string | null
   deliveryDate?: string | null
   requesterCompanyName?: string | null

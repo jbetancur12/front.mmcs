@@ -1,4 +1,5 @@
 import SignalLoader from 'src/Components/Common/SignalLoader'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 import {
   Box,
   Button,
@@ -68,6 +69,7 @@ const CalibrationServiceDetailDialogsHost = ({
   canManageSequenceConfig,
   canResetSequence
 }: CalibrationServiceDetailDialogsHostProps) => {
+  const visitsOn = useFeature('calibration_visits')
   const {
     odsDialogInitialValues,
     scheduleDialogInitialValues,
@@ -269,6 +271,11 @@ const CalibrationServiceDetailDialogsHost = ({
           serviceId={String(service.id)}
           serviceCode={service.serviceCode}
           initialValues={logisticsControlInitialValues}
+          canStartNewBatch={
+            visitsOn &&
+            service.onSiteCalibration === false &&
+            Boolean(logisticsControlInitialValues.intakeDate)
+          }
           isLoading={isOperationalBusy}
           onClose={() => setIsLogisticsControlDialogOpen(false)}
           onSubmit={handleSaveLogisticsControl}

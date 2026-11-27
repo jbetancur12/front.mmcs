@@ -1,5 +1,6 @@
 import { getApiErrorReason } from 'src/utils/apiError'
 import CalibrationVisitsPanel from './visits/CalibrationVisitsPanel'
+import NewBatchField from './visits/NewBatchField'
 import CalibrationServiceItemLabel, {
   buildServiceItemNumbers,
   getServiceItemDetail
@@ -392,6 +393,7 @@ const MobilePage = () => {
 
   // Logistics fields
   const [logIntake, setLogIntake] = useState('')
+  const [logNewBatch, setLogNewBatch] = useState(false)
   const [logDelivery, setLogDelivery] = useState('')
   const [logCompany, setLogCompany] = useState('')
   const [logOffer, setLogOffer] = useState('')
@@ -1944,6 +1946,14 @@ const MobilePage = () => {
                         >
                           Fecha ingreso
                         </Typography>
+                        {visitsOn &&
+                          s?.onSiteCalibration === false &&
+                          controlSheet.intakeDate && (
+                            <NewBatchField
+                              checked={logNewBatch}
+                              onChange={setLogNewBatch}
+                            />
+                          )}
                         <TextField
                           fullWidth
                           size='small'
@@ -2681,6 +2691,7 @@ const MobilePage = () => {
                             `/calibration-services/${serviceId}/logistics-control`,
                             {
                               intakeDate: logIntake || null,
+                              newBatch: logNewBatch,
                               deliveryDate: logDelivery || null,
                               requesterCompanyName: logCompany || null,
                               requesterOfferNumber: logOffer || null,
@@ -2721,7 +2732,10 @@ const MobilePage = () => {
                           )
                         },
                         'Control guardado',
-                        () => setShowLogistics(false)
+                        () => {
+                          setShowLogistics(false)
+                          setLogNewBatch(false)
+                        }
                       )
                     }
                     disabled={actionLoading === 'log'}
