@@ -15,6 +15,7 @@ import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { brand, neutral, intent, withAlpha } from 'src/theme/designTokens'
+import { HolidayHat } from './HolidayDecorations'
 
 interface UserMenuProps {
   name: string
@@ -88,17 +89,20 @@ const UserMenu: React.FC<UserMenuProps> = ({
           }
         }}
       >
-        <Avatar
-          sx={{
-            width: 36,
-            height: 36,
-            bgcolor: accent,
-            fontSize: 14,
-            fontWeight: 700
-          }}
-        >
-          {initials(displayName)}
-        </Avatar>
+        <Box sx={{ position: 'relative', display: 'flex' }}>
+          <Avatar
+            sx={{
+              width: 36,
+              height: 36,
+              bgcolor: accent,
+              fontSize: 14,
+              fontWeight: 700
+            }}
+          >
+            {initials(displayName)}
+          </Avatar>
+          <HolidayHat />
+        </Box>
         <Box sx={{ display: { xs: 'none', md: 'block' }, minWidth: 0 }}>
           <Typography
             noWrap

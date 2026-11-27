@@ -23,6 +23,7 @@ import ActiveSessionsListDialog from './Authentication/ActiveSessionsListDialog'
 import useSessionGuard from 'src/hooks/useSessionGuard'
 import UserMenu from './Common/UserMenu'
 import BrandLogo from './Common/BrandLogo'
+import { HolidayBow } from './Common/HolidayDecorations'
 import useAxiosPrivate from '@utils/use-axios-private'
 import AlertsBell from './DataSheet/AlertsBell'
 import { useImpersonation } from '../hooks/useImpersonation'
@@ -136,6 +137,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
               to='/'
               aria-label='Ir al inicio'
               sx={{
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 borderRadius: '8px',
@@ -146,6 +148,7 @@ function Header({ toggleMobileMenu }: HeaderProps): React.ReactElement {
               }}
             >
               <BrandLogo />
+              <HolidayBow />
             </Box>
           </Box>
 
