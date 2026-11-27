@@ -77,6 +77,7 @@ import {
   EquipmentQuoteTermKey,
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import { logger } from 'src/utils/logger'
 import {
   brand,
@@ -777,10 +778,14 @@ const EquipmentSalesWorkspacePage = () => {
       navigate(`/equipment-sales/${savedQuotation.id}`)
     } catch (error) {
       logger.error(error)
+      // Con el motivo del API (p. ej. qué ítem se pasa de largo o de valor)
       toast.error(
-        isEditing
-          ? 'No pudimos actualizar la cotización.'
-          : 'No pudimos crear la cotización.'
+        getApiErrorMessage(
+          error,
+          isEditing
+            ? 'No pudimos actualizar la cotización.'
+            : 'No pudimos crear la cotización.'
+        )
       )
     }
   }
