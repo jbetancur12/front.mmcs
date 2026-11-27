@@ -71,6 +71,14 @@ export const FLOW_WORDS: [string, string][] = [
     'Visita',
     'Cada salida a calibrar, o cada grupo de equipos que llega al laboratorio, dentro de una ODS.'
   ],
+  [
+    'Fecha programada',
+    'El día en que se va a hacer una visita. Cada visita tiene la suya.'
+  ],
+  [
+    'Fecha compromiso',
+    'La fecha límite pactada para terminar de calibrar todos los equipos de la orden. Es una sola por orden. Si se acerca y faltan equipos, la plataforma avisa.'
+  ],
   ['Certificado', 'El PDF que demuestra que un equipo fue calibrado.'],
   [
     'Liberar',
