@@ -295,6 +295,8 @@ const DEFAULT_SLA_CONFIG: Required<
   reviewTargetBusinessDays: 3,
   adjustmentWarningBusinessDays: 1,
   adjustmentTargetBusinessDays: 1,
+  deliveryWarningBusinessDays: 0,
+  deliveryTargetBusinessDays: 1,
   nextVisitWarningBusinessDays: 3,
   nextVisitTargetBusinessDays: 5
 }

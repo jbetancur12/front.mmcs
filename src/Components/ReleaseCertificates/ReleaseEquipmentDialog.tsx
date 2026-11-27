@@ -31,6 +31,7 @@ import {
   ReleaseTarget
 } from './ReleaseCertificates.types'
 import { brand, neutral, intent } from 'src/theme/designTokens'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 
 interface ReleaseEquipmentDialogProps {
   certificateId: number | null
@@ -40,7 +41,9 @@ interface ReleaseEquipmentDialogProps {
   onClose: () => void
   onRelease: (
     target: ReleaseTarget | undefined,
-    saveEquivalence: boolean
+    saveEquivalence: boolean,
+    /** Solo con la entrega separada de la liberación. */
+    deliverToPlatform?: boolean
   ) => void
 }
 
@@ -173,6 +176,8 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
   onClose,
   onRelease
 }) => {
+  const visitsOn = useFeature('calibration_visits')
+  const [toPlatform, setToPlatform] = useState(true)
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const { data, isLoading } = useReleaseMatches(
@@ -292,7 +297,8 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
   }
 
   const confirm = () => {
-    if (confirmOnly) return onRelease(undefined, false)
+    const delivery = visitsOn ? toPlatform : undefined
+    if (confirmOnly) return onRelease(undefined, false, delivery)
     const target: ReleaseTarget = creating
       ? { mode: 'new', months, ...form }
       : {
@@ -301,7 +307,7 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
           months,
           updateSerie: Boolean(selected?.serieDiffers && updateSerie)
         }
-    onRelease(target, remember)
+    onRelease(target, remember, delivery)
   }
 
   const set =
@@ -599,6 +605,27 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
               />
             </Box>
           </>
+        )}
+        {visitsOn && (
+          <Box sx={{ mt: 2 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={toPlatform}
+                  onChange={(event) => setToPlatform(event.target.checked)}
+                />
+              }
+              label='Entregar al cliente por la plataforma'
+            />
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              display='block'
+            >
+              Desmárcalo si lo recibe por correo, WhatsApp o impreso: se guarda
+              en su equipo y la entrega se registra en Pendientes › Entregas.
+            </Typography>
+          </Box>
         )}
       </DialogContent>
       <DialogActions>

@@ -459,6 +459,7 @@ export interface CalibrationServiceReleaseCertificates {
     serie: string | null
     status: string
     cutId: number | null
+    deliveredAt?: string | null
     /** Con ajustes pedidos: lo que el laboratorio observó. */
     observation?: string | null
   }[]
@@ -744,6 +745,8 @@ export interface CalibrationServiceSlaConfig {
   reviewTargetBusinessDays: number
   adjustmentWarningBusinessDays: number
   adjustmentTargetBusinessDays: number
+  deliveryWarningBusinessDays: number
+  deliveryTargetBusinessDays: number
   nextVisitWarningBusinessDays: number
   nextVisitTargetBusinessDays: number
   updatedAt?: string | null

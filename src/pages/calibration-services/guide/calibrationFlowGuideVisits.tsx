@@ -327,8 +327,8 @@ const VISIT_SECTIONS: Record<string, Partial<GuideSection>> = {
         text: (
           <>
             Programar la primera visita 3 días desde la ODS; registrar la
-            ejecución el mismo día; cargar certificados 2; revisar y liberar 3;
-            corregir 1; programar la siguiente visita 5.
+            ejecución el mismo día; cargar certificados 2; revisar y firmar 3;
+            entregar 1; corregir 1; programar la siguiente visita 5.
           </>
         )
       }
@@ -357,8 +357,17 @@ const CERTIFICATES_SECTION: GuideSection = {
       no.
     </>,
     <>
-      <b>Liberar</b> lo guarda en el equipo del cliente y en su historial: desde
-      ahí el cliente lo ve.
+      <b>Liberar</b> lo guarda en el equipo del cliente y en su historial. Deja
+      marcada <b>Entregar por la plataforma</b>, o desmárcala si va por correo,
+      WhatsApp o impreso.
+    </>,
+    <>
+      Esas entregas se anotan en <b>Pendientes › Entregas</b>: medio,
+      destinatario y, si quieres, un soporte. La plataforma no envía correos.
+    </>,
+    <>
+      Un cliente de <b>contado</b> no recibe nada hasta que se registre el pago:
+      queda <b>Esperando pago</b>.
     </>
   ],
   variants: [
@@ -372,11 +381,12 @@ const CERTIFICATES_SECTION: GuideSection = {
       )
     },
     {
-      title: 'Liberar no es enviar',
+      title: 'Liberar y entregar',
       text: (
         <>
-          Marcarlo como enviado se hace en el control documental del corte.
-          Liberar no factura ni cierra la orden.
+          Liberar guarda el certificado; entregarlo es hacérselo llegar al
+          cliente. El control documental del corte toma los enviados de las
+          entregas. Nada de esto factura ni cierra la orden.
         </>
       )
     }

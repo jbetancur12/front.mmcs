@@ -5,6 +5,8 @@ import { notify } from '../utils/notify'
 import { CALIBRATION_SERVICE_QUERY_KEYS } from './useCalibrationServices'
 import {
   CalendarVisit,
+  DeliveryResult,
+  PendingDelivery,
   CalibrationVisitsResponse,
   ServiceProgressResponse,
   UploadLagResponse,
@@ -78,6 +80,50 @@ export const useVisitMutation = (serviceId: number) => {
       },
       onError: (error) => {
         notify.error(getApiErrorMessage(error, 'No se pudo guardar el cambio.'))
+      }
+    }
+  )
+}
+
+export const usePendingDeliveries = (enabled: boolean) =>
+  useQuery(
+    [...KEY, 'pending-deliveries'],
+    () =>
+      get<{ certificates: PendingDelivery[] }>(
+        '/release-certificates/deliveries/pending'
+      ),
+    { enabled }
+  )
+
+export const useRegisterDeliveries = () => {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (data: FormData) =>
+      (
+        await axiosPrivate.post<{ results: DeliveryResult[] }>(
+          '/release-certificates/deliveries',
+          data
+        )
+      ).data,
+    {
+      onSuccess: ({ results }) => {
+        const done = results.filter((r) => r.ok).length
+        const failed = results.filter((r) => !r.ok)
+        if (done)
+          notify.success(
+            done === 1 ? 'Entrega registrada' : `${done} entregas registradas`
+          )
+        if (failed.length)
+          notify.error(
+            `${failed.length} sin registrar. ${failed[0].documentNumber || ''}: ${failed[0].error}`
+          )
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+      },
+      onError: (error) => {
+        notify.error(
+          getApiErrorMessage(error, 'No se pudo registrar la entrega.')
+        )
       }
     }
   )

@@ -77,13 +77,15 @@ const CalibrationServiceCutDocumentControlDialog = ({
   )
   const platform = {
     total: platformItems.length,
-    released: platformItems.filter((item) => item.status === 'liberado').length
+    released: platformItems.filter((item) => item.status === 'liberado').length,
+    delivered: platformItems.filter((item) => item.deliveredAt).length
   }
   const withoutCut =
     cutCount > 1 ? allItems.filter((item) => item.cutId === null).length : 0
   const hasPlatform = platform.total > 0
   const canAutofill = hasPlatform
   const [manualCounts, setManualCounts] = useState(false)
+  const deliveriesOn = useFeature('calibration_visits')
   const autoCounts = canAutofill && !manualCounts
   const suggestedCertificates = useMemo(
     () =>
@@ -129,7 +131,13 @@ const CalibrationServiceCutDocumentControlDialog = ({
   const allReviewed =
     expectedCertificates > 0 && normalizedReviewed === expectedCertificates
   const pendingReview = Math.max(0, expectedCertificates - normalizedReviewed)
-  const normalizedSent = clampValue(sentCertificates, 0, normalizedReviewed)
+  // Con la entrega por certificado, los enviados son los entregados.
+  const autoSent = autoCounts && deliveriesOn
+  const normalizedSent = clampValue(
+    autoSent ? platform.delivered : sentCertificates,
+    0,
+    normalizedReviewed
+  )
 
   const nextStatus = useMemo(() => {
     if (expectedCertificates > 0 && normalizedSent === expectedCertificates) {
@@ -382,9 +390,14 @@ const CalibrationServiceCutDocumentControlDialog = ({
         <TextField
           label='Enviados'
           type='number'
-          value={sentCertificates}
+          value={autoSent ? normalizedSent : sentCertificates}
           onChange={numberField(setSentCertificates)}
-          helperText='No pueden superar los revisados.'
+          disabled={autoSent}
+          helperText={
+            autoSent
+              ? 'Entregados según cada certificado.'
+              : 'No pueden superar los revisados.'
+          }
         />
       </FormDialogSection>
 

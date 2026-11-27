@@ -18,6 +18,7 @@ import {
 import { intent, neutral } from 'src/theme/designTokens'
 import {
   CLOCK_META,
+  certificateStageLabel,
   VISIT_STATUS_LABEL,
   clockDetail,
   formatDay,
@@ -72,11 +73,7 @@ export const VisitCertificateList = ({
             size='small'
             variant='outlined'
             color={CLOCK_META[certificate.clock.state].color}
-            label={
-              certificate.clock.stage === 'released'
-                ? `Liberado ${formatDay(certificate.releasedAt)}`
-                : `${certificate.clock.stage === 'adjustment' ? 'Corrección' : 'Revisión'}: ${CLOCK_META[certificate.clock.state].label.toLowerCase()}`
-            }
+            label={certificateStageLabel(certificate)}
             title={clockDetail(certificate.clock)}
           />
         )}
@@ -196,7 +193,7 @@ const CalibrationVisitCard = ({
         <Box sx={{ mt: 1.5 }}>
           <Typography variant='body2' fontWeight={600}>
             {uploadSummary(visit)}
-            {` · ${visit.quantities.released} liberados`}
+            {` · ${visit.quantities.delivered} entregados`}
           </Typography>
           <LinearProgress
             variant='determinate'

@@ -1021,10 +1021,16 @@ const ReleaseDetailDialog: React.FC<ReleaseDetailDialogProps> = ({
         confirmOnly={false}
         releasing={review.isLoading}
         onClose={() => setReleasing(false)}
-        onRelease={(target, saveEquivalence) =>
+        onRelease={(target, saveEquivalence, deliverToPlatform) =>
           certificate &&
           run(
-            { type: 'release', id: certificate.id, target, saveEquivalence },
+            {
+              type: 'release',
+              id: certificate.id,
+              target,
+              saveEquivalence,
+              deliverToPlatform
+            },
             'Certificado liberado y sincronizado con el equipo del cliente',
             () => setReleasing(false)
           )
