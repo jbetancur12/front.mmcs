@@ -135,7 +135,7 @@ const CalibrationVisitCard = ({
   const [showCertificates, setShowCertificates] = useState(false)
   const cancelled = visit.status === 'cancelled'
   const scheduled = visit.status === 'scheduled'
-  const finished = visit.endDate <= todayKey()
+  const started = visit.startDate <= todayKey()
   const { uploaded, expectedCertificates } = visit.quantities
   const progress = expectedCertificates
     ? Math.min((uploaded / expectedCertificates) * 100, 100)
@@ -214,13 +214,13 @@ const CalibrationVisitCard = ({
         </Box>
       )}
 
-      {permissions.execute && scheduled && !finished && (
+      {permissions.execute && scheduled && !started && (
         // A la vista: un botón deshabilitado no muestra su explicación, y en celular no hay cursor.
         <Typography
           variant='body2'
           sx={{ mt: 1.5, color: intent.warningInk, fontWeight: 600 }}
         >
-          {`Podrás registrar la ejecución desde el ${formatDay(visit.endDate, "d 'de' MMMM")}. Si la visita ya se hizo, pide a coordinación corregir la fecha.`}
+          {`Podrás registrar la ejecución desde el ${formatDay(visit.startDate, "d 'de' MMMM")}. Si la visita ya se hizo, pide a coordinación corregir la fecha.`}
         </Typography>
       )}
 
@@ -235,9 +235,8 @@ const CalibrationVisitCard = ({
           {permissions.execute && (
             <Button
               size='small'
-              variant={scheduled && finished ? 'contained' : 'outlined'}
-              disabled={!finished}
-              title={finished ? undefined : 'La visita todavía no termina'}
+              variant={scheduled && started ? 'contained' : 'outlined'}
+              disabled={!started}
               onClick={onExecute}
             >
               {scheduled ? 'Registrar ejecución' : 'Corregir cantidades'}

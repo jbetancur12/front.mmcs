@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Alert, Stack, TextField } from '@mui/material'
+import {
+  Alert,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
+  Stack,
+  TextField
+} from '@mui/material'
 import FormDialog from '../../../Components/Common/FormDialog'
 import {
   useServiceVisits,
@@ -8,6 +17,7 @@ import {
 import { CalibrationService } from '../../../types/calibrationService'
 import { CalibrationVisit } from '../../../types/calibrationVisit'
 import VisitItemsPicker, { buildPickerItems } from './VisitItemsPicker'
+import { formatDay, todayKey } from './visitUtils'
 
 interface Props {
   service: CalibrationService
@@ -51,6 +61,7 @@ const buildRows = (visit: CalibrationVisit) =>
 const VisitExecutionDialog = ({ service, visit, onClose }: Props) => {
   const [rows, setRows] = useState<Record<number, Row>>({})
   const [reason, setReason] = useState('')
+  const [finished, setFinished] = useState('')
   const mutation = useVisitMutation(service.id)
   const { data: serviceVisits } = useServiceVisits(service.id, Boolean(visit))
 
@@ -58,12 +69,15 @@ const VisitExecutionDialog = ({ service, visit, onClose }: Props) => {
     if (visit) {
       setRows(buildRows(visit))
       setReason('')
+      setFinished('')
     }
   }, [visit])
 
   if (!visit) return null
 
   const correcting = visit.status === 'executed'
+  // Antes de la fecha final hay que confirmar que la visita ya terminó.
+  const beforeEnd = !correcting && visit.endDate > todayKey()
   const set = (itemId: number, patch: Partial<Row>) =>
     setRows((current) => ({
       ...current,
@@ -72,6 +86,7 @@ const VisitExecutionDialog = ({ service, visit, onClose }: Props) => {
 
   const filled = Object.entries(rows).filter(([, row]) => row.executed !== '')
   const invalid =
+    (beforeEnd && finished !== 'yes') ||
     !filled.length ||
     filled.some(([, row]) => {
       const without = Number(row.nonCertifiable) || 0
@@ -92,7 +107,8 @@ const VisitExecutionDialog = ({ service, visit, onClose }: Props) => {
             nonCertifiableQuantity: Number(row.nonCertifiable) || 0,
             note: row.note
           })),
-          ...(correcting ? { reason } : {})
+          ...(correcting ? { reason } : {}),
+          ...(beforeEnd ? { finished: true } : {})
         }
       },
       { onSuccess: onClose }
@@ -115,6 +131,37 @@ const VisitExecutionDialog = ({ service, visit, onClose }: Props) => {
           Escribe cuántos equipos calibraste. La visita queda completa cuando
           estén cargados los certificados de todos.
         </Alert>
+        {beforeEnd && (
+          <FormControl>
+            <FormLabel id='visit-finished'>
+              {`La visita está programada hasta el ${formatDay(visit.endDate, "d 'de' MMMM")}. ¿Ya terminó?`}
+            </FormLabel>
+            <RadioGroup
+              row
+              aria-labelledby='visit-finished'
+              value={finished}
+              onChange={(event) => setFinished(event.target.value)}
+            >
+              <FormControlLabel
+                value='yes'
+                control={<Radio />}
+                label='Sí, terminó'
+              />
+              <FormControlLabel value='no' control={<Radio />} label='No' />
+            </RadioGroup>
+          </FormControl>
+        )}
+        {finished === 'yes' && (
+          <Alert severity='warning'>
+            La fecha final pasa a hoy y desde hoy corre el plazo para cargar los
+            certificados.
+          </Alert>
+        )}
+        {finished === 'no' && (
+          <Alert severity='info'>
+            Registra la ejecución cuando termine la visita.
+          </Alert>
+        )}
         <VisitItemsPicker
           items={buildPickerItems(service, serviceVisits?.visits, visit.id)}
           selectedIds={Object.keys(rows).map(Number)}
