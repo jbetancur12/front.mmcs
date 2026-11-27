@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Alert, Autocomplete, MenuItem, TextField } from '@mui/material'
+import { Alert, Autocomplete, Box, MenuItem, TextField } from '@mui/material'
 import FormDialog, {
   FormDialogSection
 } from '../../../Components/Common/FormDialog'
 import { useCalibrationAssignableMetrologists } from '../../../hooks/useCalibrationServices'
-import { useVisitMutation } from '../../../hooks/useCalibrationVisits'
+import {
+  useServiceVisits,
+  useVisitMutation
+} from '../../../hooks/useCalibrationVisits'
 import { CalibrationService } from '../../../types/calibrationService'
 import { CalibrationVisit } from '../../../types/calibrationVisit'
 import { getOperationsSummary } from '../calibrationServiceOtherFields'
-import { getEffectiveServiceItemQuantity } from '../detail/calibrationServiceDetailUtils'
+import VisitItemsPicker, { buildPickerItems } from './VisitItemsPicker'
 import { todayKey } from './visitUtils'
 
 interface Props {
@@ -51,6 +54,17 @@ const VisitFormDialog = ({
   const [values, setValues] = useState(() => buildValues(visit, initialDate))
   const { data: metrologists = [] } = useCalibrationAssignableMetrologists(open)
   const mutation = useVisitMutation(service.id)
+  const { data: serviceVisits } = useServiceVisits(service.id, open)
+  const pickerItems = buildPickerItems(
+    service,
+    serviceVisits?.visits,
+    visit?.id
+  )
+  const selectedIds = Object.keys(values.quantities).map(Number)
+  const plannedTotal = Object.values(values.quantities).reduce(
+    (sum, quantity) => sum + (Number(quantity) || 0),
+    0
+  )
 
   useEffect(() => {
     if (open) setValues(buildValues(visit, initialDate))
@@ -206,29 +220,56 @@ const VisitFormDialog = ({
       </FormDialogSection>
 
       {!executed && (
-        <FormDialogSection title='Equipos planeados (opcional)'>
-          {(service.items || []).map((item) => {
-            const max = getEffectiveServiceItemQuantity(service, item)
-            return (
-              <TextField
-                key={item.id}
-                type='number'
-                label={item.itemName}
-                value={values.quantities[item.id] ?? ''}
-                inputProps={{ min: 0, max }}
-                error={Number(values.quantities[item.id]) > max}
-                helperText={`Contratados: ${max}`}
-                onChange={(event) =>
-                  set({
-                    quantities: {
-                      ...values.quantities,
-                      [item.id]: event.target.value
+        <FormDialogSection
+          title={
+            plannedTotal
+              ? `Equipos planeados: ${plannedTotal}`
+              : 'Equipos planeados (opcional)'
+          }
+        >
+          <Box sx={FULL_ROW}>
+            <VisitItemsPicker
+              items={pickerItems}
+              selectedIds={selectedIds}
+              onAdd={(added) =>
+                set({
+                  quantities: {
+                    ...values.quantities,
+                    ...Object.fromEntries(
+                      added.map((i) => [i.id, String(i.pending || '')])
+                    )
+                  }
+                })
+              }
+              onRemove={(itemId) => {
+                const quantities = { ...values.quantities }
+                delete quantities[itemId]
+                set({ quantities })
+              }}
+              renderFields={(item) => {
+                const value = values.quantities[item.id] ?? ''
+                return (
+                  <TextField
+                    type='number'
+                    size='small'
+                    label='Cantidad'
+                    value={value}
+                    inputProps={{ min: 0, max: item.contracted }}
+                    error={Number(value) > item.contracted}
+                    onChange={(event) =>
+                      set({
+                        quantities: {
+                          ...values.quantities,
+                          [item.id]: event.target.value
+                        }
+                      })
                     }
-                  })
-                }
-              />
-            )
-          })}
+                    sx={{ width: 110 }}
+                  />
+                )
+              }}
+            />
+          </Box>
         </FormDialogSection>
       )}
 

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Alert, Box, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Stack, TextField } from '@mui/material'
 import FormDialog from '../../../Components/Common/FormDialog'
-import { useVisitMutation } from '../../../hooks/useCalibrationVisits'
+import {
+  useServiceVisits,
+  useVisitMutation
+} from '../../../hooks/useCalibrationVisits'
 import { CalibrationService } from '../../../types/calibrationService'
 import { CalibrationVisit } from '../../../types/calibrationVisit'
-import { neutral } from 'src/theme/designTokens'
+import VisitItemsPicker, { buildPickerItems } from './VisitItemsPicker'
 
 interface Props {
   service: CalibrationService
@@ -18,23 +21,28 @@ interface Row {
   note: string
 }
 
-const buildRows = (service: CalibrationService, visit: CalibrationVisit) =>
+const EMPTY_ROW: Row = { executed: '', nonCertifiable: '', note: '' }
+
+// Arranca solo con lo planeado (o lo ya registrado, al corregir); lo demás se busca y se agrega.
+const buildRows = (visit: CalibrationVisit) =>
   Object.fromEntries(
-    (service.items || []).map((item) => {
-      const saved = visit.items.find((i) => i.itemId === item.id)
+    visit.items.flatMap((saved) => {
       const executed =
         visit.status === 'executed'
-          ? saved?.executedQuantity
-          : saved?.plannedQuantity
+          ? saved.executedQuantity
+          : saved.plannedQuantity
+      if (!executed) return []
       return [
-        item.id,
-        {
-          executed: executed ? String(executed) : '',
-          nonCertifiable: saved?.nonCertifiableQuantity
-            ? String(saved.nonCertifiableQuantity)
-            : '',
-          note: saved?.note || ''
-        }
+        [
+          saved.itemId,
+          {
+            executed: String(executed),
+            nonCertifiable: saved.nonCertifiableQuantity
+              ? String(saved.nonCertifiableQuantity)
+              : '',
+            note: saved.note || ''
+          }
+        ]
       ]
     })
   ) as Record<number, Row>
@@ -44,13 +52,14 @@ const VisitExecutionDialog = ({ service, visit, onClose }: Props) => {
   const [rows, setRows] = useState<Record<number, Row>>({})
   const [reason, setReason] = useState('')
   const mutation = useVisitMutation(service.id)
+  const { data: serviceVisits } = useServiceVisits(service.id, Boolean(visit))
 
   useEffect(() => {
     if (visit) {
-      setRows(buildRows(service, visit))
+      setRows(buildRows(visit))
       setReason('')
     }
-  }, [service, visit])
+  }, [visit])
 
   if (!visit) return null
 
@@ -106,63 +115,66 @@ const VisitExecutionDialog = ({ service, visit, onClose }: Props) => {
           Escribe cuántos equipos calibraste. La visita queda completa cuando
           estén cargados los certificados de todos.
         </Alert>
-        {(service.items || []).map((item) => {
-          const row = rows[item.id]
-          if (!row) return null
-          const without = Number(row.nonCertifiable) || 0
-          return (
-            <Box
-              key={item.id}
-              sx={{
-                border: `1px solid ${neutral.border}`,
-                borderRadius: 2,
-                p: 1.5
-              }}
-            >
-              <Typography fontWeight={600} sx={{ mb: 1 }}>
-                {item.itemName}
-              </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                <TextField
-                  type='number'
-                  size='small'
-                  label='Calibrados'
-                  value={row.executed}
-                  inputProps={{ min: 0 }}
-                  onChange={(event) =>
-                    set(item.id, { executed: event.target.value })
-                  }
-                  fullWidth
-                />
-                <TextField
-                  type='number'
-                  size='small'
-                  label='Sin certificado'
-                  value={row.nonCertifiable}
-                  inputProps={{ min: 0 }}
-                  error={without > Number(row.executed || 0)}
-                  onChange={(event) =>
-                    set(item.id, { nonCertifiable: event.target.value })
-                  }
-                  fullWidth
-                />
+        <VisitItemsPicker
+          items={buildPickerItems(service, serviceVisits?.visits, visit.id)}
+          selectedIds={Object.keys(rows).map(Number)}
+          onAdd={(added) =>
+            setRows((current) => ({
+              ...Object.fromEntries(added.map((i) => [i.id, EMPTY_ROW])),
+              ...current
+            }))
+          }
+          onRemove={(itemId) =>
+            setRows((current) => {
+              const next = { ...current }
+              delete next[itemId]
+              return next
+            })
+          }
+          renderFields={(item) => {
+            const row = rows[item.id]
+            if (!row) return null
+            const without = Number(row.nonCertifiable) || 0
+            return (
+              <Stack spacing={1} sx={{ width: { sm: 260 } }}>
+                <Stack direction='row' spacing={1}>
+                  <TextField
+                    type='number'
+                    size='small'
+                    label='Calibrados'
+                    value={row.executed}
+                    inputProps={{ min: 0 }}
+                    onChange={(event) =>
+                      set(item.id, { executed: event.target.value })
+                    }
+                  />
+                  <TextField
+                    type='number'
+                    size='small'
+                    label='Sin certificado'
+                    value={row.nonCertifiable}
+                    inputProps={{ min: 0 }}
+                    error={without > Number(row.executed || 0)}
+                    onChange={(event) =>
+                      set(item.id, { nonCertifiable: event.target.value })
+                    }
+                  />
+                </Stack>
+                {without > 0 && (
+                  <TextField
+                    size='small'
+                    label='¿Por qué no llevan certificado?'
+                    value={row.note}
+                    onChange={(event) =>
+                      set(item.id, { note: event.target.value })
+                    }
+                    required
+                  />
+                )}
               </Stack>
-              {without > 0 && (
-                <TextField
-                  size='small'
-                  label='¿Por qué no llevan certificado?'
-                  value={row.note}
-                  onChange={(event) =>
-                    set(item.id, { note: event.target.value })
-                  }
-                  required
-                  fullWidth
-                  sx={{ mt: 1.5 }}
-                />
-              )}
-            </Box>
-          )
-        })}
+            )
+          }}
+        />
         {correcting && (
           <TextField
             label='Motivo de la corrección'
