@@ -257,8 +257,12 @@ const LmsUserManagement: React.FC = () => {
           variables.active ? 'Usuario activado' : 'Usuario desactivado'
         )
       },
-      onError: () => {
-        notify.error('No se pudo actualizar el estado del usuario')
+      onError: (error: unknown) => {
+        // Con el motivo del API, p. ej. que tiene servicios de calibración abiertos
+        notify.error(
+          getApiErrorReason(error) ||
+            'No se pudo actualizar el estado del usuario'
+        )
       }
     }
   )

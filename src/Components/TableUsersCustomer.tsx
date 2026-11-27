@@ -7,6 +7,7 @@ import {
   PersonOutline,
   VpnKey
 } from '@mui/icons-material'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import {
   Avatar,
   Box,
@@ -205,7 +206,7 @@ const Table: React.FC = () => {
       }
     } catch (error) {
       logger.error('Error de red:', error)
-      notify.error('Error al modificar usuario')
+      notify.error(getApiErrorMessage(error, 'Error al modificar usuario.'))
     }
   }
 
@@ -220,7 +221,7 @@ const Table: React.FC = () => {
       }
     } catch (error) {
       logger.error('Error de red:', error)
-      notify.error('Error al eliminar usuario')
+      notify.error(getApiErrorMessage(error, 'Error al eliminar usuario.'))
     } finally {
       setDeleteTarget(null)
     }

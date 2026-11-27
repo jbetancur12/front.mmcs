@@ -1,4 +1,5 @@
 import { Delete, Edit } from '@mui/icons-material'
+import { getApiErrorMessage } from 'src/utils/apiError'
 import { confirmDialog } from 'src/utils/confirm'
 import {
   Box,
@@ -135,6 +136,10 @@ const Table: React.FC = () => {
           }
         } catch (error) {
           logger.error('Error de red:', error)
+          toast.error(
+            getApiErrorMessage(error, 'No se pudo modificar el usuario.'),
+            { duration: 8000, position: 'top-center' }
+          )
         }
 
         exitEditingMode() //required to exit editing mode and close modal
@@ -160,6 +165,10 @@ const Table: React.FC = () => {
         }
       } catch (error) {
         logger.error('Error de red:', error)
+        toast.error(
+          getApiErrorMessage(error, 'No se pudo eliminar el usuario.'),
+          { duration: 8000, position: 'top-center' }
+        )
       }
     },
     [deleteUserAsync]
