@@ -4,8 +4,19 @@ import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import { useFeature } from 'src/hooks/useFeatureFlags'
 import { canSeeNewLogo } from 'src/utils/newLogo'
+import logoClaro from 'src/assets/logo-nuevo/logo-claro.png'
+import logoOscuro from 'src/assets/logo-nuevo/logo-oscuro.png'
+import simboloClaro from 'src/assets/logo-nuevo/simbolo-claro.svg'
+import simboloOscuro from 'src/assets/logo-nuevo/simbolo-oscuro.svg'
+import favicon from 'src/assets/logo-nuevo/favicon.svg'
 
-const NEW_LOGO_PATH = '/images/logo-nuevo'
+// Importados (no en public/) para que cada versión publicada tenga un nombre
+// distinto y ningún navegador muestre una imagen guardada.
+const LOGOS = {
+  claro: { completo: logoClaro, simbolo: simboloClaro },
+  oscuro: { completo: logoOscuro, simbolo: simboloOscuro }
+}
+
 const NARROW = '(max-width: 439.95px)'
 
 /** Cambia el ícono de la pestaña y lo restaura al salir. */
@@ -14,7 +25,7 @@ const useNewFavicon = (enabled: boolean) => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
     if (!enabled || !link) return
     const previous = link.getAttribute('href') ?? ''
-    link.setAttribute('href', `${NEW_LOGO_PATH}/favicon.svg`)
+    link.setAttribute('href', favicon)
     return () => link.setAttribute('href', previous)
   }, [enabled])
 }
@@ -26,14 +37,14 @@ const useNewFavicon = (enabled: boolean) => {
 function ThemedLogo({ dark }: { dark: boolean }): React.ReactElement {
   const display = dark ? 'none' : 'block'
   const darkDisplay = dark ? 'block' : 'none'
-  const file = dark ? 'oscuro' : 'claro'
+  const logo = LOGOS[dark ? 'oscuro' : 'claro']
 
   return (
     <picture>
-      <source media={NARROW} srcSet={`${NEW_LOGO_PATH}/simbolo-${file}.svg`} />
+      <source media={NARROW} srcSet={logo.simbolo} />
       <Box
         component='img'
-        src={`${NEW_LOGO_PATH}/logo-${file}.png`}
+        src={logo.completo}
         alt='Metromedics'
         sx={{
           height: { xs: 26, md: 28 },
