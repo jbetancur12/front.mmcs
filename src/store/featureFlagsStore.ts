@@ -7,6 +7,7 @@ import { map } from 'nanostores'
  */
 export type FeatureFlagKey =
   | 'release_certificates'
+  | 'calibration_visits'
   | 'certificate_calculation'
   | 'management_report'
   | 'maintenance_ticket_emails'
@@ -17,6 +18,7 @@ export type FeatureFlagKey =
 
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlagKey, boolean> = {
   release_certificates: false,
+  calibration_visits: false,
   certificate_calculation: false,
   management_report: false,
   maintenance_ticket_emails: false,

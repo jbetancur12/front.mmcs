@@ -1,4 +1,5 @@
 import { PERMISSIONS, PermissionKey } from './permissions'
+import type { FeatureFlagKey } from '../store/featureFlagsStore'
 
 /**
  * Pantallas con ruta propia que no tienen ítem en el menú lateral y que la
@@ -14,6 +15,8 @@ export interface QuickSearchPage {
   permission: PermissionKey | readonly PermissionKey[]
   /** Módulo licenciado; por defecto 'Basic'. */
   moduleName?: string
+  /** Función en construcción: solo aparece con su interruptor encendido. */
+  feature?: FeatureFlagKey
   /** Palabras extra que también deben encontrarla (sinónimos, sin tildes). */
   keywords?: string[]
 }
@@ -117,6 +120,14 @@ export const QUICK_SEARCH_PAGES: QuickSearchPage[] = [
     parents: ['Servicios de calibración'],
     permission: PERMISSIONS.CALIBRATION_SERVICE_VIEW,
     keywords: ['calendario', 'programacion', 'cronograma']
+  },
+  {
+    label: 'Pendientes de certificados',
+    path: '/calibration-services/pendientes',
+    parents: ['Servicios de calibración'],
+    permission: PERMISSIONS.CALIBRATION_SERVICE_VIEW,
+    feature: 'calibration_visits',
+    keywords: ['atrasos', 'vencidos', 'visitas', 'certificados', 'plazos']
   },
   {
     label: 'Clientes',

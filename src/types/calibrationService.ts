@@ -736,6 +736,12 @@ export interface CalibrationServiceSlaConfig {
   documentControlTargetBusinessDays: number
   finalCloseWarningBusinessDays: number
   finalCloseTargetBusinessDays: number
+  uploadWarningBusinessDays: number
+  uploadTargetBusinessDays: number
+  reviewWarningBusinessDays: number
+  reviewTargetBusinessDays: number
+  adjustmentWarningBusinessDays: number
+  adjustmentTargetBusinessDays: number
   updatedAt?: string | null
   updatedByName?: string | null
 }

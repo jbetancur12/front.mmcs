@@ -19,6 +19,7 @@ import {
 } from '../../types/calibrationService'
 import { brand, intent } from 'src/theme/designTokens'
 
+import { useFeature } from 'src/hooks/useFeatureFlags'
 type SlaConfigKey = keyof CalibrationServiceSlaConfigPayload
 
 interface SlaPhaseRow {
@@ -48,7 +49,13 @@ const DEFAULT_SLA_CONFIG: CalibrationServiceSlaConfigPayload = {
   documentControlWarningBusinessDays: 2,
   documentControlTargetBusinessDays: 3,
   finalCloseWarningBusinessDays: 1,
-  finalCloseTargetBusinessDays: 2
+  finalCloseTargetBusinessDays: 2,
+  uploadWarningBusinessDays: 1,
+  uploadTargetBusinessDays: 2,
+  reviewWarningBusinessDays: 2,
+  reviewTargetBusinessDays: 3,
+  adjustmentWarningBusinessDays: 1,
+  adjustmentTargetBusinessDays: 1
 }
 
 const slaPhaseRows: SlaPhaseRow[] = [
@@ -90,6 +97,27 @@ const slaPhaseRows: SlaPhaseRow[] = [
   }
 ]
 
+const certificateRows: SlaPhaseRow[] = [
+  {
+    label: 'Carga de certificados',
+    startsAt: 'Fin de la visita',
+    warningKey: 'uploadWarningBusinessDays',
+    targetKey: 'uploadTargetBusinessDays'
+  },
+  {
+    label: 'Revisión y liberación',
+    startsAt: 'Carga del certificado',
+    warningKey: 'reviewWarningBusinessDays',
+    targetKey: 'reviewTargetBusinessDays'
+  },
+  {
+    label: 'Corrección de un certificado',
+    startsAt: 'Devolución',
+    warningKey: 'adjustmentWarningBusinessDays',
+    targetKey: 'adjustmentTargetBusinessDays'
+  }
+]
+
 const normalizeValue = (value: unknown, fallback: number) => {
   const parsedValue = Number(value)
   return Number.isFinite(parsedValue)
@@ -100,7 +128,10 @@ const normalizeValue = (value: unknown, fallback: number) => {
 const buildInitialValues = (
   config?: CalibrationServiceSlaConfig
 ): CalibrationServiceSlaConfigPayload =>
-  slaPhaseRows.reduce<CalibrationServiceSlaConfigPayload>(
+  [
+    ...slaPhaseRows,
+    ...certificateRows
+  ].reduce<CalibrationServiceSlaConfigPayload>(
     (accumulator, row) => ({
       ...accumulator,
       [row.warningKey]: normalizeValue(
@@ -137,9 +168,15 @@ const CalibrationServiceSlaConfigDialog = ({
     setValues(buildInitialValues(config))
   }, [config, open])
 
+  const visitsOn = useFeature('calibration_visits')
+  const rows = useMemo(
+    () => (visitsOn ? [...slaPhaseRows, ...certificateRows] : slaPhaseRows),
+    [visitsOn]
+  )
+
   const hasInvalidValues = useMemo(
     () =>
-      slaPhaseRows.some((row) => {
+      rows.some((row) => {
         const warning = Number(values[row.warningKey])
         const target = Number(values[row.targetKey])
 
@@ -150,7 +187,7 @@ const CalibrationServiceSlaConfigDialog = ({
           warning > target
         )
       }),
-    [values]
+    [rows, values]
   )
 
   const updateValue = (key: SlaConfigKey, value: string) => {
@@ -230,7 +267,7 @@ const CalibrationServiceSlaConfigDialog = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {slaPhaseRows.map((row) => {
+              {rows.map((row) => {
                 const warning = Number(values[row.warningKey])
                 const target = Number(values[row.targetKey])
                 const warningInvalid = warning > target

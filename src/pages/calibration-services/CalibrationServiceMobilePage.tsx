@@ -1,4 +1,6 @@
 import { getApiErrorReason } from 'src/utils/apiError'
+import CalibrationVisitsPanel from './visits/CalibrationVisitsPanel'
+import { useFeature } from 'src/hooks/useFeatureFlags'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -593,6 +595,7 @@ const MobilePage = () => {
     setSaving(false)
   }
 
+  const visitsOn = useFeature('calibration_visits')
   type MobileTab = 'work' | 'intake' | 'issues' | 'close'
   const [tab, setTab] = useState<MobileTab>('work')
   const [openNotes, setOpenNotes] = useState<Record<number, boolean>>({})
@@ -793,6 +796,9 @@ const MobilePage = () => {
             {/* ===== TRABAJO ===== */}
             {tab === 'work' && (
               <Stack spacing={2}>
+                {visitsOn && s.odsCode ? (
+                  <CalibrationVisitsPanel service={s} />
+                ) : null}
                 {/* Paso principal */}
                 {paused && (
                   <Card

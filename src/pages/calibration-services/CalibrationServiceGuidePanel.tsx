@@ -288,7 +288,13 @@ const DEFAULT_SLA_CONFIG: Required<
   documentControlWarningBusinessDays: 2,
   documentControlTargetBusinessDays: 3,
   finalCloseWarningBusinessDays: 1,
-  finalCloseTargetBusinessDays: 2
+  finalCloseTargetBusinessDays: 2,
+  uploadWarningBusinessDays: 1,
+  uploadTargetBusinessDays: 2,
+  reviewWarningBusinessDays: 2,
+  reviewTargetBusinessDays: 3,
+  adjustmentWarningBusinessDays: 1,
+  adjustmentTargetBusinessDays: 1
 }
 
 const formatBusinessDays = (value: number) =>
