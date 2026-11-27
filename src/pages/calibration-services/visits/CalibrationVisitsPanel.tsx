@@ -18,12 +18,14 @@ import {
   ServiceProgressResponse
 } from '../../../types/calibrationVisit'
 import { neutral } from 'src/theme/designTokens'
+import { formatDay } from './visitUtils'
 import CalibrationVisitCard, {
   VisitCertificateList
 } from './CalibrationVisitCard'
 import VisitFormDialog from './VisitFormDialog'
 import VisitExecutionDialog from './VisitExecutionDialog'
 import {
+  CommitmentDateDialog,
   ServiceDeadlinesDialog,
   VisitReasonAction,
   VisitReasonDialog
@@ -92,6 +94,7 @@ const CalibrationVisitsPanel = ({
     null
   )
   const [deadlinesOpen, setDeadlinesOpen] = useState(false)
+  const [commitmentOpen, setCommitmentOpen] = useState(false)
 
   if (isLoading) return <SignalLoader />
   if (isError || !data)
@@ -134,6 +137,26 @@ const CalibrationVisitsPanel = ({
   return (
     <Stack spacing={2}>
       {progress && <ProgressStrip progress={progress} />}
+
+      <Stack
+        direction='row'
+        spacing={1}
+        alignItems='center'
+        flexWrap='wrap'
+        useFlexGap
+      >
+        <Typography variant='body2'>
+          <b>Fecha compromiso:</b>{' '}
+          {data.commitmentDate
+            ? formatDay(data.commitmentDate, "d 'de' MMMM yyyy")
+            : 'Sin definir'}
+        </Typography>
+        {permissions.reschedule && open && !service.isPaused && (
+          <Button size='small' onClick={() => setCommitmentOpen(true)}>
+            {data.commitmentDate ? 'Cambiar' : 'Definir'}
+          </Button>
+        )}
+      </Stack>
 
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -214,6 +237,12 @@ const CalibrationVisitsPanel = ({
         serviceId={service.id}
         action={reasonAction}
         onClose={() => setReasonAction(null)}
+      />
+      <CommitmentDateDialog
+        serviceId={service.id}
+        open={commitmentOpen}
+        current={data.commitmentDate}
+        onClose={() => setCommitmentOpen(false)}
       />
       <ServiceDeadlinesDialog
         serviceId={service.id}

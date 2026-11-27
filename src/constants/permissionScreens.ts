@@ -1070,6 +1070,7 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   'system:feature_flags:manage': [
     { path: "/settings/features", label: "Ajustes › Funciones", kind: 'screen' },
     { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
+    { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'related' },
     { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' },
     { path: "/calibration-services/pendientes", label: "Servicios de calibración › pendientes", kind: 'related' },
     { path: "/calibration-services/schedule", label: "Servicios de calibración › Programación", kind: 'related' },

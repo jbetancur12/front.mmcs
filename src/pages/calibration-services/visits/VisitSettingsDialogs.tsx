@@ -166,3 +166,69 @@ export const ServiceDeadlinesDialog = ({
     </FormDialog>
   )
 }
+
+/** Cambiar la fecha límite pactada de la orden, con su motivo. */
+export const CommitmentDateDialog = ({
+  serviceId,
+  open,
+  current,
+  onClose
+}: {
+  serviceId: number
+  open: boolean
+  current: string | null
+  onClose: () => void
+}) => {
+  const [date, setDate] = useState('')
+  const [reason, setReason] = useState('')
+  const mutation = useVisitMutation(serviceId)
+
+  useEffect(() => {
+    if (open) {
+      setDate(current || '')
+      setReason('')
+    }
+  }, [open, current])
+
+  return (
+    <FormDialog
+      open={open}
+      onClose={mutation.isLoading ? () => undefined : onClose}
+      title='Cambiar fecha compromiso'
+      subtitle='Fecha límite pactada para calibrar todos los equipos de la orden'
+      submitLabel='Guardar fecha'
+      onSubmit={() =>
+        mutation.mutate(
+          {
+            method: 'put',
+            path: 'commitment-date',
+            success: 'Fecha compromiso actualizada',
+            body: { commitmentDate: date, reason }
+          },
+          { onSuccess: onClose }
+        )
+      }
+      loading={mutation.isLoading}
+      submitDisabled={!date || date === current || !reason.trim()}
+    >
+      <Stack spacing={2} sx={{ pt: 1 }}>
+        <TextField
+          type='date'
+          label='Nueva fecha compromiso'
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+          InputLabelProps={{ shrink: true }}
+          required
+        />
+        <TextField
+          label='Motivo'
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          required
+          multiline
+          minRows={2}
+        />
+      </Stack>
+    </FormDialog>
+  )
+}

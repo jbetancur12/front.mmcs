@@ -88,6 +88,7 @@ export interface CalibrationVisit {
 export interface CalibrationVisitsResponse {
   visits: CalibrationVisit[]
   certificatesWithoutVisit: VisitCertificate[]
+  commitmentDate: string | null
   deadlines: {
     general: CertificateDeadlines
     service: Partial<CertificateDeadlines>
