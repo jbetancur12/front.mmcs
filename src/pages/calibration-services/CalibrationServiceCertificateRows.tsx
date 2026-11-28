@@ -13,6 +13,9 @@ import { CALIBRATION_SERVICE_QUERY_KEYS } from 'src/hooks/useCalibrationServices
 import { getApiErrorReason } from 'src/utils/apiError'
 import { notify } from 'src/utils/notify'
 import { useCan } from 'src/utils/functions'
+import { useFeature } from 'src/hooks/useFeatureFlags'
+import { DELIVERY_METHOD_LABELS } from './visits/visitUtils'
+import { formatDeliveryDay } from './visits/cutDeliveries'
 import { CalibrationServiceReleaseCertificates } from '../../types/calibrationService'
 
 type Item = CalibrationServiceReleaseCertificates['items'][number]
@@ -56,6 +59,7 @@ const CalibrationServiceCertificateRows = ({
   items,
   onChanged
 }: CertificateRowsProps) => {
+  const deliveriesOn = useFeature('calibration_visits')
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   const review = useReleaseReview()
@@ -201,6 +205,21 @@ const CalibrationServiceCertificateRows = ({
                 </Typography>
                 <ReleaseStatusPill status={item.status as ReleaseStatus} />
               </Box>
+              {deliveriesOn && item.status === 'liberado' && (
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  display='block'
+                >
+                  {item.deliveredAt
+                    ? `Entregado el ${formatDeliveryDay(item.deliveredAt)}${
+                        item.deliveryMethod
+                          ? ` · ${DELIVERY_METHOD_LABELS[item.deliveryMethod]}`
+                          : ''
+                      }`
+                    : 'Por entregar'}
+                </Typography>
+              )}
               {item.observation && (
                 <Typography
                   variant='caption'

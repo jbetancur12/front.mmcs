@@ -315,6 +315,9 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
     (event: React.ChangeEvent<HTMLInputElement>) =>
       setForm((current) => ({ ...current, [key]: event.target.value }))
 
+  // Cliente de contado sin pago: no se puede liberar; se dice antes de llenar nada.
+  const paymentBlock = data?.paymentBlock ?? null
+
   const pdfSerie = data?.prefill.serie ?? ''
   const sameType = data?.sameType ?? []
 
@@ -337,6 +340,16 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
           <SignalLoader message='Buscando el equipo del cliente' />
         ) : (
           <>
+            {paymentBlock && (
+              <Alert severity='warning' sx={{ mb: 2 }}>
+                <Typography variant='body2' fontWeight={600}>
+                  Todavía no se puede liberar
+                </Typography>
+                <Typography variant='body2'>
+                  {paymentBlock} Se registra en la pestaña Cortes de la orden.
+                </Typography>
+              </Alert>
+            )}
             {data.prefill.copiedFrom && (
               <Alert severity='info' sx={{ mb: 2 }}>
                 Este equipo ya tiene un registro de «
@@ -634,7 +647,10 @@ const ReleaseEquipmentDialog: React.FC<ReleaseEquipmentDialogProps> = ({
         </Button>
         <Button
           variant='contained'
-          disabled={releasing || (!confirmOnly && (isLoading || missing))}
+          disabled={
+            releasing ||
+            (!confirmOnly && (isLoading || missing || Boolean(paymentBlock)))
+          }
           onClick={confirm}
           sx={{ bgcolor: brand.main, '&:hover': { bgcolor: brand.hover } }}
         >

@@ -460,6 +460,8 @@ export interface CalibrationServiceReleaseCertificates {
     status: string
     cutId: number | null
     deliveredAt?: string | null
+    deliveryMethod?: 'plataforma' | 'correo' | 'whatsapp' | 'impreso' | null
+    deliveryRecipient?: string | null
     /** Con ajustes pedidos: lo que el laboratorio observó. */
     observation?: string | null
   }[]
