@@ -7,11 +7,13 @@ export type VisitClockState =
   | 'paused'
   | 'done_on_time'
   | 'done_late'
+  | 'waiting_payment'
 
 export interface VisitClock {
   startDate: string
-  dueDate: string
-  warningDate: string
+  /** Nulos solo mientras se espera el pago. */
+  dueDate: string | null
+  warningDate: string | null
   completedOn: string | null
   state: VisitClockState
   lateBusinessDays: number
@@ -31,6 +33,38 @@ export interface VisitItem {
   note?: string | null
 }
 
+export type CertificateStage =
+  | 'review'
+  | 'adjustment'
+  | 'payment'
+  | 'delivery'
+  | 'delivered'
+
+export type DeliveryMethod = 'plataforma' | 'correo' | 'whatsapp' | 'impreso'
+
+export interface PendingDelivery {
+  id: number
+  documentNumber: string | null
+  instrument: string | null
+  serie: string | null
+  status: string
+  /** Ya está guardado en el equipo del cliente: se puede registrar su entrega. */
+  released: boolean
+  readyOn: string
+  customerName: string | null
+  hasPortal: boolean
+  serviceId: number | null
+  orderCode: string | null
+  payment: { blocked: boolean; reason: string | null }
+}
+
+export interface DeliveryResult {
+  id: number
+  documentNumber: string | null
+  ok: boolean
+  error?: string
+}
+
 export interface VisitCertificate {
   id: number
   visitId?: number | null
@@ -42,7 +76,9 @@ export interface VisitCertificate {
   calibrationDate?: string | null
   createdAt: string
   releasedAt?: string | null
-  clock?: (VisitClock & { stage: 'review' | 'adjustment' | 'released' }) | null
+  deliveredAt?: string | null
+  deliveryMethod?: DeliveryMethod | null
+  clock?: (VisitClock & { stage: CertificateStage }) | null
 }
 
 export interface CertificateDeadlines {
@@ -52,6 +88,8 @@ export interface CertificateDeadlines {
   reviewTargetBusinessDays: number
   adjustmentWarningBusinessDays: number
   adjustmentTargetBusinessDays: number
+  deliveryWarningBusinessDays: number
+  deliveryTargetBusinessDays: number
   nextVisitWarningBusinessDays: number
   nextVisitTargetBusinessDays: number
 }
@@ -62,6 +100,7 @@ export interface VisitQuantities {
   expectedCertificates: number
   uploaded: number
   released: number
+  delivered: number
 }
 
 export interface CalibrationVisit {
@@ -115,6 +154,8 @@ export interface PendingStage {
 export type BoardVisit = CalendarVisit & {
   review: PendingStage
   adjustment: PendingStage
+  delivery: PendingStage
+  waitingPayment: number
 }
 
 export interface VisitBoardResponse {
@@ -126,6 +167,9 @@ export interface VisitBoardResponse {
     reviewPending: number
     adjustmentOverdue: number
     adjustmentPending: number
+    deliveryOverdue: number
+    deliveryPending: number
+    waitingPayment: number
   }
 }
 
@@ -143,6 +187,7 @@ export interface PersonCompliance {
 export interface VisitIndicatorsResponse {
   upload: PersonCompliance[]
   review: PersonCompliance[]
+  delivery: PersonCompliance[]
 }
 
 export interface UploadLagRow {
@@ -167,6 +212,7 @@ export interface ServiceProgressResponse {
     executed: number
     uploaded: number
     released: number
+    delivered: number
     invoiced: number
   }
   visits: { scheduled: number; executed: number }

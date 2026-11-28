@@ -39,7 +39,7 @@ const PROGRESS_STEPS: Array<{
   { key: 'scheduled', label: 'Programados' },
   { key: 'executed', label: 'Calibrados' },
   { key: 'uploaded', label: 'Cargados' },
-  { key: 'released', label: 'Liberados' },
+  { key: 'delivered', label: 'Entregados' },
   { key: 'invoiced', label: 'Facturados' }
 ]
 
@@ -165,7 +165,7 @@ const CalibrationVisitsPanel = ({
         justifyContent='space-between'
       >
         <Typography variant='body2' color='text.secondary'>
-          {`Plazos en días hábiles: cargar ${effective.uploadTargetBusinessDays}, liberar ${effective.reviewTargetBusinessDays}, corregir ${effective.adjustmentTargetBusinessDays}.`}
+          {`Plazos en días hábiles: cargar ${effective.uploadTargetBusinessDays}, revisar y firmar ${effective.reviewTargetBusinessDays}, entregar ${effective.deliveryTargetBusinessDays}, corregir ${effective.adjustmentTargetBusinessDays}.`}
         </Typography>
         <Stack direction='row' spacing={1}>
           {permissions.schedule && open && (

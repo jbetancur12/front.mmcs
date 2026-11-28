@@ -18,6 +18,8 @@ import { PERMISSIONS } from '../../constants/permissions'
 import { useCan } from '../../utils/functions'
 import { CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS } from '../../constants/calibrationServices'
 import { brand } from 'src/theme/designTokens'
+import CutDeliverySummary from './visits/CutDeliverySummary'
+import { summarizeCutDeliveries } from './visits/cutDeliveries'
 
 interface CalibrationServiceCutDocumentControlDialogProps {
   open: boolean
@@ -77,13 +79,15 @@ const CalibrationServiceCutDocumentControlDialog = ({
   )
   const platform = {
     total: platformItems.length,
-    released: platformItems.filter((item) => item.status === 'liberado').length
+    released: platformItems.filter((item) => item.status === 'liberado').length,
+    delivered: platformItems.filter((item) => item.deliveredAt).length
   }
   const withoutCut =
     cutCount > 1 ? allItems.filter((item) => item.cutId === null).length : 0
   const hasPlatform = platform.total > 0
   const canAutofill = hasPlatform
   const [manualCounts, setManualCounts] = useState(false)
+  const deliveriesOn = useFeature('calibration_visits')
   const autoCounts = canAutofill && !manualCounts
   const suggestedCertificates = useMemo(
     () =>
@@ -129,7 +133,13 @@ const CalibrationServiceCutDocumentControlDialog = ({
   const allReviewed =
     expectedCertificates > 0 && normalizedReviewed === expectedCertificates
   const pendingReview = Math.max(0, expectedCertificates - normalizedReviewed)
-  const normalizedSent = clampValue(sentCertificates, 0, normalizedReviewed)
+  // Con la entrega por certificado, los enviados son los entregados.
+  const autoSent = autoCounts && deliveriesOn
+  const normalizedSent = clampValue(
+    autoSent ? platform.delivered : sentCertificates,
+    0,
+    normalizedReviewed
+  )
 
   const nextStatus = useMemo(() => {
     if (expectedCertificates > 0 && normalizedSent === expectedCertificates) {
@@ -158,16 +168,37 @@ const CalibrationServiceCutDocumentControlDialog = ({
     normalizedUploaded
   ])
 
+  const deliveries = summarizeCutDeliveries(platformItems)
+  const allDelivered =
+    autoSent &&
+    expectedCertificates > 0 &&
+    normalizedSent === expectedCertificates
+
+  const headline = () => {
+    if (!hasPlatform)
+      return 'Aún no hay certificados cargados en la plataforma para este servicio.'
+    if (autoSent)
+      return allDelivered
+        ? `Los ${expectedCertificates} certificados están entregados al cliente.`
+        : `${normalizedUploaded} cargados · ${normalizedReviewed} liberados · ${normalizedSent} entregados, de ${expectedCertificates} esperados.`
+    return allReviewed
+      ? `Los ${expectedCertificates} certificados están liberados: listos para enviar.`
+      : `${platform.released} de ${platform.total} cargados están liberados.`
+  }
+
   const handleSubmit = () => {
     void onSubmit({
       expectedCertificates,
       uploadedCertificates: normalizedUploaded,
       reviewedCertificates: normalizedReviewed,
       sentCertificates: normalizedSent,
-      sendChannel: sendChannel.trim() || null,
-      sentTo: sentTo.trim() || null,
-      sentAt: dateInputToIso(sentAt) ?? null,
-      evidenceFile,
+      // Con la entrega por certificado, los datos de envío salen de esas entregas.
+      sendChannel: autoSent
+        ? deliveries.sendChannel
+        : sendChannel.trim() || null,
+      sentTo: autoSent ? deliveries.sentTo : sentTo.trim() || null,
+      sentAt: autoSent ? deliveries.sentAt : dateInputToIso(sentAt) ?? null,
+      evidenceFile: autoSent ? null : evidenceFile,
       notes: notes.trim() || null
     })
   }
@@ -204,7 +235,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
             onChange={numberField(setExpectedCertificates)}
             helperText={
               suggestedCertificates > 0
-                ? `Sugerido: ${suggestedCertificates}, según lo liberado en el corte.`
+                ? `Sugerido: ${suggestedCertificates}, según las cantidades del corte.`
                 : 'Cuántos certificados esperas para este corte.'
             }
           />
@@ -237,11 +268,7 @@ const CalibrationServiceCutDocumentControlDialog = ({
           >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant='body2' fontWeight={600}>
-                {!hasPlatform
-                  ? 'Aún no hay certificados cargados en la plataforma para este servicio.'
-                  : allReviewed
-                    ? `Los ${expectedCertificates} certificados están liberados: listos para enviar.`
-                    : `${platform.released} de ${platform.total} cargados están liberados.`}
+                {headline()}
               </Typography>
               {hasPlatform && (
                 <Typography
@@ -249,9 +276,11 @@ const CalibrationServiceCutDocumentControlDialog = ({
                   color='text.secondary'
                   display='block'
                 >
-                  {autoCounts
-                    ? 'Emitidos y revisados se toman de la plataforma.'
-                    : 'Estás editando emitidos y revisados a mano.'}
+                  {autoSent
+                    ? 'Las cantidades se toman de la plataforma.'
+                    : autoCounts
+                      ? 'Emitidos y revisados se toman de la plataforma.'
+                      : 'Estás editando emitidos y revisados a mano.'}
                 </Typography>
               )}
               {withoutCut > 0 && (
@@ -321,26 +350,28 @@ const CalibrationServiceCutDocumentControlDialog = ({
               Todos emitidos y revisados ({expectedCertificates})
             </Button>
           )}
-          <Button
-            size='small'
-            variant='outlined'
-            disabled={isLoading || !allReviewed}
-            onClick={() => {
-              if (!autoCounts) {
-                setUploadedCertificates(expectedCertificates)
-                setReviewedCertificates(expectedCertificates)
-              }
-              setSentCertificates(expectedCertificates)
-            }}
-            sx={{
-              textTransform: 'none',
-              color: brand.ink,
-              borderColor: brand.main
-            }}
-          >
-            Todos enviados ({expectedCertificates})
-          </Button>
-          {expectedCertificates > 0 && !allReviewed && (
+          {!autoSent && (
+            <Button
+              size='small'
+              variant='outlined'
+              disabled={isLoading || !allReviewed}
+              onClick={() => {
+                if (!autoCounts) {
+                  setUploadedCertificates(expectedCertificates)
+                  setReviewedCertificates(expectedCertificates)
+                }
+                setSentCertificates(expectedCertificates)
+              }}
+              sx={{
+                textTransform: 'none',
+                color: brand.ink,
+                borderColor: brand.main
+              }}
+            >
+              Todos enviados ({expectedCertificates})
+            </Button>
+          )}
+          {!autoSent && expectedCertificates > 0 && !allReviewed && (
             <Typography variant='caption' color='text.secondary'>
               Faltan {pendingReview} por revisar para poder enviarlos todos.
             </Typography>
@@ -355,76 +386,91 @@ const CalibrationServiceCutDocumentControlDialog = ({
             </Button>
           )}
         </Box>
-        <TextField
-          label='Emitidos'
-          type='number'
-          value={autoCounts ? normalizedUploaded : uploadedCertificates}
-          onChange={numberField(setUploadedCertificates)}
-          disabled={autoCounts}
-          helperText={
-            autoCounts
-              ? 'Cargados en la plataforma.'
-              : 'No pueden superar los esperados.'
-          }
-        />
-        <TextField
-          label='Revisados'
-          type='number'
-          value={autoCounts ? normalizedReviewed : reviewedCertificates}
-          onChange={numberField(setReviewedCertificates)}
-          disabled={autoCounts}
-          helperText={
-            autoCounts
-              ? 'Liberados en la plataforma.'
-              : 'No pueden superar los emitidos.'
-          }
-        />
-        <TextField
-          label='Enviados'
-          type='number'
-          value={sentCertificates}
-          onChange={numberField(setSentCertificates)}
-          helperText='No pueden superar los revisados.'
-        />
+        {!autoSent && (
+          <>
+            <TextField
+              label='Emitidos'
+              type='number'
+              value={autoCounts ? normalizedUploaded : uploadedCertificates}
+              onChange={numberField(setUploadedCertificates)}
+              disabled={autoCounts}
+              helperText={
+                autoCounts
+                  ? 'Cargados en la plataforma.'
+                  : 'No pueden superar los esperados.'
+              }
+            />
+            <TextField
+              label='Revisados'
+              type='number'
+              value={autoCounts ? normalizedReviewed : reviewedCertificates}
+              onChange={numberField(setReviewedCertificates)}
+              disabled={autoCounts}
+              helperText={
+                autoCounts
+                  ? 'Liberados en la plataforma.'
+                  : 'No pueden superar los emitidos.'
+              }
+            />
+            <TextField
+              label='Enviados'
+              type='number'
+              value={autoSent ? normalizedSent : sentCertificates}
+              onChange={numberField(setSentCertificates)}
+              disabled={autoSent}
+              helperText={
+                autoSent
+                  ? 'Entregados según cada certificado.'
+                  : 'No pueden superar los revisados.'
+              }
+            />
+          </>
+        )}
       </FormDialogSection>
 
       <FormDialogSection title='Datos de envío'>
-        <TextField
-          label='Canal de envío'
-          value={sendChannel}
-          onChange={(event) => setSendChannel(event.target.value)}
-          placeholder='Email, WhatsApp, físico, plataforma…'
-          helperText='Obligatorio si ya hay certificados enviados.'
-        />
-        <TextField
-          label='Fecha de envío'
-          type='date'
-          value={sentAt}
-          onChange={(event) => setSentAt(event.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        <TextField
-          label='Destinatario'
-          sx={FULL_ROW}
-          value={sentTo}
-          onChange={(event) => setSentTo(event.target.value)}
-          placeholder='Nombre, correo o referencia de quien recibe'
-        />
-        <Box sx={FULL_ROW}>
-          <FileDropZone
-            file={evidenceFile}
-            onFileSelected={setEvidenceFile}
-            accept=''
-            title='Arrastra el soporte de envío aquí o haz clic para elegirlo'
-            hint='Cualquier archivo · máximo 10 MB'
-            disabled={isLoading}
-          />
-          {!evidenceFile && linkedEvidence ? (
-            <Typography variant='caption' color='text.secondary'>
-              Soportes vinculados: {linkedEvidence}
-            </Typography>
-          ) : null}
-        </Box>
+        {autoSent ? (
+          <CutDeliverySummary summary={deliveries} />
+        ) : (
+          <>
+            <TextField
+              label='Canal de envío'
+              value={sendChannel}
+              onChange={(event) => setSendChannel(event.target.value)}
+              placeholder='Email, WhatsApp, físico, plataforma…'
+              helperText='Canal y destinatario son obligatorios si ya hay certificados enviados.'
+            />
+            <TextField
+              label='Fecha de envío'
+              type='date'
+              value={sentAt}
+              onChange={(event) => setSentAt(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label='Destinatario'
+              sx={FULL_ROW}
+              value={sentTo}
+              onChange={(event) => setSentTo(event.target.value)}
+              placeholder='Nombre, correo o referencia de quien recibe'
+            />
+            <Box sx={FULL_ROW}>
+              <FileDropZone
+                file={evidenceFile}
+                onFileSelected={setEvidenceFile}
+                accept=''
+                title='Arrastra el soporte de envío aquí o haz clic para elegirlo'
+                hint='Cualquier archivo · máximo 10 MB'
+                disabled={isLoading}
+              />
+              {!evidenceFile && linkedEvidence ? (
+                <Typography variant='caption' color='text.secondary'>
+                  Soportes vinculados: {linkedEvidence}
+                </Typography>
+              ) : null}
+            </Box>
+          </>
+        )}
       </FormDialogSection>
 
       <FormDialogSection title='Notas'>

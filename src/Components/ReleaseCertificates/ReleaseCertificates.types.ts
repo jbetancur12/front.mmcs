@@ -201,6 +201,8 @@ export interface ReleaseEquipmentCandidate {
 }
 
 export interface ReleaseEquipmentMatches {
+  /** Por qué no se puede liberar todavía (cliente de contado sin pago). */
+  paymentBlock?: string | null
   certificateId: number
   candidates: ReleaseEquipmentCandidate[]
   sameType: ReleaseEquipmentCandidate[]

@@ -2,6 +2,8 @@ import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   CalibrationVisit,
+  DeliveryMethod,
+  VisitCertificate,
   VisitClock,
   VisitClockState
 } from '../../../types/calibrationVisit'
@@ -18,7 +20,8 @@ export const CLOCK_META: Record<
   overdue: { label: 'Vencido', color: 'error' },
   paused: { label: 'En pausa', color: 'default' },
   done_on_time: { label: 'Cumplido a tiempo', color: 'success' },
-  done_late: { label: 'Cumplido tarde', color: 'warning' }
+  done_late: { label: 'Cumplido tarde', color: 'warning' },
+  waiting_payment: { label: 'Esperando pago', color: 'default' }
 }
 
 export const VISIT_STATUS_LABEL: Record<CalibrationVisit['status'], string> = {
@@ -39,6 +42,8 @@ export const formatRange = (startDate: string, endDate: string) =>
 export const todayKey = () => format(new Date(), 'yyyy-MM-dd')
 
 export const clockDetail = (clock: VisitClock) => {
+  if (clock.state === 'waiting_payment')
+    return 'Sin plazo mientras falte el pago'
   const days = clock.lateBusinessDays
   const late = days
     ? ` · ${days} ${days === 1 ? 'día hábil' : 'días hábiles'} de atraso`
@@ -46,6 +51,33 @@ export const clockDetail = (clock: VisitClock) => {
   return clock.completedOn
     ? `Cumplido el ${formatDay(clock.completedOn)}${late}`
     : `Vence el ${formatDay(clock.dueDate)}${late}`
+}
+
+export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
+  plataforma: 'Plataforma',
+  correo: 'Correo',
+  whatsapp: 'WhatsApp',
+  impreso: 'Impreso'
+}
+
+/** Texto del estado de un certificado según su etapa. */
+export const certificateStageLabel = (
+  certificate: Pick<
+    VisitCertificate,
+    'clock' | 'deliveredAt' | 'deliveryMethod'
+  >
+) => {
+  const clock = certificate.clock
+  if (!clock) return ''
+  if (clock.stage === 'payment') return 'Esperando pago'
+  if (clock.stage === 'delivered')
+    return `Entregado ${formatDay(certificate.deliveredAt)}${certificate.deliveryMethod ? ` · ${DELIVERY_METHOD_LABELS[certificate.deliveryMethod]}` : ''}`
+  const stage = {
+    review: 'Revisión',
+    adjustment: 'Corrección',
+    delivery: 'Entrega'
+  }[clock.stage]
+  return `${stage}: ${CLOCK_META[clock.state].label.toLowerCase()}`
 }
 
 export const uploadSummary = (visit: Pick<CalibrationVisit, 'quantities'>) => {

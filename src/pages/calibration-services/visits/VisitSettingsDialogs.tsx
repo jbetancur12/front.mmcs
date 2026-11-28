@@ -89,8 +89,9 @@ export const VisitReasonDialog = ({
 
 const CLOCKS = [
   { key: 'upload', label: 'Cargar certificados (desde el fin de la visita)' },
-  { key: 'review', label: 'Revisar y liberar (desde la carga)' },
+  { key: 'review', label: 'Revisar y firmar (desde la carga)' },
   { key: 'adjustment', label: 'Corregir un certificado devuelto' },
+  { key: 'delivery', label: 'Entregar al cliente (desde la firma o el pago)' },
   { key: 'nextVisit', label: 'Programar la próxima visita si quedan equipos' }
 ] as const
 

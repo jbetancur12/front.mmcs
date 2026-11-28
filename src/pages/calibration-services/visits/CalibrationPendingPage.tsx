@@ -18,7 +18,9 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
 import RuleOutlinedIcon from '@mui/icons-material/RuleOutlined'
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined'
 import ReplayOutlinedIcon from '@mui/icons-material/ReplayOutlined'
-import { useNavigate } from 'react-router-dom'
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import SignalLoader from 'src/Components/Common/SignalLoader'
 import DataTable from '../../../Components/Common/DataTable'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
@@ -36,15 +38,25 @@ import {
   PersonCompliance,
   UploadLagRow
 } from '../../../types/calibrationVisit'
+import PendingDeliveriesTab from './PendingDeliveriesTab'
 import { CLOCK_META, formatDay, formatRange } from './visitUtils'
 
-type Filter = 'uploadOverdue' | 'uploadDueSoon' | 'review' | 'adjustment' | null
+type Filter =
+  | 'uploadOverdue'
+  | 'uploadDueSoon'
+  | 'review'
+  | 'adjustment'
+  | 'delivery'
+  | 'payment'
+  | null
 
 const MATCHES: Record<Exclude<Filter, null>, (row: BoardVisit) => boolean> = {
   uploadOverdue: (r) => r.upload?.state === 'overdue',
   uploadDueSoon: (r) => r.upload?.state === 'due_soon',
   review: (r) => r.review.overdue > 0,
-  adjustment: (r) => r.adjustment.pending > 0
+  adjustment: (r) => r.adjustment.pending > 0,
+  delivery: (r) => r.delivery.overdue > 0,
+  payment: (r) => r.waitingPayment > 0
 }
 
 const responsibleName = (row: BoardVisit) =>
@@ -128,6 +140,17 @@ const BoardTab = () => {
         id: 'adjustment',
         header: 'Corrección',
         accessorFn: (r) => stageText(r.adjustment)
+      },
+      {
+        id: 'delivery',
+        header: 'Entrega',
+        accessorFn: (r) =>
+          [
+            r.delivery.pending ? stageText(r.delivery) : '',
+            r.waitingPayment ? `${r.waitingPayment} esperando pago` : ''
+          ]
+            .filter(Boolean)
+            .join(' · ') || '—'
       }
     ],
     []
@@ -172,6 +195,20 @@ const BoardTab = () => {
       value: data.totals.adjustmentPending,
       tone: 'orange' as const,
       icon: <ReplayOutlinedIcon />
+    },
+    {
+      key: 'delivery' as const,
+      label: 'Entregas vencidas',
+      value: data.totals.deliveryOverdue,
+      tone: 'red' as const,
+      icon: <LocalShippingOutlinedIcon />
+    },
+    {
+      key: 'payment' as const,
+      label: 'Esperando pago',
+      value: data.totals.waitingPayment,
+      tone: 'blue' as const,
+      icon: <PaymentsOutlinedIcon />
     }
   ]
 
@@ -179,7 +216,7 @@ const BoardTab = () => {
     <>
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {cards.map((card) => (
-          <Grid item xs={6} md={3} key={card.key}>
+          <Grid item xs={6} md={4} lg={2} key={card.key}>
             <LmsStatCard
               label={card.label}
               value={card.value}
@@ -312,12 +349,22 @@ const IndicatorsTab = () => {
         />
       </Section>
       <Section
-        title='Revisión y liberación'
-        hint='Por quien liberó; lo pendiente aparece sin asignar.'
+        title='Revisión y firma'
+        hint='Por quien firmó o verificó; lo pendiente aparece sin asignar.'
       >
         <DataTable<PersonCompliance>
           columns={complianceColumns}
           data={indicators.data.review}
+          itemLabel={['persona', 'personas']}
+        />
+      </Section>
+      <Section
+        title='Entrega al cliente'
+        hint='Por quien la registró. La espera por pago no cuenta.'
+      >
+        <DataTable<PersonCompliance>
+          columns={complianceColumns}
+          data={indicators.data.delivery}
           itemLabel={['persona', 'personas']}
         />
       </Section>
@@ -337,29 +384,45 @@ const IndicatorsTab = () => {
   )
 }
 
+type PageTab = 'board' | 'deliveries' | 'indicators'
+
 /** Lo atrasado de las visitas: quién debe cargar, qué falta revisar y cómo va cada persona. */
 const CalibrationPendingPage = () => {
   const canSeeIndicators = useCan(PERMISSIONS.CALIBRATION_ANALYTICS_VIEW)
-  const [tab, setTab] = useState<'board' | 'indicators'>('board')
+  const releaseOn = useFeature('release_certificates')
+  const canDeliver =
+    useCan(PERMISSIONS.RELEASE_CERTIFICATE_RELEASE) && releaseOn
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState<PageTab>(
+    searchParams.get('tab') === 'entregas' ? 'deliveries' : 'board'
+  )
+  const current =
+    (tab === 'deliveries' && !canDeliver) ||
+    (tab === 'indicators' && !canSeeIndicators)
+      ? 'board'
+      : tab
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
         title='Pendientes de certificados'
-        subtitle='Qué visitas tienen la carga, la revisión o la corrección atrasadas.'
+        subtitle='Qué falta cargar, revisar o entregar, y qué espera un pago.'
         icon={<HourglassBottomIcon />}
       />
-      {canSeeIndicators && (
+      {(canSeeIndicators || canDeliver) && (
         <Tabs
-          value={tab}
-          onChange={(_, value: 'board' | 'indicators') => setTab(value)}
+          value={current}
+          onChange={(_, value: PageTab) => setTab(value)}
           sx={{ mb: 3 }}
         >
           <Tab label='Pendientes' value='board' />
-          <Tab label='Cumplimiento' value='indicators' />
+          {canDeliver && <Tab label='Entregas' value='deliveries' />}
+          {canSeeIndicators && <Tab label='Cumplimiento' value='indicators' />}
         </Tabs>
       )}
-      {tab === 'board' || !canSeeIndicators ? <BoardTab /> : <IndicatorsTab />}
+      {current === 'board' && <BoardTab />}
+      {current === 'deliveries' && <PendingDeliveriesTab />}
+      {current === 'indicators' && <IndicatorsTab />}
     </Container>
   )
 }

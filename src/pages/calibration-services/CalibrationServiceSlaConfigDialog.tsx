@@ -56,6 +56,8 @@ const DEFAULT_SLA_CONFIG: CalibrationServiceSlaConfigPayload = {
   reviewTargetBusinessDays: 3,
   adjustmentWarningBusinessDays: 1,
   adjustmentTargetBusinessDays: 1,
+  deliveryWarningBusinessDays: 0,
+  deliveryTargetBusinessDays: 1,
   nextVisitWarningBusinessDays: 3,
   nextVisitTargetBusinessDays: 5
 }
@@ -107,7 +109,7 @@ const certificateRows: SlaPhaseRow[] = [
     targetKey: 'uploadTargetBusinessDays'
   },
   {
-    label: 'Revisión y liberación',
+    label: 'Revisión y firma',
     startsAt: 'Carga del certificado',
     warningKey: 'reviewWarningBusinessDays',
     targetKey: 'reviewTargetBusinessDays'
@@ -117,6 +119,12 @@ const certificateRows: SlaPhaseRow[] = [
     startsAt: 'Devolución',
     warningKey: 'adjustmentWarningBusinessDays',
     targetKey: 'adjustmentTargetBusinessDays'
+  },
+  {
+    label: 'Entrega al cliente',
+    startsAt: 'Certificado firmado y sin bloqueo de pago',
+    warningKey: 'deliveryWarningBusinessDays',
+    targetKey: 'deliveryTargetBusinessDays'
   },
   {
     label: 'Orden sin próxima visita',

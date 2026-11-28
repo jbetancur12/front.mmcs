@@ -112,6 +112,7 @@ export type ReleaseReviewAction =
       id: number
       target?: ReleaseTarget
       saveEquivalence?: boolean
+      deliverToPlatform?: boolean
     }
 
 /** Acciones de la revisión; todas responden con el certificado actualizado. */
@@ -156,7 +157,8 @@ export const useReleaseReview = () => {
           return axiosPrivate.post(`${base}/release`, {
             confirm: true,
             target: action.target,
-            saveEquivalence: action.saveEquivalence
+            saveEquivalence: action.saveEquivalence,
+            deliverToPlatform: action.deliverToPlatform
           })
         default: {
           const data = new FormData()

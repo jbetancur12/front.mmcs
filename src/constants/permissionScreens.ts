@@ -972,6 +972,10 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' },
     { path: "/users", label: "Usuarios", kind: 'action' }
   ],
+  'release:certificate:release': [
+    { path: "/calibration-services/:serviceId", label: "Servicios de calibración", kind: 'related' },
+    { path: "/calibration-services/mobile/:serviceId", label: "Servicios de calibración › Vista móvil", kind: 'related' }
+  ],
   'release:certificate:review': [
     { path: "/calibration-services/guia", label: "Servicios de calibración › guia", kind: 'action' }
   ],

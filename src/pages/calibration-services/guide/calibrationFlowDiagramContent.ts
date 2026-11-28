@@ -344,21 +344,38 @@ export const FLOW_PHASES: FlowPhase[] = [
         where: 'Certificados a liberar › Firmar',
         state: 'Firmado'
       }),
+      {
+        kind: 'decision',
+        question: '¿El cliente es de contado y todavía no ha pagado?',
+        branches: [
+          {
+            answer: 'Sí',
+            result:
+              'Queda «Esperando pago»: no se libera ni se entrega por ningún medio. No cuenta como atraso de la analista.',
+            tone: 'warn'
+          },
+          {
+            answer: 'No (ya pagó o es a crédito)',
+            result: 'Sigue el paso 12.',
+            tone: 'ok'
+          }
+        ]
+      },
       step({
         number: '12',
         role: 'review',
-        title: 'Libera el certificado',
-        text: 'Confirma a qué equipo del cliente pertenece (o crea el equipo) y cada cuántos meses se vuelve a calibrar.',
-        where: 'Certificados a liberar › Liberar',
+        title: 'Libera y entrega el certificado',
+        text: 'Lo guarda en el equipo del cliente y lo entrega: por la plataforma, o desmarcando esa opción para enviarlo por correo, WhatsApp o impreso y registrar esa entrega con el destinatario.',
+        where: 'Certificados a liberar › Liberar · Pendientes › Entregas',
         automatic:
-          'guarda el certificado en el equipo del cliente y en su historial, y lo copia a Google Drive si está conectado.',
-        state: 'Liberado'
+          'actualiza el historial del equipo, lo copia a Google Drive si está conectado y detiene el plazo de entrega.',
+        state: 'Liberado y entregado'
       }),
       step({
         number: '13',
         role: 'customer',
-        title: 'Consulta su certificado',
-        text: 'Entra a la plataforma y lo ve en sus equipos.'
+        title: 'Recibe su certificado',
+        text: 'Lo ve en la plataforma, o lo recibe por el medio que se registró.'
       })
     ]
   },
@@ -421,7 +438,7 @@ export const FLOW_PHASES: FlowPhase[] = [
         text: 'Confirma cuántos certificados se emitieron, revisaron y enviaron, y por qué medio.',
         where: 'Detalle › Cortes › Control documental',
         automatic:
-          'trae las cifras desde Certificados a liberar. «Todos enviados» solo se habilita cuando todos los esperados están liberados.'
+          'trae las cifras desde Certificados a liberar: los enviados son los entregados.'
       }),
       {
         kind: 'decision',
@@ -459,7 +476,7 @@ export const FLOW_CERTIFICATE_LINKS: [string, string][] = [
   ],
   [
     'Se libera',
-    'Sube el contador de liberados, deja de correr el plazo de revisión y el cliente lo ve.'
+    'Queda guardado en el equipo del cliente. Se cuenta como entregado cuando le llega por el medio elegido.'
   ],
   [
     'Se liberan los de un corte',
@@ -485,7 +502,13 @@ export const FLOW_DEADLINES: [string, string, string, string][] = [
     '2 días',
     'Responsable de la visita'
   ],
-  ['Revisar y liberar', 'Carga del certificado', '3 días', 'Analista'],
+  ['Revisar y firmar', 'Carga del certificado', '3 días', 'Analista'],
+  [
+    'Entregar al cliente',
+    'Firma, o pago si es de contado',
+    '1 día',
+    'Analista'
+  ],
   ['Corregir un certificado', 'Pedido de ajustes', '1 día', 'Quien lo cargó'],
   [
     'Programar la siguiente visita',
